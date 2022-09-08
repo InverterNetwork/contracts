@@ -3,4 +3,22 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 
+# Compilation
+solc_version = "0.8.13"
+optimizer = true
+optimizer_runs = 10_000
+via_ir = false              # @todo Try out later
+
+# Testing
+fuzz_runs = 256
+
+[fmt]
+line_length = 80
+int_types = "short"
+number_underscore = "thousands"
+
+[profile.ci]
+fuzz_runs = 1_000
+verbosity = 4
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
