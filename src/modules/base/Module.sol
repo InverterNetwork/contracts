@@ -90,8 +90,16 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice Function is only callable by authorized addresses.
     error Module__OnlyCallableByAuthorized();
+
+    /// @notice Function is only callable by the proposal.
     error Module__OnlyCallableByProposal();
+
+    /// @notice Function is only callable inside the proposal's context.
+    /// @dev Note that we can not guarantee the function is executed in the
+    ///      proposals context. However, we guarantee the function is not
+    ///      executed inside the module's own context.
     error Module__WantProposalContext();
 
     //--------------------------------------------------------------------------
@@ -173,10 +181,14 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //
     // Proposal callback functions executed via `call`.
 
+    /// @notice Callback function to pause the module.
+    /// @dev Only callable by the proposal.
     function __Module_pause() external onlyProposal {
         _pause();
     }
 
+    /// @notice Callback function to unpause the module.
+    /// @dev Only callable by the proposal.
     function __Module_unpause() external onlyProposal {
         _unpause();
     }
@@ -186,12 +198,14 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //
     // API functions for authenticated users.
 
+    /// @inheritdoc IModule
     function pause() external override (IModule) onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature("__Module_pause()"), Types.Operation.Call
         );
     }
 
+    /// @inheritdoc IModule
     function unpause() external override (IModule) onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature("__Module_unpause()"), Types.Operation.Call
