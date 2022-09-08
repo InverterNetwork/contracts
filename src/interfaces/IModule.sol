@@ -11,10 +11,6 @@ interface IModule {
     /// @dev Only callable by authorized addresses.
     function unpause() external;
 
-    /// @notice Returns whether the contract is paused.
-    /// @return bool True if paused, false otherwise.
-    function paused() external view returns (bool);
-
     // @todo mp: Extend IModule Interface.
     // function identifier() external;
     // function version() external;
