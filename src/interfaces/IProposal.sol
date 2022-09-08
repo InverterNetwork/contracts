@@ -5,5 +5,12 @@ import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 import {IModuleManager} from "src/interfaces/IModuleManager.sol";
 
 interface IProposal is IModuleManager {
+    function initialize(
+        uint proposalId,
+        address[] memory funders,
+        address[] memory modules,
+        IAuthorizer authorizer
+    )
+        external;
     function authorizer() external view returns (IAuthorizer);
 }

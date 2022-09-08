@@ -43,6 +43,19 @@ testProposal: ## Run Proposal tests
 	@forge test -vvv --match-contract "Proposal"
 
 # -----------------------------------------------------------------------------
+# Individual Component Property-Based Tests
+#
+# @todo mp: WIP
+
+.PHONY: pbtestModule
+pbtestModule: ## Run Module property-based tests
+	@scribble src/modules/base/Module.sol \
+		--output-mode files \
+		--instrumentation-metadata-file scribble.json \
+		--path-remapping '@oz-up/=lib/openzeppelin-contracts-upgradeable/contracts/'
+
+
+# -----------------------------------------------------------------------------
 # Static Analyzers
 
 .PHONY: analyze-slither

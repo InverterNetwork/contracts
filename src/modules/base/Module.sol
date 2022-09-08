@@ -73,11 +73,6 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  *
  * todo mp: Versioning
  *
- *
- * # Property-based Testing
- *
- * todo mp: Add Scribble invariants and setup test infra.
- *
  * @author byterocket
  */
 abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
@@ -103,6 +98,11 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @dev The module's proposal instance.
     /// @dev Set during initialization and MUST NOT ever be mutated!
+    ///
+    /// @custom:scribble #if_updated
+    ///                  "Proposal is only updated during initialization"
+    ///                  let initSig := bytes4(0xd44fc34c) in
+    ///                     msg.sig == initSig;
     IProposal internal __Module_proposal;
 
     //--------------------------------------------------------------------------
