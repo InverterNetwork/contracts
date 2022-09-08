@@ -31,6 +31,10 @@ update: ## Update dependencies
 test: ## Run whole testsuite
 	@forge test -vvv
 
+.PHONY: fmt
+fmt: ## Format code
+	@forge fmt
+
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
