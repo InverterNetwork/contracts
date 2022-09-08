@@ -19,70 +19,64 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  *
  * @dev Module is the base contract for modules.
  *
- *      This contract provides a framework for triggering and receiving proposal
- *      callbacks (via `call` or `delegatecall`) and a modifier to authenticate
- *      callers via the module's proposal.
+ * This contract provides a framework for triggering and receiving proposal
+ * callbacks (via `call` or `delegatecall`) and a modifier to authenticate
+ * callers via the module's proposal.
  *
  *
- *      Proposal Callbacks
- *      ==================
+ * # Proposal Callbacks
  *
- *      A module can trigger a callback from its proposal via the internal
- *      `triggerProposalCallback(funcData, op)` function. The `op` argument
- *      specifies whether the callback is executed via `call` or `delegatecall`,
- *      i.e. whether the callback is executed in the module's or the proposal's
- *      context.
- *
- *      Callbacks executed in the Proposal's Context
- *      --------------------------------------------
- *
- *      In order to easily access the proposals storage in proposal callback
- *      functions executed via `delegatecall`, the contract inherits from the
- *      auto-generated {ProposalStorage} contract to mirror the proposal's
- *      storage layout. All variables inherited from the {ProposalStorage} are
- *      prefixed with `__Proposal_`.
- *
- *      In order to guarantee the callback is not executed in the module's
- *      context, the `wantProposalContext` modifier MUST be used!
- *
- *      Per convention, such `delegatecall`-callbacks SHOULD:
- *          - Prefix the function name with `__Proposal_`
- *          - Only access {ProposalStorage} variables.
- *
- *      Callbacks executed in the Module's Context
- *      ------------------------------------------
- *
- *      Proposal callbacks executed in the module's context MUST be
- *      authenticated via the `onlyProposal` modifier. They MUST NOT access
- *      `__Proposal_` variables.
- *
- *      Per convention, the function name SHOULD be prefixed with `__Module_`.
+ * A module can trigger a callback from its proposal via the internal
+ * `triggerProposalCallback(funcData, op)` function. The `op` argument specifies
+ * whether the callback is executed via `call` or `delegatecall`, i.e. whether
+ * the callback is executed in the module's or the proposal's context.
  *
  *
- *      Initialization
- *      ==============
+ * ## Callbacks executed in the Proposal's Context
  *
- *      The contract provides a `__Module_init(proposal)` function for
- *      initialization that MUST be called in order to correctly initialize the
- *      storage.
+ * In order to easily access the proposals storage in proposal callback
+ * functions executed via `delegatecall`, the contract inherits from the
+ * auto-generated {ProposalStorage} contract to mirror the proposal's storage
+ * layout. All variables inherited from the {ProposalStorage} are prefixed with
+ * `__Proposal_`.
  *
+ * In order to guarantee the callback is not executed in the module's context,
+ * the `wantProposalContext` modifier MUST be used!
  *
- *      User Authentication
- *      ===================
- *
- *      Users are authenticated using the proposal's {IAuthenticator} instance.
- *      This ensures that all access management is handled solely by the proposal.
- *
- *
- *      Versioning
- *      ==========
- *
- *      todo mp: Versioning
+ * Per convention, such `delegatecall`-callbacks SHOULD:
+ * 1. Prefix the function name with `__Proposal_`
+ * 2. Only access {ProposalStorage} variables.
  *
  *
- * @dev Property-based Testing
+ * ## Callbacks executed in the Module's Context
  *
- *      todo mp: Add Scribble invariants and setup test infra.
+ * Proposal callbacks executed in the module's context MUST be authenticated via
+ * the `onlyProposal` modifier. They MUST NOT access `__Proposal_` variables.
+ *
+ * Per convention, the function name SHOULD be prefixed with `__Module_`.
+ *
+ *
+ * # Initialization
+ *
+ * The contract provides a `__Module_init(proposal)` function for
+ * initialization that MUST be called in order to correctly initialize the
+ * storage.
+ *
+ *
+ * # User Authentication
+ *
+ * Users are authenticated using the proposal's {IAuthenticator} instance.
+ * This ensures that all access management is handled solely by the proposal.
+ *
+ *
+ * # Versioning
+ *
+ * todo mp: Versioning
+ *
+ *
+ * # Property-based Testing
+ *
+ * todo mp: Add Scribble invariants and setup test infra.
  *
  * @author byterocket
  */
@@ -90,8 +84,16 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice Function is only callable by authorized addresses.
     error Module__OnlyCallableByAuthorized();
+
+    /// @notice Function is only callable by the proposal.
     error Module__OnlyCallableByProposal();
+
+    /// @notice Function is only callable inside the proposal's context.
+    /// @dev Note that we can not guarantee the function is executed in the
+    ///      proposals context. However, we guarantee the function is not
+    ///      executed inside the module's own context.
     error Module__WantProposalContext();
 
     //--------------------------------------------------------------------------
@@ -173,10 +175,14 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //
     // Proposal callback functions executed via `call`.
 
+    /// @notice Callback function to pause the module.
+    /// @dev Only callable by the proposal.
     function __Module_pause() external onlyProposal {
         _pause();
     }
 
+    /// @notice Callback function to unpause the module.
+    /// @dev Only callable by the proposal.
     function __Module_unpause() external onlyProposal {
         _unpause();
     }
@@ -186,12 +192,14 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //
     // API functions for authenticated users.
 
+    /// @inheritdoc IModule
     function pause() external override (IModule) onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature("__Module_pause()"), Types.Operation.Call
         );
     }
 
+    /// @inheritdoc IModule
     function unpause() external override (IModule) onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature("__Module_unpause()"), Types.Operation.Call
