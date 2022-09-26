@@ -15,6 +15,12 @@ contract ModuleManager is IModuleManager {
 
     error Proposal__ModuleManager__ExecuteTxFromModuleFailed();
 
+    error Proposal__ModuleManager__InvalidModuleAddress();
+
+    error Proposal__ModuleManager__ModuleAlreadyActive(
+        address conflictingModule
+    );
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -47,8 +53,15 @@ contract ModuleManager is IModuleManager {
         for (uint i; i < modules.length; i++) {
             module = modules[i];
 
-            assert(module != address(0));
-            assert(!_modules[module]);
+            if (module == address(0)) {
+                revert Proposal__ModuleManager__InvalidModuleAddress();
+            }
+
+            if (_modules[module]) {
+                revert Proposal__ModuleManager__ModuleAlreadyActive({
+                    conflictingModule: module
+                });
+            }
 
             _modules[module] = true;
 
@@ -74,12 +87,7 @@ contract ModuleManager is IModuleManager {
         address to,
         bytes memory data,
         Types.Operation operation
-    )
-        public
-        override (IModuleManager)
-        onlyModule
-        returns (bytes memory)
-    {
+    ) public override(IModuleManager) onlyModule returns (bytes memory) {
         bool ok;
         bytes memory returnData;
 
