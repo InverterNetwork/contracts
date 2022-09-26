@@ -9,7 +9,7 @@ The contract can be found under ```/src/modules/base/Module.sol```.
 
  # Proposal Callbacks
 
- A module can trigger a callback from its proposal via the internal `triggerProposalCallback(funcData, op)` function. 
+ A module can trigger a callback from its proposal via the internal `triggerProposalCallback(funcData, op)` function.
  The `op` argument specifies whether the callback is executed via `call` or `delegatecall`, i.e. whether the callback is executed in the proposal's or the module's context.
 
 
