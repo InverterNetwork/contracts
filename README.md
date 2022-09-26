@@ -1,6 +1,6 @@
 <img align="right" width="150" height="150" top="100" src="./assets/logo.png">
 
-# Proposal Inverter Smart Contracts
+# Proposal Inverter Smart Stuff
 
 > A new funding primitive to enable multiple groups to collaborate on proposals.
 
