@@ -1,10 +1,10 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                       Proposal Inverter Makefile
+#                              Inverter Makefile
 #
 # WARNING: This file is part of the git repo. DO NOT INCLUDE SENSITIVE DATA!
 #
-# The Proposal Inverter smart contracts project uses this Makefile to execute
-# common tasks.
+# The Inverter smart contracts project uses this Makefile to execute common
+# tasks.
 #
 # The Makefile supports a help command, i.e. `make help`.
 #
