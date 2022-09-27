@@ -8,7 +8,7 @@ import {MilestoneModule} from "src/modules/Milestone.sol";
 import {ProposalMock} from "test/utils/mocks/ProposalMock.sol";
 
 
-contract MilestoneTest is Test,ProposalMock {//@todo Felix: Properly adapt to the correct Module Implementation
+contract MilestoneTest is Test,ProposalMock {//@todo Felix: Test the Relayer-Functions
     struct Milestone {
         uint256 identifier;
         uint256 startDate;
@@ -20,10 +20,14 @@ contract MilestoneTest is Test,ProposalMock {//@todo Felix: Properly adapt to th
 
     MilestoneModule milestoneMod;
 
+    //++++++++++++++++++++++++++++++++++++++++++ SETUP ++++++++++++++++++++++++++++++++++++++++++
+
     function setUp() public {
         milestoneMod = new MilestoneModule();
         milestoneMod.initialize(this);
     }
+
+    //++++++++++++++++++++++++++++++++++++++++++ HELPER FUNCTIONS ++++++++++++++++++++++++++++++++++++++++++
 
     function getMilestoneFromModule(uint256 id)
         internal
@@ -48,6 +52,8 @@ contract MilestoneTest is Test,ProposalMock {//@todo Felix: Properly adapt to th
                 completed
             );
     }
+
+    //++++++++++++++++++++++++++++++++++++++++++ TEST-MAIN ++++++++++++++++++++++++++++++++++++++++++
 
     function testAdd(
         uint256 identifier,
@@ -74,7 +80,7 @@ contract MilestoneTest is Test,ProposalMock {//@todo Felix: Properly adapt to th
         assertTrue(milestone.completed == false);
     }
 
-    function testAdd(
+    function testChange(
         uint256 newStartDate,
         uint256 newDuration,
         string memory newDetails

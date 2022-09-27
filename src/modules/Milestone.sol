@@ -10,17 +10,25 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 error InplausibleIdInArray();
 
 contract MilestoneModule is Module {
+
+    //++++++++++++++++++++++++++++++++++++++++++ STRUCTS ++++++++++++++++++++++++++++++++++++++++++
+
     struct Milestone {
-        uint256 identifier; //Could go with a name/hash
+        uint256 identifier; //@note Could go with a name/hash
         uint256 startDate;
-        uint256 duration; //Does the duration serve a purpose or is it just informational?
-        string details; //Could go instead with an ipfs hash or a link
+        uint256 duration; //@note Does the duration serve a purpose or is it just informational?
+        string details; //@note Could go instead with an ipfs hash or a link
         bool submitted;
         bool completed;
     }
 
+    //++++++++++++++++++++++++++++++++++++++++++ STATE ++++++++++++++++++++++++++++++++++++++++++
+
     Milestone[] public milestones;
 
+    //++++++++++++++++++++++++++++++++++++++++++ EVENTS ++++++++++++++++++++++++++++++++++++++++++
+
+    ///@dev New Milestone was created
     event NewMilestone(
         uint256 identifier,
         uint256 startDate,
@@ -28,6 +36,7 @@ contract MilestoneModule is Module {
         string details
     );
 
+    ///@dev A Milestone was changed in regards of startDate, duration or details
     event ChangeMilestone(
         uint256 identifier,
         uint256 startDate,
@@ -35,21 +44,34 @@ contract MilestoneModule is Module {
         string details
     );
 
+    ///@dev A Milestone was removed
     event RemoveMilestone(uint256 identifier);
+
+    ///@dev A Milestone was submitted
     event SubmitMilestone(uint256 identifier);
+
+    ///@dev A submitted Milestone was confirmed
     event ConfirmMilestone(uint256 identifier);
+
+    ///@dev A submitted Milestone was declined
     event DeclineMilestone(uint256 identifier);
 
+    //++++++++++++++++++++++++++++++++++++++++++ MODIFIER ++++++++++++++++++++++++++++++++++++++++++
+
+    ///@dev Checks via the governance module if msg.sender is owner
     modifier ownerAccess() {
         //@todo Governance Link here
         _;
     }
 
+    ///@dev Checks via the governance module if msg.sender is contributor
     modifier contributorAccess() {
         //@todo Governance Link here
         _;
     }
 
+    ///@dev Checks if the given id is available in the milestone array
+    ///@param idInArray : id in the milestone array
     modifier plausableIdInArray(uint256 idInArray) {
         if (idInArray >= milestones.length) {
             revert InplausibleIdInArray();
@@ -57,14 +79,28 @@ contract MilestoneModule is Module {
         _;
     }
 
+    //++++++++++++++++++++++++++++++++++++++++++ CONSTRUCTOR ++++++++++++++++++++++++++++++++++++++++++
+
     constructor() {}
 
+    ///@notice insitializes the MilestoneModule
+    ///@dev Removed initializer because the underlying __Module_init() is initializer
+    ///@param proposal : The proposal that should be linked to this module
     function initialize(IProposal proposal) external {//@note Removed initializer because underlying __Module_init() is initializer
         __Module_init(proposal);
         //@todo set GovernanceModule
         //@todo Set PayableModule
     }
 
+    //++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS ++++++++++++++++++++++++++++++++++++++++++
+
+    
+    ///@dev Adds a milestone to the milestone array
+    ///@param identifier : the identifier for the new milestone
+    ///@param startDate : the startDate of the new milestone
+    ///@param duration : the duration of the new milestone
+    ///@param details : the details of the new milestone
+    ///@return id : the id of the new milestone in the milestone array
     function __Milestone_addMilestone(
         uint256 identifier,
         uint256 startDate, //Possible Startdate now
@@ -79,6 +115,13 @@ contract MilestoneModule is Module {
         return milestones.length - 1;
     }
 
+    ///@notice Adds a milestone to the milestone array
+    ///@dev Relay Function that routes the function call via the proposal
+    ///@param identifier : the identifier for the new milestone
+    ///@param startDate : the startDate of the new milestone
+    ///@param duration : the duration of the new milestone
+    ///@param details : the details of the new milestone
+    ///@return id : the id of the new milestone in the milestone array
     function addMilestone(
         uint256 identifier,
         uint256 startDate, //Possible Startdate now
@@ -97,6 +140,11 @@ contract MilestoneModule is Module {
         );
     }
 
+    ///@dev Changes a milestone in regards of startDate, duration or details
+    ///@param idInArray : id in the milestone array
+    ///@param startDate : the new startDate of the given milestone
+    ///@param duration : the new duration of the given milestone
+    ///@param details : the new details of the given milestone
     function __Milestone_changeMilestone(
         uint256 idInArray,
         uint256 startDate,
@@ -121,6 +169,12 @@ contract MilestoneModule is Module {
         );
     }
 
+    ///@notice Changes a milestone in regards of startDate, duration or details
+    ///@dev Relay Function that routes the function call via the proposal
+    ///@param idInArray : id in the milestone array
+    ///@param startDate : the new startDate of the given milestone
+    ///@param duration : the new duration of the given milestone
+    ///@param details : the new details of the given milestone
     function changeMilestone(
         uint256 idInArray,
         uint256 startDate,
@@ -139,9 +193,10 @@ contract MilestoneModule is Module {
         );
     }
 
-    //Unordered removal of the milestone
-    //There might be a point made to increase the level of interaction required to remove a milestone
-    function __Milestone_removeMilestone(uint256 idInArray)
+
+    ///@dev Unordered removal of the milestone from the milestone array
+    ///@param idInArray : id in the milestone array 
+    function __Milestone_removeMilestone(uint256 idInArray) //@note There might be a point made to increase the level of interaction required to remove a milestone
         external
         onlyProposal
     {
@@ -153,6 +208,9 @@ contract MilestoneModule is Module {
         emit RemoveMilestone(IdToRemove);
     }
 
+    ///@notice Unordered removal of the milestone from the milestone array
+    ///@dev Relay Function that routes the function call via the proposal
+    ///@param idInArray : id in the milestone array 
     function removeMilestone(uint256 idInArray)
         external
         ownerAccess
@@ -167,6 +225,8 @@ contract MilestoneModule is Module {
         );
     }
 
+    ///@dev Submit a milestone
+    ///@param idInArray : id in the milestone array 
     function __Milestone_submitMilestone(uint256 idInArray)
         external
         onlyProposal
@@ -179,6 +239,9 @@ contract MilestoneModule is Module {
         emit SubmitMilestone(milestone.identifier);
     }
 
+    ///@notice Submit a milestone
+    ///@dev Relay Function that routes the function call via the proposal
+    ///@param idInArray : id in the milestone array 
     function submitMilestone(uint256 idInArray)
         external
         contributorAccess
@@ -193,6 +256,8 @@ contract MilestoneModule is Module {
         );
     }
 
+    ///@dev Confirms a submitted milestone
+    ///@param idInArray : id in the milestone array 
     function __Milestone_confirmMilestone(uint256 idInArray)
         external
         onlyProposal
@@ -208,6 +273,9 @@ contract MilestoneModule is Module {
         emit ConfirmMilestone(milestone.identifier);
     }
 
+    ///@notice Confirms a submitted milestone
+    ///@dev Relay Function that routes the function call via the proposal
+    ///@param idInArray : id in the milestone array 
     function confirmMilestone(uint256 idInArray)
         external
         ownerAccess
@@ -222,6 +290,8 @@ contract MilestoneModule is Module {
         );
     }
 
+    ///@dev Declines a submitted milestone
+    ///@param idInArray : id in the milestone array 
     function __Milestone_declineMilestone(uint256 idInArray)
         external
         onlyProposal
@@ -233,6 +303,9 @@ contract MilestoneModule is Module {
         emit DeclineMilestone(milestone.identifier);
     }
 
+    ///@notice Declines a submitted milestone
+    ///@dev Relay Function that routes the function call via the proposal
+    ///@param idInArray : id in the milestone array 
     function declineMilestone(uint256 idInArray)
         external
         ownerAccess
