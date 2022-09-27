@@ -3,14 +3,17 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-import {MilestoneModule} from "../../src/modules/Milestone.sol";
+import {MilestoneModule} from "src/modules/Milestone.sol";
 
-contract MilestoneTest is Test {//@todo Felix: Properly adapt to the correct Module Implementation
+import {ProposalMock} from "test/utils/mocks/ProposalMock.sol";
+
+
+contract MilestoneTest is Test,ProposalMock {//@todo Felix: Properly adapt to the correct Module Implementation
     struct Milestone {
-        uint256 identifier; //Could go with a name/hash
+        uint256 identifier;
         uint256 startDate;
         uint256 duration;
-        string details; //Could go instead with an ipfs hash or a link
+        string details; 
         bool submitted;
         bool completed;
     }
@@ -19,7 +22,7 @@ contract MilestoneTest is Test {//@todo Felix: Properly adapt to the correct Mod
 
     function setUp() public {
         milestoneMod = new MilestoneModule();
-        milestoneMod.initialize();
+        milestoneMod.initialize(this);
     }
 
     function getMilestoneFromModule(uint256 id)
@@ -52,7 +55,7 @@ contract MilestoneTest is Test {//@todo Felix: Properly adapt to the correct Mod
         uint256 duration,
         string memory details
     ) public {
-        uint256 id = milestoneMod.addMilestone(
+        uint256 id = milestoneMod.__Milestone_addMilestone(
             identifier,
             startDate,
             duration,
@@ -76,9 +79,9 @@ contract MilestoneTest is Test {//@todo Felix: Properly adapt to the correct Mod
         uint256 newDuration,
         string memory newDetails
     ) public {
-        uint256 id = milestoneMod.addMilestone(0, 0, 0, "");
+        uint256 id = milestoneMod.__Milestone_addMilestone(0, 0, 0, "");
 
-        milestoneMod.changeMilestone(id, newStartDate, newDuration, newDetails);
+        milestoneMod.__Milestone_changeMilestone(id, newStartDate, newDuration, newDetails);
 
         Milestone memory milestone = getMilestoneFromModule(id);
 
@@ -93,37 +96,37 @@ contract MilestoneTest is Test {//@todo Felix: Properly adapt to the correct Mod
     }
 
     function testRemove() public {
-        uint256 id = milestoneMod.addMilestone(0, 0, 0, "");
-        milestoneMod.removeMilestone(id);
+        uint256 id = milestoneMod.__Milestone_addMilestone(0, 0, 0, "");
+        milestoneMod.__Milestone_removeMilestone(id);
         try milestoneMod.milestones(id) {
             revert();
         } catch {}
     }
 
     function testSubmit() public {
-        uint256 id = milestoneMod.addMilestone(0, 0, 0, "");
+        uint256 id = milestoneMod.__Milestone_addMilestone(0, 0, 0, "");
 
-        milestoneMod.submitMilestone(id);
+        milestoneMod.__Milestone_submitMilestone(id);
 
         Milestone memory milestone = getMilestoneFromModule(id);
         assertTrue(milestone.submitted == true);
     }
 
     function testConfirm() public {
-        uint256 id = milestoneMod.addMilestone(0, 0, 0, "");
+        uint256 id = milestoneMod.__Milestone_addMilestone(0, 0, 0, "");
 
-        milestoneMod.submitMilestone(id);
-        milestoneMod.confirmMilestone(id);
+        milestoneMod.__Milestone_submitMilestone(id);
+        milestoneMod.__Milestone_confirmMilestone(id);
 
         Milestone memory milestone = getMilestoneFromModule(id);
         assertTrue(milestone.completed == true);
     }
 
     function testDecline() public {
-        uint256 id = milestoneMod.addMilestone(0, 0, 0, "");
+        uint256 id = milestoneMod.__Milestone_addMilestone(0, 0, 0, "");
 
-        milestoneMod.submitMilestone(id);
-        milestoneMod.declineMilestone(id);
+        milestoneMod.__Milestone_submitMilestone(id);
+        milestoneMod.__Milestone_declineMilestone(id);
 
         Milestone memory milestone = getMilestoneFromModule(id);
         assertTrue(milestone.submitted == false);

@@ -1,4 +1,4 @@
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.13;
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
@@ -59,7 +59,7 @@ contract MilestoneModule is Module {
 
     constructor() {}
 
-    function initialize(IProposal proposal) external initializer {
+    function initialize(IProposal proposal) external {//@note Removed initializer because underlying __Module_init() is initializer
         __Module_init(proposal);
         //@todo set GovernanceModule
         //@todo Set PayableModule
@@ -203,6 +203,8 @@ contract MilestoneModule is Module {
 
         //milestone.submitted = true; //@note Change this to false?
 
+        //@todo add Payment
+
         emit ConfirmMilestone(milestone.identifier);
     }
 
@@ -237,7 +239,7 @@ contract MilestoneModule is Module {
         plausableIdInArray(idInArray)
     {
         _triggerProposalCallback(
-            abi.encodeWithSignature( //@todo @note is this correct?
+            abi.encodeWithSignature(
                 "__Milestone_declineMilestone(uint256)",
                 idInArray
             ),
