@@ -14,7 +14,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 * This Module handles the list of active contributors in the inverter.
 * 
 * It saves the assigned role and salary of each contributor in a registry,
-* and keeps a list of active contributors in the stile of the Gnosis Safe 
+* and keeps a list of active contributors in the style of the Gnosis Safe 
 * OwnerManager (https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol) 
 * 
 * Each contributor can only be included in the registry once, but since the 
