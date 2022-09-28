@@ -30,6 +30,15 @@ contract ContributorManager is Module {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice The supplied contributor information is not valid.
+    error Module__invalidContributorInformation();
+
+
+    /// @notice The supplied contributor is already active
+    error Module__contributorAlreadyActive();
+
+    /// @notice The supplied contributor is not active
+    error Module__contributorNotActive();
 
 
     //--------------------------------------------------------------------------
@@ -77,10 +86,23 @@ contract ContributorManager is Module {
     /// @notice Registers a new contributor and adds them to the list of active 
     ///         contributors.
     function addContributor(address _who, bytes32 _role, uint _salary) external onlyAuthorized{
-        //require contributor doesn't already exist
+
         //require address is not 0
-        //require salary is not 0
+        if(_who == address(0)) {
+            revert Module__invalidContributorInformation();
+        }
         //require role is not empty
+        if(_role == bytes32(0)){
+            revert Module__invalidContributorInformation();
+        }
+        //require salary is not 0
+        if(_salary == 0){
+            revert Module__invalidContributorInformation();
+        }
+        //require contributor doesn't already exist
+        if(activeContributors[_who] != address(0)){
+            revert Module__contributorAlreadyActive();
+        }
 
         //initialize contributorRegistry[address] with contributor
 
@@ -94,10 +116,18 @@ contract ContributorManager is Module {
     ///         active contributors.
     function removeContributor(address _who) external onlyAuthorized{
         //require contributor already exists
+        if(activeContributors[_who] == address(0)){
+            revert Module__contributorNotActive();
+        }
         //require address is not 0
+        if(_who == address(0)) {
+            revert Module__invalidContributorInformation();
+        }
 
         //save role to temp var
+        bytes32 _role = contributorRegistry[_who].role;
         //save salary to temp var 
+        uint _salary = contributorRegistry[_who].salary;
 
         //delete contributorRegistry[_who]
 
@@ -112,6 +142,9 @@ contract ContributorManager is Module {
     /// @notice Returns registry information about a specifc contributor    
     function getContributorInformation(address _who) external view returns(bytes32, uint) {
         //require contributor already exists
+        if(activeContributors[_who] == address(0)){
+            revert Module__contributorNotActive();
+        }
 
         return (contributorRegistry[_who].role, contributorRegistry[_who].salary);
         
