@@ -18,37 +18,10 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
  */
 library Errors {
     //
-    // OpenZeppelin Errors
+    // OpenZeppelin Errors (inherited)
     //
     bytes internal constant OZ__Initializable__AlreadyInitialized =
         bytes("Initializable: contract is already initialized");
-
-    //
-    // ModuleManager Errors
-    //
-    bytes internal constant Proposal__ModuleManager__OnlyCallableByModule = abi
-        .encodeWithSignature("Proposal__ModuleManager__OnlyCallableByModule()");
-
-    bytes internal constant Proposal__ModuleManager__AlreadyInitialized =
-        abi.encodeWithSignature("Proposal__ModuleManager__AlreadyInitialized()");
-
-    bytes internal constant Proposal__ModuleManager__ExecuteTxFromModuleFailed =
-    abi.encodeWithSignature(
-        "Proposal__ModuleManager__ExecuteTxFromModuleFailed()"
-    );
-
-    bytes internal constant Proposal__ModuleManager__InvalidModuleAddress = abi
-        .encodeWithSignature("Proposal__ModuleManager__InvalidModuleAddress()");
-
-    function Proposal__ModuleManager__ModuleAlreadyEnabled(address module)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return abi.encodeWithSignature(
-            "Proposal__ModuleManager__ModuleAlreadyEnabled(address)", module
-        );
-    }
 
     //
     // Proposal Errors
@@ -70,6 +43,7 @@ library Errors {
  *      variables used throughout testing.
  */
 abstract contract ProposalBaseTest is Test {
+    // SuT.
     Proposal proposal;
 
     // Mocks

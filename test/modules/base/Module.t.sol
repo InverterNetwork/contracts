@@ -27,6 +27,7 @@ library Errors {
 }
 
 contract ModuleTest is Test {
+    // SuT.
     ModuleMock module;
 
     // Mocks
