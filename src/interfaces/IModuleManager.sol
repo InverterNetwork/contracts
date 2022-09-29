@@ -8,9 +8,7 @@ interface IModuleManager {
         address to,
         bytes memory data,
         Types.Operation operation
-    )
-        external
-        returns (bytes memory);
+    ) external returns (bytes memory);
 
     function isActiveModule(address module) external returns (bool);
 }

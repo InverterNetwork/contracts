@@ -39,10 +39,7 @@ contract Payment is Module {
         address token,
         address receiver,
         uint amount
-    )
-        external
-        wantProposalContext
-    {
+    ) external wantProposalContext {
         bool ok;
         ok = IERC20(token).transfer(receiver, amount);
         if (!ok) {
@@ -58,11 +55,7 @@ contract Payment is Module {
         address receiver,
         uint amount,
         uint executableAfter
-    )
-        external
-        onlyAuthorized
-        returns (uint)
-    {
+    ) external onlyAuthorized returns (uint) {
         uint id = _id;
         _id++;
 

@@ -87,7 +87,7 @@ contract ModuleManager is IModuleManager {
         address to,
         bytes memory data,
         Types.Operation operation
-    ) public override(IModuleManager) onlyModule returns (bytes memory) {
+    ) public override (IModuleManager) onlyModule returns (bytes memory) {
         bool ok;
         bytes memory returnData;
 

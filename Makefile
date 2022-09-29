@@ -31,10 +31,6 @@ update: ## Update dependencies
 test: ## Run whole testsuite
 	@forge test -vvv
 
-.PHONY: fmt
-fmt: ## Format code
-	@forge fmt
-
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
@@ -58,15 +54,26 @@ analyze-c4udit: ## Run c4udit analyzer against project
 # -----------------------------------------------------------------------------
 # Reports
 
-.PHONY: gas-report
-gas-report: ## Print gas report and create gas snapshots file
+.PHONY: report-gas
+report-gas: ## Print gas report and create gas snapshots file
 	@forge snapshot
 	@forge test --gas-report
 
-.PHONY: cov-report
-cov-report: ## Print coverage report and create lcov report file
+.PHONY: report-cov
+report-cov: ## Print coverage report and create lcov report file
 	@forge coverage --report lcov
 	@forge coverage
+
+# -----------------------------------------------------------------------------
+# Formatting
+
+.PHONY: fmt
+fmt: ## Format code
+	@forge fmt
+
+.PHONY: fmt-check
+fmt-check: ## Check whether code formatted correctly
+	@forge fmt --check
 
 # -----------------------------------------------------------------------------
 # Help Command
