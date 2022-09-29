@@ -9,7 +9,7 @@ import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 import {Types} from "src/common/Types.sol";
 import {ProposalStorage} from "src/generated/ProposalStorage.sol";
 
-// Interfaces
+// Internal Interfaces
 import {IModule} from "src/interfaces/IModule.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
@@ -26,21 +26,6 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  * @author byterocket
  */
 abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
-    //--------------------------------------------------------------------------
-    // Errors
-
-    /// @notice Function is only callable by authorized addresses.
-    error Module__OnlyCallableByAuthorized();
-
-    /// @notice Function is only callable by the proposal.
-    error Module__OnlyCallableByProposal();
-
-    /// @notice Function is only callable inside the proposal's context.
-    /// @dev Note that we can not guarantee the function is executed in the
-    ///      proposals context. However, we guarantee the function is not
-    ///      executed inside the module's own context.
-    error Module__WantProposalContext();
-
     //--------------------------------------------------------------------------
     // Storage
     //
@@ -60,7 +45,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     modifier onlyAuthorized() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (!authorizer.isAuthorized(msg.sender)) {
-            revert Module__OnlyCallableByAuthorized();
+            revert Module__CallerNotAuthorized();
         }
         _;
     }
@@ -78,17 +63,21 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @notice Modifier to guarantee that the function is not executed in the
     ///         module's context.
-    /// @dev Note that it's save to not authenticate the caller in these
-    ///      functions. The module's storage only starts after the proposal's.
-    ///      As long as these functions only access the proposal storage
-    ///      variables (`__Proposal_`) inherited from {ProposalStorage}, the
-    ///      module's own state is never mutated.
+    /// @dev As long as wantProposalContext-protected functions only access the
+    ///      proposal storage variables (`__Proposal_`) inherited from
+    ///      {ProposalStorage}, the module's own state is never mutated.
+    /// @dev Note that it's therefore save to not authenticate the caller in
+    ///      these functions. A function only accessing the proposal storage
+    ///      variables, as recommended, can not alter it's own module's storage.
     /// @dev Note to use function prefix `__Proposal_`.
     modifier wantProposalContext() {
         // If we are in the proposal's context, the following storage access
-        // returns the zero address. That's because the module's storage
+        // returns the zero address. That is because the module's storage
         // starts after the proposal's storage due to inheriting from
         // {ProposalStorage}.
+        // If we are in the module's context, the following storage access can
+        // not return the zero address. That is because the `__Module_proposal`
+        // variable is set during initialization and never mutated again.
         if (address(__Module_proposal) != address(0)) {
             revert Module__WantProposalContext();
         }
@@ -101,16 +90,13 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @dev The initialization function MUST be called by the upstream
     ///      contract in their `initialize()` function.
     /// @param proposal The module's proposal.
-    function __Module_init(IProposal proposal) internal initializer {
+    function __Module_init(IProposal proposal) internal onlyInitializing {
         __Pausable_init();
 
-        require(address(proposal) != address(0));
+        if (address(proposal) == address(0)) {
+            revert Module__InvalidProposalAddress();
+        }
         __Module_proposal = proposal;
-    }
-
-    // @todo mp: Fallback implemented for testing.
-    fallback() external {
-        revert("Fallback called");
     }
 
     // @todo mp: Need version function (Issue 24)
