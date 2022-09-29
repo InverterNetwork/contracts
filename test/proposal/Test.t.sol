@@ -17,6 +17,15 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
  * Enables checking for errors with vm.expectRevert(Errors.<Error>).
  */
 library Errors {
+    //
+    // OpenZeppelin Errors
+    //
+    bytes internal constant OZ__Initializable__AlreadyInitialized =
+        bytes("Initializable: contract is already initialized");
+
+    //
+    // ModuleManager Errors
+    //
     bytes internal constant Proposal__ModuleManager__OnlyCallableByModule = abi
         .encodeWithSignature("Proposal__ModuleManager__OnlyCallableByModule()");
 
@@ -48,7 +57,7 @@ library Errors {
  *      Provides setUp functions, access to common test utils and internal
  *      variables used throughout testing.
  */
-abstract contract ProposalTest is Test {
+abstract contract ProposalBaseTest is Test {
     Proposal proposal;
 
     // Mocks
