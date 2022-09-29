@@ -15,11 +15,6 @@ import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
 contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //--------------------------------------------------------------------------
-    // Errors
-
-    error Proposal__CallerNotAuthorized();
-
-    //--------------------------------------------------------------------------
     // Modifiers
 
     /// @notice Modifier to guarantee function is only callable by authorized
@@ -40,11 +35,11 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     /// @dev The list of funders.
     address[] private _funders;
 
-    /// @notice The authorizer implementation used to authorize calls.
+    /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
 
     //--------------------------------------------------------------------------
-    // Public Functions
+    // Initializer
 
     function initialize(
         uint proposalId,
@@ -59,16 +54,16 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         __ModuleManager_init(modules);
 
         if (!isEnabledModule(address(authorizer_))) {
-            revert("Authorizer needs to be an active module");
+            revert Proposal__InvalidAuthorizer();
         }
 
         authorizer = authorizer_;
     }
 
-    /// @notice Executes a call on a target.
-    /// @dev Only callable by authorized msg.sender.
-    /// @param target The address to call.
-    /// @param data The call data.
+    //--------------------------------------------------------------------------
+    // Public Functions
+
+    /// @inheritdoc IProposal
     function executeTx(address target, bytes memory data)
         external
         onlyAuthorized
@@ -78,13 +73,14 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         bytes memory returnData;
         (ok, returnData) = target.call(data);
 
-        if (!ok) {
-            revert("executeTx: Call not ok");
-        } else {
+        if (ok) {
             return returnData;
+        } else {
+            revert Proposal__ExecuteTxFailed();
         }
     }
 
+    /// @inheritdoc IProposal
     function version() external pure returns (string memory) {
         return "1";
     }
