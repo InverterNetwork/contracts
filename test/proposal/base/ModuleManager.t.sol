@@ -88,5 +88,7 @@ contract ModuleManagerTest is ProposalBaseTest {
         proposal.initialize(proposalId, funders, modules, authorizer);
     }
 
-    function testExecuteTxFromModule() public {}
+    function testExecuteTxFromModule() public {
+        // @todo mp: Add ModuleManager::executeTxFromModule tests.
+    }
 }

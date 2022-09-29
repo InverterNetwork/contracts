@@ -61,6 +61,10 @@ contract ProposalTest is ProposalBaseTest {
         proposal.initialize(proposalId, funders, modules, authorizer);
     }
 
+    function testExecuteTx() public {
+        // @todo mp: Add Proposal::executeTx tests.
+    }
+
     function testVersion() public {
         assertEq(proposal.version(), "1");
     }
