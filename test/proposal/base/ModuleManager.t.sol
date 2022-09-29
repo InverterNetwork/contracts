@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../Test.t.sol";
 
-contract ModuleManagerTest is ProposalTest {
+contract ModuleManagerTest is ProposalBaseTest {
     // @todo mp: Make enchidna tests out of this.
     function testInvariants() public {
         // SENTINEL_MODULE is disabled.
@@ -29,6 +29,7 @@ contract ModuleManagerTest is ProposalTest {
         // Set last module to authorizer instance.
         modules[modules.length - 1] = address(authorizer);
 
+        // Initialize proposal.
         proposal.initialize(proposalId, funders, modules, authorizer);
 
         // Check that each module is enabled.
