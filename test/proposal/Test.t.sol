@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
 
-// Interfaces
+// Internal Interfaces
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
 // Mocks
