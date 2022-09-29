@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
+import {OZErrors} from "test/proposal/helper/OZErrors.sol";
 
 // Mocks
 import {ModuleManagerMock} from
@@ -16,15 +17,6 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
  * Enables checking for errors with vm.expectRevert(Errors.<Error>).
  */
 library Errors {
-    //
-    // OpenZeppelin Errors (inherited)
-    //
-    bytes internal constant OZ__Initializable__NotInitializing =
-        bytes("Initializable: contract is not initializing");
-
-    //
-    // ModuleManager Errors
-    //
     bytes internal constant Proposal__ModuleManager__OnlyCallableByModule = abi
         .encodeWithSignature("Proposal__ModuleManager__OnlyCallableByModule()");
 
@@ -108,7 +100,7 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
 
         moduleManager.init(modules);
 
-        vm.expectRevert(Errors.OZ__Initializable__NotInitializing);
+        vm.expectRevert(OZErrors.Initializable__NotInitializing);
         moduleManager.reinit(modules);
     }
 
