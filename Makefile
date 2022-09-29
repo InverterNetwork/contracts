@@ -38,6 +38,14 @@ test: ## Run whole testsuite
 testProposal: ## Run Proposal tests
 	@forge test -vvv --match-contract "Proposal"
 
+.PHONY: testModuleManager
+testModuleManager: ## Run ModuleManager tests
+	@forge test -vvv --match-contract "ModuleManager"
+
+.PHONY: testModule
+testModule: ## Run Module tests
+	@forge test -vvv --match-contract "Module" --no-match-contract "Manager"
+
 # -----------------------------------------------------------------------------
 # Static Analyzers
 
