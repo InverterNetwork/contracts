@@ -95,7 +95,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @dev Note to use function prefix `__Proposal_`.
     modifier wantProposalContext() {
         // If we are in the proposal's context, the following storage access
-        // MUST return the zero address. That's because the module's storage
+        // returns the zero address. That's because the module's storage
         // starts after the proposal's storage due to inheriting from
         // {ProposalStorage}.
         if (address(__Module_proposal) != address(0)) {
@@ -167,9 +167,14 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @param funcData The encoded function signature and arguments the
     ///                 proposal should call back to.
     /// @param op Whether the callback should be a `call` or `delegatecall`.
+    /// @return The return data of the callback.
     function _triggerProposalCallback(bytes memory funcData, Types.Operation op)
         internal
+        returns (bytes memory)
     {
-        __Module_proposal.executeTxFromModule(address(this), funcData, op);
+        bytes memory returnData =
+            __Module_proposal.executeTxFromModule(address(this), funcData, op);
+
+        return returnData;
     }
 }
