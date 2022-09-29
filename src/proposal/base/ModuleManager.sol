@@ -48,13 +48,15 @@ contract ModuleManager is IModuleManager {
     // Internal Functions
 
     function __ModuleManager_init(address[] calldata modules) internal {
-        assert(!_modules[SENTINEL_MODULE]);
+        if (_modules[SENTINEL_MODULE]) {
+            revert Proposal__ModuleManager__AlreadyInitialized();
+        }
 
         address module;
         for (uint i; i < modules.length; i++) {
             module = modules[i];
 
-            if (module == address(0)) {
+            if (module == address(0) || module == SENTINEL_MODULE) {
                 revert Proposal__ModuleManager__InvalidModuleAddress();
             }
 

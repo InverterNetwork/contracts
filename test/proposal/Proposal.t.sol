@@ -28,7 +28,7 @@ contract ProposalTest is Test {
         assertEq(proposal.version(), "1");
     }
 
-    function testInitialize(uint proposalId, uint numFunders, uint numModules)
+    function ttestInitialize(uint proposalId, uint numFunders, uint numModules)
         public
     {
         // Stay within reasonable array sizes.

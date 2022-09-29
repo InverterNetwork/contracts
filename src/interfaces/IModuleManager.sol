@@ -10,6 +10,9 @@ interface IModuleManager {
     /// @notice Function is only callable by activated module.
     error Proposal__ModuleManager__OnlyCallableByModule();
 
+    /// @notice ModuleManager is already initialized.
+    error Proposal__ModuleManager__AlreadyInitialized();
+
     /// @notice Execution of transaction requested by module failed.
     error Proposal__ModuleManager__ExecuteTxFromModuleFailed();
 
