@@ -48,8 +48,8 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
 
     function initialize(
         uint proposalId,
-        address[] memory funders, // @todo mp: Make to calldata?
-        address[] memory modules,
+        address[] calldata funders,
+        address[] calldata modules,
         IAuthorizer authorizer_
     ) external initializer {
         _proposalId = proposalId;
