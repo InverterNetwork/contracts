@@ -51,10 +51,7 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         address[] memory funders, // @todo mp: Make to calldata?
         address[] memory modules,
         IAuthorizer authorizer_
-    )
-        external
-        initializer
-    {
+    ) external initializer {
         _proposalId = proposalId;
         _funders = funders;
 
