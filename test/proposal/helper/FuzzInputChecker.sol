@@ -13,9 +13,6 @@ abstract contract FuzzInputChecker is Test {
     // Helper Caches.
     mapping(address => bool) modulesCache;
 
-    // Constants copied from ModuleManager.
-    address internal constant SENTINEL_MODULE = address(1);
-
     function _assumeValidProposalId(uint proposalId) internal {}
 
     function _assumeValidFunders(address[] memory funders) internal {}

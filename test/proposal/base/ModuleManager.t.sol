@@ -63,9 +63,6 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
 
             assertTrue(moduleManager.isEnabledModule(module));
         }
-
-        // Check that SENTINEL_MODULE is disabled.
-        assertTrue(!moduleManager.isEnabledModule(SENTINEL_MODULE));
     }
 
     function testInitilizationFailsForInvalidModuleAddress(
