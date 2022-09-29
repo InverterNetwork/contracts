@@ -7,32 +7,29 @@ import {Types} from "src/common/Types.sol";
 // Interfaces
 import {IModuleManager} from "src/interfaces/IModuleManager.sol";
 
+/**
+ * @title ModuleManager
+ *
+ * @dev A contract to manage modules that can execute transactions via this
+ *      contract.
+ *
+ *      Note that modules can only be enabled during the initialization of the
+ *      contract. It is, however, always possible to disable modules.
+ *
+ *      Copied and modified from Gnosis Safe.
+ *
+ * @author Stefan George - <stefan@gnosis.pm>
+ * @author Richard Meissner - <richard@gnosis.pm>
+ * @author byterocket
+ */
 contract ModuleManager is IModuleManager {
-    //--------------------------------------------------------------------------
-    // Errors
-
-    error Proposal__ModuleManager__OnlyCallableByModule();
-
-    error Proposal__ModuleManager__ExecuteTxFromModuleFailed();
-
-    error Proposal__ModuleManager__InvalidModuleAddress();
-
-    error Proposal__ModuleManager__ModuleAlreadyActive(
-        address conflictingModule
-    );
-
-    //--------------------------------------------------------------------------
-    // Events
-
-    event ModuleDeactivated(address indexed module);
-
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable by activated
+    /// @notice Modifier to guarantee function is only callable by enabled
     ///         module.
     modifier onlyModule() {
-        if (!isActiveModule(msg.sender)) {
+        if (!isEnabledModule(msg.sender)) {
             revert Proposal__ModuleManager__OnlyCallableByModule();
         }
         _;
@@ -41,7 +38,7 @@ contract ModuleManager is IModuleManager {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Mapping of activated modules.
+    /// @dev Mapping of modules.
     mapping(address => bool) private _modules;
 
     //--------------------------------------------------------------------------
@@ -58,12 +55,11 @@ contract ModuleManager is IModuleManager {
             }
 
             if (_modules[module]) {
-                revert Proposal__ModuleManager__ModuleAlreadyActive({
-                    conflictingModule: module
-                });
+                revert Proposal__ModuleManager__ModuleAlreadyEnabled(module);
             }
 
             _modules[module] = true;
+            emit ModuleEnabled(module);
 
             // @todo mp: Call into module to "register this proposal" as using
             //           that module instance?
@@ -73,16 +69,17 @@ contract ModuleManager is IModuleManager {
         }
     }
 
-    function __ModuleManager_deactivateModule(address module) internal {
+    function __ModuleManager_disableModule(address module) internal {
         if (_modules[module]) {
             _modules[module] = false;
-            emit ModuleDeactivated(module);
+            emit ModuleDisabled(module);
         }
     }
 
     //--------------------------------------------------------------------------
     // Public Functions
 
+    /// @inheritdoc IModuleManager
     function executeTxFromModule(
         address to,
         bytes memory data,
@@ -97,16 +94,22 @@ contract ModuleManager is IModuleManager {
             (ok, returnData) = to.delegatecall(data);
         }
 
-        if (!ok) {
-            revert Proposal__ModuleManager__ExecuteTxFromModuleFailed();
-        } else {
+        if (ok) {
             return returnData;
+        } else {
+            revert Proposal__ModuleManager__ExecuteTxFromModuleFailed();
         }
     }
 
     // @todo mp: Getter for modules.
 
-    function isActiveModule(address module) public view returns (bool) {
+    /// @inheritdoc IModuleManager
+    function isEnabledModule(address module)
+        public
+        view
+        override (IModuleManager)
+        returns (bool)
+    {
         return _modules[module];
     }
 }
