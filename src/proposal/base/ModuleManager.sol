@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Dependencies
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 
@@ -22,7 +25,7 @@ import {IModuleManager} from "src/interfaces/IModuleManager.sol";
  * @author Richard Meissner - <richard@gnosis.pm>
  * @author byterocket
  */
-contract ModuleManager is IModuleManager {
+contract ModuleManager is IModuleManager, Initializable {
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -38,26 +41,21 @@ contract ModuleManager is IModuleManager {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Used to revert in case of reinitialization.
-    address internal constant SENTINEL_MODULE = address(1);
-
     /// @dev Mapping of modules.
     mapping(address => bool) private _modules;
 
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function __ModuleManager_init(address[] calldata modules) internal {
-        // @todo mp: Refactor to use onlyInitializing modifier.
-        if (_modules[SENTINEL_MODULE]) {
-            revert Proposal__ModuleManager__AlreadyInitialized();
-        }
-
+    function __ModuleManager_init(address[] calldata modules)
+        internal
+        onlyInitializing
+    {
         address module;
         for (uint i; i < modules.length; i++) {
             module = modules[i];
 
-            if (module == address(0) || module == SENTINEL_MODULE) {
+            if (module == address(0)) {
                 revert Proposal__ModuleManager__InvalidModuleAddress();
             }
 
@@ -74,9 +72,6 @@ contract ModuleManager is IModuleManager {
             // One module contract that is an active module for infinite many
             // proposals by saving it's state on a per-proposal basis.
         }
-
-        // Set SENTINEL_MODULE as enabled to protect against reinitialization.
-        _modules[SENTINEL_MODULE] = true;
     }
 
     function __ModuleManager_disableModule(address module) internal {
@@ -120,6 +115,6 @@ contract ModuleManager is IModuleManager {
         override (IModuleManager)
         returns (bool)
     {
-        return module != SENTINEL_MODULE && _modules[module];
+        return _modules[module];
     }
 }
