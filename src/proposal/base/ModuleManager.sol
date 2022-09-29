@@ -38,6 +38,9 @@ contract ModuleManager is IModuleManager {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Used to revert in case of reinitialization.
+    address internal constant SENTINEL_MODULE = address(1);
+
     /// @dev Mapping of modules.
     mapping(address => bool) private _modules;
 
@@ -45,8 +48,9 @@ contract ModuleManager is IModuleManager {
     // Internal Functions
 
     function __ModuleManager_init(address[] calldata modules) internal {
-        address module;
+        assert(!_modules[SENTINEL_MODULE]);
 
+        address module;
         for (uint i; i < modules.length; i++) {
             module = modules[i];
 
@@ -67,11 +71,14 @@ contract ModuleManager is IModuleManager {
             // One module contract that is an active module for infinite many
             // proposals by saving it's state on a per-proposal basis.
         }
+
+        // Set SENTINEL_MODULE as enabled to protect against reinitialization.
+        _modules[SENTINEL_MODULE] = true;
     }
 
     function __ModuleManager_disableModule(address module) internal {
-        if (_modules[module]) {
-            _modules[module] = false;
+        if (isEnabledModule(module)) {
+            delete _modules[module];
             emit ModuleDisabled(module);
         }
     }
@@ -110,6 +117,6 @@ contract ModuleManager is IModuleManager {
         override (IModuleManager)
         returns (bool)
     {
-        return _modules[module];
+        return module != SENTINEL_MODULE && _modules[module];
     }
 }
