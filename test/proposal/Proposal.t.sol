@@ -60,7 +60,7 @@ contract ProposalTest is Test {
 
         // Check that modules correctly activated.
         for (uint i; i < numModules; i++) {
-            assertTrue(proposal.isActiveModule(modules[i]));
+            assertTrue(proposal.isEnabledModule(modules[i]));
         }
     }
 }

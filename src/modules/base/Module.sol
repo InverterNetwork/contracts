@@ -17,20 +17,11 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 /**
  * @title Module
  *
- * @dev Module is the base contract for modules.
+ * @dev The base contract for modules.
  *
- * This contract provides a framework for triggering and receiving proposal
- * callbacks (via `call` or `delegatecall`) and a modifier to authenticate
- * callers via the module's proposal.
- *
- * # Versioning
- *
- * todo mp: Versioning
- *
- *
- * # Property-based Testing
- *
- * todo mp: Add Scribble invariants and setup test infra.
+ *      This contract provides a framework for triggering and receiving proposal
+ *      callbacks (via `call` or `delegatecall`) and a modifier to authenticate
+ *      callers via the module's proposal.
  *
  * @author byterocket
  */
@@ -122,7 +113,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
         revert("Fallback called");
     }
 
-    // @todo mp: Need version function
+    // @todo mp: Need version function (Issue 24)
 
     //--------------------------------------------------------------------------
     // onlyProposal Functions

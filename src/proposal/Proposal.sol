@@ -58,7 +58,7 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         __Pausable_init();
         __ModuleManager_init(modules);
 
-        if (!isActiveModule(address(authorizer_))) {
+        if (!isEnabledModule(address(authorizer_))) {
             revert("Authorizer needs to be an active module");
         }
 
