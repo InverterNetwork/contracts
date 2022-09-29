@@ -44,7 +44,7 @@ contract ModuleManager is IModuleManager {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function __ModuleManager_init(address[] memory modules) internal {
+    function __ModuleManager_init(address[] calldata modules) internal {
         address module;
 
         for (uint i; i < modules.length; i++) {
