@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import "./Test.t.sol";
 
 contract ProposalTest is ProposalBaseTest {
-    function testInitialize(
+    function testInitialization(
         uint proposalId,
         address[] memory funders,
         address[] memory modules
@@ -20,9 +20,7 @@ contract ProposalTest is ProposalBaseTest {
         modules[modules.length - 1] = address(authorizer);
 
         // Initialize proposal.
-        proposal.initialize(
-            proposalId, funders, modules, IAuthorizer(authorizer)
-        );
+        proposal.initialize(proposalId, funders, modules, authorizer);
 
         // Check that proposal's storage correctly initialized.
         assertEq(address(proposal.authorizer()), address(authorizer));
@@ -42,14 +40,25 @@ contract ProposalTest is ProposalBaseTest {
         modules[modules.length - 1] = address(authorizer);
 
         // Initialize proposal.
-        proposal.initialize(
-            proposalId, funders, modules, IAuthorizer(authorizer)
-        );
+        proposal.initialize(proposalId, funders, modules, authorizer);
 
         vm.expectRevert(Errors.OZ__Initializable__AlreadyInitialized);
-        proposal.initialize(
-            proposalId, funders, modules, IAuthorizer(authorizer)
-        );
+        proposal.initialize(proposalId, funders, modules, authorizer);
+    }
+
+    function testInitializationFailsForInvalidAuthorizer(
+        uint proposalId,
+        address[] memory funders,
+        address[] memory modules
+    )
+        public
+        assumeValidProposalId(proposalId)
+        assumeValidFunders(funders)
+        assumeValidModules(modules)
+    {
+        // Note that the authorizer is not added to the modules list.
+        vm.expectRevert(Errors.Proposal__InvalidAuthorizer);
+        proposal.initialize(proposalId, funders, modules, authorizer);
     }
 
     function testVersion() public {

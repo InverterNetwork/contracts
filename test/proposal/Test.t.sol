@@ -49,6 +49,18 @@ library Errors {
             "Proposal__ModuleManager__ModuleAlreadyEnabled(address)", module
         );
     }
+
+    //
+    // Proposal Errors
+    //
+    bytes internal constant Proposal__CallerNotAuthorized =
+        abi.encodeWithSignature("Proposal__CallerNotAuthorized()");
+
+    bytes internal constant Proposal__InvalidAuthorizer =
+        abi.encodeWithSignature("Proposal__InvalidAuthorizer()");
+
+    bytes internal constant Proposal__ExecuteTxFailed =
+        abi.encodeWithSignature("Proposal__ExecuteTxFailed()");
 }
 
 /**

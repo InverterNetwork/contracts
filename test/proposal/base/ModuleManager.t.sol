@@ -44,7 +44,7 @@ contract ModuleManagerTest is ProposalBaseTest {
         assertTrue(!proposal.isEnabledModule(SENTINEL_MODULE));
     }
 
-    function testInitilizationFailsWithInvalidModuleAddress(
+    function testInitilizationFailsForInvalidModuleAddress(
         uint proposalId,
         address[] memory funders,
         address[] memory modules
@@ -64,7 +64,7 @@ contract ModuleManagerTest is ProposalBaseTest {
         proposal.initialize(proposalId, funders, modules, authorizer);
     }
 
-    function testInitilizationFailsWithDuplicateModules(
+    function testInitilizationFailsForDuplicateModules(
         uint proposalId,
         address[] memory funders,
         address[] memory modules
