@@ -7,10 +7,16 @@ import {Module} from "./base/Module.sol";
 
 import {IProposal} from "src/interfaces/IProposal.sol";
 
+///@dev There is no milestone in the milestone array with this id
 error InplausibleIdInArray();
 
-contract MilestoneModule is Module {
+///@dev The Milestone is not yet submitted
+error MilestoneNotSubmitted();
 
+///@dev The Milestone is already completed
+error MilestoneCompleted();
+
+contract MilestoneModule is Module {
     //++++++++++++++++++++++++++++++++++++++++++ STRUCTS ++++++++++++++++++++++++++++++++++++++++++
 
     struct Milestone {
@@ -79,6 +85,18 @@ contract MilestoneModule is Module {
         _;
     }
 
+    ///@dev Checks if the given Milestone is submitted, but not completed
+    ///@param idInArray : id in the milestone array
+    modifier submittedNotCompleted(uint256 idInArray) {
+        if (!milestones[idInArray].submitted) {
+            revert MilestoneNotSubmitted();
+        }
+        if(milestones[idInArray].completed){
+            revert MilestoneCompleted();
+        }
+        _;
+    }
+
     //++++++++++++++++++++++++++++++++++++++++++ CONSTRUCTOR ++++++++++++++++++++++++++++++++++++++++++
 
     constructor() {}
@@ -86,7 +104,8 @@ contract MilestoneModule is Module {
     ///@notice insitializes the MilestoneModule
     ///@dev Removed initializer because the underlying __Module_init() is initializer
     ///@param proposal : The proposal that should be linked to this module
-    function initialize(IProposal proposal) external {//@note Removed initializer because underlying __Module_init() is initializer
+    function initialize(IProposal proposal) external {
+        //@note Removed initializer because underlying __Module_init() is initializer
         __Module_init(proposal);
         //@todo set GovernanceModule
         //@todo Set PayableModule
@@ -94,7 +113,6 @@ contract MilestoneModule is Module {
 
     //++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS ++++++++++++++++++++++++++++++++++++++++++
 
-    
     ///@dev Adds a milestone to the milestone array
     ///@param identifier : the identifier for the new milestone
     ///@param startDate : the startDate of the new milestone
@@ -129,7 +147,7 @@ contract MilestoneModule is Module {
         string memory details
     ) external ownerAccess returns (uint256 id) {
         _triggerProposalCallback(
-            abi.encodeWithSignature( //@todo //@note return value?
+            abi.encodeWithSignature( //@todo Felix : return value? //@todo Felix : Testing needed
                 "__Milestone_addMilestone(uint256,uint256,uint256,string)",
                 identifier,
                 startDate,
@@ -182,7 +200,7 @@ contract MilestoneModule is Module {
         string memory details
     ) external ownerAccess plausableIdInArray(idInArray) {
         _triggerProposalCallback(
-            abi.encodeWithSignature( //@todo @note is this correct? @note string correct encoded?
+            abi.encodeWithSignature(
                 "__Milestone_changeMilestone(uint256,uint256,uint256,string)",
                 idInArray,
                 startDate,
@@ -193,14 +211,11 @@ contract MilestoneModule is Module {
         );
     }
 
-
     ///@dev Unordered removal of the milestone from the milestone array
-    ///@param idInArray : id in the milestone array 
-    function __Milestone_removeMilestone(uint256 idInArray) //@note There might be a point made to increase the level of interaction required to remove a milestone
-        external
-        onlyProposal
-    {
-        //@todo Require correct inputs
+    ///@param idInArray : id in the milestone array
+    function __Milestone_removeMilestone(
+        uint256 idInArray //@note There might be a point made to increase the level of interaction required to remove a milestone
+    ) external onlyProposal plausableIdInArray(idInArray) {
         uint256 IdToRemove = milestones[idInArray].identifier;
         milestones[idInArray] = milestones[milestones.length - 1];
         milestones.pop();
@@ -210,14 +225,10 @@ contract MilestoneModule is Module {
 
     ///@notice Unordered removal of the milestone from the milestone array
     ///@dev Relay Function that routes the function call via the proposal
-    ///@param idInArray : id in the milestone array 
-    function removeMilestone(uint256 idInArray)
-        external
-        ownerAccess
-        plausableIdInArray(idInArray)
-    {
+    ///@param idInArray : id in the milestone array
+    function removeMilestone(uint256 idInArray) external ownerAccess {
         _triggerProposalCallback(
-            abi.encodeWithSignature( //@todo @note is this correct?
+            abi.encodeWithSignature(
                 "__Milestone_removeMilestone(uint256)",
                 idInArray
             ),
@@ -226,13 +237,13 @@ contract MilestoneModule is Module {
     }
 
     ///@dev Submit a milestone
-    ///@param idInArray : id in the milestone array 
+    ///@param idInArray : id in the milestone array
     function __Milestone_submitMilestone(uint256 idInArray)
         external
         onlyProposal
+        plausableIdInArray(idInArray)
+        submittedNotCompleted(idInArray)
     {
-        //@todo Require correct inputs
-        //@todo Require Milestone not already submitted or confirmed
         Milestone storage milestone = milestones[idInArray];
         milestone.submitted = true;
 
@@ -241,14 +252,10 @@ contract MilestoneModule is Module {
 
     ///@notice Submit a milestone
     ///@dev Relay Function that routes the function call via the proposal
-    ///@param idInArray : id in the milestone array 
-    function submitMilestone(uint256 idInArray)
-        external
-        contributorAccess
-        plausableIdInArray(idInArray)
-    {
+    ///@param idInArray : id in the milestone array
+    function submitMilestone(uint256 idInArray) external contributorAccess {
         _triggerProposalCallback(
-            abi.encodeWithSignature( //@todo @note is this correct?
+            abi.encodeWithSignature(
                 "__Milestone_submitMilestone(uint256)",
                 idInArray
             ),
@@ -257,17 +264,19 @@ contract MilestoneModule is Module {
     }
 
     ///@dev Confirms a submitted milestone
-    ///@param idInArray : id in the milestone array 
+    ///@param idInArray : id in the milestone array
     function __Milestone_confirmMilestone(uint256 idInArray)
         external
         onlyProposal
+        plausableIdInArray(idInArray)
+        submittedNotCompleted(idInArray)
     {
-        //@todo Require Milestone Submitted & not confirmed
         Milestone storage milestone = milestones[idInArray];
         milestone.completed = true;
 
         //milestone.submitted = true; //@note Change this to false?
 
+        //@note Maybe move the milestone to a seperate array as mark of completion?
         //@todo add Payment
 
         emit ConfirmMilestone(milestone.identifier);
@@ -275,14 +284,10 @@ contract MilestoneModule is Module {
 
     ///@notice Confirms a submitted milestone
     ///@dev Relay Function that routes the function call via the proposal
-    ///@param idInArray : id in the milestone array 
-    function confirmMilestone(uint256 idInArray)
-        external
-        ownerAccess
-        plausableIdInArray(idInArray)
-    {
+    ///@param idInArray : id in the milestone array
+    function confirmMilestone(uint256 idInArray) external ownerAccess {
         _triggerProposalCallback(
-            abi.encodeWithSignature( //@todo @note is this correct?
+            abi.encodeWithSignature(
                 "__Milestone_confirmMilestone(uint256)",
                 idInArray
             ),
@@ -291,12 +296,14 @@ contract MilestoneModule is Module {
     }
 
     ///@dev Declines a submitted milestone
-    ///@param idInArray : id in the milestone array 
+    ///@param idInArray : id in the milestone array
     function __Milestone_declineMilestone(uint256 idInArray)
         external
         onlyProposal
+        plausableIdInArray(idInArray)
+        submittedNotCompleted(idInArray)
+
     {
-        //@todo Require Milestone Submitted & not confirmed
         Milestone storage milestone = milestones[idInArray];
         milestone.submitted = false;
 
@@ -305,12 +312,8 @@ contract MilestoneModule is Module {
 
     ///@notice Declines a submitted milestone
     ///@dev Relay Function that routes the function call via the proposal
-    ///@param idInArray : id in the milestone array 
-    function declineMilestone(uint256 idInArray)
-        external
-        ownerAccess
-        plausableIdInArray(idInArray)
-    {
+    ///@param idInArray : id in the milestone array
+    function declineMilestone(uint256 idInArray) external ownerAccess {
         _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__Milestone_declineMilestone(uint256)",
