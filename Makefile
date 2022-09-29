@@ -42,10 +42,8 @@ testProposal: ## Run Proposal tests
 # Static Analyzers
 
 .PHONY: analyze-slither
-analyze-slither: ## Run slither analyzer against project (requires solc-select)
-	@solc-select install 0.8.10
-	@solc-select use 0.8.10
-	@slither src
+analyze-slither: ## Run slither analyzer against project
+	@slither .
 
 .PHONY: analyze-c4udit
 analyze-c4udit: ## Run c4udit analyzer against project
