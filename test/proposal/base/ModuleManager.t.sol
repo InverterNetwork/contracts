@@ -16,6 +16,9 @@ contract ModuleManagerTest is ProposalBaseTest {
         // assertTrue(!proposal.isEnabledModule(SENTINEL_MODULE));
     }
 
+    // @todo mp: Refactor all tests to use ModuleManagerMock.
+    //           Then also add testReinitilizationFails test!
+
     function testInitialization(
         uint proposalId,
         address[] memory funders,

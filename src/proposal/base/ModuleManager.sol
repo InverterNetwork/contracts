@@ -48,6 +48,7 @@ contract ModuleManager is IModuleManager {
     // Internal Functions
 
     function __ModuleManager_init(address[] calldata modules) internal {
+        // @todo mp: Refactor to use onlyInitializing modifier.
         if (_modules[SENTINEL_MODULE]) {
             revert Proposal__ModuleManager__AlreadyInitialized();
         }
