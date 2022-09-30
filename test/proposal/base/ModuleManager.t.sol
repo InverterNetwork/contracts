@@ -5,12 +5,14 @@ import "forge-std/Test.sol";
 
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
-import {OZErrors} from "test/proposal/helper/OZErrors.sol";
 
 // Mocks
 import {ModuleManagerMock} from
     "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 /**
  * Errors library for ModuleManager's custom errors.
@@ -201,7 +203,9 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager.revokeRole(role, account);
     }
 
-    function testRenounceRole(address module, bytes32 role, address account) public {
+    function testRenounceRole(address module, bytes32 role, address account)
+        public
+    {
         _assumeValidModule(module);
 
         address[] memory modules = new address[](1);
@@ -217,7 +221,11 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         assertTrue(!moduleManager.hasRole(module, role, account));
     }
 
-    function testRolesDisabledIfModuleDisabled(address module, bytes32 role, address account) public {
+    function testRolesDisabledIfModuleDisabled(
+        address module,
+        bytes32 role,
+        address account
+    ) public {
         _assumeValidModule(module);
 
         address[] memory modules = new address[](1);

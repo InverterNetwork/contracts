@@ -11,10 +11,12 @@ import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
-import {OZErrors} from "test/proposal/helper/OZErrors.sol";
 
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 /**
  * Errors library for Proposal's custom errors.
