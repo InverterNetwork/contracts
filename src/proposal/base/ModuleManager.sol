@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Internal Dependencies
@@ -14,25 +15,28 @@ import {IModuleManager} from "src/interfaces/IModuleManager.sol";
  * @title ModuleManager
  *
  * @dev A contract to manage modules that can execute transactions via this
- *      contract.
+ *      contract and manage own role-based access control mechanisms.
  *
  *      Note that modules can only be enabled during the initialization of the
  *      contract. It is, however, always possible to disable modules.
  *
- *      Copied and modified from Gnosis Safe.
+ *      The role-based access control mechanism is based on OpenZeppelin's
+ *      AccessControl contract. Each module has it's own access control context
+ *      which it is able to freely manage.
+
+ *      The transaction execution and module management is copied from Gnosis
+ *      Safe.
  *
- * @author Stefan George - <stefan@gnosis.pm>
- * @author Richard Meissner - <richard@gnosis.pm>
  * @author byterocket
  */
-contract ModuleManager is IModuleManager, Initializable {
+contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
 
     /// @notice Modifier to guarantee function is only callable by enabled
     ///         module.
     modifier onlyModule() {
-        if (!isEnabledModule(msg.sender)) {
+        if (!isEnabledModule(_msgSender())) {
             revert Proposal__ModuleManager__OnlyCallableByModule();
         }
         _;
@@ -42,7 +46,20 @@ contract ModuleManager is IModuleManager, Initializable {
     // Storage
 
     /// @dev Mapping of modules.
+    ///
+    /// @custom:invariant No modules added after initialization.
     mapping(address => bool) private _modules;
+
+    /// @dev Mapping of modules and access control roles to accounts and
+    ///      whether they holds that role.
+    /// @dev module address => role => account address => bool.
+    ///
+    /// @custom:invariant Modules can only mutate own account roles.
+    /// @custom:invariant Only modules can mutate not own account roles.
+    /// @custom:invariant Account can always renounce own roles.
+    /// @custom:invariant Roles only exist for enabled modules.
+    mapping(address => mapping(bytes32 => mapping(address => bool))) private
+        _moduleRoles;
 
     //--------------------------------------------------------------------------
     // Internal Functions
@@ -51,6 +68,8 @@ contract ModuleManager is IModuleManager, Initializable {
         internal
         onlyInitializing
     {
+        __Context_init();
+
         address module;
         for (uint i; i < modules.length; i++) {
             module = modules[i];
@@ -82,7 +101,7 @@ contract ModuleManager is IModuleManager, Initializable {
     }
 
     //--------------------------------------------------------------------------
-    // Public Functions
+    // onlyModule Functions
 
     /// @inheritdoc IModuleManager
     function executeTxFromModule(
@@ -104,6 +123,45 @@ contract ModuleManager is IModuleManager, Initializable {
         } else {
             revert Proposal__ModuleManager__ExecuteTxFromModuleFailed();
         }
+    }
+
+    /// @inheritdoc IModuleManager
+    function grantRole(bytes32 role, address account) public onlyModule {
+        if (!hasRole(_msgSender(), role, account)) {
+            _moduleRoles[_msgSender()][role][account] = true;
+            emit ModuleRoleGranted(_msgSender(), role, account);
+        }
+    }
+
+    /// @inheritdoc IModuleManager
+    function revokeRole(bytes32 role, address account) public onlyModule {
+        if (hasRole(_msgSender(), role, account)) {
+            _moduleRoles[_msgSender()][role][account] = false;
+            emit ModuleRoleRevoked(_msgSender(), role, account);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Public Mutating Functions
+
+    /// @inheritdoc IModuleManager
+    function renounceRole(address module, bytes32 role) public {
+        if (hasRole(module, role, _msgSender())) {
+            _moduleRoles[module][role][_msgSender()] = false;
+            emit ModuleRoleRevoked(module, role, _msgSender());
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Public View Functions
+
+    /// @inheritdoc IModuleManager
+    function hasRole(address module, bytes32 role, address account)
+        public
+        view
+        returns (bool)
+    {
+        return isEnabledModule(module) && _moduleRoles[module][role][account];
     }
 
     // @todo mp: Getter for modules.
