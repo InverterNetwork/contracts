@@ -47,6 +47,15 @@ testModule: ## Run Module tests
 	@forge test -vvv --match-contract "Module" --no-match-contract "Manager"
 
 # -----------------------------------------------------------------------------
+# Property-Based Tests
+
+CRYTIC_ARGS = --crytic-args "--compile-force-framework foundry"
+
+.PHONY: ptestModule
+ptestModule: ## Run Module property-based tests (requires echidna)
+	@echidna-test . --contract "ModuleInvariants" $(CRYTIC_ARGS)
+
+# -----------------------------------------------------------------------------
 # Static Analyzers
 
 .PHONY: analyze-slither

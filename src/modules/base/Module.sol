@@ -94,6 +94,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     function __Module_init(IProposal proposal_) internal onlyInitializing {
         __Pausable_init();
 
+        // @todo mp: Disallow address(this)?
         if (address(proposal_) == address(0)) {
             revert Module__InvalidProposalAddress();
         }
@@ -126,6 +127,10 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @inheritdoc IModule
     function pause() external override (IModule) onlyAuthorized {
+        // @audit @todo WARNING
+        // Added the following statement to make enchidna fail.
+        // Be sure to remove it again ;)
+        __Module_proposal = IProposal(address(1));
         _triggerProposalCallback(
             abi.encodeWithSignature("__Module_pause()"), Types.Operation.Call
         );
