@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+/**
+ * @dev Library providing error types for OpenZeppelin contracts.
+ */
 library OZErrors {
     // Contract: Initializable
     bytes public constant Initializable__NotInitializing =
