@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// Internal Interfaces
+import {IProposal} from "src/interfaces/IProposal.sol";
+
 interface IModule {
     //--------------------------------------------------------------------------
     // Errors
@@ -19,6 +22,10 @@ interface IModule {
 
     //--------------------------------------------------------------------------
     // Functions
+
+    /// @notice Returns the module's {IProposal} proposal instance.
+    /// @return The module's proposal.
+    function proposal() external view returns (IProposal);
 
     /// @notice Pauses the module.
     /// @dev Only callable by authorized addresses.

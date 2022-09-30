@@ -34,7 +34,7 @@ library Errors {
 }
 
 contract ProposalTest is Test, FuzzInputChecker {
-    // SuT.
+    // SuT
     Proposal proposal;
 
     // Mocks
@@ -45,6 +45,9 @@ contract ProposalTest is Test, FuzzInputChecker {
 
         proposal = new Proposal();
     }
+
+    //--------------------------------------------------------------------------
+    // Tests: Initialization
 
     function testInitialization(
         uint proposalId,
@@ -98,9 +101,15 @@ contract ProposalTest is Test, FuzzInputChecker {
         proposal.initialize(proposalId, funders, modules, authorizer);
     }
 
+    //--------------------------------------------------------------------------
+    // Tests: Transaction Execution
+
     function testExecuteTx() public {
         // @todo mp: Add Proposal::executeTx tests.
     }
+
+    //--------------------------------------------------------------------------
+    // Tests: Other
 
     function testVersion() public {
         assertEq(proposal.version(), "1");

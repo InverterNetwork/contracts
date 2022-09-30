@@ -3,10 +3,16 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+// Internal Interfaces
+import {IProposal} from "src/interfaces/IProposal.sol";
+
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 /**
  * Errors library for Module's custom errors.
@@ -27,7 +33,7 @@ library Errors {
 }
 
 contract ModuleTest is Test {
-    // SuT.
+    // SuT
     ModuleMock module;
 
     // Mocks
@@ -36,10 +42,69 @@ contract ModuleTest is Test {
 
     function setUp() public {
         authorizer = new AuthorizerMock();
+        authorizer.setAllAuthorized(true);
+
         proposal = new ProposalMock(authorizer);
 
         module = new ModuleMock();
+        module.init(proposal);
+
+        // Initialize proposal to enable module.
+        address[] memory modules = new address[](1);
+        modules[0] = address(module);
+        proposal.init(modules);
     }
 
-    function testLol() public {}
+    //--------------------------------------------------------------------------
+    // Tests: Initialization
+
+    function testInitialization() public {
+        module = new ModuleMock();
+
+        module.init(proposal);
+
+        assertEq(address(module.proposal()), address(proposal));
+    }
+
+    function testInitilizationFailsForInvalidProposal() public {
+        module = new ModuleMock();
+
+        vm.expectRevert(Errors.Module__InvalidProposalAddress);
+        module.init(IProposal(address(0)));
+    }
+
+    function testInitilizationFailsForNonInitializerFunction() public {
+        module = new ModuleMock();
+
+        vm.expectRevert(OZErrors.Initializable__NotInitializing);
+        module.initNoInitializer(proposal);
+    }
+
+    //--------------------------------------------------------------------------
+    // Tests: (Un)Pause Functionality
+
+    function testPause() public {
+        module.pause();
+        assertTrue(module.paused());
+    }
+
+    function testUnpause() public {
+        module.pause();
+        module.unpause();
+        assertTrue(!module.paused());
+    }
+
+    function testPauseIsAuthenticated() public {
+        authorizer.setAllAuthorized(false);
+
+        vm.expectRevert(Errors.Module__CallerNotAuthorized);
+        module.pause();
+    }
+
+    function testUnpauseIsAuthenticated() public {
+        authorizer.setAllAuthorized(false);
+
+        vm.expectRevert(Errors.Module__CallerNotAuthorized);
+        module.unpause();
+    }
 }
