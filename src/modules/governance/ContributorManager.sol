@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
+import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Interfaces
@@ -17,9 +18,11 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 * and keeps a list of active contributors in the style of the Gnosis Safe 
 * OwnerManager (https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol) 
 * 
-* Each contributor can only be included in the registry once, but since the 
-* role is saved as bytes32, several roles can be specified (and a combined
-* salary stored)
+* Along each contributor address, the contract stores a salary and a role. This 
+* role is NOT intended for access control, but for offchain retrieval of team 
+* assignement or similar information.
+*
+* Each active contributor is only represented once.
 *   
 */
 
@@ -33,7 +36,7 @@ contract ContributorManager is Module {
     /// @notice The supplied contributor address is not valid
     error Module__invalidContributorAddress();
 
-    /// @notice The supplied contributor information is not valid.
+    /// @notice The supplied contributor details are not valid.
     error Module__invalidContributorInformation();
 
     /// @notice The supplied contributor is already active
@@ -56,19 +59,22 @@ contract ContributorManager is Module {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @notice Struct saving relevant contributor Information
     struct Contributor {
-        bool active;
         bytes32 role;
         uint salary;
     }
-
-    //for retrieval.
-    address internal constant SENTINEL_CONTRIBUTORS = address(0x1);
-
     mapping(address => Contributor) internal contributorRegistry;
 
-    // mapping of active contributors.
+    /// @notice Mapping of active contributors. Every address points to the 
+    ///         last one added before them.
+    ///         activeContributors[SENTINEL_CONTRIBUTORS] points to the last
+    ///         added address, to aid retrieval.
+    ///         The first added address points to SENTINEL_CONTRIBUTORS to 
+    //          signal end of list 
     mapping(address => address) internal activeContributors;
+    address internal constant SENTINEL_CONTRIBUTORS = address(0x1);
+
     uint internal contributorCount;
 
 
@@ -86,17 +92,21 @@ contract ContributorManager is Module {
         activeContributors[SENTINEL_CONTRIBUTORS] = SENTINEL_CONTRIBUTORS;
         
     }
-
-
+    
     /// @notice Registers a new contributor and adds them to the list of active 
     ///         contributors.
-    function addContributor(address _who, bytes32 _role, uint _salary) external onlyAuthorized{
+    /// @param _who :   the contributor to be removed 
+    /// @param _role:   the role assigned to the contributor
+    /// @param _salary: the salary the assigned to the contributor. To be spe-  
+    ///                 cified in a format already including the decimals of 
+    ///                 the payout token. 
+    function __Contributor_addContributor(address _who, bytes32 _role, uint _salary) external onlyProposal {
 
         //require address is not 0, the sentinel or the module itself
         if(_who == address(0) || _who == SENTINEL_CONTRIBUTORS || _who == address(this)) {
             revert Module__invalidContributorAddress();
         }
-        //require role is not empty
+        //require role and salary are not empty
         if(_role == bytes32(0) || _salary == 0){
             revert Module__invalidContributorInformation();
         }
@@ -108,7 +118,6 @@ contract ContributorManager is Module {
 
         //initialize contributorRegistry[address] with contributor
         Contributor memory _contributor;
-        _contributor.active = true;
         _contributor.role = _role;
         _contributor.salary= _salary;
         
@@ -123,12 +132,38 @@ contract ContributorManager is Module {
         emit contributorAdded(_who, _role, _salary);
 
     }
+    
+    /// @notice Registers a new contributor and adds them to the list of active 
+    ///         contributors.
+    /// @dev    Relay Function that routes the function call via the proposal
+    /// @param _who :   the contributor to be removed 
+    /// @param _role:   the role assigned to the contributor
+    /// @param _salary: the salary the assigned to the contributor. To be spe-  
+    ///                 cified in a format already including the decimals of 
+    ///                 the payout token. 
+    function addContributor(address _who, bytes32 _role, uint _salary) external onlyAuthorized {
+
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Contributor_addContributor(address,bytes32,uint)",
+                _who,
+                _role,
+                _salary
+            ),
+            Types.Operation.Call
+        );
+    }
+
+
 
     /// @notice Removes a contributor from the registry and from the list of 
     ///         active contributors. If the contributor to delete is the first
     ///         on the list, _prevContrib should be address(0x1), the sentinel.
-    function removeContributor(address _who, address _prevContrib) external onlyAuthorized{
-        //require that address is not 0
+    ///@param _who : the contributor to be removed 
+    ///@param _prevContrib : the contributor situated previously in the list 
+    function __Contributor_removeContributor(address _who, address _prevContrib) external onlyProposal {
+
+         //require that address is not 0, the sentinel or the module itself
         if(_who == address(0) || _who == SENTINEL_CONTRIBUTORS || _who == address(this)) {
             revert Module__invalidContributorAddress();
         }
@@ -137,10 +172,11 @@ contract ContributorManager is Module {
             revert Module__invalidContributorAddress();
         }
 
-        //mark the contributor as inactive in the contributorRegistry
-        contributorRegistry[_who].active = false;
+        //remove contributor information from registry 
+        contributorRegistry[_who].role = "";
+        contributorRegistry[_who].salary = 0;
 
-        //remove address from active contributors (gnosis-safe)
+        //remove address from active contributors list
         activeContributors[_prevContrib] = activeContributors[_who];
         activeContributors[_who] = address(0);
         contributorCount--;
@@ -149,12 +185,34 @@ contract ContributorManager is Module {
         emit contributorRemoved(_who, contributorRegistry[_who].role, contributorRegistry[_who].salary);
 
 
+    }
+
+    /// @notice Removes a contributor from the registry and from the list of 
+    ///         active contributors. If the contributor to delete is the first
+    ///         on the list, _prevContrib should be address(0x1), the sentinel.
+    ///@dev     Relay Function that routes the function call via the proposal
+    ///@param _who : the contributor to be removed 
+    ///@param _prevContrib : the contributor situated previously in the list 
+    function removeContributor(address _who, address _prevContrib) external onlyAuthorized{
+
+        /// @question   Maybe _prevContrib should be determined internally here
+        ///             and then sent in the call?
+
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Contributor_removeContributor(address,address)",
+                _who,
+                _prevContrib
+            ),
+            Types.Operation.Call
+        );       
+
 
     }
 
     /// @notice Returns registry information about a specifc contributor    
     function getContributorInformation(address _who) external view returns(bytes32, uint) {
-        //require contributor is active
+        //require that the contributor is currently active
         if( ! isActiveContributor(_who) ){
             revert Module__contributorNotActive();
         }
@@ -163,11 +221,14 @@ contract ContributorManager is Module {
         
     }
 
+    /// @notice Returns if a specified contributor is currently active
     function isActiveContributor(address _who) public view returns (bool) {
         return _who != SENTINEL_CONTRIBUTORS && activeContributors[_who] != address(0);
     }
         
-    /// @notice Returns an array with the addresses of all active contributors
+    /// @notice Returns an array with the addresses of all active contributors,
+    ///         beginning with the last one added to the list and traversing
+    ///         it in order.
     function listActiveContributors() external view returns(address[] memory){
         //return all active contributors as an array of addresses (gnosis-safe)
         address[] memory array = new address[](contributorCount);
