@@ -13,4 +13,8 @@ contract ModuleManagerMock is ModuleManager {
     function reinit(address[] calldata modules) external {
         __ModuleManager_init(modules);
     }
+
+    function disableModule(address module) external {
+        __ModuleManager_disableModule(module);
+    }
 }
