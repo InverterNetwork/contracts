@@ -45,7 +45,7 @@ library Errors {
 }
 
 contract ModuleManagerTest is Test, FuzzInputChecker {
-    // SuT.
+    // SuT
     ModuleManagerMock moduleManager;
 
     function setUp() public {

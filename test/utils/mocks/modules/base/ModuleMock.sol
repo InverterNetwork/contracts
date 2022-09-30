@@ -8,7 +8,12 @@ import {Module} from "src/modules/base/Module.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
 contract ModuleMock is Module {
-    function init(IProposal proposal) external initializer {
-        __Module_init(proposal);
+    function init(IProposal proposal_) external initializer {
+        __Module_init(proposal_);
+    }
+
+    // Note that the `initializer` modifier is missing.
+    function initNoInitializer(IProposal proposal_) external {
+        __Module_init(proposal_);
     }
 }

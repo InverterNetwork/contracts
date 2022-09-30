@@ -32,7 +32,8 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     // Variables are prefixed with `__Module_`.
 
     /// @dev The module's proposal instance.
-    /// @dev Set during initialization and MUST NOT ever be mutated!
+    ///
+    /// @custom:invariant Not mutated after initialization.
     IProposal internal __Module_proposal;
 
     //--------------------------------------------------------------------------
@@ -44,7 +45,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     ///      from the proposal via the `triggerProposalCallback()` function.
     modifier onlyAuthorized() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
-        if (!authorizer.isAuthorized(msg.sender)) {
+        if (!authorizer.isAuthorized(_msgSender())) {
             revert Module__CallerNotAuthorized();
         }
         _;
@@ -55,7 +56,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     ///      `__Module_` variables.
     /// @dev Note to use function prefix `__Module_`.
     modifier onlyProposal() {
-        if (msg.sender != address(__Module_proposal)) {
+        if (_msgSender() != address(__Module_proposal)) {
             revert Module__OnlyCallableByProposal();
         }
         _;
@@ -89,14 +90,14 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @dev The initialization function MUST be called by the upstream
     ///      contract in their `initialize()` function.
-    /// @param proposal The module's proposal.
-    function __Module_init(IProposal proposal) internal onlyInitializing {
+    /// @param proposal_ The module's proposal.
+    function __Module_init(IProposal proposal_) internal onlyInitializing {
         __Pausable_init();
 
-        if (address(proposal) == address(0)) {
+        if (address(proposal_) == address(0)) {
             revert Module__InvalidProposalAddress();
         }
-        __Module_proposal = proposal;
+        __Module_proposal = proposal_;
     }
 
     // @todo mp: Need version function (Issue 24)
@@ -135,6 +136,14 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
         _triggerProposalCallback(
             abi.encodeWithSignature("__Module_unpause()"), Types.Operation.Call
         );
+    }
+
+    //--------------------------------------------------------------------------
+    // Public View Functions
+
+    /// @inheritdoc IModule
+    function proposal() external view returns (IProposal) {
+        return __Module_proposal;
     }
 
     //--------------------------------------------------------------------------
