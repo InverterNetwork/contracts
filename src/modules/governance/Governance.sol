@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
+import {Types} from "src/common/Types.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Module} from "src/modules/base/Module.sol";
 
@@ -40,7 +41,8 @@ contract Governance is IAuthorizer, Module{
     // Storage
 
     /// @dev Mapping of authorized addresses
-    mapping(address => bool) private _authorized;
+    mapping(address => bool) private authorized;
+    uint amountAuthorized;
 
 
     //--------------------------------------------------------------------------
@@ -52,40 +54,42 @@ contract Governance is IAuthorizer, Module{
 
     /// @notice Returns whether an address is authorized to facilitate
     ///         the current transaction.
-    function isAuthorized(address who) external override view returns (bool) {
-        return _authorized[who];
+    function isAuthorized(address _who) external override view returns (bool) {
+        return authorized[_who];
     }
 
     /// @notice Adds a new address to the list of authorized addresses.
-    function addToAuthorized(address who) external onlyAuthorized {
+    function addToAuthorized(address _who) external onlyAuthorized {
         
-        require(!_authorized[who], "Address already authorized");
+        require(!authorized[_who], "Address already authorized");
         
-        _authorized[who] = true;
+        authorized[_who] = true;
+        amountAuthorized++;
         
-        emit AddedAuthorizedAddress(who);
+        emit AddedAuthorizedAddress(_who);
     }
 
     /// @notice Removes an address from the list of authorized addresses.
-    function removeFromAuthorized(address who) external onlyAuthorized {
+    function removeFromAuthorized(address _who) external onlyAuthorized {
         
         //Added the "already" to error message to avoid confusion regarding access control errors
-        require(_authorized[who], "Address already not authorized");
+        require(authorized[_who], "Address already not authorized");
         
-        _authorized[who] = false;
+        authorized[_who] = false;
+        amountAuthorized--;
         
-        emit RemovedAuthorizedAddress(who);
+        emit RemovedAuthorizedAddress(_who);
     }
 
     /// @notice Transfers authorization from the calling address to a new one.
-    function transferAuthorization(address who) external onlyAuthorized {
+    function transferAuthorization(address _who) external onlyAuthorized {
 
-        require(!_authorized[who], "Address already authorized");
+        require(!authorized[_who], "Address already authorized");
 
-        _authorized[who] = true;
-        _authorized[_msgSender()]=false;
+        authorized[_who] = true;
+        authorized[_msgSender()]=false;
 
-        emit AddedAuthorizedAddress(who);
+        emit AddedAuthorizedAddress(_who);
         emit RemovedAuthorizedAddress(_msgSender());
     }
 
@@ -95,4 +99,119 @@ contract Governance is IAuthorizer, Module{
         confirmAction(action) - Confirms a queued action that has been initiated by another authorized address. It automatically executes the action if the quorum has been reached.
         cancelAction(action)
     */
+
+    /// @notice This is the part that maybe could be "delegated" to the calling
+    ///         addresses, i.e Gnosis Safe, Aragon DAO, etc.
+    
+
+    event QuorumModified(uint newQuorum);
+    
+    error Module__alreadyVoted(address who);
+    error Module__voteNotActive(uint voteID);
+    error Module__quorumIsZero();
+    error Module_quorumUnreachable();
+
+    struct Vote {
+        bool isActive;
+        bytes encodedAction;
+        mapping(address => bool) hasVoted;
+        uint aye;
+        uint nay;
+
+    }
+    
+    mapping(uint => Vote ) voteRegistry;
+    uint voteIDCounter;
+
+    uint8 quorum;
+
+    function requiredQuorum() external view returns(uint8){
+        return quorum;
+    }
+
+    function changeQuorum(uint8 _new) external onlyAuthorized {
+        if(_new == 0){
+            revert Module__quorumIsZero();
+        }
+        if(_new > amountAuthorized){
+            revert Module_quorumUnreachable();
+        }
+
+        quorum = _new;
+
+        emit QuorumModified(_new);
+
+    }
+
+    function createVote(bytes calldata _encodedAction) external onlyAuthorized{
+        voteRegistry[voteIDCounter].isActive = true;
+        voteRegistry[voteIDCounter].encodedAction = _encodedAction;
+
+        voteIDCounter++;
+
+        
+    }
+
+    function confirmAction(uint _voteID) external onlyAuthorized{
+        // Ensure that the vote is active (and exists)
+        if(! voteRegistry[_voteID].isActive ){
+            revert Module__voteNotActive(_voteID);
+        }
+
+        // Ensure voter hasn't voted yet
+        if(voteRegistry[_voteID].hasVoted[_msgSender()]){
+            revert Module__alreadyVoted(_msgSender());
+        }
+
+
+        voteRegistry[_voteID].hasVoted[_msgSender()] = true;
+        voteRegistry[_voteID].aye++;
+        
+
+        // If enough confirmations happened, execute vote
+        if(voteRegistry[_voteID].aye >= quorum){
+            executeVote(_voteID);
+        }
+
+    }
+
+    function cancelAction(uint _voteID) external onlyAuthorized{
+        // Ensure that the vote is active (and exists)
+        if(! voteRegistry[_voteID].isActive ){
+            revert Module__voteNotActive(_voteID);
+        }
+
+        // Ensure voter hasn't voted yet
+        if(voteRegistry[_voteID].hasVoted[_msgSender()]){
+            revert Module__alreadyVoted(_msgSender());
+        }
+
+        voteRegistry[_voteID].hasVoted[_msgSender()] = true;
+        voteRegistry[_voteID].nay++;
+        
+        // If enough denials happened, cancel vote
+        if(voteRegistry[_voteID].nay >= quorum){
+            voteRegistry[_voteID].isActive= false;
+        }
+
+    }
+
+
+    function executeVote(uint _voteID) internal{
+        // Ensure that the vote is active (and exists)
+        if(! voteRegistry[_voteID].isActive ){
+            revert Module__voteNotActive(_voteID);
+        }
+        
+        // Deactivate the vote
+        voteRegistry[_voteID].isActive= false;
+
+
+        // execute stuff? should this override _triggerProposalCallback
+        // and call voteRegistry[_voteID].encodedAction with a custom address
+        // from another module as caller?
+
+
+    }
+
 }
