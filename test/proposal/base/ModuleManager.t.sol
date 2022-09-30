@@ -50,6 +50,11 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager = new ModuleManagerMock();
     }
 
+    // @todo mp: Event emission tests missing.
+
+    //--------------------------------------------------------------------------
+    // Tests: Initialization
+
     function testInitialization(address[] memory modules) public {
         _assumeValidModules(modules);
 
@@ -101,7 +106,99 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager.reinit(modules);
     }
 
+    //--------------------------------------------------------------------------
+    // Tests: Transaction Execution
+
     function testExecuteTxFromModule() public {
         // @todo mp: Add ModuleManager::executeTxFromModule tests.
+    }
+
+    //--------------------------------------------------------------------------
+    // Tests: Module Access Control
+
+    function testGrantRole(address module, bytes32 role, address account)
+        public
+    {
+        _assumeValidModule(module);
+
+        address[] memory modules = new address[](1);
+        modules[0] = module;
+        moduleManager.init(modules);
+
+        vm.prank(module);
+        moduleManager.grantRole(role, account);
+
+        assertTrue(moduleManager.hasRole(module, role, account));
+    }
+
+    function testGrantRoleFailsIfCallerNotModule(
+        address caller,
+        address module,
+        bytes32 role,
+        address account
+    ) public {
+        _assumeValidModule(module);
+        vm.assume(caller != module);
+
+        address[] memory modules = new address[](1);
+        modules[0] = module;
+        moduleManager.init(modules);
+
+        vm.prank(caller);
+        vm.expectRevert(Errors.Proposal__ModuleManager__OnlyCallableByModule);
+        moduleManager.grantRole(role, account);
+    }
+
+    function testRevokeRole(address module, bytes32 role, address account)
+        public
+    {
+        _assumeValidModule(module);
+
+        address[] memory modules = new address[](1);
+        modules[0] = module;
+        moduleManager.init(modules);
+
+        vm.startPrank(module);
+        {
+            moduleManager.grantRole(role, account);
+            moduleManager.revokeRole(role, account);
+        }
+        vm.stopPrank();
+
+        assertTrue(!moduleManager.hasRole(module, role, account));
+    }
+
+    function testRevokeRoleFailsIfCallerNotModule(
+        address caller,
+        address module,
+        bytes32 role,
+        address account
+    ) public {
+        _assumeValidModule(module);
+        vm.assume(caller != module);
+
+        address[] memory modules = new address[](1);
+        modules[0] = module;
+        moduleManager.init(modules);
+
+        vm.prank(caller);
+        vm.expectRevert(Errors.Proposal__ModuleManager__OnlyCallableByModule);
+        moduleManager.revokeRole(role, account);
+    }
+
+    function testRenounceRole(address module, bytes32 role, address account) public {
+        _assumeValidModule(module);
+
+        address[] memory modules = new address[](1);
+        modules[0] = module;
+        moduleManager.init(modules);
+
+        vm.prank(module);
+        moduleManager.grantRole(role, account);
+
+        vm.prank(account);
+        moduleManager.renounceRole(module, role);
+
+        assertTrue(!moduleManager.hasRole(module, role, account));
     }
 }
