@@ -19,6 +19,9 @@ error MilestoneCompleted();
 contract MilestoneModule is Module {
     //++++++++++++++++++++++++++++++++++++++++++ STRUCTS ++++++++++++++++++++++++++++++++++++++++++
 
+    // @audit For each user-defined struct field, create an `validXX` modifier,
+    //        e.g. `validIdentifier()` and corresponding error type.
+    //        Example: https://github.com/byterocket/kolektivo-contracts/blob/main/src/GeoNFT.sol#L69
     struct Milestone {
         uint256 identifier; //@note Could go with a name/hash
         uint256 startDate;
@@ -28,8 +31,19 @@ contract MilestoneModule is Module {
         bool completed;
     }
 
+    // Example modifier.
+    modifier validDetails(string memory details) {
+        if (bytes(details).length != 0) {
+            revert Milesonte_InvalidDetails();
+        }
+        _;
+    }
+
     //++++++++++++++++++++++++++++++++++++++++++ STATE ++++++++++++++++++++++++++++++++++++++++++
 
+    // @audit Why use a list instead of mapping(identifier => Milestone)?
+    //        This way the idInArray becomes the effective identifier,
+    //        blurring the identifier's semantic meaning.
     Milestone[] public milestones;
 
     //++++++++++++++++++++++++++++++++++++++++++ EVENTS ++++++++++++++++++++++++++++++++++++++++++
@@ -50,6 +64,7 @@ contract MilestoneModule is Module {
         string details
     );
 
+    // @audit Use @notice here.
     ///@dev A Milestone was removed
     event RemoveMilestone(uint256 identifier);
 
@@ -64,18 +79,32 @@ contract MilestoneModule is Module {
 
     //++++++++++++++++++++++++++++++++++++++++++ MODIFIER ++++++++++++++++++++++++++++++++++++++++++
 
+    // @audit Unnecessary. Got `onlyAuthorized` inherited from Module.
     ///@dev Checks via the governance module if msg.sender is owner
     modifier ownerAccess() {
         //@todo Governance Link here
         _;
     }
 
+    // @audit Do we need this according to Spec?
+    //        -> Seems so.
+    //        Q: Where should the list of contributors be stored?
+    //           -> Proposal?
     ///@dev Checks via the governance module if msg.sender is contributor
     modifier contributorAccess() {
         //@todo Governance Link here
         _;
     }
 
+    uint private _milestoneCounter;
+    modifier validMilestoneId(uint id) {
+        if (id > _milestoneCounter) {
+            revert GeoNFT__InvalidTokenId();
+        }
+        _;
+    }
+
+    // @audit Rename to `validId(uint id)` ?
     ///@dev Checks if the given id is available in the milestone array
     ///@param idInArray : id in the milestone array
     modifier plausableIdInArray(uint256 idInArray) {
@@ -101,6 +130,7 @@ contract MilestoneModule is Module {
 
     constructor() {}
 
+    // @audit Add initializer. Problem in __Module_init() got fixed.
     ///@notice insitializes the MilestoneModule
     ///@dev Removed initializer because the underlying __Module_init() is initializer
     ///@param proposal : The proposal that should be linked to this module
@@ -125,6 +155,8 @@ contract MilestoneModule is Module {
         uint256 duration,
         string memory details
     ) external onlyProposal returns (uint256 id) {
+        // @todo felix: Use idCounter or string memory identifier as unique key?
+
         //@todo Require correct inputs
         milestones.push(
             Milestone(identifier, startDate, duration, details, false, false)
@@ -211,6 +243,15 @@ contract MilestoneModule is Module {
         );
     }
 
+    function changeMilestoneDuration(uint id, uint duration) {
+        Milestone memory milestone = milestones[id];
+
+        if (milestone.duration != duration) {
+            milestone.duration = duration;
+            // emit Event
+        }
+    }
+
     ///@dev Unordered removal of the milestone from the milestone array
     ///@param idInArray : id in the milestone array
     function __Milestone_removeMilestone(
@@ -236,18 +277,37 @@ contract MilestoneModule is Module {
         );
     }
 
+    // In a different contract:
+    try submitMilestone(10) {
+        // if not revert: Got submitted
+        // Don't care
+    } catch {
+        // if revert: No problem
+        // Don't care
+    }
+    // ... continue wirth normal code
+
+    // Programmer submitMilestone:
+    // 1: I want to change the milestone submit field to True.
+    // 2: I want the milestone submit field to BE True.
+
     ///@dev Submit a milestone
     ///@param idInArray : id in the milestone array
     function __Milestone_submitMilestone(uint256 idInArray)
         external
         onlyProposal
         plausableIdInArray(idInArray)
+        // @audit Function should be idempotent!
+        // HTTP: GET, POST, DELETE, ADD
+        //            ^^^^  ^^^^^^  XXX->Id
         submittedNotCompleted(idInArray)
     {
         Milestone storage milestone = milestones[idInArray];
-        milestone.submitted = true;
 
-        emit SubmitMilestone(milestone.identifier);
+        if (!milestone.submitted) {
+            milestone.submitted = true;
+            emit SubmitMilestone(milestone.identifier);
+        }
     }
 
     ///@notice Submit a milestone
@@ -279,6 +339,7 @@ contract MilestoneModule is Module {
         //@note Maybe move the milestone to a seperate array as mark of completion?
         //@todo add Payment
 
+        // @audit Only emit event when state actually mutated.
         emit ConfirmMilestone(milestone.identifier);
     }
 
@@ -307,6 +368,7 @@ contract MilestoneModule is Module {
         Milestone storage milestone = milestones[idInArray];
         milestone.submitted = false;
 
+        // @audit Only emit event when state actually mutated.
         emit DeclineMilestone(milestone.identifier);
     }
 
