@@ -114,6 +114,21 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
     }
 
     //--------------------------------------------------------------------------
+    // Tests: Module Management
+
+    function testDisableModule(address module) public {
+        _assumeValidModule(module);
+
+        address[] memory modules = new address[](1);
+        modules[0] = module;
+        moduleManager.init(modules);
+
+        assertTrue(moduleManager.isEnabledModule(module));
+        moduleManager.disableModule(module);
+        assertTrue(!moduleManager.isEnabledModule(module));
+    }
+
+    //--------------------------------------------------------------------------
     // Tests: Module Access Control
 
     function testGrantRole(address module, bytes32 role, address account)
@@ -198,6 +213,22 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
 
         vm.prank(account);
         moduleManager.renounceRole(module, role);
+
+        assertTrue(!moduleManager.hasRole(module, role, account));
+    }
+
+    function testRolesDisabledIfModuleDisabled(address module, bytes32 role, address account) public {
+        _assumeValidModule(module);
+
+        address[] memory modules = new address[](1);
+        modules[0] = module;
+        moduleManager.init(modules);
+
+        vm.prank(module);
+        moduleManager.grantRole(role, account);
+
+        // Disable module.
+        moduleManager.disableModule(module);
 
         assertTrue(!moduleManager.hasRole(module, role, account));
     }
