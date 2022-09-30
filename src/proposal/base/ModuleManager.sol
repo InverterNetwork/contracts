@@ -23,7 +23,7 @@ import {IModuleManager} from "src/interfaces/IModuleManager.sol";
  *      The role-based access control mechanism is based on OpenZeppelin's
  *      AccessControl contract. Each module has it's own access control context
  *      which it is able to freely manage.
-
+ *
  *      The transaction execution and module management is copied from Gnosis
  *      Safe.
  *

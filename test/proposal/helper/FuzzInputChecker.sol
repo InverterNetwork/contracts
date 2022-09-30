@@ -39,8 +39,7 @@ abstract contract FuzzInputChecker is Test {
         for (uint i; i < modules.length; i++) {
             module = modules[i];
 
-            // Assume valid module address.
-            vm.assume(module != address(0));
+            _assumeValidModule(module);
 
             // Assume unique module.
             vm.assume(!modulesCache[module]);
@@ -48,5 +47,9 @@ abstract contract FuzzInputChecker is Test {
             // Add module to modules cache.
             modulesCache[module] = true;
         }
+    }
+
+    function _assumeValidModule(address module) internal {
+        vm.assume(module != address(0));
     }
 }
