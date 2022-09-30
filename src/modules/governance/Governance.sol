@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Interfaces
@@ -24,7 +25,7 @@ import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 * structure employed.   
 */
 
-contract Governance is IAuthorizer, Module {
+contract Governance is IAuthorizer, Module{
 
     
     //--------------------------------------------------------------------------
@@ -37,9 +38,6 @@ contract Governance is IAuthorizer, Module {
 
     //--------------------------------------------------------------------------
     // Storage
-
-
-    // Question: would we want to implement different "levels" of authorization? E.g. Authorize a certain address to only execute actions from a specific module.
 
     /// @dev Mapping of authorized addresses
     mapping(address => bool) private _authorized;
@@ -85,10 +83,10 @@ contract Governance is IAuthorizer, Module {
         require(!_authorized[who], "Address already authorized");
 
         _authorized[who] = true;
-        _authorized[msg.sender]=false;
+        _authorized[_msgSender()]=false;
 
         emit AddedAuthorizedAddress(who);
-        emit RemovedAuthorizedAddress(msg.sender);
+        emit RemovedAuthorizedAddress(_msgSender());
     }
 
     /*
