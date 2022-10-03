@@ -153,7 +153,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @param funcData The encoded function signature and arguments the
     ///                 proposal should call back to.
     /// @param op Whether the callback should be a `call` or `delegatecall`.
-    /// @return The return data of the callback.
+    /// @return returnData The return data of the callback.
     function _triggerProposalCallback(bytes memory funcData, Types.Operation op)
         internal
         returns (bytes memory)

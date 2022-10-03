@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
-import {Payment} from "src/modules/Payment.sol";
+import {ContributorManager} from "src/modules/governance/ContributorManager.sol";
 
 // Interfaces
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
@@ -15,7 +15,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract PaymentTest is Test {
+contract ContributorManagerTest is Test {
     Proposal proposal;
     ContributorManager contributorModule;
 
@@ -29,7 +29,7 @@ contract PaymentTest is Test {
         proposal = new Proposal();
         contributorModule = new ContributorManager();
 
-        // Init proposal with payment module.
+        // Init proposal with contributor module.
         address[] memory funders = new address[](1);
         funders[0] = address(this);
         address[] memory modules = new address[](2);
@@ -43,7 +43,7 @@ contract PaymentTest is Test {
     }
 
     function testAddContributor() public {
-        address bob = new address(0xb0b);
+        address bob = address(0xb0b);
         bytes32 role = keccak256("DEV");
         uint salary = 25000;
 
@@ -55,7 +55,7 @@ contract PaymentTest is Test {
 
 
     function testRemoveLastContributor() public {
-        address bob = new address(0xb0b);
+        address bob = address(0xb0b);
         bytes32 role = keccak256("DEV");
         uint salary = 25000;
 
@@ -65,6 +65,6 @@ contract PaymentTest is Test {
         contributorModule.removeContributor(bob, address(0x1));
 
         assertEq(contributorModule.isActiveContributor(bob), false);
-        assertEq(contributorModulel.istActiveContributors().length, 0)
+        assertEq(contributorModule.listActiveContributors().length, 0);
     }
 }
