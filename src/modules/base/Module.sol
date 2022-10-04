@@ -55,8 +55,8 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
     //
-    // Note that the modifiers declared are also available in dowstream
-    // contracts. To not make unnecessary modifiers available, this contract
+    // Note that the modifiers declared are available in dowstream contracts
+    // too. To not make unnecessary modifiers available, this contract
     // inlines checks for argument validations not needed in downstream
     // contracts.
 
@@ -109,6 +109,12 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Initialization
 
+    // @todo mp: Check that `_disableInitializers()` is used correctly.
+    //           Makes testing setup harder too.
+    //constructor() {
+    //    _disableInitializers();
+    //}
+
     // @todo mp: Can Metadata be calldata? Depends on Factories.
 
     /// @dev The initialization function MUST be called by the upstream
@@ -120,11 +126,13 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     {
         __Pausable_init();
 
+        // Write proposal to storage.
         if (address(proposal_) == address(0)) {
             revert Module__InvalidProposalAddress();
         }
         __Module_proposal = proposal_;
 
+        // Write metadata to storage.
         if (data.majorVersion == 0 && data.minorVersion == 0) {
             revert Module__InvalidVersionPair();
         }
