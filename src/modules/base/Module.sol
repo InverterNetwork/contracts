@@ -150,17 +150,20 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     // Internal Functions
 
     /// @dev Internal function to trigger a callback from the proposal.
-    /// @param funcData The encoded function signature and arguments the
-    ///                 proposal should call back to.
+    /// @param data The call data for the proposal to call.
     /// @param op Whether the callback should be a `call` or `delegatecall`.
+    /// @return Whether the callback succeeded.
     /// @return The return data of the callback.
-    function _triggerProposalCallback(bytes memory funcData, Types.Operation op)
+    function _triggerProposalCallback(bytes memory data, Types.Operation op)
         internal
-        returns (bytes memory)
+        returns (bool, bytes memory)
     {
-        bytes memory returnData =
-            __Module_proposal.executeTxFromModule(address(this), funcData, op);
+        bool ok;
+        bytes memory returnData;
 
-        return returnData;
+        (ok, returnData) =
+            __Module_proposal.executeTxFromModule(address(this), data, op);
+
+        return (ok, returnData);
     }
 }

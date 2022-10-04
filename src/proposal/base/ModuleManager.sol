@@ -108,7 +108,12 @@ contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
         address to,
         bytes memory data,
         Types.Operation operation
-    ) public override (IModuleManager) onlyModule returns (bytes memory) {
+    )
+        public
+        override (IModuleManager)
+        onlyModule
+        returns (bool, bytes memory)
+    {
         bool ok;
         bytes memory returnData;
 
@@ -118,11 +123,7 @@ contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
             (ok, returnData) = to.delegatecall(data);
         }
 
-        if (ok) {
-            return returnData;
-        } else {
-            revert Proposal__ModuleManager__ExecuteTxFromModuleFailed();
-        }
+        return (ok, returnData);
     }
 
     /// @inheritdoc IModuleManager
