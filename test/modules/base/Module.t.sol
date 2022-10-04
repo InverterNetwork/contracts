@@ -46,7 +46,8 @@ contract ModuleTest is Test {
     uint constant MINOR_VERSION = 2;
     string constant GIT_URL = "https://github.com/organization/module";
 
-    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, GIT_URL);
+    IModule.Metadata DATA =
+        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, GIT_URL);
 
     function setUp() public {
         authorizer = new AuthorizerMock();
