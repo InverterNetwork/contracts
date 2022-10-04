@@ -25,11 +25,6 @@ library Errors {
     bytes internal constant Proposal__ModuleManager__AlreadyInitialized =
         abi.encodeWithSignature("Proposal__ModuleManager__AlreadyInitialized()");
 
-    bytes internal constant Proposal__ModuleManager__ExecuteTxFromModuleFailed =
-    abi.encodeWithSignature(
-        "Proposal__ModuleManager__ExecuteTxFromModuleFailed()"
-    );
-
     bytes internal constant Proposal__ModuleManager__InvalidModuleAddress = abi
         .encodeWithSignature("Proposal__ModuleManager__InvalidModuleAddress()");
 
