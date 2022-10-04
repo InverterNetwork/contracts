@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
+import {IModule} from "src/interfaces/IModule.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -40,6 +41,13 @@ contract ModuleTest is Test {
     ProposalMock proposal;
     AuthorizerMock authorizer;
 
+    // Constants
+    uint constant MAJOR_VERSION = 1;
+    uint constant MINOR_VERSION = 2;
+    string constant GIT_URL = "https://github.com/organization/module";
+
+    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, GIT_URL);
+
     function setUp() public {
         authorizer = new AuthorizerMock();
         authorizer.setAllAuthorized(true);
@@ -47,7 +55,7 @@ contract ModuleTest is Test {
         proposal = new ProposalMock(authorizer);
 
         module = new ModuleMock();
-        module.init(proposal);
+        module.init(proposal, DATA);
 
         // Initialize proposal to enable module.
         address[] memory modules = new address[](1);
@@ -61,7 +69,7 @@ contract ModuleTest is Test {
     function testInitialization() public {
         module = new ModuleMock();
 
-        module.init(proposal);
+        module.init(proposal, DATA);
 
         assertEq(address(module.proposal()), address(proposal));
     }
@@ -70,14 +78,14 @@ contract ModuleTest is Test {
         module = new ModuleMock();
 
         vm.expectRevert(Errors.Module__InvalidProposalAddress);
-        module.init(IProposal(address(0)));
+        module.init(IProposal(address(0)), DATA);
     }
 
     function testInitilizationFailsForNonInitializerFunction() public {
         module = new ModuleMock();
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        module.initNoInitializer(proposal);
+        module.initNoInitializer(proposal, DATA);
     }
 
     //--------------------------------------------------------------------------

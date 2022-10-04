@@ -36,8 +36,29 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @custom:invariant Not mutated after initialization.
     IProposal internal __Module_proposal;
 
+    /// @dev The module's major version.
+    ///
+    /// @custom:invariant Not mutated after initialization.
+    uint private __Module_majorVersion;
+
+    /// @dev The module's minor version.
+    ///
+    /// @custom:invariant Only mutated by the `__Module_increaseMinorVersion()`
+    ///                   callback function.
+    uint private __Module_minorVersion;
+
+    /// @dev The URL to the module's git repository.
+    ///
+    /// @custom:invariant Not mutated after initialization.
+    string private __Module_gitURL;
+
     //--------------------------------------------------------------------------
     // Modifiers
+    //
+    // Note that the modifiers declared are also available in dowstream
+    // contracts. To not make unnecessary modifiers available, this contract
+    // inlines checks for argument validations not needed in downstream
+    // contracts.
 
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
@@ -88,24 +109,51 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Initialization
 
+    // @todo mp: Can Metadata be calldata? Depends on Factories.
+
     /// @dev The initialization function MUST be called by the upstream
     ///      contract in their `initialize()` function.
     /// @param proposal_ The module's proposal.
-    function __Module_init(IProposal proposal_) internal onlyInitializing {
+    function __Module_init(IProposal proposal_, Metadata memory data)
+        internal
+        onlyInitializing
+    {
         __Pausable_init();
 
         if (address(proposal_) == address(0)) {
             revert Module__InvalidProposalAddress();
         }
         __Module_proposal = proposal_;
-    }
 
-    // @todo mp: Need version function (Issue 24)
+        if (data.majorVersion == 0 && data.minorVersion == 0) {
+            revert Module__InvalidVersionPair();
+        }
+        if (bytes(data.gitURL).length == 0) {
+            revert Module__InvalidGitURL();
+        }
+        __Module_majorVersion = data.majorVersion;
+        __Module_minorVersion = data.minorVersion;
+        __Module_gitURL = data.gitURL;
+    }
 
     //--------------------------------------------------------------------------
     // onlyProposal Functions
     //
     // Proposal callback functions executed via `call`.
+
+    /// @notice Callback function to increase the module's minor version.
+    /// @dev Only callable by the proposal.
+    function __Module_increaseMinorVersion(uint newMinorVersion)
+        external
+        onlyProposal
+    {
+        if (newMinorVersion <= __Module_minorVersion) {
+            revert Module__InvalidMinorVersion();
+        }
+
+        emit MinorVersionIncreased(__Module_minorVersion, newMinorVersion);
+        __Module_minorVersion = newMinorVersion;
+    }
 
     /// @notice Callback function to pause the module.
     /// @dev Only callable by the proposal.
@@ -124,6 +172,19 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //
     // API functions for authenticated users.
 
+    function increaseMinorVersion(uint newMinorVersion)
+        external
+        override (IModule)
+        onlyAuthorized
+    {
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Module_increaseMinorVersion(uint)", newMinorVersion
+            ),
+            Types.Operation.Call
+        );
+    }
+
     /// @inheritdoc IModule
     function pause() external override (IModule) onlyAuthorized {
         _triggerProposalCallback(
@@ -140,6 +201,21 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     //--------------------------------------------------------------------------
     // Public View Functions
+
+    /// @inheritdoc IModule
+    function identifier() public view returns (bytes32) {
+        // @todo mp: Could be saved in storage?
+        return keccak256(
+            abi.encodePacked(__Module_majorVersion, __Module_gitURL)
+        );
+    }
+
+    /// @inheritdoc IModule
+    function info() external view returns (Metadata memory) {
+        return Metadata(
+            __Module_majorVersion, __Module_minorVersion, __Module_gitURL
+        );
+    }
 
     /// @inheritdoc IModule
     function proposal() external view returns (IProposal) {
