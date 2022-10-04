@@ -31,6 +31,15 @@ library Errors {
 
     bytes internal constant Module__WantProposalContext =
         abi.encodeWithSignature("Module__WantProposalContext()");
+
+    bytes internal constant Module__InvalidVersionPair =
+        abi.encodeWithSignature("Module__InvalidVersionPair()");
+
+    bytes internal constant Module__InvalidGitURL =
+        abi.encodeWithSignature("Module__InvalidGitURL()");
+
+    bytes internal constant Module__InvalidMinorVersion =
+        abi.encodeWithSignature("Module__InvalidMinorVersion()");
 }
 
 contract ModuleTest is Test {
@@ -67,7 +76,7 @@ contract ModuleTest is Test {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInitialization() public {
+    function testInit() public {
         module = new ModuleMock();
 
         module.init(proposal, DATA);
@@ -75,18 +84,54 @@ contract ModuleTest is Test {
         assertEq(address(module.proposal()), address(proposal));
     }
 
-    function testInitilizationFailsForInvalidProposal() public {
+    function testInitFailsForInvalidProposal() public {
         module = new ModuleMock();
 
         vm.expectRevert(Errors.Module__InvalidProposalAddress);
         module.init(IProposal(address(0)), DATA);
     }
 
-    function testInitilizationFailsForNonInitializerFunction() public {
+    function testInitFailsForNonInitializerFunction() public {
         module = new ModuleMock();
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
         module.initNoInitializer(proposal, DATA);
+    }
+
+    function testInitFailsForInvalidVersionPair() public {
+        module = new ModuleMock();
+
+        DATA = IModule.Metadata(0, 0, GIT_URL);
+
+        vm.expectRevert(Errors.Module__InvalidVersionPair);
+        module.init(proposal, DATA);
+    }
+
+    function testInitFailsForEmptyGitURL() public {
+        module = new ModuleMock();
+
+        DATA = IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "");
+
+        vm.expectRevert(Errors.Module__InvalidGitURL);
+        module.init(proposal, DATA);
+    }
+
+    //--------------------------------------------------------------------------
+    // Tests: Increase Minor Version
+
+    function testIncreaseMinorVersion(uint newMinorVersion) public {
+        // @todo Test Module::increaseMinorVersion()
+        // @todo Test Module::identifier()
+        // @todo Make _triggerCallback functions fail if call failed?
+    }
+
+    function testIncreaseMinorVersionIsAuthenticated()
+        public
+    {
+        authorizer.setAllAuthorized(false);
+
+        vm.expectRevert(Errors.Module__CallerNotAuthorized);
+        module.increaseMinorVersion(MINOR_VERSION + 1);
     }
 
     //--------------------------------------------------------------------------
