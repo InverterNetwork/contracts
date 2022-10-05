@@ -25,6 +25,9 @@ error MilestoneNotSubmitted();
 /// @dev The Milestone is already completed
 error MilestoneCompleted();
 
+/// @dev The Milestone is removed
+error MilestoneRemoved();
+
 contract MilestoneModule is Module {
     //--------------------------------------------------------------------------------
     // STRUCTS
@@ -126,6 +129,15 @@ contract MilestoneModule is Module {
         _;
     }
 
+    ///@dev Checks if the given Milestone is removed
+    ///@param id : id in the milestone array
+    modifier notRemoved(uint256 id) {
+        if (milestones[id].removed) {
+            revert MilestoneCompleted();
+        }
+        _;
+    }
+
     //++++++++++++++++++++++++++++++++++++++++++ CONSTRUCTOR ++++++++++++++++++++++++++++++++++++++++++
 
     constructor() {}
@@ -157,7 +169,7 @@ contract MilestoneModule is Module {
         validDetails(details)
         returns (uint256 id)
     {
-        milestones[nextNewMilestoneId] = Milestone(
+        milestones[nextNewMilestoneId++] = Milestone(
             title,
             startDate,
             details,
@@ -165,7 +177,6 @@ contract MilestoneModule is Module {
             false,
             false
         );
-        nextNewMilestoneId++; //@note Set like ->  milestones[nextNewMilestoneId++] ?
         emit NewMilestone(title, startDate, details);
         return nextNewMilestoneId - 1;
     }
@@ -205,6 +216,7 @@ contract MilestoneModule is Module {
         external
         onlyProposal
         validId(id)
+        notRemoved(id)
         validStartDate(startDate)
         validDetails(details)
     {
@@ -246,8 +258,8 @@ contract MilestoneModule is Module {
     ///@param id : id in the milestone array
     function __Milestone_removeMilestone(
         uint256 id //@note There might be a point made to increase the level of interaction required to remove a milestone
-    ) external onlyProposal validId(id) {
-        milestones[id].removed = true;//@todo you still can interact with milestone although hes removed -> Modifier
+    ) external onlyProposal validId(id) notRemoved(id) {
+        milestones[id].removed = true; //@todo you still can interact with milestone although hes removed -> Modifier
 
         emit RemoveMilestone(id);
     }
@@ -272,6 +284,7 @@ contract MilestoneModule is Module {
         external
         onlyProposal
         validId(id)
+        notRemoved(id)
     // @audit Function should be idempotent!
     // HTTP: GET, POST, DELETE, ADD
     //            ^^^^  ^^^^^^  XXX->Id
@@ -300,6 +313,7 @@ contract MilestoneModule is Module {
         external
         onlyProposal
         validId(id)
+        notRemoved(id)
         submittedNotCompleted(id)
     {
         Milestone storage milestone = milestones[id];
@@ -332,6 +346,7 @@ contract MilestoneModule is Module {
         external
         onlyProposal
         validId(id)
+        notRemoved(id)
         submittedNotCompleted(id)
     {
         Milestone storage milestone = milestones[id];
