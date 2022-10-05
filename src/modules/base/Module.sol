@@ -23,6 +23,10 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  *      callbacks (via `call` or `delegatecall`) and a modifier to authenticate
  *      callers via the module's proposal.
  *
+ *      TODO mp: Update docs. Includes now:
+ *          - versioning
+ *          - access control
+ *
  * @author byterocket
  */
 abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
@@ -55,10 +59,9 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
     //
-    // Note that the modifiers declared are available in dowstream contracts
-    // too. To not make unnecessary modifiers available, this contract
-    // inlines checks for argument validations not needed in downstream
-    // contracts.
+    // Note that the modifiers declared here are available in dowstream
+    // contracts too. To not make unnecessary modifiers available, this contract
+    // inlines argument validations not needed in downstream contracts.
 
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
@@ -247,7 +250,6 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     {
         bool ok;
         bytes memory returnData;
-
         (ok, returnData) =
             __Module_proposal.executeTxFromModule(address(this), data, op);
 
