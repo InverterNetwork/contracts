@@ -10,6 +10,14 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
+// TODO:
+// -update formatting according to notion
+// -implement vesting
+// - mp: Define token in proposal, fetchable via `paymentToken()`.
+// - `addPayment()` fetch token from address(proposal) to address(this).
+// - Refactor modifiers to only have single arguments, e.g. `validSalary`, `validEpochs`.
+
+
 
 contract Payment is Module {
     //--------------------------------------------------------------------------
@@ -35,7 +43,7 @@ contract Payment is Module {
 
     event PaymentRemoved(address contributor, uint salary, uint epochsAmount);
 
-    event EnablePaymentToggled(address contributor, uint salary, bool paymentEnabled);
+    event EnablePaymentToggled(address contributor, uint salary, bool enabled);
 
     event PaymentClaimed(address contributor, uint availableToClaim);
 
@@ -76,8 +84,9 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Functions
 
-    // @audit initializer modifier.
-    function initialize(IProposal proposal, bytes memory data) external initializer {
+    function initialize(IProposal proposal, bytes memory data)
+        external initializer
+    {
         __Module_init(proposal);
 
         address _token = abi.decode(data, (address));
@@ -137,7 +146,8 @@ contract Payment is Module {
         );
     }
 
-    /// @notice Adds a new payment containing the details of the monetary flow depending on the module
+    /// @notice Adds a new payment containing the details of the monetary flow
+    ///         depending on the module
     function addPayment(
         address contributor,
         uint salary,
@@ -149,13 +159,6 @@ contract Payment is Module {
         validSalary(contributor, salary)
         validEpochsAmount(epochsAmount)
     {
-        // - mp: Define token in proposal, fetchable via `paymentToken()`.
-        // - `addPayment()` fetch token from address(proposal) to address(this).
-        // - Make functions idempotent.
-        // - Use `onlyAuthorized` modifier.
-        // - Refactor modifiers to only have single arguments, e.g. `validSalary`, `validEpochs`.
-        // - Rename evetns to past term, e.g. `PaymentClaimed`, `PaymentPaused`.
-
         // Somewhere else: (A sends X tokens to proposal => token.balanceOf(proposal) == X)
         // Payment:
         // function addPayment {
