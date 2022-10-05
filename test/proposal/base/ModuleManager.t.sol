@@ -76,10 +76,9 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager.reinit(modules);
     }
 
-
-    function testInitFailsForInvalidModuleAddress(
-        address[] memory modules
-    ) public {
+    function testInitFailsForInvalidModuleAddress(address[] memory modules)
+        public
+    {
         _assumeValidModules(modules);
 
         // Set first module to address(0).

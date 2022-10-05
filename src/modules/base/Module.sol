@@ -25,7 +25,6 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  *
  *      TODO mp: Update docs. Includes now:
  *          - versioning
- *          - access control
  *
  * @author byterocket
  */
@@ -118,15 +117,24 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //    _disableInitializers();
     //}
 
-    // @todo mp: Can Metadata be calldata? Depends on Factories.
+    // @todo mp: Can metaData be calldata? Depends on Factories.
 
-    // @todo mp: param Metadata data missing in function doc.
+    // @todo mp: param metaData data missing in function doc.
     //           Refactor @dev, function name is `init()`.
+
+    /// @inheritdoc IModule
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory /*configdata*/
+    ) external virtual initializer {
+        __Module_init(proposal_, metadata);
+    }
 
     /// @dev The initialization function MUST be called by the upstream
     ///      contract in their `initialize()` function.
     /// @param proposal_ The module's proposal.
-    function __Module_init(IProposal proposal_, Metadata memory data)
+    function __Module_init(IProposal proposal_, Metadata memory metadata)
         internal
         onlyInitializing
     {
@@ -138,16 +146,16 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
         }
         __Module_proposal = proposal_;
 
-        // Write metadata to storage.
-        if (data.majorVersion == 0 && data.minorVersion == 0) {
+        // Write meta data to storage.
+        if (metadata.majorVersion == 0 && metadata.minorVersion == 0) {
             revert Module__InvalidVersionPair();
         }
-        if (bytes(data.gitURL).length == 0) {
+        if (bytes(metadata.gitURL).length == 0) {
             revert Module__InvalidGitURL();
         }
-        __Module_majorVersion = data.majorVersion;
-        __Module_minorVersion = data.minorVersion;
-        __Module_gitURL = data.gitURL;
+        __Module_majorVersion = metadata.majorVersion;
+        __Module_minorVersion = metadata.minorVersion;
+        __Module_gitURL = metadata.gitURL;
     }
 
     //--------------------------------------------------------------------------
