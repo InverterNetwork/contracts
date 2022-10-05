@@ -111,7 +111,7 @@ contract ModuleTest is Test {
     function testInitFailsForInvalidGitURL() public {
         module = new ModuleMock();
 
-        // Invalid: Empty git url
+        // Invalid: Empty git url.
         DATA = IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "");
 
         vm.expectRevert(Errors.Module__InvalidGitURL);
@@ -127,9 +127,7 @@ contract ModuleTest is Test {
         // @todo Make _triggerCallback functions fail if call failed?
     }
 
-    function testIncreaseMinorVersionIsAuthenticated()
-        public
-    {
+    function testIncreaseMinorVersionIsAuthenticated() public {
         authorizer.setAllAuthorized(false);
 
         vm.expectRevert(Errors.Module__CallerNotAuthorized);

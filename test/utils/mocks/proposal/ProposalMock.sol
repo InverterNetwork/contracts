@@ -17,6 +17,16 @@ contract ProposalMock is IProposal, ModuleManagerMock {
         authorizer = authorizer_;
     }
 
+    /// @dev Currently unused. Implemented due to inheritance.
+    function init(
+        uint proposalId,
+        address[] calldata funders,
+        address[] calldata modules,
+        IAuthorizer authorizer_
+    ) external {
+
+    }
+
     function executeTx(address target, bytes memory data)
         external
         returns (bytes memory)

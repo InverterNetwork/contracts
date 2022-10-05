@@ -9,9 +9,8 @@ interface IModule {
         uint majorVersion;
         uint minorVersion;
         // maybe string description?
-        // maybe deployment block.number?
-        string gitURL;  // @todo mp: Assumed to be the unique key.
-                        //           What is more than one module per repo?
+        string gitURL; // @todo mp: Assumed to be the unique key.
+            //           What if more than one module per repo?
     }
 
     //--------------------------------------------------------------------------
@@ -48,6 +47,14 @@ interface IModule {
 
     //--------------------------------------------------------------------------
     // Functions
+
+    /// @dev Can be overriden in downstream contract.
+    /// @dev Has to call `__Module_init()`.
+    function init(
+        IProposal proposal,
+        Metadata memory metadata,
+        bytes memory configdata
+    ) external;
 
     /// @notice Returns the module's identifier.
     /// @dev The identifier is defined as the keccak256 hash of the module's
