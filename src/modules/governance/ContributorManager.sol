@@ -34,16 +34,16 @@ contract ContributorManager is Module {
     // Errors
 
     /// @notice The supplied contributor address is not valid
-    error Module__invalidContributorAddress();
+    error Module__ContributorManager__invalidContributorAddress();
 
     /// @notice The supplied contributor details are not valid.
-    error Module__invalidContributorInformation();
+    error Module__ContributorManager__invalidContributorInformation();
 
     /// @notice The supplied contributor is already active
-    error Module__contributorAlreadyActive();
+    error Module__ContributorManager__contributorAlreadyActive();
 
     /// @notice The supplied contributor is not active
-    error Module__contributorNotActive();
+    error Module__ContributorManager__contributorNotActive();
 
 
     //--------------------------------------------------------------------------
@@ -85,7 +85,7 @@ contract ContributorManager is Module {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    function initialize(IProposal proposal, bytes memory) external {
+    function initialize(IProposal proposal, bytes memory) external initializer{
         __Module_init(proposal);
 
         // set up the sentinel to signal empty list of active contributors
@@ -104,16 +104,16 @@ contract ContributorManager is Module {
 
         //require address is not 0, the sentinel or the module itself
         if(_who == address(0) || _who == SENTINEL_CONTRIBUTORS || _who == address(this)) {
-            revert Module__invalidContributorAddress();
+            revert Module__ContributorManager__invalidContributorAddress();
         }
         //require role and salary are not empty
         if(_role == bytes32(0) || _salary == 0){
-            revert Module__invalidContributorInformation();
+            revert Module__ContributorManager__invalidContributorInformation();
         }
 
         //require contributor isn't already active
         if(activeContributors[_who] != address(0) ){
-            revert Module__contributorAlreadyActive();
+            revert Module__ContributorManager__contributorAlreadyActive();
         }
 
         //initialize contributorRegistry[address] with contributor
@@ -165,11 +165,11 @@ contract ContributorManager is Module {
 
          //require that address is not 0, the sentinel or the module itself
         if(_who == address(0) || _who == SENTINEL_CONTRIBUTORS || _who == address(this)) {
-            revert Module__invalidContributorAddress();
+            revert Module__ContributorManager__invalidContributorAddress();
         }
         //require that the contributors are indeed consecutive
         if(activeContributors[_prevContrib] != _who){
-            revert Module__invalidContributorAddress();
+            revert Module__ContributorManager__invalidContributorAddress();
         }
 
         //remove contributor information from registry 
@@ -214,7 +214,7 @@ contract ContributorManager is Module {
     function getContributorInformation(address _who) external view returns(bytes32, uint) {
         //require that the contributor is currently active
         if( ! isActiveContributor(_who) ){
-            revert Module__contributorNotActive();
+            revert Module__ContributorManager__contributorNotActive();
         }
 
         return (contributorRegistry[_who].role, contributorRegistry[_who].salary);

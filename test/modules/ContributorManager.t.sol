@@ -12,34 +12,40 @@ import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
 // Mocks
+import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ContributorManagerTest is Test {
-    Proposal proposal;
+    
     ContributorManager contributorModule;
 
     // Mocks
     AuthorizerMock authorizer;
+    ProposalMock proposal;
 
     function setUp() public {
         authorizer = new AuthorizerMock();
-        authorizer.setIsAuthorized(address(this), true);
+        authorizer.setAllAuthorized(true);
 
-        proposal = new Proposal();
+        proposal = new ProposalMock(authorizer);
+        
+        
         contributorModule = new ContributorManager();
 
         // Init proposal with contributor module.
-        address[] memory funders = new address[](1);
-        funders[0] = address(this);
-        address[] memory modules = new address[](2);
+        address[] memory modules = new address[](1);
         modules[0] = address(contributorModule);
-        modules[1] = address(authorizer);
-        proposal.initialize(1, funders, modules, IAuthorizer(authorizer));
+    
+        proposal.init(modules);
 
-        // Init module.
+
         bytes memory data = bytes("");
         contributorModule.initialize(IProposal(proposal), data);
+
+        assertEq(address(contributorModule.proposal()), address(proposal));
+        assertEq(address(contributorModule.proposal().authorizer()), address(authorizer));
+
     }
 
     function testAddContributor() public {
@@ -47,7 +53,6 @@ contract ContributorManagerTest is Test {
         bytes32 role = keccak256("DEV");
         uint salary = 25000;
 
-        
         contributorModule.addContributor(bob, role, salary);
 
         assertEq(contributorModule.isActiveContributor(bob), true);
