@@ -4,43 +4,45 @@ pragma solidity ^0.8.0;
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
+import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
-//--------------------------------------------------------------------------
-// Errors
-
-// @todo declare here
 
 contract Payment is Module {
     //--------------------------------------------------------------------------
     // Storage
 
+    ERC20 private token;
+
     struct Payment {
         uint salary; // per epoch
         uint epochsAmount;
         bool enabled; // @audit rename to paused?
-    };
+    }
 
     // contributerAddress => Payment
     mapping(address => Payment) public payments;
 
-    address private token;
+    //address private token;
 
     //--------------------------------------------------------------------------
     // Events
 
-    event PaymentAdded(
-        uint proposalId, address contributor, uint salary, uint epochsAmount
-    );
+    event PaymentAdded(address contributor, uint salary, uint epochsAmount);
 
     event PaymentRemoved(address contributor, uint salary, uint epochsAmount);
 
     event EnablePaymentToggled(address contributor, uint salary, bool paymentEnabled);
 
-    event PaymentClaimed(uint proposalId, address contributor, uint availableToClaim);
+    event PaymentClaimed(address contributor, uint availableToClaim);
+
+    //--------------------------------------------------------------------------
+    // Errors
+
+    // @todo declare here
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -52,8 +54,8 @@ contract Payment is Module {
         _;
     }
 
-    modifier validSalary(uint salary) {
-      require(payments[proposalId][contributor].salary == 0,
+    modifier validSalary(address contributor, uint salary) {
+      require(payments[contributor].salary == 0,
           "payment already added");
       require(salary > 0, "invalid salary");
       _;
@@ -75,13 +77,13 @@ contract Payment is Module {
     // Functions
 
     // @audit initializer modifier.
-    function initialize(IProposal proposal, bytes memory) external {
+    function initialize(IProposal proposal, bytes memory data) external initializer {
         __Module_init(proposal);
 
-        uint _token = abi.decode(data, (address));
+        address _token = abi.decode(data, (address));
         require(_token != address(0), "invalid token address");
         require(_token != msg.sender, "invalid token address");
-        token = _token;
+        token = ERC20(_token);
     }
 
     // @notice Claims any accrued funds which a contributor has earnt
@@ -89,7 +91,7 @@ contract Payment is Module {
         // TODO implement
         uint availableToClaim;
 
-        emit PaymentClaimed(proposalId, msg.sender, availableToClaim);
+        emit PaymentClaimed(msg.sender, availableToClaim);
     }
 
     // @notice Removes/stops a payment of a contributor
@@ -101,7 +103,7 @@ contract Payment is Module {
             uint _salary = payments[contributor].salary;
             uint _epochsAmount = payments[contributor].epochsAmount;
 
-            delete payments[proposalId][contributor];
+            delete payments[contributor];
 
             emit PaymentRemoved(contributor, _salary, _epochsAmount);
         }
@@ -113,15 +115,16 @@ contract Payment is Module {
         external
         onlyAuthorized() // only proposal owner
     {
-        if(payments[contributor].salary)
-        {
-            payments[contributor].enabled = !payments[contributor].enabled;
+        payments[contributor].enabled = !payments[contributor].enabled;
 
-            emit EnablePaymentToggled(contributor, salary, payments[contributor].enabled);
-        }
+        emit EnablePaymentToggled(
+            contributor,
+            payments[contributor].salary,
+            payments[contributor].enabled
+        );
     }
 
-    /// @note we may want a method that returns all the contributor addresses
+    /// NOTE we may want a method that returns all the contributor addresses
     /// @notice Returns the existing payments of the contributors
     function listPayments(address contributor)
         external
@@ -129,8 +132,8 @@ contract Payment is Module {
         returns (uint, uint)
     {
         return (
-            payments[proposalId][contributor].salary,
-            payments[proposalId][contributor].epochsAmount
+            payments[contributor].salary,
+            payments[contributor].epochsAmount
         );
     }
 
@@ -143,7 +146,7 @@ contract Payment is Module {
         external
         onlyAuthorized() // only proposal owner
         validContributor(contributor)
-        validSalary(salary)
+        validSalary(contributor, salary)
         validEpochsAmount(epochsAmount)
     {
         // - mp: Define token in proposal, fetchable via `paymentToken()`.
@@ -164,7 +167,7 @@ contract Payment is Module {
         // @todo make sure token address is the same as defined in proposal
 
         // add struct data to mapping
-        payments[proposalId][contributor] = Payment(
+        payments[contributor] = Payment(
             salary,
             epochsAmount,
             true
