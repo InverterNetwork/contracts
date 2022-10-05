@@ -10,7 +10,7 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
 contract MilestoneTest is
     Test,
-    ProposalMock //@todo Felix: Test the Relayer-Functions
+    ProposalMock
 {
     struct Milestone {
         string title;
@@ -22,15 +22,21 @@ contract MilestoneTest is
     }
 
     MilestoneModule milestoneMod;
+    AuthorizerMock authorizerMock = new AuthorizerMock();
 
     //--------------------------------------------------------------------------------
     // SETUP
 
-    constructor() ProposalMock(new AuthorizerMock()) {}
+    constructor() ProposalMock(authorizerMock) {}
 
     function setUp() public {
         milestoneMod = new MilestoneModule();
         milestoneMod.initialize(this);
+
+        address[] memory modules = new address[](1);
+        modules[0] = address(milestoneMod);
+
+        ProposalMock(this).initModules(modules);
     }
 
     //--------------------------------------------------------------------------------
@@ -59,18 +65,74 @@ contract MilestoneTest is
     //--------------------------------------------------------------------------------
     // TEST REACH-AROUND
 
-    /* function testReachAroundAdd(//@todo use encompassing function that tests all Functions
+    function testReachAroundAdd(
         string memory title,
         uint256 startDate,
         string memory details
     ) public {
         vm.assume(bytes(title).length != 0);
         vm.assume(bytes(details).length != 0);
+        authorizerMock.setAllAuthorized(true);
 
-        vm.expectCall(address(milestoneMod),abi.encodeCall(milestoneMod.__Milestone_addMilestone, (title,startDate,details)));
-        milestoneMod.addMilestone(title, startDate, details);
+        //Used to check current id
+        uint256 id;
+
+        //Add
+        vm.expectCall(
+            address(milestoneMod),
+            abi.encodeCall(
+                milestoneMod.__Milestone_addMilestone,
+                (title, startDate, details)
+            )
+        );
+        id = milestoneMod.addMilestone(title, startDate, details);
+        assertTrue(id==0);
         
-    } */
+        //Change
+        vm.expectCall(
+            address(milestoneMod),
+            abi.encodeCall(
+                milestoneMod.__Milestone_changeMilestone,
+                (id, startDate, details)
+            )
+        );
+        milestoneMod.changeMilestone(id, startDate, details);
+
+        //Remove
+        id = milestoneMod.addMilestone(title, startDate, details);
+        vm.expectCall(
+            address(milestoneMod),
+            abi.encodeCall(milestoneMod.__Milestone_removeMilestone, (id))
+        );
+        milestoneMod.removeMilestone(id);
+
+        //Submit
+        id = milestoneMod.addMilestone(title, startDate, details);
+        vm.expectCall(
+            address(milestoneMod),
+            abi.encodeCall(milestoneMod.__Milestone_submitMilestone, (id))
+        );
+        milestoneMod.submitMilestone(id);
+
+        //Confirm
+        id = milestoneMod.addMilestone(title, startDate, details);
+        milestoneMod.submitMilestone(id);
+
+        vm.expectCall(
+            address(milestoneMod),
+            abi.encodeCall(milestoneMod.__Milestone_confirmMilestone, (id))
+        );
+        milestoneMod.confirmMilestone(id);
+
+        //Decline
+        id = milestoneMod.addMilestone(title, startDate, details);
+        milestoneMod.submitMilestone(id);
+        vm.expectCall(
+            address(milestoneMod),
+            abi.encodeCall(milestoneMod.__Milestone_declineMilestone, (id))
+        );
+        milestoneMod.declineMilestone(id);
+    }
 
     //@todo Add Seperator
     //@todo test if modifiers are in place //https://github.com/byterocket/kolektivo-contracts/blob/main/test/reserve/OnlyOwner.t.sol#L8

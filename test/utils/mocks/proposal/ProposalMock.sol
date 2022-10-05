@@ -8,6 +8,8 @@ import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+
 contract ProposalMock is IProposal, ModuleManagerMock {
     IAuthorizer public authorizer;
 
@@ -22,5 +24,9 @@ contract ProposalMock is IProposal, ModuleManagerMock {
 
     function version() external pure returns (string memory) {
         return "1";
+    }
+
+    function initModules(address[] calldata modules) public initializer {
+        __ModuleManager_init(modules);
     }
 }

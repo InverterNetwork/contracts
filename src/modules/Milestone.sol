@@ -79,7 +79,8 @@ contract MilestoneModule is Module {
 
     /// @dev Checks if the given title is valid
     /// @param title : given milestone title
-    modifier validTitle(string memory title) { //@todo test modifier
+    modifier validTitle(string memory title) {
+        //@todo test modifier
         if ((bytes(title)).length == 0) {
             revert InvalidTitle();
         }
@@ -181,7 +182,7 @@ contract MilestoneModule is Module {
         string memory details
     ) external onlyAuthorized returns (uint256 id) {
         bytes memory returnData = _triggerProposalCallback(
-            abi.encodeWithSignature(//@todo Felix : Testing needed
+            abi.encodeWithSignature(
                 "__Milestone_addMilestone(string,uint256,string)",
                 title,
                 startDate,
@@ -189,7 +190,7 @@ contract MilestoneModule is Module {
             ),
             Types.Operation.Call
         );
-        return abi.decode(returnData,(uint256));
+        return abi.decode(returnData, (uint256));
     }
 
     ///@dev Changes a milestone in regards of startDate or details
@@ -246,7 +247,7 @@ contract MilestoneModule is Module {
     function __Milestone_removeMilestone(
         uint256 id //@note There might be a point made to increase the level of interaction required to remove a milestone
     ) external onlyProposal validId(id) {
-        milestones[id].removed = true;
+        milestones[id].removed = true;//@todo you still can interact with milestone although hes removed -> Modifier
 
         emit RemoveMilestone(id);
     }
