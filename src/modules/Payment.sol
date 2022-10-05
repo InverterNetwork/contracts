@@ -19,66 +19,55 @@ contract Payment is Module {
     // Storage
 
     struct Payment {
-        //address token;
         uint salary; // per epoch
         uint epochsAmount;
         bool enabled; // @audit rename to paused?
-    }
+    };
 
-    ;
-
-    // proposalId => contributerAddress => Payment
-    mapping(uint => mapping(address => Payment)) public payments;
+    // contributerAddress => Payment
+    mapping(address => Payment) public payments;
 
     address private token;
 
     //--------------------------------------------------------------------------
     // Events
 
-    event AddPayment(
+    event PaymentAdded(
         uint proposalId, address contributor, uint salary, uint epochsAmount
     );
 
-    event PausePayment(uint proposalId, address contributor, uint salary);
+    event PaymentRemoved(address contributor, uint salary, uint epochsAmount);
 
-    event Claim(uint proposalId, address contributor, uint availableToClaim);
+    event EnablePaymentToggled(address contributor, uint salary, bool paymentEnabled);
+
+    event PaymentClaimed(uint proposalId, address contributor, uint availableToClaim);
 
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier onlyOwner(uint proposalId) {
-        require(proposals[proposalId].owner == msg.sender, "not proposal owner");
-        _;
-    }
-
-    modifier onlyContributor(uint proposalId) {
-        require(
-            payments[proposalId][msg.sender].salary > 0, "no active payments"
-        );
-        _;
-    }
-
-    // @dev make sure proposal exists
-    modifier proposalExists(uint proposalId) {
-        require(
-            proposals[proposalId].initialFunding > 0, "proposal does not exist"
-        );
-        _;
-    }
-
-    // @audit validContributor, validSalary, validEpochs.
-    modifier validContributorData(
-        address contributor,
-        uint salary,
-        uint epochsAmount
-    ) {
-        require(
-            payments[proposalId][contributor].salary == 0,
-            "payment already added"
-        );
+    modifier validContributor(address contributor) {
         require(contributor != address(0), "invalid contributor address");
-        require(salary > 0, "invalid salary");
-        require(epochsAmount > 0, "invalid epochsAmount");
+        require(contributor != address(this), "invalid contributor address");
+        require(contributor != msg.sender, "invalid contributor address");
+        _;
+    }
+
+    modifier validSalary(uint salary) {
+      require(payments[proposalId][contributor].salary == 0,
+          "payment already added");
+      require(salary > 0, "invalid salary");
+      _;
+    }
+
+    modifier validEpochsAmount(uint epochsAmount) {
+        require(epochsAmount > 0, "invalid epochs amount");
+        _;
+    }
+
+    modifier hasActivePayments() {
+        require(
+            payments[msg.sender].salary > 0, "no active payments"
+        );
         _;
     }
 
@@ -89,65 +78,57 @@ contract Payment is Module {
     function initialize(IProposal proposal, bytes memory) external {
         __Module_init(proposal);
 
-        // @audit token = proposal.paymentToken();
-        // @note Decode params like:
-        // (uint a) = abi.decode(data, (uint));
+        uint _token = abi.decode(data, (address));
+        require(_token != address(0), "invalid token address");
+        require(_token != msg.sender, "invalid token address");
+        token = _token;
     }
 
     // @notice Claims any accrued funds which a contributor has earnt
-    function claim(uint proposalId) external onlyContributor(proposalId) {
+    function claim() external hasActivePayments() {
         // TODO implement
         uint availableToClaim;
 
-        emit Claim(proposalId, msg.sender, availableToClaim);
+        emit PaymentClaimed(proposalId, msg.sender, availableToClaim);
     }
 
     // @notice Removes/stops a payment of a contributor
-    function removePayment(uint proposalId, address contributor)
+    function removePayment(address contributor)
         external
-        onlyOwner(proposalId)
+        onlyAuthorized() // only proposal owner
     {
-        // @audit idempotent.
-        //
-        // 1. Delete the current existing payment.
-        //      => It's an error if payment is already deleted.
-        // 2. Have the payment be deleted after the function executed. <-- This is the way we think!
-        //      => It's NOT an error if payment is already deleted.
-        //
-        // Pattern:
-        if (payments[proposalId][contributor].salary != 0) {
-            // @todo Emit event.
+        if (payments[contributor].salary != 0) {
+            uint _salary = payments[contributor].salary;
+            uint _epochsAmount = payments[contributor].epochsAmount;
+
             delete payments[proposalId][contributor];
+
+            emit PaymentRemoved(contributor, _salary, _epochsAmount);
         }
     }
 
-    // @notice Pauses a payment of a contributor
-    function pausePayment(uint proposalId, address contributor)
+    // @notice Enable/Disable a payment of a contributor
+    // @param contributor Contributor's address
+    function toggleEnablePayment(address contributor)
         external
-        onlyOwner(proposalId)
+        onlyAuthorized() // only proposal owner
     {
-        // @audit idempotent.
-        require(
-            payments[proposalId][contributor].salary > 0, "non existing payment"
-        );
-        require(
-            payments[proposalId][contributor].enabled, "payment already paused"
-        );
-        payments[proposalId][contributor].enabled = false;
+        if(payments[contributor].salary)
+        {
+            payments[contributor].enabled = !payments[contributor].enabled;
 
-        // PaymentPaused
-        emit PausePayment(proposalId, contributor, salary);
+            emit EnablePaymentToggled(contributor, salary, payments[contributor].enabled);
+        }
     }
 
+    /// @note we may want a method that returns all the contributor addresses
     /// @notice Returns the existing payments of the contributors
-    function listPayments(uint proposalId, address contributor)
+    function listPayments(address contributor)
         external
         view
-        proposalExists(proposalId)
-        returns (address, uint, uint)
+        returns (uint, uint)
     {
         return (
-            payments[proposalId][contributor].token,
             payments[proposalId][contributor].salary,
             payments[proposalId][contributor].epochsAmount
         );
@@ -155,16 +136,15 @@ contract Payment is Module {
 
     /// @notice Adds a new payment containing the details of the monetary flow depending on the module
     function addPayment(
-        uint proposalId,
         address contributor,
-        //address token,
         uint salary,
         uint epochsAmount
     )
         external
-        onlyOwner(proposalId)
-        proposalExists(proposalId)
-        validContributorData(contributor, salary, epochsAmount)
+        onlyAuthorized() // only proposal owner
+        validContributor(contributor)
+        validSalary(salary)
+        validEpochsAmount(epochsAmount)
     {
         // - mp: Define token in proposal, fetchable via `paymentToken()`.
         // - `addPayment()` fetch token from address(proposal) to address(this).
@@ -185,12 +165,11 @@ contract Payment is Module {
 
         // add struct data to mapping
         payments[proposalId][contributor] = Payment(
-            //token,    //must be same as in proposal
-            salary, //proposal balance must be greater than salary*epochsAmount
+            salary,
             epochsAmount,
             true
         );
 
-        emit AddPayment(proposalId, contributor, salary, epochsAmount);
+        emit PaymentAdded(contributor, salary, epochsAmount);
     }
 }
