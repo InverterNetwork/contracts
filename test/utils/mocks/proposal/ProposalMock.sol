@@ -23,9 +23,7 @@ contract ProposalMock is IProposal, ModuleManagerMock {
         address[] calldata funders,
         address[] calldata modules,
         IAuthorizer authorizer_
-    ) external {
-
-    }
+    ) external {}
 
     function executeTx(address target, bytes memory data)
         external

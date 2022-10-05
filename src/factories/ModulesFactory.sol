@@ -10,7 +10,7 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 
-// @todo Needs owner
+// @todo Inherit from IModulesFactory.
 contract ModulesFactory is Ownable2Step {
     mapping(bytes32 => address) private targetPerModuleId;
 
@@ -23,7 +23,7 @@ contract ModulesFactory is Ownable2Step {
         IProposal proposal,
         IModule.Metadata memory metadata,
         bytes memory configdata
-    ) public returns (IModule) {
+    ) public returns (address) {
         address target = targetPerModuleId[moduleId];
 
         if (target == address(0)) {
@@ -33,7 +33,7 @@ contract ModulesFactory is Ownable2Step {
         address clone = Clones.clone(target);
         IModule(clone).init(proposal, metadata, configdata);
 
-        return IModule(clone);
+        return clone;
     }
 
     //--------------------------------------------------------------------------

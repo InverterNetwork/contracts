@@ -70,6 +70,10 @@ contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
     {
         __Context_init();
 
+        // @todo mp: Change modules from address to IModules.
+        //           This enables easier refactoring in future for "multi-modules".
+        //           Or not???
+
         address module;
         for (uint i; i < modules.length; i++) {
             module = modules[i];

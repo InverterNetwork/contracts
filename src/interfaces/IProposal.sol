@@ -23,7 +23,7 @@ interface IProposal is IModuleManager {
     function init(
         uint proposalId,
         address[] calldata funders,
-        address[] calldata modules,
+        address[] calldata modules, // @todo mp: Change to IModules.
         IAuthorizer authorizer_
     ) external;
 
