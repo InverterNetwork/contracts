@@ -117,6 +117,9 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     // @todo mp: Can Metadata be calldata? Depends on Factories.
 
+    // @todo mp: param Metadata data missing in function doc.
+    //           Refactor @dev, function name is `init()`.
+
     /// @dev The initialization function MUST be called by the upstream
     ///      contract in their `initialize()` function.
     /// @param proposal_ The module's proposal.

@@ -8,7 +8,10 @@ interface IModule {
     struct Metadata {
         uint majorVersion;
         uint minorVersion;
-        string gitURL;
+        // maybe string description?
+        // maybe deployment block.number?
+        string gitURL;  // @todo mp: Assumed to be the unique key.
+                        //           What is more than one module per repo?
     }
 
     //--------------------------------------------------------------------------
