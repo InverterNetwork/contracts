@@ -15,28 +15,28 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 // @todo declare here
 
 contract Payment is Module {
-
     //--------------------------------------------------------------------------
     // Storage
 
     struct Payment {
-        address token;
-        uint salary;            // per epoch
+        //address token;
+        uint salary; // per epoch
         uint epochsAmount;
-        bool enabled;
-    };
+        bool enabled; // @audit rename to paused?
+    }
+
+    ;
 
     // proposalId => contributerAddress => Payment
     mapping(uint => mapping(address => Payment)) public payments;
+
+    address private token;
 
     //--------------------------------------------------------------------------
     // Events
 
     event AddPayment(
-        uint proposalId,
-        address contributor,
-        uint salary,
-        uint epochsAmount
+        uint proposalId, address contributor, uint salary, uint epochsAmount
     );
 
     event PausePayment(uint proposalId, address contributor, uint salary);
@@ -52,18 +52,30 @@ contract Payment is Module {
     }
 
     modifier onlyContributor(uint proposalId) {
-        require(payments[proposalId][msg.sender].salary > 0, "no active payments");
+        require(
+            payments[proposalId][msg.sender].salary > 0, "no active payments"
+        );
         _;
     }
 
     // @dev make sure proposal exists
     modifier proposalExists(uint proposalId) {
-        require(proposals[proposalId].initialFunding > 0, "proposal does not exist");
+        require(
+            proposals[proposalId].initialFunding > 0, "proposal does not exist"
+        );
         _;
     }
 
-    modifier validContributorData(address contributor, uint salary, uint epochsAmount) {
-        require(payments[proposalId][contributor].salary == 0, "payment already added");
+    // @audit validContributor, validSalary, validEpochs.
+    modifier validContributorData(
+        address contributor,
+        uint salary,
+        uint epochsAmount
+    ) {
+        require(
+            payments[proposalId][contributor].salary == 0,
+            "payment already added"
+        );
         require(contributor != address(0), "invalid contributor address");
         require(salary > 0, "invalid salary");
         require(epochsAmount > 0, "invalid epochsAmount");
@@ -73,9 +85,11 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Functions
 
+    // @audit initializer modifier.
     function initialize(IProposal proposal, bytes memory) external {
         __Module_init(proposal);
 
+        // @audit token = proposal.paymentToken();
         // @note Decode params like:
         // (uint a) = abi.decode(data, (uint));
     }
@@ -93,8 +107,18 @@ contract Payment is Module {
         external
         onlyOwner(proposalId)
     {
-        require(payments[proposalId][contributor].salary > 0, "non existing payment");
-        delete payments[proposalId][contributor];
+        // @audit idempotent.
+        //
+        // 1. Delete the current existing payment.
+        //      => It's an error if payment is already deleted.
+        // 2. Have the payment be deleted after the function executed. <-- This is the way we think!
+        //      => It's NOT an error if payment is already deleted.
+        //
+        // Pattern:
+        if (payments[proposalId][contributor].salary != 0) {
+            // @todo Emit event.
+            delete payments[proposalId][contributor];
+        }
     }
 
     // @notice Pauses a payment of a contributor
@@ -102,12 +126,17 @@ contract Payment is Module {
         external
         onlyOwner(proposalId)
     {
-        require(payments[proposalId][contributor].salary > 0, "non existing payment");
-        require(payments[proposalId][contributor].enabled, "payment already paused");
+        // @audit idempotent.
+        require(
+            payments[proposalId][contributor].salary > 0, "non existing payment"
+        );
+        require(
+            payments[proposalId][contributor].enabled, "payment already paused"
+        );
         payments[proposalId][contributor].enabled = false;
 
+        // PaymentPaused
         emit PausePayment(proposalId, contributor, salary);
-
     }
 
     /// @notice Returns the existing payments of the contributors
@@ -115,7 +144,7 @@ contract Payment is Module {
         external
         view
         proposalExists(proposalId)
-        returns(address, uint, uint)
+        returns (address, uint, uint)
     {
         return (
             payments[proposalId][contributor].token,
@@ -128,7 +157,7 @@ contract Payment is Module {
     function addPayment(
         uint proposalId,
         address contributor,
-        address token,
+        //address token,
         uint salary,
         uint epochsAmount
     )
@@ -137,14 +166,27 @@ contract Payment is Module {
         proposalExists(proposalId)
         validContributorData(contributor, salary, epochsAmount)
     {
+        // - mp: Define token in proposal, fetchable via `paymentToken()`.
+        // - `addPayment()` fetch token from address(proposal) to address(this).
+        // - Make functions idempotent.
+        // - Use `onlyAuthorized` modifier.
+        // - Refactor modifiers to only have single arguments, e.g. `validSalary`, `validEpochs`.
+        // - Rename evetns to past term, e.g. `PaymentClaimed`, `PaymentPaused`.
+
+        // Somewhere else: (A sends X tokens to proposal => token.balanceOf(proposal) == X)
+        // Payment:
+        // function addPayment {
+        //   token.transferFrom(proposal, address(this), amount);
+        // }
+
         // @todo verify there's enough tokens in proposal for the payment.
 
         // @todo make sure token address is the same as defined in proposal
 
         // add struct data to mapping
         payments[proposalId][contributor] = Payment(
-            token,    //must be same as in proposal
-            salary,   //proposal balance must be greater than salary*epochsAmount
+            //token,    //must be same as in proposal
+            salary, //proposal balance must be greater than salary*epochsAmount
             epochsAmount,
             true
         );
