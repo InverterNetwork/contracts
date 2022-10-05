@@ -49,7 +49,7 @@ contract ProposalTest is Test, FuzzInputChecker {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInitialization(
+    function testInit(
         uint proposalId,
         address[] memory funders,
         address[] memory modules
@@ -62,13 +62,13 @@ contract ProposalTest is Test, FuzzInputChecker {
         modules[modules.length - 1] = address(authorizer);
 
         // Initialize proposal.
-        proposal.initialize(proposalId, funders, modules, authorizer);
+        proposal.init(proposalId, funders, modules, authorizer);
 
         // Check that proposal's storage correctly initialized.
         assertEq(address(proposal.authorizer()), address(authorizer));
     }
 
-    function testReinitializationFails(
+    function testReinitFails(
         uint proposalId,
         address[] memory funders,
         address[] memory modules
@@ -81,13 +81,13 @@ contract ProposalTest is Test, FuzzInputChecker {
         modules[modules.length - 1] = address(authorizer);
 
         // Initialize proposal.
-        proposal.initialize(proposalId, funders, modules, authorizer);
+        proposal.init(proposalId, funders, modules, authorizer);
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        proposal.initialize(proposalId, funders, modules, authorizer);
+        proposal.init(proposalId, funders, modules, authorizer);
     }
 
-    function testInitializationFailsForInvalidAuthorizer(
+    function testInitFailsForInvalidAuthorizer(
         uint proposalId,
         address[] memory funders,
         address[] memory modules
@@ -98,7 +98,7 @@ contract ProposalTest is Test, FuzzInputChecker {
 
         // Note that the authorizer is not added to the modules list.
         vm.expectRevert(Errors.Proposal__InvalidAuthorizer);
-        proposal.initialize(proposalId, funders, modules, authorizer);
+        proposal.init(proposalId, funders, modules, authorizer);
     }
 
     //--------------------------------------------------------------------------

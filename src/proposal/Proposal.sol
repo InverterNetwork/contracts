@@ -9,7 +9,7 @@ import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 
-// Interfaces
+// Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
@@ -41,7 +41,7 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Initializer
 
-    function initialize(
+    function init(
         uint proposalId,
         address[] calldata funders,
         address[] calldata modules,
