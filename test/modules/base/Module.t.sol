@@ -101,15 +101,17 @@ contract ModuleTest is Test {
     function testInitFailsForInvalidVersionPair() public {
         module = new ModuleMock();
 
+        // Invalid: Version v0.0.
         DATA = IModule.Metadata(0, 0, GIT_URL);
 
         vm.expectRevert(Errors.Module__InvalidVersionPair);
         module.init(proposal, DATA);
     }
 
-    function testInitFailsForEmptyGitURL() public {
+    function testInitFailsForInvalidGitURL() public {
         module = new ModuleMock();
 
+        // Invalid: Empty git url
         DATA = IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "");
 
         vm.expectRevert(Errors.Module__InvalidGitURL);
