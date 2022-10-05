@@ -9,31 +9,39 @@ import {Module} from "src/modules/base/Module.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
+//--------------------------------------------------------------------------
+// Errors
+
+// @todo declare here
+
 contract Payment is Module {
 
     //--------------------------------------------------------------------------
     // Storage
 
     struct Payment {
-        uint proposalId;
-        address contributor;
+        address token;
         uint salary;            // per epoch
         uint epochsAmount;
         bool enabled;
     };
 
-    // proposalId => contributerAddress => Contributor
+    // proposalId => contributerAddress => Payment
     mapping(uint => mapping(address => Payment)) public payments;
 
     //--------------------------------------------------------------------------
     // Events
 
-    event addPayment(
+    event AddPayment(
         uint proposalId,
         address contributor,
         uint salary,
         uint epochsAmount
     );
+
+    event PausePayment(uint proposalId, address contributor, uint salary);
+
+    event Claim(uint proposalId, address contributor, uint availableToClaim);
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -54,7 +62,7 @@ contract Payment is Module {
         _;
     }
 
-    modifier validContributorData(address contributorAddress, uint salary, uint epochsAmount) {
+    modifier validContributorData(address contributor, uint salary, uint epochsAmount) {
         require(payments[proposalId][contributor].salary == 0, "payment already added");
         require(contributor != address(0), "invalid contributor address");
         require(salary > 0, "invalid salary");
@@ -75,52 +83,72 @@ contract Payment is Module {
     // @notice Claims any accrued funds which a contributor has earnt
     function claim(uint proposalId) external onlyContributor(proposalId) {
         // TODO implement
+        uint availableToClaim;
+
+        emit Claim(proposalId, msg.sender, availableToClaim);
     }
 
     // @notice Removes/stops a payment of a contributor
-    function removePayment(uint proposalId) external onlyOwner(proposalId) {
+    function removePayment(uint proposalId, address contributor)
+        external
+        onlyOwner(proposalId)
+    {
         require(payments[proposalId][contributor].salary > 0, "non existing payment");
-        payments[proposalId][contributor].enabled = false;
+        delete payments[proposalId][contributor];
     }
 
     // @notice Pauses a payment of a contributor
-    function pausePayment(uint proposalId) external onlyOwner(proposalId) {
+    function pausePayment(uint proposalId, address contributor)
+        external
+        onlyOwner(proposalId)
+    {
         require(payments[proposalId][contributor].salary > 0, "non existing payment");
+        require(payments[proposalId][contributor].enabled, "payment already paused");
         payments[proposalId][contributor].enabled = false;
+
+        emit PausePayment(proposalId, contributor, salary);
+
     }
 
     /// @notice Returns the existing payments of the contributors
-    function listPayments(uint proposalId, address contributorAddress)
+    function listPayments(uint proposalId, address contributor)
         external
         view
         proposalExists(proposalId)
-        returns(uint, uint)
+        returns(address, uint, uint)
     {
-        return (payments[proposalId][contributorAddress].salary, payments[proposalId][contributorAddress].epochsAmount);
+        return (
+            payments[proposalId][contributor].token,
+            payments[proposalId][contributor].salary,
+            payments[proposalId][contributor].epochsAmount
+        );
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow depending on the module
-    function addPayment(uint proposalId, address contributorAddress, uint salary, uint epochsAmount)
+    function addPayment(
+        uint proposalId,
+        address contributor,
+        address token,
+        uint salary,
+        uint epochsAmount
+    )
         external
+        onlyOwner(proposalId)
         proposalExists(proposalId)
-        validContributorData(contributorAddress, salary, epochsAmount)
+        validContributorData(contributor, salary, epochsAmount)
     {
-        // @todo verify there's enough tokens in proposal for the payout.
+        // @todo verify there's enough tokens in proposal for the payment.
+
+        // @todo make sure token address is the same as defined in proposal
 
         // add struct data to mapping
-        payments[proposalId][contributorAddress] = Payment(
-            proposalId,
-            contributorAddress,
-            salary,
+        payments[proposalId][contributor] = Payment(
+            token,    //must be same as in proposal
+            salary,   //proposal balance must be greater than salary*epochsAmount
             epochsAmount,
             true
         );
 
-        emit addPayment(proposalId, contributorAddress, salary, epochsAmount);
+        emit AddPayment(proposalId, contributor, salary, epochsAmount);
     }
-
-
-
-
-
 }
