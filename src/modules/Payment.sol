@@ -11,13 +11,16 @@ import {VestingWallet} from "@oz/finance/VestingWallet.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
-// TODO:
-// -update formatting according to notion
-// -implement vesting
-// - mp: Define token in proposal, fetchable via `paymentToken()`.
-// - `addPayment()` fetch token from address(proposal) to address(this).
-// - Refactor modifiers to only have single arguments, e.g. `validSalary`, `validEpochs`.
+/*** TODO:
+ -update formatting according to notion
+ -implement vesting
+ - `addPayment()` fetch token from address(proposal) to address(this).
+ - Refactor modifiers to only have single arguments, e.g. `validSalary`, `validEpochs`.
+ - replace require syntax with errors
 
+ CHECKS:
+ -mp: Define token in proposal, fetchable via `paymentToken()`.
+*/
 
 
 contract Payment is Module {
