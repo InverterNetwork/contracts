@@ -83,7 +83,6 @@ contract MilestoneModule is Module {
     /// @dev Checks if the given title is valid
     /// @param title : given milestone title
     modifier validTitle(string memory title) {
-        //@todo test modifier
         if ((bytes(title)).length == 0) {
             revert InvalidTitle();
         }
@@ -198,7 +197,10 @@ contract MilestoneModule is Module {
         uint256 startDate, //Possible Startdate now
         string memory details
     ) external onlyAuthorized returns (uint256 id) {
-        bytes memory returnData = _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__Milestone_addMilestone(string,uint256,string)",
                 title,
@@ -207,6 +209,7 @@ contract MilestoneModule is Module {
             ),
             Types.Operation.Call
         );
+        require(ok);//@note is this good standard?
         return abi.decode(returnData, (uint256));
     }
 
@@ -265,7 +268,7 @@ contract MilestoneModule is Module {
     function __Milestone_removeMilestone(
         uint256 id //@note There might be a point made to increase the level of interaction required to remove a milestone
     ) external onlyProposal validId(id) notRemoved(id) notCompleted(id) {
-        milestones[id].removed = true; //@todo you still can interact with milestone although hes removed -> Modifier
+        milestones[id].removed = true;
 
         emit RemoveMilestone(id);
     }
