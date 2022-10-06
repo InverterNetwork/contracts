@@ -49,12 +49,40 @@ contract ContributorManager is Module {
     //--------------------------------------------------------------------------
     // Events
 
-    event contributorAdded(address who, bytes32 role, uint salary);
+    event ContributorAdded(address who, bytes32 role, uint salary);
     
-    event contributorRemoved(address who, bytes32 role, uint salary);
+    event ContributorRemoved(address who, bytes32 role, uint salary);
+
+    event ContributorModified(address who, bytes32 role, uint salary);
 
     //--------------------------------------------------------------------------
     // Modifiers
+
+    modifier validAddress(address _who){
+
+        //require address is not 0, the sentinel or the module itself
+        if(_who == address(0) || _who == SENTINEL_CONTRIBUTORS || _who == address(this)) {
+            revert Module__ContributorManager__invalidContributorAddress();
+        }
+        _;
+    }
+
+    modifier validContributor(bytes32 _role, uint _salary){
+        //require role and salary are not empty
+        if(_role == bytes32(0) || _salary == 0){
+            revert Module__ContributorManager__invalidContributorInformation();
+        }
+        _;
+    }
+
+    modifier onlyConsecutiveContributors(address _current, address _prev){
+        
+        //require that the contributors are indeed consecutive
+        if(activeContributors[_prev] != _current){
+            revert Module__ContributorManager__invalidContributorAddress();
+        }        
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Storage
@@ -100,36 +128,37 @@ contract ContributorManager is Module {
     /// @param _salary: the salary the assigned to the contributor. To be spe-  
     ///                 cified in a format already including the decimals of 
     ///                 the payout token. 
-    function __Contributor_addContributor(address _who, bytes32 _role, uint _salary) external onlyProposal {
+    function __Contributor_addContributor(address _who, bytes32 _role, uint _salary) external onlyProposal validAddress(_who) validContributor(_role, _salary){
 
-        //require address is not 0, the sentinel or the module itself
-        if(_who == address(0) || _who == SENTINEL_CONTRIBUTORS || _who == address(this)) {
-            revert Module__ContributorManager__invalidContributorAddress();
-        }
-        //require role and salary are not empty
-        if(_role == bytes32(0) || _salary == 0){
-            revert Module__ContributorManager__invalidContributorInformation();
-        }
+        /// @note This implementation will have to change once we 
+        // decide how to handle double contributors
 
-        //require contributor isn't already active
-        if(activeContributors[_who] != address(0) ){
-            revert Module__ContributorManager__contributorAlreadyActive();
-        }
 
         //initialize contributorRegistry[address] with contributor
         Contributor memory _contributor;
         _contributor.role = _role;
         _contributor.salary= _salary;
-        
-        contributorRegistry[_who] = _contributor;
+
+        //if the contributor is new, we add them into the mapping structure
+        if(activeContributors[_who] == address(0) ){
+
+            // add address to activecontributor mapping (gnosis-safe)
+            activeContributors[_who] = activeContributors[SENTINEL_CONTRIBUTORS];
+            activeContributors[SENTINEL_CONTRIBUTORS] = _who;
+            contributorCount++;
 
 
-        // add address to activecontributor mapping (gnosis-safe)
-        activeContributors[_who] = activeContributors[SENTINEL_CONTRIBUTORS];
-        activeContributors[SENTINEL_CONTRIBUTORS] = _who;
-        contributorCount++;
+            contributorRegistry[_who] = _contributor;
+            emit ContributorAdded(_who, _role, _salary);
 
-        emit contributorAdded(_who, _role, _salary);
+
+        } else {
+
+            // if the contributor was already active, we just save and 
+            // notify the update
+            contributorRegistry[_who] = _contributor;
+            emit ContributorModified(_who, _role, _salary);
+        }
 
     }
     
@@ -161,20 +190,15 @@ contract ContributorManager is Module {
     ///         on the list, _prevContrib should be address(0x1), the sentinel.
     ///@param _who : the contributor to be removed 
     ///@param _prevContrib : the contributor situated previously in the list 
-    function __Contributor_removeContributor(address _who, address _prevContrib) external onlyProposal {
+    function __Contributor_removeContributor(address _who, address _prevContrib) external onlyProposal validAddress(_who) onlyConsecutiveContributors(_who, _prevContrib){
 
-         //require that address is not 0, the sentinel or the module itself
-        if(_who == address(0) || _who == SENTINEL_CONTRIBUTORS || _who == address(this)) {
-            revert Module__ContributorManager__invalidContributorAddress();
-        }
-        //require that the contributors are indeed consecutive
-        if(activeContributors[_prevContrib] != _who){
-            revert Module__ContributorManager__invalidContributorAddress();
-        }
+        // Arguably there's no need to make this function idempotent, 
+        // since checking if the two addresses are consecutive in the 
+        // modifier implicitly guarantees that the supplied contributors 
+        // are active.
 
         //remove contributor information from registry 
-        contributorRegistry[_who].role = "";
-        contributorRegistry[_who].salary = 0;
+        delete contributorRegistry[_who];
 
         //remove address from active contributors list
         activeContributors[_prevContrib] = activeContributors[_who];
@@ -182,7 +206,7 @@ contract ContributorManager is Module {
         contributorCount--;
 
 
-        emit contributorRemoved(_who, contributorRegistry[_who].role, contributorRegistry[_who].salary);
+        emit ContributorRemoved(_who, contributorRegistry[_who].role, contributorRegistry[_who].salary);
 
 
     }
@@ -212,9 +236,12 @@ contract ContributorManager is Module {
 
     /// @notice Returns registry information about a specifc contributor    
     function getContributorInformation(address _who) external view returns(bytes32, uint) {
-        //require that the contributor is currently active
+        
+        /// @note Maybe this check is unnecessary? We can just return 0...
+        
+        ///require that the contributor is currently active
         if( ! isActiveContributor(_who) ){
-            revert Module__ContributorManager__contributorNotActive();
+           revert Module__ContributorManager__contributorNotActive();
         }
 
         return (contributorRegistry[_who].role, contributorRegistry[_who].salary);
