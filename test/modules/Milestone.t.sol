@@ -8,10 +8,7 @@ import {MilestoneModule} from "src/modules/Milestone.sol";
 import {ProposalMock} from "test/utils/mocks//proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
-contract MilestoneTest is
-    Test,
-    ProposalMock
-{
+contract MilestoneTest is Test, ProposalMock {
     struct Milestone {
         string title;
         uint256 startDate;
@@ -62,10 +59,124 @@ contract MilestoneTest is
     //--------------------------------------------------------------------------------
     // TEST MODIFIER
 
+    function testContributorAccess(address accessor) public {}
+
+    function testValidTitle(string memory title) public {
+        if ((bytes(title)).length == 0) {
+            vm.expectRevert(MilestoneModule.InvalidTitle.selector);
+        }
+        milestoneMod.__Milestone_addMilestone(title, 0, " ");
+    }
+
+    function testValidStartDate(uint256 startDate) public {
+        /* if(startDate == 0){
+            vm.expectRevert(MilestoneModule.InvalidStartDate.selector);
+        }
+        milestoneMod.__Milestone_addMilestone(" ", startDate, " "); */
+    }
+
+    function testValidDetails(string memory details) public {
+        if ((bytes(details)).length == 0) {
+            vm.expectRevert(MilestoneModule.InvalidDetails.selector);
+        }
+        milestoneMod.__Milestone_addMilestone(" ", 0, details);
+    }
+
+    function testValidId(uint256 id) public {
+        milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        if (id >= milestoneMod.nextNewMilestoneId()) {
+            vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
+        }
+        milestoneMod.__Milestone_removeMilestone(id);
+    }
+
+    function testSubmitted(uint256 id) public {//@note is this a useful structure
+
+        vm.assume(id <= 1);
+
+        //Not Submitted
+        uint256 idOfNotSubmitted = milestoneMod.__Milestone_addMilestone(
+            " ",
+            0,
+            " "
+        );
+
+        //Submitted
+        uint256 idOfSubmitted = milestoneMod.__Milestone_addMilestone(
+            " ",
+            0,
+            " "
+        );
+        milestoneMod.__Milestone_submitMilestone(idOfSubmitted);
+
+        if (id == idOfNotSubmitted) {
+            vm.expectRevert(MilestoneModule.MilestoneNotSubmitted.selector);
+        }
+
+        milestoneMod.__Milestone_confirmMilestone(id);
+    }
+
+    function testNotCompleted(uint256 id) public {//@note is this a useful structure
+
+        vm.assume(id <= 1);
+
+        //Submitted
+        uint256 idOfSubmitted = milestoneMod.__Milestone_addMilestone(
+            " ",
+            0,
+            " "
+        );
+        milestoneMod.__Milestone_submitMilestone(idOfSubmitted);
+
+        //Completed
+        uint256 idOfCompleted = milestoneMod.__Milestone_addMilestone(
+            " ",
+            0,
+            " "
+        );
+        milestoneMod.__Milestone_submitMilestone(idOfCompleted);
+        milestoneMod.__Milestone_confirmMilestone(idOfCompleted);
+
+        if (id == idOfCompleted) {
+            vm.expectRevert(MilestoneModule.MilestoneAlreadyCompleted.selector);
+        }
+
+        milestoneMod.__Milestone_confirmMilestone(id);
+    }
+
+    function testNotRemoved(uint256 id) public {//@note is this a useful structure? Fuzzer?
+
+        vm.assume(id <= 1);
+
+        //Not Removed
+        milestoneMod.__Milestone_addMilestone(
+            " ",
+            0,
+            " "
+        );
+
+        //Submitted
+        uint256 idOfRemoved = milestoneMod.__Milestone_addMilestone(
+            " ",
+            0,
+            " "
+        );
+        milestoneMod.__Milestone_removeMilestone(idOfRemoved);
+
+        if (id == idOfRemoved) {
+            vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
+        }
+        milestoneMod.__Milestone_changeMilestone(id,0," ");
+    }
+
+
+
+    //@todo test if modifiers are in place //https://github.com/byterocket/kolektivo-contracts/blob/main/test/reserve/OnlyOwner.t.sol#L8
+
     //--------------------------------------------------------------------------------
     // TEST REACH-AROUND
 
-    function testReachAroundAdd(
+    function testReachAround(
         string memory title,
         uint256 startDate,
         string memory details
@@ -86,8 +197,8 @@ contract MilestoneTest is
             )
         );
         id = milestoneMod.addMilestone(title, startDate, details);
-        assertTrue(id==0);
-        
+        assertTrue(id == 0);
+
         //Change
         vm.expectCall(
             address(milestoneMod),
@@ -133,9 +244,6 @@ contract MilestoneTest is
         );
         milestoneMod.declineMilestone(id);
     }
-
-    //@todo Add Seperator
-    //@todo test if modifiers are in place //https://github.com/byterocket/kolektivo-contracts/blob/main/test/reserve/OnlyOwner.t.sol#L8
 
     //--------------------------------------------------------------------------------
     // TEST MAIN

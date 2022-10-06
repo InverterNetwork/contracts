@@ -7,28 +7,28 @@ import {Module} from "./base/Module.sol";
 
 import {IProposal} from "src/interfaces/IProposal.sol";
 
-/// @dev Invalid Title
-error InvalidTitle();
-
-/// @dev Invalid startDate
-error InvalidStartDate();
-
-/// @dev Invalid details
-error InvalidDetails();
-
-/// @dev There is no milestone with this id
-error InvalidMilestoneId();
-
-/// @dev The Milestone is not yet submitted
-error MilestoneNotSubmitted();
-
-/// @dev The Milestone is already completed
-error MilestoneCompleted();
-
-/// @dev The Milestone is removed
-error MilestoneRemoved();
-
 contract MilestoneModule is Module {
+    /// @dev Invalid Title
+    error InvalidTitle();
+
+    /// @dev Invalid startDate
+    error InvalidStartDate();
+
+    /// @dev Invalid details
+    error InvalidDetails();
+
+    /// @dev There is no milestone with this id
+    error InvalidMilestoneId();
+
+    /// @dev The Milestone is not yet submitted
+    error MilestoneNotSubmitted();
+
+    /// @dev The Milestone is already completed
+    error MilestoneAlreadyCompleted();
+
+    /// @dev The Milestone is removed
+    error MilestoneRemoved();
+
     //--------------------------------------------------------------------------------
     // STRUCTS
 
@@ -48,7 +48,7 @@ contract MilestoneModule is Module {
     mapping(uint256 => Milestone) public milestones;
 
     /// @dev The Id the next new Milestone is assigned
-    uint256 nextNewMilestoneId;
+    uint256 public nextNewMilestoneId ;
 
     //--------------------------------------------------------------------------------
     // EVENTS
@@ -117,14 +117,20 @@ contract MilestoneModule is Module {
         _;
     }
 
-    ///@dev Checks if the given Milestone is submitted, but not completed
+    ///@dev Checks if the given Milestone is submitted
     ///@param id : id in the milestone array
-    modifier submittedNotCompleted(uint256 id) {
+    modifier submitted(uint256 id) {
         if (!milestones[id].submitted) {
             revert MilestoneNotSubmitted();
         }
+        _;
+    }
+
+    ///@dev Checks if the given Milestone is not completed
+    ///@param id : id in the milestone array
+    modifier notCompleted(uint256 id) {
         if (milestones[id].completed) {
-            revert MilestoneCompleted();
+            revert MilestoneAlreadyCompleted();
         }
         _;
     }
@@ -133,7 +139,7 @@ contract MilestoneModule is Module {
     ///@param id : id in the milestone array
     modifier notRemoved(uint256 id) {
         if (milestones[id].removed) {
-            revert MilestoneCompleted();
+            revert MilestoneRemoved();
         }
         _;
     }
@@ -258,7 +264,7 @@ contract MilestoneModule is Module {
     ///@param id : id in the milestone array
     function __Milestone_removeMilestone(
         uint256 id //@note There might be a point made to increase the level of interaction required to remove a milestone
-    ) external onlyProposal validId(id) notRemoved(id) {
+    ) external onlyProposal validId(id) notRemoved(id) notCompleted(id) {
         milestones[id].removed = true; //@todo you still can interact with milestone although hes removed -> Modifier
 
         emit RemoveMilestone(id);
@@ -284,7 +290,7 @@ contract MilestoneModule is Module {
         external
         onlyProposal
         validId(id)
-        notRemoved(id)
+        notRemoved(id)//@todo not Submitted Modifier? or idempotent?
     // @audit Function should be idempotent!
     // HTTP: GET, POST, DELETE, ADD
     //            ^^^^  ^^^^^^  XXX->Id
@@ -314,7 +320,8 @@ contract MilestoneModule is Module {
         onlyProposal
         validId(id)
         notRemoved(id)
-        submittedNotCompleted(id)
+        submitted(id)
+        notCompleted(id)
     {
         Milestone storage milestone = milestones[id];
         milestone.completed = true;
@@ -347,7 +354,8 @@ contract MilestoneModule is Module {
         onlyProposal
         validId(id)
         notRemoved(id)
-        submittedNotCompleted(id)
+        submitted(id)
+        notCompleted(id)
     {
         Milestone storage milestone = milestones[id];
         milestone.submitted = false;
