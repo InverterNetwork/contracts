@@ -8,6 +8,9 @@ import {Module} from "./base/Module.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
 contract MilestoneModule is Module {
+    /// @dev This function is only callable by a contributor
+    error OnlyCallableByContributor();
+
     /// @dev Invalid Title
     error InvalidTitle();
 
@@ -43,12 +46,17 @@ contract MilestoneModule is Module {
 
     //--------------------------------------------------------------------------------
     // STATE
+
+    // Define a role for contributors.
+    bytes32 internal constant MILESTONE_CONTRIBUTOR_ROLE =
+        keccak256("milestoneContributor");
+
     /// @dev Mapping of all Milestones
     ///      uses nextNewMilestoneId to determine positioning of the milestones
     mapping(uint256 => Milestone) public milestones;
 
     /// @dev The Id the next new Milestone is assigned
-    uint256 public nextNewMilestoneId ;
+    uint256 public nextNewMilestoneId;
 
     //--------------------------------------------------------------------------------
     // EVENTS
@@ -76,7 +84,15 @@ contract MilestoneModule is Module {
 
     /// @dev Checks via the governance module if msg.sender is contributor
     modifier contributorAccess() {
-        //@todo Correct Governance Link here
+        if (
+            !__Module_proposal.hasRole(
+                address(this),
+                MILESTONE_CONTRIBUTOR_ROLE,
+                msg.sender
+            )
+        ) {
+            revert OnlyCallableByContributor();
+        }
         _;
     }
 
@@ -147,8 +163,7 @@ contract MilestoneModule is Module {
 
     constructor() {}
 
-    /// @notice insitializes the MilestoneModule
-    /// @dev Removed initializer because the underlying __Module_init() is initializer
+    /// @notice insitializes the MilestoneModuleS
     /// @param proposal : The proposal that should be linked to this module
     function initialize(IProposal proposal) external initializer {
         __Module_init(proposal);
@@ -156,6 +171,24 @@ contract MilestoneModule is Module {
     }
 
     //++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS ++++++++++++++++++++++++++++++++++++++++++
+
+    /// @notice Grants an address the role of Milestone
+    /// @param account the address that is granted the role
+    function grantMilestoneContributorRole(address account)//@note reach around? @todo test?
+        public
+        onlyAuthorized
+    {
+        __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account);//@note event?
+    }
+
+    /// @notice Grants an address the role of Milestone
+    /// @param account the address that is granted the role
+    function revokeMilestoneContributorRole(address account)//@note reach around? @todo test?
+        public
+        onlyAuthorized
+    {
+        __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account);//@note event?
+    }
 
     ///@dev Adds a milestone to the milestone array
     ///@param title : the title for the new milestone
@@ -209,7 +242,7 @@ contract MilestoneModule is Module {
             ),
             Types.Operation.Call
         );
-        require(ok);//@note is this good standard?
+        require(ok); //@note is this good standard?
         return abi.decode(returnData, (uint256));
     }
 
@@ -293,7 +326,7 @@ contract MilestoneModule is Module {
         external
         onlyProposal
         validId(id)
-        notRemoved(id)//@todo not Submitted Modifier? or idempotent?
+        notRemoved(id) //@todo not Submitted Modifier? or idempotent?
     // @audit Function should be idempotent!
     // HTTP: GET, POST, DELETE, ADD
     //            ^^^^  ^^^^^^  XXX->Id

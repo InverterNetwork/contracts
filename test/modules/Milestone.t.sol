@@ -59,7 +59,24 @@ contract MilestoneTest is Test, ProposalMock {
     //--------------------------------------------------------------------------------
     // TEST MODIFIER
 
-    function testContributorAccess(address accessor) public {}
+    function testContributorAccess(address accessor) public {
+        uint256 id = milestoneMod.__Milestone_addMilestone(
+            " ",
+            0,
+            " "
+        );
+
+        vm.expectRevert(MilestoneModule.OnlyCallableByContributor.selector);
+        vm.prank(accessor);
+        milestoneMod.submitMilestone(id);
+
+        authorizerMock.setIsAuthorized(address(this), true);
+        
+        milestoneMod.grantAccountContributorRole(accessor);
+        
+        vm.prank(accessor);
+        milestoneMod.submitMilestone(id);
+    }
 
     function testValidTitle(string memory title) public {
         if ((bytes(title)).length == 0) {
@@ -219,6 +236,9 @@ contract MilestoneTest is Test, ProposalMock {
 
         //Submit
         id = milestoneMod.addMilestone(title, startDate, details);
+
+        milestoneMod.grantAccountContributorRole(address(this));
+        
         vm.expectCall(
             address(milestoneMod),
             abi.encodeCall(milestoneMod.__Milestone_submitMilestone, (id))
