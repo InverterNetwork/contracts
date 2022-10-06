@@ -72,7 +72,7 @@ contract MilestoneTest is Test, ProposalMock {
 
         authorizerMock.setIsAuthorized(address(this), true);
         
-        milestoneMod.grantAccountContributorRole(accessor);
+        milestoneMod.grantMilestoneContributorRole(accessor);
         
         vm.prank(accessor);
         milestoneMod.submitMilestone(id);
@@ -237,7 +237,7 @@ contract MilestoneTest is Test, ProposalMock {
         //Submit
         id = milestoneMod.addMilestone(title, startDate, details);
 
-        milestoneMod.grantAccountContributorRole(address(this));
+        milestoneMod.grantMilestoneContributorRole(address(this));
         
         vm.expectCall(
             address(milestoneMod),
