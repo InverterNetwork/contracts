@@ -13,9 +13,6 @@ interface IModuleManager {
     /// @notice ModuleManager is already initialized.
     error Proposal__ModuleManager__AlreadyInitialized();
 
-    /// @notice Execution of transaction requested by module failed.
-    error Proposal__ModuleManager__ExecuteTxFromModuleFailed();
-
     /// @notice Given module address invalid.
     error Proposal__ModuleManager__InvalidModuleAddress();
 
@@ -53,12 +50,13 @@ interface IModuleManager {
     /// @param to The address to call.
     /// @param data The call data.
     /// @param operation The operation type. Either call or delegatecall.
+    /// @return Whether the call succeeded.
     /// @return The return data of the call.
     function executeTxFromModule(
         address to,
         bytes memory data,
         Types.Operation operation
-    ) external returns (bytes memory);
+    ) external returns (bool, bytes memory);
 
     /// @notice Grants role `role` to account `account` in caller's access
     ///         control context.
