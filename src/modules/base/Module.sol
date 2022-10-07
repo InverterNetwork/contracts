@@ -146,7 +146,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
         }
         __Module_proposal = proposal_;
 
-        // Write meta data to storage.
+        // Write metadata to storage.
         if (metadata.majorVersion == 0 && metadata.minorVersion == 0) {
             revert Module__InvalidVersionPair();
         }
