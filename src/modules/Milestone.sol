@@ -67,6 +67,12 @@ contract MilestoneModule is Module {
     /// @dev A Milestone was changed in regards of startDate or details
     event ChangeMilestone(uint256 id, uint256 startDate, string details);
 
+    /// @dev A Milestone was changed in regards of startDate 
+    event ChangeStartDate(uint256 id, uint256 startDate);
+
+    /// @dev A Milestone was changed in regards of details
+    event ChangeDetails(uint256 id, string details);
+
     /// @notice A Milestone was removed
     event RemoveMilestone(uint256 id);
 
@@ -175,18 +181,20 @@ contract MilestoneModule is Module {
     /// @notice Grants an address the role of Milestone
     /// @dev There is no reach around function included, because the proposal is involved anyway
     /// @param account the address that is granted the role
-    function grantMilestoneContributorRole(
-        address account
-    ) public onlyAuthorized {
+    function grantMilestoneContributorRole(address account)
+        public
+        onlyAuthorized
+    {
         __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
 
     /// @notice Grants an address the role of Milestone
     /// @dev There is no reach around function included, because the proposal is involved anyway
     /// @param account the address that is granted the role
-    function revokeMilestoneContributorRole(
-        address account
-    ) public onlyAuthorized {
+    function revokeMilestoneContributorRole(address account)
+        public
+        onlyAuthorized
+    {
         __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
 
@@ -242,69 +250,103 @@ contract MilestoneModule is Module {
             ),
             Types.Operation.Call
         );
-        if(!ok){
+        if (!ok) {
             revert Module_ProposalCallbackFailed();
         }
         return abi.decode(returnData, (uint256));
     }
 
-    ///@dev Changes a milestone in regards of startDate or details
+    ///@dev Changes a milestone in regards of details
     ///@param id : id in the milestone array
-    ///@param startDate : the new startDate of the given milestone
     ///@param details : the new details of the given milestone
-    function __Milestone_changeMilestone(
+    function __Milestone_changeDetails(//@todo split
         uint256 id,
-        uint256 startDate,
         string memory details
     )
         external
         onlyProposal
         validId(id)
         notRemoved(id)
-        validStartDate(startDate)
         validDetails(details)
     {
-        Milestone memory oldMilestone = milestones[id];
-        milestones[id] = Milestone(
-            oldMilestone.title, //Keep old title
-            startDate,
-            details,
-            oldMilestone.submitted, //Keep submitted Status
-            oldMilestone.completed, //Keep completed Status
-            oldMilestone.removed //Keep completed Status
-        );
-        emit ChangeMilestone(id, startDate, details);
+        Milestone storage milestone = milestones[id];
+
+        if (keccak256(bytes(milestone.details))!=keccak256(bytes(details))) {
+            milestone.details = details;
+            emit ChangeDetails(id, details);
+        }
     }
 
-    ///@notice Changes a milestone in regards of startDate or details
+    ///@notice Changes a milestone in regards of details
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
-    ///@param startDate : the new startDate of the given milestone
     ///@param details : the new details of the given milestone
-    function changeMilestone(
+    function changeDetails(
         uint256 id,
-        uint256 startDate,
         string memory details
     ) external onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Milestone_changeMilestone(uint256,uint256,string)",
+                "__Milestone_changeDetails(uint256,string)",
                 id,
-                startDate,
                 details
             ),
             Types.Operation.Call
         );
     }
 
+    ///@dev Changes a milestone in regards of startDate
+    ///@param id : id in the milestone array
+    ///@param startDate : the new startDate of the given milestone
+    function __Milestone_changeStartDate(
+        uint256 id,
+        uint256 startDate
+    )
+        external
+        onlyProposal
+        validId(id)
+        notRemoved(id)
+        validStartDate(startDate)
+    {
+        Milestone storage milestone = milestones[id];
+
+        if (milestone.startDate!=startDate) {
+            milestone.startDate = startDate;
+            emit ChangeStartDate(id, startDate);
+        }        
+    }
+
+    ///@notice Changes a milestone in regards of startDate
+    ///@dev Relay Function that routes the function call via the proposal
+    ///@param id : id in the milestone array
+    ///@param startDate : the new startDate of the given milestone
+    function changeStartDate(
+        uint256 id,
+        uint256 startDate
+    ) external onlyAuthorized {
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Milestone_changeStartDate(uint256,uint256)",
+                id,
+                startDate
+            ),
+            Types.Operation.Call
+        );
+    }
+
+    
+
     ///@dev removal of the milestone
     ///@param id : id in the milestone array
     function __Milestone_removeMilestone(
         uint256 id //@note There might be a point made to increase the level of interaction required to remove a milestone
     ) external onlyProposal validId(id) notRemoved(id) notCompleted(id) {
-        milestones[id].removed = true;
+        Milestone storage milestone = milestones[id];
 
-        emit RemoveMilestone(id);
+        if (!milestone.removed) {
+            milestone.removed = true;
+            emit RemoveMilestone(id);
+        }
     }
 
     ///@notice removal of the milestone
@@ -327,10 +369,7 @@ contract MilestoneModule is Module {
         external
         onlyProposal
         validId(id)
-        notRemoved(id) //@todo not Submitted Modifier? or idempotent?
-    // @audit Function should be idempotent!
-    // HTTP: GET, POST, DELETE, ADD
-    //            ^^^^  ^^^^^^  XXX->Id
+        notRemoved(id)
     {
         Milestone storage milestone = milestones[id];
 
@@ -361,12 +400,14 @@ contract MilestoneModule is Module {
         notCompleted(id)
     {
         Milestone storage milestone = milestones[id];
-        milestone.completed = true;
+        if (!milestone.completed) {
+            milestone.completed = true;
 
-        //@note pay who and how much?
-        //@todo add Payment
+            //@note pay who and how much?
+            //@todo add Payment
 
-        emit ConfirmMilestone(id);
+            emit ConfirmMilestone(id);
+        }
     }
 
     ///@notice Confirms a submitted milestone
@@ -384,7 +425,9 @@ contract MilestoneModule is Module {
 
     ///@dev Declines a submitted milestone
     ///@param id : id in the milestone array
-    function __Milestone_declineMilestone(uint256 id)
+    function __Milestone_declineMilestone(
+        uint256 id //@note maybe at why declined
+    )
         external
         onlyProposal
         validId(id)
@@ -393,9 +436,10 @@ contract MilestoneModule is Module {
         notCompleted(id)
     {
         Milestone storage milestone = milestones[id];
-        milestone.submitted = false;
-
-        emit DeclineMilestone(id);
+        if (milestone.submitted) {
+            milestone.submitted = false;
+            emit DeclineMilestone(id);
+        }
     }
 
     ///@notice Declines a submitted milestone
