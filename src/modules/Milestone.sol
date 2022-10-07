@@ -36,9 +36,9 @@ contract MilestoneModule is Module {
     // STRUCTS
 
     struct Milestone {
-        string title; //@note Could go with a name/hash
+        string title;
         uint256 startDate;
-        string details; //@note Could go instead with an ipfs hash or a link
+        string details;
         bool submitted;
         bool completed;
         bool removed;
@@ -165,7 +165,7 @@ contract MilestoneModule is Module {
 
     /// @notice insitializes the MilestoneModuleS
     /// @param proposal : The proposal that should be linked to this module
-    function initialize(IProposal proposal) external initializer {
+    function initialize(IProposal proposal) external initializer {//@note should this also be tested -> modifier?
         __Module_init(proposal);
         //@todo Set PayableModule
     }
@@ -174,20 +174,18 @@ contract MilestoneModule is Module {
 
     /// @notice Grants an address the role of Milestone
     /// @param account the address that is granted the role
-    function grantMilestoneContributorRole(address account)//@note reach around? @todo test?
-        public
-        onlyAuthorized
-    {
-        __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account);//@note event?
+    function grantMilestoneContributorRole(
+        address account //@note reach around? @todo test?
+    ) public onlyAuthorized {
+        __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account); //@note event?
     }
 
     /// @notice Grants an address the role of Milestone
     /// @param account the address that is granted the role
-    function revokeMilestoneContributorRole(address account)//@note reach around? @todo test?
-        public
-        onlyAuthorized
-    {
-        __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account);//@note event?
+    function revokeMilestoneContributorRole(
+        address account //@note reach around? @todo test?
+    ) public onlyAuthorized {
+        __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account); //@note event?
     }
 
     ///@dev Adds a milestone to the milestone array
@@ -284,7 +282,7 @@ contract MilestoneModule is Module {
         uint256 id,
         uint256 startDate,
         string memory details
-    ) external onlyAuthorized validId(id) {
+    ) external onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__Milestone_changeMilestone(uint256,uint256,string)",
