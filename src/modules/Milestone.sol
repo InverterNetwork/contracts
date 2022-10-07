@@ -176,7 +176,7 @@ contract MilestoneModule is Module {
     /// @dev There is no reach around function included, because the proposal is involved anyway
     /// @param account the address that is granted the role
     function grantMilestoneContributorRole(
-        address account //@todo test -> yes
+        address account
     ) public onlyAuthorized {
         __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
@@ -185,7 +185,7 @@ contract MilestoneModule is Module {
     /// @dev There is no reach around function included, because the proposal is involved anyway
     /// @param account the address that is granted the role
     function revokeMilestoneContributorRole(
-        address account //@todo test?
+        address account
     ) public onlyAuthorized {
         __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
