@@ -37,6 +37,7 @@ contract Payment is Module {
     // Storage
 
     ERC20 private token;
+    address private proposal;
 
     struct Payment {
         uint salary; // per epoch
@@ -95,18 +96,27 @@ contract Payment is Module {
     // Functions
 
     /// @notice Initialize module, save token and proposal address.
-    /// @param proposal proposal interface.
+    /// @param proposalInterface Interface of proposal.
     /// @param data encoded token and proposal address.
-    function initialize(IProposal proposal, bytes memory data)
+    function initialize(IProposal proposalInterface, bytes memory data)
         external
         initializer
     {
-        __Module_init(proposal);
+        __Module_init(proposalInterface);
 
-        address _token = abi.decode(data, (address));
+        (address _token, address _proposal) =
+            abi.decode(data, (address, address));
+
         require(_token != address(0), "invalid token address");
         require(_token != msg.sender, "invalid token address");
+        require(_token != address(this), "invalid token address");
+
+        require(_proposal != address(0), "invalid proposal address");
+        require(_proposal != msg.sender, "invalid proposal address");
+        require(_proposal != address(this), "invalid proposal address");
+
         token = ERC20(_token);
+        proposal = _proposal;
     }
 
     /// @notice Claims any accrued funds which a contributor has earnt.
