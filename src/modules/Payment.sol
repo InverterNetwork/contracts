@@ -39,14 +39,14 @@ contract Payment is Module {
     ERC20 private token;
     address private proposal;
 
-    struct Payment {
+    struct PaymentStruct {
         uint salary; // per epoch
         uint epochsAmount;
         bool enabled; // @audit rename to paused?
     }
 
     // contributerAddress => Payment
-    mapping(address => Payment) public payments;
+    mapping(address => PaymentStruct) public payments;
 
     //address private token;
 
@@ -204,7 +204,7 @@ contract Payment is Module {
         // Note Before adding payment make sure contributor is wListed.
 
         // @dev add struct data to mapping
-        payments[contributor] = Payment(
+        payments[contributor] = PaymentStruct(
             salary,
             epochsAmount,
             true
