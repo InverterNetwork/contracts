@@ -22,6 +22,16 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 */
 
 
+/**
+ * @title Payment module
+ *
+ * @dev The payment module handles the money flow to the contributors
+ * (e.g. how many tokens are sent to which contributor at what time).
+ *
+ * @author byterocket
+ */
+
+
 contract Payment is Module {
     //--------------------------------------------------------------------------
     // Storage
@@ -180,6 +190,8 @@ contract Payment is Module {
         // @todo verify there's enough tokens in proposal for the payment.
 
         // @todo make sure token address is the same as defined in proposal
+
+        // @note before adding payment make sure contributor is wListed
 
         // add struct data to mapping
         payments[contributor] = Payment(
