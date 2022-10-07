@@ -242,7 +242,9 @@ contract MilestoneModule is Module {
             ),
             Types.Operation.Call
         );
-        require(ok); //@todo Error from base Module (Issue #40 )  
+        if(!ok){
+            revert Module_ProposalCallbackFailed();
+        }
         return abi.decode(returnData, (uint256));
     }
 
