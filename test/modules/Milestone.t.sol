@@ -174,7 +174,7 @@ contract MilestoneTest is Test, ProposalMock {
         if (id == idOfRemoved) {
             vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
         }
-        milestoneMod.__Milestone_changeMilestone(id, 0, " ");
+        milestoneMod.__Milestone_changeStartDate(id, 0);
     }
 
     function testModifierInPosition() public {
@@ -245,40 +245,64 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.addMilestone(" ", 0, " ");
 
         //--------------------------------------------------------------------------------
-        //__Milestone_changeMilestone
+        //__Milestone_changeDetails
 
         //OnlyProposal
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
         vm.prank(address(0));
-        milestoneMod.__Milestone_changeMilestone(id, 0, " ");
+        milestoneMod.__Milestone_changeDetails(id," ");
 
         //validId
         vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
-        milestoneMod.__Milestone_changeMilestone(invalidId, 0, " ");
+        milestoneMod.__Milestone_changeDetails(invalidId, " ");
 
         //notRemoved
         vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
-        milestoneMod.__Milestone_changeMilestone(removedId, 0, " ");
+        milestoneMod.__Milestone_changeDetails(removedId, " ");
+
+        //validDetails
+        vm.expectRevert(MilestoneModule.InvalidDetails.selector);
+        milestoneMod.__Milestone_changeDetails(id, "");
+
+        //--------------------------------------------------------------------------------
+        //changeDetails
+
+        //onlyAuthorized
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(0));
+        milestoneMod.changeDetails(id, " ");
+
+        //--------------------------------------------------------------------------------
+        //__Milestone_changeStartDate
+
+        //OnlyProposal
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        vm.prank(address(0));
+        milestoneMod.__Milestone_changeStartDate(id, 0);
+
+        //validId
+        vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
+        milestoneMod.__Milestone_changeStartDate(invalidId, 0);
+
+        //notRemoved
+        vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
+        milestoneMod.__Milestone_changeStartDate(removedId, 0);
 
         /*//validStartDate
         vm.expectRevert(MilestoneModule.InvalidStartDate.selector);//@note as long as ValidStartDate has no checks no Implmentation needed
-        milestoneMod.__Milestone_changeMilestone(
+        milestoneMod.__Milestone_changeStartDate(
             "",
             0,
             " "
         ); */
 
-        //validDetails
-        vm.expectRevert(MilestoneModule.InvalidDetails.selector);
-        milestoneMod.__Milestone_changeMilestone(id, 0, "");
-
         //--------------------------------------------------------------------------------
-        //changeMilestone
+        //changeStartDate
 
         //onlyAuthorized
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         vm.prank(address(0));
-        milestoneMod.changeMilestone(id, 0, " ");
+        milestoneMod.changeStartDate(id, 0);
 
         //--------------------------------------------------------------------------------
         //__Milestone_removeMilestone
@@ -423,15 +447,25 @@ contract MilestoneTest is Test, ProposalMock {
         id = milestoneMod.addMilestone(title, startDate, details);
         assertTrue(id == 0);
 
-        //Change
+        //ChangeDetails
         vm.expectCall(
             address(milestoneMod),
             abi.encodeCall(
-                milestoneMod.__Milestone_changeMilestone,
-                (id, startDate, details)
+                milestoneMod.__Milestone_changeDetails,
+                (id, details)
             )
         );
-        milestoneMod.changeMilestone(id, startDate, details);
+        milestoneMod.changeDetails(id, details);
+
+        //ChangeStartDate
+        vm.expectCall(
+            address(milestoneMod),
+            abi.encodeCall(
+                milestoneMod.__Milestone_changeStartDate,
+                (id, startDate)
+            )
+        );
+        milestoneMod.changeStartDate(id, startDate);
 
         //Remove
         id = milestoneMod.addMilestone(title, startDate, details);
@@ -535,18 +569,35 @@ contract MilestoneTest is Test, ProposalMock {
         }
     }
 
-    function testChange(uint256 newStartDate, string memory newDetails) public {
+    function testChangeDetails(string memory newDetails) public {
         vm.assume(bytes(newDetails).length != 0);
         uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
 
-        milestoneMod.__Milestone_changeMilestone(id, newStartDate, newDetails);
+        milestoneMod.__Milestone_changeDetails(id, newDetails);
+
+        Milestone memory milestone = getMilestoneFromModule(id);
+
+        assertTrue(keccak256(bytes(milestone.title)) == keccak256(bytes(" ")));
+        assertTrue(milestone.startDate == 0);
+        assertTrue(
+            keccak256(bytes(milestone.details)) == keccak256(bytes(newDetails))
+        );
+        assertTrue(milestone.submitted == false);
+        assertTrue(milestone.completed == false);
+        assertTrue(milestone.removed == false);
+    }
+
+    function testChangeStartDate(uint256 newStartDate) public {
+        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+
+        milestoneMod.__Milestone_changeStartDate(id, newStartDate);
 
         Milestone memory milestone = getMilestoneFromModule(id);
 
         assertTrue(keccak256(bytes(milestone.title)) == keccak256(bytes(" ")));
         assertTrue(milestone.startDate == newStartDate);
         assertTrue(
-            keccak256(bytes(milestone.details)) == keccak256(bytes(newDetails))
+            keccak256(bytes(milestone.details)) == keccak256(bytes(" "))
         );
         assertTrue(milestone.submitted == false);
         assertTrue(milestone.completed == false);
