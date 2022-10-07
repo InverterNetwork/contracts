@@ -4,8 +4,9 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 
 import {MilestoneModule} from "src/modules/Milestone.sol";
+import {IModule} from "src/interfaces/IModule.sol";
 
-import {ProposalMock} from "test/utils/mocks//proposal/ProposalMock.sol";
+import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
 contract MilestoneTest is Test, ProposalMock {
@@ -60,20 +61,16 @@ contract MilestoneTest is Test, ProposalMock {
     // TEST MODIFIER
 
     function testContributorAccess(address accessor) public {
-        uint256 id = milestoneMod.__Milestone_addMilestone(
-            " ",
-            0,
-            " "
-        );
+        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
 
         vm.expectRevert(MilestoneModule.OnlyCallableByContributor.selector);
         vm.prank(accessor);
         milestoneMod.submitMilestone(id);
 
         authorizerMock.setIsAuthorized(address(this), true);
-        
+
         milestoneMod.grantMilestoneContributorRole(accessor);
-        
+
         vm.prank(accessor);
         milestoneMod.submitMilestone(id);
     }
@@ -107,7 +104,8 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.__Milestone_removeMilestone(id);
     }
 
-    function testSubmitted(uint256 id) public {//@note is this a useful structure
+    function testSubmitted(uint256 id) public {
+        //@note is this a useful structure
 
         vm.assume(id <= 1);
 
@@ -133,7 +131,8 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.__Milestone_confirmMilestone(id);
     }
 
-    function testNotCompleted(uint256 id) public {//@note is this a useful structure
+    function testNotCompleted(uint256 id) public {
+        //@note is this a useful structure
 
         vm.assume(id <= 1);
 
@@ -161,16 +160,13 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.__Milestone_confirmMilestone(id);
     }
 
-    function testNotRemoved(uint256 id) public {//@note is this a useful structure? Fuzzer?
+    function testNotRemoved(uint256 id) public {
+        //@note is this a useful structure? Fuzzer?
 
         vm.assume(id <= 1);
 
         //Not Removed
-        milestoneMod.__Milestone_addMilestone(
-            " ",
-            0,
-            " "
-        );
+        milestoneMod.__Milestone_addMilestone(" ", 0, " ");
 
         //Submitted
         uint256 idOfRemoved = milestoneMod.__Milestone_addMilestone(
@@ -183,12 +179,221 @@ contract MilestoneTest is Test, ProposalMock {
         if (id == idOfRemoved) {
             vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
         }
-        milestoneMod.__Milestone_changeMilestone(id,0," ");
+        milestoneMod.__Milestone_changeMilestone(id, 0, " ");
     }
 
+    function testModifierInPosition() public {
+        //--------------------------------------------------------------------------------
+        //Setup
 
+        //Give necessary rights
+        authorizerMock.setIsAuthorized(address(this), true);
+        milestoneMod.grantMilestoneContributorRole(address(this));
 
-    //@todo test if modifiers are in place //https://github.com/byterocket/kolektivo-contracts/blob/main/test/reserve/OnlyOwner.t.sol#L8
+        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+
+        uint256 removedId = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        milestoneMod.__Milestone_removeMilestone(removedId);
+
+        uint256 completedId = milestoneMod.__Milestone_addMilestone(
+            " ",
+            0,
+            " "
+        );
+        milestoneMod.__Milestone_submitMilestone(completedId);
+        milestoneMod.__Milestone_confirmMilestone(completedId);
+
+        uint256 invalidId = milestoneMod.nextNewMilestoneId();
+
+        //Take nessesary rights
+        milestoneMod.revokeMilestoneContributorRole(address(this));
+        authorizerMock.setIsAuthorized(address(this), false);
+
+        //--------------------------------------------------------------------------------
+        //__Milestone_addMilestone
+
+        //OnlyProposal
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        vm.prank(address(0));
+        milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+
+        //validTitle
+        vm.expectRevert(MilestoneModule.InvalidTitle.selector);
+        milestoneMod.__Milestone_addMilestone("", 0, " ");
+
+        /*//validStartDate
+        vm.expectRevert(MilestoneModule.InvalidStartDate.selector);//@note as long as ValidStartDate has no checks no Implmentation needed
+        milestoneMod.__Milestone_addMilestone(
+            "",
+            0,
+            " "
+        ); */
+
+        //validDetails
+        vm.expectRevert(MilestoneModule.InvalidDetails.selector);
+        milestoneMod.__Milestone_addMilestone(" ", 0, "");
+
+        //--------------------------------------------------------------------------------
+        //addMilestone
+
+        //onlyAuthorized
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(0));
+        milestoneMod.addMilestone(" ", 0, " ");
+
+        //--------------------------------------------------------------------------------
+        //__Milestone_changeMilestone
+
+        //OnlyProposal
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        vm.prank(address(0));
+        milestoneMod.__Milestone_changeMilestone(id, 0, " ");
+
+        //validId
+        vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
+        milestoneMod.__Milestone_changeMilestone(invalidId, 0, " ");
+
+        //notRemoved
+        vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
+        milestoneMod.__Milestone_changeMilestone(removedId, 0, " ");
+
+        /*//validStartDate
+        vm.expectRevert(MilestoneModule.InvalidStartDate.selector);//@note as long as ValidStartDate has no checks no Implmentation needed
+        milestoneMod.__Milestone_changeMilestone(
+            "",
+            0,
+            " "
+        ); */
+
+        //validDetails
+        vm.expectRevert(MilestoneModule.InvalidDetails.selector);
+        milestoneMod.__Milestone_changeMilestone(id, 0, "");
+
+        //--------------------------------------------------------------------------------
+        //changeMilestone
+
+        //onlyAuthorized
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(0));
+        milestoneMod.changeMilestone(id, 0, " ");
+
+        //--------------------------------------------------------------------------------
+        //__Milestone_removeMilestone
+
+        //OnlyProposal
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        vm.prank(address(0));
+        milestoneMod.__Milestone_removeMilestone(id);
+
+        //validId
+        vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
+        milestoneMod.__Milestone_removeMilestone(invalidId);
+
+        //notRemoved
+        vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
+        milestoneMod.__Milestone_removeMilestone(removedId);
+
+        //notCompleted
+        vm.expectRevert(MilestoneModule.MilestoneAlreadyCompleted.selector);
+        milestoneMod.__Milestone_removeMilestone(completedId);
+
+        //--------------------------------------------------------------------------------
+        //removeMilestone
+
+        //onlyAuthorized
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(0));
+        milestoneMod.removeMilestone(id);
+
+        //--------------------------------------------------------------------------------
+        //__Milestone_submitMilestone
+
+        //OnlyProposal
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        vm.prank(address(0));
+        milestoneMod.__Milestone_submitMilestone(id);
+
+        //validId
+        vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
+        milestoneMod.__Milestone_submitMilestone(invalidId);
+
+        //notRemoved
+        vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
+        milestoneMod.__Milestone_submitMilestone(removedId);
+
+        //--------------------------------------------------------------------------------
+        //submitMilestone
+
+        //contributorAccess
+        vm.expectRevert(MilestoneModule.OnlyCallableByContributor.selector);
+        vm.prank(address(0));
+        milestoneMod.submitMilestone(id);
+
+        //--------------------------------------------------------------------------------
+        //__Milestone_confirmMilestone
+
+        //OnlyProposal
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        vm.prank(address(0));
+        milestoneMod.__Milestone_confirmMilestone(id);
+
+        //validId
+        vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
+        milestoneMod.__Milestone_confirmMilestone(invalidId);
+
+        //notRemoved
+        vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
+        milestoneMod.__Milestone_confirmMilestone(removedId);
+
+        //submitted
+        vm.expectRevert(MilestoneModule.MilestoneNotSubmitted.selector);
+        milestoneMod.__Milestone_confirmMilestone(id);
+
+        //notCompleted
+        vm.expectRevert(MilestoneModule.MilestoneAlreadyCompleted.selector);
+        milestoneMod.__Milestone_confirmMilestone(completedId);
+
+        //--------------------------------------------------------------------------------
+        //confirmMilestone
+
+        //onlyAuthorized
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(0));
+        milestoneMod.confirmMilestone(id);
+
+        //--------------------------------------------------------------------------------
+        //__Milestone_declineMilestone
+
+        //OnlyProposal
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        vm.prank(address(0));
+        milestoneMod.__Milestone_declineMilestone(id);
+
+        //validId
+        vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
+        milestoneMod.__Milestone_declineMilestone(invalidId);
+
+        //notRemoved
+        vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
+        milestoneMod.__Milestone_declineMilestone(removedId);
+
+        //submitted
+        vm.expectRevert(MilestoneModule.MilestoneNotSubmitted.selector);
+        milestoneMod.__Milestone_declineMilestone(id);
+
+        //notCompleted
+        vm.expectRevert(MilestoneModule.MilestoneAlreadyCompleted.selector);
+        milestoneMod.__Milestone_declineMilestone(completedId);
+
+        //--------------------------------------------------------------------------------
+        //declineMilestone
+
+        //onlyAuthorized
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(0));
+        milestoneMod.declineMilestone(id);
+
+    }
 
     //--------------------------------------------------------------------------------
     // TEST REACH-AROUND
@@ -238,7 +443,7 @@ contract MilestoneTest is Test, ProposalMock {
         id = milestoneMod.addMilestone(title, startDate, details);
 
         milestoneMod.grantMilestoneContributorRole(address(this));
-        
+
         vm.expectCall(
             address(milestoneMod),
             abi.encodeCall(milestoneMod.__Milestone_submitMilestone, (id))
