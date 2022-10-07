@@ -11,17 +11,16 @@ import {VestingWallet} from "@oz/finance/VestingWallet.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
-/**
- * TODO:
- * -update formatting according to notion
- * -implement vesting
- * - `addPayment()` fetch token from address(proposal) to address(this).
- * - Refactor modifiers to only have single arguments, e.g. `validSalary`, `validEpochs`.
- * - replace require syntax with errors
- *
- * CHECKS:
- * -mp: Define token in proposal, fetchable via `paymentToken()`.
- */
+/*** TODO:
+ -update formatting according to notion
+ -implement vesting
+ - `addPayment()` fetch token from address(proposal) to address(this).
+ - replace require syntax with errors
+
+ CHECKS:
+ -mp: Define token in proposal, fetchable via `paymentToken()`.
+*/
+
 
 contract Payment is Module {
     //--------------------------------------------------------------------------
@@ -63,11 +62,11 @@ contract Payment is Module {
         require(contributor != address(0), "invalid contributor address");
         require(contributor != address(this), "invalid contributor address");
         require(contributor != msg.sender, "invalid contributor address");
+        require(payments[contributor].salary == 0, "payment already added");
         _;
     }
 
     modifier validSalary(address contributor, uint salary) {
-        require(payments[contributor].salary == 0, "payment already added");
         require(salary > 0, "invalid salary");
         _;
     }
@@ -85,6 +84,9 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Functions
 
+    /// @notice Initialize module, save token and proposal address.
+    /// @param proposal proposal interface.
+    /// @param data encoded token and proposal address.
     function initialize(IProposal proposal, bytes memory data)
         external
         initializer
@@ -97,18 +99,19 @@ contract Payment is Module {
         token = ERC20(_token);
     }
 
-    // @notice Claims any accrued funds which a contributor has earnt
-    function claim() external hasActivePayments {
+    /// @notice Claims any accrued funds which a contributor has earnt.
+    function claim() external hasActivePayments() {
         // TODO implement
         uint availableToClaim;
 
         emit PaymentClaimed(msg.sender, availableToClaim);
     }
 
-    // @notice Removes/stops a payment of a contributor
+    /// @notice Removes/stops a payment of a contributor.
+    /// @param contributor Contributor's address.
     function removePayment(address contributor)
         external
-        onlyAuthorized // only proposal owner
+        onlyAuthorized() // only proposal owner
     {
         if (payments[contributor].salary != 0) {
             uint _salary = payments[contributor].salary;
@@ -120,11 +123,11 @@ contract Payment is Module {
         }
     }
 
-    // @notice Enable/Disable a payment of a contributor
-    // @param contributor Contributor's address
+    /// @notice Enable/Disable a payment of a contributor.
+    /// @param contributor Contributor's address.
     function toggleEnablePayment(address contributor)
         external
-        onlyAuthorized // only proposal owner
+        onlyAuthorized() // only proposal owner
     {
         payments[contributor].enabled = !payments[contributor].enabled;
 
@@ -132,29 +135,43 @@ contract Payment is Module {
             contributor,
             payments[contributor].salary,
             payments[contributor].enabled
-            );
+        );
     }
 
     /// NOTE we may want a method that returns all the contributor addresses
-    /// @notice Returns the existing payments of the contributors
+    /// @notice Returns the existing payments of the contributors.
+    /// @param contributor Contributor's address.
+    /// @param salary Salary contributor will receive per epoch.
+    /// @return epochsAmount Amount of epochs to receive the salary for.
     function listPayments(address contributor)
         external
         view
         returns (uint, uint)
     {
-        return (payments[contributor].salary, payments[contributor].epochsAmount);
+        return (
+            payments[contributor].salary,
+            payments[contributor].epochsAmount
+        );
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
-    ///         depending on the module
-    function addPayment(address contributor, uint salary, uint epochsAmount)
+    ///         depending on the module.
+    /// @param contributor Contributor's address.
+    /// @param salary Salary contributor will receive per epoch.
+    /// @return epochsAmount Amount of epochs to receive the salary for.
+    function addPayment(
+        address contributor,
+        uint salary,
+        uint epochsAmount
+    )
         external
-        onlyAuthorized // only proposal owner
+        onlyAuthorized() // only proposal owner
         validContributor(contributor)
-        validSalary(contributor, salary)
+        validSalary(salary)
         validEpochsAmount(epochsAmount)
     {
-        // Somewhere else: (A sends X tokens to proposal => token.balanceOf(proposal) == X)
+        // Somewhere else:
+        //(A sends X tokens to proposal => token.balanceOf(proposal) == X)
         // Payment:
         // function addPayment {
         //   token.transferFrom(proposal, address(this), amount);
@@ -165,7 +182,11 @@ contract Payment is Module {
         // @todo make sure token address is the same as defined in proposal
 
         // add struct data to mapping
-        payments[contributor] = Payment(salary, epochsAmount, true);
+        payments[contributor] = Payment(
+            salary,
+            epochsAmount,
+            true
+        );
 
         emit PaymentAdded(contributor, salary, epochsAmount);
     }
