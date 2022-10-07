@@ -20,6 +20,9 @@ interface IModule {
     /// @notice Function is not callable inside the module's context.
     error Module__WantProposalContext();
 
+    /// @notice Proposal callback triggered failed.
+    error Module_ProposalCallbackFailed();
+
     //--------------------------------------------------------------------------
     // Functions
 

@@ -164,6 +164,12 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
         (ok, returnData) =
             __Module_proposal.executeTxFromModule(address(this), data, op);
 
+        // Note that there is no check whether the proposal callback succeeded.
+        // This responsibility is delegated to the caller, i.e. downstream
+        // module implementation.
+        // However, the {IModule} interface defines a generic error type for
+        // failed proposal callbacks that can be used to prevent different
+        // custom error types in each implementation.
         return (ok, returnData);
     }
 }
