@@ -41,6 +41,12 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Initializer
 
+    // @todo mp: Check that `_disableInitializers()` is used correctly.
+    //           Makes testing setup harder too.
+    //constructor() {
+    //    _disableInitializers();
+    //}
+
     function init(
         uint proposalId,
         address[] calldata funders,

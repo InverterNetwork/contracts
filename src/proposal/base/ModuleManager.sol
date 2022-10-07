@@ -30,6 +30,7 @@ import {IModuleManager} from "src/interfaces/IModuleManager.sol";
  * @author byterocket
  */
 contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
+    // @todo mp: Should be abstract?
     //--------------------------------------------------------------------------
     // Modifiers
 

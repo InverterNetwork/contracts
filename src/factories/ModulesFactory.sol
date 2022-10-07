@@ -9,14 +9,17 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
+import {IModulesFactory} from "src/interfaces/IModulesFactory.sol";
 
-// @todo Inherit from IModulesFactory.
-contract ModulesFactory is Ownable2Step {
+contract ModulesFactory is IModulesFactory, Ownable2Step {
     mapping(bytes32 => address) private targetPerModuleId;
 
     constructor() {
         // NO-OP
     }
+
+    // @todo mp: Modules need to use beacon pattern and support
+    //           "bulk updates".
 
     function createModule(
         bytes32 moduleId,
