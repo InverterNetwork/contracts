@@ -11,7 +11,7 @@ import {VestingWallet} from "@oz/finance/VestingWallet.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
-/*** TODO:
+/*** @todo Nejc:
  -update formatting according to notion
  -implement vesting
  - `addPayment()` fetch token from address(proposal) to address(this).
@@ -63,7 +63,7 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Errors
 
-    // @todo declare here
+    // @todo Nejc: Declare here.
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -111,7 +111,7 @@ contract Payment is Module {
 
     /// @notice Claims any accrued funds which a contributor has earnt.
     function claim() external hasActivePayments() {
-        // TODO implement
+        // @todo Nejc: Implement.
         uint availableToClaim;
 
         emit PaymentClaimed(msg.sender, availableToClaim);
@@ -148,7 +148,7 @@ contract Payment is Module {
         );
     }
 
-    /// NOTE we may want a method that returns all the contributor addresses
+    /// @note Nejc: we may want a method that returns all contributor addresses.
     /// @notice Returns the existing payments of the contributors.
     /// @param contributor Contributor's address.
     /// @param salary Salary contributor will receive per epoch.
@@ -187,13 +187,13 @@ contract Payment is Module {
         //   token.transferFrom(proposal, address(this), amount);
         // }
 
-        // @todo verify there's enough tokens in proposal for the payment.
+        // @todo Nejc: Verify there's enough tokens in proposal for the payment.
 
-        // @todo make sure token address is the same as defined in proposal
+        // @todo Nejc: Ensure token address is the same as defined in proposal.
 
-        // @note before adding payment make sure contributor is wListed
+        // @note Nejc: Before adding payment make sure contributor is wListed.
 
-        // add struct data to mapping
+        // @dev add struct data to mapping
         payments[contributor] = Payment(
             salary,
             epochsAmount,
