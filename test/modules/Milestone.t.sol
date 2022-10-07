@@ -42,6 +42,7 @@ contract MilestoneTest is Test, ProposalMock {
 
     function getMilestoneFromModule(uint256 id)
         internal
+        view
         returns (Milestone memory)
     {
         (
@@ -105,8 +106,6 @@ contract MilestoneTest is Test, ProposalMock {
     }
 
     function testSubmitted(uint256 id) public {
-        //@note is this a useful structure
-
         vm.assume(id <= 1);
 
         //Not Submitted
@@ -132,8 +131,6 @@ contract MilestoneTest is Test, ProposalMock {
     }
 
     function testNotCompleted(uint256 id) public {
-        //@note is this a useful structure
-
         vm.assume(id <= 1);
 
         //Submitted
@@ -161,8 +158,6 @@ contract MilestoneTest is Test, ProposalMock {
     }
 
     function testNotRemoved(uint256 id) public {
-        //@note is this a useful structure? Fuzzer?
-
         vm.assume(id <= 1);
 
         //Not Removed
@@ -208,6 +203,14 @@ contract MilestoneTest is Test, ProposalMock {
         //Take nessesary rights
         milestoneMod.revokeMilestoneContributorRole(address(this));
         authorizerMock.setIsAuthorized(address(this), false);
+
+        //--------------------------------------------------------------------------------
+        //initialize
+
+        //initializer
+        //This checks if Module init is called and therfor guarantees that onlyInitializing Modifier is working,
+        //Which confirms if the initializer modifier is used
+        assertTrue(address(milestoneMod.proposal()) != address(0));
 
         //--------------------------------------------------------------------------------
         //__Milestone_addMilestone
@@ -392,7 +395,6 @@ contract MilestoneTest is Test, ProposalMock {
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         vm.prank(address(0));
         milestoneMod.declineMilestone(id);
-
     }
 
     //--------------------------------------------------------------------------------
@@ -472,6 +474,29 @@ contract MilestoneTest is Test, ProposalMock {
 
     //--------------------------------------------------------------------------------
     // TEST MAIN
+
+    function testGrantMilestoneContributorRole(address account) public {
+        authorizerMock.setAllAuthorized(true);
+
+        milestoneMod.grantMilestoneContributorRole(account);
+
+        assertTrue(hasRole(address(milestoneMod),milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),account));
+    }
+
+    function testRevokeMilestoneContributorRole(address account) public {
+        authorizerMock.setAllAuthorized(true);
+
+        milestoneMod.revokeMilestoneContributorRole(account);
+
+        assertTrue(!hasRole(address(milestoneMod),milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),account));
+
+        milestoneMod.grantMilestoneContributorRole(account);
+        milestoneMod.revokeMilestoneContributorRole(account);
+
+        assertTrue(!hasRole(address(milestoneMod),milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),account));
+
+    }
+
     function testAdd(
         string memory title,
         uint256 startDate,
@@ -502,8 +527,7 @@ contract MilestoneTest is Test, ProposalMock {
 
     function testAddMultiple() public {
         uint256 realId;
-        for (uint256 supposedId = 0; supposedId < 3; supposedId++) {
-            //@note is 3 enough? Should this even be tested?
+        for (uint256 supposedId = 0; supposedId < 300; supposedId++) {
             realId = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
             assertTrue(realId == supposedId);
         }
