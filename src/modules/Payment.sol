@@ -76,7 +76,7 @@ contract Payment is Module {
         _;
     }
 
-    modifier validSalary(address contributor, uint salary) {
+    modifier validSalary(uint salary) {
         require(salary > 0, "invalid salary");
         _;
     }
@@ -148,10 +148,10 @@ contract Payment is Module {
         );
     }
 
-    /// @note Nejc: we may want a method that returns all contributor addresses.
+    /// Note we may want a method that returns all contributor addresses.
     /// @notice Returns the existing payments of the contributors.
     /// @param contributor Contributor's address.
-    /// @param salary Salary contributor will receive per epoch.
+    /// @return salary Salary contributor will receive per epoch.
     /// @return epochsAmount Amount of epochs to receive the salary for.
     function listPayments(address contributor)
         external
@@ -168,7 +168,7 @@ contract Payment is Module {
     ///         depending on the module.
     /// @param contributor Contributor's address.
     /// @param salary Salary contributor will receive per epoch.
-    /// @return epochsAmount Amount of epochs to receive the salary for.
+    /// @param epochsAmount Amount of epochs to receive the salary for.
     function addPayment(
         address contributor,
         uint salary,
@@ -191,7 +191,7 @@ contract Payment is Module {
 
         // @todo Nejc: Ensure token address is the same as defined in proposal.
 
-        // @note Nejc: Before adding payment make sure contributor is wListed.
+        // Note Before adding payment make sure contributor is wListed.
 
         // @dev add struct data to mapping
         payments[contributor] = Payment(
