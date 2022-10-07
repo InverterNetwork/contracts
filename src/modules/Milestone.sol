@@ -48,7 +48,7 @@ contract MilestoneModule is Module {
     // STATE
 
     // Define a role for contributors.
-    bytes32 internal constant MILESTONE_CONTRIBUTOR_ROLE =
+    bytes32 public constant MILESTONE_CONTRIBUTOR_ROLE =
         keccak256("milestoneContributor");
 
     /// @dev Mapping of all Milestones
@@ -108,7 +108,7 @@ contract MilestoneModule is Module {
     /// @dev Checks if the given startDate is valid.
     /// @param startDate : The given startDate of the milestone
     modifier validStartDate(uint256 startDate) {
-        /* if () {//@note Do we need restrictions here?
+        /* if () {//@note not in vergangenheit
          revert InvalidStartDate();
        } */
         _;
@@ -164,28 +164,30 @@ contract MilestoneModule is Module {
     constructor() {}
 
     /// @notice insitializes the MilestoneModuleS
-    /// @param proposal : The proposal that should be linked to this module
-    function initialize(IProposal proposal) external initializer {//@note should this also be tested -> modifier?
-        __Module_init(proposal);
+    /// @param proposal_ : The proposal that should be linked to this module
+    function initialize(IProposal proposal_) external initializer {
+        __Module_init(proposal_);
         //@todo Set PayableModule
     }
 
     //++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS ++++++++++++++++++++++++++++++++++++++++++
 
     /// @notice Grants an address the role of Milestone
+    /// @dev There is no reach around function included, because the proposal is involved anyway
     /// @param account the address that is granted the role
     function grantMilestoneContributorRole(
-        address account //@note reach around? @todo test?
+        address account //@todo test -> yes
     ) public onlyAuthorized {
-        __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account); //@note event?
+        __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
 
     /// @notice Grants an address the role of Milestone
+    /// @dev There is no reach around function included, because the proposal is involved anyway
     /// @param account the address that is granted the role
     function revokeMilestoneContributorRole(
-        address account //@note reach around? @todo test?
+        address account //@todo test?
     ) public onlyAuthorized {
-        __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account); //@note event?
+        __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
 
     ///@dev Adds a milestone to the milestone array
@@ -240,7 +242,7 @@ contract MilestoneModule is Module {
             ),
             Types.Operation.Call
         );
-        require(ok); //@note is this good standard?
+        require(ok); //@todo Error from base Module (Issue #40 )  
         return abi.decode(returnData, (uint256));
     }
 
@@ -260,7 +262,7 @@ contract MilestoneModule is Module {
         validStartDate(startDate)
         validDetails(details)
     {
-        Milestone memory oldMilestone = milestones[id]; //@note it might be more efficient use storage
+        Milestone memory oldMilestone = milestones[id];
         milestones[id] = Milestone(
             oldMilestone.title, //Keep old title
             startDate,
@@ -278,7 +280,6 @@ contract MilestoneModule is Module {
     ///@param startDate : the new startDate of the given milestone
     ///@param details : the new details of the given milestone
     function changeMilestone(
-        //@note We might want to split up into Specific Changes (changeDetails ....)
         uint256 id,
         uint256 startDate,
         string memory details
@@ -360,9 +361,7 @@ contract MilestoneModule is Module {
         Milestone storage milestone = milestones[id];
         milestone.completed = true;
 
-        //milestone.submitted = true; //@note Change this to false?
-
-        //@note Maybe move the milestone to a seperate array as mark of completion?
+        //@note pay who and how much?
         //@todo add Payment
 
         emit ConfirmMilestone(id);
