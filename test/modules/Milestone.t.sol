@@ -157,7 +157,7 @@ contract MilestoneTest is Test, ProposalMock {
             vm.expectRevert(MilestoneModule.MilestoneAlreadyCompleted.selector);
         }
 
-        milestoneMod.__Milestone_confirmMilestone(id);
+        milestoneMod.__Milestone_declineMilestone(id);
     }
 
     function testNotRemoved(uint256 id) public {
@@ -320,10 +320,6 @@ contract MilestoneTest is Test, ProposalMock {
         vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
         milestoneMod.__Milestone_removeMilestone(invalidId);
 
-        //notRemoved
-        vm.expectRevert(MilestoneModule.MilestoneRemoved.selector);
-        milestoneMod.__Milestone_removeMilestone(removedId);
-
         //notCompleted
         vm.expectRevert(MilestoneModule.MilestoneAlreadyCompleted.selector);
         milestoneMod.__Milestone_removeMilestone(completedId);
@@ -379,10 +375,6 @@ contract MilestoneTest is Test, ProposalMock {
         //submitted
         vm.expectRevert(MilestoneModule.MilestoneNotSubmitted.selector);
         milestoneMod.__Milestone_confirmMilestone(id);
-
-        //notCompleted
-        vm.expectRevert(MilestoneModule.MilestoneAlreadyCompleted.selector);
-        milestoneMod.__Milestone_confirmMilestone(completedId);
 
         //--------------------------------------------------------------------------------
         //confirmMilestone
@@ -617,7 +609,7 @@ contract MilestoneTest is Test, ProposalMock {
         }
     }
 
-    function testChangeDetails(string memory newDetails) public {
+    function testChangeDetails(string memory newDetails) public {//@note how to test idempotence?
         vm.assume(bytes(newDetails).length != 0);
         uint256 id = milestoneMod.nextNewMilestoneId();
         milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
@@ -654,7 +646,7 @@ contract MilestoneTest is Test, ProposalMock {
         assertTrue(milestone.removed == false);
     }
 
-    function testRemove() public {
+    function testRemove() public {//@note how to test idempotence?
         uint256 id = milestoneMod.nextNewMilestoneId();
         milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
         milestoneMod.__Milestone_removeMilestone(id);
@@ -663,7 +655,7 @@ contract MilestoneTest is Test, ProposalMock {
         assertTrue(milestone.removed == true);
     }
 
-    function testSubmit() public {
+    function testSubmit() public {//@note how to test idempotence?
         uint256 id = milestoneMod.nextNewMilestoneId();
         milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
@@ -674,7 +666,7 @@ contract MilestoneTest is Test, ProposalMock {
         assertTrue(milestone.removed == false);
     }
 
-    function testConfirm() public {
+    function testConfirm() public {//@note how to test idempotence?
         uint256 id = milestoneMod.nextNewMilestoneId();
         milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
@@ -686,7 +678,7 @@ contract MilestoneTest is Test, ProposalMock {
         assertTrue(milestone.removed == false);
     }
 
-    function testDecline() public {
+    function testDecline() public {//@note how to test idempotence?
         uint256 id = milestoneMod.nextNewMilestoneId();
         milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
