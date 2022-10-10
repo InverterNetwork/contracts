@@ -25,12 +25,11 @@ import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
  * @author byterocket
  */
 contract ModuleFactory is IModuleFactory, Ownable2Step {
-    mapping(bytes32 => address) private _targetPerMetadata;
+    //--------------------------------------------------------------------------
+    // Modifiers
 
-    constructor() {
-        // NO-OP
-    }
-
+    /// @notice Modifier to guarantee function is only callable with valid
+    ///         metadata.
     modifier validMetadata(IModule.Metadata memory data) {
         if (!MetadataLib.isValid(data)) {
             revert ModuleFactory__InvalidMetadata();
@@ -38,6 +37,8 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         _;
     }
 
+    /// @notice Modifier to guarantee function is only callable with valid
+    ///         target.
     modifier validTarget(address target_) {
         if (target_ == address(this) || target_ == address(0)) {
             revert ModuleFactory__InvalidTarget();
@@ -45,10 +46,27 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         _;
     }
 
+    //--------------------------------------------------------------------------
+    // Storage
+
     // @todo mp: Modules need to use beacon pattern and support
     //           "bulk updates".
     // @todo mp: ModuleFactory needs to know/manage minorVersion.
     //           Module does not have knowledge about this anymore!
+
+    /// @dev Mapping of metadata identifier to target contract address.
+    /// @dev MetadataLib.identifier(metadata) => address
+    mapping(bytes32 => address) private _targets;
+
+    //--------------------------------------------------------------------------
+    // Constructor
+
+    constructor() {
+        // NO-OP
+    }
+
+    //--------------------------------------------------------------------------
+    // Public Mutating Functions
 
     /// @inheritdoc IModuleFactory
     function createModule(
@@ -62,7 +80,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         bytes32 id = MetadataLib.identifier(metadata);
 
-        address target_ = _targetPerMetadata[id];
+        address target_ = _targets[id];
 
         if (target_ == address(0)) {
             revert ModuleFactory__UnregisteredMetadata();
@@ -74,6 +92,9 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         return clone;
     }
 
+    //--------------------------------------------------------------------------
+    // Public View Functions
+
     function target(IModule.Metadata memory metadata)
         external
         view
@@ -81,7 +102,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     {
         bytes32 id = MetadataLib.identifier(metadata);
 
-        return _targetPerMetadata[id];
+        return _targets[id];
     }
 
     //--------------------------------------------------------------------------
@@ -96,7 +117,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     {
         bytes32 id = MetadataLib.identifier(metadata);
 
-        address got = _targetPerMetadata[id];
+        address got = _targets[id];
 
         // Revert if metadata already registered for different target.
         if (got != address(0)) {
@@ -105,7 +126,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         if (got != target_) {
             // Register Metadata for target.
-            _targetPerMetadata[id] = target_;
+            _targets[id] = target_;
             emit MetadataRegistered(metadata, target_);
         }
     }
