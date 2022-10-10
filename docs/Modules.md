@@ -37,6 +37,7 @@ to mirror the proposal's storage layout.
 All variables inherited from the `ProposalStorage` are prefixed with `__Proposal_`.
 
 Per convention, such `delegatecall`-callbacks **SHOULD**:
+
 1. Prefix the function name with `__Proposal_`
 2. Only access `ProposalStorage` variables
 
@@ -44,11 +45,12 @@ In order to guarantee the callback is NOT executed in the module's context,
 `wantProposalContext` modifier **MUST** be used!
 
 An example for this could be:
+
 ```
 function doSmth(
         uint256 dataNumber,
         string memory dataString,
-    ) external returns(uint256){
+    ) external returns(uint256,bool){
         bool ok;
         bytes memory returnData;
 
@@ -58,12 +60,12 @@ function doSmth(
                 dataNumber,
                 dataString
             ),
-            Types.Operation.Delegatecall
+            Types.Operation.DelegateCall
         );
         if (!ok) {
             revert Module_ProposalCallbackFailed();
         }
-        return abi.decode(returnData, (uint256));
+        return abi.decode(returnData, (uint256,bool));
     }
 
 function __Proposal_doSmth(
@@ -71,7 +73,7 @@ function __Proposal_doSmth(
         string memory dataString,
     ) external wantProposalContext returns(uint256){
         //do Smth in Proposalcontext
-        return 1;
+        return 1,true;
     }
 ```
 
@@ -86,11 +88,12 @@ Proposal callbacks executed in the module's context **MUST** be authenticated
 via the `onlyProposal` modifier!
 
 An example for this could be:
+
 ```
 function doSmth(
         uint256 dataNumber,
         string memory dataString,
-    ) external returns(uint256){
+    ) external returns(uint256,bool){
         bool ok;
         bytes memory returnData;
 
@@ -105,15 +108,15 @@ function doSmth(
         if (!ok) {
             revert Module_ProposalCallbackFailed();
         }
-        return abi.decode(returnData, (uint256));
+        return abi.decode(returnData, (uint256,bool));
     }
 
 function __ExampleModule_doSmth(
         uint256 dataNumber,
         string memory dataString,
-    ) external onlyProposal returns(uint256){
+    ) external onlyProposal returns(uint256,bool){
         //do Smth
-        return 1;
+        return 1,true;
     }
 ```
 
@@ -127,6 +130,7 @@ that **MUST** be called in order to correctly initialize the storage.
 Users are authenticated using the proposal's `IAuthenticator` instance.
 This ensures that all access management is handled solely by the proposal.
 An Example for this could be:
+
 ```
 // Define a role for contributors.
     bytes32 CONTRIBUTOR_ROLE =
@@ -135,5 +139,3 @@ An Example for this could be:
 // Use a function to grant Role
 __Module_proposal.grantRole(CONTRIBUTOR_ROLE, address);
 ```
-
-
