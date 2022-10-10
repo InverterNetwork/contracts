@@ -152,10 +152,7 @@ contract MilestoneModule is Module {
         }
         _;
     }
-
-    /// @dev Invalid NewId
-    error InvalidNewId();
-
+    
     ///@dev Checks if the given Milestone is submitted
     ///@param id : id in the milestone array
     modifier submitted(uint256 id) {
@@ -230,10 +227,11 @@ contract MilestoneModule is Module {
     )
         external
         onlyProposal
+        newMilestoneIdAvailable(newId) //@todo test
         validTitle(title)
         validStartDate(startDate)
         validDetails(details)
-        newMilestoneIdAvailable(newId) //@todo test
+        
     {
         if (newId == nextNewMilestoneId) {
             milestones[nextNewMilestoneId++] = Milestone(

@@ -106,6 +106,20 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.__Milestone_removeMilestone(id);
     }
 
+    function testNewMilestoneIdAvailable(uint256 id) public {
+        uint256 nextId;
+        for (uint256 i = 0; i < 10; i++) {
+            nextId = milestoneMod.nextNewMilestoneId();
+            milestoneMod.__Milestone_addMilestone(nextId, " ", 0, " ");
+        }
+        if (id > milestoneMod.nextNewMilestoneId()) {
+            vm.expectRevert(
+                MilestoneModule.NewMilestoneIdNotYetAvailable.selector
+            );
+        }
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
+    }
+
     function testSubmitted(uint256 id) public {
         vm.assume(id <= 1);
 
@@ -184,7 +198,7 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.__Milestone_submitMilestone(completedId);
         milestoneMod.__Milestone_confirmMilestone(completedId);
 
-        uint256 invalidId = milestoneMod.nextNewMilestoneId();
+        uint256 invalidId = milestoneMod.nextNewMilestoneId()+1;
 
         //Take nessesary rights
         milestoneMod.revokeMilestoneContributorRole(address(this));
@@ -205,6 +219,10 @@ contract MilestoneTest is Test, ProposalMock {
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
         vm.prank(address(0));
         milestoneMod.__Milestone_addMilestone(0, " ", 0, " ");
+
+        //newMilestoneIdAvailable
+        vm.expectRevert(MilestoneModule.NewMilestoneIdNotYetAvailable.selector);
+        milestoneMod.__Milestone_addMilestone(invalidId, " ", 0, " ");
 
         //validTitle
         vm.expectRevert(MilestoneModule.InvalidTitle.selector);
