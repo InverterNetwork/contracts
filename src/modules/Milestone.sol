@@ -23,6 +23,12 @@ contract MilestoneModule is Module {
     /// @dev There is no milestone with this id
     error InvalidMilestoneId();
 
+    /// @dev The new Milestone Id is not yet available
+    error NewMilestoneIdNotYetAvailable();
+
+    /// @dev The Milestone with the given Id is already created
+    error MilestoneWithIdAlreadyCreated();
+
     /// @dev The Milestone is not yet submitted
     error MilestoneNotSubmitted();
 
@@ -67,7 +73,7 @@ contract MilestoneModule is Module {
     /// @dev A Milestone was changed in regards of startDate or details
     event ChangeMilestone(uint256 id, uint256 startDate, string details);
 
-    /// @dev A Milestone was changed in regards of startDate 
+    /// @dev A Milestone was changed in regards of startDate
     event ChangeStartDate(uint256 id, uint256 startDate);
 
     /// @dev A Milestone was changed in regards of details
@@ -138,6 +144,18 @@ contract MilestoneModule is Module {
         _;
     }
 
+    /// @dev Checks if the given newId is valid.
+    /// @param newId :
+    modifier newMilestoneIdAvailable(uint256 newId) {
+        if (newId > nextNewMilestoneId) {
+            revert NewMilestoneIdNotYetAvailable();
+        }
+        _;
+    }
+
+    /// @dev Invalid NewId
+    error InvalidNewId();
+
     ///@dev Checks if the given Milestone is submitted
     ///@param id : id in the milestone array
     modifier submitted(uint256 id) {
@@ -198,12 +216,14 @@ contract MilestoneModule is Module {
         __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
 
-    ///@dev Adds a milestone to the milestone array
-    ///@param title : the title for the new milestone
-    ///@param startDate : the startDate of the new milestone
-    ///@param details : the details of the new milestone
-    ///@return id : the id of the new milestone in the milestone array
+    /// @dev Adds milestone to the milestone mapping
+    /// @dev
+    /// @param newId : the id of the new milestone
+    /// @param title : the title for the new milestone
+    /// @param startDate : the startDate of the new milestone
+    /// @param details : the details of the new milestone
     function __Milestone_addMilestone(
+        uint256 newId,
         string memory title,
         uint256 startDate, //@note Possible Startdate now
         string memory details
@@ -213,37 +233,45 @@ contract MilestoneModule is Module {
         validTitle(title)
         validStartDate(startDate)
         validDetails(details)
-        returns (uint256 id)
+        newMilestoneIdAvailable(newId) //@todo test
     {
-        milestones[nextNewMilestoneId++] = Milestone(
-            title,
-            startDate,
-            details,
-            false,
-            false,
-            false
-        );
-        emit NewMilestone(title, startDate, details);
-        return nextNewMilestoneId - 1;
+        if (newId == nextNewMilestoneId) {
+            milestones[nextNewMilestoneId++] = Milestone(
+                title,
+                startDate,
+                details,
+                false,
+                false,
+                false
+            );
+            emit NewMilestone(title, startDate, details);
+        } else {
+            //If its not the same Milestone Content give an error message
+            if (!(hasSameMilestoneContent(newId, title, startDate, details))) {
+                revert MilestoneWithIdAlreadyCreated();
+            }
+        }
     }
 
-    ///@notice Adds a milestone to the milestone array
-    ///@dev Relay Function that routes the function call via the proposal
-    ///@param title : the title for the new milestone
-    ///@param startDate : the startDate of the new milestone
-    ///@param details : the details of the new milestone
-    ///@return id : the id of the new milestone in the milestone array
+    /// @notice Adds a milestone to the milestone array
+    /// @dev Relay Function that routes the function call via the proposal
+    /// @param newId : the id of the new milestone
+    /// @param title : the title for the new milestone
+    /// @param startDate : the startDate of the new milestone
+    /// @param details : the details of the new milestone
     function addMilestone(
+        uint256 newId,
         string memory title,
         uint256 startDate, //Possible Startdate now
         string memory details
-    ) external onlyAuthorized returns (uint256 id) {
+    ) external onlyAuthorized {
         bool ok;
         bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, returnData) = _triggerProposalCallback( //@todo check for okay everywhere?
             abi.encodeWithSignature(
-                "__Milestone_addMilestone(string,uint256,string)",
+                "__Milestone_addMilestone(uint256,string,uint256,string)",
+                newId,
                 title,
                 startDate,
                 details
@@ -253,25 +281,18 @@ contract MilestoneModule is Module {
         if (!ok) {
             revert Module_ProposalCallbackFailed();
         }
-        return abi.decode(returnData, (uint256));
     }
 
     ///@dev Changes a milestone in regards of details
     ///@param id : id in the milestone array
     ///@param details : the new details of the given milestone
-    function __Milestone_changeDetails(//@todo split
+    function __Milestone_changeDetails(
         uint256 id,
         string memory details
-    )
-        external
-        onlyProposal
-        validId(id)
-        notRemoved(id)
-        validDetails(details)
-    {
+    ) external onlyProposal validId(id) notRemoved(id) validDetails(details) {
         Milestone storage milestone = milestones[id];
 
-        if (keccak256(bytes(milestone.details))!=keccak256(bytes(details))) {
+        if (keccak256(bytes(milestone.details)) != keccak256(bytes(details))) {
             milestone.details = details;
             emit ChangeDetails(id, details);
         }
@@ -281,10 +302,10 @@ contract MilestoneModule is Module {
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
     ///@param details : the new details of the given milestone
-    function changeDetails(
-        uint256 id,
-        string memory details
-    ) external onlyAuthorized {
+    function changeDetails(uint256 id, string memory details)
+        external
+        onlyAuthorized
+    {
         _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__Milestone_changeDetails(uint256,string)",
@@ -298,10 +319,7 @@ contract MilestoneModule is Module {
     ///@dev Changes a milestone in regards of startDate
     ///@param id : id in the milestone array
     ///@param startDate : the new startDate of the given milestone
-    function __Milestone_changeStartDate(
-        uint256 id,
-        uint256 startDate
-    )
+    function __Milestone_changeStartDate(uint256 id, uint256 startDate)
         external
         onlyProposal
         validId(id)
@@ -310,20 +328,20 @@ contract MilestoneModule is Module {
     {
         Milestone storage milestone = milestones[id];
 
-        if (milestone.startDate!=startDate) {
+        if (milestone.startDate != startDate) {
             milestone.startDate = startDate;
             emit ChangeStartDate(id, startDate);
-        }        
+        }
     }
 
     ///@notice Changes a milestone in regards of startDate
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
     ///@param startDate : the new startDate of the given milestone
-    function changeStartDate(
-        uint256 id,
-        uint256 startDate
-    ) external onlyAuthorized {
+    function changeStartDate(uint256 id, uint256 startDate)
+        external
+        onlyAuthorized
+    {
         _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__Milestone_changeStartDate(uint256,uint256)",
@@ -333,8 +351,6 @@ contract MilestoneModule is Module {
             Types.Operation.Call
         );
     }
-
-    
 
     ///@dev removal of the milestone
     ///@param id : id in the milestone array
@@ -453,5 +469,35 @@ contract MilestoneModule is Module {
             ),
             Types.Operation.Call
         );
+    }
+
+    //--------------------------------------------------------------------------------
+    // HELPER FUNCTIONS
+
+    function isSameString(string memory first, string memory second)
+        private
+        pure
+        returns (bool)
+    {
+        return keccak256(bytes(first)) == keccak256(bytes(second));
+    }
+
+    /// @dev implies, that the id is valid
+    ///@param id : the id of the milestone that should be compared
+    ///@param title : the title data set thats compared
+    ///@param startDate : the startDate data set thats compared
+    ///@param details : the details data set thats compared
+    function hasSameMilestoneContent(
+        uint256 id,
+        string memory title,
+        uint256 startDate,
+        string memory details
+    ) private view returns (bool) {
+        Milestone memory createdMilestone = milestones[id];
+        return
+            //Title and startdate and details are the same respectively
+            isSameString(createdMilestone.title, title) &&
+            (createdMilestone.startDate == startDate) &&
+            isSameString(createdMilestone.details, details);
     }
 }

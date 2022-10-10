@@ -62,7 +62,8 @@ contract MilestoneTest is Test, ProposalMock {
     // TEST MODIFIER
 
     function testContributorAccess(address accessor) public {
-        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
         vm.expectRevert(MilestoneModule.OnlyCallableByContributor.selector);
         vm.prank(accessor);
@@ -80,7 +81,7 @@ contract MilestoneTest is Test, ProposalMock {
         if ((bytes(title)).length == 0) {
             vm.expectRevert(MilestoneModule.InvalidTitle.selector);
         }
-        milestoneMod.__Milestone_addMilestone(title, 0, " ");
+        milestoneMod.__Milestone_addMilestone(0, title, 0, " ");
     }
 
     function testValidStartDate(uint256 startDate) public {
@@ -94,11 +95,11 @@ contract MilestoneTest is Test, ProposalMock {
         if ((bytes(details)).length == 0) {
             vm.expectRevert(MilestoneModule.InvalidDetails.selector);
         }
-        milestoneMod.__Milestone_addMilestone(" ", 0, details);
+        milestoneMod.__Milestone_addMilestone(0, " ", 0, details);
     }
 
     function testValidId(uint256 id) public {
-        milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        milestoneMod.__Milestone_addMilestone(0, " ", 0, " ");
         if (id >= milestoneMod.nextNewMilestoneId()) {
             vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
         }
@@ -109,18 +110,12 @@ contract MilestoneTest is Test, ProposalMock {
         vm.assume(id <= 1);
 
         //Not Submitted
-        uint256 idOfNotSubmitted = milestoneMod.__Milestone_addMilestone(
-            " ",
-            0,
-            " "
-        );
+        uint256 idOfNotSubmitted = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(idOfNotSubmitted, " ", 0, " ");
 
         //Submitted
-        uint256 idOfSubmitted = milestoneMod.__Milestone_addMilestone(
-            " ",
-            0,
-            " "
-        );
+        uint256 idOfSubmitted = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(idOfSubmitted, " ", 0, " ");
         milestoneMod.__Milestone_submitMilestone(idOfSubmitted);
 
         if (id == idOfNotSubmitted) {
@@ -134,19 +129,13 @@ contract MilestoneTest is Test, ProposalMock {
         vm.assume(id <= 1);
 
         //Submitted
-        uint256 idOfSubmitted = milestoneMod.__Milestone_addMilestone(
-            " ",
-            0,
-            " "
-        );
+        uint256 idOfSubmitted = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(idOfSubmitted, " ", 0, " ");
         milestoneMod.__Milestone_submitMilestone(idOfSubmitted);
 
         //Completed
-        uint256 idOfCompleted = milestoneMod.__Milestone_addMilestone(
-            " ",
-            0,
-            " "
-        );
+        uint256 idOfCompleted = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(idOfCompleted, " ", 0, " ");
         milestoneMod.__Milestone_submitMilestone(idOfCompleted);
         milestoneMod.__Milestone_confirmMilestone(idOfCompleted);
 
@@ -161,14 +150,12 @@ contract MilestoneTest is Test, ProposalMock {
         vm.assume(id <= 1);
 
         //Not Removed
-        milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 idOfNotRemoved = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(idOfNotRemoved, " ", 0, " ");
 
         //Submitted
-        uint256 idOfRemoved = milestoneMod.__Milestone_addMilestone(
-            " ",
-            0,
-            " "
-        );
+        uint256 idOfRemoved = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(idOfRemoved, " ", 0, " ");
         milestoneMod.__Milestone_removeMilestone(idOfRemoved);
 
         if (id == idOfRemoved) {
@@ -185,16 +172,15 @@ contract MilestoneTest is Test, ProposalMock {
         authorizerMock.setIsAuthorized(address(this), true);
         milestoneMod.grantMilestoneContributorRole(address(this));
 
-        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
-        uint256 removedId = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 removedId = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(removedId, " ", 0, " ");
         milestoneMod.__Milestone_removeMilestone(removedId);
 
-        uint256 completedId = milestoneMod.__Milestone_addMilestone(
-            " ",
-            0,
-            " "
-        );
+        uint256 completedId = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(completedId, " ", 0, " ");
         milestoneMod.__Milestone_submitMilestone(completedId);
         milestoneMod.__Milestone_confirmMilestone(completedId);
 
@@ -218,11 +204,11 @@ contract MilestoneTest is Test, ProposalMock {
         //OnlyProposal
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
         vm.prank(address(0));
-        milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        milestoneMod.__Milestone_addMilestone(0, " ", 0, " ");
 
         //validTitle
         vm.expectRevert(MilestoneModule.InvalidTitle.selector);
-        milestoneMod.__Milestone_addMilestone("", 0, " ");
+        milestoneMod.__Milestone_addMilestone(0, "", 0, " ");
 
         /*//validStartDate
         vm.expectRevert(MilestoneModule.InvalidStartDate.selector);//@note as long as ValidStartDate has no checks no Implmentation needed
@@ -234,7 +220,7 @@ contract MilestoneTest is Test, ProposalMock {
 
         //validDetails
         vm.expectRevert(MilestoneModule.InvalidDetails.selector);
-        milestoneMod.__Milestone_addMilestone(" ", 0, "");
+        milestoneMod.__Milestone_addMilestone(0, " ", 0, "");
 
         //--------------------------------------------------------------------------------
         //addMilestone
@@ -242,7 +228,7 @@ contract MilestoneTest is Test, ProposalMock {
         //onlyAuthorized
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         vm.prank(address(0));
-        milestoneMod.addMilestone(" ", 0, " ");
+        milestoneMod.addMilestone(0, " ", 0, " ");
 
         //--------------------------------------------------------------------------------
         //__Milestone_changeDetails
@@ -250,7 +236,7 @@ contract MilestoneTest is Test, ProposalMock {
         //OnlyProposal
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
         vm.prank(address(0));
-        milestoneMod.__Milestone_changeDetails(id," ");
+        milestoneMod.__Milestone_changeDetails(id, " ");
 
         //validId
         vm.expectRevert(MilestoneModule.InvalidMilestoneId.selector);
@@ -441,10 +427,11 @@ contract MilestoneTest is Test, ProposalMock {
             address(milestoneMod),
             abi.encodeCall(
                 milestoneMod.__Milestone_addMilestone,
-                (title, startDate, details)
+                (0, title, startDate, details)
             )
         );
-        id = milestoneMod.addMilestone(title, startDate, details);
+        id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.addMilestone(id, title, startDate, details);
         assertTrue(id == 0);
 
         //ChangeDetails
@@ -468,7 +455,8 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.changeStartDate(id, startDate);
 
         //Remove
-        id = milestoneMod.addMilestone(title, startDate, details);
+        id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.addMilestone(id, title, startDate, details);
         vm.expectCall(
             address(milestoneMod),
             abi.encodeCall(milestoneMod.__Milestone_removeMilestone, (id))
@@ -476,7 +464,8 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.removeMilestone(id);
 
         //Submit
-        id = milestoneMod.addMilestone(title, startDate, details);
+        id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.addMilestone(id, title, startDate, details);
 
         milestoneMod.grantMilestoneContributorRole(address(this));
 
@@ -487,7 +476,8 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.submitMilestone(id);
 
         //Confirm
-        id = milestoneMod.addMilestone(title, startDate, details);
+        id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.addMilestone(id, title, startDate, details);
         milestoneMod.submitMilestone(id);
 
         vm.expectCall(
@@ -497,7 +487,8 @@ contract MilestoneTest is Test, ProposalMock {
         milestoneMod.confirmMilestone(id);
 
         //Decline
-        id = milestoneMod.addMilestone(title, startDate, details);
+        id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.addMilestone(id, title, startDate, details);
         milestoneMod.submitMilestone(id);
         vm.expectCall(
             address(milestoneMod),
@@ -514,7 +505,13 @@ contract MilestoneTest is Test, ProposalMock {
 
         milestoneMod.grantMilestoneContributorRole(account);
 
-        assertTrue(hasRole(address(milestoneMod),milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),account));
+        assertTrue(
+            hasRole(
+                address(milestoneMod),
+                milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),
+                account
+            )
+        );
     }
 
     function testRevokeMilestoneContributorRole(address account) public {
@@ -522,13 +519,24 @@ contract MilestoneTest is Test, ProposalMock {
 
         milestoneMod.revokeMilestoneContributorRole(account);
 
-        assertTrue(!hasRole(address(milestoneMod),milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),account));
+        assertTrue(
+            !hasRole(
+                address(milestoneMod),
+                milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),
+                account
+            )
+        );
 
         milestoneMod.grantMilestoneContributorRole(account);
         milestoneMod.revokeMilestoneContributorRole(account);
 
-        assertTrue(!hasRole(address(milestoneMod),milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),account));
-
+        assertTrue(
+            !hasRole(
+                address(milestoneMod),
+                milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),
+                account
+            )
+        );
     }
 
     //++++++++++++++++++++++++++++++++++++++++++ TEST-MAIN ++++++++++++++++++++++++++++++++++++++++++
@@ -541,11 +549,8 @@ contract MilestoneTest is Test, ProposalMock {
         vm.assume(bytes(title).length != 0);
         vm.assume(bytes(details).length != 0);
 
-        uint256 id = milestoneMod.__Milestone_addMilestone(
-            title,
-            startDate,
-            details
-        );
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, title, startDate, details);
 
         Milestone memory milestone = getMilestoneFromModule(id);
 
@@ -559,19 +564,45 @@ contract MilestoneTest is Test, ProposalMock {
         assertTrue(milestone.submitted == false);
         assertTrue(milestone.completed == false);
         assertTrue(milestone.removed == false);
+
+        //Check for idempotence
+        milestoneMod.__Milestone_addMilestone(id, title, startDate, details);
+        assertTrue(
+            keccak256(bytes(milestone.title)) == keccak256(bytes(title))
+        );
+        assertTrue(milestone.startDate == startDate);
+        assertTrue(
+            keccak256(bytes(milestone.details)) == keccak256(bytes(details))
+        );
+        assertTrue(milestone.submitted == false);
+        assertTrue(milestone.completed == false);
+        assertTrue(milestone.removed == false);
+
+        if (
+            keccak256(bytes(title)) != keccak256(bytes(" ")) ||
+            startDate != 0 ||
+            keccak256(bytes(details)) != keccak256(bytes(" "))
+        ) {
+            vm.expectRevert(
+                MilestoneModule.MilestoneWithIdAlreadyCreated.selector
+            );
+        }
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
     }
 
     function testAddMultiple() public {
         uint256 realId;
         for (uint256 supposedId = 0; supposedId < 300; supposedId++) {
-            realId = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+            realId = milestoneMod.nextNewMilestoneId();
+            milestoneMod.__Milestone_addMilestone(realId, " ", 0, " ");
             assertTrue(realId == supposedId);
         }
     }
 
     function testChangeDetails(string memory newDetails) public {
         vm.assume(bytes(newDetails).length != 0);
-        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
         milestoneMod.__Milestone_changeDetails(id, newDetails);
 
@@ -588,7 +619,8 @@ contract MilestoneTest is Test, ProposalMock {
     }
 
     function testChangeStartDate(uint256 newStartDate) public {
-        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
         milestoneMod.__Milestone_changeStartDate(id, newStartDate);
 
@@ -605,7 +637,8 @@ contract MilestoneTest is Test, ProposalMock {
     }
 
     function testRemove() public {
-        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
         milestoneMod.__Milestone_removeMilestone(id);
 
         Milestone memory milestone = getMilestoneFromModule(id);
@@ -613,7 +646,8 @@ contract MilestoneTest is Test, ProposalMock {
     }
 
     function testSubmit() public {
-        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
         milestoneMod.__Milestone_submitMilestone(id);
 
@@ -623,7 +657,8 @@ contract MilestoneTest is Test, ProposalMock {
     }
 
     function testConfirm() public {
-        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
         milestoneMod.__Milestone_submitMilestone(id);
         milestoneMod.__Milestone_confirmMilestone(id);
@@ -634,7 +669,8 @@ contract MilestoneTest is Test, ProposalMock {
     }
 
     function testDecline() public {
-        uint256 id = milestoneMod.__Milestone_addMilestone(" ", 0, " ");
+        uint256 id = milestoneMod.nextNewMilestoneId();
+        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
         milestoneMod.__Milestone_submitMilestone(id);
         milestoneMod.__Milestone_declineMilestone(id);
