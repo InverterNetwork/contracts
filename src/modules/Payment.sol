@@ -52,7 +52,12 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Events
 
-    event PaymentAdded(address contributor, uint salary, uint epochsAmount);
+      event PaymentAdded(
+        address contributor,
+        uint salary,
+        uint64 start,
+        uint64 end
+    );
 
     event PaymentRemoved(address contributor, uint salary, uint epochsAmount);
 
