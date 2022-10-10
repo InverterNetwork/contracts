@@ -13,17 +13,25 @@ import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 contract ProposalMock is IProposal, ModuleManagerMock {
     IAuthorizer public authorizer;
 
+    uint public proposalId;
+    address[] public funders;
+    address[] public modules;
+
     constructor(IAuthorizer authorizer_) {
         authorizer = authorizer_;
     }
 
-    /// @dev Currently unused. Implemented due to inheritance.
     function init(
-        uint proposalId,
-        address[] calldata funders,
-        address[] calldata modules,
+        uint proposalId_,
+        address[] calldata funders_,
+        address[] calldata modules_,
         IAuthorizer authorizer_
-    ) external {}
+    ) external {
+        proposalId = proposalId_;
+        funders = funders_;
+        modules = modules_;
+        authorizer = authorizer_;
+    }
 
     function executeTx(address target, bytes memory data)
         external
@@ -34,7 +42,7 @@ contract ProposalMock is IProposal, ModuleManagerMock {
         return "1";
     }
 
-    function initModules(address[] calldata modules) public initializer {
-        __ModuleManager_init(modules);
+    function initModules(address[] calldata modules_) public initializer {
+        __ModuleManager_init(modules_);
     }
 }

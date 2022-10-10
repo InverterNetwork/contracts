@@ -18,18 +18,30 @@ import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
  * @author byterocket
  */
 contract ProposalFactory is IProposalFactory {
+    //--------------------------------------------------------------------------
+    // Immutables
+
     /// @inheritdoc IProposalFactory
     address public immutable override target;
 
     /// @inheritdoc IProposalFactory
     address public immutable override moduleFactory;
 
+    //--------------------------------------------------------------------------
+    // Storage
+
     uint private _proposalIdCounter;
+
+    //--------------------------------------------------------------------------
+    // Constructor
 
     constructor(address target_, address moduleFactory_) {
         target = target_;
         moduleFactory = moduleFactory_;
     }
+
+    //--------------------------------------------------------------------------
+    // Public Mutating Functions
 
     /// @inheritdoc IProposalFactory
     function createProposal(
