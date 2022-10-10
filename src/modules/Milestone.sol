@@ -43,7 +43,7 @@ contract MilestoneModule is Module {
 
     struct Milestone {
         string title;
-        uint256 startDate;
+        uint startDate;
         string details;
         bool submitted;
         bool completed;
@@ -59,37 +59,37 @@ contract MilestoneModule is Module {
 
     /// @dev Mapping of all Milestones
     ///      uses nextNewMilestoneId to determine positioning of the milestones
-    mapping(uint256 => Milestone) public milestones;
+    mapping(uint => Milestone) public milestones;
 
     /// @dev The Id the next new Milestone is assigned
-    uint256 public nextNewMilestoneId;
+    uint public nextNewMilestoneId;
 
     //--------------------------------------------------------------------------------
     // EVENTS
 
     /// @dev New Milestone was created
-    event NewMilestone(string title, uint256 startDate, string details);
+    event NewMilestone(string title, uint startDate, string details);
 
     /// @dev A Milestone was changed in regards of startDate or details
-    event ChangeMilestone(uint256 id, uint256 startDate, string details);
+    event ChangeMilestone(uint id, uint startDate, string details);
 
     /// @dev A Milestone was changed in regards of startDate
-    event ChangeStartDate(uint256 id, uint256 startDate);
+    event ChangeStartDate(uint id, uint startDate);
 
     /// @dev A Milestone was changed in regards of details
-    event ChangeDetails(uint256 id, string details);
+    event ChangeDetails(uint id, string details);
 
     /// @notice A Milestone was removed
-    event RemoveMilestone(uint256 id);
+    event RemoveMilestone(uint id);
 
     /// @notice A Milestone was submitted
-    event SubmitMilestone(uint256 id);
+    event SubmitMilestone(uint id);
 
     /// @notice A submitted Milestone was confirmed
-    event ConfirmMilestone(uint256 id);
+    event ConfirmMilestone(uint id);
 
     /// @notice A submitted Milestone was declined
-    event DeclineMilestone(uint256 id);
+    event DeclineMilestone(uint id);
 
     //--------------------------------------------------------------------------------
     // MODIFIER
@@ -98,9 +98,7 @@ contract MilestoneModule is Module {
     modifier contributorAccess() {
         if (
             !__Module_proposal.hasRole(
-                address(this),
-                MILESTONE_CONTRIBUTOR_ROLE,
-                msg.sender
+                address(this), MILESTONE_CONTRIBUTOR_ROLE, msg.sender
             )
         ) {
             revert OnlyCallableByContributor();
@@ -119,7 +117,7 @@ contract MilestoneModule is Module {
 
     /// @dev Checks if the given startDate is valid.
     /// @param startDate : The given startDate of the milestone
-    modifier validStartDate(uint256 startDate) {
+    modifier validStartDate(uint startDate) {
         /* if () {//@note not in past?
          revert InvalidStartDate();
        } */
@@ -137,7 +135,7 @@ contract MilestoneModule is Module {
 
     /// @dev Checks if the given id is available in the milestone array
     /// @param id : id in the milestone array
-    modifier validId(uint256 id) {
+    modifier validId(uint id) {
         if (id >= nextNewMilestoneId) {
             revert InvalidMilestoneId();
         }
@@ -146,16 +144,16 @@ contract MilestoneModule is Module {
 
     /// @dev Checks if the given newId is valid.
     /// @param newId :
-    modifier newMilestoneIdAvailable(uint256 newId) {
+    modifier newMilestoneIdAvailable(uint newId) {
         if (newId > nextNewMilestoneId) {
             revert NewMilestoneIdNotYetAvailable();
         }
         _;
     }
-    
+
     ///@dev Checks if the given Milestone is submitted
     ///@param id : id in the milestone array
-    modifier submitted(uint256 id) {
+    modifier submitted(uint id) {
         if (!milestones[id].submitted) {
             revert MilestoneNotSubmitted();
         }
@@ -164,7 +162,7 @@ contract MilestoneModule is Module {
 
     ///@dev Checks if the given Milestone is not completed
     ///@param id : id in the milestone array
-    modifier notCompleted(uint256 id) {
+    modifier notCompleted(uint id) {
         if (milestones[id].completed) {
             revert MilestoneAlreadyCompleted();
         }
@@ -173,7 +171,7 @@ contract MilestoneModule is Module {
 
     ///@dev Checks if the given Milestone is removed
     ///@param id : id in the milestone array
-    modifier notRemoved(uint256 id) {
+    modifier notRemoved(uint id) {
         if (milestones[id].removed) {
             revert MilestoneRemoved();
         }
@@ -220,9 +218,9 @@ contract MilestoneModule is Module {
     /// @param startDate : the startDate of the new milestone
     /// @param details : the details of the new milestone
     function __Milestone_addMilestone(
-        uint256 newId,
+        uint newId,
         string memory title,
-        uint256 startDate, //@note Possible Startdate now
+        uint startDate, //@note Possible Startdate now
         string memory details
     )
         external
@@ -231,17 +229,10 @@ contract MilestoneModule is Module {
         validTitle(title)
         validStartDate(startDate)
         validDetails(details)
-        
     {
         if (newId == nextNewMilestoneId) {
-            milestones[nextNewMilestoneId++] = Milestone(
-                title,
-                startDate,
-                details,
-                false,
-                false,
-                false
-            );
+            milestones[nextNewMilestoneId++] =
+                Milestone(title, startDate, details, false, false, false);
             emit NewMilestone(title, startDate, details);
         } else {
             //If its not the same Milestone Content give an error message
@@ -258,9 +249,9 @@ contract MilestoneModule is Module {
     /// @param startDate : the startDate of the new milestone
     /// @param details : the details of the new milestone
     function addMilestone(
-        uint256 newId,
+        uint newId,
         string memory title,
-        uint256 startDate, //Possible Startdate now
+        uint startDate, //Possible Startdate now
         string memory details
     ) external onlyAuthorized {
         bool ok;
@@ -284,10 +275,13 @@ contract MilestoneModule is Module {
     ///@dev Changes a milestone in regards of details
     ///@param id : id in the milestone array
     ///@param details : the new details of the given milestone
-    function __Milestone_changeDetails(
-        uint256 id,
-        string memory details
-    ) external onlyProposal validId(id) notRemoved(id) validDetails(details) {
+    function __Milestone_changeDetails(uint id, string memory details)
+        external
+        onlyProposal
+        validId(id)
+        notRemoved(id)
+        validDetails(details)
+    {
         Milestone storage milestone = milestones[id];
 
         if (keccak256(bytes(milestone.details)) != keccak256(bytes(details))) {
@@ -300,15 +294,13 @@ contract MilestoneModule is Module {
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
     ///@param details : the new details of the given milestone
-    function changeDetails(uint256 id, string memory details)
+    function changeDetails(uint id, string memory details)
         external
         onlyAuthorized
     {
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Milestone_changeDetails(uint256,string)",
-                id,
-                details
+                "__Milestone_changeDetails(uint256,string)", id, details
             ),
             Types.Operation.Call
         );
@@ -317,7 +309,7 @@ contract MilestoneModule is Module {
     ///@dev Changes a milestone in regards of startDate
     ///@param id : id in the milestone array
     ///@param startDate : the new startDate of the given milestone
-    function __Milestone_changeStartDate(uint256 id, uint256 startDate)
+    function __Milestone_changeStartDate(uint id, uint startDate)
         external
         onlyProposal
         validId(id)
@@ -326,7 +318,8 @@ contract MilestoneModule is Module {
     {
         Milestone storage milestone = milestones[id];
 
-        if (milestone.startDate != startDate) {//@todo test idempotence
+        if (milestone.startDate != startDate) {
+            //@todo test idempotence
             milestone.startDate = startDate;
             emit ChangeStartDate(id, startDate);
         }
@@ -336,15 +329,10 @@ contract MilestoneModule is Module {
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
     ///@param startDate : the new startDate of the given milestone
-    function changeStartDate(uint256 id, uint256 startDate)
-        external
-        onlyAuthorized
-    {
+    function changeStartDate(uint id, uint startDate) external onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Milestone_changeStartDate(uint256,uint256)",
-                id,
-                startDate
+                "__Milestone_changeStartDate(uint256,uint256)", id, startDate
             ),
             Types.Operation.Call
         );
@@ -353,7 +341,7 @@ contract MilestoneModule is Module {
     ///@dev removal of the milestone
     ///@param id : id in the milestone array
     function __Milestone_removeMilestone(
-        uint256 id //@note There might be a point made to increase the level of interaction required to remove a milestone
+        uint id //@note There might be a point made to increase the level of interaction required to remove a milestone
     ) external onlyProposal validId(id) notCompleted(id) {
         Milestone storage milestone = milestones[id];
 
@@ -366,7 +354,7 @@ contract MilestoneModule is Module {
     ///@notice removal of the milestone
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
-    function removeMilestone(uint256 id) external onlyAuthorized {
+    function removeMilestone(uint id) external onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature("__Milestone_removeMilestone(uint256)", id),
             Types.Operation.Call
@@ -379,7 +367,7 @@ contract MilestoneModule is Module {
 
     ///@dev Submit a milestone
     ///@param id : id in the milestone array
-    function __Milestone_submitMilestone(uint256 id)
+    function __Milestone_submitMilestone(uint id)
         external
         onlyProposal
         validId(id)
@@ -396,7 +384,7 @@ contract MilestoneModule is Module {
     ///@notice Submit a milestone
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
-    function submitMilestone(uint256 id) external contributorAccess {
+    function submitMilestone(uint id) external contributorAccess {
         _triggerProposalCallback(
             abi.encodeWithSignature("__Milestone_submitMilestone(uint256)", id),
             Types.Operation.Call
@@ -405,7 +393,7 @@ contract MilestoneModule is Module {
 
     ///@dev Confirms a submitted milestone
     ///@param id : id in the milestone array
-    function __Milestone_confirmMilestone(uint256 id)
+    function __Milestone_confirmMilestone(uint id)
         external
         onlyProposal
         validId(id)
@@ -426,12 +414,9 @@ contract MilestoneModule is Module {
     ///@notice Confirms a submitted milestone
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
-    function confirmMilestone(uint256 id) external onlyAuthorized {
+    function confirmMilestone(uint id) external onlyAuthorized {
         _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Milestone_confirmMilestone(uint256)",
-                id
-            ),
+            abi.encodeWithSignature("__Milestone_confirmMilestone(uint256)", id),
             Types.Operation.Call
         );
     }
@@ -439,7 +424,7 @@ contract MilestoneModule is Module {
     ///@dev Declines a submitted milestone
     ///@param id : id in the milestone array
     function __Milestone_declineMilestone(
-        uint256 id //@note maybe at why declined
+        uint id //@note maybe at why declined
     )
         external
         onlyProposal
@@ -458,12 +443,9 @@ contract MilestoneModule is Module {
     ///@notice Declines a submitted milestone
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
-    function declineMilestone(uint256 id) external onlyAuthorized {
+    function declineMilestone(uint id) external onlyAuthorized {
         _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Milestone_declineMilestone(uint256)",
-                id
-            ),
+            abi.encodeWithSignature("__Milestone_declineMilestone(uint256)", id),
             Types.Operation.Call
         );
     }
@@ -485,16 +467,16 @@ contract MilestoneModule is Module {
     ///@param startDate : the startDate data set thats compared
     ///@param details : the details data set thats compared
     function hasSameMilestoneContent(
-        uint256 id,
+        uint id,
         string memory title,
-        uint256 startDate,
+        uint startDate,
         string memory details
     ) private view returns (bool) {
         Milestone memory createdMilestone = milestones[id];
         return
-            //Title and startdate and details are the same respectively
-            isSameString(createdMilestone.title, title) &&
-            (createdMilestone.startDate == startDate) &&
-            isSameString(createdMilestone.details, details);
+        //Title and startdate and details are the same respectively
+        isSameString(createdMilestone.title, title)
+            && (createdMilestone.startDate == startDate)
+            && isSameString(createdMilestone.details, details);
     }
 }
