@@ -109,8 +109,63 @@ contract Payment is Module {
         require(validAddress(_token), "invalid token address");
         require(validAddress(_proposal), "invalid proposal address");
 
-        token = ERC20(_token);
+        token = IERC20(_token);
         proposal = _proposal;
+    }
+
+    /// @notice Adds a new payment containing the details of the monetary flow
+    ///         depending on the module.
+    /// @param contributor Contributor's address.
+    /// @param salary Salary contributor will receive per epoch.
+    /// PARAM epochsAmount Amount of epochs to receive the salary for.
+    function addPayment(
+        address contributor,
+        uint salary,
+        uint64 start,
+        uint64 duration
+        //uint epochsAmount
+    )
+        external
+        onlyAuthorized() // only proposal owner
+        validContributor(contributor)
+        validSalary(salary)
+        //validEpochsAmount(epochsAmount)
+        // @todo Nejc: add modifiers for input validation
+    {
+
+        // INPUTS VALIDATION
+        // require(start + duration > start, "duration overflow");
+        // require(start > block.timestamp, "should start in future");
+        // require(duration > 0, "duration cant be 0");
+        //require(vestings[contributor] == address(0), "already has a vesting");
+
+        vesting = new VestingWallet(contributor, start, duration);
+
+        vestings[contributor] = address(vesting);
+
+        // Somewhere else:
+        //(A sends X tokens to proposal => token.balanceOf(proposal) == X)
+        // Payment:
+        // function addPayment {
+        //   token.transferFrom(proposal, address(this), amount);
+        // }
+
+
+
+        // @todo Nejc: Verify there's enough tokens in proposal for the payment.
+
+        // @todo Nejc: Ensure token address is the same as defined in proposal.
+
+        // Note Before adding payment make sure contributor is wListed.
+
+        // @dev add struct data to mapping
+        // payments[contributor] = PaymentStruct(
+        //     salary,
+        //     epochsAmount,
+        //     true
+        // );
+        //
+        emit PaymentAdded(contributor, salary, start, start + duration);
     }
 
     /// @notice Claims any accrued funds which a contributor has earnt.
@@ -166,45 +221,6 @@ contract Payment is Module {
             payments[contributor].salary,
             payments[contributor].epochsAmount
         );
-    }
-
-    /// @notice Adds a new payment containing the details of the monetary flow
-    ///         depending on the module.
-    /// @param contributor Contributor's address.
-    /// @param salary Salary contributor will receive per epoch.
-    /// @param epochsAmount Amount of epochs to receive the salary for.
-    function addPayment(
-        address contributor,
-        uint salary,
-        uint epochsAmount
-    )
-        external
-        onlyAuthorized() // only proposal owner
-        validContributor(contributor)
-        validSalary(salary)
-        validEpochsAmount(epochsAmount)
-    {
-        // Somewhere else:
-        //(A sends X tokens to proposal => token.balanceOf(proposal) == X)
-        // Payment:
-        // function addPayment {
-        //   token.transferFrom(proposal, address(this), amount);
-        // }
-
-        // @todo Nejc: Verify there's enough tokens in proposal for the payment.
-
-        // @todo Nejc: Ensure token address is the same as defined in proposal.
-
-        // Note Before adding payment make sure contributor is wListed.
-
-        // @dev add struct data to mapping
-        payments[contributor] = PaymentStruct(
-            salary,
-            epochsAmount,
-            true
-        );
-
-        emit PaymentAdded(contributor, salary, epochsAmount);
     }
 
     //--------------------------------------------------------------------------
