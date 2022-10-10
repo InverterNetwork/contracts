@@ -93,7 +93,7 @@ contract Payment is Module {
     }
 
     //--------------------------------------------------------------------------
-    // Functions
+    // External Functions
 
     /// @notice Initialize module, save token and proposal address.
     /// @param proposalInterface Interface of proposal.
@@ -107,13 +107,8 @@ contract Payment is Module {
         (address _token, address _proposal) =
             abi.decode(data, (address, address));
 
-        require(_token != address(0), "invalid token address");
-        require(_token != msg.sender, "invalid token address");
-        require(_token != address(this), "invalid token address");
-
-        require(_proposal != address(0), "invalid proposal address");
-        require(_proposal != msg.sender, "invalid proposal address");
-        require(_proposal != address(this), "invalid proposal address");
+        require(validAddress(_token), "invalid token address");
+        require(validAddress(_proposal), "invalid proposal address");
 
         token = ERC20(_token);
         proposal = _proposal;
@@ -211,5 +206,17 @@ contract Payment is Module {
         );
 
         emit PaymentAdded(contributor, salary, epochsAmount);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @notice validate address input.
+    /// @param addr Address to validate.
+    /// @return True if address is valid.
+    function validAddress(address addr) internal view returns(bool){
+        if(addr != address(0) || addr != msg.sender || addr != address(this))
+            return false;
+        return true;
     }
 }
