@@ -46,6 +46,17 @@ testModuleManager: ## Run ModuleManager tests
 testModule: ## Run Module tests
 	@forge test -vvv --match-contract "Module" --no-match-contract "Manager"
 
+.PHONY: testFactories
+testFactories: ## Run Factory tests
+	@forge test -vvv --match-contract "Factory"
+
+# --------------------------------------
+# Modules Tests
+
+.PHONY: testModuleMilestone
+testModuleMilestone: ## Run Milestone module tests
+	@forge test -vvv --match-contract "Milestone"
+
 # -----------------------------------------------------------------------------
 # Static Analyzers
 

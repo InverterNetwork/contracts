@@ -10,4 +10,8 @@ library OZErrors {
         bytes("Initializable: contract is not initializing");
     bytes internal constant Initializable__AlreadyInitialized =
         bytes("Initializable: contract is already initialized");
+
+    // Contract: Ownable2Step (inherits the error from Ownable)
+    bytes internal constant Ownable2Step__CallerNotOwner =
+        bytes("Ownable: caller is not the owner");
 }

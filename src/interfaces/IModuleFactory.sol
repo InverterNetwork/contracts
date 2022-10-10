@@ -6,8 +6,11 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 
 interface IModuleFactory {
-    error ModulesFactory__UnregisteredMetadata();
-    error ModulesFactory__MetataAlreadyRegistered();
+    error ModuleFactory__InvalidMetadata();
+    error ModuleFactory__InvalidTarget();
+
+    error ModuleFactory__UnregisteredMetadata();
+    error ModuleFactory__MetadataAlreadyRegistered();
 
     event MetadataRegistered(
         IModule.Metadata indexed metadata, address indexed target

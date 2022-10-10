@@ -114,28 +114,6 @@ contract ModuleTest is Test {
         module.init(proposal, data);
     }
 
-    /*
-    function testInitFailsForInvalidVersionPair() public {
-        module = new ModuleMock();
-
-        // Invalid: Version v0.0.
-        DATA = IModule.Metadata(0, 0, GIT_URL);
-
-        vm.expectRevert(Errors.Module__InvalidVersionPair);
-        module.init(proposal, DATA);
-    }
-
-    function testInitFailsForInvalidGitURL() public {
-        module = new ModuleMock();
-
-        // Invalid: Empty git url.
-        DATA = IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "");
-
-        vm.expectRevert(Errors.Module__InvalidGitURL);
-        module.init(proposal, DATA);
-    }
-    */
-
     //--------------------------------------------------------------------------
     // Tests: (Un)Pause Functionality
 

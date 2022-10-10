@@ -33,7 +33,14 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
     modifier validMetadata(IModule.Metadata memory data) {
         if (!MetadataLib.isValid(data)) {
-            revert("Invalid Metadata");
+            revert ModuleFactory__InvalidMetadata();
+        }
+        _;
+    }
+
+    modifier validTarget(address target_) {
+        if (target_ == address(this) || target_ == address(0)) {
+            revert ModuleFactory__InvalidTarget();
         }
         _;
     }
@@ -48,29 +55,44 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         IModule.Metadata memory metadata,
         IProposal proposal,
         bytes memory configdata
-    ) external validMetadata(metadata) returns (address) {
+    ) external returns (address) {
+        // Note that the metadata's validity is not checked because the
+        // module's `init()` function does it anyway.
+        // @todo mp: Add comment to function doc?!
+
         bytes32 id = MetadataLib.identifier(metadata);
 
-        address target = _targetPerMetadata[id];
+        address target_ = _targetPerMetadata[id];
 
-        if (target == address(0)) {
-            revert ModulesFactory__UnregisteredMetadata();
+        if (target_ == address(0)) {
+            revert ModuleFactory__UnregisteredMetadata();
         }
 
-        address clone = Clones.clone(target);
+        address clone = Clones.clone(target_);
         IModule(clone).init(proposal, metadata, configdata);
 
         return clone;
+    }
+
+    function target(IModule.Metadata memory metadata)
+        external
+        view
+        returns (address)
+    {
+        bytes32 id = MetadataLib.identifier(metadata);
+
+        return _targetPerMetadata[id];
     }
 
     //--------------------------------------------------------------------------
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, address target)
+    function registerMetadata(IModule.Metadata memory metadata, address target_)
         external
         onlyOwner
         validMetadata(metadata)
+        validTarget(target_)
     {
         bytes32 id = MetadataLib.identifier(metadata);
 
@@ -78,13 +100,13 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         // Revert if metadata already registered for different target.
         if (got != address(0)) {
-            revert ModulesFactory__MetataAlreadyRegistered();
+            revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
-        if (got != target) {
+        if (got != target_) {
             // Register Metadata for target.
-            _targetPerMetadata[id] = target;
-            emit MetadataRegistered(metadata, target);
+            _targetPerMetadata[id] = target_;
+            emit MetadataRegistered(metadata, target_);
         }
     }
 }
