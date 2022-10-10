@@ -41,6 +41,7 @@ contract Payment is Module {
     address private proposal;
 
     struct PaymentStruct {
+        address vesting;
         uint salary; // per epoch
         uint epochsAmount;
         bool enabled; // @audit rename to paused?
