@@ -10,15 +10,19 @@ import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
+import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
 
 /**
  * @title Proposal Factory
  *
  * @author byterocket
  */
-contract ProposalFactory {
-    address public immutable target;
-    address public immutable moduleFactory;
+contract ProposalFactory is IProposalFactory {
+    /// @inheritdoc IProposalFactory
+    address public immutable override target;
+
+    /// @inheritdoc IProposalFactory
+    address public immutable override moduleFactory;
 
     uint private _proposalIdCounter;
 
@@ -27,6 +31,7 @@ contract ProposalFactory {
         moduleFactory = moduleFactory_;
     }
 
+    /// @inheritdoc IProposalFactory
     function createProposal(
         address[] calldata funders,
         IModule.Metadata memory authorizerMetadata,
@@ -34,28 +39,32 @@ contract ProposalFactory {
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address) {
-        address proposal = Clones.clone(target);
+        address clone = Clones.clone(target);
 
-        // @todo mp: Check that array length all match.
+        // Revert if data arrays' lengths mismatch.
+        if (moduleMetadatas.length != moduleConfigdatas.length) {
+            revert ProposalFactory__ModuleDataLengthMismatch();
+        }
 
         // Deploy and cache authorizer module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
-            authorizerMetadata, IProposal(proposal), authorizerConfigdata
+            authorizerMetadata, IProposal(clone), authorizerConfigdata
         );
 
         // Deploy and cache optional modules.
-        address[] memory modules = new address[](moduleMetadatas.length);
-        for (uint i; i < moduleMetadatas.length; i++) {
+        uint modulesLen = moduleMetadatas.length;
+        address[] memory modules = new address[](modulesLen);
+        for (uint i; i < modulesLen; i++) {
             modules[i] = IModuleFactory(moduleFactory).createModule(
-                moduleMetadatas[i], IProposal(proposal), moduleConfigdatas[i]
+                moduleMetadatas[i], IProposal(clone), moduleConfigdatas[i]
             );
         }
 
         // Initialize proposal.
-        IProposal(proposal).init(
+        IProposal(clone).init(
             _proposalIdCounter++, funders, modules, IAuthorizer(authorizer)
         );
 
-        return proposal;
+        return clone;
     }
 }

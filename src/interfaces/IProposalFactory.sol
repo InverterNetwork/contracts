@@ -6,27 +6,16 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 
 interface IProposalFactory {
-    error ModulesFactory__UnregisteredMetadata();
-    error ModulesFactory__MetataAlreadyRegistered();
+    error ProposalFactory__ModuleDataLengthMismatch();
 
-    event MetadataRegistered(
-        IModule.Metadata indexed metadata, address indexed target
-    );
+    function target() external view returns (address);
+    function moduleFactory() external view returns (address);
 
-    /// @notice Creates a module instance identified by given metadata.
-    /// @param metadata The metadata of the module.
-    /// @param proposal The proposal's instance of the module.
-    /// @param configdata The configdata of the module.
-    function createModule(
-        IModule.Metadata memory metadata,
-        IProposal proposal,
-        bytes memory configdata
+    function createProposal(
+        address[] calldata funders,
+        IModule.Metadata memory authorizerMetadata,
+        bytes memory authorizerConfigdata,
+        IModule.Metadata[] memory moduleMetadatas,
+        bytes[] memory moduleConfigdatas
     ) external returns (address);
-
-    /// @notice Registers metadata `metadata` with module's implementation `target`.
-    /// @dev Only callable by owner.
-    /// @param metadata The module's metadata.
-    /// @param target The module's implementation.
-    function registerMetadata(IModule.Metadata memory metadata, address target)
-        external;
 }

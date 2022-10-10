@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+// Internal Libraries
+import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
+
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
@@ -26,20 +29,14 @@ library Errors {
     bytes internal constant Module__OnlyCallableByProposal =
         abi.encodeWithSignature("Module__OnlyCallableByProposal()");
 
-    bytes internal constant Module__InvalidProposalAddress =
-        abi.encodeWithSignature("Module__InvalidProposalAddress()");
-
     bytes internal constant Module__WantProposalContext =
         abi.encodeWithSignature("Module__WantProposalContext()");
 
-    bytes internal constant Module__InvalidVersionPair =
-        abi.encodeWithSignature("Module__InvalidVersionPair()");
+    bytes internal constant Module__InvalidProposalAddress =
+        abi.encodeWithSignature("Module__InvalidProposalAddress()");
 
-    bytes internal constant Module__InvalidGitURL =
-        abi.encodeWithSignature("Module__InvalidGitURL()");
-
-    bytes internal constant Module__InvalidMinorVersion =
-        abi.encodeWithSignature("Module__InvalidMinorVersion()");
+    bytes internal constant Module__InvalidMetadata =
+        abi.encodeWithSignature("Module__InvalidMetadata()");
 }
 
 contract ModuleTest is Test {
@@ -79,7 +76,18 @@ contract ModuleTest is Test {
 
         module.init(proposal, DATA);
 
+        // Proposal correctly written to storage.
         assertEq(address(module.proposal()), address(proposal));
+
+        // Metadata correctly written to storage.
+        bytes32 got = MetadataLib.identifier(module.info());
+        bytes32 want = MetadataLib.identifier(DATA);
+        assertEq(got, want);
+
+        // Module's identifier correctly computed.
+        got = module.identifier();
+        want = MetadataLib.identifier(DATA);
+        assertEq(got, want);
     }
 
     function testInitFailsForInvalidProposal() public {
@@ -94,6 +102,16 @@ contract ModuleTest is Test {
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
         module.initNoInitializer(proposal, DATA);
+    }
+
+    function testInitFailsIfMetadataInvalid(uint majorVersion) public {
+        module = new ModuleMock();
+
+        // Invalid if gitURL empty.
+        IModule.Metadata memory data = IModule.Metadata(majorVersion, "");
+
+        vm.expectRevert(Errors.Module__InvalidMetadata);
+        module.init(proposal, data);
     }
 
     /*
