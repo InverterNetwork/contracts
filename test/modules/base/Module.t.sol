@@ -52,11 +52,9 @@ contract ModuleTest is Test {
 
     // Constants
     uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 2;
     string constant GIT_URL = "https://github.com/organization/module";
 
-    IModule.Metadata DATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, GIT_URL);
+    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
 
     function setUp() public {
         authorizer = new AuthorizerMock();
@@ -98,6 +96,7 @@ contract ModuleTest is Test {
         module.initNoInitializer(proposal, DATA);
     }
 
+    /*
     function testInitFailsForInvalidVersionPair() public {
         module = new ModuleMock();
 
@@ -117,22 +116,7 @@ contract ModuleTest is Test {
         vm.expectRevert(Errors.Module__InvalidGitURL);
         module.init(proposal, DATA);
     }
-
-    //--------------------------------------------------------------------------
-    // Tests: Increase Minor Version
-
-    function testIncreaseMinorVersion(uint newMinorVersion) public {
-        // @todo Test Module::increaseMinorVersion()
-        // @todo Test Module::identifier()
-        // @todo Make _triggerCallback functions fail if call failed?
-    }
-
-    function testIncreaseMinorVersionIsAuthenticated() public {
-        authorizer.setAllAuthorized(false);
-
-        vm.expectRevert(Errors.Module__CallerNotAuthorized);
-        module.increaseMinorVersion(MINOR_VERSION + 1);
-    }
+    */
 
     //--------------------------------------------------------------------------
     // Tests: (Un)Pause Functionality

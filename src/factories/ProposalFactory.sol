@@ -9,25 +9,28 @@ import {Context} from "@oz/utils/Context.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
-import {IModulesFactory} from "src/interfaces/IModulesFactory.sol";
+import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
 
+/**
+ * @title Proposal Factory
+ *
+ * @author byterocket
+ */
 contract ProposalFactory {
     address public immutable target;
-    address public immutable modulesFactory;
+    address public immutable moduleFactory;
 
     uint private _proposalIdCounter;
 
-    constructor(address target_, address modulesFactory_) {
+    constructor(address target_, address moduleFactory_) {
         target = target_;
-        modulesFactory = modulesFactory_;
+        moduleFactory = moduleFactory_;
     }
 
     function createProposal(
         address[] calldata funders,
-        bytes32 authorizerModuleId,
         IModule.Metadata memory authorizerMetadata,
         bytes memory authorizerConfigdata,
-        bytes32[] memory moduleIds,
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address) {
@@ -35,22 +38,16 @@ contract ProposalFactory {
 
         // @todo mp: Check that array length all match.
 
-        // Deploy and cache authorizer modules.
-        address authorizer = IModulesFactory(modulesFactory).createModule(
-            authorizerModuleId,
-            IProposal(proposal),
-            authorizerMetadata,
-            authorizerConfigdata
+        // Deploy and cache authorizer module.
+        address authorizer = IModuleFactory(moduleFactory).createModule(
+            authorizerMetadata, IProposal(proposal), authorizerConfigdata
         );
 
         // Deploy and cache optional modules.
-        address[] memory modules = new address[](moduleIds.length);
-        for (uint i; i < moduleIds.length; i++) {
-            modules[i] = IModulesFactory(modulesFactory).createModule(
-                moduleIds[i],
-                IProposal(proposal),
-                moduleMetadatas[i],
-                moduleConfigdatas[i]
+        address[] memory modules = new address[](moduleMetadatas.length);
+        for (uint i; i < moduleMetadatas.length; i++) {
+            modules[i] = IModuleFactory(moduleFactory).createModule(
+                moduleMetadatas[i], IProposal(proposal), moduleConfigdatas[i]
             );
         }
 

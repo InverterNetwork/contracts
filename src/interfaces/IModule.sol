@@ -7,7 +7,6 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 interface IModule {
     struct Metadata {
         uint majorVersion;
-        uint minorVersion;
         // maybe string description?
         string gitURL; // @todo mp: Assumed to be the unique key.
             //           What if more than one module per repo?
@@ -28,22 +27,13 @@ interface IModule {
     /// @notice Given proposal address invalid.
     error Module__InvalidProposalAddress();
 
-    /// @notice Given version pair invalid.
-    error Module__InvalidVersionPair();
-
-    /// @notice Given minor version invalid.
-    error Module__InvalidMinorVersion();
-
-    /// @notice Given git url invalid.
-    error Module__InvalidGitURL();
-
-    //--------------------------------------------------------------------------
-    // Events
-
-    event MinorVersionIncreased(uint oldMinorVersion, uint newMinorVersion);
+    /// @notice Given metadata invalid.
+    error Module__InvalidMetadata();
 
     //--------------------------------------------------------------------------
     // Functions
+
+    // @todo mp: Function doc for `init()`.
 
     /// @dev Can be overriden in downstream contract.
     /// @dev Has to call `__Module_init()`.
@@ -66,12 +56,6 @@ interface IModule {
     /// @notice Returns the module's {IProposal} proposal instance.
     /// @return The module's proposal.
     function proposal() external view returns (IProposal);
-
-    /// @notice Increases the minor version to `newMinorVersion`.
-    /// @dev Only callable by authorized addresses.
-    /// @dev Fails if newMinorVersion `newMinorVersion` less than current
-    ///      minor version.
-    function increaseMinorVersion(uint newMinorVersion) external;
 
     /// @notice Pauses the module.
     /// @dev Only callable by authorized addresses.
