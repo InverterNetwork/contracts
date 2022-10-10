@@ -243,7 +243,7 @@ contract Payment is Module {
     /// @param addr Address to validate.
     /// @return True if address is valid.
     function validAddress(address addr) internal view returns(bool){
-        if(addr != address(0) || addr != msg.sender || addr != address(this))
+        if(addr == address(0) || addr == msg.sender || addr == address(this))
             return false;
         return true;
     }
