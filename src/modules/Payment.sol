@@ -94,14 +94,18 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // External Functions
 
+
     /// @notice Initialize module, save token and proposal address.
     /// @param proposalInterface Interface of proposal.
     /// @param data encoded token and proposal address.
-    function initialize(IProposal proposalInterface, bytes memory data)
+    function initialize(
+        IProposal proposalInterface,
+        Metadata memory metadata,
+        bytes memory data)
         external
         initializer
     {
-        __Module_init(proposalInterface);
+        __Module_init(proposalInterface, metadata);
 
         (address _token, address _proposal) =
             abi.decode(data, (address, address));
