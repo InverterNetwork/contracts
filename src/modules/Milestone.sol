@@ -120,7 +120,7 @@ contract MilestoneModule is Module {
     /// @dev Checks if the given startDate is valid.
     /// @param startDate : The given startDate of the milestone
     modifier validStartDate(uint256 startDate) {
-        /* if () {//@note not in vergangenheit
+        /* if () {//@note not in past?
          revert InvalidStartDate();
        } */
         _;
@@ -227,7 +227,7 @@ contract MilestoneModule is Module {
     )
         external
         onlyProposal
-        newMilestoneIdAvailable(newId) //@todo test
+        newMilestoneIdAvailable(newId)
         validTitle(title)
         validStartDate(startDate)
         validDetails(details)
@@ -326,7 +326,7 @@ contract MilestoneModule is Module {
     {
         Milestone storage milestone = milestones[id];
 
-        if (milestone.startDate != startDate) {
+        if (milestone.startDate != startDate) {//@todo test idempotence
             milestone.startDate = startDate;
             emit ChangeStartDate(id, startDate);
         }
@@ -354,7 +354,7 @@ contract MilestoneModule is Module {
     ///@param id : id in the milestone array
     function __Milestone_removeMilestone(
         uint256 id //@note There might be a point made to increase the level of interaction required to remove a milestone
-    ) external onlyProposal validId(id) notRemoved(id) notCompleted(id) {
+    ) external onlyProposal validId(id) notCompleted(id) {
         Milestone storage milestone = milestones[id];
 
         if (!milestone.removed) {
@@ -411,7 +411,6 @@ contract MilestoneModule is Module {
         validId(id)
         notRemoved(id)
         submitted(id)
-        notCompleted(id)
     {
         Milestone storage milestone = milestones[id];
         if (!milestone.completed) {
