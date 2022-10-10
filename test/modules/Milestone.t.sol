@@ -3,9 +3,14 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
+// Internal Dependencies
 import {MilestoneModule} from "src/modules/Milestone.sol";
-import {IModule} from "src/interfaces/IModule.sol";
 
+// Internal Interfaces
+import {IModule} from "src/interfaces/IModule.sol";
+import {IProposal} from "src/interfaces/IProposal.sol";
+
+// Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
@@ -22,6 +27,13 @@ contract MilestoneTest is Test, ProposalMock {
     MilestoneModule milestoneMod;
     AuthorizerMock authorizerMock = new AuthorizerMock();
 
+    // Constants
+    // @todo mp: Make abstract Module test to inherit this stuff.
+    uint constant MAJOR_VERSION = 1;
+    string constant GIT_URL = "https://github.com/organization/module";
+
+    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
+
     //--------------------------------------------------------------------------------
     // SETUP
 
@@ -29,7 +41,7 @@ contract MilestoneTest is Test, ProposalMock {
 
     function setUp() public {
         milestoneMod = new MilestoneModule();
-        milestoneMod.initialize(this);
+        milestoneMod.init(IProposal(address(this)), DATA, bytes(""));
 
         address[] memory modules = new address[](1);
         modules[0] = address(milestoneMod);
@@ -550,11 +562,9 @@ contract MilestoneTest is Test, ProposalMock {
 
     //++++++++++++++++++++++++++++++++++++++++++ TEST-MAIN ++++++++++++++++++++++++++++++++++++++++++
 
-    function testAdd(
-        string memory title,
-        uint256 startDate,
-        string memory details
-    ) public {
+    function testAdd(string memory title, uint startDate, string memory details)
+        public
+    {
         vm.assume(bytes(title).length != 0);
         vm.assume(bytes(details).length != 0);
 

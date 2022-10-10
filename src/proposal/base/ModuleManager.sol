@@ -30,6 +30,7 @@ import {IModuleManager} from "src/interfaces/IModuleManager.sol";
  * @author byterocket
  */
 contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
+    // @todo mp: Should be abstract?
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -69,6 +70,10 @@ contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
         onlyInitializing
     {
         __Context_init();
+
+        // @todo mp: Change modules from address to IModules.
+        //           This enables easier refactoring in future for "multi-modules".
+        //           Or not???
 
         address module;
         for (uint i; i < modules.length; i++) {

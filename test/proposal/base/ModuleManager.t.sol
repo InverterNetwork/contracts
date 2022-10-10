@@ -52,7 +52,7 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInitialization(address[] memory modules) public {
+    function testInit(address[] memory modules) public {
         _assumeValidModules(modules);
 
         // Initialize ModuleManager.
@@ -67,9 +67,18 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         }
     }
 
-    function testInitilizationFailsForInvalidModuleAddress(
-        address[] memory modules
-    ) public {
+    function testReinitFails(address[] memory modules) public {
+        _assumeValidModules(modules);
+
+        moduleManager.init(modules);
+
+        vm.expectRevert(OZErrors.Initializable__NotInitializing);
+        moduleManager.reinit(modules);
+    }
+
+    function testInitFailsForInvalidModuleAddress(address[] memory modules)
+        public
+    {
         _assumeValidModules(modules);
 
         // Set first module to address(0).
@@ -79,7 +88,7 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager.init(modules);
     }
 
-    function testInitilizationFailsForDuplicateModules(address[] memory modules)
+    function testInitFailsForDuplicateModules(address[] memory modules)
         public
     {
         _assumeValidModules(modules);
@@ -92,15 +101,6 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
             Errors.Proposal__ModuleManager__ModuleAlreadyEnabled(modules[0])
         );
         moduleManager.init(modules);
-    }
-
-    function testReinitializationFails(address[] memory modules) public {
-        _assumeValidModules(modules);
-
-        moduleManager.init(modules);
-
-        vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        moduleManager.reinit(modules);
     }
 
     //--------------------------------------------------------------------------

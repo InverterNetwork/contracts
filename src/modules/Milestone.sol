@@ -182,11 +182,14 @@ contract MilestoneModule is Module {
 
     constructor() {}
 
-    /// @notice insitializes the MilestoneModuleS
-    /// @param proposal_ : The proposal that should be linked to this module
-    function initialize(IProposal proposal_) external initializer {
-        __Module_init(proposal_);
-        //@todo Set PayableModule
+    /// @inheritdoc Module
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory /*configdata*/
+    ) external override (Module) initializer {
+        __Module_init(proposal_, metadata);
+        // @todo felix: Set Payment module.
     }
 
     //++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS ++++++++++++++++++++++++++++++++++++++++++
