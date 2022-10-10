@@ -105,7 +105,7 @@ contract ProposalFactoryTest is Test {
         // Note to add one more element to configdata.
         IModule.Metadata[] memory metadatas = new IModule.Metadata[](modulesLen);
         bytes[] memory configdatas = new bytes[](modulesLen + 1);
-        for (uint i; i < modulesLen1; i++) {
+        for (uint i; i < modulesLen; i++) {
             metadatas[i] = IModule.Metadata(1, "");
             configdatas[i] = bytes("");
         }
