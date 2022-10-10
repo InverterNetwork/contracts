@@ -11,6 +11,10 @@ import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
 
 // Internal Interfaces
 import {IModule} from "src/interfaces/IModule.sol";
+import {IProposal} from "src/interfaces/IProposal.sol";
+
+// Mocks
+import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -26,15 +30,18 @@ library Errors {
     bytes internal constant ModuleFactory__InvalidTarget =
         abi.encodeWithSignature("ModuleFactory__InvalidTarget()");
 
-    bytes internal constant ModulesFactory__UnregisteredMetadata =
+    bytes internal constant ModuleFactory__UnregisteredMetadata =
         abi.encodeWithSignature("ModuleFactory__UnregisteredMetadata()");
 
-    bytes internal constant ModulesFactory__MetadataAlreadyRegistered =
+    bytes internal constant ModuleFactory__MetadataAlreadyRegistered =
         abi.encodeWithSignature("ModuleFactory__MetadataAlreadyRegistered()");
 }
 
 contract ModuleFactoryTest is Test {
     ModuleFactory factory;
+
+    // Mocks
+    ModuleMock module;
 
     // Constants
     // @todo mp: Move to some common contract. See todo in Milestone.t.sol too.
@@ -44,6 +51,8 @@ contract ModuleFactoryTest is Test {
     IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
 
     function setUp() public {
+        module = new ModuleMock();
+
         factory = new ModuleFactory();
     }
 
@@ -107,13 +116,44 @@ contract ModuleFactoryTest is Test {
 
         factory.registerMetadata(DATA, target1);
 
-        vm.expectRevert(Errors.ModulesFactory__MetadataAlreadyRegistered);
+        vm.expectRevert(Errors.ModuleFactory__MetadataAlreadyRegistered);
         factory.registerMetadata(DATA, target2);
     }
 
     //--------------------------------------------------------------------------
     // Tests: createModule
-    // @todo mp: ModuleFactory createModule tests
+
+    function testCreateModule(
+        IModule.Metadata memory metadata,
+        address proposal,
+        bytes memory configdata
+    ) public {
+        _assumeValidMetadata(metadata);
+        _assumeValidProposal(proposal);
+
+        // Register ModuleMock for given metadata.
+        factory.registerMetadata(metadata, address(module));
+
+        // Create new module instance.
+        IModule newModule = IModule(
+            factory.createModule(metadata, IProposal(proposal), configdata)
+        );
+
+        assertEq(address(newModule.proposal()), address(proposal));
+        assertEq(newModule.identifier(), MetadataLib.identifier(metadata));
+    }
+
+    function testCreateModuleFailsIfMetadataUnregistered(
+        IModule.Metadata memory metadata,
+        address proposal,
+        bytes memory configdata
+    ) public {
+        _assumeValidMetadata(metadata);
+        _assumeValidProposal(proposal);
+
+        vm.expectRevert(Errors.ModuleFactory__UnregisteredMetadata);
+        factory.createModule(metadata, IProposal(proposal), configdata);
+    }
 
     //--------------------------------------------------------------------------
     // Internal Helper Functions
@@ -125,5 +165,9 @@ contract ModuleFactoryTest is Test {
     function _assumeValidTarget(address target) internal {
         vm.assume(target != address(factory));
         vm.assume(target != address(0));
+    }
+
+    function _assumeValidProposal(address proposal) internal {
+        vm.assume(proposal != address(0));
     }
 }

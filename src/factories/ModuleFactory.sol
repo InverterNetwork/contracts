@@ -95,6 +95,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     //--------------------------------------------------------------------------
     // Public View Functions
 
+    /// @inheritdoc IModuleFactory
     function target(IModule.Metadata memory metadata)
         external
         view
