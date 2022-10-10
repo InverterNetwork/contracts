@@ -43,6 +43,38 @@ Per convention, such `delegatecall`-callbacks **SHOULD**:
 In order to guarantee the callback is NOT executed in the module's context,
 `wantProposalContext` modifier **MUST** be used!
 
+An example for this could be:
+```
+function doSmth(
+        uint256 dataNumber,
+        string memory dataString,
+    ) external returns(uint256){
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__ExampleModule_doSmth(uint256,string)",
+                dataNumber,
+                dataString
+            ),
+            Types.Operation.Delegatecall
+        );
+        if (!ok) {
+            revert Module_ProposalCallbackFailed();
+        }
+        return abi.decode(returnData, (uint256));
+    }
+
+function __Proposal_doSmth(
+        uint256 dataNumber,
+        string memory dataString,
+    ) external wantProposalContext returns(uint256){
+        //do Smth in Proposalcontext
+        return 1;
+    }
+```
+
 ### Callbacks executed in the Module's Context
 
 Proposal callbacks executed in the module's context **MUST NOT** access
@@ -53,6 +85,38 @@ Per convention, the function name **SHOULD** be prefixed with `__Module_`.
 Proposal callbacks executed in the module's context **MUST** be authenticated
 via the `onlyProposal` modifier!
 
+An example for this could be:
+```
+function doSmth(
+        uint256 dataNumber,
+        string memory dataString,
+    ) external returns(uint256){
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__ExampleModule_doSmth(uint256,string)",
+                dataNumber,
+                dataString
+            ),
+            Types.Operation.Call
+        );
+        if (!ok) {
+            revert Module_ProposalCallbackFailed();
+        }
+        return abi.decode(returnData, (uint256));
+    }
+
+function __ExampleModule_doSmth(
+        uint256 dataNumber,
+        string memory dataString,
+    ) external onlyProposal returns(uint256){
+        //do Smth
+        return 1;
+    }
+```
+
 ## Initialization
 
 The contract provides a `__Module_init(proposal)` function for initialization
@@ -62,3 +126,14 @@ that **MUST** be called in order to correctly initialize the storage.
 
 Users are authenticated using the proposal's `IAuthenticator` instance.
 This ensures that all access management is handled solely by the proposal.
+An Example for this could be:
+```
+// Define a role for contributors.
+    bytes32 CONTRIBUTOR_ROLE =
+        keccak256("milestoneContributor");
+
+// Use a function to grant Role
+__Module_proposal.grantRole(CONTRIBUTOR_ROLE, address);
+```
+
+
