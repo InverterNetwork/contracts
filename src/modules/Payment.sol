@@ -47,10 +47,11 @@ contract Payment is Module {
         bool enabled; // @audit rename to paused?
     }
 
-    // contributerAddress => Payment
+    // contributor => Payment
     mapping(address => PaymentStruct) public payments;
 
-    //address private token;
+    // contributor => vesting
+    mapping(address => address) public vestings;
 
     //--------------------------------------------------------------------------
     // Events
