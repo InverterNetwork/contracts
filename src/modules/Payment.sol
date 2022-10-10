@@ -35,7 +35,9 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Storage
 
-    ERC20 private token;
+    IERC20 private token;
+    VestingWallet private vesting;
+
     address private proposal;
 
     struct PaymentStruct {
