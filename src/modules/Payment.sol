@@ -12,7 +12,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
 /*** @todo Nejc:
- -update formatting according to notion
  -implement vesting
  - `addPayment()` fetch token from address(proposal) to address(this).
  - replace require syntax with errors
