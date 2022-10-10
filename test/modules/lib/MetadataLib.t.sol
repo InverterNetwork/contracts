@@ -14,9 +14,7 @@ import {IModule} from "src/interfaces/IModule.sol";
  *      functionality tests.
  */
 contract MetadataLibTest is Test {
-
-    function setUp() public {
-    }
+    function setUp() public {}
 
     function testIdentifierIsHashOfMajorVersionAndGitURL(
         IModule.Metadata memory data
