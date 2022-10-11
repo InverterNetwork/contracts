@@ -17,7 +17,6 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ContributorManagerTest is Test {
-    
     ContributorManager contributorModule;
 
     // Mocks
@@ -29,42 +28,40 @@ contract ContributorManagerTest is Test {
         authorizer.setAllAuthorized(true);
 
         proposal = new ProposalMock(authorizer);
-        
-        
+
         contributorModule = new ContributorManager();
 
         // Init proposal with contributor module.
         address[] memory modules = new address[](1);
         modules[0] = address(contributorModule);
-    
-        proposal.init(modules);
 
+        proposal.init(modules);
 
         bytes memory data = bytes("");
         contributorModule.initialize(IProposal(proposal), data);
 
         assertEq(address(contributorModule.proposal()), address(proposal));
-        assertEq(address(contributorModule.proposal().authorizer()), address(authorizer));
-
+        assertEq(
+            address(contributorModule.proposal().authorizer()),
+            address(authorizer)
+        );
     }
 
     function testAddContributor() public {
         address bob = address(0xb0b);
         bytes32 role = keccak256("DEV");
-        uint salary = 25000;
+        uint salary = 25_000;
 
         contributorModule.addContributor(bob, role, salary);
 
         assertEq(contributorModule.isActiveContributor(bob), true);
     }
 
-
     function testRemoveLastContributor() public {
         address bob = address(0xb0b);
         bytes32 role = keccak256("DEV");
-        uint salary = 25000;
+        uint salary = 25_000;
 
-        
         contributorModule.addContributor(bob, role, salary);
 
         contributorModule.removeContributor(bob, address(0x1));
