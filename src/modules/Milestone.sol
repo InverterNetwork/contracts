@@ -8,6 +8,13 @@ import {Module} from "src/modules/base/Module.sol";
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
 
+/**
+ * @title Milestone Module
+ *
+ * @dev @todo felix: Add contract documentation
+ *
+ * @author byterocket
+ */
 contract MilestoneModule is Module {
     /// @dev This function is only callable by a contributor
     error OnlyCallableByContributor();
