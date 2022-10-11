@@ -58,4 +58,48 @@ contract PaymentTest is Test, ProposalMock {
         assertEq(token.balanceOf(address(this)), amount);
     }
 
+    function testAddPayment() public {
+
+        // vesting params
+        uint vestingAmount = 100;
+        address receiver = address(0xBEEF); //aka. contributor/beneficiary
+        uint64 start = uint64(block.timestamp);
+        uint64 duration = 300; // seconds
+
+        // mint erc20 tokens
+        mintTokens(vestingAmount);
+
+        // simulate payer's deposit to proposal
+        // @todo Nejc transfer to proposal, not payment
+        token.transfer(address(payment), vestingAmount);
+        assertEq(token.balanceOf(address(payment)), vestingAmount);
+
+        // initiate vesting
+        payment.addPayment(
+            receiver,
+            vestingAmount,
+            start,
+            duration
+        );
+
+        // make sure tokens are transfered to vesting
+        address vesting = payment.getVesting(receiver);
+        assertEq(token.balanceOf(vesting), vestingAmount);
+
+        // set VestingWallet instance at vesting address
+        VestingWallet vestingWallet = VestingWallet(payable(vesting));
+
+        //--------------------------------------------------------------------------
+        // Validate vesting data on vestingWallet contract
+
+        // validate beneficiary at Vesting is proper address
+        address vestingReceiver = vestingWallet.beneficiary();
+        assertEq(vestingReceiver, receiver);
+
+        uint vestingStart = vestingWallet.start();
+        assertEq(vestingStart, start);
+
+        uint vestingDuration = vestingWallet.duration();
+        assertEq(vestingDuration, duration);
+    }
 }
