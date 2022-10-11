@@ -84,6 +84,20 @@ contract ContributorManager is Module {
         _;
     }
 
+    modifier contributorNotActive(address _who) {
+        if(isActiveContributor(_who)){
+            revert Module__ContributorManager__contributorAlreadyActive();
+        }
+        _;
+    }
+
+    modifier contributorIsActive(address _who) {
+        if(! isActiveContributor(_who)){
+            revert Module__ContributorManager__contributorNotActive();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -128,7 +142,7 @@ contract ContributorManager is Module {
     /// @param _salary: the salary the assigned to the contributor. To be spe-  
     ///                 cified in a format already including the decimals of 
     ///                 the payout token. 
-    function __Contributor_addContributor(address _who, bytes32 _role, uint _salary) external onlyProposal validAddress(_who) validContributor(_role, _salary){
+    function __Contributor_addContributor(address _who, bytes32 _role, uint _salary) external onlyProposal validAddress(_who) validContributor(_role, _salary) contributorNotActive(_who){
 
         /// @note This implementation will have to change once we 
         // decide how to handle double contributors
@@ -139,26 +153,23 @@ contract ContributorManager is Module {
         _contributor.role = _role;
         _contributor.salary= _salary;
 
-        //if the contributor is new, we add them into the mapping structure
-        if(activeContributors[_who] == address(0) ){
-
-            // add address to activecontributor mapping (gnosis-safe)
-            activeContributors[_who] = activeContributors[SENTINEL_CONTRIBUTORS];
-            activeContributors[SENTINEL_CONTRIBUTORS] = _who;
-            contributorCount++;
+        // add address to activecontributor mapping (gnosis-safe)
+        activeContributors[_who] = activeContributors[SENTINEL_CONTRIBUTORS];
+        activeContributors[SENTINEL_CONTRIBUTORS] = _who;
+        contributorCount++;
 
 
-            contributorRegistry[_who] = _contributor;
-            emit ContributorAdded(_who, _role, _salary);
+        contributorRegistry[_who] = _contributor;
+        emit ContributorAdded(_who, _role, _salary);
 
+        // TODO make this a separate function
+        // } else {
 
-        } else {
-
-            // if the contributor was already active, we just save and 
-            // notify the update
-            contributorRegistry[_who] = _contributor;
-            emit ContributorModified(_who, _role, _salary);
-        }
+        //     // if the contributor was already active, we just save and 
+        //     // notify the update
+        //     contributorRegistry[_who] = _contributor;
+        //     emit ContributorModified(_who, _role, _salary);
+        // }
 
     }
     
@@ -234,16 +245,44 @@ contract ContributorManager is Module {
 
     }
 
-    /// @notice Returns registry information about a specifc contributor    
-    function getContributorInformation(address _who) external view returns(bytes32, uint) {
-        
-        /// @note Maybe this check is unnecessary? We can just return 0...
-        
-        ///require that the contributor is currently active
-        if( ! isActiveContributor(_who) ){
-           revert Module__ContributorManager__contributorNotActive();
-        }
+    /// @notice Modifies an existing contributor.
+    /// @param _who :   the contributor to be modified 
+    /// @param _role:   the new role assigned to the contributor
+    /// @param _salary: the new salary the assigned to the contributor. To be 
+    ///                 specified in a format already including the decimals of 
+    ///                 the payout token. 
+    function __Contributor_modifyContributor(address _who, bytes32 _role, uint _salary) external onlyProposal validAddress(_who) validContributor(_role, _salary) contributorIsActive(_who){
 
+   
+        contributorRegistry[_who].role = _role;
+        contributorRegistry[_who].salary= _salary;
+        emit ContributorModified(_who, _role, _salary);
+
+    }
+     
+    /// @notice Modifies an existing contributor.
+    /// @dev    Relay Function that routes the function call via the proposal
+    /// @param _who :   the contributor to be modified 
+    /// @param _role:   the new role assigned to the contributor
+    /// @param _salary: the new salary the assigned to the contributor. To be 
+    ///                 specified in a format already including the decimals of 
+    ///                 the payout token. 
+    function modifyContributor(address _who, bytes32 _role, uint _salary) external onlyAuthorized {
+
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Contributor_modifyContributor(address,bytes32,uint)",
+                _who,
+                _role,
+                _salary
+            ),
+            Types.Operation.Call
+        );
+    }
+
+    /// @notice Returns registry information about a specifc contributor    
+    function getContributorInformation(address _who) external view contributorIsActive(_who)  returns(bytes32, uint){
+        
         return (contributorRegistry[_who].role, contributorRegistry[_who].salary);
         
     }

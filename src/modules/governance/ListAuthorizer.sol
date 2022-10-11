@@ -53,8 +53,14 @@ contract ListAuthorizer is IAuthorizer, Module{
     //--------------------------------------------------------------------------
     // Public Functions
 
-    function initialize(IProposal proposal, bytes memory) external {
-        __Module_init(proposal);
+    function initialize(IProposal proposal, Metadata memory metadata) external {
+        __Module_init(proposal, metadata);
+
+        //authorize the calling address
+        authorized[_msgSender()] = true;
+        amountAuthorized++;
+        
+        emit AddedAuthorizedAddress(_msgSender());
     }
 
     /// @notice Returns whether an address is authorized to facilitate
@@ -66,7 +72,7 @@ contract ListAuthorizer is IAuthorizer, Module{
 
     /// @notice Adds a new address to the list of authorized addresses.
     /// @param _who The address to add to the list of authorized addresses.
-    function __Governance_addToAuthorized(address _who) external onlyProposal {
+    function __ListAuthorizer_addToAuthorized(address _who) virtual public onlyProposal {
         
         if(authorized[_who]){
             revert Module__AddressAlreadyAuthorized();
@@ -85,7 +91,7 @@ contract ListAuthorizer is IAuthorizer, Module{
 
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_addToAuthorized(address)",
+                "__ListAuthorizer_addToAuthorized(address)",
                 _who
             ),
             Types.Operation.Call
@@ -96,7 +102,7 @@ contract ListAuthorizer is IAuthorizer, Module{
     }
 
 
-    function __Governance_removeFromAuthorized(address _who) external onlyProposal {
+    function __ListAuthorizer_removeFromAuthorized(address _who) virtual public onlyProposal {
 
         if(! authorized[_who]){
             revert Module__AddressAlreadyNotAuthorized();
@@ -115,7 +121,7 @@ contract ListAuthorizer is IAuthorizer, Module{
 
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_removeFromAuthorized(address)",
+                "__ListAuthorizer_removeFromAuthorized(address)",
                 _who
             ),
             Types.Operation.Call
@@ -125,7 +131,7 @@ contract ListAuthorizer is IAuthorizer, Module{
     }
 
 
-    function __Governance_transferAuthorization(address _who) external onlyProposal {
+    function __ListAuthorizer_transferAuthorization(address _who) virtual public onlyProposal {
         
         if(authorized[_who]){
             revert Module__AddressAlreadyAuthorized();
@@ -147,7 +153,7 @@ contract ListAuthorizer is IAuthorizer, Module{
 
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_transferAuthorization(address)",
+                "__ListAuthorizer_transferAuthorization(address)",
                 _who
             ),
             Types.Operation.Call

@@ -30,7 +30,7 @@ import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 * passed, those transactions are canceled or executed.
 */
 
-contract SimpleGovernance is ListAuthorizer{
+contract SingleVoteGovernance is ListAuthorizer{
 
     /*
         requiredQuorum() - Returns the number of confirmations that a certain action requires before it may be executed
@@ -41,9 +41,20 @@ contract SimpleGovernance is ListAuthorizer{
 
     /// @notice This is the part that maybe could be "delegated" to the calling
     ///         addresses, i.e Gnosis Safe, Aragon DAO, etc.
+
+
+    /// Function overrides:
+
+
+    function __ListAuthorizer_removeFromAuthorized(address _who) override public onlyProposal validQuorum(quorum, (amountAuthorized-1)){
+        super.__ListAuthorizer_removeFromAuthorized(_who);
+    }
+
+
     
 
     event QuorumModified(uint8 oldQuorum, uint8 newQuorum);
+    event VoteDurationModified(uint oldDuration, uint newDuration);
 
     event VoteEnacted(uint voteID);
     event VotedInFavor(address who, uint voteID);
@@ -53,32 +64,50 @@ contract SimpleGovernance is ListAuthorizer{
     
 
 
-    error Module__addressAlreadyVoted(address who);
-    error Module__voteNotActive(uint voteID);
-    event Module__ExecuteVoteFailed();
+    error Module__SingleVoteGovernance_addressAlreadyVoted(address who);
+    error Module__SingleVoteGovernance_voteNotActive(uint voteID);
+    error Module__SingleVoteGovernance_voteStillActive(uint voteID);
+    error Module__SingleVoteGovernance_ExecuteVoteFailed();
+    error Module__SingleVoteGovernance_quorumNotReached(uint voteID);
+    error Module__SingleVoteGovernance_voteExpired(uint _voteID);
 
-    error Module__invalidAddress();
-    error Module__invalidEncodedAction();
+    error Module__SingleVoteGovernance_invalidAddress();
+    error Module__SingleVoteGovernance_invalidEncodedAction();
 
-    error Module__quorumIsZero();
-    error Module_quorumUnreachable();
+    error Module__SingleVoteGovernance_quorumIsZero();
+    error Module__SingleVoteGovernance_quorumUnreachable();
 
     modifier voteIsActive(uint _voteID){
 
-        // Ensure that the vote is active (and exists)
-        if(! voteRegistry[_voteID].isActive ){
-            revert Module__voteNotActive(_voteID);
+        if(! (voteRegistry[_voteID].createdAt + VOTE_DURATION >= block.timestamp) ){
+            revert Module__SingleVoteGovernance_voteExpired(_voteID);
         }
         _;
     }
 
-    modifier validQuorum(uint8 _quorum){
+    modifier voteNotActive(uint _voteID){
+
+        if(! (voteRegistry[_voteID].createdAt + VOTE_DURATION < block.timestamp) ){
+            revert Module__SingleVoteGovernance_voteStillActive(_voteID);
+        }
+        _;
+    }
+
+
+    modifier quorumReached(uint _voteID){
+        if(! (voteRegistry[_voteID].aye >= quorum)){
+            revert Module__SingleVoteGovernance_quorumNotReached(_voteID);
+        }
+        _;
+    }
+
+    modifier validQuorum(uint8 _quorum, uint _amountAuthorized){
         
         if(_quorum == 0){
-            revert Module__quorumIsZero();
+            revert Module__SingleVoteGovernance_quorumIsZero();
         }
         if(_quorum > amountAuthorized){
-            revert Module_quorumUnreachable();
+            revert Module__SingleVoteGovernance_quorumUnreachable();
         }
         _;
 
@@ -86,7 +115,7 @@ contract SimpleGovernance is ListAuthorizer{
 
     modifier validModuleAddress(address _target){
         if(_target == address(0)){
-            revert Module__invalidAddress();
+            revert Module__SingleVoteGovernance_invalidAddress();
         }
         //I think we DO want to explicitly allow address==address(this)? F.ex. to vote on quorum change
 
@@ -112,9 +141,15 @@ contract SimpleGovernance is ListAuthorizer{
     /// @param aye "Yes" votes
     /// @param nay "No" votes
     struct Vote {
-        bool isActive;
+        // Vote information
         bytes encodedAction;
         address targetAddress;
+        uint createdAt;
+        // execution information
+        uint executedAt;
+        bool executionResult;
+        bytes returnata;
+        // voting results
         mapping(address => bool) hasVoted;
         uint aye;
         uint nay;
@@ -126,7 +161,8 @@ contract SimpleGovernance is ListAuthorizer{
     uint voteIDCounter;
 
     /// @notice Quorum necessary to pass/deny a vote
-    uint8 quorum;
+    uint8 private quorum;
+    uint private VOTE_DURATION;
 
     /// @notice Returns the current required quorum
     function requiredQuorum() external view returns(uint8){
@@ -134,9 +170,18 @@ contract SimpleGovernance is ListAuthorizer{
     }
 
 
+    function initialize(IProposal proposal, uint8 _startingQuorum, uint _voteDuration, Metadata memory metadata) external initializer{
+        __Module_init(proposal, metadata);
+
+        //During initialization we don't check for valid quorum etc... Is this too risky?
+        quorum = _startingQuorum;
+        VOTE_DURATION = _voteDuration;
+        
+    }
+
     /// @notice Sets a new quorum
     /// @param _new The new quorum
-    function __Governance_changeQuorum(uint8 _new) external onlyProposal validQuorum(_new){
+    function __Governance_changeQuorum(uint8 _new) external onlyProposal validQuorum(_new, amountAuthorized){
 
 
         uint8 old= quorum;
@@ -147,14 +192,53 @@ contract SimpleGovernance is ListAuthorizer{
     }
 
     /// @notice Sets a new quorum
-    /// @dev Relay Function that routes the function call via the proposal
+    /// @dev    Relay Function that routes the function call via the proposal. 
+    ///         The onlyProposal modifier forces a quorum change to als go
+    ///         through governance.
     /// @param _new The new quorum
-    function changeQuorum(uint8 _new) external onlyAuthorized {
+    function changeQuorum(uint8 _new) external onlyProposal {
 
 
         _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__Governance_changeQuorum(uint8)",
+                _new
+            ),
+            Types.Operation.Call
+        );       
+
+
+    }
+
+        /// @notice Returns the current required quorum
+    function voteDuration() external view returns(uint){
+        return VOTE_DURATION;
+    }
+
+
+    /// @notice Sets a new quorum
+    /// @param _new The new quorum
+    function __Governance_changeVoteDuration(uint _new) external onlyProposal {
+
+
+        uint old= VOTE_DURATION;
+        VOTE_DURATION = _new;
+
+        emit VoteDurationModified(old, VOTE_DURATION);
+
+    }
+
+    /// @notice Sets a new quorum
+    /// @dev    Relay Function that routes the function call via the proposal. 
+    ///         The onlyProposal modifier forces a quorum change to als go
+    ///         through governance.
+    /// @param _new The new quorum
+    function changeVoteDuration(uint _new) external onlyProposal {
+
+
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Governance_changeVoteDuration(uint)",
                 _new
             ),
             Types.Operation.Call
@@ -170,7 +254,7 @@ contract SimpleGovernance is ListAuthorizer{
     function __Governance_createVote(address _target, bytes calldata _encodedAction) external onlyProposal validModuleAddress(_target) validAction(_encodedAction){
 
 
-        voteRegistry[voteIDCounter].isActive = true;
+        voteRegistry[voteIDCounter].createdAt = block.timestamp;
         voteRegistry[voteIDCounter].targetAddress = _target;
         voteRegistry[voteIDCounter].encodedAction = _encodedAction;
 
@@ -201,25 +285,18 @@ contract SimpleGovernance is ListAuthorizer{
 
     /// @notice Vote "yes" and execute action if quorum is reached
     /// @param _voteID The ID of the vote to vote on
-    function __Governance_confirmAction(uint _voteID) external onlyProposal voteIsActive(_voteID){
+    function __Governance_confirmAction(address _voter, uint _voteID) external onlyProposal voteIsActive(_voteID){
 
 
         // Ensure voter hasn't voted yet
-        if(!voteRegistry[_voteID].hasVoted[_msgSender()]){
+        if(!voteRegistry[_voteID].hasVoted[_voter]){
 
-            voteRegistry[_voteID].hasVoted[_msgSender()] = true;
+            voteRegistry[_voteID].hasVoted[_voter] = true;
             voteRegistry[_voteID].aye++;
 
-            emit VotedInFavor(_msgSender(), _voteID);
+            emit VotedInFavor(_voter, _voteID);
             
         }
-
-
-        // If enough confirmations happened, execute vote
-        if(voteRegistry[_voteID].aye >= quorum){
-            executeVote(_voteID);
-        }
-
 
     }
 
@@ -230,7 +307,8 @@ contract SimpleGovernance is ListAuthorizer{
 
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_confirmAction(uint)",
+                "__Governance_confirmAction(address,uint)",
+                _msgSender(),
                 _voteID
             ),
             Types.Operation.Call
@@ -241,26 +319,19 @@ contract SimpleGovernance is ListAuthorizer{
 
     /// @notice Vote "no" and abort action if quorum is reached
     /// @param _voteID The ID of the vote to vote on
-    function __Governance_cancelAction(uint _voteID) external onlyProposal voteIsActive(_voteID){
+    function __Governance_cancelAction(address _voter, uint _voteID) external onlyProposal voteIsActive(_voteID){
 
 
 
         // If the voter hasn't voted yet register vote
-        if(!voteRegistry[_voteID].hasVoted[_msgSender()]){
+        if(!voteRegistry[_voteID].hasVoted[_voter]){
 
-            voteRegistry[_voteID].hasVoted[_msgSender()] = true;
+            voteRegistry[_voteID].hasVoted[_voter] = true;
             voteRegistry[_voteID].nay++;
 
-            emit VotedAgainst(_msgSender(), _voteID);
+            emit VotedAgainst(_voter, _voteID);
                     
         } 
-
-        
-        // If enough denials happened, cancel vote
-        if(voteRegistry[_voteID].nay >= quorum){
-            voteRegistry[_voteID].isActive= false;
-            emit VoteCancelled(_voteID);
-        }
 
     }
 
@@ -271,7 +342,8 @@ contract SimpleGovernance is ListAuthorizer{
 
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_cancelAction(uint)",
+                "__Governance_cancelAction(address,uint)",
+                _msgSender(),
                 _voteID
             ),
             Types.Operation.Call
@@ -284,17 +356,29 @@ contract SimpleGovernance is ListAuthorizer{
     /// @notice Execute a vote. Only called by confirmAction once quorum 
     ///         is reached
     /// @param _voteID The ID of the vote to execute
-    function executeVote(uint _voteID) internal voteIsActive(_voteID){
+    function executeVote(uint _voteID) external voteIsActive(_voteID) quorumReached(_voteID){
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Governance_executeVote(uint)",
+                _voteID
+            ),
+            Types.Operation.Call
+        );       
 
-        // Deactivate the vote
-        voteRegistry[_voteID].isActive= false;
+
+    }
+
+    function __Governance_executeVote(uint _voteID) external onlyProposal quorumReached(_voteID) voteNotActive(_voteID){
+
 
         // Tell the proposal to execute the vote
-        __Module_proposal.executeTxFromModule(
+        (voteRegistry[_voteID].executionResult, voteRegistry[_voteID].returnData) = __Module_proposal.executeTxFromModule(
             voteRegistry[_voteID].targetAddress, 
             voteRegistry[_voteID].encodedAction, 
             Types.Operation.Call
             );
+        
+        voteRegistry[_voteID].executedAt = block.timestamp;
 
         emit VoteEnacted(_voteID);
 
