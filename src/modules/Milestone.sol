@@ -17,14 +17,12 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  * @author byterocket
  */
 contract MilestoneModule is IMilestone, Module {
-
+    /// @notice The contributor access control role.
+    bytes32 public constant MILESTONE_CONTRIBUTOR_ROLE =
+        keccak256("modules.milestone.contributor");
 
     //--------------------------------------------------------------------------------
-    // STATE
-
-    // Define a role for contributors.
-    bytes32 public constant MILESTONE_CONTRIBUTOR_ROLE =
-        keccak256("milestoneContributor");
+    // Storage
 
     /// @dev Mapping of all Milestones
     ///      uses nextNewMilestoneId to determine positioning of the milestones
@@ -33,17 +31,15 @@ contract MilestoneModule is IMilestone, Module {
     /// @dev The Id the next new Milestone is assigned
     uint public nextNewMilestoneId;
 
-
     //--------------------------------------------------------------------------------
     // MODIFIER
 
     /// @dev Checks via the governance module if msg.sender is contributor
-    modifier contributorAccess() {
-        if (
-            !__Module_proposal.hasRole(
-                address(this), MILESTONE_CONTRIBUTOR_ROLE, msg.sender
-            )
-        ) {
+    modifier onlyContributor() {
+        bool isContributor = __Module_proposal.hasRole(
+            address(this), MILESTONE_CONTRIBUTOR_ROLE, msg.sender
+        );
+        if (!isContributor) {
             revert OnlyCallableByContributor();
         }
         _;
@@ -330,7 +326,7 @@ contract MilestoneModule is IMilestone, Module {
     ///@notice Submit a milestone
     ///@dev Relay Function that routes the function call via the proposal
     ///@param id : id in the milestone array
-    function submitMilestone(uint id) external contributorAccess {
+    function submitMilestone(uint id) external onlyContributor {
         _triggerProposalCallback(
             abi.encodeWithSignature("__Milestone_submitMilestone(uint256)", id),
             Types.Operation.Call
