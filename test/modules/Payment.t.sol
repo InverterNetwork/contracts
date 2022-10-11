@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 
 
 import {Payment} from "src/modules/Payment.sol";
+import {VestingWallet} from "@oz/finance/VestingWallet.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 import {IModule} from "src/interfaces/IModule.sol";
