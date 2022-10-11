@@ -35,8 +35,8 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Storage
 
-    IERC20 private token;
-    VestingWallet private vesting;
+    IERC20 private token;             // invariant
+    VestingWallet private vesting;    // invariant
 
     address private proposal;
 
@@ -139,9 +139,10 @@ contract Payment is Module {
         //uint epochsAmount
     )
         external
-        onlyAuthorized() // only proposal owner
-        validContributor(contributor)
-        validSalary(salary)
+        // onlyAuthorized() // only proposal owner
+        // validContributor(contributor)
+        // validSalary(salary)
+
         //validEpochsAmount(epochsAmount)
         // @todo Nejc: add modifiers for input validation
     {
