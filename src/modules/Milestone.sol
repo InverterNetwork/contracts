@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
+import {Module} from "src/modules/base/Module.sol";
 
-import {Module} from "./base/Module.sol";
-
+// Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
 
 contract MilestoneModule is Module {
