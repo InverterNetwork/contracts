@@ -123,9 +123,13 @@ function __ExampleModule_doSmth(
 ## Initialization
 
 The contract provides a `__Module_init(proposal)` function for initialization
-that **MUST** be called in order to correctly initialize the storage.
+that **MUST** be called during the dowmstream's `init()` function order to
+correctly initialize the storage.
 
-## User Authentication
+The `init()` function is declared inside the base `Module` contract and,
+therefore, has to be implemented inside the downstream contract.
+
+### User Authentication
 
 Users are authenticated using the proposal's `IAuthenticator` instance.
 This ensures that all access management is handled solely by the proposal.

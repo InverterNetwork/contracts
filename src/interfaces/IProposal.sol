@@ -20,6 +20,13 @@ interface IProposal is IModuleManager {
     //--------------------------------------------------------------------------
     // Functions
 
+    function init(
+        uint proposalId,
+        address[] calldata funders,
+        address[] calldata modules, // @todo mp: Change to IModules.
+        IAuthorizer authorizer_
+    ) external;
+
     /// @notice Executes a call on target `target` with call data `data`.
     /// @dev Only callable by authorized caller.
     /// @param target The address to call.
