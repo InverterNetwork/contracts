@@ -177,8 +177,13 @@ contract Payment is Module {
         //     epochsAmount,
         //     true
         // );
-        //
+
         emit PaymentAdded(contributor, salary, start, start + duration);
+    }
+
+    // @notice Returns address of vesting contract per contributor.
+    function getVesting(address contributor) external view returns(address) {
+        return vestings[contributor];
     }
 
     /// @notice Claims any accrued funds which a contributor has earnt.
