@@ -3,8 +3,12 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+// Internal Libraries
+import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
+
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
+import {IModule} from "src/interfaces/IModule.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -25,11 +29,14 @@ library Errors {
     bytes internal constant Module__OnlyCallableByProposal =
         abi.encodeWithSignature("Module__OnlyCallableByProposal()");
 
+    bytes internal constant Module__WantProposalContext =
+        abi.encodeWithSignature("Module__WantProposalContext()");
+
     bytes internal constant Module__InvalidProposalAddress =
         abi.encodeWithSignature("Module__InvalidProposalAddress()");
 
-    bytes internal constant Module__WantProposalContext =
-        abi.encodeWithSignature("Module__WantProposalContext()");
+    bytes internal constant Module__InvalidMetadata =
+        abi.encodeWithSignature("Module__InvalidMetadata()");
 }
 
 contract ModuleTest is Test {
@@ -40,6 +47,12 @@ contract ModuleTest is Test {
     ProposalMock proposal;
     AuthorizerMock authorizer;
 
+    // Constants
+    uint constant MAJOR_VERSION = 1;
+    string constant GIT_URL = "https://github.com/organization/module";
+
+    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
+
     function setUp() public {
         authorizer = new AuthorizerMock();
         authorizer.setAllAuthorized(true);
@@ -47,7 +60,7 @@ contract ModuleTest is Test {
         proposal = new ProposalMock(authorizer);
 
         module = new ModuleMock();
-        module.init(proposal);
+        module.init(proposal, DATA);
 
         // Initialize proposal to enable module.
         address[] memory modules = new address[](1);
@@ -58,26 +71,47 @@ contract ModuleTest is Test {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInitialization() public {
+    function testInit() public {
         module = new ModuleMock();
 
-        module.init(proposal);
+        module.init(proposal, DATA);
 
+        // Proposal correctly written to storage.
         assertEq(address(module.proposal()), address(proposal));
+
+        // Metadata correctly written to storage.
+        bytes32 got = MetadataLib.identifier(module.info());
+        bytes32 want = MetadataLib.identifier(DATA);
+        assertEq(got, want);
+
+        // Module's identifier correctly computed.
+        got = module.identifier();
+        want = MetadataLib.identifier(DATA);
+        assertEq(got, want);
     }
 
-    function testInitilizationFailsForInvalidProposal() public {
+    function testInitFailsForInvalidProposal() public {
         module = new ModuleMock();
 
         vm.expectRevert(Errors.Module__InvalidProposalAddress);
-        module.init(IProposal(address(0)));
+        module.init(IProposal(address(0)), DATA);
     }
 
-    function testInitilizationFailsForNonInitializerFunction() public {
+    function testInitFailsForNonInitializerFunction() public {
         module = new ModuleMock();
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        module.initNoInitializer(proposal);
+        module.initNoInitializer(proposal, DATA);
+    }
+
+    function testInitFailsIfMetadataInvalid(uint majorVersion) public {
+        module = new ModuleMock();
+
+        // Invalid if gitURL empty.
+        IModule.Metadata memory data = IModule.Metadata(majorVersion, "");
+
+        vm.expectRevert(Errors.Module__InvalidMetadata);
+        module.init(proposal, data);
     }
 
     //--------------------------------------------------------------------------

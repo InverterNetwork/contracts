@@ -9,6 +9,9 @@ import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 import {Types} from "src/common/Types.sol";
 import {ProposalStorage} from "src/generated/ProposalStorage.sol";
 
+// Internal Libraries
+import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
+
 // Internal Interfaces
 import {IModule} from "src/interfaces/IModule.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
@@ -23,6 +26,9 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  *      callbacks (via `call` or `delegatecall`) and a modifier to authenticate
  *      callers via the module's proposal.
  *
+ *      TODO mp: Update docs. Includes now:
+ *          - versioning
+ *
  * @author byterocket
  */
 abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
@@ -36,8 +42,17 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @custom:invariant Not mutated after initialization.
     IProposal internal __Module_proposal;
 
+    /// @dev The module's metadata.
+    ///
+    /// @custom:invariant Not mutated after initialization.
+    Metadata internal __Module_metadata;
+
     //--------------------------------------------------------------------------
     // Modifiers
+    //
+    // Note that the modifiers declared here are available in dowstream
+    // contracts too. To not make unnecessary modifiers available, this contract
+    // inlines argument validations not needed in downstream contracts.
 
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
@@ -88,19 +103,47 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Initialization
 
+    // @todo mp: Check that `_disableInitializers()` is used correctly.
+    //           Makes testing setup harder too.
+    //constructor() {
+    //    _disableInitializers();
+    //}
+
+    // @todo mp: Can metaData be calldata? Depends on Factories.
+
+    // @todo mp: param metaData data missing in function doc.
+    //           Refactor @dev, function name is `init()`.
+
+    /// @inheritdoc IModule
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory /*configdata*/
+    ) external virtual initializer {
+        __Module_init(proposal_, metadata);
+    }
+
     /// @dev The initialization function MUST be called by the upstream
     ///      contract in their `initialize()` function.
     /// @param proposal_ The module's proposal.
-    function __Module_init(IProposal proposal_) internal onlyInitializing {
+    function __Module_init(IProposal proposal_, Metadata memory metadata)
+        internal
+        onlyInitializing
+    {
         __Pausable_init();
 
+        // Write proposal to storage.
         if (address(proposal_) == address(0)) {
             revert Module__InvalidProposalAddress();
         }
         __Module_proposal = proposal_;
-    }
 
-    // @todo mp: Need version function (Issue 24)
+        // Write metadata to storage.
+        if (!MetadataLib.isValid(metadata)) {
+            revert Module__InvalidMetadata();
+        }
+        __Module_metadata = metadata;
+    }
 
     //--------------------------------------------------------------------------
     // onlyProposal Functions
@@ -142,6 +185,16 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     // Public View Functions
 
     /// @inheritdoc IModule
+    function identifier() public view returns (bytes32) {
+        return MetadataLib.identifier(__Module_metadata);
+    }
+
+    /// @inheritdoc IModule
+    function info() external view returns (Metadata memory) {
+        return __Module_metadata;
+    }
+
+    /// @inheritdoc IModule
     function proposal() external view returns (IProposal) {
         return __Module_proposal;
     }
@@ -160,10 +213,15 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     {
         bool ok;
         bytes memory returnData;
-
         (ok, returnData) =
             __Module_proposal.executeTxFromModule(address(this), data, op);
 
+        // Note that there is no check whether the proposal callback succeeded.
+        // This responsibility is delegated to the caller, i.e. downstream
+        // module implementation.
+        // However, the {IModule} interface defines a generic error type for
+        // failed proposal callbacks that can be used to prevent different
+        // custom error types in each implementation.
         return (ok, returnData);
     }
 }

@@ -8,10 +8,28 @@ import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+
 contract ProposalMock is IProposal, ModuleManagerMock {
     IAuthorizer public authorizer;
 
+    uint public proposalId;
+    address[] public funders;
+    address[] public modules;
+
     constructor(IAuthorizer authorizer_) {
+        authorizer = authorizer_;
+    }
+
+    function init(
+        uint proposalId_,
+        address[] calldata funders_,
+        address[] calldata modules_,
+        IAuthorizer authorizer_
+    ) external {
+        proposalId = proposalId_;
+        funders = funders_;
+        modules = modules_;
         authorizer = authorizer_;
     }
 
@@ -22,5 +40,9 @@ contract ProposalMock is IProposal, ModuleManagerMock {
 
     function version() external pure returns (string memory) {
         return "1";
+    }
+
+    function initModules(address[] calldata modules_) public initializer {
+        __ModuleManager_init(modules_);
     }
 }
