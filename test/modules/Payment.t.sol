@@ -52,8 +52,10 @@ contract PaymentTest is Test, ProposalMock {
         ProposalMock(this).initModules(modules);
     }
 
-    function testTest() public {
-        require(true);
+    // NOTE should be test or just mintTokens?
+    function mintTokens(uint amount) public {
+        token.mint(address(this), amount);
+        assertEq(token.balanceOf(address(this)), amount);
     }
 
 }
