@@ -34,7 +34,7 @@ contract MilestoneModule is IMilestone, Module {
     //--------------------------------------------------------------------------------
     // MODIFIER
 
-    /// @dev Checks via the governance module if msg.sender is contributor
+    /// @dev Checks via the governance module if msg.sender is contributor.
     modifier onlyContributor() {
         bool isContributor = __Module_proposal.hasRole(
             address(this), MILESTONE_CONTRIBUTOR_ROLE, msg.sender
@@ -45,8 +45,8 @@ contract MilestoneModule is IMilestone, Module {
         _;
     }
 
-    /// @dev Checks if the given title is valid
-    /// @param title : given milestone title
+    /// @dev Checks if the given title is valid.
+    /// @param title Given milestone title.
     modifier validTitle(string memory title) {
         if ((bytes(title)).length == 0) {
             revert InvalidTitle();
@@ -55,7 +55,7 @@ contract MilestoneModule is IMilestone, Module {
     }
 
     /// @dev Checks if the given startDate is valid.
-    /// @param startDate : The given startDate of the milestone
+    /// @param startDate The given startDate of the milestone.
     modifier validStartDate(uint startDate) {
         /* if () {//@note not in past?
          revert InvalidStartDate();
@@ -64,7 +64,7 @@ contract MilestoneModule is IMilestone, Module {
     }
 
     /// @dev Checks if the given details is valid.
-    /// @param details : The given details of the milestone
+    /// @param details The given details of the milestone.
     modifier validDetails(string memory details) {
         if ((bytes(details)).length == 0) {
             revert InvalidDetails();
@@ -72,8 +72,8 @@ contract MilestoneModule is IMilestone, Module {
         _;
     }
 
-    /// @dev Checks if the given id is available in the milestone array
-    /// @param id : id in the milestone array
+    /// @dev Checks if the given id is available in the milestone array.
+    /// @param id The id in the milestone array.
     modifier validId(uint id) {
         if (id >= nextNewMilestoneId) {
             revert InvalidMilestoneId();
@@ -82,7 +82,7 @@ contract MilestoneModule is IMilestone, Module {
     }
 
     /// @dev Checks if the given newId is valid.
-    /// @param newId :
+    /// @param newId ???
     modifier newMilestoneIdAvailable(uint newId) {
         if (newId > nextNewMilestoneId) {
             revert NewMilestoneIdNotYetAvailable();
@@ -90,8 +90,8 @@ contract MilestoneModule is IMilestone, Module {
         _;
     }
 
-    ///@dev Checks if the given Milestone is submitted
-    ///@param id : id in the milestone array
+    ///@dev Checks if the given Milestone is submitted.
+    ///@param id The id in the milestone array.
     modifier submitted(uint id) {
         if (!milestones[id].submitted) {
             revert MilestoneNotSubmitted();
@@ -99,8 +99,8 @@ contract MilestoneModule is IMilestone, Module {
         _;
     }
 
-    ///@dev Checks if the given Milestone is not completed
-    ///@param id : id in the milestone array
+    ///@dev Checks if the given Milestone is not completed.
+    ///@param id The id in the milestone array.
     modifier notCompleted(uint id) {
         if (milestones[id].completed) {
             revert MilestoneAlreadyCompleted();
@@ -108,8 +108,8 @@ contract MilestoneModule is IMilestone, Module {
         _;
     }
 
-    ///@dev Checks if the given Milestone is removed
-    ///@param id : id in the milestone array
+    ///@dev Checks if the given Milestone is removed.
+    ///@param id The id in the milestone array.
     modifier notRemoved(uint id) {
         if (milestones[id].removed) {
             revert MilestoneRemoved();
