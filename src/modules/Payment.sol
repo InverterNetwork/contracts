@@ -154,22 +154,15 @@ contract Payment is Module {
 
         vesting = new VestingWallet(contributor, start, duration);
 
-        vestings[contributor] = address(vesting);
-
-        // Somewhere else:
-        //(A sends X tokens to proposal => token.balanceOf(proposal) == X)
-        // Payment:
-        // function addPayment {
-        //   token.transferFrom(proposal, address(this), amount);
-        // }
-
-
-
         // @todo Nejc: Verify there's enough tokens in proposal for the payment.
+        // @todo Nejc transferFrom proposal instead this.
+        // @todo Nejc: before adding payment make sure contributor is wListed.
 
-        // @todo Nejc: Ensure token address is the same as defined in proposal.
+        vesting = new VestingWallet(contributor, start, duration);
 
-        // Note Before adding payment make sure contributor is wListed.
+        token.transfer(address(vesting), salary);
+
+        vestings[contributor] = address(vesting);
 
         // @dev add struct data to mapping
         // payments[contributor] = PaymentStruct(
