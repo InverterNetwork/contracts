@@ -117,7 +117,8 @@ contract MilestoneModule is IMilestone, Module {
         _;
     }
 
-    //++++++++++++++++++++++++++++++++++++++++++ CONSTRUCTOR ++++++++++++++++++++++++++++++++++++++++++
+    //--------------------------------------------------------------------------------
+    // Initialization
 
     constructor() {}
 
@@ -131,7 +132,8 @@ contract MilestoneModule is IMilestone, Module {
         // @todo felix: Set Payment module.
     }
 
-    //++++++++++++++++++++++++++++++++++++++++++ FUNCTIONS ++++++++++++++++++++++++++++++++++++++++++
+    //--------------------------------------------------------------------------------
+    // Access Control Functions
 
     /// @notice Grants an address the role of Milestone
     /// @dev There is no reach around function included, because the proposal is involved anyway
@@ -152,6 +154,9 @@ contract MilestoneModule is IMilestone, Module {
     {
         __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
+
+    //--------------------------------------------------------------------------------
+    // Milestone API Functions
 
     /// @dev Adds milestone to the milestone mapping
     /// @dev
@@ -178,7 +183,7 @@ contract MilestoneModule is IMilestone, Module {
             emit NewMilestone(title, startDate, details);
         } else {
             //If its not the same Milestone Content give an error message
-            if (!(hasSameMilestoneContent(newId, title, startDate, details))) {
+            if (!(_hasSameMilestoneContent(newId, title, startDate, details))) {
                 revert MilestoneWithIdAlreadyCreated();
             }
         }
@@ -393,10 +398,10 @@ contract MilestoneModule is IMilestone, Module {
     }
 
     //--------------------------------------------------------------------------------
-    // HELPER FUNCTIONS
+    // Helper Functions
 
-    function isSameString(string memory first, string memory second)
-        private
+    function _isSameString(string memory first, string memory second)
+        internal
         pure
         returns (bool)
     {
@@ -408,17 +413,18 @@ contract MilestoneModule is IMilestone, Module {
     ///@param title : the title data set thats compared
     ///@param startDate : the startDate data set thats compared
     ///@param details : the details data set thats compared
-    function hasSameMilestoneContent(
+    function _hasSameMilestoneContent(
         uint id,
         string memory title,
         uint startDate,
         string memory details
-    ) private view returns (bool) {
+    ) internal view returns (bool) {
         Milestone memory createdMilestone = milestones[id];
-        return
-        //Title and startdate and details are the same respectively
-        isSameString(createdMilestone.title, title)
-            && (createdMilestone.startDate == startDate)
-            && isSameString(createdMilestone.details, details);
+
+        bool equalTitles = _isSameString(createdMilestone.title, title);
+        bool equalStartDates = createdMilestone.startDate == startDate;
+        bool equalDetails = _isSameString(createdMilestone.details, details);
+
+        return equalTitles && equalStartDates && equalDetails;
     }
 }
