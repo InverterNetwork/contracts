@@ -36,6 +36,7 @@ contract MilestoneModule is IMilestone, Module {
 
     /// @dev Checks via the governance module if msg.sender is contributor.
     modifier onlyContributor() {
+        // @todo mp: Use _msgSender().
         bool isContributor = __Module_proposal.hasRole(
             address(this), MILESTONE_CONTRIBUTOR_ROLE, msg.sender
         );
@@ -231,7 +232,7 @@ contract MilestoneModule is IMilestone, Module {
     {
         Milestone storage milestone = milestones[id];
 
-        if (keccak256(bytes(milestone.details)) != keccak256(bytes(details))) {
+        if (!_isSameString(milestone.details, details)) {
             milestone.details = details;
             emit ChangeDetails(id, details);
         }
