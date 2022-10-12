@@ -53,9 +53,9 @@ testFactories: ## Run Factory tests
 # --------------------------------------
 # Modules Tests
 
-.PHONY: testModuleMilestone
-testModuleMilestone: ## Run Milestone module tests
-	@forge test -vvv --match-contract "Milestone"
+.PHONY: testModuleMilestoneManager
+testModuleMilestoneManager: ## Run MilestoneManager module tests
+	@forge test -vvv --match-contract "MilestoneManager"
 
 # -----------------------------------------------------------------------------
 # Static Analyzers
