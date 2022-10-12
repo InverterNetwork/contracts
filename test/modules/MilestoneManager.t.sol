@@ -55,18 +55,21 @@ contract MilestoneManagerTest is Test, ProposalMock {
         view
         returns (IMilestoneManager.Milestone memory)
     {
-        (
-            string memory title,
-            uint startDate,
-            string memory details,
-            bool submitted,
-            bool completed,
-            bool removed
-        ) = milestoneMod.milestones(id);
+        IMilestoneManager.Milestone memory m = milestoneMod.milestone(id);
 
-        return IMilestoneManager.Milestone(
-            title, startDate, details, submitted, completed, removed
-        );
+        return m;
+        //(
+        //    string memory title,
+        //    uint startDate,
+        //    string memory details,
+        //    bool submitted,
+        //    bool completed,
+        //    bool removed
+        //) = milestoneMod.milestones(id);
+
+        //return IMilestoneManager.Milestone(
+        //    title, startDate, details, submitted, completed, removed
+        //);
     }
 
     //--------------------------------------------------------------------------------
