@@ -5,6 +5,9 @@ pragma solidity ^0.8.0;
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
@@ -12,6 +15,7 @@ import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IPayer} from "src/interfaces/IPayer.sol";
 
 contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //--------------------------------------------------------------------------
@@ -38,6 +42,12 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
 
+    /// @inheritdoc IProposal
+    IPayer public override (IProposal) payer;
+
+    // @inheritdoc IProposal
+    //IERC20 public override (IProposal) paymentToken;
+
     //--------------------------------------------------------------------------
     // Initializer
 
@@ -51,7 +61,8 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         uint proposalId,
         address[] calldata funders,
         address[] calldata modules,
-        IAuthorizer authorizer_
+        IAuthorizer authorizer_,
+        IPayer payer_
     ) external initializer {
         _proposalId = proposalId;
         _funders = funders;
@@ -59,11 +70,18 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         __Pausable_init();
         __ModuleManager_init(modules);
 
+        // Require authorizer module.
         if (!isEnabledModule(address(authorizer_))) {
             revert Proposal__InvalidAuthorizer();
         }
 
+        // Require payer module.
+        if (!isEnabledModule(address(payer_))) {
+            revert("Invalid Payer"); // @todo mp: Make error type.
+        }
+
         authorizer = authorizer_;
+        payer = payer_;
     }
 
     //--------------------------------------------------------------------------

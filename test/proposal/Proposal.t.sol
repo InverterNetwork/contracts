@@ -8,6 +8,7 @@ import {Proposal} from "src/proposal/Proposal.sol";
 
 // Internal Interfaces
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IPayer} from "src/interfaces/IPayer.sol";
 
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
@@ -39,9 +40,11 @@ contract ProposalTest is Test, FuzzInputChecker {
 
     // Mocks
     AuthorizerMock authorizer;
+    IPayer payer; // @todo mp: Make mock.
 
     function setUp() public {
         authorizer = new AuthorizerMock();
+        payer = IPayer(address(0xBEEF));
 
         proposal = new Proposal();
     }
@@ -62,7 +65,7 @@ contract ProposalTest is Test, FuzzInputChecker {
         modules[modules.length - 1] = address(authorizer);
 
         // Initialize proposal.
-        proposal.init(proposalId, funders, modules, authorizer);
+        proposal.init(proposalId, funders, modules, authorizer, payer);
 
         // Check that proposal's storage correctly initialized.
         assertEq(address(proposal.authorizer()), address(authorizer));
@@ -81,10 +84,10 @@ contract ProposalTest is Test, FuzzInputChecker {
         modules[modules.length - 1] = address(authorizer);
 
         // Initialize proposal.
-        proposal.init(proposalId, funders, modules, authorizer);
+        proposal.init(proposalId, funders, modules, authorizer, payer);
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        proposal.init(proposalId, funders, modules, authorizer);
+        proposal.init(proposalId, funders, modules, authorizer, payer);
     }
 
     function testInitFailsForInvalidAuthorizer(
@@ -98,7 +101,7 @@ contract ProposalTest is Test, FuzzInputChecker {
 
         // Note that the authorizer is not added to the modules list.
         vm.expectRevert(Errors.Proposal__InvalidAuthorizer);
-        proposal.init(proposalId, funders, modules, authorizer);
+        proposal.init(proposalId, funders, modules, authorizer, payer);
     }
 
     //--------------------------------------------------------------------------

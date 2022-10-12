@@ -7,6 +7,7 @@ import {Context} from "@oz/utils/Context.sol";
 
 // Internal Interfaces
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IPayer} from "src/interfaces/IPayer.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
@@ -47,7 +48,7 @@ contract ProposalFactory is IProposalFactory {
     function createProposal(
         address[] calldata funders,
         IModule.Metadata memory authorizerMetadata,
-        bytes memory authorizerConfigdata,
+        bytes memory authorizerConfigdata, // @todo mp: Add payer arguments.
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address) {
@@ -74,7 +75,11 @@ contract ProposalFactory is IProposalFactory {
 
         // Initialize proposal.
         IProposal(clone).init(
-            _proposalIdCounter++, funders, modules, IAuthorizer(authorizer)
+            _proposalIdCounter++,
+            funders,
+            modules,
+            IAuthorizer(authorizer),
+            IPayer(address(0xBEEF)) // @todo mp: Adjust when arguments added.
         );
 
         return clone;

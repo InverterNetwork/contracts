@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Internal Interfaces
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IPayer} from "src/interfaces/IPayer.sol";
 import {IModuleManager} from "src/interfaces/IModuleManager.sol";
 
 interface IProposal is IModuleManager {
@@ -24,7 +29,8 @@ interface IProposal is IModuleManager {
         uint proposalId,
         address[] calldata funders,
         address[] calldata modules, // @todo mp: Change to IModules.
-        IAuthorizer authorizer_
+        IAuthorizer authorizer,
+        IPayer payer
     ) external;
 
     /// @notice Executes a call on target `target` with call data `data`.
@@ -38,6 +44,12 @@ interface IProposal is IModuleManager {
 
     /// @notice The {IAuthorizer} implementation used to authorize addresses.
     function authorizer() external view returns (IAuthorizer);
+
+    /// @notice The {IPayer} implementation used to pay addresses.
+    function payer() external view returns (IPayer);
+
+    // @notice The {IERC20} token used for payments.
+    //function paymentToken() external view returns (IERC20);
 
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);

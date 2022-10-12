@@ -410,6 +410,17 @@ contract MilestoneModule is Module {
             //@note pay who and how much?
             //@todo add Payment
 
+            // @todo mp: Example for how to pay:
+            /**
+             * IPayer payer = __Module_proposal.payer();
+             *          uint amount = milestone.salary;
+             *          address recipient = @todo felix: ?
+             *          payer.pay({
+             *             recipient: recipient,
+             *             amount: amount,
+             *             details: bytes("")
+             *          });
+             */
             emit ConfirmMilestone(id);
         }
     }
