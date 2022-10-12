@@ -5,18 +5,15 @@ import "forge-std/Test.sol";
 
 
 import {Payment} from "src/modules/Payment.sol";
-import {VestingWallet} from "@oz/finance/VestingWallet.sol";
-import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-
+// import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+//
 import {IModule} from "src/interfaces/IModule.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
-
-
 
 
 contract PaymentTest is Test, ProposalMock {
@@ -53,17 +50,20 @@ contract PaymentTest is Test, ProposalMock {
         ProposalMock(this).initModules(modules);
     }
 
+
     // NOTE should be test or just mintTokens?
     function mintTokens(uint amount) public {
         token.mint(address(this), amount);
         assertEq(token.balanceOf(address(this)), amount);
     }
 
-    function testAddPayment() public {
+    function testAddPayment()
+        public
+        returns(uint, address, uint64, uint64) {
 
         // vesting params
         uint vestingAmount = 100;
-        address receiver = address(0xBEEF); //aka. contributor/beneficiary
+        address receiver = 0xE71d14a3fA97292BDE885C1D134bE4698e09b3B7; //aka. contributor/beneficiary
         uint64 start = uint64(block.timestamp);
         uint64 duration = 300; // seconds
 
@@ -84,23 +84,41 @@ contract PaymentTest is Test, ProposalMock {
         );
 
         // make sure tokens are transfered to vesting
-        address vesting = payment.getVesting(receiver);
-        assertEq(token.balanceOf(vesting), vestingAmount);
-
-        // set VestingWallet instance at vesting address
-        VestingWallet vestingWallet = VestingWallet(payable(vesting));
+        assertEq(token.balanceOf(address(payment)), vestingAmount);
 
         //--------------------------------------------------------------------------
-        // Validate vesting data on vestingWallet contract
+        // Validate vesting data on payment contract
 
         // validate beneficiary at Vesting is proper address
-        address vestingReceiver = vestingWallet.beneficiary();
-        assertEq(vestingReceiver, receiver);
+        bool vestingEnabled = payment.enabled(receiver);
+        assertTrue(vestingEnabled);
 
-        uint vestingStart = vestingWallet.start();
+        uint vestingStart = payment.start(receiver);
         assertEq(vestingStart, start);
 
-        uint vestingDuration = vestingWallet.duration();
+        uint vestingDuration = payment.duration(receiver);
         assertEq(vestingDuration, duration);
+
+        return (vestingAmount, receiver, start, duration);
+    }
+
+    function testClaim() public {
+        (uint vestingAmount, address receiver, uint64 start, uint64 duration)
+            = testAddPayment();
+
+        vm.prank(receiver);
+        uint releasableBefore = payment.releasable();
+        assertEq(releasableBefore, 0);
+
+        skip(duration);
+
+        vm.prank(receiver);
+        payment.release();
+
+        uint balanceAfter = token.balanceOf(receiver);
+        console.log("balanceAfter: " ,balanceAfter);
+
+        uint releasableAfter = payment.releasable();
+        assertEq(releasableAfter, 0);
     }
 }
