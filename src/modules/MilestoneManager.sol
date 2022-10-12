@@ -136,9 +136,10 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------------
     // Access Control Functions
 
-    /// @notice Grants an address the role of Milestone
-    /// @dev There is no reach around function included, because the proposal is involved anyway
-    /// @param account the address that is granted the role
+    /// @notice Grants address `account` the milestone-contributor role.
+    /// @dev There is no reach around function included, because the proposal
+    ///      is involved anyway.
+    /// @param account The address to grant the role.
     function grantMilestoneContributorRole(address account)
         public
         onlyAuthorized
@@ -146,9 +147,10 @@ contract MilestoneManager is IMilestoneManager, Module {
         __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account);
     }
 
-    /// @notice Grants an address the role of Milestone
-    /// @dev There is no reach around function included, because the proposal is involved anyway
-    /// @param account the address that is granted the role
+    /// @notice Revokes from address `account` the milestone-contributor role.
+    /// @dev There is no reach around function included, because the proposal
+    ///      is involved anyway.
+    /// @param account The address to revoke the role from.
     function revokeMilestoneContributorRole(address account)
         public
         onlyAuthorized
