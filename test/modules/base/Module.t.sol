@@ -14,6 +14,7 @@ import {IModule} from "src/interfaces/IModule.sol";
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {PayerMock} from "test/utils/mocks/PayerMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -46,6 +47,7 @@ contract ModuleTest is Test {
     // Mocks
     ProposalMock proposal;
     AuthorizerMock authorizer;
+    PayerMock payer;
 
     // Constants
     uint constant MAJOR_VERSION = 1;
@@ -57,7 +59,9 @@ contract ModuleTest is Test {
         authorizer = new AuthorizerMock();
         authorizer.setAllAuthorized(true);
 
-        proposal = new ProposalMock(authorizer);
+        payer = new PayerMock();
+
+        proposal = new ProposalMock();
 
         module = new ModuleMock();
         module.init(proposal, DATA);
@@ -65,7 +69,7 @@ contract ModuleTest is Test {
         // Initialize proposal to enable module.
         address[] memory modules = new address[](1);
         modules[0] = address(module);
-        proposal.init(modules);
+        proposal.init(authorizer, payer, modules);
     }
 
     //--------------------------------------------------------------------------

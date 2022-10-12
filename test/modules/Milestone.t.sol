@@ -13,6 +13,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 // Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {PayerMock} from "test/utils/mocks/PayerMock.sol";
 
 contract MilestoneTest is Test, ProposalMock {
     struct Milestone {
@@ -24,8 +25,12 @@ contract MilestoneTest is Test, ProposalMock {
         bool removed;
     }
 
+    // SuT
     MilestoneModule milestoneMod;
-    AuthorizerMock authorizerMock = new AuthorizerMock();
+
+    // Mocks
+    AuthorizerMock authorizerMock;
+    PayerMock payerMock;
 
     // Constants
     // @todo mp: Make abstract Module test to inherit this stuff.
@@ -37,16 +42,21 @@ contract MilestoneTest is Test, ProposalMock {
     //--------------------------------------------------------------------------------
     // SETUP
 
-    constructor() ProposalMock(authorizerMock) {}
-
     function setUp() public {
+        // SuT
         milestoneMod = new MilestoneModule();
         milestoneMod.init(IProposal(address(this)), DATA, bytes(""));
 
-        address[] memory modules = new address[](1);
-        modules[0] = address(milestoneMod);
+        // Mocks
+        authorizerMock = new AuthorizerMock();
+        payerMock = new PayerMock();
 
-        ProposalMock(this).initModules(modules);
+        // ProposalMock, i.e. address(this).
+        address[] memory funders_ = new address[](1);
+        funders_[0] = address(0xF);
+        address[] memory modules_ = new address[](1);
+        modules_[0] = address(milestoneMod);
+        ProposalMock(this).init(0, funders_, modules_, authorizerMock, payerMock);
     }
 
     //--------------------------------------------------------------------------------
@@ -77,6 +87,8 @@ contract MilestoneTest is Test, ProposalMock {
     function testContributorAccess(address accessor) public {
         uint id = milestoneMod.nextNewMilestoneId();
         milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
+
+        authorizer = authorizerMock;
 
         vm.expectRevert(MilestoneModule.OnlyCallableByContributor.selector);
         vm.prank(accessor);

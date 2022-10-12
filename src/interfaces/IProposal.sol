@@ -19,11 +19,16 @@ interface IProposal is IModuleManager {
     /// @notice Given authorizer address invalid.
     error Proposal__InvalidAuthorizer();
 
+    /// @notice Given payer address invalid.
+    error Proposal__InvalidPayer();
+
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
 
     //--------------------------------------------------------------------------
     // Functions
+
+    // @todo mp: Proposal::init() docs missing.
 
     function init(
         uint proposalId,

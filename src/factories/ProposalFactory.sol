@@ -47,8 +47,13 @@ contract ProposalFactory is IProposalFactory {
     /// @inheritdoc IProposalFactory
     function createProposal(
         address[] calldata funders,
+        // Authorizer module arguments
         IModule.Metadata memory authorizerMetadata,
-        bytes memory authorizerConfigdata, // @todo mp: Add payer arguments.
+        bytes memory authorizerConfigdata,
+        // Payer module arguments
+        IModule.Metadata memory payerMetadata,
+        bytes memory payerConfigdata,
+        // Other module arguments
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address) {
@@ -62,6 +67,11 @@ contract ProposalFactory is IProposalFactory {
         // Deploy and cache authorizer module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerMetadata, IProposal(clone), authorizerConfigdata
+        );
+
+        // Deploy and cache payer module.
+        address payer = IModuleFactory(moduleFactory).createModule(
+            payerMetadata, IProposal(clone), payerConfigdata
         );
 
         // Deploy and cache optional modules.
@@ -79,7 +89,7 @@ contract ProposalFactory is IProposalFactory {
             funders,
             modules,
             IAuthorizer(authorizer),
-            IPayer(address(0xBEEF)) // @todo mp: Adjust when arguments added.
+            IPayer(payer)
         );
 
         return clone;

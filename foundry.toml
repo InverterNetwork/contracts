@@ -7,7 +7,7 @@ libs = ['lib']
 solc_version = "0.8.13"
 optimizer = true
 optimizer_runs = 10_000
-via_ir = false              # @todo Try out later
+via_ir = true              # @todo Try out later
 
 # Testing
 fuzz_runs = 256

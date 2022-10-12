@@ -21,8 +21,7 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable by authorized
-    ///         address.
+    /// @dev Guarantees that function is only callable by authorized addresses.
     modifier onlyAuthorized() {
         if (!authorizer.isAuthorized(msg.sender)) {
             revert Proposal__CallerNotAuthorized();
@@ -45,14 +44,11 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     /// @inheritdoc IProposal
     IPayer public override (IProposal) payer;
 
-    // @inheritdoc IProposal
-    //IERC20 public override (IProposal) paymentToken;
-
     //--------------------------------------------------------------------------
     // Initializer
 
     // @todo mp: Check that `_disableInitializers()` is used correctly.
-    //           Makes testing setup harder too.
+    //           Makes testing setup harder though.
     //constructor() {
     //    _disableInitializers();
     //}
@@ -64,9 +60,6 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         IAuthorizer authorizer_,
         IPayer payer_
     ) external initializer {
-        _proposalId = proposalId;
-        _funders = funders;
-
         __Pausable_init();
         __ModuleManager_init(modules);
 
@@ -77,9 +70,12 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
 
         // Require payer module.
         if (!isEnabledModule(address(payer_))) {
-            revert("Invalid Payer"); // @todo mp: Make error type.
+            revert Proposal__InvalidPayer();
         }
 
+        // Write arguments to storage.
+        _proposalId = proposalId;
+        _funders = funders;
         authorizer = authorizer_;
         payer = payer_;
     }

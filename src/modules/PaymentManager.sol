@@ -12,9 +12,25 @@ import {Module} from "src/modules/base/Module.sol";
 import {Types} from "src/common/Types.sol";
 
 // Internal Interfaces
-import {IPaymentManager, IPayer} from "src/interfaces/IPaymentManager.sol";
+import {
+    IPaymentManager,
+    IPayer,
+    IModule
+} from "src/interfaces/IPaymentManager.sol";
+import {IProposal} from "src/interfaces/IProposal.sol";
 
+/**
+ * @title PaymentManager
+ *
+ * @dev @todo mp: Write docs...
+ *
+ * @author byterocket
+ */
 contract PaymentManager is IPaymentManager, Module {
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    /// @dev Guarantees that function is only callable with valid payment id.
     modifier validId(uint id) {
         if (id >= _paymentIdCounter) {
             revert("Invalid Payment ID");
@@ -22,30 +38,44 @@ contract PaymentManager is IPaymentManager, Module {
         _;
     }
 
+    //--------------------------------------------------------------------------
+    // Storage
+
     mapping(uint => Payment) private _payments;
 
     uint private _paymentIdCounter;
 
+    /// @custom:invariant Not mutated after initialization.
     IERC20 private _paymentToken;
 
-    /**
-     * Module linking:
-     *     - ContributorManager has
-     *         - `getContributorInfo(address) returns (salary)`
-     *         - `isActiveContributor(address) returns (bool)`
-     *     - Milestone
-     *         - wants to send payment when milestone confirmed
-     */
+    //--------------------------------------------------------------------------
+    // Initialization
+
+    /// @inheritdoc Module
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory configdata
+    ) external override (Module, IModule) initializer {
+        __Module_init(proposal_, metadata);
+
+        // Decode configdata.
+        address token = abi.decode(configdata, (address));
+
+        if (token == address(this) || token == address(0)) {
+            revert("Invalid Payment Token");
+        }
+
+        _paymentToken = IERC20(token);
+    }
 
     //--------------------------------------------------------------------------
     // onlyAuthorized Functions
 
     /// @inheritdoc IPayer
-    function pay(address recipient, uint amount, bytes memory)
-        external
-    {
-        // @todo mp: Problem with authentication. This caller could be e.g.
-        //           the milestone module.
+    function pay(address recipient, uint amount, bytes memory) external {
+        // @todo mp: Problem with authentication?
+        //           This caller could be e.g. the milestone module.
         addPayment(recipient, amount);
     }
 
@@ -136,7 +166,11 @@ contract PaymentManager is IPaymentManager, Module {
     }
 
     // Return _payment[start:end] -> start inclusive, end exclusive
-    function listPayments(uint start, uint end) public view returns (Payment[] memory) {
+    function listPayments(uint start, uint end)
+        public
+        view
+        returns (Payment[] memory)
+    {
         if (start >= end) {
             revert("Start must be less then end");
         }
@@ -216,10 +250,7 @@ contract PaymentManager is IPaymentManager, Module {
         _requireNotRemoved(p);
     }
 
-    function _requireRemovable(Payment storage p)
-        internal
-        view
-    {
+    function _requireRemovable(Payment storage p) internal view {
         _requireNotClaimed(p);
     }
 

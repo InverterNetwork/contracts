@@ -20,7 +20,10 @@ interface IPaymentManager is IPayer, IModule {
         returns (uint);
 
     function listPayments() external view returns (Payment[] memory);
-    function listPayments(uint start, uint end) external view returns (Payment[] memory);
+    function listPayments(uint start, uint end)
+        external
+        view
+        returns (Payment[] memory);
 
     function pausePayment(uint id) external;
 

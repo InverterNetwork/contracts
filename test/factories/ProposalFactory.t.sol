@@ -12,10 +12,12 @@ import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
 // Internal Interfaces
 import {IModule} from "src/interfaces/IModule.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
+import {IPayer} from "src/interfaces/IPayer.sol";
 
 // Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {PayerMock} from "test/utils/mocks/PayerMock.sol";
 import {ModuleFactoryMock} from
     "test/utils/mocks/factories/ModuleFactoryMock.sol";
 
@@ -36,13 +38,15 @@ contract ProposalFactoryTest is Test {
 
     // Mocks
     AuthorizerMock authorizer;
+    PayerMock payer;
     ProposalMock target;
     ModuleFactoryMock moduleFactory;
 
     function setUp() public {
         authorizer = new AuthorizerMock();
+        payer = new PayerMock();
 
-        target = new ProposalMock(authorizer);
+        target = new ProposalMock();
         moduleFactory = new ModuleFactoryMock();
 
         factory = new ProposalFactory(address(target), address(moduleFactory));
@@ -74,6 +78,8 @@ contract ProposalFactoryTest is Test {
                 funders: funders,
                 authorizerMetadata: IModule.Metadata(1, "Authorizer"),
                 authorizerConfigdata: bytes("Authorizer"),
+                payerMetadata: IModule.Metadata(1, "Payer"),
+                payerConfigdata: bytes("Payer"),
                 moduleMetadatas: metadatas,
                 moduleConfigdatas: configdatas
             })
@@ -86,6 +92,8 @@ contract ProposalFactoryTest is Test {
                 funders: funders,
                 authorizerMetadata: IModule.Metadata(1, "Authorizer"),
                 authorizerConfigdata: bytes("Authorizer"),
+                payerMetadata: IModule.Metadata(1, "Payer"),
+                payerConfigdata: bytes("Payer"),
                 moduleMetadatas: metadatas,
                 moduleConfigdatas: configdatas
             })
@@ -116,6 +124,8 @@ contract ProposalFactoryTest is Test {
             funders: funders,
             authorizerMetadata: IModule.Metadata(1, "Authorizer"),
             authorizerConfigdata: bytes("Authorizer"),
+            payerMetadata: IModule.Metadata(1, "Payer"),
+            payerConfigdata: bytes("Payer"),
             moduleMetadatas: metadatas,
             moduleConfigdatas: configdatas
         });

@@ -13,8 +13,13 @@ interface IProposalFactory {
 
     function createProposal(
         address[] calldata funders,
+        // Authorizer module arguments
         IModule.Metadata memory authorizerMetadata,
         bytes memory authorizerConfigdata,
+        // Payer module arguments
+        IModule.Metadata memory payerMetadata,
+        bytes memory payerConfigdata,
+        // Other module arguments
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address);
