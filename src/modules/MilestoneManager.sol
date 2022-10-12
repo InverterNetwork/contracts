@@ -17,24 +17,24 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  * @author byterocket
  */
 contract MilestoneManager is IMilestoneManager, Module {
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Constants
 
     /// @inheritdoc IMilestoneManager
     bytes32 public constant CONTRIBUTOR_ROLE =
         keccak256("modules.milestonemanager.contributor");
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Mapping of all Milestones
-    ///      uses nextNewMilestoneId to determine positioning of the milestones
-    mapping(uint => Milestone) public milestones;
+    /// @dev Mapping of all Milestones.
+    /// @dev Milestone id => Milestone.
+    mapping(uint => Milestone) private _milestones;
 
-    /// @dev The Id the next new Milestone is assigned
-    uint public nextNewMilestoneId;
+    /// @dev The id assigned to the next created Milestone.
+    uint private _milestoneIdCounter;
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // MODIFIER
 
     /// @dev Checks via the governance module if msg.sender is contributor.
@@ -79,7 +79,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @dev Checks if the given id is available in the milestone array.
     /// @param id The id in the milestone array.
     modifier validId(uint id) {
-        if (id >= nextNewMilestoneId) {
+        if (id >= _milestoneIdCounter) {
             revert InvalidMilestoneId();
         }
         _;
@@ -88,7 +88,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @dev Checks if the given newId is valid.
     /// @param newId ???
     modifier newMilestoneIdAvailable(uint newId) {
-        if (newId > nextNewMilestoneId) {
+        if (newId > _milestoneIdCounter) {
             revert NewMilestoneIdNotYetAvailable();
         }
         _;
@@ -97,7 +97,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     ///@dev Checks if the given Milestone is submitted.
     ///@param id The id in the milestone array.
     modifier submitted(uint id) {
-        if (!milestones[id].submitted) {
+        if (!_milestones[id].submitted) {
             revert MilestoneNotSubmitted();
         }
         _;
@@ -106,7 +106,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     ///@dev Checks if the given Milestone is not completed.
     ///@param id The id in the milestone array.
     modifier notCompleted(uint id) {
-        if (milestones[id].completed) {
+        if (_milestones[id].completed) {
             revert MilestoneAlreadyCompleted();
         }
         _;
@@ -115,13 +115,13 @@ contract MilestoneManager is IMilestoneManager, Module {
     ///@dev Checks if the given Milestone is removed.
     ///@param id The id in the milestone array.
     modifier notRemoved(uint id) {
-        if (milestones[id].removed) {
+        if (_milestones[id].removed) {
             revert MilestoneRemoved();
         }
         _;
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Initialization
 
     constructor() {}
@@ -136,7 +136,7 @@ contract MilestoneManager is IMilestoneManager, Module {
         // @todo felix: Set Payment module.
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Access Control Functions
 
     // @todo mp, felix: Rename to `grantContributorRole()`?
@@ -151,7 +151,7 @@ contract MilestoneManager is IMilestoneManager, Module {
         __Module_proposal.revokeRole(CONTRIBUTOR_ROLE, account);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Milestone API Functions
 
     /// @dev Adds milestone to the milestone mapping
@@ -173,9 +173,16 @@ contract MilestoneManager is IMilestoneManager, Module {
         validStartDate(startDate)
         validDetails(details)
     {
-        if (newId == nextNewMilestoneId) {
-            milestones[nextNewMilestoneId++] =
-                Milestone(title, startDate, details, false, false, false);
+        if (newId == _milestoneIdCounter) {
+            _milestones[_milestoneIdCounter++] =
+                Milestone({
+                    startDate: startDate,
+                    submitted: false,
+                    completed: false,
+                    removed: false,
+                    title: title,
+                    details: details
+                });
             emit NewMilestone(title, startDate, details);
         } else {
             //If its not the same Milestone Content give an error message
@@ -210,6 +217,7 @@ contract MilestoneManager is IMilestoneManager, Module {
             ),
             Types.Operation.Call
         );
+
         if (!ok) {
             revert Module_ProposalCallbackFailed();
         }
@@ -225,10 +233,10 @@ contract MilestoneManager is IMilestoneManager, Module {
         notRemoved(id)
         validDetails(details)
     {
-        Milestone storage milestone = milestones[id];
+        Milestone storage m = _milestones[id];
 
-        if (!_isSameString(milestone.details, details)) {
-            milestone.details = details;
+        if (!_isSameString(m.details, details)) {
+            m.details = details;
             emit ChangeDetails(id, details);
         }
     }
@@ -259,11 +267,11 @@ contract MilestoneManager is IMilestoneManager, Module {
         notRemoved(id)
         validStartDate(startDate)
     {
-        Milestone storage milestone = milestones[id];
+        Milestone storage m = _milestones[id];
 
-        if (milestone.startDate != startDate) {
+        if (m.startDate != startDate) {
             //@todo test idempotence
-            milestone.startDate = startDate;
+            m.startDate = startDate;
             emit ChangeStartDate(id, startDate);
         }
     }
@@ -286,10 +294,10 @@ contract MilestoneManager is IMilestoneManager, Module {
     function __Milestone_removeMilestone(
         uint id //@note There might be a point made to increase the level of interaction required to remove a milestone
     ) external onlyProposal validId(id) notCompleted(id) {
-        Milestone storage milestone = milestones[id];
+        Milestone storage m = _milestones[id];
 
-        if (!milestone.removed) {
-            milestone.removed = true;
+        if (!m.removed) {
+            m.removed = true;
             emit RemoveMilestone(id);
         }
     }
@@ -316,10 +324,10 @@ contract MilestoneManager is IMilestoneManager, Module {
         validId(id)
         notRemoved(id)
     {
-        Milestone storage milestone = milestones[id];
+        Milestone storage m = _milestones[id];
 
-        if (!milestone.submitted) {
-            milestone.submitted = true;
+        if (!m.submitted) {
+            m.submitted = true;
             emit SubmitMilestone(id);
         }
     }
@@ -343,9 +351,9 @@ contract MilestoneManager is IMilestoneManager, Module {
         notRemoved(id)
         submitted(id)
     {
-        Milestone storage milestone = milestones[id];
-        if (!milestone.completed) {
-            milestone.completed = true;
+        Milestone storage m = _milestones[id];
+        if (!m.completed) {
+            m.completed = true;
 
             //@note pay who and how much?
             //@todo add Payment
@@ -376,9 +384,9 @@ contract MilestoneManager is IMilestoneManager, Module {
         submitted(id)
         notCompleted(id)
     {
-        Milestone storage milestone = milestones[id];
-        if (milestone.submitted) {
-            milestone.submitted = false;
+        Milestone storage m = _milestones[id];
+        if (m.submitted) {
+            m.submitted = false;
             emit DeclineMilestone(id);
         }
     }
@@ -393,8 +401,23 @@ contract MilestoneManager is IMilestoneManager, Module {
         );
     }
 
-    //--------------------------------------------------------------------------------
-    // Helper Functions
+    //--------------------------------------------------------------------------
+    // Public View Functions
+
+    /// @inheritdoc IMilestoneManager
+    function milestone(uint id) external view returns (Milestone memory) {
+        Milestone memory m = _milestones[id];
+
+        return m;
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function nextNewMilestoneId() external view returns (uint) {
+        return _milestoneIdCounter;
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Helper Functions
 
     function _isSameString(string memory first, string memory second)
         internal
@@ -419,11 +442,11 @@ contract MilestoneManager is IMilestoneManager, Module {
         uint startDate,
         string memory details
     ) internal view returns (bool) {
-        Milestone memory createdMilestone = milestones[id];
+        Milestone memory m = _milestones[id];
 
-        bool equalTitles = _isSameString(createdMilestone.title, title);
-        bool equalStartDates = createdMilestone.startDate == startDate;
-        bool equalDetails = _isSameString(createdMilestone.details, details);
+        bool equalTitles = _isSameString(m.title, title);
+        bool equalStartDates = m.startDate == startDate;
+        bool equalDetails = _isSameString(m.details, details);
 
         return equalTitles && equalStartDates && equalDetails;
     }

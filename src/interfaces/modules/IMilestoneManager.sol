@@ -2,19 +2,19 @@
 pragma solidity ^0.8.0;
 
 interface IMilestoneManager {
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Types
 
     struct Milestone {
-        string title;
         uint startDate;
-        string details;
         bool submitted;
         bool completed;
         bool removed;
+        string title;
+        string details;
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Errors
 
     /// @dev This function is only callable by a contributor
@@ -47,7 +47,7 @@ interface IMilestoneManager {
     /// @dev The Milestone is removed
     error MilestoneRemoved();
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Events
 
     /// @dev New Milestone was created
@@ -74,8 +74,11 @@ interface IMilestoneManager {
     /// @notice A submitted Milestone was declined
     event DeclineMilestone(uint id);
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Functions
+
+    //----------------------------------
+    // Access Control
 
     /// @notice The contributor access control role.
     function CONTRIBUTOR_ROLE() external view returns (bytes32);
@@ -91,4 +94,19 @@ interface IMilestoneManager {
     ///      is involved anyway.
     /// @param account The address to revoke the role from.
     function revokeContributorRole(address account) external;
+
+    //----------------------------------
+    // Milestone View Functions
+
+    /// @notice Returns the milestone with id `id`.
+    /// @dev Returns empty milestone in case id `id` is invalid.
+    /// @param id The id of the milstone to return.
+    /// @return Milestone with id `id`.
+    function milestone(uint id) external view returns (Milestone memory);
+
+    // @todo felix, mp: Docs + rename.
+    function nextNewMilestoneId() external view returns (uint);
+
+    //----------------------------------
+    // Milestone Mutating Functions
 }
