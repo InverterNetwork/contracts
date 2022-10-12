@@ -38,7 +38,7 @@ contract Payment is Module {
         uint _released;
         uint64 _start;
         uint64 _duration;
-        bool enabled;
+        bool _enabled;
     }
 
     // contributor => Payment
@@ -98,28 +98,32 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // External View Functions
 
-    function start(address contributor) public view virtual returns(uint256) {
+    function enabled(address contributor) public view returns(bool) {
+        return vestings[contributor]._enabled;
+    }
+
+    function start(address contributor) public view returns(uint256) {
         return vestings[contributor]._start;
     }
 
-    function duration(address contributor) public view virtual returns(uint256) {
+    function duration(address contributor) public view returns(uint256) {
         return vestings[contributor]._duration;
     }
 
-    function released(address contributor) public view virtual returns(uint256) {
+    function released(address contributor) public view returns(uint256) {
         return vestings[contributor]._released;
     }
 
-    function vestedAmount(uint64 timestamp) public view virtual returns (uint256) {
+    function vestedAmount(uint64 timestamp) public view returns (uint256) {
         return _vestingSchedule(token.balanceOf(
             address(this)) + released(msg.sender), timestamp);
     }
 
-    function releasable() public view virtual returns (uint) {
+    function releasable() public view returns (uint) {
         return vestedAmount(uint64(block.timestamp)) - released(msg.sender);
     }
 
-    function release() public virtual {
+    function release() public {
         uint256 amount = releasable();
         vestings[msg.sender]._released += amount;
         emit ERC20Released(address(token), amount);
@@ -173,8 +177,8 @@ contract Payment is Module {
     function addPayment(
         address contributor,
         uint salary,
-        uint64 start,
-        uint64 duration
+        uint64 _start,
+        uint64 _duration
         //uint epochsAmount
     )
         external
@@ -195,11 +199,11 @@ contract Payment is Module {
         // @todo Nejc transferFrom proposal to payment module.
         // @todo Nejc: before adding payment make sure contributor is wListed.
 
-        vestings[msg.sender] = VestingWallet(
-            salary, 0, start, duration, true
+        vestings[contributor] = VestingWallet(
+            salary, 0, _start, _duration, true
         );
 
-        emit PaymentAdded(contributor, salary, start, duration);
+        emit PaymentAdded(contributor, salary, _start, _duration);
     }
 
     // @notice Returns address of vesting contract per contributor.
