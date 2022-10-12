@@ -76,13 +76,14 @@ contract MilestoneManagerTest is Test, ProposalMock {
         uint id = milestoneMod.nextNewMilestoneId();
         milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
 
-        vm.expectRevert(IMilestoneManager.OnlyCallableByContributor.selector);
+        // Fails if contributor role missing.
         vm.prank(accessor);
+        vm.expectRevert(IMilestoneManager.OnlyCallableByContributor.selector);
         milestoneMod.submitMilestone(id);
 
+        // Grant contributor role.
         authorizerMock.setIsAuthorized(address(this), true);
-
-        milestoneMod.grantMilestoneContributorRole(accessor);
+        milestoneMod.grantContributorRole(accessor);
 
         vm.prank(accessor);
         milestoneMod.submitMilestone(id);
@@ -197,7 +198,7 @@ contract MilestoneManagerTest is Test, ProposalMock {
 
         //Give necessary rights
         authorizerMock.setIsAuthorized(address(this), true);
-        milestoneMod.grantMilestoneContributorRole(address(this));
+        milestoneMod.grantContributorRole(address(this));
 
         uint id = milestoneMod.nextNewMilestoneId();
         milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
@@ -214,7 +215,7 @@ contract MilestoneManagerTest is Test, ProposalMock {
         uint invalidId = milestoneMod.nextNewMilestoneId() + 1;
 
         //Take nessesary rights
-        milestoneMod.revokeMilestoneContributorRole(address(this));
+        milestoneMod.revokeContributorRole(address(this));
         authorizerMock.setIsAuthorized(address(this), false);
 
         //--------------------------------------------------------------------------------
@@ -490,7 +491,7 @@ contract MilestoneManagerTest is Test, ProposalMock {
         id = milestoneMod.nextNewMilestoneId();
         milestoneMod.addMilestone(id, title, startDate, details);
 
-        milestoneMod.grantMilestoneContributorRole(address(this));
+        milestoneMod.grantContributorRole(address(this));
 
         vm.expectCall(
             address(milestoneMod),
@@ -523,41 +524,35 @@ contract MilestoneManagerTest is Test, ProposalMock {
     //--------------------------------------------------------------------------------
     // TEST MAIN
 
-    function testGrantMilestoneContributorRole(address account) public {
+    function testGrantContributorRole(address account) public {
         authorizerMock.setAllAuthorized(true);
 
-        milestoneMod.grantMilestoneContributorRole(account);
+        milestoneMod.grantContributorRole(account);
 
         assertTrue(
             hasRole(
-                address(milestoneMod),
-                milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),
-                account
+                address(milestoneMod), milestoneMod.CONTRIBUTOR_ROLE(), account
             )
         );
     }
 
-    function testRevokeMilestoneContributorRole(address account) public {
+    function testRevokeContributorRole(address account) public {
         authorizerMock.setAllAuthorized(true);
 
-        milestoneMod.revokeMilestoneContributorRole(account);
+        milestoneMod.revokeContributorRole(account);
 
         assertTrue(
             !hasRole(
-                address(milestoneMod),
-                milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),
-                account
+                address(milestoneMod), milestoneMod.CONTRIBUTOR_ROLE(), account
             )
         );
 
-        milestoneMod.grantMilestoneContributorRole(account);
-        milestoneMod.revokeMilestoneContributorRole(account);
+        milestoneMod.grantContributorRole(account);
+        milestoneMod.revokeContributorRole(account);
 
         assertTrue(
             !hasRole(
-                address(milestoneMod),
-                milestoneMod.MILESTONE_CONTRIBUTOR_ROLE(),
-                account
+                address(milestoneMod), milestoneMod.CONTRIBUTOR_ROLE(), account
             )
         );
     }

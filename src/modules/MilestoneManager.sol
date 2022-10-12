@@ -17,9 +17,12 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  * @author byterocket
  */
 contract MilestoneManager is IMilestoneManager, Module {
-    /// @notice The contributor access control role.
-    bytes32 public constant MILESTONE_CONTRIBUTOR_ROLE =
-        keccak256("modules.milestone.contributor");
+    //--------------------------------------------------------------------------------
+    // Constants
+
+    /// @inheritdoc IMilestoneManager
+    bytes32 public constant CONTRIBUTOR_ROLE =
+        keccak256("modules.milestonemanager.contributor");
 
     //--------------------------------------------------------------------------------
     // Storage
@@ -38,7 +41,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     modifier onlyContributor() {
         // @todo mp: Use _msgSender().
         bool isContributor = __Module_proposal.hasRole(
-            address(this), MILESTONE_CONTRIBUTOR_ROLE, msg.sender
+            address(this), CONTRIBUTOR_ROLE, msg.sender
         );
         if (!isContributor) {
             revert OnlyCallableByContributor();
@@ -136,26 +139,16 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------------
     // Access Control Functions
 
-    /// @notice Grants address `account` the milestone-contributor role.
-    /// @dev There is no reach around function included, because the proposal
-    ///      is involved anyway.
-    /// @param account The address to grant the role.
-    function grantMilestoneContributorRole(address account)
-        public
-        onlyAuthorized
-    {
-        __Module_proposal.grantRole(MILESTONE_CONTRIBUTOR_ROLE, account);
+    // @todo mp, felix: Rename to `grantContributorRole()`?
+
+    /// @inheritdoc IMilestoneManager
+    function grantContributorRole(address account) public onlyAuthorized {
+        __Module_proposal.grantRole(CONTRIBUTOR_ROLE, account);
     }
 
-    /// @notice Revokes from address `account` the milestone-contributor role.
-    /// @dev There is no reach around function included, because the proposal
-    ///      is involved anyway.
-    /// @param account The address to revoke the role from.
-    function revokeMilestoneContributorRole(address account)
-        public
-        onlyAuthorized
-    {
-        __Module_proposal.revokeRole(MILESTONE_CONTRIBUTOR_ROLE, account);
+    /// @inheritdoc IMilestoneManager
+    function revokeContributorRole(address account) public onlyAuthorized {
+        __Module_proposal.revokeRole(CONTRIBUTOR_ROLE, account);
     }
 
     //--------------------------------------------------------------------------------
