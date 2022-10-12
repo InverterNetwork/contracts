@@ -406,7 +406,11 @@ contract MilestoneModule is IMilestone, Module {
         pure
         returns (bool)
     {
-        return keccak256(bytes(first)) == keccak256(bytes(second));
+        if (bytes(first).length != bytes(second).length) {
+            return false;
+        } else {
+            return keccak256(bytes(first)) == keccak256(bytes(second));
+        }
     }
 
     /// @dev implies, that the id is valid
