@@ -6,7 +6,7 @@ import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
-import {IMilestone} from "src/interfaces/modules/IMilestone.sol";
+import {IMilestoneManager} from "src/interfaces/modules/IMilestoneManager.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
 /**
@@ -16,7 +16,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  *
  * @author byterocket
  */
-contract MilestoneModule is IMilestone, Module {
+contract MilestoneManager is IMilestoneManager, Module {
     /// @notice The contributor access control role.
     bytes32 public constant MILESTONE_CONTRIBUTOR_ROLE =
         keccak256("modules.milestone.contributor");
