@@ -42,6 +42,9 @@ contract ContributorManager is Module {
     /// @notice The supplied contributor is not active
     error Module__ContributorManager__contributorNotActive();
 
+    /// @notice The supplied contributors are not consecutive
+    error Module__ContributorManager__ContributorsNotConsecutive();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -76,7 +79,7 @@ contract ContributorManager is Module {
     modifier onlyConsecutiveContributors(address _current, address _prev) {
         //require that the contributors are indeed consecutive
         if (activeContributors[_prev] != _current) {
-            revert Module__ContributorManager__invalidContributorAddress();
+            revert Module__ContributorManager__ContributorsNotConsecutive();
         }
         _;
     }
@@ -123,11 +126,11 @@ contract ContributorManager is Module {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    function initialize(IProposal proposal, bytes memory)
+    function initialize(IProposal proposal, Metadata memory metadata)
         external
         initializer
     {
-        __Module_init(proposal);
+        __Module_init(proposal, metadata);
 
         // set up the sentinel to signal empty list of active contributors
         activeContributors[SENTINEL_CONTRIBUTORS] = SENTINEL_CONTRIBUTORS;
@@ -151,9 +154,6 @@ contract ContributorManager is Module {
         validContributor(_role, _salary)
         contributorNotActive(_who)
     {
-        /// @note This implementation will have to change once we
-        // decide how to handle double contributors
-
         //initialize contributorRegistry[address] with contributor
         Contributor memory _contributor;
         _contributor.role = _role;
@@ -166,15 +166,6 @@ contract ContributorManager is Module {
 
         contributorRegistry[_who] = _contributor;
         emit ContributorAdded(_who, _role, _salary);
-
-        // TODO make this a separate function
-        // } else {
-
-        //     // if the contributor was already active, we just save and
-        //     // notify the update
-        //     contributorRegistry[_who] = _contributor;
-        //     emit ContributorModified(_who, _role, _salary);
-        // }
     }
 
     /// @notice Registers a new contributor and adds them to the list of active
@@ -189,15 +180,29 @@ contract ContributorManager is Module {
         external
         onlyAuthorized
     {
-        _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Contributor_addContributor(address,bytes32,uint)",
-                _who,
-                _role,
-                _salary
-            ),
-            Types.Operation.Call
-        );
+        //@question: I think it's better to make the call idempotent at this level? So if the user wants to add a contributor that exists we just call modify. This allows us to keep stricter checks in the func called by the proposal.
+
+        if (!isActiveContributor(_who)) {
+            _triggerProposalCallback(
+                abi.encodeWithSignature(
+                    "__Contributor_addContributor(address,bytes32,uint)",
+                    _who,
+                    _role,
+                    _salary
+                ),
+                Types.Operation.Call
+            );
+        } else {
+            _triggerProposalCallback(
+                abi.encodeWithSignature(
+                    "__Contributor_modifyContributor(address,bytes32,uint)",
+                    _who,
+                    _role,
+                    _salary
+                ),
+                Types.Operation.Call
+            );
+        }
     }
 
     /// @notice Removes a contributor from the registry and from the list of
@@ -211,11 +216,6 @@ contract ContributorManager is Module {
         validAddress(_who)
         onlyConsecutiveContributors(_who, _prevContrib)
     {
-        // Arguably there's no need to make this function idempotent,
-        // since checking if the two addresses are consecutive in the
-        // modifier implicitly guarantees that the supplied contributors
-        // are active.
-
         //remove contributor information from registry
         delete contributorRegistry[_who];
 
@@ -244,14 +244,16 @@ contract ContributorManager is Module {
         /// @question   Maybe _prevContrib should be determined internally here
         ///             and then sent in the call?
 
-        _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Contributor_removeContributor(address,address)",
-                _who,
-                _prevContrib
-            ),
-            Types.Operation.Call
-        );
+        if (isActiveContributor(_who)) {
+            _triggerProposalCallback(
+                abi.encodeWithSignature(
+                    "__Contributor_removeContributor(address,address)",
+                    _who,
+                    _prevContrib
+                ),
+                Types.Operation.Call
+            );
+        }
     }
 
     /// @notice Modifies an existing contributor.
