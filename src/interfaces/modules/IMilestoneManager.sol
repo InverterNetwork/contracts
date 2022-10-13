@@ -112,6 +112,7 @@ interface IMilestoneManager {
 
     /// @notice Adds a new milestone.
     /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if an argument invalid.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param newId The id of the new milestone.
     /// @param title The title for the new milestone.
@@ -133,6 +134,7 @@ interface IMilestoneManager {
 
     /// @notice Changes a milestone's starting date.
     /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if an argument invalid or milestone already removed.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     /// @param startDate The new starting date of the milestone.
@@ -140,24 +142,30 @@ interface IMilestoneManager {
 
     /// @notice Removes a milestone.
     /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if id invalid or milestone already completed.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function removeMilestone(uint id) external;
 
     /// @notice Submits a milestone.
     /// @dev Only callable by addresses holding the contributor role.
+    /// @dev Reverts if id invalid or milestone already removed.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function submitMilestone(uint id) external;
 
     /// @notice Confirms a submitted milestone.
     /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if id invalid, milestone already removed, or milestone not
+    ///      yet submitted.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function confirmMilestone(uint id) external;
 
     /// @notice Declines a submitted milestone.
     /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if id invalid, milestone already removed, milestone not
+    ///      yet submitted, or milestone already completed.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function declineMilestone(uint id) external;
