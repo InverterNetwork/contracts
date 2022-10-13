@@ -257,15 +257,14 @@ contract MilestoneManager is IMilestoneManager, Module {
         validDetails(details)
     {
         if (newId == _milestoneIdCounter) {
-            _milestones[_milestoneIdCounter++] =
-                Milestone({
-                    startDate: startDate,
-                    submitted: false,
-                    completed: false,
-                    removed: false,
-                    title: title,
-                    details: details
-                });
+            _milestones[_milestoneIdCounter++] = Milestone({
+                startDate: startDate,
+                submitted: false,
+                completed: false,
+                removed: false,
+                title: title,
+                details: details
+            });
             emit NewMilestone(title, startDate, details);
         } else {
             //If its not the same Milestone Content give an error message
