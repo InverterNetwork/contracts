@@ -63,7 +63,7 @@ contract PaymentTest is Test, ProposalMock {
 
         // vesting params
         uint vestingAmount = 100;
-        address receiver = 0xE71d14a3fA97292BDE885C1D134bE4698e09b3B7; //aka. contributor/beneficiary
+        address receiver = address(0xBEEF); //aka. contributor/beneficiary
         uint64 start = uint64(block.timestamp);
         uint64 duration = 300; // seconds
 
@@ -113,10 +113,11 @@ contract PaymentTest is Test, ProposalMock {
         skip(duration);
 
         vm.prank(receiver);
-        payment.release();
+        payment.claim();
 
         uint balanceAfter = token.balanceOf(receiver);
         console.log("balanceAfter: " ,balanceAfter);
+        assertEq(balanceAfter, vestingAmount);
 
         uint releasableAfter = payment.releasable();
         assertEq(releasableAfter, 0);
