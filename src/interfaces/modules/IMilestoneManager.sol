@@ -17,34 +17,34 @@ interface IMilestoneManager {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @dev This function is only callable by a contributor
+    /// @dev Function is only callable by contributor.
     error OnlyCallableByContributor();
 
-    /// @dev Invalid Title
+    /// @dev Invalid title.
     error InvalidTitle();
 
-    /// @dev Invalid startDate
+    /// @dev Invalid startDate.
     error InvalidStartDate();
 
-    /// @dev Invalid details
+    /// @dev Invalid details.
     error InvalidDetails();
 
-    /// @dev There is no milestone with this id
+    /// @dev There is no milestone with this id.
     error InvalidMilestoneId();
 
-    /// @dev The new Milestone Id is not yet available
+    /// @dev The new milestone id is not yet available.
     error NewMilestoneIdNotYetAvailable();
 
-    /// @dev The Milestone with the given Id is already created
+    /// @dev The milestone with the given id is already created.
     error MilestoneWithIdAlreadyCreated();
 
-    /// @dev The Milestone is not yet submitted
+    /// @dev The milestone is not yet submitted.
     error MilestoneNotSubmitted();
 
-    /// @dev The Milestone is already completed
+    /// @dev The milestone is already completed.
     error MilestoneAlreadyCompleted();
 
-    /// @dev The Milestone is removed
+    /// @dev The milestone is removed.
     error MilestoneRemoved();
 
     //--------------------------------------------------------------------------
@@ -109,4 +109,49 @@ interface IMilestoneManager {
 
     //----------------------------------
     // Milestone Mutating Functions
+
+    /// @notice Adds a new milestone.
+    /// @dev Relay function that routes the function call via the proposal.
+    /// @param newId The id of the new milestone.
+    /// @param title The title for the new milestone.
+    /// @param startDate The starting date of the new milestone.
+    /// @param details The details of the new milestone.
+    function addMilestone(
+        uint newId,
+        string memory title,
+        uint startDate,
+        string memory details
+    ) external;
+
+    /// @notice Changes a milestone's details.
+    /// @dev Relay function that routes the function call via the proposal.
+    /// @param id The milestone's id.
+    /// @param details The new details of the milestone.
+    function changeDetails(uint id, string memory details) external;
+
+    /// @notice Changes a milestone's starting date.
+    /// @dev Relay function that routes the function call via the proposal.
+    /// @param id The milestone's id.
+    /// @param startDate The new starting date of the milestone.
+    function changeStartDate(uint id, uint startDate) external;
+
+    /// @notice Removes a milestone.
+    /// @dev Relay function that routes the function call via the proposal.
+    /// @param id The milestone's id.
+    function removeMilestone(uint id) external;
+
+    /// @notice Submits a milestone.
+    /// @dev Relay function that routes the function call via the proposal.
+    /// @param id The milestone's id.
+    function submitMilestone(uint id) external;
+
+    /// @notice Confirms a submitted milestone.
+    /// @dev Relay function that routes the function call via the proposal.
+    /// @param id The milestone's id.
+    function confirmMilestone(uint id) external;
+
+    /// @notice Declines a submitted milestone.
+    /// @dev Relay function that routes the function call via the proposal.
+    /// @param id The milestone's id.
+    function declineMilestone(uint id) external;
 }

@@ -133,13 +133,12 @@ contract MilestoneManager is IMilestoneManager, Module {
         bytes memory /*configdata*/
     ) external override (Module) initializer {
         __Module_init(proposal_, metadata);
+
         // @todo felix: Set Payment module.
     }
 
     //--------------------------------------------------------------------------
     // Access Control Functions
-
-    // @todo mp, felix: Rename to `grantContributorRole()`?
 
     /// @inheritdoc IMilestoneManager
     function grantContributorRole(address account) public onlyAuthorized {
@@ -153,6 +152,90 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     //--------------------------------------------------------------------------
     // Milestone API Functions
+
+    /// @inheritdoc IMilestoneManager
+    function addMilestone(
+        uint newId,
+        string memory title,
+        uint startDate, //Possible Startdate now
+        string memory details
+    ) external onlyAuthorized {
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback( //@todo check for okay everywhere?
+            abi.encodeWithSignature(
+                "__Milestone_addMilestone(uint256,string,uint256,string)",
+                newId,
+                title,
+                startDate,
+                details
+            ),
+            Types.Operation.Call
+        );
+
+        if (!ok) {
+            revert Module_ProposalCallbackFailed();
+        }
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function changeDetails(uint id, string memory details)
+        external
+        onlyAuthorized
+    {
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Milestone_changeDetails(uint256,string)", id, details
+            ),
+            Types.Operation.Call
+        );
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function changeStartDate(uint id, uint startDate) external onlyAuthorized {
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Milestone_changeStartDate(uint256,uint256)", id, startDate
+            ),
+            Types.Operation.Call
+        );
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function removeMilestone(uint id) external onlyAuthorized {
+        _triggerProposalCallback(
+            abi.encodeWithSignature("__Milestone_removeMilestone(uint256)", id),
+            Types.Operation.Call
+        );
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function submitMilestone(uint id) external onlyContributor {
+        _triggerProposalCallback(
+            abi.encodeWithSignature("__Milestone_submitMilestone(uint256)", id),
+            Types.Operation.Call
+        );
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function confirmMilestone(uint id) external onlyAuthorized {
+        _triggerProposalCallback(
+            abi.encodeWithSignature("__Milestone_confirmMilestone(uint256)", id),
+            Types.Operation.Call
+        );
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function declineMilestone(uint id) external onlyAuthorized {
+        _triggerProposalCallback(
+            abi.encodeWithSignature("__Milestone_declineMilestone(uint256)", id),
+            Types.Operation.Call
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // Proposal Callback Functions
 
     /// @dev Adds milestone to the milestone mapping
     /// @dev
@@ -192,37 +275,6 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
-    /// @notice Adds a milestone to the milestone array
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param newId : the id of the new milestone
-    /// @param title : the title for the new milestone
-    /// @param startDate : the startDate of the new milestone
-    /// @param details : the details of the new milestone
-    function addMilestone(
-        uint newId,
-        string memory title,
-        uint startDate, //Possible Startdate now
-        string memory details
-    ) external onlyAuthorized {
-        bool ok;
-        bytes memory returnData;
-
-        (ok, returnData) = _triggerProposalCallback( //@todo check for okay everywhere?
-            abi.encodeWithSignature(
-                "__Milestone_addMilestone(uint256,string,uint256,string)",
-                newId,
-                title,
-                startDate,
-                details
-            ),
-            Types.Operation.Call
-        );
-
-        if (!ok) {
-            revert Module_ProposalCallbackFailed();
-        }
-    }
-
     ///@dev Changes a milestone in regards of details
     ///@param id : id in the milestone array
     ///@param details : the new details of the given milestone
@@ -239,22 +291,6 @@ contract MilestoneManager is IMilestoneManager, Module {
             m.details = details;
             emit ChangeDetails(id, details);
         }
-    }
-
-    ///@notice Changes a milestone in regards of details
-    ///@dev Relay Function that routes the function call via the proposal
-    ///@param id : id in the milestone array
-    ///@param details : the new details of the given milestone
-    function changeDetails(uint id, string memory details)
-        external
-        onlyAuthorized
-    {
-        _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Milestone_changeDetails(uint256,string)", id, details
-            ),
-            Types.Operation.Call
-        );
     }
 
     ///@dev Changes a milestone in regards of startDate
@@ -276,19 +312,6 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
-    ///@notice Changes a milestone in regards of startDate
-    ///@dev Relay Function that routes the function call via the proposal
-    ///@param id : id in the milestone array
-    ///@param startDate : the new startDate of the given milestone
-    function changeStartDate(uint id, uint startDate) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Milestone_changeStartDate(uint256,uint256)", id, startDate
-            ),
-            Types.Operation.Call
-        );
-    }
-
     ///@dev removal of the milestone
     ///@param id : id in the milestone array
     function __Milestone_removeMilestone(
@@ -300,16 +323,6 @@ contract MilestoneManager is IMilestoneManager, Module {
             m.removed = true;
             emit RemoveMilestone(id);
         }
-    }
-
-    ///@notice removal of the milestone
-    ///@dev Relay Function that routes the function call via the proposal
-    ///@param id : id in the milestone array
-    function removeMilestone(uint id) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Milestone_removeMilestone(uint256)", id),
-            Types.Operation.Call
-        );
     }
 
     // Programmer submitMilestone:
@@ -332,16 +345,6 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
-    ///@notice Submit a milestone
-    ///@dev Relay Function that routes the function call via the proposal
-    ///@param id : id in the milestone array
-    function submitMilestone(uint id) external onlyContributor {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Milestone_submitMilestone(uint256)", id),
-            Types.Operation.Call
-        );
-    }
-
     ///@dev Confirms a submitted milestone
     ///@param id : id in the milestone array
     function __Milestone_confirmMilestone(uint id)
@@ -362,16 +365,6 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
-    ///@notice Confirms a submitted milestone
-    ///@dev Relay Function that routes the function call via the proposal
-    ///@param id : id in the milestone array
-    function confirmMilestone(uint id) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Milestone_confirmMilestone(uint256)", id),
-            Types.Operation.Call
-        );
-    }
-
     ///@dev Declines a submitted milestone
     ///@param id : id in the milestone array
     function __Milestone_declineMilestone(
@@ -389,16 +382,6 @@ contract MilestoneManager is IMilestoneManager, Module {
             m.submitted = false;
             emit DeclineMilestone(id);
         }
-    }
-
-    ///@notice Declines a submitted milestone
-    ///@dev Relay Function that routes the function call via the proposal
-    ///@param id : id in the milestone array
-    function declineMilestone(uint id) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Milestone_declineMilestone(uint256)", id),
-            Types.Operation.Call
-        );
     }
 
     //--------------------------------------------------------------------------
