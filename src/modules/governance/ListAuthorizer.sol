@@ -111,7 +111,7 @@ contract ListAuthorizer is IAuthorizer, Module {
         virtual
         onlyProposal
     {
-        //@question Do we want to allow an empty authorizer list?
+        //@question TODO Do we want to allow an empty authorizer list?
         //          My first impulse would be no...
 
         if (isAuthorized(_who)) {

@@ -119,7 +119,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @notice Verifies that the targeted module address is indeed active in the Proposal.
 
     modifier validModuleAddress(address _target) {
-        //I think we DO want to allow address==address(this)? F.ex. to vote on quorum change
+        //TODO I think we DO want to allow address==address(this)? F.ex. to vote on quorum change. Depends on wether the governance is allowed to cahnge itself...
 
         //this should implicitly control for address  != 0
         if (!__Module_proposal.isEnabledModule(_target)) {
@@ -367,7 +367,7 @@ contract SingleVoteGovernance is ListAuthorizer {
 
         voteRegistry[_voteID].executedAt = block.timestamp;
 
-        emit VoteEnacted(_voteID);
+        emit VoteEnacted(_voteID); // TODO also tell executionResult
     }
 
     /// @notice Execute a vote. Only called by confirmAction once quorum

@@ -242,7 +242,7 @@ contract ContributorManager is Module {
         onlyAuthorized
     {
         /// @question   Maybe _prevContrib should be determined internally here
-        ///             and then sent in the call?
+        ///             and then sent in the call? Not for now
 
         if (isActiveContributor(_who)) {
             _triggerProposalCallback(

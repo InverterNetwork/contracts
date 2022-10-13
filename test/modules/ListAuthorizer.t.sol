@@ -59,7 +59,7 @@ contract ListAuthorizerTest is Test {
     }
 
     function testRemoveAuthorized() public {
-        //this test leaves an empty uthorizer list. If we choose to disallow that it will need to be cahnged.
+        //this test leaves an empty authorizer list. If we choose to disallow that it will need to be cahnged.
         uint amountAuth = authorizer.getAmountAuthorized();
 
         vm.prank(address(proposal));
