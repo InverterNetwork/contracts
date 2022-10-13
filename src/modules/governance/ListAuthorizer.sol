@@ -44,13 +44,14 @@ contract ListAuthorizer is IAuthorizer, Module {
 
     /// @dev Mapping of authorized addresses
     mapping(address => bool) private authorized;
-    uint amountAuthorized;
+    uint private amountAuthorized;
 
     //--------------------------------------------------------------------------
     // Initialization
 
     function initialize(IProposal proposal, Metadata memory metadata)
         external
+        initializer
     {
         __Module_init(proposal, metadata);
 
@@ -69,6 +70,11 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @param  _who  The address on which to perform the check.
     function isAuthorized(address _who) public view override returns (bool) {
         return authorized[_who];
+    }
+
+    /// @notice Returns the number of authorized addresses
+    function getAmountAuthorized() public view returns (uint) {
+        return amountAuthorized;
     }
 
     /// @notice Adds a new address to the list of authorized addresses.
@@ -105,6 +111,9 @@ contract ListAuthorizer is IAuthorizer, Module {
         virtual
         onlyProposal
     {
+        //@question Do we want to allow an empty authorizer list?
+        //          My first impulse would be no...
+
         if (isAuthorized(_who)) {
             authorized[_who] = false;
             amountAuthorized--;

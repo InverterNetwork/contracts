@@ -111,7 +111,7 @@ contract SingleVoteGovernance is ListAuthorizer {
         if (_quorum == 0) {
             revert Module__SingleVoteGovernance_quorumIsZero();
         }
-        if (_quorum > amountAuthorized) {
+        if (_quorum > getAmountAuthorized()) {
             revert Module__SingleVoteGovernance_quorumUnreachable();
         }
         _;
@@ -176,7 +176,7 @@ contract SingleVoteGovernance is ListAuthorizer {
         public
         override
         onlyProposal
-        validQuorum(quorum, (amountAuthorized - 1))
+        validQuorum(quorum, (getAmountAuthorized() - 1))
     {
         super.__ListAuthorizer_removeFromAuthorized(_who);
     }
@@ -199,7 +199,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     function __Governance_changeQuorum(uint8 _new)
         external
         onlyProposal
-        validQuorum(_new, amountAuthorized)
+        validQuorum(_new, getAmountAuthorized())
     {
         uint8 old = quorum;
         quorum = _new;

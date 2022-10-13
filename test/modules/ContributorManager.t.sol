@@ -271,7 +271,6 @@ contract ContributorManagerTest is Test {
         (newRole, newSal) =
             contributorModule.getContributorInformation(contributors[0].addr);
 
-
         assertEq(
             contributorModule.isActiveContributor(contributors[0].addr), true
         );
