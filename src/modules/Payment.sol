@@ -72,27 +72,21 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier validContributor(address contributor) {
-        require(contributor != address(0), "invalid contributor address");
-        require(contributor != address(this), "invalid contributor address");
-        require(contributor != msg.sender, "invalid contributor address");
-        require(vestings[contributor]._salary == 0, "payment already added");
+    modifier validSalary(uint _salary) {
+        require(_salary > 0, "invalid salary");
         _;
     }
 
-    modifier validSalary(uint salary) {
-        require(salary > 0, "invalid salary");
+    modifier validStart(uint _start) {
+        //require(_start > block.timestamp, "should start in future");
+        require(_start < type(uint64).max, "invalid start time");
         _;
     }
 
-    modifier validEpochsAmount(uint epochsAmount) {
-        require(epochsAmount > 0, "invalid epochs amount");
-        _;
-    }
-
-    modifier hasActivePayments() {
-        require(vestings[msg.sender]._salary > 0, "no active payments");
-        _;
+    modifier validDuration(uint _start, uint _duration){
+      require(_start + _duration > _start, "duration overflow");
+      require(_duration > 0, "duration cant be 0");
+      _;
     }
 
     //--------------------------------------------------------------------------
@@ -123,14 +117,6 @@ contract Payment is Module {
         return vestedAmount(uint64(block.timestamp)) - released(msg.sender);
     }
 
-    function release() public {
-        uint256 amount = releasable();
-        vestings[msg.sender]._released += amount;
-        emit ERC20Released(address(token), amount);
-        // @todo Nejc: check transfer return value / use safeTransfer
-        token.transfer(msg.sender, amount);
-    }
-
     function _vestingSchedule(uint256 totalAllocation, uint64 timestamp)
         internal
         view
@@ -145,6 +131,15 @@ contract Payment is Module {
             return (totalAllocation * (timestamp - start(msg.sender))) /
                 duration(msg.sender);
         }
+    }
+
+    /// @notice validate address input.
+    /// @param addr Address to validate.
+    /// @return True if address is valid.
+    function validAddress(address addr) internal view returns(bool){
+        if(addr == address(0) || addr == msg.sender || addr == address(this))
+            return false;
+        return true;
     }
 
     /// @notice Initialize module, save token and proposal address.
@@ -169,41 +164,50 @@ contract Payment is Module {
         proposal = _proposal;
     }
 
+    // @note in OZ VestingWallet this method is called release()
+    // @notice Release the tokens that have already vested.
+    function claim() public {
+        uint256 amount = releasable();
+        vestings[msg.sender]._released += amount;
+        emit ERC20Released(address(token), amount);
+        // @todo Nejc: check transfer return value / use safeTransfer
+        token.transfer(msg.sender, amount);
+    }
+
     /// @notice Adds a new payment containing the details of the monetary flow
     ///         depending on the module.
-    /// @param contributor Contributor's address.
-    /// @param salary Salary contributor will receive per epoch.
-    /// PARAM epochsAmount Amount of epochs to receive the salary for.
+    /// @param _contributor Contributor's address.
+    /// @param _salary Salary contributor will receive per epoch.
+    /// @param _start Start vesting timestamp.
+    /// @param _duration Vesting duration timestamp.
     function addPayment(
-        address contributor,
-        uint salary,
+        address _contributor,
+        uint _salary,
         uint64 _start,
         uint64 _duration
-        //uint epochsAmount
     )
         external
         // onlyAuthorized() // only proposal owner
-        // validContributor(contributor)
-        // validSalary(salary)
-
-        //validEpochsAmount(epochsAmount)
+        validSalary(_salary)
         // @todo Nejc: add modifiers for input validation
+        validStart(_start)
+        validDuration(_start, _duration)
     {
-        // INPUTS VALIDATION
-        // require(start + duration > start, "duration overflow");
-        // require(start > block.timestamp, "should start in future");
-        // require(duration > 0, "duration cant be 0");
-        //require(vestings[contributor] == address(0), "already has a vesting");
+        require(validAddress(_contributor), "invalid contributor");
 
         // @todo Nejc: Verify there's enough tokens in proposal for the payment.
-        // @todo Nejc transferFrom proposal to payment module.
+        // @todo Nejc: delegatecall transferFrom proposal to payment module.
         // @todo Nejc: before adding payment make sure contributor is wListed.
 
-        vestings[contributor] = VestingWallet(
-            salary, 0, _start, _duration, true
+        vestings[_contributor] = VestingWallet(
+            _salary,
+            0,
+            _start,
+            _duration,
+            true
         );
 
-        emit PaymentAdded(contributor, salary, _start, _duration);
+        emit PaymentAdded(_contributor, _salary, _start, _duration);
     }
 
     // @notice Returns address of vesting contract per contributor.
@@ -260,13 +264,4 @@ contract Payment is Module {
 
     //--------------------------------------------------------------------------
     // Internal Functions
-
-    /// @notice validate address input.
-    /// @param addr Address to validate.
-    /// @return True if address is valid.
-    function validAddress(address addr) internal view returns(bool){
-        if(addr == address(0) || addr == msg.sender || addr == address(this))
-            return false;
-        return true;
-    }
 }
