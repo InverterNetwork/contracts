@@ -111,6 +111,7 @@ interface IMilestoneManager {
     // Milestone Mutating Functions
 
     /// @notice Adds a new milestone.
+    /// @dev Only callable by authorized addresses.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param newId The id of the new milestone.
     /// @param title The title for the new milestone.
@@ -124,33 +125,39 @@ interface IMilestoneManager {
     ) external;
 
     /// @notice Changes a milestone's details.
+    /// @dev Only callable by authorized addresses.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     /// @param details The new details of the milestone.
     function changeDetails(uint id, string memory details) external;
 
     /// @notice Changes a milestone's starting date.
+    /// @dev Only callable by authorized addresses.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     /// @param startDate The new starting date of the milestone.
     function changeStartDate(uint id, uint startDate) external;
 
     /// @notice Removes a milestone.
+    /// @dev Only callable by authorized addresses.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function removeMilestone(uint id) external;
 
     /// @notice Submits a milestone.
+    /// @dev Only callable by addresses holding the contributor role.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function submitMilestone(uint id) external;
 
     /// @notice Confirms a submitted milestone.
+    /// @dev Only callable by authorized addresses.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function confirmMilestone(uint id) external;
 
     /// @notice Declines a submitted milestone.
+    /// @dev Only callable by authorized addresses.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function declineMilestone(uint id) external;
