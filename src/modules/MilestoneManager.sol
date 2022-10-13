@@ -31,7 +31,25 @@ contract MilestoneManager is IMilestoneManager, Module {
     // Proposal Callback Function Signatures
 
     string private constant FUNC_ADD_MILESTONE =
-                "__Milestone_addMilestone(uint256,string,uint256,string)";
+        "__Milestone_addMilestone(uint256,string,uint256,string)";
+
+    string private constant FUNC_CHANGE_MILESTONE_DETAILS =
+        "__Milestone_changeDetails(uint256,string)";
+
+    string private constant FUNC_CHANGE_MILESTONE_START_DATE =
+        "__Milestone_changeStartDate(uint256,uint256)";
+
+    string private constant FUNC_REMOVE_MILESTONE =
+        "__Milestone_removeMilestone(uint256)";
+
+    string private constant FUNC_SUBMIT_MILESTONE =
+        "__Milestone_submitMilestone(uint256)";
+
+    string private constant FUNC_CONFIRM_MILESTONE =
+        "__Milestone_confirmMilestone(uint256)";
+
+    string private constant FUNC_DECLINE_MILESTONE =
+        "__Milestone_declineMilestone(uint256)";
 
     //--------------------------------------------------------------------------
     // Storage
@@ -174,11 +192,7 @@ contract MilestoneManager is IMilestoneManager, Module {
 
         (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                FUNC_ADD_MILESTONE,
-                newId,
-                title,
-                startDate,
-                details
+                FUNC_ADD_MILESTONE, newId, title, startDate, details
             ),
             Types.Operation.Call
         );
@@ -188,59 +202,102 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
+    // @todo mp: Rename to changeMilestoneDetails
     /// @inheritdoc IMilestoneManager
     function changeDetails(uint id, string memory details)
         external
         onlyAuthorized
     {
-        _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Milestone_changeDetails(uint256,string)", id, details
-            ),
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback(
+            abi.encodeWithSignature(FUNC_CHANGE_MILESTONE_DETAILS, id, details),
             Types.Operation.Call
         );
+
+        if (!ok) {
+            revert Module_ProposalCallbackFailed(FUNC_CHANGE_MILESTONE_DETAILS);
+        }
     }
 
     /// @inheritdoc IMilestoneManager
     function changeStartDate(uint id, uint startDate) external onlyAuthorized {
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Milestone_changeStartDate(uint256,uint256)", id, startDate
+                FUNC_CHANGE_MILESTONE_START_DATE, id, startDate
             ),
             Types.Operation.Call
         );
+
+        if (!ok) {
+            revert Module_ProposalCallbackFailed(
+                FUNC_CHANGE_MILESTONE_START_DATE
+            );
+        }
     }
 
     /// @inheritdoc IMilestoneManager
     function removeMilestone(uint id) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Milestone_removeMilestone(uint256)", id),
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback(
+            abi.encodeWithSignature(FUNC_REMOVE_MILESTONE, id),
             Types.Operation.Call
         );
+
+        if (!ok) {
+            revert Module_ProposalCallbackFailed(FUNC_REMOVE_MILESTONE);
+        }
     }
 
     /// @inheritdoc IMilestoneManager
     function submitMilestone(uint id) external onlyContributor {
+        bool ok;
+        bytes memory returnData;
+
         _triggerProposalCallback(
-            abi.encodeWithSignature("__Milestone_submitMilestone(uint256)", id),
+            abi.encodeWithSignature(FUNC_SUBMIT_MILESTONE, id),
             Types.Operation.Call
         );
+
+        if (!ok) {
+            revert Module_ProposalCallbackFailed(FUNC_SUBMIT_MILESTONE);
+        }
     }
 
     /// @inheritdoc IMilestoneManager
     function confirmMilestone(uint id) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Milestone_confirmMilestone(uint256)", id),
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback(
+            abi.encodeWithSignature(FUNC_CONFIRM_MILESTONE, id),
             Types.Operation.Call
         );
+
+        if (!ok) {
+            revert Module_ProposalCallbackFailed(FUNC_CONFIRM_MILESTONE);
+        }
     }
 
     /// @inheritdoc IMilestoneManager
     function declineMilestone(uint id) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Milestone_declineMilestone(uint256)", id),
+        bool ok;
+        bytes memory returnData;
+
+        (ok, returnData) = _triggerProposalCallback(
+            abi.encodeWithSignature(FUNC_DECLINE_MILESTONE, id),
             Types.Operation.Call
         );
+
+        if (!ok) {
+            revert Module_ProposalCallbackFailed(FUNC_DECLINE_MILESTONE);
+        }
     }
 
     //--------------------------------------------------------------------------
