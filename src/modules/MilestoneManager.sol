@@ -20,9 +20,18 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Constants
 
+    //----------------------------------
+    // Access Control Roles
+
     /// @inheritdoc IMilestoneManager
     bytes32 public constant CONTRIBUTOR_ROLE =
         keccak256("modules.milestonemanager.contributor");
+
+    //----------------------------------
+    // Proposal Callback Function Signatures
+
+    string private constant FUNC_ADD_MILESTONE =
+                "__Milestone_addMilestone(uint256,string,uint256,string)";
 
     //--------------------------------------------------------------------------
     // Storage
@@ -163,9 +172,9 @@ contract MilestoneManager is IMilestoneManager, Module {
         bool ok;
         bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback( //@todo check for okay everywhere?
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Milestone_addMilestone(uint256,string,uint256,string)",
+                FUNC_ADD_MILESTONE,
                 newId,
                 title,
                 startDate,
@@ -175,7 +184,7 @@ contract MilestoneManager is IMilestoneManager, Module {
         );
 
         if (!ok) {
-            revert Module_ProposalCallbackFailed();
+            revert Module_ProposalCallbackFailed(FUNC_ADD_MILESTONE);
         }
     }
 

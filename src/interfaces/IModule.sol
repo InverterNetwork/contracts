@@ -31,7 +31,8 @@ interface IModule {
     error Module__InvalidMetadata();
 
     /// @notice Proposal callback triggered failed.
-    error Module_ProposalCallbackFailed();
+    /// @param funcSig The signature of the function called.
+    error Module_ProposalCallbackFailed(string funcSig);
 
     //--------------------------------------------------------------------------
     // Functions
