@@ -88,9 +88,9 @@ contract Payment is Module {
     }
 
     modifier validDuration(uint _start, uint _duration){
-      require(_start + _duration > _start, "duration overflow");
-      require(_duration > 0, "duration cant be 0");
-      _;
+        require(_start + _duration > _start, "duration overflow");
+        require(_duration > 0, "duration cant be 0");
+        _;
     }
 
     //--------------------------------------------------------------------------
@@ -250,6 +250,21 @@ contract Payment is Module {
     //     );
     // }
     //
+    function removePayment(address contributor)
+        external
+        // onlyAuthorized() // only proposal owner
+    {
+        // TODO withdraw tokens that were not withdrawn yet.
+        uint unclaimedAmount = vestedAmount(uint64(block.timestamp)) -
+            released(contributor);
+        if(unclaimedAmount > 0) {
+            delete vestings[contributor];
+
+            token.transfer(msg.sender, unclaimedAmount);
+
+            emit PaymentRemoved(contributor);
+        }
+    }
     // /// Note we may want a method that returns all contributor addresses.
     // /// @notice Returns the existing payments of the contributors.
     // /// @param contributor Contributor's address.
