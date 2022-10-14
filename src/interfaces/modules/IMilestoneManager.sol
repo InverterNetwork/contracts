@@ -17,20 +17,35 @@ interface IMilestoneManager {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @dev Function is only callable by contributor.
+    /// @notice Function is only callable by contributor.
     error Module__MilestoneManager__OnlyCallableByContributor();
 
-    /// @dev Given title invalid.
+    /// @notice Given title invalid.
     error Module__MilestoneManager__InvalidTitle();
 
-    /// @dev Given startDate invalid.
+    /// @notice Given startDate invalid.
     error Module__MilestoneManager__InvalidStartDate();
 
-    /// @dev Given details invalid.
+    /// @notice Given details invalid.
     error Module__MilestoneManager__InvalidDetails();
 
-    /// @dev Given milestone id invalid.
+    /// @notice Given milestone id invalid.
     error Module__MilestoneManager__InvalidMilestoneId();
+
+    /// @notice Given milestone not updateable.
+    error Module__MilestoneManager__MilestoneNotUpdateable();
+
+    /// @notice Given milestone not removable.
+    error Module__MilestoneManager__MilestoneNotRemovable();
+
+    /// @notice Given milestone not submitable.
+    error Module__MilestoneManager__MilestoneNotSubmitable();
+
+    /// @notice Given milestone not confirmable.
+    error Module__MilestoneManager__MilestoneNotConfirmable();
+
+    /// @notice Given milestone not declineable.
+    error Module__MilestoneManager__MilestoneNotDeclineable();
 
     /// @dev The new milestone id is not yet available.
     error Module__MilestoneManager__NewMilestoneIdNotYetAvailable();
