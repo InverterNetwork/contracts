@@ -315,53 +315,48 @@ contract MilestoneManager is IMilestoneManager, Module {
     // Proposal Callback Functions
 
     function __Milestone_addMilestone(
-        uint newId,
         string memory title,
         uint startDate, //@note Possible Startdate now
         string memory details
     )
         external
         onlyProposal
-        newMilestoneIdAvailable(newId)
         validTitle(title)
         validStartDate(startDate)
         validDetails(details)
     {
-        if (newId == _milestoneIdCounter) {
-            // Increase id counter;
-            _milestoneIdCounter++;
+        // Cache current id and increase id counter.
+        uint id = _milestoneIdCounter++;
 
-            // Create new milestone instance.
-            _milestones[newId] = Milestone({
-                startDate: startDate,
-                submitted: false,
-                completed: false,
-                removed: false,
-                title: title,
-                details: details
-            });
-            emit NewMilestoneAdded(newId, title, startDate, details);
-        } else {
-            //If its not the same Milestone Content give an error message
-            if (!(_hasSameMilestoneContent(newId, title, startDate, details))) {
-                revert Module__MilestoneManager__MilestoneWithIdAlreadyCreated();
-            }
-        }
+        // Create new milestone instance.
+        Milestone memory m = Milestone({
+            startDate: startDate,
+            title: title,
+            details: details,
+            submitted: false,
+            completed: false,
+            removed: false
+        });
+
+        // Write new milestone to storage using current id.
+        _milestones[id] = m;
+
+        // Notify off-chain services.
+        emit NewMilestoneAdded(id, title, startDate, details);
     }
 
-    // @todo mp: Rename change to update
-
-    ///@dev Changes a milestone in regards of details
-    ///@param id : id in the milestone array
-    ///@param details : the new details of the given milestone
     function __Milestone_updateMilestoneDetails(uint id, string memory details)
         external
         onlyProposal
         validId(id)
-        notRemoved(id)
+        // notRemoved(id) // @todo mp: Creates extra SLOAD :(
         validDetails(details)
     {
         Milestone storage m = _milestones[id];
+
+        if (!_isUpdateable(m)) {
+            revert Module__MilestoneManager__NotUpdateable();
+        }
 
         if (!m.details.equals(details)) {
             m.details = details;
@@ -369,31 +364,36 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
-    ///@dev Changes a milestone in regards of startDate
-    ///@param id : id in the milestone array
-    ///@param startDate : the new startDate of the given milestone
     function __Milestone_updateMilestoneStartDate(uint id, uint startDate)
         external
         onlyProposal
         validId(id)
-        notRemoved(id)
+        // notRemoved(id) @todo mp: See above.
         validStartDate(startDate)
     {
         Milestone storage m = _milestones[id];
 
+        if (!_isUpdateable(m)) {
+            revert Module__MilestoneManager__MilestoneNotUpdateable();
+        }
+
         if (m.startDate != startDate) {
-            //@todo test idempotence
+            //@todo felix: test idempotence
             m.startDate = startDate;
             emit MilestoneStartDateUpdated(id, startDate);
         }
     }
 
-    ///@dev removal of the milestone
-    ///@param id : id in the milestone array
     function __Milestone_removeMilestone(
         uint id //@note There might be a point made to increase the level of interaction required to remove a milestone
-    ) external onlyProposal validId(id) notCompleted(id) {
+    ) external onlyProposal validId(id) 
+    // notCompleted(id) @todo Creates extra SLOAD :(
+    {
         Milestone storage m = _milestones[id];
+
+        if (!_isRemoveable(m)) {
+            revert Module__MilestoneManager__MilestoneNotRemovable();
+        }
 
         if (!m.removed) {
             m.removed = true;
@@ -411,9 +411,13 @@ contract MilestoneManager is IMilestoneManager, Module {
         external
         onlyProposal
         validId(id)
-        notRemoved(id)
+    // notRemoved(id) @todo Creates extra SLOAD
     {
         Milestone storage m = _milestones[id];
+
+        if (!_isSubmitable(m)) {
+            revert Module__MilestoneManager__MilestoneNotSubmitable();
+        }
 
         if (!m.submitted) {
             m.submitted = true;
@@ -427,15 +431,19 @@ contract MilestoneManager is IMilestoneManager, Module {
         external
         onlyProposal
         validId(id)
-        notRemoved(id)
-        submitted(id)
+    // notRemoved(id)
+    // submitted(id)
     {
         Milestone storage m = _milestones[id];
+
+        if (!_isConfirmable(m)) {
+            revert Module__MilestoneManager__MilestoneNotConfirmable();
+        }
+
         if (!m.completed) {
             m.completed = true;
 
-            //@note pay who and how much?
-            //@todo add Payment
+            //@todo add Payment connection
 
             emit MilestoneConfirmed(id);
         }
@@ -445,15 +453,17 @@ contract MilestoneManager is IMilestoneManager, Module {
     ///@param id : id in the milestone array
     function __Milestone_declineMilestone(
         uint id //@note maybe at why declined
-    )
-        external
-        onlyProposal
-        validId(id)
-        notRemoved(id)
-        submitted(id)
-        notCompleted(id)
+    ) external onlyProposal validId(id) 
+    // notRemoved(id)
+    // submitted(id)
+    // notCompleted(id)
     {
         Milestone storage m = _milestones[id];
+
+        if (!_isDeclineable(m)) {
+            revert Module__MilestoneManager__MilestoneNotDeclineable();
+        }
+
         if (m.submitted) {
             m.submitted = false;
             emit MilestoneDeclined(id);
@@ -478,23 +488,39 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
-    /// @dev implies, that the id is valid
-    ///@param id : the id of the milestone that should be compared
-    ///@param title : the title data set thats compared
-    ///@param startDate : the startDate data set thats compared
-    ///@param details : the details data set thats compared
-    function _hasSameMilestoneContent(
-        uint id,
-        string memory title,
-        uint startDate,
-        string memory details
-    ) internal view returns (bool) {
-        Milestone memory m = _milestones[id];
+    function _isUpdateable(Milestone storage m) internal view returns (bool) {
+        // @todo mp: When is updating not allowed anymore?
+        // gitbook: If milestone started already, see https://inverter-network.gitbook.io/inverter-network-docs/creating-a-proposal/managing-milestones#editing-milestone.
+        bool notStarted = m.startDate <= block.timestamp;
 
-        bool equalTitles = m.title.equals(title);
-        bool equalStartDates = m.startDate == startDate;
-        bool equalDetails = m.details.equals(details);
+        return notStarted;
+    }
 
-        return equalTitles && equalStartDates && equalDetails;
+    function _isRemoveable(Milestone storage m) internal view returns (bool) {
+        bool notCompleted = !m.completed;
+
+        return notCompleted;
+    }
+
+    function _isSubmitable(Milestone storage m) internal view returns (bool) {
+        bool notStarted = m.startDate <= block.timestamp;
+        bool notRemoved = !m.removed;
+
+        return notStarted && notRemoved;
+    }
+
+    function _isConfirmable(Milestone storage m) internal view returns (bool) {
+        bool notRemoved = !m.removed;
+        bool notSubmitted = !m.submitted;
+
+        return notRemoved && notSubmitted;
+    }
+
+    function _isDeclineable(Milestone storage m) internal view returns (bool) {
+        bool notRemoved = !m.removed;
+        bool submitted = m.submitted;
+        bool notCompleted = !m.completed;
+
+        return notRemoved && submitted && notCompleted;
     }
 }
