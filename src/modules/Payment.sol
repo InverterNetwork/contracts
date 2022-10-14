@@ -13,6 +13,10 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 
 /*** @todo Nejc:
  - replace require syntax with errors
+ - update style, layout, comments
+ - in addPayment() use delegatecall to transfer funds from proposal contract
+ - implement onlyAuthorized functionality.
+ - update test suite
 */
 
 
