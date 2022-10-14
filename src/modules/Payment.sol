@@ -265,6 +265,18 @@ contract Payment is Module {
             emit PaymentRemoved(contributor);
         }
     }
+
+    /// @notice Disable a payment of a contributor.
+    /// @param contributor Contributor's address.
+    function pausePayment(address contributor)
+        external
+        // onlyAuthorized() // only proposal owner
+    {
+        if(vestings[contributor]._enabled) {
+            vestings[contributor]._enabled = false;
+            emit PaymentPaused(contributor);
+        }
+    }
     // /// Note we may want a method that returns all contributor addresses.
     // /// @notice Returns the existing payments of the contributors.
     // /// @param contributor Contributor's address.
