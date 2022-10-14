@@ -30,7 +30,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  */
 
 
-contract Payment is Module {
+contract PaymentManagement is Module {
     //--------------------------------------------------------------------------
     // Storage
 
