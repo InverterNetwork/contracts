@@ -35,25 +35,25 @@ contract MilestoneManager is IMilestoneManager, Module {
     //----------------------------------
     // Proposal Callback Function Signatures
 
-    string private constant FUNC_ADD_MILESTONE =
+    string private constant _FUNC_ADD_MILESTONE =
         "__Milestone_addMilestone(string,uint256,string)";
 
-    string private constant FUNC_UPDATE_MILESTONE_DETAILS =
+    string private constant _FUNC_UPDATE_MILESTONE_DETAILS =
         "__Milestone_updateMilestoneDetails(uint256,string)";
 
-    string private constant FUNC_UPDATE_MILESTONE_START_DATE =
+    string private constant _FUNC_UPDATE_MILESTONE_START_DATE =
         "__Milestone_updateMilestoneStartDate(uint256,uint256)";
 
-    string private constant FUNC_REMOVE_MILESTONE =
+    string private constant _FUNC_REMOVE_MILESTONE =
         "__Milestone_removeMilestone(uint256)";
 
-    string private constant FUNC_SUBMIT_MILESTONE =
+    string private constant _FUNC_SUBMIT_MILESTONE =
         "__Milestone_submitMilestone(uint256)";
 
-    string private constant FUNC_CONFIRM_MILESTONE =
+    string private constant _FUNC_CONFIRM_MILESTONE =
         "__Milestone_confirmMilestone(uint256)";
 
-    string private constant FUNC_DECLINE_MILESTONE =
+    string private constant _FUNC_DECLINE_MILESTONE =
         "__Milestone_declineMilestone(uint256)";
 
     //--------------------------------------------------------------------------
@@ -160,13 +160,13 @@ contract MilestoneManager is IMilestoneManager, Module {
 
         (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                FUNC_ADD_MILESTONE, title, startDate, details
+                _FUNC_ADD_MILESTONE, title, startDate, details
             ),
             Types.Operation.Call
         );
 
         if (!ok) {
-            revert Module_ProposalCallbackFailed(FUNC_ADD_MILESTONE);
+            revert Module_ProposalCallbackFailed(_FUNC_ADD_MILESTONE);
         }
     }
 
@@ -179,12 +179,12 @@ contract MilestoneManager is IMilestoneManager, Module {
         bytes memory returnData;
 
         (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(FUNC_UPDATE_MILESTONE_DETAILS, id, details),
+            abi.encodeWithSignature(_FUNC_UPDATE_MILESTONE_DETAILS, id, details),
             Types.Operation.Call
         );
 
         if (!ok) {
-            revert Module_ProposalCallbackFailed(FUNC_UPDATE_MILESTONE_DETAILS);
+            revert Module_ProposalCallbackFailed(_FUNC_UPDATE_MILESTONE_DETAILS);
         }
     }
 
@@ -198,14 +198,14 @@ contract MilestoneManager is IMilestoneManager, Module {
 
         (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                FUNC_UPDATE_MILESTONE_START_DATE, id, startDate
+                _FUNC_UPDATE_MILESTONE_START_DATE, id, startDate
             ),
             Types.Operation.Call
         );
 
         if (!ok) {
             revert Module_ProposalCallbackFailed(
-                FUNC_UPDATE_MILESTONE_START_DATE
+                _FUNC_UPDATE_MILESTONE_START_DATE
             );
         }
     }
@@ -216,12 +216,12 @@ contract MilestoneManager is IMilestoneManager, Module {
         bytes memory returnData;
 
         (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(FUNC_REMOVE_MILESTONE, id),
+            abi.encodeWithSignature(_FUNC_REMOVE_MILESTONE, id),
             Types.Operation.Call
         );
 
         if (!ok) {
-            revert Module_ProposalCallbackFailed(FUNC_REMOVE_MILESTONE);
+            revert Module_ProposalCallbackFailed(_FUNC_REMOVE_MILESTONE);
         }
     }
 
@@ -231,12 +231,12 @@ contract MilestoneManager is IMilestoneManager, Module {
         bytes memory returnData;
 
         _triggerProposalCallback(
-            abi.encodeWithSignature(FUNC_SUBMIT_MILESTONE, id),
+            abi.encodeWithSignature(_FUNC_SUBMIT_MILESTONE, id),
             Types.Operation.Call
         );
 
         if (!ok) {
-            revert Module_ProposalCallbackFailed(FUNC_SUBMIT_MILESTONE);
+            revert Module_ProposalCallbackFailed(_FUNC_SUBMIT_MILESTONE);
         }
     }
 
@@ -246,12 +246,12 @@ contract MilestoneManager is IMilestoneManager, Module {
         bytes memory returnData;
 
         (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(FUNC_CONFIRM_MILESTONE, id),
+            abi.encodeWithSignature(_FUNC_CONFIRM_MILESTONE, id),
             Types.Operation.Call
         );
 
         if (!ok) {
-            revert Module_ProposalCallbackFailed(FUNC_CONFIRM_MILESTONE);
+            revert Module_ProposalCallbackFailed(_FUNC_CONFIRM_MILESTONE);
         }
     }
 
@@ -261,12 +261,12 @@ contract MilestoneManager is IMilestoneManager, Module {
         bytes memory returnData;
 
         (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(FUNC_DECLINE_MILESTONE, id),
+            abi.encodeWithSignature(_FUNC_DECLINE_MILESTONE, id),
             Types.Operation.Call
         );
 
         if (!ok) {
-            revert Module_ProposalCallbackFailed(FUNC_DECLINE_MILESTONE);
+            revert Module_ProposalCallbackFailed(_FUNC_DECLINE_MILESTONE);
         }
     }
 
