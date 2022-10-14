@@ -18,61 +18,61 @@ interface IMilestoneManager {
     // Errors
 
     /// @dev Function is only callable by contributor.
-    error OnlyCallableByContributor();
+    error Module__MilestoneManager__OnlyCallableByContributor();
 
-    /// @dev Invalid title.
-    error InvalidTitle();
+    /// @dev Given title invalid.
+    error Module__MilestoneManager__InvalidTitle();
 
-    /// @dev Invalid startDate.
-    error InvalidStartDate();
+    /// @dev Given startDate invalid.
+    error Module__MilestoneManager__InvalidStartDate();
 
-    /// @dev Invalid details.
-    error InvalidDetails();
+    /// @dev Given details invalid.
+    error Module__MilestoneManager__InvalidDetails();
 
-    /// @dev There is no milestone with this id.
-    error InvalidMilestoneId();
+    /// @dev Given milestone id invalid.
+    error Module__MilestoneManager__InvalidMilestoneId();
+
+
 
     /// @dev The new milestone id is not yet available.
-    error NewMilestoneIdNotYetAvailable();
+    error Module__MilestoneManager__NewMilestoneIdNotYetAvailable();
 
     /// @dev The milestone with the given id is already created.
-    error MilestoneWithIdAlreadyCreated();
+    error Module__MilestoneManager__MilestoneWithIdAlreadyCreated();
 
     /// @dev The milestone is not yet submitted.
-    error MilestoneNotSubmitted();
+    error Module__MilestoneManager__MilestoneNotSubmitted();
 
     /// @dev The milestone is already completed.
-    error MilestoneAlreadyCompleted();
+    error Module__MilestoneManager__MilestoneAlreadyCompleted();
 
     /// @dev The milestone is removed.
-    error MilestoneRemoved();
+    error Module__MilestoneManager__MilestoneRemoved();
 
     //--------------------------------------------------------------------------
     // Events
 
-    /// @dev New Milestone was created
-    event NewMilestone(string title, uint startDate, string details);
+    // @todo mp: Need id. All id's need to be indexed.
+    /// @notice Event emitted when a new milestone added.
+    event NewMilestoneAdded(uint indexed id, string title, uint startDate, string details);
 
-    /// @dev A Milestone was changed in regards of startDate or details
-    event ChangeMilestone(uint id, uint startDate, string details);
+    /// @notice Event emitted when a milestone's startDate updated.
+    event MilestoneStartDateUpdated(uint indexed id, uint startDate);
 
-    /// @dev A Milestone was changed in regards of startDate
-    event ChangeStartDate(uint id, uint startDate);
+    /// @notice Event emitted when a milestone's details updated.
+    event MilestoneDetailsUpdated(uint indexed id, string details);
 
-    /// @dev A Milestone was changed in regards of details
-    event ChangeDetails(uint id, string details);
+    /// @notice Event emitted when a milestone removed.
+    event MilestoneRemoved(uint indexed id);
 
-    /// @notice A Milestone was removed
-    event RemoveMilestone(uint id);
+    /// @notice Event emitted when a milestone submitted.
+    event MilestoneSubmitted(uint indexed id);
 
-    /// @notice A Milestone was submitted
-    event SubmitMilestone(uint id);
+    /// @notice Event emitted when a milestone confirmed.
+    event MilestoneConfirmed(uint indexed id);
 
-    /// @notice A submitted Milestone was confirmed
-    event ConfirmMilestone(uint id);
-
-    /// @notice A submitted Milestone was declined
-    event DeclineMilestone(uint id);
+    /// @notice Event emitted when a milestone declined.
+    event MilestoneDeclined(uint indexed id);
 
     //--------------------------------------------------------------------------
     // Functions
