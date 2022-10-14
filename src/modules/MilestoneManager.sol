@@ -25,10 +25,6 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Constants
 
-    // @todo mp: Refactorings
-    //          - some function names
-    //          - some modifier names
-
     //----------------------------------
     // Access Control Roles
 
@@ -40,7 +36,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     // Proposal Callback Function Signatures
 
     string private constant FUNC_ADD_MILESTONE =
-        "__Milestone_addMilestone(uint256,string,uint256,string)";
+        "__Milestone_addMilestone(string,uint256,string)";
 
     string private constant FUNC_UPDATE_MILESTONE_DETAILS =
         "__Milestone_updateMilestoneDetails(uint256,string)";
@@ -71,7 +67,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     uint private _milestoneIdCounter;
 
     //--------------------------------------------------------------------------
-    // MODIFIER
+    // Modifiers
 
     /// @dev Checks via the governance module if msg.sender is contributor.
     modifier onlyContributor() {
@@ -121,42 +117,6 @@ contract MilestoneManager is IMilestoneManager, Module {
         _;
     }
 
-    /// @dev Checks if the given newId is valid.
-    /// @param newId ???
-    modifier newMilestoneIdAvailable(uint newId) {
-        if (newId > _milestoneIdCounter) {
-            revert Module__MilestoneManager__NewMilestoneIdNotYetAvailable();
-        }
-        _;
-    }
-
-    ///@dev Checks if the given Milestone is submitted.
-    ///@param id The id in the milestone array.
-    modifier submitted(uint id) {
-        if (!_milestones[id].submitted) {
-            revert Module__MilestoneManager__MilestoneNotSubmitted();
-        }
-        _;
-    }
-
-    ///@dev Checks if the given Milestone is not completed.
-    ///@param id The id in the milestone array.
-    modifier notCompleted(uint id) {
-        if (_milestones[id].completed) {
-            revert Module__MilestoneManager__MilestoneAlreadyCompleted();
-        }
-        _;
-    }
-
-    ///@dev Checks if the given Milestone is removed.
-    ///@param id The id in the milestone array.
-    modifier notRemoved(uint id) {
-        if (_milestones[id].removed) {
-            revert Module__MilestoneManager__MilestoneRemoved();
-        }
-        _;
-    }
-
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -191,9 +151,8 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     /// @inheritdoc IMilestoneManager
     function addMilestone(
-        uint newId,
         string memory title,
-        uint startDate, //Possible Startdate now
+        uint startDate,
         string memory details
     ) external onlyAuthorized {
         bool ok;
@@ -201,7 +160,7 @@ contract MilestoneManager is IMilestoneManager, Module {
 
         (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                FUNC_ADD_MILESTONE, newId, title, startDate, details
+                FUNC_ADD_MILESTONE, title, startDate, details
             ),
             Types.Operation.Call
         );
@@ -325,10 +284,8 @@ contract MilestoneManager is IMilestoneManager, Module {
         validStartDate(startDate)
         validDetails(details)
     {
-        // Cache current id and increase id counter.
         uint id = _milestoneIdCounter++;
 
-        // Create new milestone instance.
         Milestone memory m = Milestone({
             startDate: startDate,
             title: title,
@@ -338,10 +295,7 @@ contract MilestoneManager is IMilestoneManager, Module {
             removed: false
         });
 
-        // Write new milestone to storage using current id.
         _milestones[id] = m;
-
-        // Notify off-chain services.
         emit NewMilestoneAdded(id, title, startDate, details);
     }
 
@@ -349,7 +303,6 @@ contract MilestoneManager is IMilestoneManager, Module {
         external
         onlyProposal
         validId(id)
-        // notRemoved(id) // @todo mp: Creates extra SLOAD :(
         validDetails(details)
     {
         Milestone storage m = _milestones[id];
@@ -368,7 +321,6 @@ contract MilestoneManager is IMilestoneManager, Module {
         external
         onlyProposal
         validId(id)
-        // notRemoved(id) @todo mp: See above.
         validStartDate(startDate)
     {
         Milestone storage m = _milestones[id];
@@ -386,9 +338,7 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     function __Milestone_removeMilestone(
         uint id //@note There might be a point made to increase the level of interaction required to remove a milestone
-    ) external onlyProposal validId(id) 
-    // notCompleted(id) @todo Creates extra SLOAD :(
-    {
+    ) external onlyProposal validId(id) {
         Milestone storage m = _milestones[id];
 
         if (!_isRemoveable(m)) {
@@ -401,17 +351,10 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
-    // Programmer submitMilestone:
-    // 1: I want to change the milestone submit field to True.
-    // 2: I want the milestone submit field to BE True.
-
-    ///@dev Submit a milestone
-    ///@param id : id in the milestone array
     function __Milestone_submitMilestone(uint id)
         external
         onlyProposal
         validId(id)
-    // notRemoved(id) @todo Creates extra SLOAD
     {
         Milestone storage m = _milestones[id];
 
@@ -425,14 +368,10 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
-    ///@dev Confirms a submitted milestone
-    ///@param id : id in the milestone array
     function __Milestone_confirmMilestone(uint id)
         external
         onlyProposal
         validId(id)
-    // notRemoved(id)
-    // submitted(id)
     {
         Milestone storage m = _milestones[id];
 
@@ -443,21 +382,15 @@ contract MilestoneManager is IMilestoneManager, Module {
         if (!m.completed) {
             m.completed = true;
 
-            //@todo add Payment connection
+            // @todo mp, felix: add Payment connection
 
             emit MilestoneConfirmed(id);
         }
     }
 
-    ///@dev Declines a submitted milestone
-    ///@param id : id in the milestone array
     function __Milestone_declineMilestone(
         uint id //@note maybe at why declined
-    ) external onlyProposal validId(id) 
-    // notRemoved(id)
-    // submitted(id)
-    // notCompleted(id)
-    {
+    ) external onlyProposal validId(id) {
         Milestone storage m = _milestones[id];
 
         if (!_isDeclineable(m)) {
@@ -487,6 +420,9 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     //--------------------------------------------------------------------------
     // Internal Helper Functions
+
+    // @todo mp, felix: The checks are probably _not_ sufficient.
+    //                  Need to check with specs again.
 
     function _isUpdateable(Milestone storage m) internal view returns (bool) {
         // @todo mp: When is updating not allowed anymore?
