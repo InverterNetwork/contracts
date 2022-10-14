@@ -277,6 +277,20 @@ contract Payment is Module {
             emit PaymentPaused(contributor);
         }
     }
+
+    /// @notice Continue contributors paused payment.
+    //          Tokens from paused period will be immediately claimable.
+    /// @param contributor Contributor's address.
+    function continuePayment(address contributor)
+        external
+        // onlyAuthorized() // only proposal owner
+    {
+        if(!vestings[contributor]._enabled) {
+            vestings[contributor]._enabled = true;
+            emit PaymentContinued(contributor);
+        }
+    }
+
     // /// Note we may want a method that returns all contributor addresses.
     // /// @notice Returns the existing payments of the contributors.
     // /// @param contributor Contributor's address.
