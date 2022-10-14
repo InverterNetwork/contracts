@@ -149,7 +149,6 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Milestone API Functions
 
-    // @todo mp: Needs to return id of new milestone!
     /// @inheritdoc IMilestoneManager
     function addMilestone(
         string memory title,
@@ -170,7 +169,7 @@ contract MilestoneManager is IMilestoneManager, Module {
             revert Module_ProposalCallbackFailed(_FUNC_ADD_MILESTONE);
         }
 
-        // Decode return data into milestone id.
+        // Decode returnData into milestone id and return it.
         return abi.decode(returnData, (uint));
     }
 

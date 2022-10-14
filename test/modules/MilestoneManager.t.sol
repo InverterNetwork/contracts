@@ -105,19 +105,13 @@ contract MilestoneManagerTest is ModuleTest {
     function testAddMilestoneCallbackFailed() public {
         _authorizer.setIsAuthorized(address(this), true);
 
-        // Invalid title.
-        string memory title = "";
+        // Empty title is invalid.
+        string memory invalidTitle = "";
 
-        // @todo mp: Anyone knows how to do this better?
-        //           Does not work this way :(
-        /*
-        vm.expectRevert(
-            abi.encodeWithSignature(
-                "Module_ProposalCallbackFailed(__Milestone_addMilestone(string,uint256,string))"
-            )
+        _expectProposalCallbackFailure(
+            "__Milestone_addMilestone(string,uint256,string)"
         );
-        milestoneManager.addMilestone(title, block.timestamp, _DETAILS);
-        */
+        milestoneManager.addMilestone(invalidTitle, block.timestamp, _DETAILS);
     }
 
     //--------------------------------------------------------------------------
@@ -126,31 +120,25 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: __Milestone_addMilestone()
 
-    function test__Milestone_addMilestone(
-        string memory title,
-        uint startDate,
-        string memory details
-    ) public {
-        _assumeNonEmptyString(title);
-        _assumeTimestampNotInPast(startDate);
-        _assumeNonEmptyString(details);
-
+    function test__Milestone_addMilestone() public {
         vm.startPrank(address(_proposal));
 
         uint id;
 
-        id =
-            milestoneManager.__Milestone_addMilestone(title, startDate, details);
+        id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp, _DETAILS
+        );
 
         assertEq(id, 0);
-        _assertMilestone(0, title, startDate, details);
+        _assertMilestone(0, _TITLE, block.timestamp, _DETAILS);
 
         // Add second milestone to verify id increments correctly.
-        id =
-            milestoneManager.__Milestone_addMilestone(title, startDate, details);
+        id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp, _DETAILS
+        );
 
         assertEq(id, 1);
-        _assertMilestone(1, title, startDate, details);
+        _assertMilestone(1, _TITLE, block.timestamp, _DETAILS);
     }
 
     function test__Milestone_addMilestoneOnlyCallableByProposal(address caller)
@@ -165,34 +153,26 @@ contract MilestoneManagerTest is ModuleTest {
         );
     }
 
-    function test__Milestone_addMilestoneFailsForInvalidTitle(
-        uint startDate,
-        string memory details
-    ) public {
-        _assumeTimestampNotInPast(startDate);
-        _assumeNonEmptyString(details);
-
-        // Invalid if title is empty.
-        string memory title = "";
+    function test__Milestone_addMilestoneFailsForInvalidTitle() public {
+        // Title invalid if:
+        //  - empty
+        string memory invalidTitle = "";
 
         vm.startPrank(address(_proposal));
 
         vm.expectRevert(
             IMilestoneManager.Module__MilestoneManager__InvalidTitle.selector
         );
-        milestoneManager.__Milestone_addMilestone(title, startDate, details);
+        milestoneManager.__Milestone_addMilestone(
+            invalidTitle, block.timestamp, _DETAILS
+        );
     }
 
-    function test__Milestone_addMilestoneFailsForInvalidStartDate(
-        string memory title,
-        string memory details
-    ) public {
-        _assumeNonEmptyString(title);
-        _assumeNonEmptyString(details);
-
-        // Invalid if startDate < block.timestamp.
+    function test__Milestone_addMilestoneFailsForInvalidStartDate() public {
+        // StartDate invalid if:
+        //  - less than block.timestamp
         vm.warp(1);
-        uint startDate = 0;
+        uint invalidStartDate = 0;
 
         vm.startPrank(address(_proposal));
 
@@ -201,25 +181,24 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__InvalidStartDate
                 .selector
         );
-        milestoneManager.__Milestone_addMilestone(title, startDate, details);
+        milestoneManager.__Milestone_addMilestone(
+            _TITLE, invalidStartDate, _DETAILS
+        );
     }
 
-    function test__Milestone_addMilestoneFailsForInvalidDetails(
-        string memory title,
-        uint startDate
-    ) public {
-        _assumeNonEmptyString(title);
-        _assumeTimestampNotInPast(startDate);
-
-        // Invalid if details is empty.
-        string memory details = "";
+    function test__Milestone_addMilestoneFailsForInvalidDetails() public {
+        // Details invalid if:
+        //  - empty
+        string memory invalidDetails = "";
 
         vm.startPrank(address(_proposal));
 
         vm.expectRevert(
             IMilestoneManager.Module__MilestoneManager__InvalidDetails.selector
         );
-        milestoneManager.__Milestone_addMilestone(title, startDate, details);
+        milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp, invalidDetails
+        );
     }
 
     //----------------------------------
@@ -241,7 +220,7 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: __Milestone_declineMilestone()
 
     //--------------------------------------------------------------------------
-    // Internal Assert Helper Function
+    // Assert Helper Function
 
     /// @dev Asserts a milestone with given data exists.
     function _assertMilestone(

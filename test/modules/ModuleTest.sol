@@ -23,7 +23,8 @@ contract ModuleTest is Test {
     uint internal constant _MAJOR_VERSION = 1;
     string internal constant _GIT_URL = "https://github.com/org/module";
 
-    IModule.Metadata _METADATA = IModule.Metadata(_MAJOR_VERSION, _GIT_URL);
+    IModule.Metadata internal _METADATA =
+        IModule.Metadata(_MAJOR_VERSION, _GIT_URL);
 
     //--------------------------------------------------------------------------------
     // Setup
@@ -36,10 +37,27 @@ contract ModuleTest is Test {
     }
 
     //--------------------------------------------------------------------------------
-    // Internal Helper Functions
+    // Error Helper Functions
+    //
+    // Prefixed with `_expect`.
 
-    // Note that this function may be removed again, depending on how many tests
-    // actually need them.
+    function _expectProposalCallbackFailure(string memory funcSig) internal {
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module_ProposalCallbackFailed(string)", funcSig
+            )
+        );
+    }
+
+    //--------------------------------------------------------------------------------
+    // Assertion Helper Functions
+    //
+    // Prefixed with `_assert`.
+
+    //--------------------------------------------------------------------------------
+    // Fuzzer Helper Functions
+    //
+    // Prefixed with `_assume`.
 
     function _assumeNonEmptyString(string memory a) internal {
         vm.assume(bytes(a).length != 0);
