@@ -47,21 +47,6 @@ interface IMilestoneManager {
     /// @notice Given milestone not declineable.
     error Module__MilestoneManager__MilestoneNotDeclineable();
 
-    /// @dev The new milestone id is not yet available.
-    error Module__MilestoneManager__NewMilestoneIdNotYetAvailable();
-
-    /// @dev The milestone with the given id is already created.
-    error Module__MilestoneManager__MilestoneWithIdAlreadyCreated();
-
-    /// @dev The milestone is not yet submitted.
-    error Module__MilestoneManager__MilestoneNotSubmitted();
-
-    /// @dev The milestone is already completed.
-    error Module__MilestoneManager__MilestoneAlreadyCompleted();
-
-    /// @dev The milestone is removed.
-    error Module__MilestoneManager__MilestoneRemoved();
-
     //--------------------------------------------------------------------------
     // Events
 
