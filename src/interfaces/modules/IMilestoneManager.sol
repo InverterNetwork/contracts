@@ -102,10 +102,7 @@ interface IMilestoneManager {
     /// @dev Returns empty milestone in case id `id` is invalid.
     /// @param id The id of the milstone to return.
     /// @return Milestone with id `id`.
-    function milestone(uint id) external view returns (Milestone memory);
-
-    // @todo felix, mp: Docs + rename.
-    function nextNewMilestoneId() external view returns (uint);
+    function getMilestone(uint id) external view returns (Milestone memory);
 
     //----------------------------------
     // Milestone Mutating Functions

@@ -273,6 +273,8 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Proposal Callback Functions
 
+    // @todo mp: addMilestone needs return value id.
+
     function __Milestone_addMilestone(
         string memory title,
         uint startDate, //@note Possible Startdate now
@@ -407,15 +409,10 @@ contract MilestoneManager is IMilestoneManager, Module {
     // Public View Functions
 
     /// @inheritdoc IMilestoneManager
-    function milestone(uint id) external view returns (Milestone memory) {
+    function getMilestone(uint id) external view returns (Milestone memory) {
         Milestone memory m = _milestones[id];
 
         return m;
-    }
-
-    /// @inheritdoc IMilestoneManager
-    function nextNewMilestoneId() external view returns (uint) {
-        return _milestoneIdCounter;
     }
 
     //--------------------------------------------------------------------------
