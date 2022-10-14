@@ -111,12 +111,10 @@ interface IMilestoneManager {
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if an argument invalid.
     /// @dev Relay function that routes the function call via the proposal.
-    /// @param newId The id of the new milestone.
     /// @param title The title for the new milestone.
     /// @param startDate The starting date of the new milestone.
     /// @param details The details of the new milestone.
     function addMilestone(
-        uint newId,
         string memory title,
         uint startDate,
         string memory details

@@ -310,7 +310,7 @@ contract MilestoneManager is IMilestoneManager, Module {
         Milestone storage m = _milestones[id];
 
         if (!_isUpdateable(m)) {
-            revert Module__MilestoneManager__NotUpdateable();
+            revert Module__MilestoneManager__MilestoneNotUpdateable();
         }
 
         if (!m.details.equals(details)) {
