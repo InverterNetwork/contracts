@@ -230,7 +230,7 @@ contract MilestoneManager is IMilestoneManager, Module {
         bool ok;
         bytes memory returnData;
 
-        _triggerProposalCallback(
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_SUBMIT_MILESTONE, id),
             Types.Operation.Call
         );
