@@ -114,11 +114,12 @@ interface IMilestoneManager {
     /// @param title The title for the new milestone.
     /// @param startDate The starting date of the new milestone.
     /// @param details The details of the new milestone.
+    /// @return The newly added milestone's id.
     function addMilestone(
         string memory title,
         uint startDate,
         string memory details
-    ) external;
+    ) external returns (uint);
 
     /// @notice Changes a milestone's details.
     /// @dev Only callable by authorized addresses.

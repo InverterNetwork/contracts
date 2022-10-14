@@ -93,7 +93,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @dev Checks if the given startDate is valid.
     /// @param startDate The given startDate of the milestone.
     modifier validStartDate(uint startDate) {
-        if (startDate <= block.timestamp) {
+        if (startDate < block.timestamp) {
             revert Module__MilestoneManager__InvalidStartDate();
         }
         _;
@@ -149,12 +149,13 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Milestone API Functions
 
+    // @todo mp: Needs to return id of new milestone!
     /// @inheritdoc IMilestoneManager
     function addMilestone(
         string memory title,
         uint startDate,
         string memory details
-    ) external onlyAuthorized {
+    ) external onlyAuthorized returns (uint) {
         bool ok;
         bytes memory returnData;
 
@@ -168,6 +169,9 @@ contract MilestoneManager is IMilestoneManager, Module {
         if (!ok) {
             revert Module_ProposalCallbackFailed(_FUNC_ADD_MILESTONE);
         }
+
+        // Decode return data into milestone id.
+        return abi.decode(returnData, (uint));
     }
 
     /// @inheritdoc IMilestoneManager
@@ -273,8 +277,6 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Proposal Callback Functions
 
-    // @todo mp: addMilestone needs return value id.
-
     function __Milestone_addMilestone(
         string memory title,
         uint startDate, //@note Possible Startdate now
@@ -285,6 +287,7 @@ contract MilestoneManager is IMilestoneManager, Module {
         validTitle(title)
         validStartDate(startDate)
         validDetails(details)
+        returns (uint)
     {
         uint id = _milestoneIdCounter++;
 
@@ -299,6 +302,8 @@ contract MilestoneManager is IMilestoneManager, Module {
 
         _milestones[id] = m;
         emit NewMilestoneAdded(id, title, startDate, details);
+
+        return id;
     }
 
     function __Milestone_updateMilestoneDetails(uint id, string memory details)

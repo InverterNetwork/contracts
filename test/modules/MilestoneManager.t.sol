@@ -1,706 +1,259 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import {
+    ModuleTest,
+    IModule,
+    IProposal,
+    LibString
+} from "test/modules/ModuleTest.sol";
 
-// Internal Dependencies
+// SuT
 import {MilestoneManager} from "src/modules/MilestoneManager.sol";
-
-// Internal Interfaces
 import {IMilestoneManager} from "src/interfaces/modules/IMilestoneManager.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
 
-// Mocks
-import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+contract MilestoneManagerTest is ModuleTest {
+    using LibString for string;
 
-contract MilestoneManagerTest is Test, ProposalMock {
     // SuT
-    MilestoneManager milestoneMod;
-
-    // Mocks
-    AuthorizerMock authorizerMock = new AuthorizerMock();
+    MilestoneManager milestoneManager;
 
     // Constants
-    // @todo mp: Make abstract Module test to inherit this stuff.
-    uint constant MAJOR_VERSION = 1;
-    string constant GIT_URL = "https://github.com/organization/module";
-
-    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
-
-    //--------------------------------------------------------------------------------
-    // SETUP
-
-    constructor() ProposalMock(authorizerMock) {}
+    string private constant _TITLE = "Title";
+    string private constant _DETAILS = "Details";
 
     function setUp() public {
-        milestoneMod = new MilestoneManager();
-        milestoneMod.init(IProposal(address(this)), DATA, bytes(""));
+        milestoneManager = new MilestoneManager();
+        milestoneManager.init(_proposal, _METADATA, bytes(""));
 
-        address[] memory modules_ = new address[](1);
-        modules_[0] = address(milestoneMod);
-
-        // Note the current workaround via `this` due to `initModules()` expecting
-        // the modules as calldata.
-        // @todo mp, felix: Can this be fixed?
-        ProposalMock(this).initModules(modules_);
+        _setUpProposal(milestoneManager);
     }
 
-    //--------------------------------------------------------------------------------
-    // HELPER FUNCTIONS
+    //--------------------------------------------------------------------------
+    // Test: Access Control Functions
 
-    function getMilestoneFromModule(uint id)
-        internal
-        view
-        returns (IMilestoneManager.Milestone memory)
-    {
-        IMilestoneManager.Milestone memory m = milestoneMod.milestone(id);
+    function testGrantContributorRole(address to) public {
+        _authorizer.setIsAuthorized(address(this), true);
 
-        return m;
-        //(
-        //    string memory title,
-        //    uint startDate,
-        //    string memory details,
-        //    bool submitted,
-        //    bool completed,
-        //    bool removed
-        //) = milestoneMod.milestones(id);
-
-        //return IMilestoneManager.Milestone(
-        //    title, startDate, details, submitted, completed, removed
-        //);
-    }
-
-    //--------------------------------------------------------------------------------
-    // TEST MODIFIER
-
-    function testContributorAccess(address accessor) public {
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
-
-        // Fails if contributor role missing.
-        vm.prank(accessor);
-        vm.expectRevert(IMilestoneManager.OnlyCallableByContributor.selector);
-        milestoneMod.submitMilestone(id);
-
-        // Grant contributor role.
-        authorizerMock.setIsAuthorized(address(this), true);
-        milestoneMod.grantContributorRole(accessor);
-
-        vm.prank(accessor);
-        milestoneMod.submitMilestone(id);
-    }
-
-    function testValidTitle(string memory title) public {
-        if ((bytes(title)).length == 0) {
-            vm.expectRevert(IMilestoneManager.InvalidTitle.selector);
-        }
-        milestoneMod.__Milestone_addMilestone(0, title, 0, " ");
-    }
-
-    function testValidStartDate(uint startDate) public {
-        /* if(startDate == 0){
-            vm.expectRevert(MilestoneModule.InvalidStartDate.selector);
-        }
-        milestoneMod.__Milestone_addMilestone(" ", startDate, " "); */
-    }
-
-    function testValidDetails(string memory details) public {
-        if ((bytes(details)).length == 0) {
-            vm.expectRevert(IMilestoneManager.InvalidDetails.selector);
-        }
-        milestoneMod.__Milestone_addMilestone(0, " ", 0, details);
-    }
-
-    function testValidId(uint id) public {
-        milestoneMod.__Milestone_addMilestone(0, " ", 0, " ");
-        if (id >= milestoneMod.nextNewMilestoneId()) {
-            vm.expectRevert(IMilestoneManager.InvalidMilestoneId.selector);
-        }
-        milestoneMod.__Milestone_removeMilestone(id);
-    }
-
-    function testNewMilestoneIdAvailable(uint id) public {
-        uint nextId;
-        for (uint i = 0; i < 10; i++) {
-            nextId = milestoneMod.nextNewMilestoneId();
-            milestoneMod.__Milestone_addMilestone(nextId, " ", 0, " ");
-        }
-        if (id > milestoneMod.nextNewMilestoneId()) {
-            vm.expectRevert(
-                IMilestoneManager.NewMilestoneIdNotYetAvailable.selector
-            );
-        }
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
-    }
-
-    function testSubmitted(uint id) public {
-        vm.assume(id <= 1);
-
-        //Not Submitted
-        uint idOfNotSubmitted = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(idOfNotSubmitted, " ", 0, " ");
-
-        //Submitted
-        uint idOfSubmitted = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(idOfSubmitted, " ", 0, " ");
-        milestoneMod.__Milestone_submitMilestone(idOfSubmitted);
-
-        if (id == idOfNotSubmitted) {
-            vm.expectRevert(IMilestoneManager.MilestoneNotSubmitted.selector);
-        }
-
-        milestoneMod.__Milestone_confirmMilestone(id);
-    }
-
-    function testNotCompleted(uint id) public {
-        vm.assume(id <= 1);
-
-        //Submitted
-        uint idOfSubmitted = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(idOfSubmitted, " ", 0, " ");
-        milestoneMod.__Milestone_submitMilestone(idOfSubmitted);
-
-        //Completed
-        uint idOfCompleted = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(idOfCompleted, " ", 0, " ");
-        milestoneMod.__Milestone_submitMilestone(idOfCompleted);
-        milestoneMod.__Milestone_confirmMilestone(idOfCompleted);
-
-        if (id == idOfCompleted) {
-            vm.expectRevert(
-                IMilestoneManager.MilestoneAlreadyCompleted.selector
-            );
-        }
-
-        milestoneMod.__Milestone_declineMilestone(id);
-    }
-
-    function testNotRemoved(uint id) public {
-        vm.assume(id <= 1);
-
-        //Not Removed
-        uint idOfNotRemoved = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(idOfNotRemoved, " ", 0, " ");
-
-        //Submitted
-        uint idOfRemoved = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(idOfRemoved, " ", 0, " ");
-        milestoneMod.__Milestone_removeMilestone(idOfRemoved);
-
-        if (id == idOfRemoved) {
-            vm.expectRevert(IMilestoneManager.MilestoneRemoved.selector);
-        }
-        milestoneMod.__Milestone_changeStartDate(id, 0);
-    }
-
-    function testModifierInPosition() public {
-        //--------------------------------------------------------------------------------
-        //Setup
-
-        //Give necessary rights
-        authorizerMock.setIsAuthorized(address(this), true);
-        milestoneMod.grantContributorRole(address(this));
-
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
-
-        uint removedId = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(removedId, " ", 0, " ");
-        milestoneMod.__Milestone_removeMilestone(removedId);
-
-        uint completedId = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(completedId, " ", 0, " ");
-        milestoneMod.__Milestone_submitMilestone(completedId);
-        milestoneMod.__Milestone_confirmMilestone(completedId);
-
-        uint invalidId = milestoneMod.nextNewMilestoneId() + 1;
-
-        //Take nessesary rights
-        milestoneMod.revokeContributorRole(address(this));
-        authorizerMock.setIsAuthorized(address(this), false);
-
-        //--------------------------------------------------------------------------------
-        //initialize
-
-        //initializer
-        //This checks if Module init is called and therfor guarantees that onlyInitializing Modifier is working,
-        //Which confirms if the initializer modifier is used
-        assertTrue(address(milestoneMod.proposal()) != address(0));
-
-        //--------------------------------------------------------------------------------
-        //__Milestone_addMilestone
-
-        //OnlyProposal
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(address(0));
-        milestoneMod.__Milestone_addMilestone(0, " ", 0, " ");
-
-        //newMilestoneIdAvailable
-        vm.expectRevert(
-            IMilestoneManager.NewMilestoneIdNotYetAvailable.selector
+        milestoneManager.grantContributorRole(to);
+        assertTrue(
+            _proposal.hasRole(
+                address(milestoneManager),
+                milestoneManager.CONTRIBUTOR_ROLE(),
+                to
+            )
         );
-        milestoneMod.__Milestone_addMilestone(invalidId, " ", 0, " ");
-
-        //validTitle
-        vm.expectRevert(IMilestoneManager.InvalidTitle.selector);
-        milestoneMod.__Milestone_addMilestone(0, "", 0, " ");
-
-        /*//validStartDate
-        vm.expectRevert(MilestoneModule.InvalidStartDate.selector);//@note as long as ValidStartDate has no checks no Implmentation needed
-        milestoneMod.__Milestone_addMilestone(
-            "",
-            0,
-            " "
-        ); */
-
-        //validDetails
-        vm.expectRevert(IMilestoneManager.InvalidDetails.selector);
-        milestoneMod.__Milestone_addMilestone(0, " ", 0, "");
-
-        //--------------------------------------------------------------------------------
-        //addMilestone
-
-        //onlyAuthorized
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(0));
-        milestoneMod.addMilestone(0, " ", 0, " ");
-
-        //--------------------------------------------------------------------------------
-        //__Milestone_changeDetails
-
-        //OnlyProposal
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(address(0));
-        milestoneMod.__Milestone_changeDetails(id, " ");
-
-        //validId
-        vm.expectRevert(IMilestoneManager.InvalidMilestoneId.selector);
-        milestoneMod.__Milestone_changeDetails(invalidId, " ");
-
-        //notRemoved
-        vm.expectRevert(IMilestoneManager.MilestoneRemoved.selector);
-        milestoneMod.__Milestone_changeDetails(removedId, " ");
-
-        //validDetails
-        vm.expectRevert(IMilestoneManager.InvalidDetails.selector);
-        milestoneMod.__Milestone_changeDetails(id, "");
-
-        //--------------------------------------------------------------------------------
-        //changeDetails
-
-        //onlyAuthorized
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(0));
-        milestoneMod.changeDetails(id, " ");
-
-        //--------------------------------------------------------------------------------
-        //__Milestone_changeStartDate
-
-        //OnlyProposal
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(address(0));
-        milestoneMod.__Milestone_changeStartDate(id, 0);
-
-        //validId
-        vm.expectRevert(IMilestoneManager.InvalidMilestoneId.selector);
-        milestoneMod.__Milestone_changeStartDate(invalidId, 0);
-
-        //notRemoved
-        vm.expectRevert(IMilestoneManager.MilestoneRemoved.selector);
-        milestoneMod.__Milestone_changeStartDate(removedId, 0);
-
-        /*//validStartDate
-        vm.expectRevert(MilestoneModule.InvalidStartDate.selector);//@note as long as ValidStartDate has no checks no Implmentation needed
-        milestoneMod.__Milestone_changeStartDate(
-            "",
-            0,
-            " "
-        ); */
-
-        //--------------------------------------------------------------------------------
-        //changeStartDate
-
-        //onlyAuthorized
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(0));
-        milestoneMod.changeStartDate(id, 0);
-
-        //--------------------------------------------------------------------------------
-        //__Milestone_removeMilestone
-
-        //OnlyProposal
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(address(0));
-        milestoneMod.__Milestone_removeMilestone(id);
-
-        //validId
-        vm.expectRevert(IMilestoneManager.InvalidMilestoneId.selector);
-        milestoneMod.__Milestone_removeMilestone(invalidId);
-
-        //notCompleted
-        vm.expectRevert(IMilestoneManager.MilestoneAlreadyCompleted.selector);
-        milestoneMod.__Milestone_removeMilestone(completedId);
-
-        //--------------------------------------------------------------------------------
-        //removeMilestone
-
-        //onlyAuthorized
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(0));
-        milestoneMod.removeMilestone(id);
-
-        //--------------------------------------------------------------------------------
-        //__Milestone_submitMilestone
-
-        //OnlyProposal
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(address(0));
-        milestoneMod.__Milestone_submitMilestone(id);
-
-        //validId
-        vm.expectRevert(IMilestoneManager.InvalidMilestoneId.selector);
-        milestoneMod.__Milestone_submitMilestone(invalidId);
-
-        //notRemoved
-        vm.expectRevert(IMilestoneManager.MilestoneRemoved.selector);
-        milestoneMod.__Milestone_submitMilestone(removedId);
-
-        //--------------------------------------------------------------------------------
-        //submitMilestone
-
-        //contributorAccess
-        vm.expectRevert(IMilestoneManager.OnlyCallableByContributor.selector);
-        vm.prank(address(0));
-        milestoneMod.submitMilestone(id);
-
-        //--------------------------------------------------------------------------------
-        //__Milestone_confirmMilestone
-
-        //OnlyProposal
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(address(0));
-        milestoneMod.__Milestone_confirmMilestone(id);
-
-        //validId
-        vm.expectRevert(IMilestoneManager.InvalidMilestoneId.selector);
-        milestoneMod.__Milestone_confirmMilestone(invalidId);
-
-        //notRemoved
-        vm.expectRevert(IMilestoneManager.MilestoneRemoved.selector);
-        milestoneMod.__Milestone_confirmMilestone(removedId);
-
-        //submitted
-        vm.expectRevert(IMilestoneManager.MilestoneNotSubmitted.selector);
-        milestoneMod.__Milestone_confirmMilestone(id);
-
-        //--------------------------------------------------------------------------------
-        //confirmMilestone
-
-        //onlyAuthorized
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(0));
-        milestoneMod.confirmMilestone(id);
-
-        //--------------------------------------------------------------------------------
-        //__Milestone_declineMilestone
-
-        //OnlyProposal
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(address(0));
-        milestoneMod.__Milestone_declineMilestone(id);
-
-        //validId
-        vm.expectRevert(IMilestoneManager.InvalidMilestoneId.selector);
-        milestoneMod.__Milestone_declineMilestone(invalidId);
-
-        //notRemoved
-        vm.expectRevert(IMilestoneManager.MilestoneRemoved.selector);
-        milestoneMod.__Milestone_declineMilestone(removedId);
-
-        //submitted
-        vm.expectRevert(IMilestoneManager.MilestoneNotSubmitted.selector);
-        milestoneMod.__Milestone_declineMilestone(id);
-
-        //notCompleted
-        vm.expectRevert(IMilestoneManager.MilestoneAlreadyCompleted.selector);
-        milestoneMod.__Milestone_declineMilestone(completedId);
-
-        //--------------------------------------------------------------------------------
-        //declineMilestone
-
-        //onlyAuthorized
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(0));
-        milestoneMod.declineMilestone(id);
     }
 
-    //--------------------------------------------------------------------------------
-    // TEST REACH-AROUND
+    function testGrantContributorRoleOnlyCallableIfAuthorized(address caller)
+        public
+    {
+        _authorizer.setIsAuthorized(caller, false);
 
-    function testReachAround(
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.grantContributorRole(address(0xBEEF));
+    }
+
+    function testRevokeContributorRole(address from) public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        milestoneManager.grantContributorRole(from);
+
+        milestoneManager.revokeContributorRole(from);
+        assertTrue(
+            !_proposal.hasRole(
+                address(milestoneManager),
+                milestoneManager.CONTRIBUTOR_ROLE(),
+                from
+            )
+        );
+    }
+
+    function testRevokeContributorRoleOnlyCallableIfAuthorized(address caller)
+        public
+    {
+        _authorizer.setIsAuthorized(caller, false);
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.revokeContributorRole(address(0xBEEF));
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: Milestone API Functions
+
+    // @todo felix, mp: Test API Functions
+
+    function testAddMilestone() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        uint id =
+            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+        assertEq(id, 0);
+        _assertMilestone(0, _TITLE, block.timestamp, _DETAILS);
+    }
+
+    function testAddMilestoneOnlyCallableIfAuthorized(address caller) public {
+        _authorizer.setIsAuthorized(caller, false);
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+    }
+
+    function testAddMilestoneCallbackFailed() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        // Invalid title.
+        string memory title = "";
+
+        // @todo mp: Anyone knows how to do this better?
+        //           Does not work this way :(
+        /*
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module_ProposalCallbackFailed(__Milestone_addMilestone(string,uint256,string))"
+            )
+        );
+        milestoneManager.addMilestone(title, block.timestamp, _DETAILS);
+        */
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: Proposal Callback Functions
+
+    //----------------------------------
+    // Test: __Milestone_addMilestone()
+
+    function test__Milestone_addMilestone(
         string memory title,
         uint startDate,
         string memory details
     ) public {
-        vm.assume(bytes(title).length != 0);
-        vm.assume(bytes(details).length != 0);
-        authorizerMock.setAllAuthorized(true);
+        _assumeNonEmptyString(title);
+        _assumeTimestampNotInPast(startDate);
+        _assumeNonEmptyString(details);
 
-        //Used to check current id
+        vm.startPrank(address(_proposal));
+
         uint id;
 
-        //Add
-        vm.expectCall(
-            address(milestoneMod),
-            abi.encodeCall(
-                milestoneMod.__Milestone_addMilestone,
-                (0, title, startDate, details)
-            )
-        );
-        id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.addMilestone(id, title, startDate, details);
-        assertTrue(id == 0);
+        id =
+            milestoneManager.__Milestone_addMilestone(title, startDate, details);
 
-        //ChangeDetails
-        vm.expectCall(
-            address(milestoneMod),
-            abi.encodeCall(
-                milestoneMod.__Milestone_changeDetails, (id, details)
-            )
-        );
-        milestoneMod.changeDetails(id, details);
+        assertEq(id, 0);
+        _assertMilestone(0, title, startDate, details);
 
-        //ChangeStartDate
-        vm.expectCall(
-            address(milestoneMod),
-            abi.encodeCall(
-                milestoneMod.__Milestone_changeStartDate, (id, startDate)
-            )
-        );
-        milestoneMod.changeStartDate(id, startDate);
+        // Add second milestone to verify id increments correctly.
+        id =
+            milestoneManager.__Milestone_addMilestone(title, startDate, details);
 
-        //Remove
-        id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.addMilestone(id, title, startDate, details);
-        vm.expectCall(
-            address(milestoneMod),
-            abi.encodeCall(milestoneMod.__Milestone_removeMilestone, (id))
-        );
-        milestoneMod.removeMilestone(id);
-
-        //Submit
-        id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.addMilestone(id, title, startDate, details);
-
-        milestoneMod.grantContributorRole(address(this));
-
-        vm.expectCall(
-            address(milestoneMod),
-            abi.encodeCall(milestoneMod.__Milestone_submitMilestone, (id))
-        );
-        milestoneMod.submitMilestone(id);
-
-        //Confirm
-        id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.addMilestone(id, title, startDate, details);
-        milestoneMod.submitMilestone(id);
-
-        vm.expectCall(
-            address(milestoneMod),
-            abi.encodeCall(milestoneMod.__Milestone_confirmMilestone, (id))
-        );
-        milestoneMod.confirmMilestone(id);
-
-        //Decline
-        id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.addMilestone(id, title, startDate, details);
-        milestoneMod.submitMilestone(id);
-        vm.expectCall(
-            address(milestoneMod),
-            abi.encodeCall(milestoneMod.__Milestone_declineMilestone, (id))
-        );
-        milestoneMod.declineMilestone(id);
+        assertEq(id, 1);
+        _assertMilestone(1, title, startDate, details);
     }
 
-    //--------------------------------------------------------------------------------
-    // TEST MAIN
-
-    function testGrantContributorRole(address account) public {
-        authorizerMock.setAllAuthorized(true);
-
-        milestoneMod.grantContributorRole(account);
-
-        assertTrue(
-            hasRole(
-                address(milestoneMod), milestoneMod.CONTRIBUTOR_ROLE(), account
-            )
-        );
-    }
-
-    function testRevokeContributorRole(address account) public {
-        authorizerMock.setAllAuthorized(true);
-
-        milestoneMod.revokeContributorRole(account);
-
-        assertTrue(
-            !hasRole(
-                address(milestoneMod), milestoneMod.CONTRIBUTOR_ROLE(), account
-            )
-        );
-
-        milestoneMod.grantContributorRole(account);
-        milestoneMod.revokeContributorRole(account);
-
-        assertTrue(
-            !hasRole(
-                address(milestoneMod), milestoneMod.CONTRIBUTOR_ROLE(), account
-            )
-        );
-    }
-
-    //++++++++++++++++++++++++++++++++++++++++++ TEST-MAIN ++++++++++++++++++++++++++++++++++++++++++
-
-    function testAdd(string memory title, uint startDate, string memory details)
+    function test__Milestone_addMilestoneOnlyCallableByProposal(address caller)
         public
     {
-        vm.assume(bytes(title).length != 0);
-        vm.assume(bytes(details).length != 0);
+        vm.assume(caller != address(_proposal));
 
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, title, startDate, details);
-
-        IMilestoneManager.Milestone memory milestone =
-            getMilestoneFromModule(id);
-
-        assertTrue(keccak256(bytes(milestone.title)) == keccak256(bytes(title)));
-        assertTrue(milestone.startDate == startDate);
-        assertTrue(
-            keccak256(bytes(milestone.details)) == keccak256(bytes(details))
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp, _DETAILS
         );
-        assertTrue(milestone.submitted == false);
-        assertTrue(milestone.completed == false);
-        assertTrue(milestone.removed == false);
+    }
 
-        //Check for idempotence
-        milestoneMod.__Milestone_addMilestone(id, title, startDate, details);
-        assertTrue(keccak256(bytes(milestone.title)) == keccak256(bytes(title)));
-        assertTrue(milestone.startDate == startDate);
-        assertTrue(
-            keccak256(bytes(milestone.details)) == keccak256(bytes(details))
+    function test__Milestone_addMilestoneFailsForInvalidTitle(
+        uint startDate,
+        string memory details
+    ) public {
+        _assumeTimestampNotInPast(startDate);
+        _assumeNonEmptyString(details);
+
+        // Invalid if title is empty.
+        string memory title = "";
+
+        vm.startPrank(address(_proposal));
+
+        vm.expectRevert(
+            IMilestoneManager.Module__MilestoneManager__InvalidTitle.selector
         );
-        assertTrue(milestone.submitted == false);
-        assertTrue(milestone.completed == false);
-        assertTrue(milestone.removed == false);
-
-        if (
-            keccak256(bytes(title)) != keccak256(bytes(" ")) || startDate != 0
-                || keccak256(bytes(details)) != keccak256(bytes(" "))
-        ) {
-            vm.expectRevert(
-                IMilestoneManager.MilestoneWithIdAlreadyCreated.selector
-            );
-        }
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
+        milestoneManager.__Milestone_addMilestone(title, startDate, details);
     }
 
-    function testAddMultiple() public {
-        uint realId;
-        for (uint supposedId = 0; supposedId < 300; supposedId++) {
-            realId = milestoneMod.nextNewMilestoneId();
-            milestoneMod.__Milestone_addMilestone(realId, " ", 0, " ");
-            assertTrue(realId == supposedId);
-        }
-    }
+    function test__Milestone_addMilestoneFailsForInvalidStartDate(
+        string memory title,
+        string memory details
+    ) public {
+        _assumeNonEmptyString(title);
+        _assumeNonEmptyString(details);
 
-    function testChangeDetails(string memory newDetails) public {
-        //@note how to test idempotence?
-        vm.assume(bytes(newDetails).length != 0);
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
+        // Invalid if startDate < block.timestamp.
+        vm.warp(1);
+        uint startDate = 0;
 
-        milestoneMod.__Milestone_changeDetails(id, newDetails);
+        vm.startPrank(address(_proposal));
 
-        IMilestoneManager.Milestone memory milestone =
-            getMilestoneFromModule(id);
-
-        assertTrue(keccak256(bytes(milestone.title)) == keccak256(bytes(" ")));
-        assertTrue(milestone.startDate == 0);
-        assertTrue(
-            keccak256(bytes(milestone.details)) == keccak256(bytes(newDetails))
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidStartDate
+                .selector
         );
-        assertTrue(milestone.submitted == false);
-        assertTrue(milestone.completed == false);
-        assertTrue(milestone.removed == false);
+        milestoneManager.__Milestone_addMilestone(title, startDate, details);
     }
 
-    function testChangeStartDate(uint newStartDate) public {
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
+    function test__Milestone_addMilestoneFailsForInvalidDetails(
+        string memory title,
+        uint startDate
+    ) public {
+        _assumeNonEmptyString(title);
+        _assumeTimestampNotInPast(startDate);
 
-        milestoneMod.__Milestone_changeStartDate(id, newStartDate);
+        // Invalid if details is empty.
+        string memory details = "";
 
-        IMilestoneManager.Milestone memory milestone =
-            getMilestoneFromModule(id);
+        vm.startPrank(address(_proposal));
 
-        assertTrue(keccak256(bytes(milestone.title)) == keccak256(bytes(" ")));
-        assertTrue(milestone.startDate == newStartDate);
-        assertTrue(keccak256(bytes(milestone.details)) == keccak256(bytes(" ")));
-        assertTrue(milestone.submitted == false);
-        assertTrue(milestone.completed == false);
-        assertTrue(milestone.removed == false);
+        vm.expectRevert(
+            IMilestoneManager.Module__MilestoneManager__InvalidDetails.selector
+        );
+        milestoneManager.__Milestone_addMilestone(title, startDate, details);
     }
 
-    function testRemove() public {
-        //@note how to test idempotence?
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
-        milestoneMod.__Milestone_removeMilestone(id);
+    //----------------------------------
+    // Test: __Milestone_updateMilestoneDetails()
 
-        IMilestoneManager.Milestone memory milestone =
-            getMilestoneFromModule(id);
-        assertTrue(milestone.removed == true);
-    }
+    //----------------------------------
+    // Test: __Milestone_updateMilestoneTitle()
 
-    function testSubmit() public {
-        //@note how to test idempotence?
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
+    //----------------------------------
+    // Test: __Milestone_removeMilestone()
 
-        milestoneMod.__Milestone_submitMilestone(id);
+    //----------------------------------
+    // Test: __Milestone_submitMilestone()
 
-        IMilestoneManager.Milestone memory milestone =
-            getMilestoneFromModule(id);
-        assertTrue(milestone.submitted == true);
-        assertTrue(milestone.removed == false);
-    }
+    //----------------------------------
+    // Test: __Milestone_confirmMilestone()
 
-    function testConfirm() public {
-        //@note how to test idempotence?
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
+    //----------------------------------
+    // Test: __Milestone_declineMilestone()
 
-        milestoneMod.__Milestone_submitMilestone(id);
-        milestoneMod.__Milestone_confirmMilestone(id);
+    //--------------------------------------------------------------------------
+    // Internal Assert Helper Function
 
-        IMilestoneManager.Milestone memory milestone =
-            getMilestoneFromModule(id);
-        assertTrue(milestone.completed == true);
-        assertTrue(milestone.removed == false);
-    }
+    /// @dev Asserts a milestone with given data exists.
+    function _assertMilestone(
+        uint id,
+        string memory title,
+        uint startDate,
+        string memory details
+    ) internal {
+        IMilestoneManager.Milestone memory m = milestoneManager.getMilestone(id);
 
-    function testDecline() public {
-        //@note how to test idempotence?
-        uint id = milestoneMod.nextNewMilestoneId();
-        milestoneMod.__Milestone_addMilestone(id, " ", 0, " ");
-
-        milestoneMod.__Milestone_submitMilestone(id);
-        milestoneMod.__Milestone_declineMilestone(id);
-
-        IMilestoneManager.Milestone memory milestone =
-            getMilestoneFromModule(id);
-        assertTrue(milestone.submitted == false);
-        assertTrue(milestone.removed == false);
+        assertTrue(m.title.equals(title));
+        assertEq(m.startDate, startDate);
+        assertTrue(m.details.equals(details));
     }
 }
