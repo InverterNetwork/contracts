@@ -14,4 +14,9 @@ library LibString {
             return keccak256(bytes(a)) == keccak256(bytes(b));
         }
     }
+
+    /// @dev Returns true if string `a` is empty.
+    function isEmpty(string memory a) internal pure returns (bool) {
+        return bytes(a).length == 0;
+    }
 }

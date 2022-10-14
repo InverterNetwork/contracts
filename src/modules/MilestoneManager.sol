@@ -88,7 +88,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @dev Checks if the given title is valid.
     /// @param title Given milestone title.
     modifier validTitle(string memory title) {
-        if ((bytes(title)).length == 0) {
+        if (title.isEmpty()) {
             revert Module__MilestoneManager__InvalidTitle();
         }
         _;
@@ -106,7 +106,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @dev Checks if the given details is valid.
     /// @param details The given details of the milestone.
     modifier validDetails(string memory details) {
-        if ((bytes(details)).length == 0) {
+        if (details.isEmpty()) {
             revert Module__MilestoneManager__InvalidDetails();
         }
         _;
@@ -314,14 +314,6 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Proposal Callback Functions
 
-    // @todo mp: Do this functions need docs? Same docs as the API functions.
-
-    /// @dev Adds milestone to the milestone mapping
-    /// @dev
-    /// @param newId : the id of the new milestone
-    /// @param title : the title for the new milestone
-    /// @param startDate : the startDate of the new milestone
-    /// @param details : the details of the new milestone
     function __Milestone_addMilestone(
         uint newId,
         string memory title,
@@ -485,18 +477,6 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     //--------------------------------------------------------------------------
     // Internal Helper Functions
-
-    function _isEqual(string memory first, string memory second)
-        internal
-        pure
-        returns (bool)
-    {
-        if (bytes(first).length != bytes(second).length) {
-            return false;
-        } else {
-            return keccak256(bytes(first)) == keccak256(bytes(second));
-        }
-    }
 
     /// @dev implies, that the id is valid
     ///@param id : the id of the milestone that should be compared
