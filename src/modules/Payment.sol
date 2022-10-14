@@ -208,42 +208,8 @@ contract Payment is Module {
         emit PaymentAdded(_contributor, _salary, _start, _duration);
     }
 
-    // @notice Returns address of vesting contract per contributor.
-    // function getVesting(address contributor) external view returns(address) {
-    //     return vestings[contributor];
-    // }
-
     /// @notice Removes/stops a payment of a contributor.
     /// @param contributor Contributor's address.
-    // function removePayment(address contributor)
-    //     external
-    //     onlyAuthorized() // only proposal owner
-    // {
-    //     if (payments[contributor].salary != 0) {
-    //         uint _salary = payments[contributor].salary;
-    //         uint _epochsAmount = payments[contributor].epochsAmount;
-    //
-    //         delete payments[contributor];
-    //
-    //         emit PaymentRemoved(contributor, _salary, _epochsAmount);
-    //     }
-    // }
-    //
-    // /// @notice Enable/Disable a payment of a contributor.
-    // /// @param contributor Contributor's address.
-    // function toggleEnablePayment(address contributor)
-    //     external
-    //     onlyAuthorized() // only proposal owner
-    // {
-    //     payments[contributor].enabled = !payments[contributor].enabled;
-    //
-    //     emit EnablePaymentToggled(
-    //         contributor,
-    //         payments[contributor].salary,
-    //         payments[contributor].enabled
-    //     );
-    // }
-    //
     function removePayment(address contributor)
         external
         // onlyAuthorized() // only proposal owner
@@ -301,6 +267,9 @@ contract Payment is Module {
     //     );
     // }
 
-    //--------------------------------------------------------------------------
-    // Internal Functions
+
+    // @notice Returns address of vesting contract per contributor.
+    // function getVesting(address contributor) external view returns(address) {
+    //     return vestings[contributor];
+    // }
 }
