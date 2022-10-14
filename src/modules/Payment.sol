@@ -51,22 +51,16 @@ contract Payment is Module {
     //--------------------------------------------------------------------------
     // Events
 
-    event ERC20Released(address indexed token, uint256 amount);
-
     event PaymentAdded(
         address contributor,
         uint salary,
         uint64 start,
         uint64 end
     );
-
-    // event PaymentRemoved(address contributor, uint salary, uint epochsAmount);
-    //
-    // event EnablePaymentToggled(address contributor, uint salary, bool enabled);
-    //
-    // event PaymentClaimed(address contributor, uint availableToClaim);
-
-
+    event ERC20Released(address indexed token, uint256 amount);
+    event PaymentRemoved(address contributor);
+    event PaymentPaused(address contributor);
+    event PaymentContinued(address contributor);
 
     //--------------------------------------------------------------------------
     // Errors
