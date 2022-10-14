@@ -32,8 +32,6 @@ interface IMilestoneManager {
     /// @dev Given milestone id invalid.
     error Module__MilestoneManager__InvalidMilestoneId();
 
-
-
     /// @dev The new milestone id is not yet available.
     error Module__MilestoneManager__NewMilestoneIdNotYetAvailable();
 
@@ -54,7 +52,9 @@ interface IMilestoneManager {
 
     // @todo mp: Need id. All id's need to be indexed.
     /// @notice Event emitted when a new milestone added.
-    event NewMilestoneAdded(uint indexed id, string title, uint startDate, string details);
+    event NewMilestoneAdded(
+        uint indexed id, string title, uint startDate, string details
+    );
 
     /// @notice Event emitted when a milestone's startDate updated.
     event MilestoneStartDateUpdated(uint indexed id, uint startDate);
@@ -130,7 +130,7 @@ interface IMilestoneManager {
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     /// @param details The new details of the milestone.
-    function changeDetails(uint id, string memory details) external;
+    function updateMilestoneDetails(uint id, string memory details) external;
 
     /// @notice Changes a milestone's starting date.
     /// @dev Only callable by authorized addresses.
@@ -138,7 +138,7 @@ interface IMilestoneManager {
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     /// @param startDate The new starting date of the milestone.
-    function changeStartDate(uint id, uint startDate) external;
+    function updateMilestoneStartDate(uint id, uint startDate) external;
 
     /// @notice Removes a milestone.
     /// @dev Only callable by authorized addresses.

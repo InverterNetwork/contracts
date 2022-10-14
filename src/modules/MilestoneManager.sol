@@ -5,6 +5,9 @@ pragma solidity ^0.8.0;
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 
+// Internal Libraries
+import {LibString} from "src/common/LibString.sol";
+
 // Internal Interfaces
 import {IMilestoneManager} from "src/interfaces/modules/IMilestoneManager.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
@@ -17,12 +20,12 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  * @author byterocket
  */
 contract MilestoneManager is IMilestoneManager, Module {
+    using LibString for string;
+
     //--------------------------------------------------------------------------
     // Constants
 
     // @todo mp: Refactorings
-    //          - Events
-    //          - Error add contract prefix
     //          - some function names
     //          - some modifier names
 
@@ -39,11 +42,11 @@ contract MilestoneManager is IMilestoneManager, Module {
     string private constant FUNC_ADD_MILESTONE =
         "__Milestone_addMilestone(uint256,string,uint256,string)";
 
-    string private constant FUNC_CHANGE_MILESTONE_DETAILS =
-        "__Milestone_changeDetails(uint256,string)";
+    string private constant FUNC_UPDATE_MILESTONE_DETAILS =
+        "__Milestone_updateMilestoneDetails(uint256,string)";
 
-    string private constant FUNC_CHANGE_MILESTONE_START_DATE =
-        "__Milestone_changeStartDate(uint256,uint256)";
+    string private constant FUNC_UPDATE_MILESTONE_START_DATE =
+        "__Milestone_updateMilestoneStartDate(uint256,uint256)";
 
     string private constant FUNC_REMOVE_MILESTONE =
         "__Milestone_removeMilestone(uint256)";
@@ -208,9 +211,8 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
-    // @todo mp: Rename to changeMilestoneDetails
     /// @inheritdoc IMilestoneManager
-    function changeDetails(uint id, string memory details)
+    function updateMilestoneDetails(uint id, string memory details)
         external
         onlyAuthorized
     {
@@ -218,30 +220,33 @@ contract MilestoneManager is IMilestoneManager, Module {
         bytes memory returnData;
 
         (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(FUNC_CHANGE_MILESTONE_DETAILS, id, details),
+            abi.encodeWithSignature(FUNC_UPDATE_MILESTONE_DETAILS, id, details),
             Types.Operation.Call
         );
 
         if (!ok) {
-            revert Module_ProposalCallbackFailed(FUNC_CHANGE_MILESTONE_DETAILS);
+            revert Module_ProposalCallbackFailed(FUNC_UPDATE_MILESTONE_DETAILS);
         }
     }
 
     /// @inheritdoc IMilestoneManager
-    function changeStartDate(uint id, uint startDate) external onlyAuthorized {
+    function updateMilestoneStartDate(uint id, uint startDate)
+        external
+        onlyAuthorized
+    {
         bool ok;
         bytes memory returnData;
 
         (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                FUNC_CHANGE_MILESTONE_START_DATE, id, startDate
+                FUNC_UPDATE_MILESTONE_START_DATE, id, startDate
             ),
             Types.Operation.Call
         );
 
         if (!ok) {
             revert Module_ProposalCallbackFailed(
-                FUNC_CHANGE_MILESTONE_START_DATE
+                FUNC_UPDATE_MILESTONE_START_DATE
             );
         }
     }
@@ -357,7 +362,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     ///@dev Changes a milestone in regards of details
     ///@param id : id in the milestone array
     ///@param details : the new details of the given milestone
-    function __Milestone_changeDetails(uint id, string memory details)
+    function __Milestone_updateMilestoneDetails(uint id, string memory details)
         external
         onlyProposal
         validId(id)
@@ -366,7 +371,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     {
         Milestone storage m = _milestones[id];
 
-        if (!_isEqual(m.details, details)) {
+        if (!m.details.equals(details)) {
             m.details = details;
             emit MilestoneDetailsUpdated(id, details);
         }
@@ -375,7 +380,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     ///@dev Changes a milestone in regards of startDate
     ///@param id : id in the milestone array
     ///@param startDate : the new startDate of the given milestone
-    function __Milestone_changeStartDate(uint id, uint startDate)
+    function __Milestone_updateMilestoneStartDate(uint id, uint startDate)
         external
         onlyProposal
         validId(id)
@@ -506,9 +511,9 @@ contract MilestoneManager is IMilestoneManager, Module {
     ) internal view returns (bool) {
         Milestone memory m = _milestones[id];
 
-        bool equalTitles = _isEqual(m.title, title);
+        bool equalTitles = m.title.equals(title);
         bool equalStartDates = m.startDate == startDate;
-        bool equalDetails = _isEqual(m.details, details);
+        bool equalDetails = m.details.equals(details);
 
         return equalTitles && equalStartDates && equalDetails;
     }
