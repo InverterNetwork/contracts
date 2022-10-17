@@ -15,8 +15,6 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  - replace require syntax with errors
  - update style, layout, comments
  - in addPayment() use delegatecall to transfer funds from proposal contract
- - implement onlyAuthorized functionality.
- - update test suite
 */
 
 
@@ -187,7 +185,7 @@ contract PaymentManagement is Module {
         uint64 _duration
     )
         external
-        // onlyAuthorized() // only proposal owner
+        onlyAuthorized // only proposal owner
         validSalary(_salary)
         // @todo Nejc: add modifiers for input validation
         validStart(_start)
@@ -214,7 +212,7 @@ contract PaymentManagement is Module {
     /// @param contributor Contributor's address.
     function removePayment(address contributor)
         external
-        // onlyAuthorized() // only proposal owner
+        onlyAuthorized // only proposal owner
     {
         // TODO withdraw tokens that were not withdrawn yet.
         uint unclaimedAmount = vestedAmount(uint64(block.timestamp)) -
@@ -232,7 +230,7 @@ contract PaymentManagement is Module {
     /// @param contributor Contributor's address.
     function pausePayment(address contributor)
         external
-        // onlyAuthorized() // only proposal owner
+        onlyAuthorized // only proposal owner
     {
         if(vestings[contributor]._enabled) {
             vestings[contributor]._enabled = false;
@@ -245,7 +243,7 @@ contract PaymentManagement is Module {
     /// @param contributor Contributor's address.
     function continuePayment(address contributor)
         external
-        // onlyAuthorized() // only proposal owner
+        onlyAuthorized // only proposal owner
     {
         if(!vestings[contributor]._enabled) {
             vestings[contributor]._enabled = true;
