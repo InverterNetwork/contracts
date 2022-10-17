@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Internal Libraries
-import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
+import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
@@ -80,13 +80,13 @@ contract ModuleTest is Test {
         assertEq(address(module.proposal()), address(proposal));
 
         // Metadata correctly written to storage.
-        bytes32 got = MetadataLib.identifier(module.info());
-        bytes32 want = MetadataLib.identifier(DATA);
+        bytes32 got = LibMetadata.identifier(module.info());
+        bytes32 want = LibMetadata.identifier(DATA);
         assertEq(got, want);
 
         // Module's identifier correctly computed.
         got = module.identifier();
-        want = MetadataLib.identifier(DATA);
+        want = LibMetadata.identifier(DATA);
         assertEq(got, want);
     }
 

@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 
 // Internal Libraries
-import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
+import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
 import {IModule} from "src/interfaces/IModule.sol";
@@ -140,7 +140,7 @@ contract ModuleFactoryTest is Test {
         );
 
         assertEq(address(newModule.proposal()), address(proposal));
-        assertEq(newModule.identifier(), MetadataLib.identifier(metadata));
+        assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
     }
 
     function testCreateModuleFailsIfMetadataUnregistered(
@@ -159,7 +159,7 @@ contract ModuleFactoryTest is Test {
     // Internal Helper Functions
 
     function _assumeValidMetadata(IModule.Metadata memory metadata) public {
-        vm.assume(MetadataLib.isValid(metadata));
+        vm.assume(LibMetadata.isValid(metadata));
     }
 
     function _assumeValidTarget(address target) internal {

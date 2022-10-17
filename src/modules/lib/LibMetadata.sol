@@ -10,7 +10,7 @@ import {IModule} from "src/interfaces/IModule.sol";
  *
  * @author byterocket
  */
-library MetadataLib {
+library LibMetadata {
     /// @dev Returns the identifier for given metadata.
     /// @param metadata The metadata.
     /// @return The metadata's identifier.
