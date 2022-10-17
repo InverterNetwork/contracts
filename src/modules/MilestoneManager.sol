@@ -300,7 +300,7 @@ contract MilestoneManager is IMilestoneManager, Module {
         });
 
         _milestones[id] = m;
-        emit NewMilestoneAdded(id, title, startDate, details);
+        emit MilestoneAdded(id, title, startDate, details);
 
         return id;
     }
@@ -336,7 +336,6 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
 
         if (m.startDate != startDate) {
-            //@todo felix: test idempotence
             m.startDate = startDate;
             emit MilestoneStartDateUpdated(id, startDate);
         }
@@ -428,7 +427,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     function _isUpdateable(Milestone storage m) internal view returns (bool) {
         // @todo mp: When is updating not allowed anymore?
         // gitbook: If milestone started already, see https://inverter-network.gitbook.io/inverter-network-docs/creating-a-proposal/managing-milestones#editing-milestone.
-        bool notStarted = m.startDate <= block.timestamp;
+        bool notStarted = block.timestamp < m.startDate;
 
         return notStarted;
     }
@@ -440,7 +439,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     }
 
     function _isSubmitable(Milestone storage m) internal view returns (bool) {
-        bool notStarted = m.startDate <= block.timestamp;
+        bool notStarted = block.timestamp < m.startDate;
         bool notRemoved = !m.removed;
 
         return notStarted && notRemoved;
