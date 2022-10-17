@@ -85,13 +85,18 @@ contract MilestoneManagerTest is ModuleTest {
 
     // @todo felix, mp: Test API Functions
 
+    //----------------------------------
+    // Test: addMilestone()
+
     function testAddMilestone() public {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
             milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
         assertEq(id, 0);
-        _assertMilestone(0, _TITLE, block.timestamp, _DETAILS);
+        _assertMilestone(
+            0, _TITLE, block.timestamp, _DETAILS, false, false, false
+        );
     }
 
     function testAddMilestoneOnlyCallableIfAuthorized(address caller) public {
@@ -114,6 +119,260 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.addMilestone(invalidTitle, block.timestamp, _DETAILS);
     }
 
+    //----------------------------------
+    // Test: updateMilestoneDetails()
+
+    function testUpdateMilestoneDetails() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        uint id =
+            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+
+        string memory newDetails = "new Details";
+        milestoneManager.updateMilestoneDetails(id, newDetails);
+
+        _assertMilestone(
+            id, _TITLE, block.timestamp, newDetails, false, false, false
+        );
+    }
+
+    function testUpdateMilestoneDetailsOnlyCallableIfAuthorized(address caller)
+        public
+    {
+        _authorizer.setIsAuthorized(caller, false);
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.updateMilestoneDetails(0, _DETAILS);
+    }
+
+    function testUpdateMilestoneDetailsCallbackFailed() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        uint id =
+            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+
+        // Invalid id.
+        uint invalidId = id + 1;
+
+        _expectProposalCallbackFailure(
+            "__Milestone_updateMilestoneDetails(uint256,string)"
+        );
+        milestoneManager.updateMilestoneDetails(invalidId, _DETAILS);
+    }
+
+    //----------------------------------
+    // Test: updateMilestoneStartDate()
+
+    function testUpdateMilestoneStartDate() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        uint id =
+            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+
+        uint newStartDate = block.timestamp + 1;
+        milestoneManager.updateMilestoneStartDate(id, newStartDate);
+
+        _assertMilestone(
+            id, _TITLE, newStartDate, _DETAILS, false, false, false
+        );
+    }
+
+    function testUpdateMilestoneStartDateOnlyCallableIfAuthorized(
+        address caller
+    ) public {
+        _authorizer.setIsAuthorized(caller, false);
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.updateMilestoneStartDate(0, block.timestamp);
+    }
+
+    function testUpdateMilestoneStartDateCallbackFailed() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        // Invalid id.
+        uint invalidId = 1;
+
+        _expectProposalCallbackFailure(
+            "__Milestone_updateMilestoneStartDate(uint256,uint256)"
+        );
+        milestoneManager.updateMilestoneStartDate(invalidId, block.timestamp);
+    }
+
+    //----------------------------------
+    // Test: removeMilestone()
+
+    function testRemoveMilestone() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        uint id =
+            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+
+        milestoneManager.removeMilestone(id);
+        _assertMilestone({
+            id: id,
+            title: _TITLE,
+            startDate: block.timestamp,
+            details: _DETAILS,
+            submitted: false,
+            completed: false,
+            removed: true
+        });
+    }
+
+    function testRemoveMilestoneOnlyCallableIfAuthorized(address caller)
+        public
+    {
+        _authorizer.setIsAuthorized(caller, false);
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.removeMilestone(0);
+    }
+
+    function testRemoveMilestoneCallbackFailed() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        // Invalid id.
+        uint invalidId = 1;
+
+        _expectProposalCallbackFailure("__Milestone_removeMilestone(uint256)");
+        milestoneManager.removeMilestone(invalidId);
+    }
+
+    //----------------------------------
+    // Test: submitMilestone()
+
+    function testSubmitMilestone() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        uint id =
+            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+
+        // Grant contributor role to address(this).
+        milestoneManager.grantContributorRole(address(this));
+
+        milestoneManager.submitMilestone(id);
+        _assertMilestone({
+            id: id,
+            title: _TITLE,
+            startDate: block.timestamp,
+            details: _DETAILS,
+            submitted: true,
+            completed: false,
+            removed: false
+        });
+    }
+
+    function testSubmitMilestoneOnlyCallableIfContributor(address caller)
+        public
+    {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        milestoneManager.revokeContributorRole(caller);
+
+        vm.prank(caller);
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__OnlyCallableByContributor
+                .selector
+        );
+        milestoneManager.submitMilestone(0);
+    }
+
+    function testSubmitMilestoneCallbackFailed() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        milestoneManager.grantContributorRole(address(this));
+
+        // Invalid id.
+        uint invalidId = 1;
+
+        _expectProposalCallbackFailure("__Milestone_submitMilestone(uint256)");
+        milestoneManager.submitMilestone(invalidId);
+    }
+
+    //----------------------------------
+    // Test: confirmMilestone()
+
+    function testConfirmMilestone() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        uint id = milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+
+        milestoneManager.confirmMilestone(id);
+        _assertMilestone({
+            id: id,
+            title: _TITLE,
+            startDate: block.timestamp,
+            details: _DETAILS,
+            submitted: false,
+            completed: true,
+            removed: false
+        });
+    }
+
+    function testConfirmMilestoneOnlyCallableIfAuthorized(address caller) public {
+        _authorizer.setIsAuthorized(caller, false);
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.confirmMilestone(0);
+    }
+
+    function testConfirmMilestoneCallbackFailed() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        // Invalid id.
+        uint invalidId = 1;
+
+        _expectProposalCallbackFailure("__Milestone_confirmMilestone(uint256)");
+        milestoneManager.confirmMilestone(invalidId);
+    }
+
+    //----------------------------------
+    // Test: declineMilestone()
+
+    function testDeclineMilestone() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        uint id = milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+
+        // Note that a milestone is only declineable if currently submitted.
+        milestoneManager.grantContributorRole(address(this));
+        milestoneManager.submitMilestone(id);
+
+        milestoneManager.declineMilestone(id);
+        _assertMilestone({
+            id: id,
+            title: _TITLE,
+            startDate: block.timestamp,
+            details: _DETAILS,
+            submitted: false,
+            completed: false,
+            removed: false
+        });
+    }
+
+    function testDeclineMilestoneOnlyCallableIfAuthorized(address caller) public {
+        _authorizer.setIsAuthorized(caller, false);
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.declineMilestone(0);
+    }
+
+    function testDeclineMilestoneCallbackFailed() public {
+        _authorizer.setIsAuthorized(address(this), true);
+
+        // Invalid id.
+        uint invalidId = 1;
+
+        _expectProposalCallbackFailure("__Milestone_declineMilestone(uint256)");
+        milestoneManager.declineMilestone(invalidId);
+    }
+
     //--------------------------------------------------------------------------
     // Test: Proposal Callback Functions
 
@@ -130,7 +389,9 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         assertEq(id, 0);
-        _assertMilestone(0, _TITLE, block.timestamp, _DETAILS);
+        _assertMilestone(
+            0, _TITLE, block.timestamp, _DETAILS, false, false, false
+        );
 
         // Add second milestone to verify id increments correctly.
         id = milestoneManager.__Milestone_addMilestone(
@@ -138,7 +399,9 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         assertEq(id, 1);
-        _assertMilestone(1, _TITLE, block.timestamp, _DETAILS);
+        _assertMilestone(
+            1, _TITLE, block.timestamp, _DETAILS, false, false, false
+        );
     }
 
     function test__Milestone_addMilestoneOnlyCallableByProposal(address caller)
@@ -222,17 +485,24 @@ contract MilestoneManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Assert Helper Function
 
-    /// @dev Asserts a milestone with given data exists.
+    /// @dev Asserts milestone with given data exists.
     function _assertMilestone(
         uint id,
         string memory title,
         uint startDate,
-        string memory details
+        string memory details,
+        bool submitted,
+        bool completed,
+        bool removed
     ) internal {
         IMilestoneManager.Milestone memory m = milestoneManager.getMilestone(id);
 
         assertTrue(m.title.equals(title));
         assertEq(m.startDate, startDate);
         assertTrue(m.details.equals(details));
+
+        assertEq(m.submitted, submitted);
+        assertEq(m.completed, completed);
+        assertEq(m.removed, removed);
     }
 }
