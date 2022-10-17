@@ -146,4 +146,22 @@ contract PaymentManagementTest is Test, ProposalMock {
         uint receiverBalanceAfter = token.balanceOf(receiver);
         assertEq(receiverBalanceBefore, receiverBalanceAfter);
     }
+
+    function testPausePayment() public {
+        (uint vestingAmount, address receiver, uint64 start, uint64 duration)
+            = testAddPayment();
+
+        // make sure receiver cant claim
+        uint receiverBalanceBefore = token.balanceOf(receiver);
+
+        payment.pausePayment(receiver);
+
+        skip(duration);
+
+        vm.prank(receiver);
+        payment.claim();
+
+        uint receiverBalanceAfter = token.balanceOf(receiver);
+        assertEq(receiverBalanceBefore, receiverBalanceAfter);
+    }
 }
