@@ -150,6 +150,8 @@ interface IMilestoneManager {
     /// @param id The milestone's id.
     function submitMilestone(uint id) external;
 
+    // @todo mp, felix: Should be renamed to `completeMilestone()`?
+
     /// @notice Confirms a submitted milestone.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if id invalid, milestone already removed, or milestone not

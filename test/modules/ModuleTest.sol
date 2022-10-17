@@ -14,6 +14,9 @@ import {LibString} from "src/common/LibString.sol";
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
+/**
+ * @dev Base class for module implementation test contracts.
+ */
 contract ModuleTest is Test {
     // Mocks
     AuthorizerMock internal _authorizer = new AuthorizerMock();
