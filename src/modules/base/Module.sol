@@ -10,7 +10,7 @@ import {Types} from "src/common/Types.sol";
 import {ProposalStorage} from "src/generated/ProposalStorage.sol";
 
 // Internal Libraries
-import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
+import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
 import {IModule} from "src/interfaces/IModule.sol";
@@ -139,7 +139,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
         __Module_proposal = proposal_;
 
         // Write metadata to storage.
-        if (!MetadataLib.isValid(metadata)) {
+        if (!LibMetadata.isValid(metadata)) {
             revert Module__InvalidMetadata();
         }
         __Module_metadata = metadata;
@@ -186,7 +186,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @inheritdoc IModule
     function identifier() public view returns (bytes32) {
-        return MetadataLib.identifier(__Module_metadata);
+        return LibMetadata.identifier(__Module_metadata);
     }
 
     /// @inheritdoc IModule

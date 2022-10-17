@@ -7,7 +7,7 @@ import {Context} from "@oz/utils/Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 // Internal Libraries
-import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
+import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
@@ -31,7 +31,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     /// @notice Modifier to guarantee function is only callable with valid
     ///         metadata.
     modifier validMetadata(IModule.Metadata memory data) {
-        if (!MetadataLib.isValid(data)) {
+        if (!LibMetadata.isValid(data)) {
             revert ModuleFactory__InvalidMetadata();
         }
         _;
@@ -78,7 +78,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // module's `init()` function does it anyway.
         // @todo mp: Add comment to function doc?!
 
-        bytes32 id = MetadataLib.identifier(metadata);
+        bytes32 id = LibMetadata.identifier(metadata);
 
         address target_ = _targets[id];
 
@@ -101,7 +101,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         view
         returns (address)
     {
-        bytes32 id = MetadataLib.identifier(metadata);
+        bytes32 id = LibMetadata.identifier(metadata);
 
         return _targets[id];
     }
@@ -116,7 +116,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         validMetadata(metadata)
         validTarget(target_)
     {
-        bytes32 id = MetadataLib.identifier(metadata);
+        bytes32 id = LibMetadata.identifier(metadata);
 
         address got = _targets[id];
 

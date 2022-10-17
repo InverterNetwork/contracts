@@ -6,9 +6,6 @@ import "forge-std/Test.sol";
 // Internal Dependencies
 import {ProposalFactory} from "src/factories/ProposalFactory.sol";
 
-// Internal Libraries
-import {MetadataLib} from "src/modules/lib/MetadataLib.sol";
-
 // Internal Interfaces
 import {IModule} from "src/interfaces/IModule.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
@@ -97,7 +94,7 @@ contract ProposalFactoryTest is Test {
         address[] memory funders,
         uint modulesLen
     ) public {
-        // Note to stay reasonable
+        // Note to stay reasonable.
         vm.assume(funders.length < 50);
         vm.assume(modulesLen < 50);
 
