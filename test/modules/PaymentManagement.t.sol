@@ -16,7 +16,7 @@ import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
 
-contract PaymentTest is Test, ProposalMock {
+contract PaymentManagementTest is Test, ProposalMock {
 
     // contract definitions
     PaymentManagement payment;
@@ -121,5 +121,29 @@ contract PaymentTest is Test, ProposalMock {
 
         uint releasableAfter = payment.releasable();
         assertEq(releasableAfter, 0);
+    }
+
+    function testRemovePayment() public {
+        (uint vestingAmount, address receiver, uint64 start, uint64 duration)
+            = testAddPayment();
+
+        // make sure owner is refunded
+        uint ownerBalanceBefore = token.balanceOf(address(this));
+
+        payment.removePayment(receiver);
+
+        uint ownerBalanceAfter = token.balanceOf(address(this));
+        assertEq(ownerBalanceBefore + vestingAmount, ownerBalanceAfter);
+
+        skip(duration);
+
+        // make sure receiver cant claim
+        uint receiverBalanceBefore = token.balanceOf(receiver);
+
+        vm.prank(receiver);
+        payment.claim();
+
+        uint receiverBalanceAfter = token.balanceOf(receiver);
+        assertEq(receiverBalanceBefore, receiverBalanceAfter);
     }
 }
