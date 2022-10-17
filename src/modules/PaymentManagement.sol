@@ -165,11 +165,13 @@ contract PaymentManagement is Module {
     // @note in OZ VestingWallet this method is called release()
     // @notice Release the tokens that have already vested.
     function claim() public {
-        uint256 amount = releasable();
-        vestings[msg.sender]._released += amount;
-        emit ERC20Released(address(token), amount);
-        // @todo Nejc: check transfer return value / use safeTransfer
-        token.transfer(msg.sender, amount);
+        if(vestings[msg.sender]._enabled){
+            uint256 amount = releasable();
+            vestings[msg.sender]._released += amount;
+            emit ERC20Released(address(token), amount);
+            // @todo Nejc: check transfer return value / use safeTransfer
+            token.transfer(msg.sender, amount);
+        }
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
