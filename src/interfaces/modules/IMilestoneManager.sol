@@ -50,9 +50,8 @@ interface IMilestoneManager {
     //--------------------------------------------------------------------------
     // Events
 
-    // @todo mp: Need id. All id's need to be indexed.
     /// @notice Event emitted when a new milestone added.
-    event NewMilestoneAdded(
+    event MilestoneAdded(
         uint indexed id, string title, uint startDate, string details
     );
 

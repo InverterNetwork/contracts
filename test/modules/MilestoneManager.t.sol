@@ -18,6 +18,17 @@ contract MilestoneManagerTest is ModuleTest {
     // SuT
     MilestoneManager milestoneManager;
 
+    // Events copied from SuT
+    event MilestoneAdded(
+        uint indexed id, string title, uint startDate, string details
+    );
+    event MilestoneStartDateUpdated(uint indexed id, uint startDate);
+    event MilestoneDetailsUpdated(uint indexed id, string details);
+    event MilestoneRemoved(uint indexed id);
+    event MilestoneSubmitted(uint indexed id);
+    event MilestoneConfirmed(uint indexed id);
+    event MilestoneDeclined(uint indexed id);
+
     // Constants
     string private constant _TITLE = "Title";
     string private constant _DETAILS = "Details";
@@ -83,8 +94,6 @@ contract MilestoneManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Milestone API Functions
 
-    // @todo felix, mp: Test API Functions
-
     //----------------------------------
     // Test: addMilestone()
 
@@ -110,8 +119,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testAddMilestoneCallbackFailed() public {
         _authorizer.setIsAuthorized(address(this), true);
 
-        // Empty title is invalid.
-        string memory invalidTitle = "";
+        string memory invalidTitle = _createInvalidTitles()[0];
 
         _expectProposalCallbackFailure(
             "__Milestone_addMilestone(string,uint256,string)"
@@ -126,13 +134,13 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+            milestoneManager.addMilestone(_TITLE, block.timestamp + 1, _DETAILS);
 
         string memory newDetails = "new Details";
         milestoneManager.updateMilestoneDetails(id, newDetails);
 
         _assertMilestone(
-            id, _TITLE, block.timestamp, newDetails, false, false, false
+            id, _TITLE, block.timestamp + 1, newDetails, false, false, false
         );
     }
 
@@ -152,7 +160,6 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
 
-        // Invalid id.
         uint invalidId = id + 1;
 
         _expectProposalCallbackFailure(
@@ -168,9 +175,9 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+            milestoneManager.addMilestone(_TITLE, block.timestamp + 1, _DETAILS);
 
-        uint newStartDate = block.timestamp + 1;
+        uint newStartDate = block.timestamp + 2;
         milestoneManager.updateMilestoneStartDate(id, newStartDate);
 
         _assertMilestone(
@@ -191,7 +198,6 @@ contract MilestoneManagerTest is ModuleTest {
     function testUpdateMilestoneStartDateCallbackFailed() public {
         _authorizer.setIsAuthorized(address(this), true);
 
-        // Invalid id.
         uint invalidId = 1;
 
         _expectProposalCallbackFailure(
@@ -234,7 +240,6 @@ contract MilestoneManagerTest is ModuleTest {
     function testRemoveMilestoneCallbackFailed() public {
         _authorizer.setIsAuthorized(address(this), true);
 
-        // Invalid id.
         uint invalidId = 1;
 
         _expectProposalCallbackFailure("__Milestone_removeMilestone(uint256)");
@@ -248,7 +253,7 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+            milestoneManager.addMilestone(_TITLE, block.timestamp + 1, _DETAILS);
 
         // Grant contributor role to address(this).
         milestoneManager.grantContributorRole(address(this));
@@ -257,7 +262,7 @@ contract MilestoneManagerTest is ModuleTest {
         _assertMilestone({
             id: id,
             title: _TITLE,
-            startDate: block.timestamp,
+            startDate: block.timestamp + 1,
             details: _DETAILS,
             submitted: true,
             completed: false,
@@ -286,7 +291,6 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.grantContributorRole(address(this));
 
-        // Invalid id.
         uint invalidId = 1;
 
         _expectProposalCallbackFailure("__Milestone_submitMilestone(uint256)");
@@ -327,7 +331,6 @@ contract MilestoneManagerTest is ModuleTest {
     function testConfirmMilestoneCallbackFailed() public {
         _authorizer.setIsAuthorized(address(this), true);
 
-        // Invalid id.
         uint invalidId = 1;
 
         _expectProposalCallbackFailure("__Milestone_confirmMilestone(uint256)");
@@ -341,7 +344,7 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+            milestoneManager.addMilestone(_TITLE, block.timestamp + 1, _DETAILS);
 
         // Note that a milestone is only declineable if currently submitted.
         milestoneManager.grantContributorRole(address(this));
@@ -351,7 +354,7 @@ contract MilestoneManagerTest is ModuleTest {
         _assertMilestone({
             id: id,
             title: _TITLE,
-            startDate: block.timestamp,
+            startDate: block.timestamp + 1,
             details: _DETAILS,
             submitted: false,
             completed: false,
@@ -372,7 +375,6 @@ contract MilestoneManagerTest is ModuleTest {
     function testDeclineMilestoneCallbackFailed() public {
         _authorizer.setIsAuthorized(address(this), true);
 
-        // Invalid id.
         uint invalidId = 1;
 
         _expectProposalCallbackFailure("__Milestone_declineMilestone(uint256)");
@@ -390,6 +392,10 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint id;
 
+        // Add first milestone.
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneAdded(0, _TITLE, block.timestamp, _DETAILS);
+
         id = milestoneManager.__Milestone_addMilestone(
             _TITLE, block.timestamp, _DETAILS
         );
@@ -400,6 +406,9 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         // Add second milestone to verify id increments correctly.
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneAdded(1, _TITLE, block.timestamp, _DETAILS);
+
         id = milestoneManager.__Milestone_addMilestone(
             _TITLE, block.timestamp, _DETAILS
         );
@@ -423,18 +432,20 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     function test__Milestone_addMilestoneFailsForInvalidTitle() public {
-        // Title invalid if:
-        //  - empty
-        string memory invalidTitle = "";
+        string[] memory invalidTitles = _createInvalidTitles();
 
         vm.startPrank(address(_proposal));
 
-        vm.expectRevert(
-            IMilestoneManager.Module__MilestoneManager__InvalidTitle.selector
-        );
-        milestoneManager.__Milestone_addMilestone(
-            invalidTitle, block.timestamp, _DETAILS
-        );
+        for (uint i; i < invalidTitles.length; i++) {
+            vm.expectRevert(
+                IMilestoneManager
+                    .Module__MilestoneManager__InvalidTitle
+                    .selector
+            );
+            milestoneManager.__Milestone_addMilestone(
+                invalidTitles[i], block.timestamp, _DETAILS
+            );
+        }
     }
 
     function test__Milestone_addMilestoneFailsForInvalidStartDate() public {
@@ -456,18 +467,20 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     function test__Milestone_addMilestoneFailsForInvalidDetails() public {
-        // Details invalid if:
-        //  - empty
-        string memory invalidDetails = "";
+        string[] memory invalidDetails = _createInvalidDetails();
 
         vm.startPrank(address(_proposal));
 
-        vm.expectRevert(
-            IMilestoneManager.Module__MilestoneManager__InvalidDetails.selector
-        );
-        milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, invalidDetails
-        );
+        for (uint i; i < invalidDetails.length; i++) {
+            vm.expectRevert(
+                IMilestoneManager
+                    .Module__MilestoneManager__InvalidDetails
+                    .selector
+            );
+            milestoneManager.__Milestone_addMilestone(
+                _TITLE, block.timestamp, invalidDetails[i]
+            );
+        }
     }
 
     //----------------------------------
@@ -477,14 +490,18 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
+            _TITLE, block.timestamp + 1, _DETAILS
         );
 
         string memory newDetails = "new Details";
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneDetailsUpdated(id, newDetails);
+
         milestoneManager.__Milestone_updateMilestoneDetails(id, newDetails);
 
         _assertMilestone(
-            id, _TITLE, block.timestamp, newDetails, false, false, false
+            id, _TITLE, block.timestamp + 1, newDetails, false, false, false
         );
     }
 
@@ -498,27 +515,60 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.__Milestone_updateMilestoneDetails(0, _DETAILS);
     }
 
+    function test__Milestone_updateMilestoneDetailsFailsForInvalidId() public {
+        vm.startPrank(address(_proposal));
+
+        uint invalidId = 1;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.__Milestone_updateMilestoneDetails(invalidId, _DETAILS);
+    }
+
     function test__Milestone_updateMilestoneDetailsFailsForInvalidDetails()
         public
     {
-        // Details invalid if:
-        //  - empty
-        string memory invalidDetails = "";
+        string[] memory invalidDetails = _createInvalidDetails();
 
         vm.startPrank(address(_proposal));
 
         // Add milestone to update.
         uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp + 1, _DETAILS
+        );
+
+        for (uint i; i < invalidDetails.length; i++) {
+            vm.expectRevert(
+                IMilestoneManager
+                    .Module__MilestoneManager__InvalidDetails
+                    .selector
+            );
+            milestoneManager.__Milestone_updateMilestoneDetails(
+                id, invalidDetails[i]
+            );
+        }
+    }
+
+    function test__Milestone_updateMilestoneDetailsFailsIfNotUpdateable()
+        public
+    {
+        vm.startPrank(address(_proposal));
+
+        // Note that a milestone is not updateable if it started already, i.e.
+        // if `block.timestamp` >= `startDate`.
+        uint id = milestoneManager.__Milestone_addMilestone(
             _TITLE, block.timestamp, _DETAILS
         );
 
         vm.expectRevert(
-            IMilestoneManager.Module__MilestoneManager__InvalidDetails.selector
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotUpdateable
+                .selector
         );
-        milestoneManager.__Milestone_updateMilestoneDetails(id, invalidDetails);
-    }
-
-    function test__Milestone_updateMilestoneDetailsFailsIfNotUpdateable() public {
+        milestoneManager.__Milestone_updateMilestoneDetails(id, _DETAILS);
     }
 
     //----------------------------------
@@ -528,10 +578,14 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
+            _TITLE, block.timestamp + 1, _DETAILS
         );
 
-        uint newStartDate = block.timestamp + 1;
+        uint newStartDate = block.timestamp + 2;
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneStartDateUpdated(id, newStartDate);
+
         milestoneManager.__Milestone_updateMilestoneStartDate(id, newStartDate);
 
         _assertMilestone(
@@ -546,7 +600,26 @@ contract MilestoneManagerTest is ModuleTest {
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_updateMilestoneStartDate(0, block.timestamp);
+        milestoneManager.__Milestone_updateMilestoneStartDate(
+            0, block.timestamp
+        );
+    }
+
+    function test__Milestone_updateMilestoneStartDateFailsForInvalidId()
+        public
+    {
+        vm.startPrank(address(_proposal));
+
+        uint invalidId = 1;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.__Milestone_updateMilestoneStartDate(
+            invalidId, block.timestamp
+        );
     }
 
     function test__Milestone_updateMilestoneStartDateFailsForInvalidDetails()
@@ -561,37 +634,314 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Add milestone to update.
         uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp + 1, _DETAILS
+        );
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidStartDate
+                .selector
+        );
+        milestoneManager.__Milestone_updateMilestoneStartDate(
+            id, invalidStartDate
+        );
+    }
+
+    function test__Milestone_updateMilestoneStartDateFailsIfNotUpdateable()
+        public
+    {
+        vm.startPrank(address(_proposal));
+
+        // Note that a milestone is not updateable if it started already, i.e.
+        // if `block.timestamp` >= `startDate`.
+        uint id = milestoneManager.__Milestone_addMilestone(
             _TITLE, block.timestamp, _DETAILS
         );
 
         vm.expectRevert(
-            IMilestoneManager.Module__MilestoneManager__InvalidStartDate.selector
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotUpdateable
+                .selector
         );
-        milestoneManager.__Milestone_updateMilestoneStartDate(id, invalidStartDate);
-    }
-
-    function test__Milestone_updateMilestoneStartDateFailsIfNotUpdateable() public {
-
+        milestoneManager.__Milestone_updateMilestoneStartDate(
+            id, block.timestamp
+        );
     }
 
     //----------------------------------
     // Test: __Milestone_removeMilestone()
 
     function test__Milestone_removeMilestone() public {
+        vm.startPrank(address(_proposal));
 
+        uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp + 1, _DETAILS
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneRemoved(id);
+
+        milestoneManager.__Milestone_removeMilestone(id);
+
+        _assertMilestone({
+            id: id,
+            title: _TITLE,
+            startDate: block.timestamp + 1,
+            details: _DETAILS,
+            submitted: false,
+            completed: false,
+            removed: true
+        });
+    }
+
+    function test__Milestone_removeMilestoneOnlyCallableByProposal(
+        address caller
+    ) public {
+        vm.assume(caller != address(_proposal));
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        milestoneManager.__Milestone_removeMilestone(0);
+    }
+
+    function test__Milestone_removeMilestoneFailsForInvalidId() public {
+        vm.startPrank(address(_proposal));
+
+        uint invalidId = 1;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.__Milestone_removeMilestone(invalidId);
+    }
+
+    function test__Milestone_removeMilestoneFailsIfNotRemoveable() public {
+        vm.startPrank(address(_proposal));
+
+        uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp + 1, _DETAILS
+        );
+
+        // Note that a milestone is not removeable if it is already completed,
+        // i.e. confirmed.
+        milestoneManager.__Milestone_confirmMilestone(id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotRemovable
+                .selector
+        );
+        milestoneManager.__Milestone_removeMilestone(id);
     }
 
     //----------------------------------
     // Test: __Milestone_submitMilestone()
 
+    function test__Milestone_submitMilestone() public {
+        vm.startPrank(address(_proposal));
+
+        uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp + 1, _DETAILS
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneSubmitted(id);
+
+        milestoneManager.__Milestone_submitMilestone(id);
+
+        _assertMilestone({
+            id: id,
+            title: _TITLE,
+            startDate: block.timestamp + 1,
+            details: _DETAILS,
+            submitted: true,
+            completed: false,
+            removed: false
+        });
+    }
+
+    function test__Milestone_submitMilestoneOnlyCallableByProposal(
+        address caller
+    ) public {
+        vm.assume(caller != address(_proposal));
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        milestoneManager.__Milestone_submitMilestone(0);
+    }
+
+    function test__Milestone_submitMilestoneFailsForInvalidId() public {
+        vm.startPrank(address(_proposal));
+
+        uint invalidId = 1;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.__Milestone_submitMilestone(invalidId);
+    }
+
+    function test__Milestone_submitMilestoneFailsIfNotSubmitable() public {
+        vm.startPrank(address(_proposal));
+
+        // Note that a milestone is not updateable if it started already, i.e.
+        // if `block.timestamp` >= `startDate`.
+        uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp, _DETAILS
+        );
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotSubmitable
+                .selector
+        );
+        milestoneManager.__Milestone_submitMilestone(id);
+    }
+
     //----------------------------------
     // Test: __Milestone_confirmMilestone()
+
+    function test__Milestone_confirmMilestone() public {
+        vm.startPrank(address(_proposal));
+
+        uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp + 1, _DETAILS
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneConfirmed(id);
+
+        milestoneManager.__Milestone_confirmMilestone(id);
+
+        _assertMilestone({
+            id: id,
+            title: _TITLE,
+            startDate: block.timestamp + 1,
+            details: _DETAILS,
+            submitted: false,
+            completed: true,
+            removed: false
+        });
+    }
+
+    function test__Milestone_confirmMilestoneOnlyCallableByProposal(
+        address caller
+    ) public {
+        vm.assume(caller != address(_proposal));
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        milestoneManager.__Milestone_confirmMilestone(0);
+    }
+
+    function test__Milestone_confirmMilestoneFailsForInvalidId() public {
+        vm.startPrank(address(_proposal));
+
+        uint invalidId = 1;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.__Milestone_confirmMilestone(invalidId);
+    }
+
+    function test__Milestone_confirmMilestoneFailsIfNotConfirmable() public {
+        vm.startPrank(address(_proposal));
+
+        uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp, _DETAILS
+        );
+
+        // Note that a milestone is not confirmable if it is already removed.
+        milestoneManager.__Milestone_removeMilestone(id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotConfirmable
+                .selector
+        );
+        milestoneManager.__Milestone_confirmMilestone(id);
+    }
+
 
     //----------------------------------
     // Test: __Milestone_declineMilestone()
 
+    function test__Milestone_declineMilestone() public {
+        vm.startPrank(address(_proposal));
+
+        uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp + 1, _DETAILS
+        );
+
+        // Note that a milestone is only declineable if it is submitted already.
+        milestoneManager.__Milestone_submitMilestone(id);
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneDeclined(id);
+
+        milestoneManager.__Milestone_declineMilestone(id);
+
+        _assertMilestone({
+            id: id,
+            title: _TITLE,
+            startDate: block.timestamp + 1,
+            details: _DETAILS,
+            submitted: false,
+            completed: false,
+            removed: false
+        });
+    }
+
+    function test__Milestone_declineMilestoneOnlyCallableByProposal(
+        address caller
+    ) public {
+        vm.assume(caller != address(_proposal));
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        milestoneManager.__Milestone_declineMilestone(0);
+    }
+
+
+    function test__Milestone_declineMilestoneFailsForInvalidId() public {
+        vm.startPrank(address(_proposal));
+
+        uint invalidId = 1;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.__Milestone_declineMilestone(invalidId);
+    }
+
+    function test__Milestone_declineMilestoneFailsIfNotConfirmable() public {
+        vm.startPrank(address(_proposal));
+
+        uint id = milestoneManager.__Milestone_addMilestone(
+            _TITLE, block.timestamp, _DETAILS
+        );
+
+        // Note that a milestone is not declineable if it is not yet submitted.
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotDeclineable
+                .selector
+        );
+        milestoneManager.__Milestone_declineMilestone(id);
+    }
+
     //--------------------------------------------------------------------------
-    // Assert Helper Function
+    // Assert Helper Functions
 
     /// @dev Asserts milestone with given data exists.
     function _assertMilestone(
@@ -612,5 +962,26 @@ contract MilestoneManagerTest is ModuleTest {
         assertEq(m.submitted, submitted);
         assertEq(m.completed, completed);
         assertEq(m.removed, removed);
+    }
+
+    //--------------------------------------------------------------------------
+    // Data Creation Helper Functions
+
+    /// @dev Returns an element of each category of invalid titles.
+    function _createInvalidTitles() internal pure returns (string[] memory) {
+        string[] memory invalidTitles = new string[](1);
+
+        invalidTitles[0] = ""; // Empty string
+
+        return invalidTitles;
+    }
+
+    /// @dev Returns an element of each category of invalid details.
+    function _createInvalidDetails() internal pure returns (string[] memory) {
+        string[] memory invalidDetails = new string[](1);
+
+        invalidDetails[0] = ""; // Empty string
+
+        return invalidDetails;
     }
 }
