@@ -48,6 +48,7 @@ contract PaymentManagementTest is Test, ProposalMock {
         modules[0] = address(payment);
 
         ProposalMock(this).initModules(modules);
+        authorizerMock.setIsAuthorized(address(this), true);
     }
 
 
