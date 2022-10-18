@@ -73,7 +73,7 @@ contract PaymentManagement is Module {
     }
 
     modifier validStart(uint _start) {
-        //require(_start > block.timestamp, "should start in future");
+        require(_start >= block.timestamp, "should start in future");
         require(_start < type(uint64).max, "invalid start time");
         _;
     }
