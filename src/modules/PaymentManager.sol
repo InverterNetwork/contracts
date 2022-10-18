@@ -64,6 +64,18 @@ contract PaymentManager is Module {
     /// @notice duration cant overflow, cant be 0.
     error Module__PaymentManager__InvalidDuration();
 
+    /// @notice erc20 transfer failed
+    error Module__PaymentManager__Erc20TransferFailed();
+
+    /// @notice invalid token address
+    error Module__PaymentManager__InvalidToken();
+
+    /// @notice invalid proposal address
+    error Module__PaymentManager__InvalidProposal();
+
+    /// @notice invalid contributor address
+    error Module__PaymentManager__InvalidContributor();
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -105,8 +117,11 @@ contract PaymentManager is Module {
         (address _token, address _proposal) =
             abi.decode(data, (address, address));
 
-        require(validAddress(_token), "invalid token address");
-        require(validAddress(_proposal), "invalid proposal address");
+
+        if(!validAddress(_token))
+            revert Module__PaymentManager__InvalidToken();
+        if(!validAddress(_token))
+            revert Module__PaymentManager__InvalidProposal();
 
         token = IERC20(_token);
         proposal = _proposal;
@@ -121,8 +136,8 @@ contract PaymentManager is Module {
 
             emit ERC20Released(address(token), amount);
 
-            require(token.transfer(msg.sender, amount),
-                "erc20 transfer failed");
+            if(!token.transfer(msg.sender, amount))
+                revert Module__PaymentManager__Erc20TransferFailed();
         }
     }
 
@@ -144,7 +159,8 @@ contract PaymentManager is Module {
         validStart(_start)
         validDuration(_start, _duration)
     {
-        require(validAddress(_contributor), "invalid contributor");
+        if(!validAddress(_contributor))
+            revert Module__PaymentManager__InvalidContributor();
 
         // @todo Nejc: Verify there's enough tokens in proposal for the payment.
         // @todo Nejc: before adding payment make sure contributor is wListed.
@@ -182,8 +198,8 @@ contract PaymentManager is Module {
         if(unclaimedAmount > 0) {
             delete vestings[contributor];
 
-            require(token.transfer(msg.sender, unclaimedAmount),
-                "erc20 transfer failed");
+            if(!token.transfer(msg.sender, unclaimedAmount))
+                revert Module__PaymentManager__Erc20TransferFailed();
 
             emit PaymentRemoved(contributor);
         }
