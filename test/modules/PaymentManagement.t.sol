@@ -24,12 +24,52 @@ contract PaymentManagementTest is Test, ProposalMock {
     ERC20Mock token;
     AuthorizerMock authorizerMock = new AuthorizerMock();
 
-
     // versioning system
     uint constant MAJOR_VERSION = 1;
     string constant GIT_URL = "https://github.com/organization/module";
 
     IModule.Metadata metadata = IModule.Metadata(MAJOR_VERSION, GIT_URL);
+
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    // modifier validParams(uint amount, uint64 duration, address receiver) {
+    //
+    //     // fixed params
+    //     uint64 start = uint64(block.timestamp);
+    //
+    //     // // Expect revert if amount is zero.
+    //     if (amount == 0) {
+    //         vm.expectRevert(bytes("invalid salary"));
+    //         payment.addPayment(receiver, amount, start, duration);
+    //         return;
+    //     }
+    //     // Expect revert if vestingDuration is zero.
+    //     if (duration == 0){
+    //         vm.expectRevert(bytes("invalid duration"));
+    //         payment.addPayment(receiver, amount, start, duration);
+    //         return;
+    //     }
+    //     if (start > duration + start){
+    //         vm.expectRevert(bytes("invalid duration"));
+    //         payment.addPayment(receiver, amount, start, duration);
+    //         return;
+    //     }
+    //     // Expect revert if receiver is invalid.
+    //     if (
+    //         receiver == address(0) ||
+    //         receiver == address(this) ||
+    //         receiver == address(payment) ||
+    //         receiver == address(token)
+    //     ) {
+    //         vm.expectRevert(bytes("invalid contributor"));
+    //         payment.addPayment(receiver, amount, start, duration);
+    //         return;
+    //     }
+    //
+    //     _;
+    // }
+
 
     //--------------------------------------------------------------------------------
     // SETUP
