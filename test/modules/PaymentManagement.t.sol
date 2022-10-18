@@ -60,7 +60,7 @@ contract PaymentManagementTest is Test, ProposalMock {
 
     function testAddPayment()
         public
-        returns(uint, address, uint64, uint64) {
+        returns(uint, address, uint64) {
 
         // vesting params
         uint vestingAmount = 300;
@@ -84,9 +84,6 @@ contract PaymentManagementTest is Test, ProposalMock {
             duration
         );
 
-        // make sure tokens are transfered to vesting
-        assertEq(token.balanceOf(address(payment)), vestingAmount);
-
         //--------------------------------------------------------------------------
         // Validate vesting data on payment contract
 
@@ -100,11 +97,11 @@ contract PaymentManagementTest is Test, ProposalMock {
         uint vestingDuration = payment.duration(receiver);
         assertEq(vestingDuration, duration);
 
-        return (vestingAmount, receiver, start, duration);
+        return (vestingAmount, receiver, duration);
     }
 
     function testClaim() public {
-        (uint vestingAmount, address receiver, uint64 start, uint64 duration)
+        (uint vestingAmount, address receiver, uint64 duration)
             = testAddPayment();
 
         vm.prank(receiver);
@@ -117,7 +114,6 @@ contract PaymentManagementTest is Test, ProposalMock {
         payment.claim();
 
         uint balanceAfter = token.balanceOf(receiver);
-        console.log("balanceAfter: " ,balanceAfter);
         assertEq(balanceAfter, vestingAmount);
 
         uint releasableAfter = payment.releasable();
@@ -125,7 +121,7 @@ contract PaymentManagementTest is Test, ProposalMock {
     }
 
     function testVestingAmounts() public {
-        (uint vestingAmount, address receiver, uint64 start, uint64 duration)
+        (uint vestingAmount, address receiver, uint64 duration)
             = testAddPayment();
 
         //at 1/3 duration, 1/3 tokens should be claimable
@@ -137,7 +133,6 @@ contract PaymentManagementTest is Test, ProposalMock {
         payment.claim();
 
         uint balanceAfter = token.balanceOf(receiver);
-        console.log("balanceAfter: " ,balanceAfter);
         assertEq(balanceAfter, vestingAmount*1/3);
 
         //at 2/3 duration, 2/3 tokens should be claimable
@@ -164,8 +159,82 @@ contract PaymentManagementTest is Test, ProposalMock {
 
     }
 
+    // function testVestingSeveralContributors(uint64 skip1, uint64 skip2) public {
+    //     uint amount1 = 1500;
+    //     uint amount2 = 2800;
+    //     uint amount3 = 800;
+    //
+    //     address receiver1 = address(0xBEEF);
+    //     address receiver2 = address(0xDEAD);
+    //     address receiver3 = address(0xCAFE);
+    //
+    //     uint64 start = uint64(block.timestamp);
+    //
+    //     uint64 duration1 = 3600;
+    //     uint64 duration2 = 160000;
+    //     uint64 duration3 = 7200;
+    //
+    //     uint totalAmount = amount1 + amount2 + amount3;
+    //
+    //     // mint erc20 tokens
+    //     mintTokens(totalAmount);
+    //
+    //     // simulate payer's deposit to proposal
+    //     // @todo Nejc transfer to proposal, not payment
+    //     token.transfer(address(payment), totalAmount);
+    //     assertEq(token.balanceOf(address(payment)), totalAmount);
+    //
+    //     // initiate vestings
+    //     payment.addPayment(receiver1, amount1, start1, duration1);
+    //     payment.addPayment(receiver2, amount2, start2, duration2);
+    //     payment.addPayment(receiver3, amount3, start3, duration3);
+    //
+    //     //at 2/3 duration, 2/3 tokens should be claimable
+    //     uint balanceBefore = token.balanceOf(receiver1);
+    //
+    //     skip(skip1);
+    //
+    //     vm.prank(receiver1);
+    //     payment.claim();
+    //
+    //     uint properAmount = amount1*1/4;
+    //     uint balanceAfter = token.balanceOf(receiver1);
+    //     assertEq(balanceAfter, properAmount);
+    //
+    //     balanceBefore = token.balanceOf(receiver2);
+    //
+    //     vm.prank(receiver2);
+    //     payment.claim();
+    //
+    //     properAmount = amount2*1/7;
+    //     balanceAfter = token.balanceOf(receiver2);
+    //     assertEq(balanceAfter, properAmount);
+    //
+    //     skip(duration1*1/2);
+    //
+    //     balanceBefore = token.balanceOf(receiver1);
+    //
+    //     vm.prank(receiver1);
+    //     payment.claim();
+    //
+    //     properAmount = amount2*/7;
+    //     balanceAfter = token.balanceOf(receiver2);
+    //     assertEq(balanceAfter, properAmount);
+    //
+    //     //at 2 duration, all tokens should be claimable
+    //     // balanceBefore = balanceAfter;
+    //     //
+    //     // skip(duration);
+    //     //
+    //     // vm.prank(receiver);
+    //     // payment.claim();
+    //     //
+    //     // balanceAfter = token.balanceOf(receiver);
+    //     // assertEq(balanceAfter, vestingAmount);
+    // }
+
     function testRemovePayment() public {
-        (uint vestingAmount, address receiver, uint64 start, uint64 duration)
+        (uint vestingAmount, address receiver,  uint64 duration)
             = testAddPayment();
 
         // make sure owner is refunded
@@ -189,7 +258,7 @@ contract PaymentManagementTest is Test, ProposalMock {
     }
 
     function testPausePayment() public {
-        (uint vestingAmount, address receiver, uint64 start, uint64 duration)
+        (uint vestingAmount, address receiver,  uint64 duration)
             = testAddPayment();
 
         // make sure receiver cant claim
@@ -207,7 +276,7 @@ contract PaymentManagementTest is Test, ProposalMock {
     }
 
     function testContinuePayment() public {
-        (uint vestingAmount, address receiver, uint64 start, uint64 duration)
+        (uint vestingAmount, address receiver, uint64 duration)
             = testAddPayment();
 
         payment.pausePayment(receiver);
