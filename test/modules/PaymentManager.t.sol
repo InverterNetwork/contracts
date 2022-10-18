@@ -15,6 +15,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
+/*** @todo Nejc:
+ - make sure delegatecall in addPayment() works, to transfer funds from proposal contract.
+*/
 
 contract PaymentManagerTest is Test, ProposalMock {
 
