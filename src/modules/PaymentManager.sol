@@ -12,9 +12,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 
 
 /*** @todo Nejc:
- - replace require syntax with errors.
  - in addPayment() use delegatecall to transfer funds from proposal contract.
- - make sure removePayment() returns proper amounts.
 */
 
 
@@ -62,25 +60,33 @@ contract PaymentManager is Module {
     //--------------------------------------------------------------------------
     // Errors
 
-    // @todo Nejc: Declare here.
+    /// @notice salary cant be 0.
+    error Module__PaymentManager__InvalidSalary();
+
+    /// @notice should start in future, cant be more than 10e18.
+    error Module__PaymentManager__InvalidStart();
+
+    /// @notice duration cant overflow, cant be 0.
+    error Module__PaymentManager__InvalidDuration();
 
     //--------------------------------------------------------------------------
     // Modifiers
 
     modifier validSalary(uint _salary) {
-        require(_salary > 0, "invalid salary");
+        if(_salary == 0)
+            revert Module__PaymentManager__InvalidSalary();
         _;
     }
 
     modifier validStart(uint _start) {
-        require(_start >= block.timestamp, "should start in future");
-        require(_start < type(uint64).max, "invalid start time");
+        if(_start < block.timestamp || _start >= type(uint64).max)
+            revert Module__PaymentManager__InvalidStart();
         _;
     }
 
     modifier validDuration(uint _start, uint _duration){
-        require(_start + _duration > _start, "duration overflow");
-        require(_duration > 0, "duration cant be 0");
+        if(_start + _duration <= _start || _duration == 0)
+            revert Module__PaymentManager__InvalidDuration();
         _;
     }
 
@@ -248,10 +254,6 @@ contract PaymentManager is Module {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    // @notice Returns address of vesting contract per contributor.
-    // function getVesting(address contributor) external view returns(address) {
-    //     return vestings[contributor];
-    // }
     /// @notice Virtual implementation of the vesting formula.
     ///         Returns the amount vested, as a function of time,
     ///         for an asset given its total historical allocation.
