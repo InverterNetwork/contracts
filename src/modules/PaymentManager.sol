@@ -123,9 +123,11 @@ contract PaymentManager is Module {
         if(vestings[msg.sender]._enabled){
             uint256 amount = releasable();
             vestings[msg.sender]._released += amount;
+
             emit ERC20Released(address(token), amount);
-            // @todo Nejc: check transfer return value / use safeTransfer
-            token.transfer(msg.sender, amount);
+
+            require(token.transfer(msg.sender, amount),
+                "erc20 transfer failed");
         }
     }
 
@@ -177,7 +179,8 @@ contract PaymentManager is Module {
         if(unclaimedAmount > 0) {
             delete vestings[contributor];
 
-            token.transfer(msg.sender, unclaimedAmount);
+            require(token.transfer(msg.sender, unclaimedAmount),
+                "erc20 transfer failed");
 
             emit PaymentRemoved(contributor);
         }
