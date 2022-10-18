@@ -11,11 +11,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
 
-/*** @todo Nejc:
- - in addPayment() use delegatecall to transfer funds from proposal contract.
-*/
-
-
 /**
  * @title Payment manager module implementation #1: Linear vesting curve.
  *
@@ -152,8 +147,16 @@ contract PaymentManager is Module {
         require(validAddress(_contributor), "invalid contributor");
 
         // @todo Nejc: Verify there's enough tokens in proposal for the payment.
-        // @todo Nejc: delegatecall transferFrom proposal to payment module.
         // @todo Nejc: before adding payment make sure contributor is wListed.
+
+        _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__PaymentManager_fetchERC20FromProposal(address,uint)",
+                address(this),
+                _salary
+            ),
+            Types.Operation.DelegateCall
+        );
 
         vestings[_contributor] = VestingWallet(
             _salary,
