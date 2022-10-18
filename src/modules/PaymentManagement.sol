@@ -104,13 +104,17 @@ contract PaymentManagement is Module {
         return vestings[contributor]._released;
     }
 
-    function vestedAmount(uint64 timestamp) public view returns (uint256) {
-        return _vestingSchedule(token.balanceOf(
-            address(this)) + released(msg.sender), timestamp);
+    function vestedAmount(uint64 timestamp, address contributor)
+        public
+        view
+        returns (uint256)
+    {
+        return _vestingSchedule(vestings[contributor]._salary, timestamp);
     }
 
     function releasable() public view returns (uint) {
-        return vestedAmount(uint64(block.timestamp)) - released(msg.sender);
+        return vestedAmount(uint64(block.timestamp), msg.sender) -
+            released(msg.sender);
     }
 
     function _vestingSchedule(uint256 totalAllocation, uint64 timestamp)
@@ -215,8 +219,8 @@ contract PaymentManagement is Module {
         onlyAuthorized // only proposal owner
     {
         // TODO withdraw tokens that were not withdrawn yet.
-        uint unclaimedAmount = vestedAmount(uint64(block.timestamp)) -
-            released(contributor);
+        uint unclaimedAmount = vestedAmount(uint64(block.timestamp),
+            contributor) - released(contributor);
         if(unclaimedAmount > 0) {
             delete vestings[contributor];
 
