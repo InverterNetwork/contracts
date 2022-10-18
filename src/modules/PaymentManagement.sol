@@ -12,21 +12,20 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 
 
 /*** @todo Nejc:
- - replace require syntax with errors
- - update style, layout, comments
- - in addPayment() use delegatecall to transfer funds from proposal contract
+ - replace require syntax with errors.
+ - in addPayment() use delegatecall to transfer funds from proposal contract.
+ - make sure removePayment() returns proper amounts.
 */
 
 
 /**
- * @title Payment module
+ * @title Payment module implementation #1: Linear vesting curve.
  *
  * @dev The payment module handles the money flow to the contributors
  * (e.g. how many tokens are sent to which contributor at what time).
  *
  * @author byterocket
  */
-
 
 contract PaymentManagement is Module {
     //--------------------------------------------------------------------------
@@ -55,10 +54,10 @@ contract PaymentManagement is Module {
         uint64 start,
         uint64 end
     );
-    event ERC20Released(address indexed token, uint256 amount);
     event PaymentRemoved(address contributor);
     event PaymentPaused(address contributor);
     event PaymentContinued(address contributor);
+    event ERC20Released(address indexed token, uint256 amount);
 
     //--------------------------------------------------------------------------
     // Errors
@@ -88,22 +87,32 @@ contract PaymentManagement is Module {
     //--------------------------------------------------------------------------
     // External View Functions
 
+    /// @notice Returns true if contributors vesting is enabled.
+    /// @param contributor Contributor's address.
     function enabled(address contributor) public view returns(bool) {
         return vestings[contributor]._enabled;
     }
 
+    /// @notice Getter for the start timestamp.
+    /// @param contributor Contributor's address.
     function start(address contributor) public view returns(uint256) {
         return vestings[contributor]._start;
     }
 
+    /// @notice Getter for the vesting duration.
+    /// @param contributor Contributor's address.
     function duration(address contributor) public view returns(uint256) {
         return vestings[contributor]._duration;
     }
 
+    /// @notice Getter for the amount of eth already released
+    /// @param contributor Contributor's address.
     function released(address contributor) public view returns(uint256) {
         return vestings[contributor]._released;
     }
 
+    /// @notice Calculates the amount of tokens that has already vested.
+    /// @param contributor Contributor's address.
     function vestedAmount(uint64 timestamp, address contributor)
         public
         view
@@ -112,11 +121,17 @@ contract PaymentManagement is Module {
         return _vestingSchedule(vestings[contributor]._salary, timestamp);
     }
 
+    /// @notice Getter for the amount of releasable tokens.
     function releasable() public view returns (uint) {
         return vestedAmount(uint64(block.timestamp), msg.sender) -
             released(msg.sender);
     }
 
+    /// @notice Virtual implementation of the vesting formula.
+    ///         Returns the amount vested, as a function of time,
+    ///         for an asset given its total historical allocation.
+    /// @param totalAllocation Contributor's allocated vesting amount.
+    /// @param timestamp Current block.timestamp
     function _vestingSchedule(uint256 totalAllocation, uint64 timestamp)
         internal
         view
@@ -144,6 +159,7 @@ contract PaymentManagement is Module {
 
     /// @notice Initialize module, save token and proposal address.
     /// @param proposalInterface Interface of proposal.
+    /// @param metadata module metadata.
     /// @param data encoded token and proposal address.
     function initialize(
         IProposal proposalInterface,
@@ -164,8 +180,8 @@ contract PaymentManagement is Module {
         proposal = _proposal;
     }
 
-    // @note in OZ VestingWallet this method is called release()
-    // @notice Release the tokens that have already vested.
+    /// @notice Release the releasable tokens.
+    ///         In OZ VestingWallet this method is named release().
     function claim() public {
         if(vestings[msg.sender]._enabled){
             uint256 amount = releasable();
@@ -191,7 +207,6 @@ contract PaymentManagement is Module {
         external
         onlyAuthorized // only proposal owner
         validSalary(_salary)
-        // @todo Nejc: add modifiers for input validation
         validStart(_start)
         validDuration(_start, _duration)
     {
@@ -212,13 +227,14 @@ contract PaymentManagement is Module {
         emit PaymentAdded(_contributor, _salary, _start, _duration);
     }
 
-    /// @notice Removes/stops a payment of a contributor.
+    /// @notice Deletes a contributors payment and refunds non-released tokens
+    ///         to proposal owner.
     /// @param contributor Contributor's address.
     function removePayment(address contributor)
         external
         onlyAuthorized // only proposal owner
     {
-        // TODO withdraw tokens that were not withdrawn yet.
+        // @noto Nejc: withdraw tokens that were not withdrawn yet.
         uint unclaimedAmount = vestedAmount(uint64(block.timestamp),
             contributor) - released(contributor);
         if(unclaimedAmount > 0) {
@@ -243,7 +259,7 @@ contract PaymentManagement is Module {
     }
 
     /// @notice Continue contributors paused payment.
-    //          Tokens from paused period will be immediately claimable.
+    ///         Tokens from paused period will be immediately claimable.
     /// @param contributor Contributor's address.
     function continuePayment(address contributor)
         external
