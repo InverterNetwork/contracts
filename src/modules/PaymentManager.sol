@@ -19,7 +19,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 
 
 /**
- * @title Payment module implementation #1: Linear vesting curve.
+ * @title Payment manager module implementation #1: Linear vesting curve.
  *
  * @dev The payment module handles the money flow to the contributors
  * (e.g. how many tokens are sent to which contributor at what time).
@@ -27,7 +27,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  * @author byterocket
  */
 
-contract PaymentManagement is Module {
+contract PaymentManager is Module {
     //--------------------------------------------------------------------------
     // Storage
 

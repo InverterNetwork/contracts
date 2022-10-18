@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 
 
-import {PaymentManagement} from "src/modules/PaymentManagement.sol";
+import {PaymentManager} from "src/modules/PaymentManager.sol";
 // import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 //
 import {IModule} from "src/interfaces/IModule.sol";
@@ -16,10 +16,10 @@ import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
 
-contract PaymentManagementTest is Test, ProposalMock {
+contract PaymentManagerTest is Test, ProposalMock {
 
     // contract definitions
-    PaymentManagement payment;
+    PaymentManager payment;
     ProposalMock proposal;
     ERC20Mock token;
     AuthorizerMock authorizerMock = new AuthorizerMock();
@@ -77,7 +77,7 @@ contract PaymentManagementTest is Test, ProposalMock {
     constructor() ProposalMock(authorizerMock) {}
 
     function setUp() public {
-        payment = new PaymentManagement();
+        payment = new PaymentManager();
         token = new ERC20Mock("TestToken", "TT");
         proposal = new ProposalMock(authorizerMock);
 
