@@ -85,77 +85,7 @@ contract PaymentManagement is Module {
     }
 
     //--------------------------------------------------------------------------
-    // External View Functions
-
-    /// @notice Returns true if contributors vesting is enabled.
-    /// @param contributor Contributor's address.
-    function enabled(address contributor) public view returns(bool) {
-        return vestings[contributor]._enabled;
-    }
-
-    /// @notice Getter for the start timestamp.
-    /// @param contributor Contributor's address.
-    function start(address contributor) public view returns(uint256) {
-        return vestings[contributor]._start;
-    }
-
-    /// @notice Getter for the vesting duration.
-    /// @param contributor Contributor's address.
-    function duration(address contributor) public view returns(uint256) {
-        return vestings[contributor]._duration;
-    }
-
-    /// @notice Getter for the amount of eth already released
-    /// @param contributor Contributor's address.
-    function released(address contributor) public view returns(uint256) {
-        return vestings[contributor]._released;
-    }
-
-    /// @notice Calculates the amount of tokens that has already vested.
-    /// @param contributor Contributor's address.
-    function vestedAmount(uint64 timestamp, address contributor)
-        public
-        view
-        returns (uint256)
-    {
-        return _vestingSchedule(vestings[contributor]._salary, timestamp);
-    }
-
-    /// @notice Getter for the amount of releasable tokens.
-    function releasable() public view returns (uint) {
-        return vestedAmount(uint64(block.timestamp), msg.sender) -
-            released(msg.sender);
-    }
-
-    /// @notice Virtual implementation of the vesting formula.
-    ///         Returns the amount vested, as a function of time,
-    ///         for an asset given its total historical allocation.
-    /// @param totalAllocation Contributor's allocated vesting amount.
-    /// @param timestamp Current block.timestamp
-    function _vestingSchedule(uint256 totalAllocation, uint64 timestamp)
-        internal
-        view
-        virtual
-        returns (uint256)
-    {
-        if (timestamp < start(msg.sender)) {
-            return 0;
-        } else if (timestamp > start(msg.sender) + duration(msg.sender)) {
-            return totalAllocation;
-        } else {
-            return (totalAllocation * (timestamp - start(msg.sender))) /
-                duration(msg.sender);
-        }
-    }
-
-    /// @notice validate address input.
-    /// @param addr Address to validate.
-    /// @return True if address is valid.
-    function validAddress(address addr) internal view returns(bool){
-        if(addr == address(0) || addr == msg.sender || addr == address(this))
-            return false;
-        return true;
-    }
+    // External Functions
 
     /// @notice Initialize module, save token and proposal address.
     /// @param proposalInterface Interface of proposal.
@@ -164,7 +94,8 @@ contract PaymentManagement is Module {
     function initialize(
         IProposal proposalInterface,
         Metadata memory metadata,
-        bytes memory data)
+        bytes memory data
+    )
         external
         initializer
     {
@@ -182,7 +113,7 @@ contract PaymentManagement is Module {
 
     /// @notice Release the releasable tokens.
     ///         In OZ VestingWallet this method is named release().
-    function claim() public {
+    function claim() external {
         if(vestings[msg.sender]._enabled){
             uint256 amount = releasable();
             vestings[msg.sender]._released += amount;
@@ -271,25 +202,83 @@ contract PaymentManagement is Module {
         }
     }
 
-    // /// Note we may want a method that returns all contributor addresses.
-    // /// @notice Returns the existing payments of the contributors.
-    // /// @param contributor Contributor's address.
-    // /// @return salary Salary contributor will receive per epoch.
-    // /// @return epochsAmount Amount of epochs to receive the salary for.
-    // function listPayments(address contributor)
-    //     external
-    //     view
-    //     returns (uint, uint)
-    // {
-    //     return (
-    //         payments[contributor].salary,
-    //         payments[contributor].epochsAmount
-    //     );
-    // }
+    //--------------------------------------------------------------------------
+    // Public Functions
 
+    /// @notice Returns true if contributors vesting is enabled.
+    /// @param contributor Contributor's address.
+    function enabled(address contributor) public view returns(bool) {
+        return vestings[contributor]._enabled;
+    }
+
+    /// @notice Getter for the start timestamp.
+    /// @param contributor Contributor's address.
+    function start(address contributor) public view returns(uint256) {
+        return vestings[contributor]._start;
+    }
+
+    /// @notice Getter for the vesting duration.
+    /// @param contributor Contributor's address.
+    function duration(address contributor) public view returns(uint256) {
+        return vestings[contributor]._duration;
+    }
+
+    /// @notice Getter for the amount of eth already released
+    /// @param contributor Contributor's address.
+    function released(address contributor) public view returns(uint256) {
+        return vestings[contributor]._released;
+    }
+
+    /// @notice Calculates the amount of tokens that has already vested.
+    /// @param contributor Contributor's address.
+    function vestedAmount(uint64 timestamp, address contributor)
+        public
+        view
+        returns (uint256)
+    {
+        return _vestingSchedule(vestings[contributor]._salary, timestamp);
+    }
+
+    /// @notice Getter for the amount of releasable tokens.
+    function releasable() public view returns (uint) {
+        return vestedAmount(uint64(block.timestamp), msg.sender) -
+            released(msg.sender);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
 
     // @notice Returns address of vesting contract per contributor.
     // function getVesting(address contributor) external view returns(address) {
     //     return vestings[contributor];
     // }
+    /// @notice Virtual implementation of the vesting formula.
+    ///         Returns the amount vested, as a function of time,
+    ///         for an asset given its total historical allocation.
+    /// @param totalAllocation Contributor's allocated vesting amount.
+    /// @param timestamp Current block.timestamp
+    function _vestingSchedule(uint256 totalAllocation, uint64 timestamp)
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
+        if (timestamp < start(msg.sender)) {
+            return 0;
+        } else if (timestamp > start(msg.sender) + duration(msg.sender)) {
+            return totalAllocation;
+        } else {
+            return (totalAllocation * (timestamp - start(msg.sender))) /
+                duration(msg.sender);
+        }
+    }
+
+    /// @notice validate address input.
+    /// @param addr Address to validate.
+    /// @return True if address is valid.
+    function validAddress(address addr) internal view returns(bool){
+        if(addr == address(0) || addr == msg.sender || addr == address(this))
+            return false;
+        return true;
+    }
 }
