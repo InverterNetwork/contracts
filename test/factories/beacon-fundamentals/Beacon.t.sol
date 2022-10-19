@@ -8,19 +8,24 @@ import {ImplementationV1Mock} from "test/utils/mocks/factories/beacon-fundamenta
 import {ImplementationV2Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
 
 contract BeaconTest is Test {
+
     Beacon beacon;
 
     event Upgraded(address indexed implementation);
 
+    //--------------------------------------------------------------------------------
+    // SETUP
+
     function setUp() public {
         beacon = new Beacon();
     }
+    
+    //--------------------------------------------------------------------------------
+    // TEST MAIN
 
     function testDeployment() public {
         assertTrue(beacon.implementation() == address(0));
     }
-
-    //@todo 
 
     function testUpgradeTo() public {
         ImplementationV1Mock toUpgrade1 = new ImplementationV1Mock();
