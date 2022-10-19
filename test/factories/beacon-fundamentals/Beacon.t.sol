@@ -13,6 +13,7 @@ import {ImplementationV2Mock} from "test/utils/mocks/factories/beacon-fundamenta
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract BeaconTest is Test {
+
     Beacon beacon;
 
     event Upgraded(address indexed implementation);
