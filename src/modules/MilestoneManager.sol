@@ -179,9 +179,8 @@ contract MilestoneManager is IMilestoneManager, Module {
         onlyAuthorized
     {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_UPDATE_MILESTONE_DETAILS, id, details),
             Types.Operation.Call
         );
@@ -197,9 +196,8 @@ contract MilestoneManager is IMilestoneManager, Module {
         onlyAuthorized
     {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/) = _triggerProposalCallback(
             abi.encodeWithSignature(
                 _FUNC_UPDATE_MILESTONE_START_DATE, id, startDate
             ),
@@ -216,9 +214,8 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @inheritdoc IMilestoneManager
     function removeMilestone(uint id) external onlyAuthorized {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_REMOVE_MILESTONE, id),
             Types.Operation.Call
         );
@@ -231,9 +228,8 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @inheritdoc IMilestoneManager
     function submitMilestone(uint id) external onlyContributor {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_SUBMIT_MILESTONE, id),
             Types.Operation.Call
         );
@@ -246,9 +242,8 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @inheritdoc IMilestoneManager
     function confirmMilestone(uint id) external onlyAuthorized {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_CONFIRM_MILESTONE, id),
             Types.Operation.Call
         );
@@ -261,9 +256,8 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @inheritdoc IMilestoneManager
     function declineMilestone(uint id) external onlyAuthorized {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_DECLINE_MILESTONE, id),
             Types.Operation.Call
         );
@@ -278,7 +272,7 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     function __Milestone_addMilestone(
         string memory title,
-        uint startDate, //@note Possible Startdate now
+        uint startDate,
         string memory details
     )
         external
@@ -342,7 +336,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     }
 
     function __Milestone_removeMilestone(
-        uint id //@note There might be a point made to increase the level of interaction required to remove a milestone
+        uint id
     ) external onlyProposal validId(id) {
         Milestone storage m = _milestones[id];
 
@@ -394,7 +388,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     }
 
     function __Milestone_declineMilestone(
-        uint id //@note maybe at why declined
+        uint id
     ) external onlyProposal validId(id) {
         Milestone storage m = _milestones[id];
 
