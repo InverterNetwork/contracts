@@ -4,8 +4,13 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
+
+//Mocks
 import {ImplementationV1Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
 import {ImplementationV2Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
+
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract BeaconTest is Test {
 
@@ -25,6 +30,14 @@ contract BeaconTest is Test {
 
     function testDeployment() public {
         assertTrue(beacon.implementation() == address(0));
+    }
+
+    function testUpgradeToOnlyCallableByOwner(address caller) public {
+        vm.assume(caller != address(this));
+        vm.prank(caller);
+
+        vm.expectRevert(OZErrors.Ownable2Step__CallerNotOwner);
+        beacon.upgradeTo(address(0));
     }
 
     function testUpgradeTo() public {
