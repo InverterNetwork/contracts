@@ -21,6 +21,9 @@ interface IModuleFactory {
     /// @notice Given metadata already registered.
     error ModuleFactory__MetadataAlreadyRegistered();
 
+    /// @notice Given beacon has no Implmentation.
+    error ModuleFactory__BeaconNoValidImplementation();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -52,6 +55,7 @@ interface IModuleFactory {
 
     /// @notice Registers metadata `metadata` with module's implementation `target`.
     /// @dev Only callable by owner.
+    /// @dev Has to guarantee that 
     /// @param metadata The module's metadata.
     /// @param target The module's implementation.
     function registerMetadata(IModule.Metadata memory metadata, address target)

@@ -6,6 +6,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
+import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
+import {BeaconProxy} from "src/factories/beacon-fundamentals/BeaconProxy.sol";
+
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -49,8 +52,6 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     //--------------------------------------------------------------------------
     // Storage
 
-    // @todo mp: Modules need to use beacon pattern and support
-    //           "bulk updates".
     // @todo mp: ModuleFactory needs to know/manage minorVersion.
     //           Module does not have knowledge about this anymore!
 
@@ -86,10 +87,15 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        address clone = Clones.clone(target_);
-        IModule(clone).init(proposal, metadata, configdata);
+        if (Beacon(target_).implementation() == address(0)) {
+            revert ModuleFactory__BeaconNoValidImplementation();
+        }
 
-        return clone;
+        address implementation = address(new BeaconProxy(Beacon(target_)));
+
+        IModule(implementation).init(proposal, metadata, configdata); // @note what happens if the init functionality of the modules needs more input parameters?
+
+        return implementation;
     }
 
     //--------------------------------------------------------------------------
@@ -110,12 +116,10 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, address target_)
-        external
-        onlyOwner
-        validMetadata(metadata)
-        validTarget(target_)
-    {
+    function registerMetadata(
+        IModule.Metadata memory metadata,
+        address target_
+    ) external onlyOwner validMetadata(metadata) validTarget(target_) {
         bytes32 id = LibMetadata.identifier(metadata);
 
         address got = _targets[id];
@@ -125,10 +129,21 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
             revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
-        if (got != target_) {
-            // Register Metadata for target.
-            _targets[id] = target_;
-            emit MetadataRegistered(metadata, target_);
+        if(target_.code.length==0){
+            revert ModuleFactory__BeaconNoValidImplementation();
         }
+
+        //Check if Target is Beacon and has valid Implmentation
+        try Beacon(target_).implementation() returns (address implementation) {//@todo test for these specifically
+            if (implementation == address(0)) {
+                revert ModuleFactory__BeaconNoValidImplementation();//@note is this necessary? Doesnt this get caught by the catch?
+            }
+        } catch {
+            revert ModuleFactory__BeaconNoValidImplementation();
+        }
+
+        // Register Metadata for target.
+        _targets[id] = target_;
+        emit MetadataRegistered(metadata, target_);
     }
 }
