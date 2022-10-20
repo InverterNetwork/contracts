@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -21,10 +22,13 @@ import {IProposal} from "src/interfaces/IProposal.sol";
  */
 
 contract PaymentManager is Module {
+    using SafeERC20 for IERC20;
+
     //--------------------------------------------------------------------------
     // Storage
 
-    IERC20 private token;             // invariant
+    // invariants
+    IERC20 private token;
     address private proposal;
 
     struct VestingWallet {
@@ -63,9 +67,6 @@ contract PaymentManager is Module {
 
     /// @notice duration cant overflow, cant be 0.
     error Module__PaymentManager__InvalidDuration();
-
-    /// @notice erc20 transfer failed
-    error Module__PaymentManager__Erc20TransferFailed();
 
     /// @notice invalid token address
     error Module__PaymentManager__InvalidToken();
@@ -136,8 +137,7 @@ contract PaymentManager is Module {
 
             emit ERC20Released(address(token), amount);
 
-            if (!token.transfer(msg.sender, amount))
-                revert Module__PaymentManager__Erc20TransferFailed();
+            token.safeTransfer(msg.sender, amount);
         }
     }
 
@@ -198,8 +198,7 @@ contract PaymentManager is Module {
         if (unclaimedAmount > 0) {
             delete vestings[contributor];
 
-            if (!token.transfer(msg.sender, unclaimedAmount))
-                revert Module__PaymentManager__Erc20TransferFailed();
+            token.safeTransfer(msg.sender, unclaimedAmount);
 
             emit PaymentRemoved(contributor);
         }
