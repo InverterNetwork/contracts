@@ -4,8 +4,10 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
-import {ImplementationV1Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
-import {ImplementationV2Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
+import {ImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
+import {ImplementationV2Mock} from
+    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
 
 contract BeaconTest is Test {
     Beacon beacon;
@@ -20,7 +22,7 @@ contract BeaconTest is Test {
         assertTrue(beacon.implementation() == address(0));
     }
 
-    //@todo 
+    //@todo
 
     function testUpgradeTo() public {
         ImplementationV1Mock toUpgrade1 = new ImplementationV1Mock();
@@ -40,5 +42,4 @@ contract BeaconTest is Test {
 
         assertTrue(beacon.implementation() == address(toUpgrade2));
     }
-
 }

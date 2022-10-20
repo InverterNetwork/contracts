@@ -2,18 +2,16 @@ pragma solidity ^0.8.0;
 
 import "lib/openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
 
-contract ImplementationV2Mock is Initializable{
-
+contract ImplementationV2Mock is Initializable {
     uint public data;
 
-    constructor(){}
+    constructor() {}
 
-    function initialize(uint _data) external initializer(){
-        data=_data;
+    function initialize(uint _data) external initializer {
+        data = _data;
     }
 
-    function getVersion() external pure returns(uint){
+    function getVersion() external pure returns (uint) {
         return 2;
     }
-
 }

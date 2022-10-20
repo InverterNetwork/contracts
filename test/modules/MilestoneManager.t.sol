@@ -869,7 +869,6 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.__Milestone_confirmMilestone(id);
     }
 
-
     //----------------------------------
     // Test: __Milestone_declineMilestone()
 
@@ -908,7 +907,6 @@ contract MilestoneManagerTest is ModuleTest {
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
         milestoneManager.__Milestone_declineMilestone(0);
     }
-
 
     function test__Milestone_declineMilestoneFailsForInvalidId() public {
         vm.startPrank(address(_proposal));

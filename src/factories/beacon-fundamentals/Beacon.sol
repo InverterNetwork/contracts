@@ -20,7 +20,8 @@ contract Beacon is IBeacon, Ownable2Step {
 
     /// @notice upgrades the beacon to a new implementation address
     /// @param newImplementation : the new implementation address
-    function upgradeTo(address newImplementation) public onlyOwner {// @todo value check
+    function upgradeTo(address newImplementation) public onlyOwner {
+        // @todo value check
         _setImplementation(newImplementation);
         emit Upgraded(newImplementation);
     }
@@ -30,7 +31,7 @@ contract Beacon is IBeacon, Ownable2Step {
     function _setImplementation(address newImplementation) private {
         require(
             Address.isContract(newImplementation),
-            "UpgradeableBeacon: implementation is not a contract"// @todo Error
+            "UpgradeableBeacon: implementation is not a contract" // @todo Error
         );
         _implementation = newImplementation;
     }
