@@ -7,20 +7,37 @@ import "lib/openzeppelin-contracts/contracts/utils/Address.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 contract Beacon is IBeacon, Ownable2Step {
-    //@note Do we need some identifier for a module here?
+    //--------------------------------------------------------------------------------
+    // Error
+
+    /// @notice The given ImplementationAddress is not a Contract
+    error Beacon__ImplementationIsNotAContract();
+
+    //--------------------------------------------------------------------------------
+    // STATE
+
     address private _implementation;
+
+    //--------------------------------------------------------------------------------
+    // EVENTS
 
     /// @notice The beacon got upgraded to a new address
     event Upgraded(address indexed implementation);
 
+    //--------------------------------------------------------------------------------
+    // CONSTRUCTOR
+
     /// @inheritdoc IBeacon
-    function implementation() public view override returns (address) {
+    function implementation() public view override virtual returns (address) {
         return _implementation;
     }
 
+    //--------------------------------------------------------------------------------
+    // FUNCTIONS
+
     /// @notice upgrades the beacon to a new implementation address
     /// @param newImplementation : the new implementation address
-    function upgradeTo(address newImplementation) public onlyOwner {// @todo value check
+    function upgradeTo(address newImplementation) public onlyOwner {
         _setImplementation(newImplementation);
         emit Upgraded(newImplementation);
     }
@@ -28,10 +45,9 @@ contract Beacon is IBeacon, Ownable2Step {
     /// @notice sets the implementation address of the beacon
     /// @param newImplementation the new implementation address
     function _setImplementation(address newImplementation) private {
-        require(
-            Address.isContract(newImplementation),
-            "UpgradeableBeacon: implementation is not a contract"// @todo Error
-        );
+        if (newImplementation.code.length==0) {
+            revert Beacon__ImplementationIsNotAContract();
+        }
         _implementation = newImplementation;
     }
 }

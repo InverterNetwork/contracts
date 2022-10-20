@@ -13,7 +13,6 @@ import {ImplementationV2Mock} from "test/utils/mocks/factories/beacon-fundamenta
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract BeaconTest is Test {
-
     Beacon beacon;
 
     event Upgraded(address indexed implementation);
@@ -24,7 +23,7 @@ contract BeaconTest is Test {
     function setUp() public {
         beacon = new Beacon();
     }
-    
+
     //--------------------------------------------------------------------------------
     // TEST MAIN
 
@@ -38,6 +37,15 @@ contract BeaconTest is Test {
 
         vm.expectRevert(OZErrors.Ownable2Step__CallerNotOwner);
         beacon.upgradeTo(address(0));
+    }
+
+    function testImplemenationIsNotAContract(address implementation) public {
+        if (implementation.code.length > 0) {} else {
+            vm.expectRevert(
+                Beacon.Beacon__ImplementationIsNotAContract.selector
+            );
+        }
+        beacon.upgradeTo(implementation);
     }
 
     function testUpgradeTo() public {
@@ -58,5 +66,4 @@ contract BeaconTest is Test {
 
         assertTrue(beacon.implementation() == address(toUpgrade2));
     }
-
 }
