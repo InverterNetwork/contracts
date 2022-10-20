@@ -12,32 +12,68 @@ import {
 import {MilestoneManager} from "src/modules/MilestoneManager.sol";
 import {IMilestoneManager} from "src/interfaces/modules/IMilestoneManager.sol";
 
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
 contract MilestoneManagerTest is ModuleTest {
     using LibString for string;
 
     // SuT
     MilestoneManager milestoneManager;
 
+    // Constants
+    uint private constant _DURATION = 1 weeks;
+    uint private constant _BUDGET = 1000 * 1e18;
+    string private constant _TITLE = "Title";
+    string private constant _DETAILS = "Details";
+
+    // Constant copied from SuT
+    uint private constant _SENTINEL = type(uint).max;
+
     // Events copied from SuT
     event MilestoneAdded(
-        uint indexed id, string title, uint startDate, string details
+        uint indexed id,
+        uint duration,
+        uint budget,
+        string title,
+        string details
     );
-    event MilestoneStartDateUpdated(uint indexed id, uint startDate);
-    event MilestoneDetailsUpdated(uint indexed id, string details);
+    event MilestoneUpdated(
+        uint indexed id, uint duration, uint budget, string details
+    );
     event MilestoneRemoved(uint indexed id);
     event MilestoneSubmitted(uint indexed id);
     event MilestoneConfirmed(uint indexed id);
     event MilestoneDeclined(uint indexed id);
-
-    // Constants
-    string private constant _TITLE = "Title";
-    string private constant _DETAILS = "Details";
 
     function setUp() public {
         milestoneManager = new MilestoneManager();
         milestoneManager.init(_proposal, _METADATA, bytes(""));
 
         _setUpProposal(milestoneManager);
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: Initialization
+
+    function testInit() public override (ModuleTest) {
+        // SENTINEL milestone does not exist.
+        assertTrue(!milestoneManager.isExistingMilestone(_SENTINEL));
+
+        // Not current active milestone.
+        assertTrue(!milestoneManager.hasActiveMilestone());
+
+        // Next milestone not activateable.
+        assertTrue(!milestoneManager.isNextMilestoneActivateable());
+
+        // Current milestone list is empty.
+        uint[] memory milestones = milestoneManager.getAllMilestoneIds();
+        assertEq(milestones.length, 0);
+    }
+
+    function testReinitFails() public override (ModuleTest) {
+        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        milestoneManager.init(_proposal, _METADATA, bytes(""));
     }
 
     //--------------------------------------------------------------------------
@@ -93,6 +129,8 @@ contract MilestoneManagerTest is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Test: Milestone API Functions
+
+    /*
 
     //----------------------------------
     // Test: addMilestone()
@@ -381,6 +419,8 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.declineMilestone(invalidId);
     }
 
+*/
+
     //--------------------------------------------------------------------------
     // Test: Proposal Callback Functions
 
@@ -388,35 +428,40 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: __Milestone_addMilestone()
 
     function test__Milestone_addMilestone() public {
+        uint numberMilestones = 10;
+
         vm.startPrank(address(_proposal));
 
-        uint id;
+        uint gotId;
+        uint wantId;
 
-        // Add first milestone.
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneAdded(0, _TITLE, block.timestamp, _DETAILS);
+        // Add each milestone.
+        for (uint i; i < numberMilestones; i++) {
+            wantId = i + 1; // Note that id's start at 1.
 
-        id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
-        );
+            vm.expectEmit(true, true, true, true);
+            emit MilestoneAdded(wantId, _DURATION, _BUDGET, _TITLE, _DETAILS);
 
-        assertEq(id, 0);
-        _assertMilestone(
-            0, _TITLE, block.timestamp, _DETAILS, false, false, false
-        );
+            gotId = milestoneManager.__Milestone_addMilestone(
+                _DURATION, _BUDGET, _TITLE, _DETAILS
+            );
 
-        // Add second milestone to verify id increments correctly.
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneAdded(1, _TITLE, block.timestamp, _DETAILS);
+            assertEq(gotId, wantId);
+            _assertMilestone(
+                gotId, _DURATION, _BUDGET, _TITLE, _DETAILS, false, false
+            );
+        }
 
-        id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
-        );
+        // Assert that all milestone id's are fetchable.
+        // Note that the list is traversed.
+        uint[] memory ids = milestoneManager.getAllMilestoneIds();
 
-        assertEq(id, 1);
-        _assertMilestone(
-            1, _TITLE, block.timestamp, _DETAILS, false, false, false
-        );
+        assertEq(ids.length, numberMilestones);
+        for (uint i; i < numberMilestones; i++) {
+            wantId = numberMilestones - i; // Note that id's start at 1.
+
+            assertEq(ids[i], wantId);
+        }
     }
 
     function test__Milestone_addMilestoneOnlyCallableByProposal(address caller)
@@ -427,9 +472,46 @@ contract MilestoneManagerTest is ModuleTest {
         vm.prank(caller);
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
         milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
+            _DURATION, _BUDGET, _TITLE, _DETAILS
         );
     }
+
+    function test__Milestone_addMilestoneFailsForInvalidDuration() public {
+        uint[] memory invalids = _createInvalidDurations();
+
+        vm.startPrank(address(_proposal));
+
+        for (uint i; i < invalids.length; i++) {
+            vm.expectRevert(
+                IMilestoneManager
+                    .Module__MilestoneManager__InvalidDuration
+                    .selector
+            );
+            milestoneManager.__Milestone_addMilestone(
+                invalids[i], _BUDGET, _TITLE, _DETAILS
+            );
+        }
+    }
+
+    /*
+    @todo mp, marvin, nuggan: There are currently no invalid budgets.
+    function test__Milestone_addMilestoneFailsForInvalidBudget() public {
+        uint[] memory invalids = _createInvalidBudgets();
+
+        vm.startPrank(address(_proposal));
+
+        for (uint i; i < invalids.length; i++) {
+            vm.expectRevert(
+                IMilestoneManager
+                    .Module__MilestoneManager__InvalidBudget
+                    .selector
+            );
+            milestoneManager.__Milestone_addMilestone(
+                _DURATION, invalids[i], _TITLE, _DETAILS
+            );
+        }
+    }
+    */
 
     function test__Milestone_addMilestoneFailsForInvalidTitle() public {
         string[] memory invalidTitles = _createInvalidTitles();
@@ -443,27 +525,9 @@ contract MilestoneManagerTest is ModuleTest {
                     .selector
             );
             milestoneManager.__Milestone_addMilestone(
-                invalidTitles[i], block.timestamp, _DETAILS
+                _DURATION, _BUDGET, invalidTitles[i], _DETAILS
             );
         }
-    }
-
-    function test__Milestone_addMilestoneFailsForInvalidStartDate() public {
-        // StartDate invalid if:
-        //  - less than block.timestamp
-        vm.warp(1);
-        uint invalidStartDate = 0;
-
-        vm.startPrank(address(_proposal));
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidStartDate
-                .selector
-        );
-        milestoneManager.__Milestone_addMilestone(
-            _TITLE, invalidStartDate, _DETAILS
-        );
     }
 
     function test__Milestone_addMilestoneFailsForInvalidDetails() public {
@@ -478,10 +542,119 @@ contract MilestoneManagerTest is ModuleTest {
                     .selector
             );
             milestoneManager.__Milestone_addMilestone(
-                _TITLE, block.timestamp, invalidDetails[i]
+                _DURATION, _BUDGET, _TITLE, invalidDetails[i]
             );
         }
     }
+
+    //----------------------------------
+    // Test: __Milestone_removeMilestone()
+
+    function test__Milestone_removeMilestone() public {
+        uint numberMilestones = 10;
+
+        vm.startPrank(address(_proposal));
+
+        // Fill list with milestones.
+        for (uint i; i < numberMilestones; i++) {
+            milestoneManager.__Milestone_addMilestone(
+                _DURATION, _BUDGET, _TITLE, _DETAILS
+            );
+        }
+
+        // Remove milestones from the front, i.e. highest milestone id, until
+        // list is empty.
+        for (uint i; i < numberMilestones; i++) {
+            uint id = numberMilestones - i; // Note that id's start at 1.
+
+            vm.expectEmit(true, true, true, true);
+            emit MilestoneRemoved(id);
+
+            milestoneManager.__Milestone_removeMilestone(_SENTINEL, id);
+            assertEq(
+                milestoneManager.getAllMilestoneIds().length,
+                numberMilestones - i - 1
+            );
+        }
+
+        // Fill list again with milestones.
+        for (uint i; i < numberMilestones; i++) {
+            milestoneManager.__Milestone_addMilestone(
+                _DURATION, _BUDGET, _TITLE, _DETAILS
+            );
+        }
+
+        // Remove milestones from the back, i.e. lowest milestone id, until
+        // list is empty.
+        // Note that removing the last milestone requires the sentinel as
+        // prevId.
+        for (uint i; i < numberMilestones - 1; i++) {
+            // Note that id's start at 1.
+            uint prevId = i + 2;
+            uint id = i + 1;
+
+            vm.expectEmit(true, true, true, true);
+            emit MilestoneRemoved(id);
+
+            milestoneManager.__Milestone_removeMilestone(prevId, id);
+            assertEq(
+                milestoneManager.getAllMilestoneIds().length,
+                numberMilestones - i - 1
+            );
+        }
+
+        milestoneManager.__Milestone_removeMilestone(
+            _SENTINEL, numberMilestones
+        );
+        assertEq(milestoneManager.getAllMilestoneIds().length, 0);
+    }
+
+    function test__Milestone_removeMilestoneOnlyCallableByProposal(
+        address caller
+    ) public {
+        vm.assume(caller != address(_proposal));
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        milestoneManager.__Milestone_removeMilestone(0, 1);
+    }
+
+    function test__Milestone_removeMilestoneFailsForInvalidId() public {
+        vm.startPrank(address(_proposal));
+
+        uint invalidId = 1;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.__Milestone_removeMilestone(_SENTINEL, invalidId);
+    }
+
+    /*
+    // @todo mp: Need mock to set completed field per hand.
+    function test__Milestone_removeMilestoneFailsIfMilestoneAlreadyStarted() public {
+        vm.startPrank(address(_proposal));
+
+        // Add and start a milestone.
+        milestoneManager.__Milestone_addMilestone(_DURATION, _BUDGET, _TITLE, _DETAILS);
+        // @todo mp: Set as completed.
+
+        // Note that a milestone is not removeable if it is already completed,
+        // i.e. confirmed.
+        milestoneManager.__Milestone_confirmMilestone(id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotRemovable
+                .selector
+        );
+        milestoneManager.__Milestone_removeMilestone(id);
+    }
+
+    //----------------------------------
+    // Test: __Milestone_startNextMilestone()
 
     //----------------------------------
     // Test: __Milestone_updateMilestoneDetails()
@@ -669,74 +842,6 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     //----------------------------------
-    // Test: __Milestone_removeMilestone()
-
-    function test__Milestone_removeMilestone() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
-        );
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneRemoved(id);
-
-        milestoneManager.__Milestone_removeMilestone(id);
-
-        _assertMilestone({
-            id: id,
-            title: _TITLE,
-            startDate: block.timestamp + 1,
-            details: _DETAILS,
-            submitted: false,
-            completed: false,
-            removed: true
-        });
-    }
-
-    function test__Milestone_removeMilestoneOnlyCallableByProposal(
-        address caller
-    ) public {
-        vm.assume(caller != address(_proposal));
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_removeMilestone(0);
-    }
-
-    function test__Milestone_removeMilestoneFailsForInvalidId() public {
-        vm.startPrank(address(_proposal));
-
-        uint invalidId = 1;
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidMilestoneId
-                .selector
-        );
-        milestoneManager.__Milestone_removeMilestone(invalidId);
-    }
-
-    function test__Milestone_removeMilestoneFailsIfNotRemoveable() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
-        );
-
-        // Note that a milestone is not removeable if it is already completed,
-        // i.e. confirmed.
-        milestoneManager.__Milestone_confirmMilestone(id);
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestoneNotRemovable
-                .selector
-        );
-        milestoneManager.__Milestone_removeMilestone(id);
-    }
-
-    //----------------------------------
     // Test: __Milestone_submitMilestone()
 
     function test__Milestone_submitMilestone() public {
@@ -869,7 +974,6 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.__Milestone_confirmMilestone(id);
     }
 
-
     //----------------------------------
     // Test: __Milestone_declineMilestone()
 
@@ -909,7 +1013,6 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.__Milestone_declineMilestone(0);
     }
 
-
     function test__Milestone_declineMilestoneFailsForInvalidId() public {
         vm.startPrank(address(_proposal));
 
@@ -939,6 +1042,7 @@ contract MilestoneManagerTest is ModuleTest {
         );
         milestoneManager.__Milestone_declineMilestone(id);
     }
+*/
 
     //--------------------------------------------------------------------------
     // Assert Helper Functions
@@ -946,26 +1050,43 @@ contract MilestoneManagerTest is ModuleTest {
     /// @dev Asserts milestone with given data exists.
     function _assertMilestone(
         uint id,
+        uint duration,
+        uint budget,
         string memory title,
-        uint startDate,
         string memory details,
         bool submitted,
-        bool completed,
-        bool removed
+        bool completed
     ) internal {
         IMilestoneManager.Milestone memory m = milestoneManager.getMilestone(id);
 
+        assertEq(m.duration, duration);
+        assertEq(m.budget, budget);
+
         assertTrue(m.title.equals(title));
-        assertEq(m.startDate, startDate);
         assertTrue(m.details.equals(details));
 
         assertEq(m.submitted, submitted);
         assertEq(m.completed, completed);
-        assertEq(m.removed, removed);
     }
 
     //--------------------------------------------------------------------------
     // Data Creation Helper Functions
+
+    /// @dev Returns an element of each category of invalid durations.
+    function _createInvalidDurations() internal pure returns (uint[] memory) {
+        uint[] memory invalids = new uint[](1);
+
+        invalids[0] = 0;
+
+        return invalids;
+    }
+
+    /// @dev Returns an element of each category of invalid budgets.
+    function _createInvalidBudgets() internal pure returns (uint[] memory) {
+        uint[] memory invalids = new uint[](0);
+
+        return invalids;
+    }
 
     /// @dev Returns an element of each category of invalid titles.
     function _createInvalidTitles() internal pure returns (string[] memory) {

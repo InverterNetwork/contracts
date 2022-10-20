@@ -17,7 +17,7 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 /**
  * @dev Base class for module implementation test contracts.
  */
-contract ModuleTest is Test {
+abstract contract ModuleTest is Test {
     // Mocks
     AuthorizerMock internal _authorizer = new AuthorizerMock();
     ProposalMock internal _proposal = new ProposalMock(_authorizer);
@@ -38,6 +38,13 @@ contract ModuleTest is Test {
 
         _proposal.init(modules);
     }
+
+    //--------------------------------------------------------------------------------
+    // Test: Initialization
+
+    function testInit() public virtual;
+
+    function testReinitFails() public virtual;
 
     //--------------------------------------------------------------------------------
     // Error Helper Functions
