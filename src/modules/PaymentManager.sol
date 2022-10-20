@@ -50,7 +50,7 @@ contract PaymentManager is Module {
     event PaymentRemoved(address contributor);
     event PaymentPaused(address contributor);
     event PaymentContinued(address contributor);
-    event ERC20Released(address indexed token, uint256 amount);
+    event ERC20Released(address indexed token, uint amount);
 
     //--------------------------------------------------------------------------
     // Errors
@@ -80,19 +80,19 @@ contract PaymentManager is Module {
     // Modifiers
 
     modifier validSalary(uint _salary) {
-        if(_salary == 0)
+        if (_salary == 0)
             revert Module__PaymentManager__InvalidSalary();
         _;
     }
 
     modifier validStart(uint _start) {
-        if(_start < block.timestamp || _start >= type(uint64).max)
+        if (_start < block.timestamp || _start >= type(uint64).max)
             revert Module__PaymentManager__InvalidStart();
         _;
     }
 
-    modifier validDuration(uint _start, uint _duration){
-        if(_start + _duration <= _start || _duration == 0)
+    modifier validDuration(uint _start, uint _duration) {
+        if (_start + _duration <= _start || _duration == 0)
             revert Module__PaymentManager__InvalidDuration();
         _;
     }
@@ -118,9 +118,9 @@ contract PaymentManager is Module {
             abi.decode(data, (address, address));
 
 
-        if(!validAddress(_token))
+        if (!validAddress(_token))
             revert Module__PaymentManager__InvalidToken();
-        if(!validAddress(_token))
+        if (!validAddress(_token))
             revert Module__PaymentManager__InvalidProposal();
 
         token = IERC20(_token);
@@ -130,13 +130,13 @@ contract PaymentManager is Module {
     /// @notice Release the releasable tokens.
     ///         In OZ VestingWallet this method is named release().
     function claim() external {
-        if(vestings[msg.sender]._enabled){
-            uint256 amount = releasable();
+        if (vestings[msg.sender]._enabled) {
+            uint amount = releasable();
             vestings[msg.sender]._released += amount;
 
             emit ERC20Released(address(token), amount);
 
-            if(!token.transfer(msg.sender, amount))
+            if (!token.transfer(msg.sender, amount))
                 revert Module__PaymentManager__Erc20TransferFailed();
         }
     }
@@ -159,7 +159,7 @@ contract PaymentManager is Module {
         validStart(_start)
         validDuration(_start, _duration)
     {
-        if(!validAddress(_contributor))
+        if (!validAddress(_contributor))
             revert Module__PaymentManager__InvalidContributor();
 
         // @todo Nejc: Verify there's enough tokens in proposal for the payment.
@@ -193,12 +193,12 @@ contract PaymentManager is Module {
         onlyAuthorized // only proposal owner
     {
         // @noto Nejc: withdraw tokens that were not withdrawn yet.
-        uint unclaimedAmount = vestedAmount(uint64(block.timestamp),
-            contributor) - released(contributor);
-        if(unclaimedAmount > 0) {
+        uint unclaimedAmount = vestedAmount(
+            uint64(block.timestamp), contributor) - released(contributor);
+        if (unclaimedAmount > 0) {
             delete vestings[contributor];
 
-            if(!token.transfer(msg.sender, unclaimedAmount))
+            if (!token.transfer(msg.sender, unclaimedAmount))
                 revert Module__PaymentManager__Erc20TransferFailed();
 
             emit PaymentRemoved(contributor);
@@ -211,7 +211,7 @@ contract PaymentManager is Module {
         external
         onlyAuthorized // only proposal owner
     {
-        if(vestings[contributor]._enabled) {
+        if (vestings[contributor]._enabled) {
             vestings[contributor]._enabled = false;
             emit PaymentPaused(contributor);
         }
@@ -224,7 +224,7 @@ contract PaymentManager is Module {
         external
         onlyAuthorized // only proposal owner
     {
-        if(!vestings[contributor]._enabled) {
+        if (!vestings[contributor]._enabled) {
             vestings[contributor]._enabled = true;
             emit PaymentContinued(contributor);
         }
@@ -235,25 +235,25 @@ contract PaymentManager is Module {
 
     /// @notice Returns true if contributors vesting is enabled.
     /// @param contributor Contributor's address.
-    function enabled(address contributor) public view returns(bool) {
+    function enabled(address contributor) public view returns (bool) {
         return vestings[contributor]._enabled;
     }
 
     /// @notice Getter for the start timestamp.
     /// @param contributor Contributor's address.
-    function start(address contributor) public view returns(uint256) {
+    function start(address contributor) public view returns (uint) {
         return vestings[contributor]._start;
     }
 
     /// @notice Getter for the vesting duration.
     /// @param contributor Contributor's address.
-    function duration(address contributor) public view returns(uint256) {
+    function duration(address contributor) public view returns (uint) {
         return vestings[contributor]._duration;
     }
 
     /// @notice Getter for the amount of eth already released
     /// @param contributor Contributor's address.
-    function released(address contributor) public view returns(uint256) {
+    function released(address contributor) public view returns (uint) {
         return vestings[contributor]._released;
     }
 
@@ -262,15 +262,15 @@ contract PaymentManager is Module {
     function vestedAmount(uint64 timestamp, address contributor)
         public
         view
-        returns (uint256)
+        returns (uint)
     {
         return _vestingSchedule(vestings[contributor]._salary, timestamp);
     }
 
     /// @notice Getter for the amount of releasable tokens.
     function releasable() public view returns (uint) {
-        return vestedAmount(uint64(block.timestamp), msg.sender) -
-            released(msg.sender);
+        return vestedAmount(uint64(block.timestamp), msg.sender)
+            - released(msg.sender);
     }
 
     //--------------------------------------------------------------------------
@@ -281,27 +281,27 @@ contract PaymentManager is Module {
     ///         for an asset given its total historical allocation.
     /// @param totalAllocation Contributor's allocated vesting amount.
     /// @param timestamp Current block.timestamp
-    function _vestingSchedule(uint256 totalAllocation, uint64 timestamp)
+    function _vestingSchedule(uint totalAllocation, uint64 timestamp)
         internal
         view
         virtual
-        returns (uint256)
+        returns (uint)
     {
         if (timestamp < start(msg.sender)) {
             return 0;
         } else if (timestamp > start(msg.sender) + duration(msg.sender)) {
             return totalAllocation;
         } else {
-            return (totalAllocation * (timestamp - start(msg.sender))) /
-                duration(msg.sender);
+            return (totalAllocation * (timestamp - start(msg.sender)))
+                / duration(msg.sender);
         }
     }
 
     /// @notice validate address input.
     /// @param addr Address to validate.
     /// @return True if address is valid.
-    function validAddress(address addr) internal view returns(bool){
-        if(addr == address(0) || addr == msg.sender || addr == address(this))
+    function validAddress(address addr) internal view returns (bool) {
+        if (addr == address(0) || addr == msg.sender || addr == address(this))
             return false;
         return true;
     }
