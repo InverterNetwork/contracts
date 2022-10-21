@@ -9,20 +9,49 @@ import {ImplementationV1Mock} from
 import {ImplementationV2Mock} from
     "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
 
+//Libraries
+import "lib/openzeppelin-contracts/contracts/utils/Address.sol";
+
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
+
 contract BeaconTest is Test {
     Beacon beacon;
 
     event Upgraded(address indexed implementation);
 
+    //--------------------------------------------------------------------------------
+    // SETUP
+
     function setUp() public {
         beacon = new Beacon();
     }
+
+    //--------------------------------------------------------------------------------
+    // TEST MAIN
 
     function testDeployment() public {
         assertTrue(beacon.implementation() == address(0));
     }
 
-    //@todo
+    function testUpgradeToOnlyCallableByOwner(address caller) public {
+        vm.assume(caller != address(this));
+        vm.prank(caller);
+
+        vm.expectRevert(OZErrors.Ownable2Step__CallerNotOwner);
+        beacon.upgradeTo(address(0));
+    }
+
+    function testImplemenationIsNotAContract(address implementation) public {
+        if (!Address.isContract(implementation)) {
+            vm.expectRevert(
+                Beacon.Beacon__ImplementationIsNotAContract.selector
+            );
+        }
+        beacon.upgradeTo(implementation);
+    }
+
 
     function testUpgradeTo() public {
         ImplementationV1Mock toUpgrade1 = new ImplementationV1Mock();

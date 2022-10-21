@@ -6,11 +6,29 @@ interface IMilestoneManager {
     // Types
 
     struct Milestone {
-        uint startDate;
+        /// @dev The duration of the milestone.
+        ///      MUST not be zero.
+        uint duration;
+        /// @dev The budget for the milestone.
+        ///      That is the number of tokens payed during the milestone's
+        ///      duration.
+        ///      CAN be zero.
+        uint budget;
+        /// @dev The timestamp the milestone started.
+        uint startTimestamp;
+        /// @dev Whether the milestone got submitted already.
+        ///      Note that only accounts holding the {CONTRIBUTOR_ROLE()} can
+        ///      submit milestones.
         bool submitted;
+        /// @dev Whether the milestone is completed.
+        ///      A milestone is completed if it got confirmed and started more
+        ///      than duration seconds ago.
         bool completed;
-        bool removed;
+        /// @dev The milestone's title.
+        ///      MUST not be empty.
         string title;
+        /// @dev The milestone's details.
+        ///      MUST not be empty.
         string details;
     }
 
@@ -23,8 +41,8 @@ interface IMilestoneManager {
     /// @notice Given title invalid.
     error Module__MilestoneManager__InvalidTitle();
 
-    /// @notice Given startDate invalid.
-    error Module__MilestoneManager__InvalidStartDate();
+    /// @notice Given duration invalid.
+    error Module__MilestoneManager__InvalidDuration();
 
     /// @notice Given details invalid.
     error Module__MilestoneManager__InvalidDetails();
@@ -52,14 +70,17 @@ interface IMilestoneManager {
 
     /// @notice Event emitted when a new milestone added.
     event MilestoneAdded(
-        uint indexed id, string title, uint startDate, string details
+        uint indexed id,
+        uint duration,
+        uint budget,
+        string title,
+        string details
     );
 
-    /// @notice Event emitted when a milestone's startDate updated.
-    event MilestoneStartDateUpdated(uint indexed id, uint startDate);
-
-    /// @notice Event emitted when a milestone's details updated.
-    event MilestoneDetailsUpdated(uint indexed id, string details);
+    /// @notice Event emitted when a milestone got updated.
+    event MilestoneUpdated(
+        uint indexed id, uint duration, uint budget, string details
+    );
 
     /// @notice Event emitted when a milestone removed.
     event MilestoneRemoved(uint indexed id);

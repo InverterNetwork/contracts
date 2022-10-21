@@ -42,16 +42,19 @@ interface IModuleFactory {
         bytes memory configdata
     ) external returns (address);
 
-    /// @notice Returns the target address to clone for given metadata.
+    /// @notice Returns the target address to clone and the id for given
+    ///         metadata.
     /// @param metadata The module's metadata.
     /// @return The target address to clone.
-    function target(IModule.Metadata memory metadata)
+    /// @return The metadata's id.
+    function getTargetAndId(IModule.Metadata memory metadata)
         external
         view
-        returns (address);
+        returns (address, bytes32);
 
     /// @notice Registers metadata `metadata` with module's implementation `target`.
     /// @dev Only callable by owner.
+    /// @dev Has to guarantee that
     /// @param metadata The module's metadata.
     /// @param target The module's implementation.
     function registerMetadata(IModule.Metadata memory metadata, address target)

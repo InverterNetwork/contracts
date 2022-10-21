@@ -23,7 +23,64 @@ contract MilestoneManager is IMilestoneManager, Module {
     using LibString for string;
 
     //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier onlyContributor() {
+        // @todo mp: Use _msgSender().
+        bool isContributor = __Module_proposal.hasRole(
+            address(this), CONTRIBUTOR_ROLE, msg.sender
+        );
+        if (!isContributor) {
+            revert Module__MilestoneManager__OnlyCallableByContributor();
+        }
+        _;
+    }
+
+    modifier validDuration(uint duration) {
+        if (duration == 0) {
+            revert Module__MilestoneManager__InvalidDuration();
+        }
+        _;
+    }
+
+    modifier validBudget(uint budget) {
+        // @todo mp, marvin, nuggan: No constraints for a milestones budget.
+        _;
+    }
+
+    modifier validTitle(string memory title) {
+        if (title.isEmpty()) {
+            revert Module__MilestoneManager__InvalidTitle();
+        }
+        _;
+    }
+
+    modifier validDetails(string memory details) {
+        if (details.isEmpty()) {
+            revert Module__MilestoneManager__InvalidDetails();
+        }
+        _;
+    }
+
+    modifier validId(uint id) {
+        if (!isExistingMilestone(id)) {
+            revert Module__MilestoneManager__InvalidMilestoneId();
+        }
+        _;
+    }
+
+    modifier onlyConsecutiveMilestones(uint prevId, uint id) {
+        if (_milestones[prevId] != id) {
+            revert("Not consecutive milestones");
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
     // Constants
+
+    /// @dev Unrealistic to have that many milestones.
+    uint internal constant _SENTINEL = type(uint).max;
 
     //----------------------------------
     // Access Control Roles
@@ -59,63 +116,13 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Mapping of all Milestones.
-    /// @dev Milestone id => Milestone.
-    mapping(uint => Milestone) private _milestones;
+    mapping(uint => Milestone) internal _milestoneRegistry;
 
-    /// @dev The id assigned to the next created Milestone.
-    uint private _milestoneIdCounter;
+    mapping(uint => uint) internal _milestones;
 
-    //--------------------------------------------------------------------------
-    // Modifiers
+    uint internal _milestoneCounter;
 
-    /// @dev Checks via the governance module if msg.sender is contributor.
-    modifier onlyContributor() {
-        // @todo mp: Use _msgSender().
-        bool isContributor = __Module_proposal.hasRole(
-            address(this), CONTRIBUTOR_ROLE, msg.sender
-        );
-        if (!isContributor) {
-            revert Module__MilestoneManager__OnlyCallableByContributor();
-        }
-        _;
-    }
-
-    /// @dev Checks if the given title is valid.
-    /// @param title Given milestone title.
-    modifier validTitle(string memory title) {
-        if (title.isEmpty()) {
-            revert Module__MilestoneManager__InvalidTitle();
-        }
-        _;
-    }
-
-    /// @dev Checks if the given startDate is valid.
-    /// @param startDate The given startDate of the milestone.
-    modifier validStartDate(uint startDate) {
-        if (startDate < block.timestamp) {
-            revert Module__MilestoneManager__InvalidStartDate();
-        }
-        _;
-    }
-
-    /// @dev Checks if the given details is valid.
-    /// @param details The given details of the milestone.
-    modifier validDetails(string memory details) {
-        if (details.isEmpty()) {
-            revert Module__MilestoneManager__InvalidDetails();
-        }
-        _;
-    }
-
-    /// @dev Checks if the given id is available in the milestone array.
-    /// @param id The id in the milestone array.
-    modifier validId(uint id) {
-        if (id >= _milestoneIdCounter) {
-            revert Module__MilestoneManager__InvalidMilestoneId();
-        }
-        _;
-    }
+    uint internal _activeMilestone;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -130,7 +137,69 @@ contract MilestoneManager is IMilestoneManager, Module {
     ) external override (Module) initializer {
         __Module_init(proposal_, metadata);
 
-        // @todo felix: Set Payment module.
+        // Set up sentinel to signal empty list of milestones.
+        _milestones[_SENTINEL] = _SENTINEL;
+
+        // Set _activeMilestone to sentinel as otherwise the 0th milestone would
+        // be interpreted as active.
+        _activeMilestone = _SENTINEL;
+    }
+
+    //--------------------------------------------------------------------------
+    // Public View Functions
+
+    function getMilestone(uint id) public view returns (Milestone memory) {
+        if (!isExistingMilestone(id)) {
+            revert("Milestone does not exist");
+        }
+
+        return _milestoneRegistry[id];
+    }
+
+    function getAllMilestoneIds() external view returns (uint[] memory) {
+        uint[] memory array = new uint[](_milestoneCounter);
+
+        uint index = 0;
+        uint id = _milestones[_SENTINEL];
+        while (id != _SENTINEL) {
+            array[index] = id;
+            id = _milestones[id];
+            index++;
+        }
+
+        return array;
+    }
+
+    function getActiveMilestoneId() public view returns (uint id) {
+        if (!hasActiveMilestone()) {
+            revert("No milestone currently active");
+        }
+
+        return _activeMilestone;
+    }
+
+    function hasActiveMilestone() public view returns (bool) {
+        if (!isExistingMilestone(_activeMilestone)) {
+            return false;
+        }
+
+        Milestone storage m = _milestoneRegistry[_activeMilestone];
+
+        return m.completed && m.startTimestamp + m.duration < block.timestamp;
+    }
+
+    function isNextMilestoneActivateable() public view returns (bool) {
+        if (hasActiveMilestone()) {
+            return false;
+        }
+
+        uint next = _milestones[_activeMilestone];
+
+        return isExistingMilestone(next);
+    }
+
+    function isExistingMilestone(uint id) public view returns (bool) {
+        return id != _SENTINEL && _milestones[id] != 0;
     }
 
     //--------------------------------------------------------------------------
@@ -174,14 +243,44 @@ contract MilestoneManager is IMilestoneManager, Module {
     }
 
     /// @inheritdoc IMilestoneManager
+    function removeMilestone(uint id) external onlyAuthorized {
+        bool ok;
+
+        (ok, /*returnData*/ ) = _triggerProposalCallback(
+            abi.encodeWithSignature(_FUNC_REMOVE_MILESTONE, id),
+            Types.Operation.Call
+        );
+
+        if (!ok) {
+            revert Module_ProposalCallbackFailed(_FUNC_REMOVE_MILESTONE);
+        }
+    }
+
+    function startNextMilestone() external onlyAuthorized {
+        // Pre conditions:
+        // - preMilestone confirmed
+        // - preMilestone duration ended
+
+        // Payment handling:
+        // - Payment for this milestone starts now
+        // - Need to make sure tokens exist!
+        //   - Fetch tokens from proposal to address(this) (?)
+        //   - Payment Order
+        //      - Implement PaymentClient interface
+        //      - Create PaymentOrder
+
+        // Milestone handling:
+        // - milestone starts now
+    }
+
+    /// @inheritdoc IMilestoneManager
     function updateMilestoneDetails(uint id, string memory details)
         external
         onlyAuthorized
     {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/ ) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_UPDATE_MILESTONE_DETAILS, id, details),
             Types.Operation.Call
         );
@@ -197,9 +296,8 @@ contract MilestoneManager is IMilestoneManager, Module {
         onlyAuthorized
     {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/ ) = _triggerProposalCallback(
             abi.encodeWithSignature(
                 _FUNC_UPDATE_MILESTONE_START_DATE, id, startDate
             ),
@@ -214,26 +312,10 @@ contract MilestoneManager is IMilestoneManager, Module {
     }
 
     /// @inheritdoc IMilestoneManager
-    function removeMilestone(uint id) external onlyAuthorized {
-        bool ok;
-        bytes memory returnData;
-
-        (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(_FUNC_REMOVE_MILESTONE, id),
-            Types.Operation.Call
-        );
-
-        if (!ok) {
-            revert Module_ProposalCallbackFailed(_FUNC_REMOVE_MILESTONE);
-        }
-    }
-
-    /// @inheritdoc IMilestoneManager
     function submitMilestone(uint id) external onlyContributor {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/ ) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_SUBMIT_MILESTONE, id),
             Types.Operation.Call
         );
@@ -246,9 +328,8 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @inheritdoc IMilestoneManager
     function confirmMilestone(uint id) external onlyAuthorized {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/ ) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_CONFIRM_MILESTONE, id),
             Types.Operation.Call
         );
@@ -261,9 +342,8 @@ contract MilestoneManager is IMilestoneManager, Module {
     /// @inheritdoc IMilestoneManager
     function declineMilestone(uint id) external onlyAuthorized {
         bool ok;
-        bytes memory returnData;
 
-        (ok, returnData) = _triggerProposalCallback(
+        (ok, /*returnData*/ ) = _triggerProposalCallback(
             abi.encodeWithSignature(_FUNC_DECLINE_MILESTONE, id),
             Types.Operation.Call
         );
@@ -277,82 +357,113 @@ contract MilestoneManager is IMilestoneManager, Module {
     // Proposal Callback Functions
 
     function __Milestone_addMilestone(
+        uint duration,
+        uint budget,
         string memory title,
-        uint startDate, //@note Possible Startdate now
         string memory details
     )
         external
         onlyProposal
+        validDuration(duration)
+        validBudget(budget)
         validTitle(title)
-        validStartDate(startDate)
         validDetails(details)
         returns (uint)
     {
-        uint id = _milestoneIdCounter++;
+        // Increase counter and cache result.
+        // Note that ids therefore start at 1.
+        uint id = ++_milestoneCounter;
 
-        Milestone memory m = Milestone({
-            startDate: startDate,
+        // Add milestone's id to list.
+        _milestones[id] = _milestones[_SENTINEL];
+        _milestones[_SENTINEL] = id;
+
+        // Add milestone instance to registry.
+        _milestoneRegistry[id] = Milestone({
+            duration: duration,
+            budget: budget,
             title: title,
             details: details,
+            startTimestamp: 0,
             submitted: false,
-            completed: false,
-            removed: false
+            completed: false
         });
 
-        _milestones[id] = m;
-        emit MilestoneAdded(id, title, startDate, details);
+        // Emit event.
+        emit MilestoneAdded(id, duration, budget, title, details);
 
         return id;
     }
 
-    function __Milestone_updateMilestoneDetails(uint id, string memory details)
+    function __Milestone_removeMilestone(uint prevId, uint id)
         external
         onlyProposal
         validId(id)
-        validDetails(details)
+        onlyConsecutiveMilestones(prevId, id)
     {
-        Milestone storage m = _milestones[id];
+        Milestone storage m = _milestoneRegistry[id];
 
-        if (!_isUpdateable(m)) {
-            revert Module__MilestoneManager__MilestoneNotUpdateable();
-        }
-
-        if (!m.details.equals(details)) {
-            m.details = details;
-            emit MilestoneDetailsUpdated(id, details);
-        }
-    }
-
-    function __Milestone_updateMilestoneStartDate(uint id, uint startDate)
-        external
-        onlyProposal
-        validId(id)
-        validStartDate(startDate)
-    {
-        Milestone storage m = _milestones[id];
-
-        if (!_isUpdateable(m)) {
-            revert Module__MilestoneManager__MilestoneNotUpdateable();
-        }
-
-        if (m.startDate != startDate) {
-            m.startDate = startDate;
-            emit MilestoneStartDateUpdated(id, startDate);
-        }
-    }
-
-    function __Milestone_removeMilestone(
-        uint id //@note There might be a point made to increase the level of interaction required to remove a milestone
-    ) external onlyProposal validId(id) {
-        Milestone storage m = _milestones[id];
-
-        if (!_isRemoveable(m)) {
+        // Not removeable if milestone started already.
+        if (m.startTimestamp != 0) {
             revert Module__MilestoneManager__MilestoneNotRemovable();
         }
 
-        if (!m.removed) {
-            m.removed = true;
-            emit MilestoneRemoved(id);
+        // Delete milestone instance from registry.
+        delete _milestoneRegistry[id];
+
+        // Remove milestone's id from list and decrease counter.
+        _milestones[prevId] = _milestones[id];
+        delete _milestones[id];
+        _milestoneCounter--;
+
+        emit MilestoneRemoved(id);
+    }
+
+    function __Milestone_startNextMilestone() external onlyProposal {
+        if (!isNextMilestoneActivateable()) {
+            revert("Milestone not activateable");
+        }
+
+        // Get next milestone's id and update _activeMilestone.
+        uint id = _milestones[_activeMilestone];
+        _activeMilestone = id;
+
+        // Mark milestone as started, i.e. set its startTimestamp.
+        _milestoneRegistry[id].startTimestamp = block.timestamp;
+
+        // @todo Initiate payment order.
+        //       Make sure token exists.
+    }
+
+    function __Milestone_updateMilestone(
+        uint id,
+        uint duration,
+        uint budget,
+        string memory details
+    )
+        external
+        onlyProposal
+        validId(id)
+        validDuration(duration)
+        validBudget(budget)
+        validDetails(details)
+    {
+        Milestone storage m = _milestoneRegistry[id];
+
+        // Not updateable if milestone started already.
+        if (m.startTimestamp != 0) {
+            revert Module__MilestoneManager__MilestoneNotUpdateable();
+        }
+
+        bool durationUpdated = m.duration != duration;
+        bool budgetUpdated = m.budget != budget;
+        bool detailsUpdated = m.details.equals(details);
+
+        if (durationUpdated || budgetUpdated || detailsUpdated) {
+            m.duration = duration;
+            m.budget = budget;
+            m.details = details;
+            emit MilestoneUpdated(id, duration, budget, details);
         }
     }
 
@@ -361,9 +472,10 @@ contract MilestoneManager is IMilestoneManager, Module {
         onlyProposal
         validId(id)
     {
-        Milestone storage m = _milestones[id];
+        Milestone storage m = _milestoneRegistry[id];
 
-        if (!_isSubmitable(m)) {
+        // Not submitable if milestone not started yet or already completed.
+        if (m.startTimestamp == 0 || m.completed) {
             revert Module__MilestoneManager__MilestoneNotSubmitable();
         }
 
@@ -378,85 +490,33 @@ contract MilestoneManager is IMilestoneManager, Module {
         onlyProposal
         validId(id)
     {
-        Milestone storage m = _milestones[id];
+        Milestone storage m = _milestoneRegistry[id];
 
-        if (!_isConfirmable(m)) {
+        // Not confirmable if milestone not submitted yet.
+        if (!m.submitted) {
             revert Module__MilestoneManager__MilestoneNotConfirmable();
         }
 
         if (!m.completed) {
             m.completed = true;
-
-            // @todo mp, felix: add Payment connection
-
             emit MilestoneConfirmed(id);
         }
     }
 
-    function __Milestone_declineMilestone(
-        uint id //@note maybe at why declined
-    ) external onlyProposal validId(id) {
-        Milestone storage m = _milestones[id];
+    function __Milestone_declineMilestone(uint id)
+        external
+        onlyProposal
+        validId(id)
+    {
+        Milestone storage m = _milestoneRegistry[id];
 
-        if (!_isDeclineable(m)) {
+        // Not declineable if milestone not submitted yet or already completed.
+        if (!m.submitted || m.completed) {
             revert Module__MilestoneManager__MilestoneNotDeclineable();
         }
 
-        if (m.submitted) {
-            m.submitted = false;
-            emit MilestoneDeclined(id);
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    // Public View Functions
-
-    /// @inheritdoc IMilestoneManager
-    function getMilestone(uint id) external view returns (Milestone memory) {
-        Milestone memory m = _milestones[id];
-
-        return m;
-    }
-
-    //--------------------------------------------------------------------------
-    // Internal Helper Functions
-
-    // @todo mp, felix: The checks are probably _not_ sufficient.
-    //                  Need to check with specs again.
-
-    function _isUpdateable(Milestone storage m) internal view returns (bool) {
-        // @todo mp: When is updating not allowed anymore?
-        // gitbook: If milestone started already, see https://inverter-network.gitbook.io/inverter-network-docs/creating-a-proposal/managing-milestones#editing-milestone.
-        bool notStarted = block.timestamp < m.startDate;
-
-        return notStarted;
-    }
-
-    function _isRemoveable(Milestone storage m) internal view returns (bool) {
-        bool notCompleted = !m.completed;
-
-        return notCompleted;
-    }
-
-    function _isSubmitable(Milestone storage m) internal view returns (bool) {
-        bool notStarted = block.timestamp < m.startDate;
-        bool notRemoved = !m.removed;
-
-        return notStarted && notRemoved;
-    }
-
-    function _isConfirmable(Milestone storage m) internal view returns (bool) {
-        bool notRemoved = !m.removed;
-        bool notSubmitted = !m.submitted;
-
-        return notRemoved && notSubmitted;
-    }
-
-    function _isDeclineable(Milestone storage m) internal view returns (bool) {
-        bool notRemoved = !m.removed;
-        bool submitted = m.submitted;
-        bool notCompleted = !m.completed;
-
-        return notRemoved && submitted && notCompleted;
+        // Declining a milestone marks it as non-submitted again.
+        m.submitted = false;
+        emit MilestoneDeclined(id);
     }
 }

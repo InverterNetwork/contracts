@@ -6,6 +6,13 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+import {BeaconProxy} from "src/factories/beacon-fundamentals/BeaconProxy.sol";
+
+// External Libraries
+import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
+import {Address} from "@oz/utils/Address.sol";
+
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -38,19 +45,33 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         target.
-    modifier validTarget(address target_) {
-        if (target_ == address(this) || target_ == address(0)) {
+    ///         beacon.
+    modifier validBeacon(address beacon) {
+        // Revert if beacon is not a contract.
+        if (!Address.isContract(beacon)) {
             revert ModuleFactory__InvalidTarget();
         }
+
+        // Revert if beacon does not implement {IBeacon} interface.
+        // Checked via ERC-165.
+        bool isIBeacon =
+            ERC165Checker.supportsInterface(beacon, type(IBeacon).interfaceId);
+        if (!isIBeacon) {
+            revert ModuleFactory__InvalidTarget();
+        }
+
+        // Revert if beacon's implementation is zero address.
+        if (IBeacon(beacon).implementation() == address(0)) {
+            revert ModuleFactory__InvalidTarget();
+        }
+
+        // Otherwise valid beacon.
         _;
     }
 
     //--------------------------------------------------------------------------
     // Storage
 
-    // @todo mp: Modules need to use beacon pattern and support
-    //           "bulk updates".
     // @todo mp: ModuleFactory needs to know/manage minorVersion.
     //           Module does not have knowledge about this anymore!
 
@@ -78,57 +99,67 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // module's `init()` function does it anyway.
         // @todo mp: Add comment to function doc?!
 
-        bytes32 id = LibMetadata.identifier(metadata);
+        address target;
+        (target, /*id*/ ) = getTargetAndId(metadata);
 
-        address target_ = _targets[id];
-
-        if (target_ == address(0)) {
+        if (target == address(0)) {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        address clone = Clones.clone(target_);
-        IModule(clone).init(proposal, metadata, configdata);
+        // @todo mp: This is not cool... Check needs to be there because
+        //           contract can change after registration, but the error
+        //           should be more "exceptional".
+        //           This should _really_ NOT happen!
+        // Update:   It indicates the module is broken and should NOT be
+        //           trusted. Better to burn all gas and make sure nothing
+        //           can happen in this tx anymore (?)
+        assert(IBeacon(target).implementation() != address(0));
+        //if (IBeacon(target).implementation() == address(0)) {
+        //    revert ModuleFactory__InvalidBeaconImplementation();
+        //}
 
-        return clone;
+        address implementation = address(new BeaconProxy(IBeacon(target)));
+
+        IModule(implementation).init(proposal, metadata, configdata);
+
+        return implementation;
     }
 
     //--------------------------------------------------------------------------
     // Public View Functions
 
     /// @inheritdoc IModuleFactory
-    function target(IModule.Metadata memory metadata)
-        external
+    function getTargetAndId(IModule.Metadata memory metadata)
+        public
         view
-        returns (address)
+        returns (address, bytes32)
     {
         bytes32 id = LibMetadata.identifier(metadata);
 
-        return _targets[id];
+        return (_targets[id], id);
     }
 
     //--------------------------------------------------------------------------
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, address target_)
+    function registerMetadata(IModule.Metadata memory metadata, address target)
         external
         onlyOwner
         validMetadata(metadata)
-        validTarget(target_)
+        validBeacon(target)
     {
-        bytes32 id = LibMetadata.identifier(metadata);
-
-        address got = _targets[id];
+        address oldTarget;
+        bytes32 id;
+        (oldTarget, id) = getTargetAndId(metadata);
 
         // Revert if metadata already registered for different target.
-        if (got != address(0)) {
+        if (oldTarget != address(0)) {
             revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
-        if (got != target_) {
-            // Register Metadata for target.
-            _targets[id] = target_;
-            emit MetadataRegistered(metadata, target_);
-        }
+        // Register Metadata for target.
+        _targets[id] = target;
+        emit MetadataRegistered(metadata, target);
     }
 }
