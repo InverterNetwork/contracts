@@ -13,21 +13,12 @@ interface IPaymentClient {
         bytes32 additionalData; // Additional info for stuff like streaming, vesting etc
     }
 
-    /// @notice Returns the list of this module's payment orders.
-    function getPaymentOrders() external view returns (PaymentOrder[] memory);
+    /// @notice Returns the list outstanding payment orders.
+    function viewPaymentOrders()
+        external
+        view
+        returns (PaymentOrder[] memory);
 
-    /// @notice Adds a payment order to the client using the proposal's default payment processor
-    function addPaymentOrder(
-        address _recipient,
-        uint _amount,
-        bytes32 _additionalData
-    ) external;
-
-    /// @notice Adds a payment order to the client, specifying which processor should handle payout
-    function addPaymentOrder(
-        IPaymentProcessor assignedPaymentProcessor,
-        address _recipient,
-        uint _amount,
-        bytes32 _additionalData
-    ) external;
+    /// @notice Collects all outstanding payment orders, modifying internal state to mark them as completed.
+    function collectPaymentOrders() external returns (PaymentOrder[] memory);
 }
