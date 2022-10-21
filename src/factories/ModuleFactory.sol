@@ -45,11 +45,27 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         target.
-    modifier validTarget(address target_) {
-        if (target_ == address(this) || target_ == address(0)) {
+    ///         beacon.
+    modifier validBeacon(address beacon) {
+        // Revert if beacon is not a contract.
+        if (!Address.isContract(beacon)) {
             revert ModuleFactory__InvalidTarget();
         }
+
+        // Revert if beacon does not implement {IBeacon} interface.
+        // Checked via ERC-165.
+        bool isIBeacon =
+            ERC165Checker.supportsInterface(beacon, type(IBeacon).interfaceId);
+        if (!isIBeacon) {
+            revert ModuleFactory__InvalidTarget();
+        }
+
+        // Revert if beacon's implementation is zero address.
+        if (IBeacon(beacon).implementation() == address(0)) {
+            revert ModuleFactory__InvalidTarget();
+        }
+
+        // Otherwise valid beacon.
         _;
     }
 
@@ -94,9 +110,13 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         //           contract can change after registration, but the error
         //           should be more "exceptional".
         //           This should _really_ NOT happen!
-        if (IBeacon(target).implementation() == address(0)) {
-            revert ModuleFactory__InvalidBeaconImplementation();
-        }
+        // Update:   It indicates the module is broken and should NOT be
+        //           trusted. Better to burn all gas and make sure nothing
+        //           can happen in this tx anymore (?)
+        assert(IBeacon(target).implementation() != address(0));
+        //if (IBeacon(target).implementation() == address(0)) {
+        //    revert ModuleFactory__InvalidBeaconImplementation();
+        //}
 
         address implementation = address(new BeaconProxy(IBeacon(target)));
 
@@ -127,28 +147,15 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         external
         onlyOwner
         validMetadata(metadata)
-        validTarget(target)
+        validBeacon(target)
     {
-        address currentTarget;
+        address oldTarget;
         bytes32 id;
-        (currentTarget, id) = getTargetAndId(metadata);
+        (oldTarget, id) = getTargetAndId(metadata);
 
         // Revert if metadata already registered for different target.
-        if (currentTarget != address(0)) {
+        if (oldTarget != address(0)) {
             revert ModuleFactory__MetadataAlreadyRegistered();
-        }
-
-        if (!Address.isContract(target)) {
-            revert ModuleFactory__InvalidBeaconImplementation();
-        }
-
-        if (!ERC165Checker.supportsInterface(target, type(IBeacon).interfaceId))
-        {
-            revert ModuleFactory__InvalidBeaconImplementation();
-        }
-
-        if (IBeacon(target).implementation() == address(0)) {
-            revert ModuleFactory__InvalidBeaconImplementation();
         }
 
         // Register Metadata for target.
