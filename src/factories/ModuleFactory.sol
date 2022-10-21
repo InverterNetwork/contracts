@@ -6,8 +6,12 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
-import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 import {BeaconProxy} from "src/factories/beacon-fundamentals/BeaconProxy.sol";
+
+// External Libraries
+import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
+import {Address} from "@oz/utils/Address.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -87,13 +91,13 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        if (Beacon(target_).implementation() == address(0)) {
+        if (IBeacon(target_).implementation() == address(0)) {
             revert ModuleFactory__BeaconNoValidImplementation();
         }
 
-        address implementation = address(new BeaconProxy(Beacon(target_)));
+        address implementation = address(new BeaconProxy(IBeacon(target_)));
 
-        IModule(implementation).init(proposal, metadata, configdata); // @note what happens if the init functionality of the modules needs more input parameters?
+        IModule(implementation).init(proposal, metadata, configdata);
 
         return implementation;
     }
@@ -131,16 +135,17 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
             revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
-        if (target_.code.length == 0) {
+        if (!Address.isContract(target_)) {
             revert ModuleFactory__BeaconNoValidImplementation();
         }
 
-        //Check if Target is Beacon and has valid Implmentation
-        try Beacon(target_).implementation() returns (address implementation) {
-            if (implementation == address(0)) {
-                revert ModuleFactory__BeaconNoValidImplementation();
-            }
-        } catch {
+        if (
+            !ERC165Checker.supportsInterface(target_, type(IBeacon).interfaceId)
+        ) {
+            revert ModuleFactory__BeaconNoValidImplementation();
+        }
+
+        if (IBeacon(target_).implementation() == address(0)) {
             revert ModuleFactory__BeaconNoValidImplementation();
         }
 
