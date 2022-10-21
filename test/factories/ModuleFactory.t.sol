@@ -103,25 +103,20 @@ contract ModuleFactoryTest is Test {
 
     function testRegisterMetadataFailsIfBeaconIsNotContract() public {
         // Note that 0xCAFE is EOA and has no code.
-        vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidTarget.selector
-        );
+        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
         factory.registerMetadata(DATA, address(0xCAFE));
     }
 
     function testRegisterMetadataFailsIfBeaconNotImplementingERC165() public {
         // Note that address(this) does not implement ERC-165.
-        vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidTarget.selector
-        );
+        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
         factory.registerMetadata(DATA, address(this));
     }
 
     function testRegisterMetadataFailsIfBeaconsImplementationIsZero() public {
         beacon.overrideImplementation(address(0));
 
-        vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidTarget.selector);
+        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
         factory.registerMetadata(DATA, address(beacon));
     }
 
@@ -184,7 +179,6 @@ contract ModuleFactoryTest is Test {
         vm.expectRevert();
         factory.createModule(metadata, IProposal(proposal), configdata);
     }
-
 
     //--------------------------------------------------------------------------
     // Tests: Beacon Upgrades
