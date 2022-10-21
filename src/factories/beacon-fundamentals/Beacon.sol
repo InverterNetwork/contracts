@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "lib/openzeppelin-contracts/contracts/proxy/beacon/IBeacon.sol";
-import "lib/openzeppelin-contracts/contracts/utils/Address.sol";
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+import {Address} from "@oz/utils/Address.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
-contract Beacon is IBeacon, Ownable2Step {
+contract Beacon is IBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
     // Error
 
@@ -49,5 +50,19 @@ contract Beacon is IBeacon, Ownable2Step {
             revert Beacon__ImplementationIsNotAContract();
         }
         _implementation = newImplementation;
+    }
+
+    //--------------------------------------------------------------------------------
+    // ERC165 FUNCTIONS
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override
+        returns (bool)
+    {
+        return interfaceId == type(IBeacon).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 }
