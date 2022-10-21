@@ -16,9 +16,12 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
-import {BeaconMock} from "test/utils/mocks/factories/beacon-fundamentals/BeaconMock.sol";
-import {ImplementationV1Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol"; //Is also a Module
-import {ImplementationV2Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol"; //Is also a Module
+import {BeaconMock} from
+    "test/utils/mocks/factories/beacon-fundamentals/BeaconMock.sol";
+import {ImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol"; //Is also a Module
+import {ImplementationV2Mock} from
+    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol"; //Is also a Module
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -32,7 +35,7 @@ contract ModuleFactoryTest is Test {
 
     // Constants
     // @todo mp: Move to some common contract. See todo in Milestone.t.sol too.
-    uint256 constant MAJOR_VERSION = 1;
+    uint constant MAJOR_VERSION = 1;
     string constant GIT_URL = "https://github.com/organization/module";
 
     IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
@@ -97,24 +100,34 @@ contract ModuleFactoryTest is Test {
 
         factory.registerMetadata(DATA, address(beacon));
 
-        vm.expectRevert(IModuleFactory.ModuleFactory__MetadataAlreadyRegistered.selector);
+        vm.expectRevert(
+            IModuleFactory.ModuleFactory__MetadataAlreadyRegistered.selector
+        );
         factory.registerMetadata(DATA, address(additionalBeacon));
     }
 
-    function testRegisterMetadataFailsIfBeaconHasNoValidImplementation(address burner) public {
+    function testRegisterMetadataFailsIfBeaconHasNoValidImplementation(
+        address burner
+    ) public {
         _assumeValidTarget(burner);
-        vm.assume(burner.code.length==0);
+        vm.assume(burner.code.length == 0);
 
         //Should fail because 0 Address has no code
-        vm.expectRevert(IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector);
+        vm.expectRevert(
+            IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector
+        );
         factory.registerMetadata(DATA, burner);
 
         //Should fail because factory has no implementation() function//@note is there a better way to generalize this?
-        vm.expectRevert(IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector);
+        vm.expectRevert(
+            IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector
+        );
         factory.registerMetadata(DATA, address(this));
 
         //Should fail because beacon address is 0
-        vm.expectRevert(IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector);
+        vm.expectRevert(
+            IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector
+        );
         factory.registerMetadata(DATA, address(beacon));
     }
 
@@ -151,7 +164,9 @@ contract ModuleFactoryTest is Test {
         _assumeValidMetadata(metadata);
         _assumeValidProposal(proposal);
 
-        vm.expectRevert(IModuleFactory.ModuleFactory__UnregisteredMetadata.selector);
+        vm.expectRevert(
+            IModuleFactory.ModuleFactory__UnregisteredMetadata.selector
+        );
         factory.createModule(metadata, IProposal(proposal), configdata);
     }
 
@@ -170,11 +185,8 @@ contract ModuleFactoryTest is Test {
         //register beacon as Module
         factory.registerMetadata(metadata, address(beacon));
 
-        address proxyImplementationAddress1 = factory.createModule(
-            metadata,
-            IProposal(proposal),
-            configdata
-        );
+        address proxyImplementationAddress1 =
+            factory.createModule(metadata, IProposal(proposal), configdata);
 
         assertTrue(
             ImplementationV1Mock(proxyImplementationAddress1).getVersion() == 1
@@ -212,11 +224,7 @@ contract ModuleFactoryTest is Test {
         vm.expectRevert(
             IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector
         );
-        factory.createModule(
-            metadata,
-            IProposal(proposal),
-            configdata
-        );
+        factory.createModule(metadata, IProposal(proposal), configdata);
     }
 
     //--------------------------------------------------------------------------

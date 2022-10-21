@@ -6,8 +6,10 @@ import "forge-std/Test.sol";
 import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
 
 //Mocks
-import {ImplementationV1Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
-import {ImplementationV2Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
+import {ImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
+import {ImplementationV2Mock} from
+    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";

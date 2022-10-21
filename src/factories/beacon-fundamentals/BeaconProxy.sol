@@ -23,9 +23,8 @@ contract BeaconProxy is Proxy {
 
     /// @notice Construct the BeaconProxy
     /// @dev Sets the beacon address that contains the implementation address
-    /// @param beacon the according beacon address    
-    constructor(IBeacon beacon)
-    {
+    /// @param beacon the according beacon address
+    constructor(IBeacon beacon) {
         _beacon = beacon;
         emit BeaconUpgraded(beacon);
     }
@@ -34,12 +33,7 @@ contract BeaconProxy is Proxy {
     // FUNCTIONS
 
     /// @inheritdoc Proxy
-    function _implementation()
-        internal
-        view
-        override
-        returns (address)
-    {
+    function _implementation() internal view override returns (address) {
         return _beacon.implementation();
     }
 }

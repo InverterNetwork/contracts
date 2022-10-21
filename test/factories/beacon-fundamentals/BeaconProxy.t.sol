@@ -3,10 +3,12 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {IBeacon} from "lib/openzeppelin-contracts/contracts/proxy/beacon/IBeacon.sol";
+import {IBeacon} from
+    "lib/openzeppelin-contracts/contracts/proxy/beacon/IBeacon.sol";
 import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
 import {BeaconProxy} from "src/factories/beacon-fundamentals/BeaconProxy.sol";
-import {ImplementationV1Mock} from "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
+import {ImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
 
 contract BeaconProxyTest is Test {
     Beacon beacon;
@@ -37,7 +39,7 @@ contract BeaconProxyTest is Test {
         new BeaconProxy(beacon);
     }
 
-    function testImplementation(uint256 data) public {
+    function testImplementation(uint data) public {
         ImplementationV1Mock(address(proxy)).initialize(data);
 
         assertTrue(ImplementationV1Mock(address(proxy)).data() == data);

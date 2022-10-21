@@ -116,10 +116,12 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(
-        IModule.Metadata memory metadata,
-        address target_
-    ) external onlyOwner validMetadata(metadata) validTarget(target_) {
+    function registerMetadata(IModule.Metadata memory metadata, address target_)
+        external
+        onlyOwner
+        validMetadata(metadata)
+        validTarget(target_)
+    {
         bytes32 id = LibMetadata.identifier(metadata);
 
         address got = _targets[id];
@@ -129,7 +131,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
             revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
-        if(target_.code.length==0){
+        if (target_.code.length == 0) {
             revert ModuleFactory__BeaconNoValidImplementation();
         }
 

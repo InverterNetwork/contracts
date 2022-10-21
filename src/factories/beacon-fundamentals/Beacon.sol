@@ -28,7 +28,7 @@ contract Beacon is IBeacon, Ownable2Step {
     // CONSTRUCTOR
 
     /// @inheritdoc IBeacon
-    function implementation() public view override virtual returns (address) {
+    function implementation() public view virtual override returns (address) {
         return _implementation;
     }
 
@@ -45,7 +45,7 @@ contract Beacon is IBeacon, Ownable2Step {
     /// @notice sets the implementation address of the beacon
     /// @param newImplementation the new implementation address
     function _setImplementation(address newImplementation) private {
-        if (newImplementation.code.length==0) {
+        if (newImplementation.code.length == 0) {
             revert Beacon__ImplementationIsNotAContract();
         }
         _implementation = newImplementation;
