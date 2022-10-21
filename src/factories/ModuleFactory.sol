@@ -83,19 +83,18 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // module's `init()` function does it anyway.
         // @todo mp: Add comment to function doc?!
 
-        bytes32 id = LibMetadata.identifier(metadata);
+        address target;
+        (target, /*id*/ ) = getTargetAndId(metadata);
 
-        address target_ = _targets[id];
-
-        if (target_ == address(0)) {
+        if (target == address(0)) {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        if (IBeacon(target_).implementation() == address(0)) {
+        if (IBeacon(target).implementation() == address(0)) {
             revert ModuleFactory__BeaconNoValidImplementation();
         }
 
-        address implementation = address(new BeaconProxy(IBeacon(target_)));
+        address implementation = address(new BeaconProxy(IBeacon(target)));
 
         IModule(implementation).init(proposal, metadata, configdata);
 
@@ -106,51 +105,50 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     // Public View Functions
 
     /// @inheritdoc IModuleFactory
-    function target(IModule.Metadata memory metadata)
-        external
+    function getTargetAndId(IModule.Metadata memory metadata)
+        public
         view
-        returns (address)
+        returns (address, bytes32)
     {
         bytes32 id = LibMetadata.identifier(metadata);
 
-        return _targets[id];
+        return (_targets[id], id);
     }
 
     //--------------------------------------------------------------------------
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, address target_)
+    function registerMetadata(IModule.Metadata memory metadata, address target)
         external
         onlyOwner
         validMetadata(metadata)
-        validTarget(target_)
+        validTarget(target)
     {
-        bytes32 id = LibMetadata.identifier(metadata);
-
-        address got = _targets[id];
+        address currentTarget;
+        bytes32 id;
+        (currentTarget, id) = getTargetAndId(metadata);
 
         // Revert if metadata already registered for different target.
-        if (got != address(0)) {
+        if (currentTarget != address(0)) {
             revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
-        if (!Address.isContract(target_)) {
+        if (!Address.isContract(target)) {
             revert ModuleFactory__BeaconNoValidImplementation();
         }
 
-        if (
-            !ERC165Checker.supportsInterface(target_, type(IBeacon).interfaceId)
-        ) {
+        if (!ERC165Checker.supportsInterface(target, type(IBeacon).interfaceId))
+        {
             revert ModuleFactory__BeaconNoValidImplementation();
         }
 
-        if (IBeacon(target_).implementation() == address(0)) {
+        if (IBeacon(target).implementation() == address(0)) {
             revert ModuleFactory__BeaconNoValidImplementation();
         }
 
         // Register Metadata for target.
-        _targets[id] = target_;
-        emit MetadataRegistered(metadata, target_);
+        _targets[id] = target;
+        emit MetadataRegistered(metadata, target);
     }
 }

@@ -53,6 +53,8 @@ contract ModuleFactoryTest is Test {
         assertEq(factory.pendingOwner(), address(0));
     }
 
+    // @todo mp, felix: Add tests for `getTargetAndId`.
+
     //--------------------------------------------------------------------------
     // Test: registerMetadata
 
@@ -71,7 +73,10 @@ contract ModuleFactoryTest is Test {
 
         factory.registerMetadata(metadata, address(beacon));
 
-        assertEq(factory.target(metadata), address(beacon));
+        address target;
+        (target, /*id*/ ) = factory.getTargetAndId(metadata);
+
+        assertEq(target, address(beacon));
     }
 
     function testRegisterMetadataFailsIfMetadataInvalid() public {
