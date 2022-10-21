@@ -11,6 +11,9 @@ import {ImplementationV1Mock} from
 import {ImplementationV2Mock} from
     "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
 
+//Libraries
+import "lib/openzeppelin-contracts/contracts/utils/Address.sol";
+
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -42,7 +45,7 @@ contract BeaconTest is Test {
     }
 
     function testImplemenationIsNotAContract(address implementation) public {
-        if (implementation.code.length > 0) {} else {
+        if (!Address.isContract(implementation)) {
             vm.expectRevert(
                 Beacon.Beacon__ImplementationIsNotAContract.selector
             );

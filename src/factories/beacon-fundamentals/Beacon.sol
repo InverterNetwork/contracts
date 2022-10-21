@@ -45,7 +45,7 @@ contract Beacon is IBeacon, Ownable2Step {
     /// @notice sets the implementation address of the beacon
     /// @param newImplementation the new implementation address
     function _setImplementation(address newImplementation) private {
-        if (newImplementation.code.length == 0) {
+        if (!Address.isContract(newImplementation)) {
             revert Beacon__ImplementationIsNotAContract();
         }
         _implementation = newImplementation;
