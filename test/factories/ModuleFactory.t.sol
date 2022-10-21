@@ -119,19 +119,19 @@ contract ModuleFactoryTest is Test {
 
         //Should fail because 0 Address has no code
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector
+            IModuleFactory.ModuleFactory__InvalidBeaconImplementation.selector
         );
         factory.registerMetadata(DATA, burner);
 
         //Should fail because factory has no implementation() function//@note is there a better way to generalize this?
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector
+            IModuleFactory.ModuleFactory__InvalidBeaconImplementation.selector
         );
         factory.registerMetadata(DATA, address(this));
 
         //Should fail because beacon address is 0
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector
+            IModuleFactory.ModuleFactory__InvalidBeaconImplementation.selector
         );
         factory.registerMetadata(DATA, address(beacon));
     }
@@ -227,7 +227,7 @@ contract ModuleFactoryTest is Test {
         beacon.overrideImplementation(address(0));
 
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector
+            IModuleFactory.ModuleFactory__InvalidBeaconImplementation.selector
         );
         factory.createModule(metadata, IProposal(proposal), configdata);
     }

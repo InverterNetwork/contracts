@@ -15,14 +15,14 @@ interface IModuleFactory {
     /// @notice Given target invalid.
     error ModuleFactory__InvalidTarget();
 
+    /// @notice Given beacon implementation invalid.
+    error ModuleFactory__InvalidBeaconImplementation();
+
     /// @notice Given metadata unregistered.
     error ModuleFactory__UnregisteredMetadata();
 
     /// @notice Given metadata already registered.
     error ModuleFactory__MetadataAlreadyRegistered();
-
-    /// @notice Given beacon has no Implmentation.
-    error ModuleFactory__BeaconNoValidImplementation();
 
     //--------------------------------------------------------------------------
     // Events
