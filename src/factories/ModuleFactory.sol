@@ -134,9 +134,9 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         }
 
         //Check if Target is Beacon and has valid Implmentation
-        try Beacon(target_).implementation() returns (address implementation) {//@todo test for these specifically
+        try Beacon(target_).implementation() returns (address implementation) {
             if (implementation == address(0)) {
-                revert ModuleFactory__BeaconNoValidImplementation();//@note is this necessary? Doesnt this get caught by the catch?
+                revert ModuleFactory__BeaconNoValidImplementation();
             }
         } catch {
             revert ModuleFactory__BeaconNoValidImplementation();

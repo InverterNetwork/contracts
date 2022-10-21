@@ -101,6 +101,23 @@ contract ModuleFactoryTest is Test {
         factory.registerMetadata(DATA, address(additionalBeacon));
     }
 
+    function testRegisterMetadataFailsIfBeaconHasNoValidImplementation(address burner) public {
+        _assumeValidTarget(burner);
+        vm.assume(burner.code.length==0);
+
+        //Should fail because 0 Address has no code
+        vm.expectRevert(IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector);
+        factory.registerMetadata(DATA, burner);
+
+        //Should fail because factory has no implementation() function//@note is there a better way to generalize this?
+        vm.expectRevert(IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector);
+        factory.registerMetadata(DATA, address(this));
+
+        //Should fail because beacon address is 0
+        vm.expectRevert(IModuleFactory.ModuleFactory__BeaconNoValidImplementation.selector);
+        factory.registerMetadata(DATA, address(beacon));
+    }
+
     //--------------------------------------------------------------------------
     // Tests: createModule
 
@@ -183,7 +200,7 @@ contract ModuleFactoryTest is Test {
         bytes memory configdata
     ) public {
         _assumeValidMetadata(metadata);
-        _assumeValidProposal(proposal); //@todo mock Beacon to have 0 address implmene
+        _assumeValidProposal(proposal);
 
         beacon.overrideImplementation(address(new ModuleMock()));
 
