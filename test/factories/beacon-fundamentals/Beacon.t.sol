@@ -4,8 +4,6 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
-
-//Mocks
 import {ImplementationV1Mock} from
     "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
 import {ImplementationV2Mock} from
@@ -16,6 +14,7 @@ import "lib/openzeppelin-contracts/contracts/utils/Address.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
 
 contract BeaconTest is Test {
     Beacon beacon;
@@ -52,6 +51,7 @@ contract BeaconTest is Test {
         }
         beacon.upgradeTo(implementation);
     }
+
 
     function testUpgradeTo() public {
         ImplementationV1Mock toUpgrade1 = new ImplementationV1Mock();
