@@ -29,9 +29,10 @@ contract SimplePaymentClient is PaymentClient, Module {
     // Modifiers
 
     modifier onlyPaymentProcessor() {
-        if (_msgSender() != address(__Module_proposal.paymentProcessor())) {
-            revert __Module__PaymentClient_UnauthorizedProcessor(_msgSender());
-        }
+        // TODO
+        //if (_msgSender() != address(__Module_proposal.paymentProcessor())) {
+        //    revert __Module__PaymentClient_UnauthorizedProcessor(_msgSender());
+        //}
         _;
     }
 
@@ -125,13 +126,17 @@ contract SimplePaymentClient is PaymentClient, Module {
 
         PaymentOrder[] memory processOrders = paymentOrders;
         // Cache payment token.
+        
+        //TODO
+
+        /*
         IERC20 paymentToken = __Module_proposal.paymentToken();
 
         for (uint i; i < processOrders.length; i++) {
             paymentToken.safeIncreaseAllowance(
                 _msgSender(), processOrders[i].amount
             );
-        }
+        }*/
 
         delete paymentOrders;
 
