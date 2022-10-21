@@ -15,9 +15,6 @@ interface IModuleFactory {
     /// @notice Given target invalid.
     error ModuleFactory__InvalidTarget();
 
-    /// @notice Given beacon implementation invalid.
-    error ModuleFactory__InvalidBeaconImplementation();
-
     /// @notice Given metadata unregistered.
     error ModuleFactory__UnregisteredMetadata();
 
