@@ -90,8 +90,12 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
+        // @todo mp: This is not cool... Check needs to be there because
+        //           contract can change after registration, but the error
+        //           should be more "exceptional".
+        //           This should _really_ NOT happen!
         if (IBeacon(target).implementation() == address(0)) {
-            revert ModuleFactory__BeaconNoValidImplementation();
+            revert ModuleFactory__InvalidBeaconImplementation();
         }
 
         address implementation = address(new BeaconProxy(IBeacon(target)));
@@ -135,16 +139,16 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         }
 
         if (!Address.isContract(target)) {
-            revert ModuleFactory__BeaconNoValidImplementation();
+            revert ModuleFactory__InvalidBeaconImplementation();
         }
 
         if (!ERC165Checker.supportsInterface(target, type(IBeacon).interfaceId))
         {
-            revert ModuleFactory__BeaconNoValidImplementation();
+            revert ModuleFactory__InvalidBeaconImplementation();
         }
 
         if (IBeacon(target).implementation() == address(0)) {
-            revert ModuleFactory__BeaconNoValidImplementation();
+            revert ModuleFactory__InvalidBeaconImplementation();
         }
 
         // Register Metadata for target.
