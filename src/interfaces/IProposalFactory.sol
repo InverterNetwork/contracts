@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 
-interface IProposalFactory { //@todo felix add Beacon pattern
+interface IProposalFactory {
     error ProposalFactory__ModuleDataLengthMismatch();
 
     function target() external view returns (address);
