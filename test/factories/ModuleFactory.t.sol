@@ -87,16 +87,6 @@ contract ModuleFactoryTest is Test {
         factory.registerMetadata(data, address(beacon));
     }
 
-    function testRegisterMetadataFailsIfTargetInvalid() public {
-        // Invalid if address(0).
-        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
-        factory.registerMetadata(DATA, address(0));
-
-        // Invalid if address(factory).
-        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
-        factory.registerMetadata(DATA, address(factory));
-    }
-
     function testRegisterMetadataFailsIfAlreadyRegistered() public {
         beacon.overrideImplementation(address(module));
 
@@ -111,28 +101,27 @@ contract ModuleFactoryTest is Test {
         factory.registerMetadata(DATA, address(additionalBeacon));
     }
 
-    function testRegisterMetadataFailsIfBeaconHasNoValidImplementation(
-        address burner
-    ) public {
-        _assumeValidTarget(burner);
-        vm.assume(burner.code.length == 0);
-
-        //Should fail because 0 Address has no code
+    function testRegisterMetadataFailsIfBeaconIsNotContract() public {
+        // Note that 0xCAFE is EOA and has no code.
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidBeaconImplementation.selector
+            IModuleFactory.ModuleFactory__InvalidTarget.selector
         );
-        factory.registerMetadata(DATA, burner);
+        factory.registerMetadata(DATA, address(0xCAFE));
+    }
 
-        //Should fail because factory has no implementation() function//@note is there a better way to generalize this?
+    function testRegisterMetadataFailsIfBeaconNotImplementingERC165() public {
+        // Note that address(this) does not implement ERC-165.
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidBeaconImplementation.selector
+            IModuleFactory.ModuleFactory__InvalidTarget.selector
         );
         factory.registerMetadata(DATA, address(this));
+    }
 
-        //Should fail because beacon address is 0
+    function testRegisterMetadataFailsIfBeaconsImplementationIsZero() public {
+        beacon.overrideImplementation(address(0));
+
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidBeaconImplementation.selector
-        );
+            IModuleFactory.ModuleFactory__InvalidTarget.selector);
         factory.registerMetadata(DATA, address(beacon));
     }
 
@@ -175,6 +164,33 @@ contract ModuleFactoryTest is Test {
         factory.createModule(metadata, IProposal(proposal), configdata);
     }
 
+    function testCreateModuleFailsIfBeaconsImplementationIsZero(
+        IModule.Metadata memory metadata,
+        address proposal,
+        bytes memory configdata
+    ) public {
+        _assumeValidMetadata(metadata);
+        _assumeValidProposal(proposal);
+
+        // Setup and register beacon.
+        beacon.overrideImplementation(address(new ModuleMock()));
+        factory.registerMetadata(metadata, address(beacon));
+
+        // Change beacon's implementation to zero address.
+        beacon.overrideImplementation(address(0));
+
+        // Note that an `assert()` statement fails.
+        // @todo mp, felix: Can we test this better?
+        vm.expectRevert();
+        factory.createModule(metadata, IProposal(proposal), configdata);
+    }
+
+
+    //--------------------------------------------------------------------------
+    // Tests: Beacon Upgrades
+
+    // @todo mp, Felix: Does this tests really belong here? What does this have
+    //                  to do with the factories?
     function testBeaconUpgrade(
         IModule.Metadata memory metadata,
         address proposal,
@@ -183,53 +199,32 @@ contract ModuleFactoryTest is Test {
         _assumeValidMetadata(metadata);
         _assumeValidProposal(proposal);
 
-        //Create implementation V1 and upgrade beacon to it
+        // Create implementation V1 and upgrade beacon to it.
         ImplementationV1Mock implementationV1 = new ImplementationV1Mock();
         beacon.overrideImplementation(address(implementationV1));
 
-        //register beacon as Module
+        // Register beacon as Module.
         factory.registerMetadata(metadata, address(beacon));
 
         address proxyImplementationAddress1 =
             factory.createModule(metadata, IProposal(proposal), configdata);
 
-        assertTrue(
-            ImplementationV1Mock(proxyImplementationAddress1).getVersion() == 1
+        assertEq(
+            ImplementationV1Mock(proxyImplementationAddress1).getVersion(), 1
         );
 
-        //Create implementation V2 and upgrade beacon to it
+        // Create implementation V2 and upgrade beacon to it.
         ImplementationV2Mock implementationV2 = new ImplementationV2Mock();
         beacon.overrideImplementation(address(implementationV2));
 
-        assertTrue(
-            ImplementationV2Mock(proxyImplementationAddress1).getVersion() == 2
+        assertEq(
+            ImplementationV2Mock(proxyImplementationAddress1).getVersion(), 2
         );
 
-        //Out of curiosity test if V1 Still works
-        assertTrue(
-            ImplementationV1Mock(proxyImplementationAddress1).getVersion() == 2
+        // (Out of curiosity) Check that V1 Still works.
+        assertEq(
+            ImplementationV1Mock(proxyImplementationAddress1).getVersion(), 2
         );
-    }
-
-    function testBeaconNotFunctional(
-        IModule.Metadata memory metadata,
-        address proposal,
-        bytes memory configdata
-    ) public {
-        _assumeValidMetadata(metadata);
-        _assumeValidProposal(proposal);
-
-        beacon.overrideImplementation(address(new ModuleMock()));
-
-        //register beacon as Module
-        factory.registerMetadata(metadata, address(beacon));
-
-        beacon.overrideImplementation(address(0));
-
-        vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidBeaconImplementation.selector
-        );
-        factory.createModule(metadata, IProposal(proposal), configdata);
     }
 
     //--------------------------------------------------------------------------
@@ -237,11 +232,6 @@ contract ModuleFactoryTest is Test {
 
     function _assumeValidMetadata(IModule.Metadata memory metadata) public {
         vm.assume(LibMetadata.isValid(metadata));
-    }
-
-    function _assumeValidTarget(address target) internal {
-        vm.assume(target != address(factory));
-        vm.assume(target != address(0));
     }
 
     function _assumeValidProposal(address proposal) internal {
