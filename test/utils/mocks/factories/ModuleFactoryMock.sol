@@ -13,7 +13,7 @@ import {IModule} from "src/interfaces/IModule.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
 contract ModuleFactoryMock is IModuleFactory {
-    address private _target;
+    IBeacon private _beacon;
 
     uint public addressCounter;
 
@@ -24,12 +24,12 @@ contract ModuleFactoryMock is IModuleFactory {
         return address(uint160(++addressCounter));
     }
 
-    function getTargetAndId(IModule.Metadata memory metadata)
+    function getBeaconAndId(IModule.Metadata memory metadata)
         external
         view
-        returns (address, bytes32)
+        returns (IBeacon, bytes32)
     {
-        return (_target, LibMetadata.identifier(metadata));
+        return (_beacon, LibMetadata.identifier(metadata));
     }
 
     function registerMetadata(IModule.Metadata memory, IBeacon) external {}

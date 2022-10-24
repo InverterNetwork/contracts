@@ -18,7 +18,6 @@ import {ImplementationV2Mock} from
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-
 contract BeaconTest is Test {
     Beacon beacon;
 
@@ -54,7 +53,6 @@ contract BeaconTest is Test {
         }
         beacon.upgradeTo(implementation);
     }
-
 
     function testUpgradeTo() public {
         ImplementationV1Mock toUpgrade1 = new ImplementationV1Mock();
