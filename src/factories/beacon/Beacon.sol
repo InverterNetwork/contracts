@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
@@ -11,6 +11,7 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
     // Error
 
+    // @todo mp: Use InvalidContract terminology.
     /// @notice The given ImplementationAddress is not a Contract
     error Beacon__ImplementationIsNotAContract();
 
@@ -39,7 +40,7 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     /// @notice upgrades the beacon to a new implementation address
     /// @param newImplementation : the new implementation address
     function upgradeTo(address newImplementation) public onlyOwner {
-    
+
         _setImplementation(newImplementation);
         emit Upgraded(newImplementation);
     }

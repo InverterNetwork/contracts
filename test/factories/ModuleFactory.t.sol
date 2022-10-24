@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+// External Interfaces
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+
 // Internal Dependencies
 import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 
@@ -63,7 +66,7 @@ contract ModuleFactoryTest is Test {
         vm.prank(caller);
 
         vm.expectRevert(OZErrors.Ownable2Step__CallerNotOwner);
-        factory.registerMetadata(DATA, address(1));
+        factory.registerMetadata(DATA, beacon);
     }
 
     function testRegisterMetadata(IModule.Metadata memory metadata) public {
@@ -71,7 +74,7 @@ contract ModuleFactoryTest is Test {
 
         beacon.overrideImplementation(address(module));
 
-        factory.registerMetadata(metadata, address(beacon));
+        factory.registerMetadata(metadata, beacon);
 
         address target;
         (target, /*id*/ ) = factory.getTargetAndId(metadata);
@@ -84,7 +87,7 @@ contract ModuleFactoryTest is Test {
         IModule.Metadata memory data = IModule.Metadata(1, "");
 
         vm.expectRevert(IModuleFactory.ModuleFactory__InvalidMetadata.selector);
-        factory.registerMetadata(data, address(beacon));
+        factory.registerMetadata(data, beacon);
     }
 
     function testRegisterMetadataFailsIfAlreadyRegistered() public {
@@ -93,31 +96,19 @@ contract ModuleFactoryTest is Test {
         BeaconMock additionalBeacon = new BeaconMock();
         additionalBeacon.overrideImplementation(address(module));
 
-        factory.registerMetadata(DATA, address(beacon));
+        factory.registerMetadata(DATA, beacon);
 
         vm.expectRevert(
             IModuleFactory.ModuleFactory__MetadataAlreadyRegistered.selector
         );
-        factory.registerMetadata(DATA, address(additionalBeacon));
-    }
-
-    function testRegisterMetadataFailsIfBeaconIsNotContract() public {
-        // Note that 0xCAFE is EOA and has no code.
-        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
-        factory.registerMetadata(DATA, address(0xCAFE));
-    }
-
-    function testRegisterMetadataFailsIfBeaconNotImplementingERC165() public {
-        // Note that address(this) does not implement ERC-165.
-        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
-        factory.registerMetadata(DATA, address(this));
+        factory.registerMetadata(DATA, additionalBeacon);
     }
 
     function testRegisterMetadataFailsIfBeaconsImplementationIsZero() public {
         beacon.overrideImplementation(address(0));
 
         vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
-        factory.registerMetadata(DATA, address(beacon));
+        factory.registerMetadata(DATA, beacon);
     }
 
     //--------------------------------------------------------------------------
@@ -134,7 +125,7 @@ contract ModuleFactoryTest is Test {
         beacon.overrideImplementation(address(module));
 
         // Register ModuleMock for given metadata.
-        factory.registerMetadata(metadata, address(beacon));
+        factory.registerMetadata(metadata, beacon);
 
         // Create new module instance.
         IModule newModule = IModule(
@@ -169,7 +160,7 @@ contract ModuleFactoryTest is Test {
 
         // Setup and register beacon.
         beacon.overrideImplementation(address(new ModuleMock()));
-        factory.registerMetadata(metadata, address(beacon));
+        factory.registerMetadata(metadata, beacon);
 
         // Change beacon's implementation to zero address.
         beacon.overrideImplementation(address(0));
@@ -198,7 +189,7 @@ contract ModuleFactoryTest is Test {
         beacon.overrideImplementation(address(implementationV1));
 
         // Register beacon as Module.
-        factory.registerMetadata(metadata, address(beacon));
+        factory.registerMetadata(metadata, beacon);
 
         address proxyImplementationAddress1 =
             factory.createModule(metadata, IProposal(proposal), configdata);
