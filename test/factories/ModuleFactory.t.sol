@@ -17,11 +17,11 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {BeaconMock} from
-    "test/utils/mocks/factories/beacon-fundamentals/BeaconMock.sol";
+    "test/utils/mocks/factories/beacon/BeaconMock.sol";
 import {ImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol"; //Is also a Module
+    "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol"; //Is also a Module
 import {ImplementationV2Mock} from
-    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol"; //Is also a Module
+    "test/utils/mocks/factories/beacon/ImplementationV2Mock.sol"; //Is also a Module
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";

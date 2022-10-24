@@ -3,12 +3,17 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+// External Interfaces
 import {IBeacon} from
     "lib/openzeppelin-contracts/contracts/proxy/beacon/IBeacon.sol";
-import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
-import {BeaconProxy} from "src/factories/beacon-fundamentals/BeaconProxy.sol";
+
+// Internal Dependencies
+import {Beacon} from "src/factories/beacon/Beacon.sol";
+import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
+
+// Mocks
 import {ImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
+    "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol";
 
 contract BeaconProxyTest is Test {
     Beacon beacon;
