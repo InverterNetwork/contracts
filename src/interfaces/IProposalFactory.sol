@@ -15,6 +15,8 @@ interface IProposalFactory {
         address[] calldata funders,
         IModule.Metadata memory authorizerMetadata,
         bytes memory authorizerConfigdata,
+        IModule.Metadata memory paymentProcessorMetadata,
+        bytes memory paymentProcessorConfigdata,
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address);
