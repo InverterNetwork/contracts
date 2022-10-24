@@ -77,5 +77,4 @@ contract BeaconTest is Test {
         //          - ERC 165
         //          - IBeacon
     }
-
 }
