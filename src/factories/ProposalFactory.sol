@@ -73,7 +73,9 @@ contract ProposalFactory is IProposalFactory {
 
         // Deploy and cache {IPaymentProcessor} module.
         address paymentProcessor = IModuleFactory(moduleFactory).createModule(
-            paymentProcessorMetadata, IProposal(clone), paymentProcessorConfigdata
+            paymentProcessorMetadata,
+            IProposal(clone),
+            paymentProcessorConfigdata
         );
 
         // Deploy and cache optional modules.
