@@ -31,7 +31,9 @@ contract ProposalFactory is IProposalFactory {
     //--------------------------------------------------------------------------
     // Storage
 
-    uint private _proposalIdCounter;
+    /// @dev The counter for the next proposal id.
+    /// @dev Starts counting at 1.
+    uint private _proposalIdCounter = 1;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -47,8 +49,13 @@ contract ProposalFactory is IProposalFactory {
     /// @inheritdoc IProposalFactory
     function createProposal(
         address[] calldata funders,
+        // {IAuthorizer} data
         IModule.Metadata memory authorizerMetadata,
         bytes memory authorizerConfigdata,
+        // {IPaymentProcessor} data
+        IModule.Metadata memory paymentProcessorMetadata,
+        bytes memory paymentProcessorConfigdata,
+        // Other module data
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address) {
@@ -59,9 +66,14 @@ contract ProposalFactory is IProposalFactory {
             revert ProposalFactory__ModuleDataLengthMismatch();
         }
 
-        // Deploy and cache authorizer module.
+        // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerMetadata, IProposal(clone), authorizerConfigdata
+        );
+
+        // Deploy and cache {IPaymentProcessor} module.
+        address paymentProcessor = IModuleFactory(moduleFactory).createModule(
+            paymentProcessorMetadata, IProposal(clone), paymentProcessorConfigdata
         );
 
         // Deploy and cache optional modules.
@@ -79,7 +91,7 @@ contract ProposalFactory is IProposalFactory {
             funders,
             modules,
             IAuthorizer(authorizer),
-            IPaymentProcessor(address(0xCAFE)) // @todo mp: Obviously wrong...
+            IPaymentProcessor(paymentProcessor)
         );
 
         return clone;
