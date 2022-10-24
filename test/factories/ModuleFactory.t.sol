@@ -29,6 +29,7 @@ import {ImplementationV2Mock} from
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract ModuleFactoryTest is Test {
+    // SuT
     ModuleFactory factory;
 
     // Mocks

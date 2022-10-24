@@ -12,42 +12,44 @@ import {Beacon} from "src/factories/beacon/Beacon.sol";
 import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
 
 // Mocks
+import {BeaconMock} from "test/utils/mocks/factories/beacon/BeaconMock.sol";
 import {ImplementationV1Mock} from
     "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol";
 
 contract BeaconProxyTest is Test {
-    Beacon beacon;
+    // SuT
     BeaconProxy proxy;
+
+    // Mocks
+    BeaconMock beacon;
     ImplementationV1Mock implementation;
 
+    // Events copied from SuT
     event BeaconUpgraded(IBeacon indexed beacon);
 
-    //--------------------------------------------------------------------------------
-    // SETUP
-
     function setUp() public {
-        beacon = new Beacon();
+        beacon = new BeaconMock();
 
         implementation = new ImplementationV1Mock();
-        beacon.upgradeTo(address(implementation));
+        beacon.overrideImplementation(address(implementation));
 
         proxy = new BeaconProxy(beacon);
     }
 
-    //--------------------------------------------------------------------------------
-    // TEST MAIN
-
-    function testDeployment() public {
+    function testDeploymentInvariants() public {
         vm.expectEmit(true, true, true, true);
         emit BeaconUpgraded(beacon);
 
         new BeaconProxy(beacon);
     }
 
+    //--------------------------------------------------------------------------------
+    // Test: _implementation
+
     function testImplementation(uint data) public {
         ImplementationV1Mock(address(proxy)).initialize(data);
 
-        assertTrue(ImplementationV1Mock(address(proxy)).data() == data);
-        assertTrue(ImplementationV1Mock(address(proxy)).getVersion() == 1);
+        assertEq(ImplementationV1Mock(address(proxy)).data(), data);
+        assertEq(ImplementationV1Mock(address(proxy)).getVersion(), 1);
     }
 }

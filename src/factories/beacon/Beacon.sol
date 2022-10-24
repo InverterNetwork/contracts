@@ -1,33 +1,37 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-import {Address} from "@oz/utils/Address.sol";
+// External Dependencies
+import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
-import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
+// External Libraries
+import {Address} from "@oz/utils/Address.sol";
+
+// External Interfaces
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
 contract Beacon is IBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
-    // Error
+    // Errors
 
-    // @todo mp: Use InvalidContract terminology.
-    /// @notice The given ImplementationAddress is not a Contract
-    error Beacon__ImplementationIsNotAContract();
-
-    //--------------------------------------------------------------------------------
-    // STATE
-
-    address private _implementation;
+    /// @notice Given implementation invalid.
+    error Beacon__InvalidImplementation();
 
     //--------------------------------------------------------------------------------
-    // EVENTS
+    // Events
 
-    /// @notice The beacon got upgraded to a new address
+    /// @notice Beacon upgraded to new implementation address.
     event Upgraded(address indexed implementation);
 
     //--------------------------------------------------------------------------------
-    // CONSTRUCTOR
+    // State
+
+    /// @dev The beacon's implementation address.
+    address private _implementation;
+
+    //--------------------------------------------------------------------------------
+    // Public View Functions
 
     /// @inheritdoc IBeacon
     function implementation() public view virtual override returns (address) {
@@ -35,28 +39,32 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     }
 
     //--------------------------------------------------------------------------------
-    // FUNCTIONS
+    // onlyOwner Mutating Functions
 
-    /// @notice upgrades the beacon to a new implementation address
-    /// @param newImplementation : the new implementation address
+    /// @notice Upgrades the beacon to a new implementation address.
+    /// @dev Only callable by owner.
+    /// @dev Revert if new implementation invalid.
+    /// @param newImplementation The new implementation address.
     function upgradeTo(address newImplementation) public onlyOwner {
         _setImplementation(newImplementation);
         emit Upgraded(newImplementation);
     }
 
-    /// @notice sets the implementation address of the beacon
-    /// @param newImplementation the new implementation address
+    //--------------------------------------------------------------------------------
+    // Internal Mutating Functions
+
     function _setImplementation(address newImplementation) private {
         if (!Address.isContract(newImplementation)) {
-            revert Beacon__ImplementationIsNotAContract();
+            revert Beacon__InvalidImplementation();
         }
 
         _implementation = newImplementation;
     }
 
     //--------------------------------------------------------------------------------
-    // ERC165 FUNCTIONS
+    // ERC-165 Public View Functions
 
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
