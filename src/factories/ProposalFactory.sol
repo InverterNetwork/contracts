@@ -7,6 +7,7 @@ import {Context} from "@oz/utils/Context.sol";
 
 // Internal Interfaces
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
@@ -74,7 +75,11 @@ contract ProposalFactory is IProposalFactory {
 
         // Initialize proposal.
         IProposal(clone).init(
-            _proposalIdCounter++, funders, modules, IAuthorizer(authorizer)
+            _proposalIdCounter++,
+            funders,
+            modules,
+            IAuthorizer(authorizer),
+            IPaymentProcessor(address(0xCAFE)) // @todo mp: Obviously wrong...
         );
 
         return clone;

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IModuleManager} from "src/interfaces/IModuleManager.sol";
 
 interface IProposal is IModuleManager {
@@ -11,8 +12,11 @@ interface IProposal is IModuleManager {
     /// @notice Function is only callable by authorized caller.
     error Proposal__CallerNotAuthorized();
 
-    /// @notice Given authorizer address invalid.
+    /// @notice Given {IAuthorizer} instance invalid.
     error Proposal__InvalidAuthorizer();
+
+    /// @notice Given {IPaymentProcessor} instance invalid.
+    error Proposal__InvalidPaymentProcessor();
 
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
@@ -20,11 +24,15 @@ interface IProposal is IModuleManager {
     //--------------------------------------------------------------------------
     // Functions
 
+    /// @notice Initialization function.
+    /// @dev Note that `authorizer` and `paymentProcessor` MUST be elements of
+    ///      `modules`.
     function init(
         uint proposalId,
         address[] calldata funders,
         address[] calldata modules, // @todo mp: Change to IModules.
-        IAuthorizer authorizer_
+        IAuthorizer authorizer,
+        IPaymentProcessor paymentProcessor
     ) external;
 
     /// @notice Executes a call on target `target` with call data `data`.
@@ -38,6 +46,10 @@ interface IProposal is IModuleManager {
 
     /// @notice The {IAuthorizer} implementation used to authorize addresses.
     function authorizer() external view returns (IAuthorizer);
+
+    /// @notice The {IPaymentProcessor} implementation used to process module
+    ///         payments.
+    function paymentProcessor() external view returns (IPaymentProcessor);
 
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);
