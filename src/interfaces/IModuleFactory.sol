@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Interfaces
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
@@ -52,11 +55,11 @@ interface IModuleFactory {
         view
         returns (address, bytes32);
 
-    /// @notice Registers metadata `metadata` with module's implementation `target`.
+    /// @notice Registers metadata `metadata` with {IBeacon} implementation
+    ///         `beacon`.
     /// @dev Only callable by owner.
-    /// @dev Has to guarantee that
     /// @param metadata The module's metadata.
-    /// @param target The module's implementation.
-    function registerMetadata(IModule.Metadata memory metadata, address target)
+    /// @param beacon The module's implementation beacon.
+    function registerMetadata(IModule.Metadata memory metadata, IBeacon beacon)
         external;
 }

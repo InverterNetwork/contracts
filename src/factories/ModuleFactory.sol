@@ -7,8 +7,6 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
-import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
-import {Address} from "@oz/utils/Address.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
@@ -48,27 +46,12 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         beacon.
-    modifier validBeacon(address beacon) {
-        // Revert if beacon is not a contract.
-        if (!Address.isContract(beacon)) {
-            revert ModuleFactory__InvalidTarget();
-        }
-
-        // Revert if beacon does not implement {IBeacon} interface.
-        // Checked via ERC-165.
-        bool isIBeacon =
-            ERC165Checker.supportsInterface(beacon, type(IBeacon).interfaceId);
-        if (!isIBeacon) {
-            revert ModuleFactory__InvalidTarget();
-        }
-
+    ///         {IBeacon} instance.
+    modifier validBeacon(IBeacon beacon) {
         // Revert if beacon's implementation is zero address.
-        if (IBeacon(beacon).implementation() == address(0)) {
+        if (beacon.implementation() == address(0)) {
             revert ModuleFactory__InvalidTarget();
         }
-
-        // Otherwise valid beacon.
         _;
     }
 
@@ -146,11 +129,11 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, address target)
+    function registerMetadata(IModule.Metadata memory metadata, IBeacon target)
         external
         onlyOwner
         validMetadata(metadata)
-        validBeacon(target) // @todo mp: Just expect interface IBeacon.
+        validBeacon(target)
     {
         address oldTarget;
         bytes32 id;
@@ -162,7 +145,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         }
 
         // Register Metadata for target.
-        _targets[id] = target;
-        emit MetadataRegistered(metadata, target);
+        _targets[id] = address(target);
+        emit MetadataRegistered(metadata, address(target));
     }
 }
