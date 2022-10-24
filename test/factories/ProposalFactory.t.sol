@@ -105,7 +105,9 @@ contract ProposalFactoryTest is Test {
         }
         configdatas[modulesLen] = bytes("");
 
-        vm.expectRevert(IProposalFactory.ProposalFactory__ModuleDataLengthMismatch.selector);
+        vm.expectRevert(
+            IProposalFactory.ProposalFactory__ModuleDataLengthMismatch.selector
+        );
         factory.createProposal({
             funders: funders,
             authorizerMetadata: IModule.Metadata(1, "Authorizer"),
