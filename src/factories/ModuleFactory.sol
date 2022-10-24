@@ -2,16 +2,19 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
-import {Clones} from "@oz/proxy/Clones.sol";
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-import {BeaconProxy} from "src/factories/beacon-fundamentals/BeaconProxy.sol";
-
 // External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
 import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 import {Address} from "@oz/utils/Address.sol";
+
+// External Interfaces
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+
+// Internal Dependencies
+import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -147,7 +150,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         external
         onlyOwner
         validMetadata(metadata)
-        validBeacon(target)
+        validBeacon(target) // @todo mp: Just expect interface IBeacon.
     {
         address oldTarget;
         bytes32 id;

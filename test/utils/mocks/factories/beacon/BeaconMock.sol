@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
+import {Beacon} from "src/factories/beacon/Beacon.sol";
 
 contract BeaconMock is Beacon {
     address private _implementation;

@@ -3,14 +3,17 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {Beacon} from "src/factories/beacon-fundamentals/Beacon.sol";
-import {ImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV1Mock.sol";
-import {ImplementationV2Mock} from
-    "test/utils/mocks/factories/beacon-fundamentals/ImplementationV2Mock.sol";
-
-//Libraries
+// External Libraries
 import "lib/openzeppelin-contracts/contracts/utils/Address.sol";
+
+// Internal Dependencies
+import {Beacon} from "src/factories/beacon/Beacon.sol";
+
+// Mocks
+import {ImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol";
+import {ImplementationV2Mock} from
+    "test/utils/mocks/factories/beacon/ImplementationV2Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
