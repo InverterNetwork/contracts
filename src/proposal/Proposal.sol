@@ -11,6 +11,7 @@ import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
+import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
 contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
@@ -38,6 +39,9 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
 
+    /// @inheritdoc IProposal
+    IPaymentProcessor public override (IProposal) paymentProcessor;
+
     //--------------------------------------------------------------------------
     // Initializer
 
@@ -51,7 +55,8 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         uint proposalId,
         address[] calldata funders,
         address[] calldata modules,
-        IAuthorizer authorizer_
+        IAuthorizer authorizer_,
+        IPaymentProcessor paymentProcessor_
     ) external initializer {
         _proposalId = proposalId;
         _funders = funders;
@@ -59,11 +64,17 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
         __Pausable_init();
         __ModuleManager_init(modules);
 
+        // Ensure that authorizer_ is an enabled module.
         if (!isEnabledModule(address(authorizer_))) {
             revert Proposal__InvalidAuthorizer();
         }
-
         authorizer = authorizer_;
+
+        // Ensure that paymentProcessor_ is an enabled module.
+        if (!isEnabledModule(address(paymentProcessor_))) {
+            revert Proposal__InvalidPaymentProcessor();
+        }
+        paymentProcessor = paymentProcessor_;
     }
 
     //--------------------------------------------------------------------------
