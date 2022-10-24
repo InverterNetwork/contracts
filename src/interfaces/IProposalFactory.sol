@@ -17,6 +17,7 @@ interface IProposalFactory {
         bytes memory authorizerConfigdata,
         IModule.Metadata memory paymentProcessorMetadata,
         bytes memory paymentProcessorConfigdata,
+        address paymentToken,
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address);

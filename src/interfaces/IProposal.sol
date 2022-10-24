@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IModuleManager} from "src/interfaces/IModuleManager.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 interface IProposal is IModuleManager {
     //--------------------------------------------------------------------------
@@ -17,6 +18,9 @@ interface IProposal is IModuleManager {
 
     /// @notice Given {IPaymentProcessor} instance invalid.
     error Proposal__InvalidPaymentProcessor();
+
+    /// @notice Given {IERC20} instance invalid.
+    error Proposal__InvalidPaymentToken();
 
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
@@ -32,7 +36,8 @@ interface IProposal is IModuleManager {
         address[] calldata funders,
         address[] calldata modules, // @todo mp: Change to IModules.
         IAuthorizer authorizer,
-        IPaymentProcessor paymentProcessor
+        IPaymentProcessor paymentProcessor,
+        IERC20 paymentToken
     ) external;
 
     /// @notice Executes a call on target `target` with call data `data`.
@@ -50,6 +55,9 @@ interface IProposal is IModuleManager {
     /// @notice The {IPaymentProcessor} implementation used to process module
     ///         payments.
     function paymentProcessor() external view returns (IPaymentProcessor);
+
+    /// @notice The {IERC20} token used for payouts.
+    function paymentToken() external view returns (IERC20);
 
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);

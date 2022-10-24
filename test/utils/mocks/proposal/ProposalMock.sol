@@ -8,12 +8,14 @@ import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 contract ProposalMock is IProposal, ModuleManagerMock {
     IAuthorizer public authorizer;
     IPaymentProcessor public paymentProcessor;
+    IERC20 public paymentToken;
 
     uint public proposalId;
     address[] public funders;
@@ -29,13 +31,15 @@ contract ProposalMock is IProposal, ModuleManagerMock {
         address[] calldata funders_,
         address[] calldata modules_,
         IAuthorizer authorizer_,
-        IPaymentProcessor paymentProcessor_
+        IPaymentProcessor paymentProcessor_,
+        IERC20 paymentToken_
     ) external {
         proposalId = proposalId_;
         funders = funders_;
         modules = modules_;
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
+        paymentToken = paymentToken_;
     }
 
     function executeTx(address target, bytes memory data)

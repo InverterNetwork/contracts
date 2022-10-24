@@ -29,10 +29,9 @@ contract SimplePaymentClient is PaymentClient, Module {
     // Modifiers
 
     modifier onlyPaymentProcessor() {
-        // TODO
-        //if (_msgSender() != address(__Module_proposal.paymentProcessor())) {
-        //    revert __Module__PaymentClient_UnauthorizedProcessor(_msgSender());
-        //}
+        if (_msgSender() != address(__Module_proposal.paymentProcessor())) {
+            revert __Module__PaymentClient_UnauthorizedProcessor(_msgSender());
+        }
         _;
     }
 
@@ -122,21 +121,18 @@ contract SimplePaymentClient is PaymentClient, Module {
     {
         /// @question: Doesn't the for loop below do the same as the example without copying? Using safeIncreaseAllowance, if something fails it should revert
 
-        /// @question: Do we want to strucutre this function also with triggerProposalCallback etc ? It would basically force us to send the PaymentOrders[] around as bytes32  in the call returns and parse them again at the end...
+        /// @question: Do we want to structure this function also with triggerProposalCallback etc ? It would basically force us to send the PaymentOrders[] around as bytes32  in the call returns and parse them again at the end...
 
         PaymentOrder[] memory processOrders = paymentOrders;
+        
         // Cache payment token.
-
-        //TODO
-
-        /*
         IERC20 paymentToken = __Module_proposal.paymentToken();
 
         for (uint i; i < processOrders.length; i++) {
             paymentToken.safeIncreaseAllowance(
                 _msgSender(), processOrders[i].amount
             );
-        }*/
+        }
 
         delete paymentOrders;
 
