@@ -40,7 +40,6 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     /// @notice upgrades the beacon to a new implementation address
     /// @param newImplementation : the new implementation address
     function upgradeTo(address newImplementation) public onlyOwner {
-
         _setImplementation(newImplementation);
         emit Upgraded(newImplementation);
     }
@@ -48,7 +47,6 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     /// @notice sets the implementation address of the beacon
     /// @param newImplementation the new implementation address
     function _setImplementation(address newImplementation) private {
-
         if (!Address.isContract(newImplementation)) {
             revert Beacon__ImplementationIsNotAContract();
         }

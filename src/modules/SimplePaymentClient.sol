@@ -126,7 +126,7 @@ contract SimplePaymentClient is PaymentClient, Module {
 
         PaymentOrder[] memory processOrders = paymentOrders;
         // Cache payment token.
-        
+
         //TODO
 
         /*

@@ -19,8 +19,7 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
-import {BeaconMock} from
-    "test/utils/mocks/factories/beacon/BeaconMock.sol";
+import {BeaconMock} from "test/utils/mocks/factories/beacon/BeaconMock.sol";
 import {ImplementationV1Mock} from
     "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol"; //Is also a Module
 import {ImplementationV2Mock} from
@@ -76,10 +75,10 @@ contract ModuleFactoryTest is Test {
 
         factory.registerMetadata(metadata, beacon);
 
-        address target;
-        (target, /*id*/ ) = factory.getTargetAndId(metadata);
+        IBeacon beaconRegistered;
+        (beaconRegistered, /*id*/ ) = factory.getBeaconAndId(metadata);
 
-        assertEq(target, address(beacon));
+        assertEq(address(beaconRegistered), address(beacon));
     }
 
     function testRegisterMetadataFailsIfMetadataInvalid() public {
@@ -107,7 +106,7 @@ contract ModuleFactoryTest is Test {
     function testRegisterMetadataFailsIfBeaconsImplementationIsZero() public {
         beacon.overrideImplementation(address(0));
 
-        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidTarget.selector);
+        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidBeacon.selector);
         factory.registerMetadata(DATA, beacon);
     }
 

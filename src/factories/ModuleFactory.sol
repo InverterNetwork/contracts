@@ -50,7 +50,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     modifier validBeacon(IBeacon beacon) {
         // Revert if beacon's implementation is zero address.
         if (beacon.implementation() == address(0)) {
-            revert ModuleFactory__InvalidTarget();
+            revert ModuleFactory__InvalidBeacon();
         }
         _;
     }
@@ -61,9 +61,9 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     // @todo mp: ModuleFactory needs to know/manage minorVersion.
     //           Module does not have knowledge about this anymore!
 
-    /// @dev Mapping of metadata identifier to target contract address.
-    /// @dev MetadataLib.identifier(metadata) => address
-    mapping(bytes32 => address) private _targets;
+    /// @dev Mapping of metadata identifier to {IBeacon} instance.
+    /// @dev MetadataLib.identifier(metadata) => {IBeacon}
+    mapping(bytes32 => IBeacon) private _beacons;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -85,10 +85,10 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // module's `init()` function does it anyway.
         // @todo mp: Add comment to function doc?!
 
-        address target;
-        (target, /*id*/ ) = getTargetAndId(metadata);
+        IBeacon beacon;
+        (beacon, /*id*/ ) = getBeaconAndId(metadata);
 
-        if (target == address(0)) {
+        if (address(beacon) == address(0)) {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
@@ -99,12 +99,12 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // Update:   It indicates the module is broken and should NOT be
         //           trusted. Better to burn all gas and make sure nothing
         //           can happen in this tx anymore (?)
-        assert(IBeacon(target).implementation() != address(0));
+        assert(beacon.implementation() != address(0));
         //if (IBeacon(target).implementation() == address(0)) {
         //    revert ModuleFactory__InvalidBeaconImplementation();
         //}
 
-        address implementation = address(new BeaconProxy(IBeacon(target)));
+        address implementation = address(new BeaconProxy(beacon));
 
         IModule(implementation).init(proposal, metadata, configdata);
 
@@ -115,37 +115,37 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     // Public View Functions
 
     /// @inheritdoc IModuleFactory
-    function getTargetAndId(IModule.Metadata memory metadata)
+    function getBeaconAndId(IModule.Metadata memory metadata)
         public
         view
-        returns (address, bytes32)
+        returns (IBeacon, bytes32)
     {
         bytes32 id = LibMetadata.identifier(metadata);
 
-        return (_targets[id], id);
+        return (_beacons[id], id);
     }
 
     //--------------------------------------------------------------------------
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, IBeacon target)
+    function registerMetadata(IModule.Metadata memory metadata, IBeacon beacon)
         external
         onlyOwner
         validMetadata(metadata)
-        validBeacon(target)
+        validBeacon(beacon)
     {
-        address oldTarget;
+        IBeacon oldBeacon;
         bytes32 id;
-        (oldTarget, id) = getTargetAndId(metadata);
+        (oldBeacon, id) = getBeaconAndId(metadata);
 
-        // Revert if metadata already registered for different target.
-        if (oldTarget != address(0)) {
+        // Revert if metadata already registered for different beacon.
+        if (address(oldBeacon) != address(0)) {
             revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
-        // Register Metadata for target.
-        _targets[id] = address(target);
-        emit MetadataRegistered(metadata, address(target));
+        // Register Metadata for beacon.
+        _beacons[id] = beacon;
+        emit MetadataRegistered(metadata, beacon);
     }
 }

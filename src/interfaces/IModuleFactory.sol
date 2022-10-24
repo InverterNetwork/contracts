@@ -15,8 +15,8 @@ interface IModuleFactory {
     /// @notice Given metadata invalid.
     error ModuleFactory__InvalidMetadata();
 
-    /// @notice Given target invalid.
-    error ModuleFactory__InvalidTarget();
+    /// @notice Given beacon invalid.
+    error ModuleFactory__InvalidBeacon();
 
     /// @notice Given metadata unregistered.
     error ModuleFactory__UnregisteredMetadata();
@@ -27,9 +27,9 @@ interface IModuleFactory {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when new target registered for metadata.
+    /// @notice Event emitted when new beacon registered for metadata.
     event MetadataRegistered(
-        IModule.Metadata indexed metadata, address indexed target
+        IModule.Metadata indexed metadata, IBeacon indexed beacon
     );
 
     //--------------------------------------------------------------------------
@@ -45,21 +45,21 @@ interface IModuleFactory {
         bytes memory configdata
     ) external returns (address);
 
-    /// @notice Returns the target address to clone and the id for given
+    /// @notice Returns the {IBeacon} instance registered and the id for given
     ///         metadata.
     /// @param metadata The module's metadata.
-    /// @return The target address to clone.
+    /// @return The module's {IBeacon} instance registered.
     /// @return The metadata's id.
-    function getTargetAndId(IModule.Metadata memory metadata)
+    function getBeaconAndId(IModule.Metadata memory metadata)
         external
         view
-        returns (address, bytes32);
+        returns (IBeacon, bytes32);
 
     /// @notice Registers metadata `metadata` with {IBeacon} implementation
     ///         `beacon`.
     /// @dev Only callable by owner.
     /// @param metadata The module's metadata.
-    /// @param beacon The module's implementation beacon.
+    /// @param beacon The module's {IBeacon} instance.
     function registerMetadata(IModule.Metadata memory metadata, IBeacon beacon)
         external;
 }
