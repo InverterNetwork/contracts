@@ -11,7 +11,6 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
-
 /**
  * @title Payment manager module implementation #1: Linear vesting curve.
  *
@@ -46,10 +45,7 @@ contract PaymentManager is Module {
     // Events
 
     event PaymentAdded(
-        address contributor,
-        uint salary,
-        uint64 start,
-        uint64 end
+        address contributor, uint salary, uint64 start, uint64 end
     );
     event PaymentRemoved(address contributor);
     event PaymentPaused(address contributor);
@@ -81,20 +77,23 @@ contract PaymentManager is Module {
     // Modifiers
 
     modifier validSalary(uint _salary) {
-        if (_salary == 0)
+        if (_salary == 0) {
             revert Module__PaymentManager__InvalidSalary();
+        }
         _;
     }
 
     modifier validStart(uint _start) {
-        if (_start < block.timestamp || _start >= type(uint64).max)
+        if (_start < block.timestamp || _start >= type(uint64).max) {
             revert Module__PaymentManager__InvalidStart();
+        }
         _;
     }
 
     modifier validDuration(uint _start, uint _duration) {
-        if (_start + _duration <= _start || _duration == 0)
+        if (_start + _duration <= _start || _duration == 0) {
             revert Module__PaymentManager__InvalidDuration();
+        }
         _;
     }
 
@@ -109,20 +108,18 @@ contract PaymentManager is Module {
         IProposal proposalInterface,
         Metadata memory metadata,
         bytes memory data
-    )
-        external
-        initializer
-    {
+    ) external initializer {
         __Module_init(proposalInterface, metadata);
 
         (address _token, address _proposal) =
             abi.decode(data, (address, address));
 
-
-        if (!validAddress(_token))
+        if (!validAddress(_token)) {
             revert Module__PaymentManager__InvalidToken();
-        if (!validAddress(_token))
+        }
+        if (!validAddress(_token)) {
             revert Module__PaymentManager__InvalidProposal();
+        }
 
         token = IERC20(_token);
         proposal = _proposal;
@@ -159,8 +156,9 @@ contract PaymentManager is Module {
         validStart(_start)
         validDuration(_start, _duration)
     {
-        if (!validAddress(_contributor))
+        if (!validAddress(_contributor)) {
             revert Module__PaymentManager__InvalidContributor();
+        }
 
         // @todo Nejc: Verify there's enough tokens in proposal for the payment.
         // @todo Nejc: before adding payment make sure contributor is wListed.
@@ -174,13 +172,8 @@ contract PaymentManager is Module {
             Types.Operation.DelegateCall
         );
 
-        vestings[_contributor] = VestingWallet(
-            _salary,
-            0,
-            _start,
-            _duration,
-            true
-        );
+        vestings[_contributor] =
+            VestingWallet(_salary, 0, _start, _duration, true);
 
         emit PaymentAdded(_contributor, _salary, _start, _duration);
     }
@@ -194,7 +187,8 @@ contract PaymentManager is Module {
     {
         // @noto Nejc: withdraw tokens that were not withdrawn yet.
         uint unclaimedAmount = vestedAmount(
-            uint64(block.timestamp), contributor) - released(contributor);
+            uint64(block.timestamp), contributor
+        ) - released(contributor);
         if (unclaimedAmount > 0) {
             delete vestings[contributor];
 
@@ -300,8 +294,9 @@ contract PaymentManager is Module {
     /// @param addr Address to validate.
     /// @return True if address is valid.
     function validAddress(address addr) internal view returns (bool) {
-        if (addr == address(0) || addr == msg.sender || addr == address(this))
+        if (addr == address(0) || addr == msg.sender || addr == address(this)) {
             return false;
+        }
         return true;
     }
 }
