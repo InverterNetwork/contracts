@@ -17,6 +17,13 @@ abstract contract FuzzInputChecker is Test {
 
     function _assumeValidFunders(address[] memory funders) internal {}
 
+    function _assumeAddressNotInSet(address[] memory set, address element) internal{
+        for (uint i; i < set.length; i++) {
+            // Assume element address is unique.
+            vm.assume(element != set[i]);
+        }
+    }
+
     function _assumeValidModules(address[] memory modules) internal {
         // Note that at least two modules are expected:
         // - IAuthorizer instance

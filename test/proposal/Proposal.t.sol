@@ -54,6 +54,11 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidFunders(funders);
         _assumeValidModules(modules);
 
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(paymentProcessor));
+        _assumeAddressNotInSet(modules, address(token));
+
         // Set last two module to authorizer and paymentProcessor.
         modules[modules.length - 1] = address(authorizer);
         modules[modules.length - 2] = address(paymentProcessor);
@@ -80,6 +85,11 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidFunders(funders);
         _assumeValidModules(modules);
 
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(paymentProcessor));
+        _assumeAddressNotInSet(modules, address(token));
+
         // Set last two module to authorizer and paymentProcessor.
         modules[modules.length - 1] = address(authorizer);
         modules[modules.length - 2] = address(paymentProcessor);
@@ -104,6 +114,11 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidFunders(funders);
         _assumeValidModules(modules);
 
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(paymentProcessor));
+        _assumeAddressNotInSet(modules, address(token));
+
         // Note that the authorizer is not added to the modules list.
         modules[modules.length - 1] = address(paymentProcessor);
 
@@ -122,6 +137,10 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidFunders(funders);
         _assumeValidModules(modules);
 
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(token));
+
         // Note that the paymentProcessor is not added to the modules list.
         modules[modules.length - 1] = address(authorizer);
 
@@ -139,6 +158,10 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidProposalId(proposalId);
         _assumeValidFunders(funders);
         _assumeValidModules(modules);
+
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(paymentProcessor));
 
         // Set last two module to authorizer and paymentProcessor.
         modules[modules.length - 1] = address(authorizer);
