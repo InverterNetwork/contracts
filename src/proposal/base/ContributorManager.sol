@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Dependencies
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
@@ -9,35 +12,30 @@ import {Module} from "src/modules/base/Module.sol";
 import {LibString} from "src/common/LibString.sol";
 
 // Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
+import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
 
 /**
- * @title Contributor manager module
+ * @title Contributor Manager
  *
- * @dev
- * This Module handles the list of active contributors in the inverter.
+ * @dev A contract to manage a list of contributors.
  *
- * It saves the assigned role and salary of each contributor in a registry,
- * and keeps a list of active contributors in the style of the Gnosis Safe
- * OwnerManager (https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol)
+ *      It saves the assigned role and salary of each contributor in a registry,
+ *      and keeps a list of active contributors in the style of the Gnosis Safe
+ *      OwnerManager (https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol)
  *
- * Along each contributor address, the contract stores a salary and a role. This
- * role is NOT intended for access control, but for offchain retrieval of team
- * assignement or similar information.
+ *      Along each contributor address, the contract stores a salary and a role.
+ *      This role is NOT intended for access control, but for offchain
+ *      retrieval of team assignment or similar information.
  *
- * Each active contributor is only represented once.
+ *      Each active contributor is only represented once.
  *
+ * @author byterocket
  */
-
-contract ContributorManager {
+contract ContributorManager is IContributorManager, Initializable {
     using LibString for string;
+    // @todo mp: Should be abstract?
 
-    // @todo mp: Is in interface.
-    struct Contributor {
-        string name;
-        bytes32 role;
-        uint salary; // @todo mp, nuggan: What exactly is contributor's salary?
-    }
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -90,22 +88,8 @@ contract ContributorManager {
 
     modifier onlyConsecutiveContributors(address _current, address _prev) {
         //require that the contributors are indeed consecutive
-        if (activeContributors[_prev] != _current) {
+        if (_contributors[_prev] != _current) {
             revert Module__ContributorManager__ContributorsNotConsecutive();
-        }
-        _;
-    }
-
-    modifier contributorNotActive(address _who) {
-        if (isActiveContributor(_who)) {
-            revert Module__ContributorManager__contributorAlreadyActive();
-        }
-        _;
-    }
-
-    modifier contributorIsActive(address _who) {
-        if (!isActiveContributor(_who)) {
-            revert Module__ContributorManager__contributorNotActive();
         }
         _;
     }
@@ -131,17 +115,19 @@ contract ContributorManager {
     uint private _contributorCounter;
 
     //--------------------------------------------------------------------------
-    // Internal Functions
+    // Internal Mutating Functions
+
+    // @todo mp, nuggan: Decide which functions should be public.
 
     function __ContributorManager_init() internal onlyInitializing {
         // Set up the sentinel to signal an empty list of active contributors.
-        _activeContributors[_SENTINEL] = _SENTINEL;
+        _contributors[_SENTINEL] = _SENTINEL;
     }
 
     function __ContributorManager_addContributor(
         address who,
         string memory name,
-        bytes32 role,
+        string memory role,
         uint salary
     )
         internal
@@ -155,12 +141,12 @@ contract ContributorManager {
         Contributor memory c = Contributor(name, role, salary);
 
         // Add address to _contributors mapping.
-        _contributors[_who] = _contributors[_SENTINEL];
+        _contributors[who] = _contributors[_SENTINEL];
         _contributors[_SENTINEL] = who;
         _contributorCounter++;
 
         // Add Contributor instance to registry.
-        _contributorRegistry[_who] = c;
+        _contributorRegistry[who] = c;
 
         emit ContributorAdded(who);
     }
@@ -168,9 +154,49 @@ contract ContributorManager {
     function __ContributorManager_removeContributor(
         address who,
         address prevContrib
+    ) internal validAddress(who) {
+        _commitContributorRemoval(who, prevContrib);
+    }
+
+    /// @dev Removes caller from contributor list.
+    function __Contributor_revokeContributor(address prevContrib) internal {
+        _commitContributorRemoval(msg.sender, prevContrib);
+    }
+
+    function __ContributorManager_updateContributorsRole(
+        address who,
+        string memory role
+    ) internal validAddress(who) validRole(role) _isActiveContributor(who) {
+        string memory oldRole = _contributorRegistry[who].role;
+
+        if (!oldRole.equals(role)) {
+            emit ContributorsRoleUpdated(who, role, oldRole);
+            _contributorRegistry[who].role = role;
+        }
+    }
+
+    function __ContributorManager_updateContributorsSalary(
+        address who,
+        uint salary
     )
         internal
         validAddress(who)
+        validSalary(salary)
+        _isActiveContributor(who)
+    {
+        uint oldSalary = _contributorRegistry[who].salary;
+
+        if (oldSalary != salary) {
+            emit ContributorsSalaryUpdated(who, salary, oldSalary);
+            _contributorRegistry[who].salary = salary;
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Private Mutating Functions
+
+    function _commitContributorRemoval(address who, address prevContrib)
+        private
         onlyConsecutiveContributors(who, prevContrib)
     {
         // Remove Contributor instance from registry.
@@ -184,29 +210,6 @@ contract ContributorManager {
         emit ContributorRemoved(who);
     }
 
-    function __ContributorManager_updateContributorsRole(
-        address who,
-        bytes32 role
-    ) internal validAddress(_who) validRole(role) isActiveContributor(who) {
-        emit ContributorsRoleUpdated(who, role, _contributorRegistry[who].role);
-        _contributorRegistry[who].role = _role;
-    }
-
-    function __ContributorManager_updateContributorsSalary(
-        address who,
-        uint salary
-    )
-        internal
-        validAddress(_who)
-        validSalary(salary)
-        _isActiveContributor(who)
-    {
-        emit ContributorsSalaryUpdated(
-            who, salary, _contributorRegistry[who].salary
-            );
-        _contributorRegistry[who].salary = salary;
-    }
-
     //--------------------------------------------------------------------------
     // Public View Functions
 
@@ -215,9 +218,9 @@ contract ContributorManager {
         external
         view
         _isActiveContributor(who)
-        returns (bytes32, uint)
+        returns (Contributor memory)
     {
-        return _contributors[who];
+        return _contributorRegistry[who];
     }
 
     /// @inheritdoc IContributorManager

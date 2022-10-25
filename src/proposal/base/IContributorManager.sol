@@ -9,7 +9,7 @@ interface IContributorManager {
 
     struct Contributor {
         string name;
-        bytes32 role;
+        string role;
         uint salary; // @todo mp, nuggan: What exactly is contributor's salary?
     }
 
@@ -45,7 +45,7 @@ interface IContributorManager {
     event ContributorRemoved(address indexed who);
 
     event ContributorsRoleUpdated(
-        address indexed who, bytes32 newRole, bytes32 oldRole
+        address indexed who, string newRole, string oldRole
     );
 
     event ContributorsSalaryUpdated(

@@ -104,11 +104,7 @@ contract SimplePaymentClient is PaymentClient, Module {
     }
 
     /// @notice Returns a list of this module's payment orders.
-    function paymentOrders()
-        external
-        view
-        returns (PaymentOrder[] memory)
-    {
+    function paymentOrders() external view returns (PaymentOrder[] memory) {
         return _paymentOrders;
     }
 
