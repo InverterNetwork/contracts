@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IPaymentProcessor} from "src/modules/mixins/IPaymentProcessor.sol";
 
 interface IPaymentClient {
     struct PaymentOrder {
@@ -15,6 +15,10 @@ interface IPaymentClient {
         /// @dev Timestamp at which the payment SHOULD be fulfilled.
         uint dueTo;
     }
+
+    error Module__PaymentClient__CallerNotAuthorized();
+
+    event PaymentAdded(address indexed recipient, uint amount);
 
     /// @notice Returns the list of outstanding payment orders.
     function paymentOrders() external view returns (PaymentOrder[] memory);

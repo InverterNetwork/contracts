@@ -12,7 +12,7 @@ import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IPaymentProcessor} from "src/modules/mixins/IPaymentProcessor.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 
 // External Interfaces
