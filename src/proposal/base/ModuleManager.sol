@@ -12,7 +12,7 @@ import {Types} from "src/common/Types.sol";
 import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
 
 /**
- * @title ModuleManager
+ * @title Module Manager
  *
  * @dev A contract to manage modules that can execute transactions via this
  *      contract and manage own role-based access control mechanisms.
