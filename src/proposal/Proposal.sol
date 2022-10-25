@@ -8,6 +8,7 @@ import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
+import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
@@ -17,7 +18,12 @@ import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
+contract Proposal is
+    IProposal,
+    ModuleManager,
+    ContributorManager,
+    PausableUpgradeable
+{
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -70,6 +76,7 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
 
         __Pausable_init();
         __ModuleManager_init(modules);
+        __ContributorManager_init();
 
         // Ensure that authorizer_ is an enabled module.
         if (!isEnabledModule(address(authorizer_))) {
