@@ -24,7 +24,7 @@ contract PaymentManagerTest is Test, ProposalMock {
     // contract definitions
     PaymentManager payment;
     ProposalMock proposal;
-    ERC20Mock token;
+    ERC20Mock token_;
     AuthorizerMock authorizerMock = new AuthorizerMock();
 
     // versioning system
@@ -81,10 +81,10 @@ contract PaymentManagerTest is Test, ProposalMock {
 
     function setUp() public {
         payment = new PaymentManager();
-        token = new ERC20Mock("TestToken", "TT");
+        token_ = new ERC20Mock("TestToken", "TT");
         proposal = new ProposalMock(authorizerMock);
 
-        bytes memory data = abi.encode(address(token), address(proposal));
+        bytes memory data = abi.encode(address(token_), address(proposal));
         payment.initialize(IProposal(address(this)), metadata, data);
 
         address[] memory modules = new address[](1);
@@ -97,8 +97,8 @@ contract PaymentManagerTest is Test, ProposalMock {
 
     // NOTE should be test or just mintTokens?
     function mintTokens(uint amount) public {
-        token.mint(address(this), amount);
-        assertEq(token.balanceOf(address(this)), amount);
+        token_.mint(address(this), amount);
+        assertEq(token_.balanceOf(address(this)), amount);
     }
 
     function testAddPayment()
@@ -117,8 +117,8 @@ contract PaymentManagerTest is Test, ProposalMock {
 
         // simulate payer's deposit to proposal
         // @todo Nejc transfer to proposal, not payment
-        token.transfer(address(payment), amount);
-        assertEq(token.balanceOf(address(payment)), amount);
+        token_.transfer(address(payment), amount);
+        assertEq(token_.balanceOf(address(payment)), amount);
 
         // initiate vesting
         payment.addPayment(receiver, amount, start, uint64(duration));
@@ -153,7 +153,7 @@ contract PaymentManagerTest is Test, ProposalMock {
         vm.prank(receiver);
         payment.claim();
 
-        uint balanceAfter = token.balanceOf(receiver);
+        uint balanceAfter = token_.balanceOf(receiver);
         assertEq(balanceAfter, amount);
 
         uint releasableAfter = payment.releasable();
@@ -165,14 +165,14 @@ contract PaymentManagerTest is Test, ProposalMock {
           = testAddPayment();
 
         //at 1/3 duration, 1/3 tokens should be claimable
-        uint balanceBefore = token.balanceOf(receiver);
+        uint balanceBefore = token_.balanceOf(receiver);
 
         skip(duration*1/3);
 
         vm.prank(receiver);
         payment.claim();
 
-        uint balanceAfter = token.balanceOf(receiver);
+        uint balanceAfter = token_.balanceOf(receiver);
         assertEq(balanceAfter, amount*1/3);
 
         //at 2/3 duration, 2/3 tokens should be claimable
@@ -183,7 +183,7 @@ contract PaymentManagerTest is Test, ProposalMock {
         vm.prank(receiver);
         payment.claim();
 
-        balanceAfter = token.balanceOf(receiver);
+        balanceAfter = token_.balanceOf(receiver);
         assertEq(balanceAfter, amount*2/3);
 
         //at 2 duration, all tokens should be claimable
@@ -194,7 +194,7 @@ contract PaymentManagerTest is Test, ProposalMock {
         vm.prank(receiver);
         payment.claim();
 
-        balanceAfter = token.balanceOf(receiver);
+        balanceAfter = token_.balanceOf(receiver);
         assertEq(balanceAfter, amount);
 
     }
@@ -204,20 +204,20 @@ contract PaymentManagerTest is Test, ProposalMock {
             = testAddPayment();
 
         // make sure owner is refunded
-        uint ownerBalanceBefore = token.balanceOf(address(this));
-        uint receiverBalanceBefore = token.balanceOf(receiver);
+        uint ownerBalanceBefore = token_.balanceOf(address(this));
+        uint receiverBalanceBefore = token_.balanceOf(receiver);
 
         skip(duration/2);
 
         vm.prank(receiver);
         payment.claim();
 
-        uint receiverBalanceAfter = token.balanceOf(receiver);
+        uint receiverBalanceAfter = token_.balanceOf(receiver);
         assertEq(receiverBalanceBefore + amount/2, receiverBalanceAfter);
 
         payment.removePayment(receiver);
 
-        uint ownerBalanceAfter = token.balanceOf(address(this));
+        uint ownerBalanceAfter = token_.balanceOf(address(this));
         assertEq(ownerBalanceBefore + amount/2, ownerBalanceAfter);
     }
 
@@ -226,7 +226,7 @@ contract PaymentManagerTest is Test, ProposalMock {
           = testAddPayment();
 
         // make sure receiver cant claim
-        uint receiverBalanceBefore = token.balanceOf(receiver);
+        uint receiverBalanceBefore = token_.balanceOf(receiver);
 
         payment.pausePayment(receiver);
 
@@ -235,7 +235,7 @@ contract PaymentManagerTest is Test, ProposalMock {
         vm.prank(receiver);
         payment.claim();
 
-        uint receiverBalanceAfter = token.balanceOf(receiver);
+        uint receiverBalanceAfter = token_.balanceOf(receiver);
         assertEq(receiverBalanceBefore, receiverBalanceAfter);
     }
 
@@ -250,12 +250,12 @@ contract PaymentManagerTest is Test, ProposalMock {
         payment.continuePayment(receiver);
 
         // make sure receiver can claim
-        uint receiverBalanceBefore = token.balanceOf(receiver);
+        uint receiverBalanceBefore = token_.balanceOf(receiver);
 
         vm.prank(receiver);
         payment.claim();
 
-        uint receiverBalanceAfter = token.balanceOf(receiver);
+        uint receiverBalanceAfter = token_.balanceOf(receiver);
         assertEq(receiverBalanceBefore + amount, receiverBalanceAfter);
     }
 }
