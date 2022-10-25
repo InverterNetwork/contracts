@@ -87,11 +87,24 @@ contract PaymentManagerTest is Test, ProposalMock {
         bytes memory data = abi.encode(address(token_), address(proposal));
         payment.initialize(IProposal(address(this)), metadata, data);
 
+        authorizerMock.setIsAuthorized(address(this), true);
+
         address[] memory modules = new address[](1);
         modules[0] = address(payment);
 
+        address[] memory funders = new address[](0);
+        address paymentProcessor = address(0xBF);
+
+        // Initialize ProposalMock via init() function.
+        init(
+            1,
+            funders,
+            modules,
+            authorizerMock,
+            IPaymentProcessor(paymentProcessor),
+            IERC20(_token)
+        );
         ProposalMock(this).initModules(modules);
-        authorizerMock.setIsAuthorized(address(this), true);
     }
 
 
