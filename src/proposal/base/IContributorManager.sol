@@ -55,6 +55,10 @@ interface IContributorManager {
     //--------------------------------------------------------------------------
     // Functions
 
+    /// @notice Revokes the caller from being a contributor.
+    /// @param prevContrib The previous contributor in the contributor's list.
+    function revokeContributor(address prevContrib) external;
+
     /// @notice Returns whether `who` is registered as active contributor.
     function isActiveContributor(address who) external view returns (bool);
 
