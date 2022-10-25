@@ -41,7 +41,7 @@ contract SimplePaymentClient is PaymentClient, Module {
     //--------------------------------------------------------------------------
     // Storage
 
-    PaymentOrder[] private paymentOrders;
+    PaymentOrder[] private _paymentOrders;
     uint private paymentOrderCounter;
 
     //--------------------------------------------------------------------------
@@ -89,26 +89,27 @@ contract SimplePaymentClient is PaymentClient, Module {
             keccak256(abi.encodePacked(paymentOrderCounter, address(this)));
 
         PaymentOrder memory _new = PaymentOrder({
-            id: _id,
+            //id: _id,
             amount: _amount,
             recipient: _recipient,
-            date: _date,
-            additionalData: _additionalData
+            createdAt: _date,
+            //additionalData: _additionalData
+            dueTo: block.timestamp + 100 // @todo mp, nuggan: Get per argument
         });
 
-        paymentOrders.push(_new);
+        _paymentOrders.push(_new);
         paymentOrderCounter++;
 
         emit PaymentOrderAdded(_recipient, _amount, _additionalData);
     }
 
     /// @notice Returns a list of this module's payment orders.
-    function viewPaymentOrders()
+    function paymentOrders()
         external
         view
         returns (PaymentOrder[] memory)
     {
-        return paymentOrders;
+        return _paymentOrders;
     }
 
     /// @notice Returns the amount of existing payment orders
@@ -126,7 +127,7 @@ contract SimplePaymentClient is PaymentClient, Module {
 
         /// @question: Do we want to structure this function also with triggerProposalCallback etc ? It would basically force us to send the PaymentOrders[] around as bytes32  in the call returns and parse them again at the end...
 
-        PaymentOrder[] memory processOrders = paymentOrders;
+        PaymentOrder[] memory processOrders = _paymentOrders;
 
         // Cache payment token.
         IERC20 token = __Module_proposal.token();
@@ -135,7 +136,7 @@ contract SimplePaymentClient is PaymentClient, Module {
             token.safeIncreaseAllowance(_msgSender(), processOrders[i].amount);
         }
 
-        delete paymentOrders;
+        delete _paymentOrders;
 
         emit PaymentOrdersCollected();
         return processOrders;
