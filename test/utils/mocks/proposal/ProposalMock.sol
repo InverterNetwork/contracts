@@ -14,8 +14,13 @@ import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 
 // Mock Dependencies
 import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
+import {ContributorManagerMock} from "./base/ContributorManagerMock.sol";
 
-contract ProposalMock is IProposal, ModuleManagerMock {
+contract ProposalMock is
+    IProposal,
+    ModuleManagerMock,
+    ContributorManagerMock
+{
     IAuthorizer public authorizer;
     IPaymentProcessor public paymentProcessor;
     IERC20 public token;
