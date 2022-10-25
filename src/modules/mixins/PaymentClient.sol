@@ -2,7 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
+import {
+    IPaymentClient, IPaymentProcessor
+} from "src/modules/mixins/IPaymentClient.sol";
 
 abstract contract PaymentClient is IPaymentClient {
     //--------------------------------------------------------------------------
@@ -24,13 +26,13 @@ abstract contract PaymentClient is IPaymentClient {
 
     /// @dev Ensures `amount` of token allowance for payment processor(s).
     /// @dev MUST be overriden by downstream contract.
-    function _ensureTokenAllowance(address spender, uint amount)
+    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
         virtual;
 
     /// @dev Returns whether address `who` is an authorized payment processor.
     /// @dev MUST be overriden by downstream contract.
-    function _isAuthorizedPaymentProcessor(address who)
+    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
         virtual
         returns (bool);
@@ -73,14 +75,16 @@ abstract contract PaymentClient is IPaymentClient {
         returns (PaymentOrder[] memory)
     {
         // Ensure caller is authorized to act as payment processor.
-        if (!_isAuthorizedPaymentProcessor(msg.sender)) {
+        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(msg.sender))) {
             revert Module__PaymentClient__CallerNotAuthorized();
         }
 
         // Ensure payment processor is able to fetch the tokens from
         // address(this).
         // Note that function is implemented in downstream contract.
-        _ensureTokenAllowance(msg.sender, _outstandingTokenAmount);
+        _ensureTokenAllowance(
+            IPaymentProcessor(msg.sender), _outstandingTokenAmount
+        );
 
         // Create a copy of all orders to return.
         PaymentOrder[] memory copy = new PaymentOrder[](_orders.length);

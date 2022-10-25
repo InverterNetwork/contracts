@@ -5,8 +5,7 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 interface IProposalFactory {
     error ProposalFactory__ModuleDataLengthMismatch();
