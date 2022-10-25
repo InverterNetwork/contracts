@@ -39,7 +39,8 @@ interface IProposal is IModuleManager {
         address[] calldata funders,
         address[] calldata modules, // @todo mp: Change to IModules.
         IAuthorizer authorizer,
-        IPaymentProcessor paymentProcessor
+        IPaymentProcessor paymentProcessor,
+        IERC20 token
     ) external;
 
     /// @notice Executes a call on target `target` with call data `data`.
