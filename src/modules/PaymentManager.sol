@@ -1,15 +1,21 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Dependencies
+import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+
+// External Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
-import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-// Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
+// Internal Interfaces
+import {IProposal} from "src/proposal/IProposal.sol";
 
 /**
  * @title Payment manager module implementation #1: Linear vesting curve.

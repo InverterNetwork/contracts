@@ -6,12 +6,15 @@ import "forge-std/Test.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+// Internal Dependencies
 import {PaymentManager} from "src/modules/PaymentManager.sol";
 
-import {IModule} from "src/interfaces/IModule.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
+// Internal Interfaces
+import {IModule} from "src/modules/base/IModule.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
 
+// Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
