@@ -11,7 +11,7 @@ import {PaymentManager} from "src/modules/PaymentManager.sol";
 
 // Internal Interfaces
 import {IModule} from "src/modules/base/IModule.sol";
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IPaymentProcessor} from "src/modules/mixins/IPaymentProcessor.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
 // Mocks

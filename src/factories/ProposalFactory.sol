@@ -12,7 +12,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IPaymentProcessor} from "src/modules/mixins/IPaymentProcessor.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {IModuleFactory} from "src/factories/IModuleFactory.sol";
