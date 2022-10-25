@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 
 contract AuthorizerMock is IAuthorizer {
     mapping(address => bool) private _authorized;

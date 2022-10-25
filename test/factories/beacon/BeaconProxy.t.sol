@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 // External Interfaces
 import {IBeacon} from
-    "lib/openzeppelin-contracts/contracts/proxy/beacon/IBeacon.sol";
+    "@oz/proxy/beacon/IBeacon.sol";
 
 // Internal Dependencies
 import {Beacon} from "src/factories/beacon/Beacon.sol";

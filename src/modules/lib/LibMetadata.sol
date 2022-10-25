@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IModule} from "src/interfaces/IModule.sol";
+import {IModule} from "src/modules/base/IModule.sol";
 
 /**
  * @title Metadata Library

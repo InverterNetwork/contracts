@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// Mock Dependencies
-import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// Mock Dependencies
+import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
 
 contract ProposalMock is IProposal, ModuleManagerMock {
     IAuthorizer public authorizer;

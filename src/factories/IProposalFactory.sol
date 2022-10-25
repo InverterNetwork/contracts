@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Internal Interfaces
+import {IProposal} from "src/proposal/IProposal.sol";
+import {IModule} from "src/modules/base/IModule.sol";
 
 interface IProposalFactory {
     error ProposalFactory__ModuleDataLengthMismatch();

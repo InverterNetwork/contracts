@@ -3,16 +3,16 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
-
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";

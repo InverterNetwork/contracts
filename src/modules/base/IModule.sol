@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
 
 interface IModule {
     struct Metadata {

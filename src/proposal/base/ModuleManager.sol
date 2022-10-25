@@ -9,7 +9,7 @@ import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {Types} from "src/common/Types.sol";
 
 // Interfaces
-import {IModuleManager} from "src/interfaces/IModuleManager.sol";
+import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
 
 /**
  * @title ModuleManager

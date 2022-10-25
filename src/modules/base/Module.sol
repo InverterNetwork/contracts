@@ -13,9 +13,9 @@ import {ProposalStorage} from "src/generated/ProposalStorage.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule} from "src/interfaces/IModule.sol";
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {IModule} from "src/modules/base/IModule.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
 
 /**
  * @title Module

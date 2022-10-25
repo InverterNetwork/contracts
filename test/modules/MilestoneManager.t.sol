@@ -10,7 +10,7 @@ import {
 
 // SuT
 import {MilestoneManager} from "src/modules/MilestoneManager.sol";
-import {IMilestoneManager} from "src/interfaces/modules/IMilestoneManager.sol";
+import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
