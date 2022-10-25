@@ -10,6 +10,8 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
 import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
+
+// External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Mocks
@@ -61,7 +63,7 @@ contract ProposalFactoryTest is Test {
         }
 
         // Create a mock payment Token
-        ERC20Mock paymentToken = new ERC20Mock("TestToken", "TST");
+        ERC20Mock token = new ERC20Mock("TestToken", "TST");
 
         // Deploy Proposal with id=1
         ProposalMock proposal = ProposalMock(
@@ -71,7 +73,7 @@ contract ProposalFactoryTest is Test {
                 authorizerConfigdata: bytes("Authorizer"),
                 paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
                 paymentProcessorConfigdata: bytes("PaymentProcessor"),
-                paymentToken: address(paymentToken),
+                token: token,
                 moduleMetadatas: metadatas,
                 moduleConfigdatas: configdatas
             })
@@ -86,7 +88,7 @@ contract ProposalFactoryTest is Test {
                 authorizerConfigdata: bytes("Authorizer"),
                 paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
                 paymentProcessorConfigdata: bytes("PaymentProcessor"),
-                paymentToken: address(paymentToken),
+                token: token,
                 moduleMetadatas: metadatas,
                 moduleConfigdatas: configdatas
             })
@@ -113,7 +115,7 @@ contract ProposalFactoryTest is Test {
         configdatas[modulesLen] = bytes("");
 
         // Create a mock payment Token
-        ERC20Mock paymentToken = new ERC20Mock("TestToken", "TST");
+        ERC20Mock token = new ERC20Mock("TestToken", "TST");
 
         vm.expectRevert(
             IProposalFactory.ProposalFactory__ModuleDataLengthMismatch.selector
@@ -124,7 +126,7 @@ contract ProposalFactoryTest is Test {
             authorizerConfigdata: bytes("Authorizer"),
             paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
             paymentProcessorConfigdata: bytes("PaymentProcessor"),
-            paymentToken: address(paymentToken),
+            token: token,
             moduleMetadatas: metadatas,
             moduleConfigdatas: configdatas
         });

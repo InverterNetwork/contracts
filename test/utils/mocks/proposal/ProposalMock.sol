@@ -4,18 +4,21 @@ pragma solidity ^0.8.0;
 // Mock Dependencies
 import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
 
+// External Dependencies
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 contract ProposalMock is IProposal, ModuleManagerMock {
     IAuthorizer public authorizer;
     IPaymentProcessor public paymentProcessor;
-    IERC20 public paymentToken;
+    IERC20 public token;
 
     uint public proposalId;
     address[] public funders;
@@ -32,14 +35,14 @@ contract ProposalMock is IProposal, ModuleManagerMock {
         address[] calldata modules_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_,
-        IERC20 paymentToken_
+        IERC20 token_
     ) external {
         proposalId = proposalId_;
         funders = funders_;
         modules = modules_;
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
-        paymentToken = paymentToken_;
+        token = token_;
     }
 
     function executeTx(address target, bytes memory data)

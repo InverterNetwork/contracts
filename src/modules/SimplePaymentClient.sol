@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// External Dependencies
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {PaymentClient} from "src/modules/PaymentClient.sol";
+
+// External Interfces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 contract SimplePaymentClient is PaymentClient, Module {
     using SafeERC20 for IERC20;
@@ -124,14 +127,12 @@ contract SimplePaymentClient is PaymentClient, Module {
         /// @question: Do we want to structure this function also with triggerProposalCallback etc ? It would basically force us to send the PaymentOrders[] around as bytes32  in the call returns and parse them again at the end...
 
         PaymentOrder[] memory processOrders = paymentOrders;
-        
+
         // Cache payment token.
-        IERC20 paymentToken = __Module_proposal.paymentToken();
+        IERC20 token = __Module_proposal.token();
 
         for (uint i; i < processOrders.length; i++) {
-            paymentToken.safeIncreaseAllowance(
-                _msgSender(), processOrders[i].amount
-            );
+            token.safeIncreaseAllowance(_msgSender(), processOrders[i].amount);
         }
 
         delete paymentOrders;

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// Internal Interfaces
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IModuleManager} from "src/interfaces/IModuleManager.sol";
+
+// External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 interface IProposal is IModuleManager {
@@ -20,7 +23,7 @@ interface IProposal is IModuleManager {
     error Proposal__InvalidPaymentProcessor();
 
     /// @notice Given {IERC20} instance invalid.
-    error Proposal__InvalidPaymentToken();
+    error Proposal__InvalidToken();
 
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
@@ -37,7 +40,7 @@ interface IProposal is IModuleManager {
         address[] calldata modules, // @todo mp: Change to IModules.
         IAuthorizer authorizer,
         IPaymentProcessor paymentProcessor,
-        IERC20 paymentToken
+        IERC20 token
     ) external;
 
     /// @notice Executes a call on target `target` with call data `data`.
@@ -57,7 +60,7 @@ interface IProposal is IModuleManager {
     function paymentProcessor() external view returns (IPaymentProcessor);
 
     /// @notice The {IERC20} token used for payouts.
-    function paymentToken() external view returns (IERC20);
+    function token() external view returns (IERC20);
 
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);
