@@ -7,31 +7,23 @@ import "forge-std/Test.sol";
 import {Proposal} from "src/proposal/Proposal.sol";
 
 // Internal Interfaces
+import {IProposal} from "src/interfaces/IProposal.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
 
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {PaymentProcessorMock} from "test/utils/mocks/PaymentProcessorMock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
-
-/**
- * Errors library for Proposal's custom errors.
- * Enables checking for errors with vm.expectRevert(Errors.<Error>).
- */
-library Errors {
-    bytes internal constant Proposal__CallerNotAuthorized =
-        abi.encodeWithSignature("Proposal__CallerNotAuthorized()");
-
-    bytes internal constant Proposal__InvalidAuthorizer =
-        abi.encodeWithSignature("Proposal__InvalidAuthorizer()");
-
-    bytes internal constant Proposal__ExecuteTxFailed =
-        abi.encodeWithSignature("Proposal__ExecuteTxFailed()");
-}
 
 contract ProposalTest is Test, FuzzInputChecker {
     // SuT
@@ -39,9 +31,13 @@ contract ProposalTest is Test, FuzzInputChecker {
 
     // Mocks
     AuthorizerMock authorizer;
+    PaymentProcessorMock paymentProcessor;
+    ERC20Mock token;
 
     function setUp() public {
         authorizer = new AuthorizerMock();
+        paymentProcessor = new PaymentProcessorMock();
+        token = new ERC20Mock("TestToken", "TST");
 
         proposal = new Proposal();
     }
@@ -58,14 +54,26 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidFunders(funders);
         _assumeValidModules(modules);
 
-        // Set last module to authorizer instance.
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(paymentProcessor));
+        _assumeAddressNotInSet(modules, address(token));
+
+        // Set last two module to authorizer and paymentProcessor.
         modules[modules.length - 1] = address(authorizer);
+        modules[modules.length - 2] = address(paymentProcessor);
 
         // Initialize proposal.
-        proposal.init(proposalId, funders, modules, authorizer);
+        proposal.init(
+            proposalId, funders, modules, authorizer, paymentProcessor, token
+        );
 
         // Check that proposal's storage correctly initialized.
         assertEq(address(proposal.authorizer()), address(authorizer));
+        assertEq(
+            address(proposal.paymentProcessor()), address(paymentProcessor)
+        );
+        assertEq(address(proposal.token()), address(token));
     }
 
     function testReinitFails(
@@ -77,14 +85,24 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidFunders(funders);
         _assumeValidModules(modules);
 
-        // Set last module to authorizer instance.
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(paymentProcessor));
+        _assumeAddressNotInSet(modules, address(token));
+
+        // Set last two module to authorizer and paymentProcessor.
         modules[modules.length - 1] = address(authorizer);
+        modules[modules.length - 2] = address(paymentProcessor);
 
         // Initialize proposal.
-        proposal.init(proposalId, funders, modules, authorizer);
+        proposal.init(
+            proposalId, funders, modules, authorizer, paymentProcessor, token
+        );
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        proposal.init(proposalId, funders, modules, authorizer);
+        proposal.init(
+            proposalId, funders, modules, authorizer, paymentProcessor, token
+        );
     }
 
     function testInitFailsForInvalidAuthorizer(
@@ -96,9 +114,67 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidFunders(funders);
         _assumeValidModules(modules);
 
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(paymentProcessor));
+        _assumeAddressNotInSet(modules, address(token));
+
         // Note that the authorizer is not added to the modules list.
-        vm.expectRevert(Errors.Proposal__InvalidAuthorizer);
-        proposal.init(proposalId, funders, modules, authorizer);
+        modules[modules.length - 1] = address(paymentProcessor);
+
+        vm.expectRevert(IProposal.Proposal__InvalidAuthorizer.selector);
+        proposal.init(
+            proposalId, funders, modules, authorizer, paymentProcessor, token
+        );
+    }
+
+    function testInitFailsForInvalidPaymentProcessor(
+        uint proposalId,
+        address[] memory funders,
+        address[] memory modules
+    ) public {
+        _assumeValidProposalId(proposalId);
+        _assumeValidFunders(funders);
+        _assumeValidModules(modules);
+
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(token));
+
+        // Note that the paymentProcessor is not added to the modules list.
+        modules[modules.length - 1] = address(authorizer);
+
+        vm.expectRevert(IProposal.Proposal__InvalidPaymentProcessor.selector);
+        proposal.init(
+            proposalId, funders, modules, authorizer, paymentProcessor, token
+        );
+    }
+
+    function testInitFailsForInvalidToken(
+        uint proposalId,
+        address[] memory funders,
+        address[] memory modules
+    ) public {
+        _assumeValidProposalId(proposalId);
+        _assumeValidFunders(funders);
+        _assumeValidModules(modules);
+
+        // Make sure that the addresses we'll set manually are not already in the module list
+        _assumeAddressNotInSet(modules, address(authorizer));
+        _assumeAddressNotInSet(modules, address(paymentProcessor));
+
+        // Set last two module to authorizer and paymentProcessor.
+        modules[modules.length - 1] = address(authorizer);
+        modules[modules.length - 2] = address(paymentProcessor);
+
+        vm.expectRevert(IProposal.Proposal__InvalidToken.selector);
+        proposal.init(
+            proposalId,
+            funders,
+            modules,
+            authorizer,
+            paymentProcessor,
+            IERC20(address(0))
+        );
     }
 
     //--------------------------------------------------------------------------

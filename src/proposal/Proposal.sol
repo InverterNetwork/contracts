@@ -11,7 +11,11 @@ import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/interfaces/IProposal.sol";
+import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //--------------------------------------------------------------------------
@@ -38,6 +42,11 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
 
+    /// @inheritdoc IProposal
+    IPaymentProcessor public override (IProposal) paymentProcessor;
+
+    IERC20 public token;
+
     //--------------------------------------------------------------------------
     // Initializer
 
@@ -47,23 +56,37 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //    _disableInitializers();
     //}
 
+    /// @inheritdoc IProposal
     function init(
         uint proposalId,
         address[] calldata funders,
         address[] calldata modules,
-        IAuthorizer authorizer_
-    ) external initializer {
+        IAuthorizer authorizer_,
+        IPaymentProcessor paymentProcessor_,
+        IERC20 token_
+    ) external override (IProposal) initializer {
         _proposalId = proposalId;
         _funders = funders;
 
         __Pausable_init();
         __ModuleManager_init(modules);
 
+        // Ensure that authorizer_ is an enabled module.
         if (!isEnabledModule(address(authorizer_))) {
             revert Proposal__InvalidAuthorizer();
         }
-
         authorizer = authorizer_;
+
+        // Ensure that paymentProcessor_ is an enabled module.
+        if (!isEnabledModule(address(paymentProcessor_))) {
+            revert Proposal__InvalidPaymentProcessor();
+        }
+        paymentProcessor = paymentProcessor_;
+
+        if (address(token_) == address(0)) {
+            revert Proposal__InvalidToken();
+        }
+        token = token_;
     }
 
     //--------------------------------------------------------------------------

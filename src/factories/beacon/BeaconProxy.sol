@@ -1,36 +1,39 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "lib/openzeppelin-contracts/contracts/proxy/beacon/IBeacon.sol";
-import "lib/openzeppelin-contracts/contracts/proxy/Proxy.sol";
+// External Dependencies
+import {Proxy} from "@oz/proxy/Proxy.sol";
+
+// External Interfaces
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
 /// @custom:security-contact security@p00ls.com
 contract BeaconProxy is Proxy {
     //--------------------------------------------------------------------------------
-    // STATE
+    // Events
 
-    /// @notice The beacon that points to the implementation
-    IBeacon private immutable _beacon;
-
-    //--------------------------------------------------------------------------------
-    // EVENTS
-
-    /// @notice the proxy upgraded to a new beacon
+    /// @notice Proxy upgraded to new {IBeacon} instance.
     event BeaconUpgraded(IBeacon indexed beacon);
 
     //--------------------------------------------------------------------------------
-    // CONSTRUCTOR
+    // State
 
-    /// @notice Construct the BeaconProxy
-    /// @dev Sets the beacon address that contains the implementation address
-    /// @param beacon the according beacon address
+    /// @notice {IBeacon} instance that points to the implementation.
+    IBeacon private immutable _beacon;
+
+    //--------------------------------------------------------------------------------
+    // Constructor
+
+    /// @notice Constructs the BeaconProxy.
+    /// @dev Sets the {IBeacon} instance that contains the implementation address.
+    /// @param beacon The {IBeacon} instance.
     constructor(IBeacon beacon) {
         _beacon = beacon;
         emit BeaconUpgraded(beacon);
     }
 
     //--------------------------------------------------------------------------------
-    // FUNCTIONS
+    // Internal View Functions
 
     /// @inheritdoc Proxy
     function _implementation() internal view override returns (address) {

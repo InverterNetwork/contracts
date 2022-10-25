@@ -5,6 +5,9 @@ pragma solidity ^0.8.0;
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 interface IProposalFactory {
     error ProposalFactory__ModuleDataLengthMismatch();
 
@@ -15,6 +18,9 @@ interface IProposalFactory {
         address[] calldata funders,
         IModule.Metadata memory authorizerMetadata,
         bytes memory authorizerConfigdata,
+        IModule.Metadata memory paymentProcessorMetadata,
+        bytes memory paymentProcessorConfigdata,
+        IERC20 token,
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address);

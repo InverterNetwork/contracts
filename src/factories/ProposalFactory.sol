@@ -7,10 +7,14 @@ import {Context} from "@oz/utils/Context.sol";
 
 // Internal Interfaces
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
 import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 /**
  * @title Proposal Factory
@@ -30,7 +34,9 @@ contract ProposalFactory is IProposalFactory {
     //--------------------------------------------------------------------------
     // Storage
 
-    uint private _proposalIdCounter;
+    /// @dev The counter for the next proposal id.
+    /// @dev Starts counting at 1.
+    uint private _proposalIdCounter = 1;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -46,8 +52,15 @@ contract ProposalFactory is IProposalFactory {
     /// @inheritdoc IProposalFactory
     function createProposal(
         address[] calldata funders,
+        // {IAuthorizer} data
         IModule.Metadata memory authorizerMetadata,
         bytes memory authorizerConfigdata,
+        // {IPaymentProcessor} data
+        IModule.Metadata memory paymentProcessorMetadata,
+        bytes memory paymentProcessorConfigdata,
+        // Token the Proposal will use
+        IERC20 token,
+        // Other module data
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
     ) external returns (address) {
@@ -58,9 +71,16 @@ contract ProposalFactory is IProposalFactory {
             revert ProposalFactory__ModuleDataLengthMismatch();
         }
 
-        // Deploy and cache authorizer module.
+        // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerMetadata, IProposal(clone), authorizerConfigdata
+        );
+
+        // Deploy and cache {IPaymentProcessor} module.
+        address paymentProcessor = IModuleFactory(moduleFactory).createModule(
+            paymentProcessorMetadata,
+            IProposal(clone),
+            paymentProcessorConfigdata
         );
 
         // Deploy and cache optional modules.
@@ -74,7 +94,12 @@ contract ProposalFactory is IProposalFactory {
 
         // Initialize proposal.
         IProposal(clone).init(
-            _proposalIdCounter++, funders, modules, IAuthorizer(authorizer)
+            _proposalIdCounter++,
+            funders,
+            modules,
+            IAuthorizer(authorizer),
+            IPaymentProcessor(paymentProcessor),
+            IERC20(token)
         );
 
         return clone;
