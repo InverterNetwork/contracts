@@ -8,7 +8,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
 import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
-import {IPaymentProcessor} from "src/modules/mixins/IPaymentProcessor.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 
 interface IProposal is IModuleManager, IContributorManager {
     //--------------------------------------------------------------------------

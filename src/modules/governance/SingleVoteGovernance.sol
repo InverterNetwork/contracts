@@ -10,8 +10,7 @@ import {Module} from "src/modules/base/Module.sol";
 import {ListAuthorizer} from "src/modules/governance/ListAuthorizer.sol";
 
 // Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
-import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {IProposal, IAuthorizer} from "src/proposal/IProposal.sol";
 
 /**
  * @title Vote-based governance module

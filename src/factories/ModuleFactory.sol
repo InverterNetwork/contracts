@@ -18,9 +18,11 @@ import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModuleFactory} from "src/factories/IModuleFactory.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {
+    IModuleFactory,
+    IProposal,
+    IModule
+} from "src/factories/IModuleFactory.sol";
 
 /**
  * @title Module Factory

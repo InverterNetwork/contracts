@@ -12,7 +12,7 @@ import {Proposal} from "src/proposal/Proposal.sol";
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
-import {IPaymentProcessor} from "src/modules/mixins/IPaymentProcessor.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
@@ -20,7 +20,7 @@ import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
-    "test/utils/mocks/modules/mixins/PaymentProcessorMock.sol";
+    "test/utils/mocks/modules/PaymentProcessorMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors

@@ -11,12 +11,14 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
-import {IAuthorizer} from "src/modules/IAuthorizer.sol";
-import {IPaymentProcessor} from "src/modules/mixins/IPaymentProcessor.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
-import {IModule} from "src/modules/base/IModule.sol";
 import {IModuleFactory} from "src/factories/IModuleFactory.sol";
-import {IProposalFactory} from "src/factories/IProposalFactory.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {
+    IProposalFactory,
+    IProposal,
+    IModule
+} from "src/factories/IProposalFactory.sol";
 
 /**
  * @title Proposal Factory

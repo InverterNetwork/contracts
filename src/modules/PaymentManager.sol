@@ -12,10 +12,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
-import {Module} from "src/modules/base/Module.sol";
-
-// Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {Module, IProposal} from "src/modules/base/Module.sol";
 
 /**
  * @title Payment manager module implementation #1: Linear vesting curve.
