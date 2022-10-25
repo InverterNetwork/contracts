@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Internal Interfaces
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 
 /**
  * @dev Helper contract providing `_assume...` functions to check fuzzer inputs.

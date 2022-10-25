@@ -6,13 +6,13 @@ import "forge-std/Test.sol";
 // Internal Dependencies
 import {ProposalFactory} from "src/factories/ProposalFactory.sol";
 
-// Internal Interfaces
-import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
-
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Internal Interfaces
+import {IProposalFactory} from "src/factories/IProposalFactory.sol";
+import {IModule} from "src/modules/base/IModule.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
 
 // Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";

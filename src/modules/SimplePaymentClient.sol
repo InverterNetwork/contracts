@@ -4,13 +4,13 @@ pragma solidity ^0.8.0;
 // External Dependencies
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {PaymentClient} from "src/modules/PaymentClient.sol";
-
-// External Interfces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 contract SimplePaymentClient is PaymentClient, Module {
     using SafeERC20 for IERC20;

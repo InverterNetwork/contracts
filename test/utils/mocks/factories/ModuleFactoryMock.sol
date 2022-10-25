@@ -8,9 +8,9 @@ import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {IModuleFactory} from "src/factories/IModuleFactory.sol";
+import {IModule} from "src/modules/base/IModule.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
 
 contract ModuleFactoryMock is IModuleFactory {
     IBeacon private _beacon;

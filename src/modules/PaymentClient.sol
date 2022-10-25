@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {IPaymentClient} from "src/interfaces/IPaymentClient.sol";
+import {IPaymentClient} from "src/modules/IPaymentClient.sol";
 
 abstract contract PaymentClient is IPaymentClient {
     /// @notice Adds an open Payment Order to the client, to be picked up by the paymentProcessor

@@ -9,8 +9,8 @@ import {Module} from "src/modules/base/Module.sol";
 import {LibString} from "src/common/LibString.sol";
 
 // Internal Interfaces
-import {IMilestoneManager} from "src/interfaces/modules/IMilestoneManager.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
 
 /**
  * @title Milestone Module

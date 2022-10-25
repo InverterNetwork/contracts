@@ -10,9 +10,9 @@ import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";

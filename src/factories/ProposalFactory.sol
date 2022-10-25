@@ -2,19 +2,21 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
-import {Clones} from "@oz/proxy/Clones.sol";
 import {Context} from "@oz/utils/Context.sol";
 
-// Internal Interfaces
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
-import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Internal Interfaces
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
+import {IModule} from "src/modules/base/IModule.sol";
+import {IModuleFactory} from "src/factories/IModuleFactory.sol";
+import {IProposalFactory} from "src/factories/IProposalFactory.sol";
 
 /**
  * @title Proposal Factory
