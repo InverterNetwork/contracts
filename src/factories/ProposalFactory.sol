@@ -58,7 +58,7 @@ contract ProposalFactory is IProposalFactory {
         // {IPaymentProcessor} data
         IModule.Metadata memory paymentProcessorMetadata,
         bytes memory paymentProcessorConfigdata,
-        // Payment token
+        // Token the Proposal will use
         IERC20 token,
         // Other module data
         IModule.Metadata[] memory moduleMetadatas,
