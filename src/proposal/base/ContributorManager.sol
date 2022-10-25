@@ -115,6 +115,14 @@ contract ContributorManager is IContributorManager, Initializable {
     uint private _contributorCounter;
 
     //--------------------------------------------------------------------------
+    // Public Mutating Functions
+
+    /// @inheritdoc IContributorManager
+    function revokeContributor(address prevContrib) external {
+        __Contributor_revokeContributor(prevContrib);
+    }
+
+    //--------------------------------------------------------------------------
     // Internal Mutating Functions
 
     // @todo mp, nuggan: Decide which functions should be public.
@@ -154,12 +162,19 @@ contract ContributorManager is IContributorManager, Initializable {
     function __ContributorManager_removeContributor(
         address who,
         address prevContrib
-    ) internal validAddress(who) {
+    )
+        internal
+        _isActiveContributor(who)
+        onlyConsecutiveContributors(who, prevContrib)
+    {
         _commitContributorRemoval(who, prevContrib);
     }
 
-    /// @dev Removes caller from contributor list.
-    function __Contributor_revokeContributor(address prevContrib) internal {
+    function __Contributor_revokeContributor(address prevContrib)
+        internal
+        _isActiveContributor(msg.sender)
+        onlyConsecutiveContributors(msg.sender, prevContrib)
+    {
         _commitContributorRemoval(msg.sender, prevContrib);
     }
 
@@ -197,7 +212,6 @@ contract ContributorManager is IContributorManager, Initializable {
 
     function _commitContributorRemoval(address who, address prevContrib)
         private
-        onlyConsecutiveContributors(who, prevContrib)
     {
         // Remove Contributor instance from registry.
         delete _contributorRegistry[who];

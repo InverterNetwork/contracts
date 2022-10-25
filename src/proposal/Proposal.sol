@@ -51,6 +51,7 @@ contract Proposal is
     /// @inheritdoc IProposal
     IPaymentProcessor public override (IProposal) paymentProcessor;
 
+    /// @inheritdoc IProposal
     IERC20 public token;
 
     //--------------------------------------------------------------------------
