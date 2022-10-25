@@ -115,7 +115,6 @@ contract ProposalTest is Test, FuzzInputChecker {
         _assumeValidModules(modules);
 
         // Make sure that the addresses we'll set manually are not already in the module list
-        _assumeAddressNotInSet(modules, address(authorizer));
         _assumeAddressNotInSet(modules, address(paymentProcessor));
         _assumeAddressNotInSet(modules, address(token));
 
