@@ -14,6 +14,9 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -42,6 +45,8 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     /// @inheritdoc IProposal
     IPaymentProcessor public override (IProposal) paymentProcessor;
 
+    IERC20 public token;
+
     //--------------------------------------------------------------------------
     // Initializer
 
@@ -51,13 +56,15 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //    _disableInitializers();
     //}
 
+    /// @inheritdoc IProposal
     function init(
         uint proposalId,
         address[] calldata funders,
         address[] calldata modules,
         IAuthorizer authorizer_,
-        IPaymentProcessor paymentProcessor_
-    ) external initializer {
+        IPaymentProcessor paymentProcessor_,
+        IERC20 token_
+    ) external override (IProposal) initializer {
         _proposalId = proposalId;
         _funders = funders;
 
@@ -75,6 +82,11 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
             revert Proposal__InvalidPaymentProcessor();
         }
         paymentProcessor = paymentProcessor_;
+
+        if (address(token_) == address(0)) {
+            revert Proposal__InvalidToken();
+        }
+        token = token_;
     }
 
     //--------------------------------------------------------------------------

@@ -11,11 +11,15 @@ import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
 import {IModule} from "src/interfaces/IModule.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {ModuleFactoryMock} from
     "test/utils/mocks/factories/ModuleFactoryMock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -58,6 +62,9 @@ contract ProposalFactoryTest is Test {
             configdatas[i] = bytes("");
         }
 
+        // Create a mock payment Token
+        ERC20Mock token = new ERC20Mock("TestToken", "TST");
+
         // Deploy Proposal with id=1
         ProposalMock proposal = ProposalMock(
             factory.createProposal({
@@ -66,6 +73,7 @@ contract ProposalFactoryTest is Test {
                 authorizerConfigdata: bytes("Authorizer"),
                 paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
                 paymentProcessorConfigdata: bytes("PaymentProcessor"),
+                token: token,
                 moduleMetadatas: metadatas,
                 moduleConfigdatas: configdatas
             })
@@ -80,6 +88,7 @@ contract ProposalFactoryTest is Test {
                 authorizerConfigdata: bytes("Authorizer"),
                 paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
                 paymentProcessorConfigdata: bytes("PaymentProcessor"),
+                token: token,
                 moduleMetadatas: metadatas,
                 moduleConfigdatas: configdatas
             })
@@ -105,6 +114,9 @@ contract ProposalFactoryTest is Test {
         }
         configdatas[modulesLen] = bytes("");
 
+        // Create a mock payment Token
+        ERC20Mock token = new ERC20Mock("TestToken", "TST");
+
         vm.expectRevert(
             IProposalFactory.ProposalFactory__ModuleDataLengthMismatch.selector
         );
@@ -114,6 +126,7 @@ contract ProposalFactoryTest is Test {
             authorizerConfigdata: bytes("Authorizer"),
             paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
             paymentProcessorConfigdata: bytes("PaymentProcessor"),
+            token: token,
             moduleMetadatas: metadatas,
             moduleConfigdatas: configdatas
         });

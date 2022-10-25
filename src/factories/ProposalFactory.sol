@@ -13,6 +13,9 @@ import {IModule} from "src/interfaces/IModule.sol";
 import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
 import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 /**
  * @title Proposal Factory
  *
@@ -55,6 +58,8 @@ contract ProposalFactory is IProposalFactory {
         // {IPaymentProcessor} data
         IModule.Metadata memory paymentProcessorMetadata,
         bytes memory paymentProcessorConfigdata,
+        // Payment token
+        IERC20 token,
         // Other module data
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
@@ -93,7 +98,8 @@ contract ProposalFactory is IProposalFactory {
             funders,
             modules,
             IAuthorizer(authorizer),
-            IPaymentProcessor(paymentProcessor)
+            IPaymentProcessor(paymentProcessor),
+            IERC20(token)
         );
 
         return clone;

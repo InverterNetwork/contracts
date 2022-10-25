@@ -11,12 +11,16 @@ import {IProposal} from "src/interfaces/IProposal.sol";
 import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
 
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {PaymentProcessorMock} from "test/utils/mocks/PaymentProcessorMock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -28,10 +32,12 @@ contract ProposalTest is Test, FuzzInputChecker {
     // Mocks
     AuthorizerMock authorizer;
     PaymentProcessorMock paymentProcessor;
+    ERC20Mock token;
 
     function setUp() public {
         authorizer = new AuthorizerMock();
         paymentProcessor = new PaymentProcessorMock();
+        token = new ERC20Mock("TestToken", "TST");
 
         proposal = new Proposal();
     }
@@ -54,7 +60,7 @@ contract ProposalTest is Test, FuzzInputChecker {
 
         // Initialize proposal.
         proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor
+            proposalId, funders, modules, authorizer, paymentProcessor, token
         );
 
         // Check that proposal's storage correctly initialized.
@@ -62,6 +68,7 @@ contract ProposalTest is Test, FuzzInputChecker {
         assertEq(
             address(proposal.paymentProcessor()), address(paymentProcessor)
         );
+        assertEq(address(proposal.token()), address(token));
     }
 
     function testReinitFails(
@@ -79,12 +86,12 @@ contract ProposalTest is Test, FuzzInputChecker {
 
         // Initialize proposal.
         proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor
+            proposalId, funders, modules, authorizer, paymentProcessor, token
         );
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor
+            proposalId, funders, modules, authorizer, paymentProcessor, token
         );
     }
 
@@ -102,7 +109,7 @@ contract ProposalTest is Test, FuzzInputChecker {
 
         vm.expectRevert(IProposal.Proposal__InvalidAuthorizer.selector);
         proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor
+            proposalId, funders, modules, authorizer, paymentProcessor, token
         );
     }
 
@@ -120,7 +127,31 @@ contract ProposalTest is Test, FuzzInputChecker {
 
         vm.expectRevert(IProposal.Proposal__InvalidPaymentProcessor.selector);
         proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor
+            proposalId, funders, modules, authorizer, paymentProcessor, token
+        );
+    }
+
+    function testInitFailsForInvalidToken(
+        uint proposalId,
+        address[] memory funders,
+        address[] memory modules
+    ) public {
+        _assumeValidProposalId(proposalId);
+        _assumeValidFunders(funders);
+        _assumeValidModules(modules);
+
+        // Set last two module to authorizer and paymentProcessor.
+        modules[modules.length - 1] = address(authorizer);
+        modules[modules.length - 2] = address(paymentProcessor);
+
+        vm.expectRevert(IProposal.Proposal__InvalidToken.selector);
+        proposal.init(
+            proposalId,
+            funders,
+            modules,
+            authorizer,
+            paymentProcessor,
+            IERC20(address(0))
         );
     }
 
