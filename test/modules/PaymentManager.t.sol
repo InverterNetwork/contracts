@@ -7,11 +7,10 @@ import "forge-std/Test.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 import {PaymentManager} from "src/modules/PaymentManager.sol";
-// import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-//
+
 import {IModule} from "src/interfaces/IModule.sol";
 import {IProposal} from "src/interfaces/IProposal.sol";
-// import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
 
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
@@ -95,7 +94,6 @@ contract PaymentManagerTest is Test, ProposalMock {
         modules[0] = address(payment);
 
         address[] memory funders = new address[](0);
-        address paymentProcessor = address(0xBF);
 
         // Initialize ProposalMock via init() function.
         init(
@@ -103,8 +101,8 @@ contract PaymentManagerTest is Test, ProposalMock {
             funders,
             modules,
             authorizerMock,
-            IPaymentProcessor(paymentProcessor),
-            IERC20(_token)
+            IPaymentProcessor(address(0xB)),
+            IERC20(token_)
         );
         ProposalMock(this).initModules(modules);
     }

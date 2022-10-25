@@ -31,12 +31,12 @@ contract ProposalMock is IProposal, ModuleManagerMock {
 
     function init(
         uint proposalId_,
-        address[] calldata funders_,
-        address[] calldata modules_,
+        address[] memory funders_,
+        address[] memory modules_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_,
         IERC20 token_
-    ) external {
+    ) public {
         proposalId = proposalId_;
         funders = funders_;
         modules = modules_;
