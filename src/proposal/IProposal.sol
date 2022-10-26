@@ -53,6 +53,10 @@ interface IProposal is IModuleManager, IContributorManager {
         external
         returns (bytes memory);
 
+    /// @notice Returns the proposal's id.
+    /// @dev Unique id set by the {ProposalFactory} during initialization.
+    function proposalId() external view returns (uint);
+
     /// @notice The {IAuthorizer} implementation used to authorize addresses.
     function authorizer() external view returns (IAuthorizer);
 
