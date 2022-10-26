@@ -7,10 +7,8 @@ import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 contract ImplementationV2Mock is ModuleMock {
     uint public data;
 
-    constructor() {}
-
-    function initialize(uint _data) external initializer {
-        data = _data;
+    function initialize(uint data_) external initializer {
+        data = data_;
     }
 
     function getVersion() external pure returns (uint) {
