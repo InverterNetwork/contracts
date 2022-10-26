@@ -66,33 +66,29 @@ contract ProposalFactoryTest is Test {
         ERC20Mock token = new ERC20Mock("TestToken", "TST");
 
         // Deploy Proposal with id=1
-        ProposalMock proposal = ProposalMock(
-            factory.createProposal({
-                funders: funders,
-                authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-                authorizerConfigdata: bytes("Authorizer"),
-                paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
-                paymentProcessorConfigdata: bytes("PaymentProcessor"),
-                token: token,
-                moduleMetadatas: metadatas,
-                moduleConfigdatas: configdatas
-            })
-        );
+        IProposal proposal = factory.createProposal({
+            funders: funders,
+            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
+            authorizerConfigdata: bytes("Authorizer"),
+            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
+            paymentProcessorConfigdata: bytes("PaymentProcessor"),
+            token: token,
+            moduleMetadatas: metadatas,
+            moduleConfigdatas: configdatas
+        });
         assertEq(proposal.proposalId(), 1);
 
         // Deploy Proposal with id=2
-        proposal = ProposalMock(
-            factory.createProposal({
-                funders: funders,
-                authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-                authorizerConfigdata: bytes("Authorizer"),
-                paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
-                paymentProcessorConfigdata: bytes("PaymentProcessor"),
-                token: token,
-                moduleMetadatas: metadatas,
-                moduleConfigdatas: configdatas
-            })
-        );
+        proposal = factory.createProposal({
+            funders: funders,
+            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
+            authorizerConfigdata: bytes("Authorizer"),
+            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
+            paymentProcessorConfigdata: bytes("PaymentProcessor"),
+            token: token,
+            moduleMetadatas: metadatas,
+            moduleConfigdatas: configdatas
+        });
         assertEq(proposal.proposalId(), 2);
     }
 

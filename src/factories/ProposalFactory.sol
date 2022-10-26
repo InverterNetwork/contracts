@@ -40,7 +40,7 @@ contract ProposalFactory is IProposalFactory {
 
     /// @dev The counter for the next proposal id.
     /// @dev Starts counting at 1.
-    uint private _proposalIdCounter = 1;
+    uint private _proposalIdCounter;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -67,7 +67,7 @@ contract ProposalFactory is IProposalFactory {
         // Other module data
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
-    ) external returns (address) {
+    ) external returns (IProposal) {
         address clone = Clones.clone(target);
 
         // Revert if data arrays' lengths mismatch.
@@ -98,7 +98,7 @@ contract ProposalFactory is IProposalFactory {
 
         // Initialize proposal.
         IProposal(clone).init(
-            _proposalIdCounter++,
+            ++_proposalIdCounter,
             funders,
             modules,
             IAuthorizer(authorizer),
@@ -106,6 +106,6 @@ contract ProposalFactory is IProposalFactory {
             IERC20(token)
         );
 
-        return clone;
+        return IProposal(clone);
     }
 }
