@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-
-// Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
-// Internal Interfaces
-import {IModuleFactory} from "src/factories/IModuleFactory.sol";
-import {IModule} from "src/modules/base/IModule.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
+import {
+    IModuleFactory,
+    IBeacon,
+    IModule,
+    IProposal
+} from "src/factories/IModuleFactory.sol";
 
 contract ModuleFactoryMock is IModuleFactory {
     IBeacon private _beacon;
