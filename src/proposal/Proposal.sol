@@ -42,11 +42,11 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The proposal's id.
-    uint private _proposalId;
-
     /// @dev The list of funders.
     address[] private _funders;
+
+    /// @inheritdoc IProposal
+    uint public proposalId;
 
     /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
@@ -68,14 +68,14 @@ contract Proposal is
 
     /// @inheritdoc IProposal
     function init(
-        uint proposalId,
+        uint proposalId_,
         address[] calldata funders,
         address[] calldata modules,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_,
         IERC20 token_
     ) external override (IProposal) initializer {
-        _proposalId = proposalId;
+        proposalId = proposalId_;
         _funders = funders;
 
         __Pausable_init();
