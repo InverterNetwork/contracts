@@ -22,5 +22,5 @@ interface IProposalFactory {
         IERC20 token,
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
-    ) external returns (address);
+    ) external returns (IProposal);
 }
