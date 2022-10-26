@@ -29,10 +29,17 @@ import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
  *
  * @author byterocket
  */
-contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
+abstract contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
     // @todo mp: Should be abstract?
     //--------------------------------------------------------------------------
     // Modifiers
+
+    modifier onlyAuthorized() {
+        if (!__ModuleManager_isAuthorized(msg.sender)) {
+            revert ("Not authorized");
+        }
+        _;
+    }
 
     /// @notice Modifier to guarantee function is only callable by enabled
     ///         module.
@@ -63,7 +70,7 @@ contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
         _moduleRoles;
 
     //--------------------------------------------------------------------------
-    // Internal Functions
+    // Initializer
 
     function __ModuleManager_init(address[] calldata modules)
         internal
@@ -98,7 +105,21 @@ contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
         }
     }
 
-    function __ModuleManager_disableModule(address module) internal {
+    //--------------------------------------------------------------------------
+    // Internal Functions Implemented in Downstream Contract
+
+    /// @dev Returns whether address `who` is authorized to mutate module
+    ///      manager's state.
+    /// @dev MUST be overriden by downstream contract.
+    function __ModuleManager_isAuthorized(address who)
+        internal
+        virtual
+        returns (bool);
+
+    //--------------------------------------------------------------------------
+    // onlyAuthorized Functions
+
+    function disableModule(address module) internal onlyAuthorized {
         if (isEnabledModule(module)) {
             delete _modules[module];
             emit ModuleDisabled(module);
