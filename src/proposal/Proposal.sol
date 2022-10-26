@@ -29,8 +29,8 @@ contract Proposal is
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
-    modifier onlyAuthorized() {
-        if (!authorizer.isAuthorized(msg.sender)) {
+    modifier onlyOwnerOrAuthorized() {
+        if (!_isOwnerOrAuthorized(msg.sender)) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -98,12 +98,23 @@ contract Proposal is
     }
 
     //--------------------------------------------------------------------------
+    // ContributorManager Function Implementations
+
+    function __ContributorManager_isAuthorized(address who)
+        internal
+        override (ContributorManager)
+        returns (bool)
+    {
+        return _isOwnerOrAuthorized(who);
+    }
+
+    //--------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IProposal
     function executeTx(address target, bytes memory data)
         external
-        onlyAuthorized
+        onlyOwnerOrAuthorized
         returns (bytes memory)
     {
         bool ok;
@@ -120,5 +131,18 @@ contract Proposal is
     /// @inheritdoc IProposal
     function version() external pure returns (string memory) {
         return "1";
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    function _isOwnerOrAuthorized(address who) private returns (bool) {
+        // @todo mp: Proposal needs owner. Check should be
+        //           owner || isAuthorized.
+        if (!authorizer.isAuthorized(who)) {
+            return false;
+        }
+
+        return true;
     }
 }
