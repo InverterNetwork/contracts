@@ -98,24 +98,6 @@ interface IMilestoneManager {
     // Functions
 
     //----------------------------------
-    // Access Control
-
-    /// @notice The contributor access control role.
-    function CONTRIBUTOR_ROLE() external view returns (bytes32);
-
-    /// @notice Grants contributor role to account `account`.
-    /// @dev There is no reach around function included, because the proposal
-    ///      is involved anyway.
-    /// @param account The address to grant the role.
-    function grantContributorRole(address account) external;
-
-    /// @notice Revokes contributor role from account `account`.
-    /// @dev There is no reach around function included, because the proposal
-    ///      is involved anyway.
-    /// @param account The address to revoke the role from.
-    function revokeContributorRole(address account) external;
-
-    //----------------------------------
     // Milestone View Functions
 
     /// @notice Returns the milestone with id `id`.
