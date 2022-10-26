@@ -26,11 +26,8 @@ contract MilestoneManager is IMilestoneManager, Module {
     // Modifiers
 
     modifier onlyContributor() {
-        // @todo mp: Use _msgSender().
-        bool isContributor = __Module_proposal.hasRole(
-            address(this), CONTRIBUTOR_ROLE, msg.sender
-        );
-        if (!isContributor) {
+        // @todo mp, felix: Use _msgSender().
+        if (!__Module_proposal.isActiveContributor(msg.sender)) {
             revert Module__MilestoneManager__OnlyCallableByContributor();
         }
         _;
@@ -44,7 +41,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     }
 
     modifier validBudget(uint budget) {
-        // @todo mp, marvin, nuggan: No constraints for a milestones budget.
+        // @todo mp, marvin, nuggan: No constraints for a milestone budget?
         _;
     }
 
@@ -81,13 +78,6 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     /// @dev Unrealistic to have that many milestones.
     uint internal constant _SENTINEL = type(uint).max;
-
-    //----------------------------------
-    // Access Control Roles
-
-    /// @inheritdoc IMilestoneManager
-    bytes32 public constant CONTRIBUTOR_ROLE =
-        keccak256("modules.milestonemanager.contributor");
 
     //----------------------------------
     // Proposal Callback Function Signatures
@@ -200,19 +190,6 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     function isExistingMilestone(uint id) public view returns (bool) {
         return id != _SENTINEL && _milestones[id] != 0;
-    }
-
-    //--------------------------------------------------------------------------
-    // Access Control Functions
-
-    /// @inheritdoc IMilestoneManager
-    function grantContributorRole(address account) public onlyAuthorized {
-        __Module_proposal.grantRole(CONTRIBUTOR_ROLE, account);
-    }
-
-    /// @inheritdoc IMilestoneManager
-    function revokeContributorRole(address account) public onlyAuthorized {
-        __Module_proposal.revokeRole(CONTRIBUTOR_ROLE, account);
     }
 
     //--------------------------------------------------------------------------

@@ -7,6 +7,9 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
@@ -16,9 +19,6 @@ import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
-
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 contract Proposal is
     IProposal,
