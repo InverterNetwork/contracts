@@ -116,6 +116,8 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
     function testDisableModule(address module) public {
         _assumeValidModule(module);
 
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
+
         address[] memory modules = new address[](1);
         modules[0] = module;
         moduleManager.init(modules);
@@ -231,6 +233,7 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager.grantRole(role, account);
 
         // Disable module.
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
         moduleManager.disableModule(module);
 
         assertTrue(!moduleManager.hasRole(module, role, account));

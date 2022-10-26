@@ -5,6 +5,18 @@ pragma solidity ^0.8.0;
 import {ModuleManager, Types} from "src/proposal/base/ModuleManager.sol";
 
 contract ModuleManagerMock is ModuleManager {
+    mapping(address => bool) private _authorized;
+
+    bool private _allAuthorized;
+
+    function __ModuleManager_setIsAuthorized(address who, bool to) external {
+        _authorized[who] = to;
+    }
+
+    function __ModuleManager_setAllAuthorized(bool to) external {
+        _allAuthorized = to;
+    }
+
     function init(address[] calldata modules) external initializer {
         __ModuleManager_init(modules);
     }
@@ -14,7 +26,12 @@ contract ModuleManagerMock is ModuleManager {
         __ModuleManager_init(modules);
     }
 
-    function disableModule(address module) external {
-        __ModuleManager_disableModule(module);
+    function __ModuleManager_isAuthorized(address who)
+        internal
+        view
+        override (ModuleManager)
+        returns (bool)
+    {
+        return _authorized[who] || _allAuthorized;
     }
 }

@@ -29,14 +29,18 @@ import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
  *
  * @author byterocket
  */
-abstract contract ModuleManager is IModuleManager, Initializable, ContextUpgradeable {
+abstract contract ModuleManager is
+    IModuleManager,
+    Initializable,
+    ContextUpgradeable
+{
     // @todo mp: Should be abstract?
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier onlyAuthorized() {
+    modifier __ModuleManager_onlyAuthorized() {
         if (!__ModuleManager_isAuthorized(msg.sender)) {
-            revert ("Not authorized");
+            revert("Not authorized");
         }
         _;
     }
@@ -113,13 +117,17 @@ abstract contract ModuleManager is IModuleManager, Initializable, ContextUpgrade
     /// @dev MUST be overriden by downstream contract.
     function __ModuleManager_isAuthorized(address who)
         internal
+        view
         virtual
         returns (bool);
 
     //--------------------------------------------------------------------------
     // onlyAuthorized Functions
 
-    function disableModule(address module) internal onlyAuthorized {
+    function disableModule(address module)
+        external
+        __ModuleManager_onlyAuthorized
+    {
         if (isEnabledModule(module)) {
             delete _modules[module];
             emit ModuleDisabled(module);
