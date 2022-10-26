@@ -121,6 +121,14 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     uint private _contributorCounter;
 
     //--------------------------------------------------------------------------
+    // Initializer
+
+    function __ContributorManager_init() internal onlyInitializing {
+        // Set up the sentinel to signal an empty list of active contributors.
+        _contributors[_SENTINEL] = _SENTINEL;
+    }
+
+    //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
     /// @dev Returns whether address `who` is authorized to mutate contributor
@@ -132,7 +140,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         returns (bool);
 
     //--------------------------------------------------------------------------
-    // Public Mutating Functions
+    // onlyAuthorized Mutating Functions
 
     function addContributor(
         address who,
@@ -171,16 +179,6 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         _commitContributorRemoval(who, prevContrib);
     }
 
-    /// @inheritdoc IContributorManager
-    function revokeContributor(address prevContrib)
-        external
-        onlyAuthorized
-        isActiveContributor_(msg.sender)
-        onlyConsecutiveContributors(msg.sender, prevContrib)
-    {
-        _commitContributorRemoval(msg.sender, prevContrib);
-    }
-
     function updateContributorsRole(address who, string memory role)
         internal
         onlyAuthorized
@@ -212,28 +210,15 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     }
 
     //--------------------------------------------------------------------------
-    // Internal Functions
+    // Public Mutating Functions
 
-    function __ContributorManager_init() internal onlyInitializing {
-        // Set up the sentinel to signal an empty list of active contributors.
-        _contributors[_SENTINEL] = _SENTINEL;
-    }
-
-    /// @dev Expects address arguments to be consecutive in the contributor
-    ///      list.
-    /// @dev Expects address `who` to be active contributor.
-    function _commitContributorRemoval(address who, address prevContrib)
-        private
+    /// @inheritdoc IContributorManager
+    function revokeContributor(address prevContrib)
+        external
+        isActiveContributor_(msg.sender)
+        onlyConsecutiveContributors(msg.sender, prevContrib)
     {
-        // Remove Contributor instance from registry.
-        delete _contributorRegistry[who];
-
-        // Remove address from active contributors list.
-        _contributors[prevContrib] = _contributors[who];
-        _contributors[who] = address(0);
-        _contributorCounter--;
-
-        emit ContributorRemoved(who);
+        _commitContributorRemoval(msg.sender, prevContrib);
     }
 
     //--------------------------------------------------------------------------
@@ -273,4 +258,25 @@ abstract contract ContributorManager is IContributorManager, Initializable {
 
         return result;
     }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev Expects address arguments to be consecutive in the contributor
+    ///      list.
+    /// @dev Expects address `who` to be active contributor.
+    function _commitContributorRemoval(address who, address prevContrib)
+        private
+    {
+        // Remove Contributor instance from registry.
+        delete _contributorRegistry[who];
+
+        // Remove address from active contributors list.
+        _contributors[prevContrib] = _contributors[who];
+        _contributors[who] = address(0);
+        _contributorCounter--;
+
+        emit ContributorRemoved(who);
+    }
+
 }
