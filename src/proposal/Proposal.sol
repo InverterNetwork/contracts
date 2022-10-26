@@ -98,10 +98,20 @@ contract Proposal is
     }
 
     //--------------------------------------------------------------------------
-    // ContributorManager Function Implementations
+    // Upstream Function Implementations
+
+    function __ModuleManager_isAuthorized(address who)
+        internal
+        view
+        override (ModuleManager)
+        returns (bool)
+    {
+        return _isOwnerOrAuthorized(who);
+    }
 
     function __ContributorManager_isAuthorized(address who)
         internal
+        view
         override (ContributorManager)
         returns (bool)
     {
@@ -136,7 +146,7 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function _isOwnerOrAuthorized(address who) private returns (bool) {
+    function _isOwnerOrAuthorized(address who) private view returns (bool) {
         // @todo mp: Proposal needs owner. Check should be
         //           owner || isAuthorized.
         if (!authorizer.isAuthorized(who)) {

@@ -38,7 +38,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier onlyAuthorized() {
+    modifier __ContributorManager_onlyAuthorized() {
         if (!__ContributorManager_isAuthorized(msg.sender)) {
             revert("Not authorized");
         }
@@ -136,6 +136,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     /// @dev MUST be overriden by downstream contract.
     function __ContributorManager_isAuthorized(address who)
         internal
+        view
         virtual
         returns (bool);
 
@@ -149,7 +150,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         uint salary
     )
         internal
-        onlyAuthorized
+        __ContributorManager_onlyAuthorized
         validAddress(who)
         validName(name)
         validRole(role)
@@ -172,7 +173,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
 
     function removeContributor(address who, address prevContrib)
         internal
-        onlyAuthorized
+        __ContributorManager_onlyAuthorized
         isActiveContributor_(who)
         onlyConsecutiveContributors(who, prevContrib)
     {
@@ -181,7 +182,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
 
     function updateContributorsRole(address who, string memory role)
         internal
-        onlyAuthorized
+        __ContributorManager_onlyAuthorized
         validAddress(who)
         validRole(role)
         isActiveContributor_(who)
@@ -196,7 +197,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
 
     function updateContributorsSalary(address who, uint salary)
         internal
-        onlyAuthorized
+        __ContributorManager_onlyAuthorized
         validAddress(who)
         validSalary(salary)
         isActiveContributor_(who)
@@ -278,5 +279,4 @@ abstract contract ContributorManager is IContributorManager, Initializable {
 
         emit ContributorRemoved(who);
     }
-
 }
