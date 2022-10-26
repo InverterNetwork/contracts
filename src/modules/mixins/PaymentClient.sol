@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 // Internal Dependencies
 import {
-    IPaymentClient, IPaymentProcessor
+    IPaymentClient,
+    IPaymentProcessor
 } from "src/modules/mixins/IPaymentClient.sol";
 
 abstract contract PaymentClient is IPaymentClient {
