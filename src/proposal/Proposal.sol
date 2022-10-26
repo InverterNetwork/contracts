@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
+// @todo mp: Would like to have 2 step owner.
+import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 
@@ -22,6 +24,7 @@ contract Proposal is
     IProposal,
     ModuleManager,
     ContributorManager,
+    OwnableUpgradeable,
     PausableUpgradeable
 {
     //--------------------------------------------------------------------------
@@ -76,6 +79,8 @@ contract Proposal is
         _funders = funders;
 
         __Pausable_init();
+        __Ownable_init();
+
         __ModuleManager_init(modules);
         __ContributorManager_init();
 
@@ -147,12 +152,6 @@ contract Proposal is
     // Internal Functions
 
     function _isOwnerOrAuthorized(address who) private view returns (bool) {
-        // @todo mp: Proposal needs owner. Check should be
-        //           owner || isAuthorized.
-        if (!authorizer.isAuthorized(who)) {
-            return false;
-        }
-
-        return true;
+        return authorizer.isAuthorized(who) || owner() == who;
     }
 }
