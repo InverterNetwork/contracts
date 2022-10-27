@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IModule} from "src/interfaces/IModule.sol";
+import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 interface IProposalFactory { //@todo felix add Beacon pattern
     error ProposalFactory__ModuleDataLengthMismatch();
@@ -15,7 +17,10 @@ interface IProposalFactory { //@todo felix add Beacon pattern
         address[] calldata funders,
         IModule.Metadata memory authorizerMetadata,
         bytes memory authorizerConfigdata,
+        IModule.Metadata memory paymentProcessorMetadata,
+        bytes memory paymentProcessorConfigdata,
+        IERC20 token,
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
-    ) external returns (address);
+    ) external returns (IProposal);
 }

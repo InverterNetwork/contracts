@@ -6,29 +6,26 @@ import "forge-std/Test.sol";
 // Internal Dependencies
 import {ProposalFactory} from "src/factories/ProposalFactory.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Interfaces
-import {IModule} from "src/interfaces/IModule.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {IProposalFactory} from "src/factories/IProposalFactory.sol";
+import {IModule} from "src/modules/base/IModule.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
 
 // Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {ModuleFactoryMock} from
     "test/utils/mocks/factories/ModuleFactoryMock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-/**
- * Errors library for ProposalFactory's custom errors.
- * Enables checking for errors with vm.expectRevert(Errors.<Error>).
- */
-library Errors {
-    bytes internal constant ProposalFactory__ModuleDataLengthMismatch =
-        abi.encodeWithSignature("ProposalFactory__ModuleDataLengthMismatch()");
-}
-
 contract ProposalFactoryTest is Test {
+    // SuT
     ProposalFactory factory;
 
     // Mocks
@@ -45,7 +42,7 @@ contract ProposalFactoryTest is Test {
         factory = new ProposalFactory(address(target), address(moduleFactory));
     }
 
-    function testDeployment() public {
+    function testDeploymentInvariants() public {
         assertEq(factory.target(), address(target));
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
@@ -65,29 +62,34 @@ contract ProposalFactoryTest is Test {
             configdatas[i] = bytes("");
         }
 
-        // Deploy Proposal with id=0
-        ProposalMock proposal = ProposalMock(
-            factory.createProposal({
-                funders: funders,
-                authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-                authorizerConfigdata: bytes("Authorizer"),
-                moduleMetadatas: metadatas,
-                moduleConfigdatas: configdatas
-            })
-        );
-        assertEq(proposal.proposalId(), 0);
+        // Create a mock payment Token
+        ERC20Mock token = new ERC20Mock("TestToken", "TST");
 
         // Deploy Proposal with id=1
-        proposal = ProposalMock(
-            factory.createProposal({
-                funders: funders,
-                authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-                authorizerConfigdata: bytes("Authorizer"),
-                moduleMetadatas: metadatas,
-                moduleConfigdatas: configdatas
-            })
-        );
+        IProposal proposal = factory.createProposal({
+            funders: funders,
+            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
+            authorizerConfigdata: bytes("Authorizer"),
+            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
+            paymentProcessorConfigdata: bytes("PaymentProcessor"),
+            token: token,
+            moduleMetadatas: metadatas,
+            moduleConfigdatas: configdatas
+        });
         assertEq(proposal.proposalId(), 1);
+
+        // Deploy Proposal with id=2
+        proposal = factory.createProposal({
+            funders: funders,
+            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
+            authorizerConfigdata: bytes("Authorizer"),
+            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
+            paymentProcessorConfigdata: bytes("PaymentProcessor"),
+            token: token,
+            moduleMetadatas: metadatas,
+            moduleConfigdatas: configdatas
+        });
+        assertEq(proposal.proposalId(), 2);
     }
 
     function testCreateProposalFailsIfModuleDataLengthMismatch(
@@ -108,11 +110,19 @@ contract ProposalFactoryTest is Test {
         }
         configdatas[modulesLen] = bytes("");
 
-        vm.expectRevert(Errors.ProposalFactory__ModuleDataLengthMismatch);
+        // Create a mock payment Token
+        ERC20Mock token = new ERC20Mock("TestToken", "TST");
+
+        vm.expectRevert(
+            IProposalFactory.ProposalFactory__ModuleDataLengthMismatch.selector
+        );
         factory.createProposal({
             funders: funders,
             authorizerMetadata: IModule.Metadata(1, "Authorizer"),
             authorizerConfigdata: bytes("Authorizer"),
+            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
+            paymentProcessorConfigdata: bytes("PaymentProcessor"),
+            token: token,
             moduleMetadatas: metadatas,
             moduleConfigdatas: configdatas
         });

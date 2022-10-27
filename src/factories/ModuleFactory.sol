@@ -2,24 +2,27 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
-import {Clones} from "@oz/proxy/Clones.sol";
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-import {BeaconProxy} from "src/factories/beacon-fundamentals/BeaconProxy.sol";
-
 // External Libraries
-import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
-import {Address} from "@oz/utils/Address.sol";
+import {Clones} from "@oz/proxy/Clones.sol";
+
+// External Interfaces
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+
+// Internal Dependencies
+import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
+import {
+    IModuleFactory,
+    IProposal,
+    IModule
+} from "src/factories/IModuleFactory.sol";
 
 /**
  * @title Module Factory
@@ -45,10 +48,11 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         target.
-    modifier validTarget(address target_) {
-        if (target_ == address(this) || target_ == address(0)) {
-            revert ModuleFactory__InvalidTarget();
+    ///         {IBeacon} instance.
+    modifier validBeacon(IBeacon beacon) {
+        // Revert if beacon's implementation is zero address.
+        if (beacon.implementation() == address(0)) {
+            revert ModuleFactory__InvalidBeacon();
         }
         _;
     }
@@ -59,9 +63,9 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     // @todo mp: ModuleFactory needs to know/manage minorVersion.
     //           Module does not have knowledge about this anymore!
 
-    /// @dev Mapping of metadata identifier to target contract address.
-    /// @dev MetadataLib.identifier(metadata) => address
-    mapping(bytes32 => address) private _targets;
+    /// @dev Mapping of metadata identifier to {IBeacon} instance.
+    /// @dev MetadataLib.identifier(metadata) => {IBeacon}
+    mapping(bytes32 => IBeacon) private _beacons;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -83,19 +87,26 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // module's `init()` function does it anyway.
         // @todo mp: Add comment to function doc?!
 
-        bytes32 id = LibMetadata.identifier(metadata);
+        IBeacon beacon;
+        (beacon, /*id*/ ) = getBeaconAndId(metadata);
 
-        address target_ = _targets[id];
-
-        if (target_ == address(0)) {
+        if (address(beacon) == address(0)) {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        if (IBeacon(target_).implementation() == address(0)) {
-            revert ModuleFactory__BeaconNoValidImplementation();
-        }
+        // @todo mp: This is not cool... Check needs to be there because
+        //           contract can change after registration, but the error
+        //           should be more "exceptional".
+        //           This should _really_ NOT happen!
+        // Update:   It indicates the module is broken and should NOT be
+        //           trusted. Better to burn all gas and make sure nothing
+        //           can happen in this tx anymore (?)
+        assert(beacon.implementation() != address(0));
+        //if (IBeacon(target).implementation() == address(0)) {
+        //    revert ModuleFactory__InvalidBeaconImplementation();
+        //}
 
-        address implementation = address(new BeaconProxy(IBeacon(target_)));
+        address implementation = address(new BeaconProxy(beacon));
 
         IModule(implementation).init(proposal, metadata, configdata);
 
@@ -106,51 +117,37 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     // Public View Functions
 
     /// @inheritdoc IModuleFactory
-    function target(IModule.Metadata memory metadata)
-        external
+    function getBeaconAndId(IModule.Metadata memory metadata)
+        public
         view
-        returns (address)
+        returns (IBeacon, bytes32)
     {
         bytes32 id = LibMetadata.identifier(metadata);
 
-        return _targets[id];
+        return (_beacons[id], id);
     }
 
     //--------------------------------------------------------------------------
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, address target_)
+    function registerMetadata(IModule.Metadata memory metadata, IBeacon beacon)
         external
         onlyOwner
         validMetadata(metadata)
-        validTarget(target_)
+        validBeacon(beacon)
     {
-        bytes32 id = LibMetadata.identifier(metadata);
+        IBeacon oldBeacon;
+        bytes32 id;
+        (oldBeacon, id) = getBeaconAndId(metadata);
 
-        address got = _targets[id];
-
-        // Revert if metadata already registered for different target.
-        if (got != address(0)) {
+        // Revert if metadata already registered for different beacon.
+        if (address(oldBeacon) != address(0)) {
             revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
-        if (!Address.isContract(target_)) {
-            revert ModuleFactory__BeaconNoValidImplementation();
-        }
-
-        if (
-            !ERC165Checker.supportsInterface(target_, type(IBeacon).interfaceId)
-        ) {
-            revert ModuleFactory__BeaconNoValidImplementation();
-        }
-
-        if (IBeacon(target_).implementation() == address(0)) {
-            revert ModuleFactory__BeaconNoValidImplementation();
-        }
-
-        // Register Metadata for target.
-        _targets[id] = target_;
-        emit MetadataRegistered(metadata, target_);
+        // Register Metadata for beacon.
+        _beacons[id] = beacon;
+        emit MetadataRegistered(metadata, beacon);
     }
 }

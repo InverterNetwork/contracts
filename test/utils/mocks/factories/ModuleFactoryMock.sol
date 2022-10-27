@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// Internal Interfaces
-import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
+
+import {
+    IModuleFactory,
+    IBeacon,
+    IModule,
+    IProposal
+} from "src/factories/IModuleFactory.sol";
 
 contract ModuleFactoryMock is IModuleFactory {
-    address private _target;
+    IBeacon private _beacon;
 
     uint public addressCounter;
 
@@ -18,9 +22,13 @@ contract ModuleFactoryMock is IModuleFactory {
         return address(uint160(++addressCounter));
     }
 
-    function target(IModule.Metadata memory) external view returns (address) {
-        return _target;
+    function getBeaconAndId(IModule.Metadata memory metadata)
+        external
+        view
+        returns (IBeacon, bytes32)
+    {
+        return (_beacon, LibMetadata.identifier(metadata));
     }
 
-    function registerMetadata(IModule.Metadata memory, address) external {}
+    function registerMetadata(IModule.Metadata memory, IBeacon) external {}
 }

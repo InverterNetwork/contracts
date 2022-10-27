@@ -6,7 +6,7 @@ import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {IProposal} from "src/proposal/IProposal.sol";
 
 /**
  * @title Contributor manager module

@@ -2,15 +2,23 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
-import {Clones} from "@oz/proxy/Clones.sol";
 import {Context} from "@oz/utils/Context.sol";
 
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Interfaces
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
-import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
+import {IModuleFactory} from "src/factories/IModuleFactory.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {
+    IProposalFactory,
+    IProposal,
+    IModule
+} from "src/factories/IProposalFactory.sol";
 
 /**
  * @title Proposal Factory
@@ -30,6 +38,8 @@ contract ProposalFactory is IProposalFactory {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev The counter for the next proposal id.
+    /// @dev Starts counting at 1.
     uint private _proposalIdCounter;
 
     //--------------------------------------------------------------------------
@@ -46,11 +56,18 @@ contract ProposalFactory is IProposalFactory {
     /// @inheritdoc IProposalFactory
     function createProposal(
         address[] calldata funders,
+        // {IAuthorizer} data
         IModule.Metadata memory authorizerMetadata,
         bytes memory authorizerConfigdata,
+        // {IPaymentProcessor} data
+        IModule.Metadata memory paymentProcessorMetadata,
+        bytes memory paymentProcessorConfigdata,
+        // Token the Proposal will use
+        IERC20 token,
+        // Other module data
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
-    ) external returns (address) {
+    ) external returns (IProposal) {
         address clone = Clones.clone(target);
 
         // Revert if data arrays' lengths mismatch.
@@ -58,9 +75,16 @@ contract ProposalFactory is IProposalFactory {
             revert ProposalFactory__ModuleDataLengthMismatch();
         }
 
-        // Deploy and cache authorizer module.
+        // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerMetadata, IProposal(clone), authorizerConfigdata
+        );
+
+        // Deploy and cache {IPaymentProcessor} module.
+        address paymentProcessor = IModuleFactory(moduleFactory).createModule(
+            paymentProcessorMetadata,
+            IProposal(clone),
+            paymentProcessorConfigdata
         );
 
         // Deploy and cache optional modules.
@@ -74,9 +98,14 @@ contract ProposalFactory is IProposalFactory {
 
         // Initialize proposal.
         IProposal(clone).init(
-            _proposalIdCounter++, funders, modules, IAuthorizer(authorizer)
+            ++_proposalIdCounter,
+            funders,
+            modules,
+            IAuthorizer(authorizer),
+            IPaymentProcessor(paymentProcessor),
+            IERC20(token)
         );
 
-        return clone;
+        return IProposal(clone);
     }
 }

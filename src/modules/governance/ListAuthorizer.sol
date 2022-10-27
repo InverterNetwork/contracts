@@ -7,8 +7,7 @@ import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IProposal, IAuthorizer} from "src/proposal/IProposal.sol";
 
 /**
  * @title A simple List-based Authorizer
