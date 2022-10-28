@@ -10,9 +10,11 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
-import {IProposalFactory} from "src/factories/IProposalFactory.sol";
-import {IModule} from "src/modules/base/IModule.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
+import {
+    IProposalFactory,
+    IModule,
+    IProposal
+} from "src/factories/IProposalFactory.sol";
 
 // Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
