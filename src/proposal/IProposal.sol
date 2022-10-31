@@ -17,15 +17,6 @@ interface IProposal is IModuleManager, IContributorManager {
     /// @notice Function is only callable by authorized caller.
     error Proposal__CallerNotAuthorized();
 
-    /// @notice Given {IAuthorizer} instance invalid.
-    error Proposal__InvalidAuthorizer();
-
-    /// @notice Given {IPaymentProcessor} instance invalid.
-    error Proposal__InvalidPaymentProcessor();
-
-    /// @notice Given {IERC20} token instance invalid.
-    error Proposal__InvalidToken();
-
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
 
@@ -33,15 +24,13 @@ interface IProposal is IModuleManager, IContributorManager {
     // Functions
 
     /// @notice Initialization function.
-    /// @dev Note that `authorizer` and `paymentProcessor` MUST be elements of
-    ///      `modules`.
     function init(
         uint proposalId,
+        IERC20 token,
         address[] calldata funders,
         address[] calldata modules, // @todo mp: Change to IModules.
         IAuthorizer authorizer,
-        IPaymentProcessor paymentProcessor,
-        IERC20 token
+        IPaymentProcessor paymentProcessor
     ) external;
 
     /// @notice Executes a call on target `target` with call data `data`.
