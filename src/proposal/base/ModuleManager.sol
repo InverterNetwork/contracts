@@ -88,7 +88,7 @@ abstract contract ModuleManager is
 
         address module;
         for (uint i; i < modules.length; i++) {
-            _enableModule(modules[i]);
+            __ModuleManager_enableModule(modules[i]);
 
             // @todo mp: Call into module to "register this proposal" as using
             //           that module instance?
@@ -126,7 +126,16 @@ abstract contract ModuleManager is
     function __ModuleManager_disableModule(address module) internal {
         if (isEnabledModule(module)) {
             delete _modules[module];
-            delete _moduleRoles[module];
+
+            // @todo marvin, mp: See comment.
+            //                   Should we maybe allow roles managemant for
+            //                   non-modules too?
+            //                   Then a disabled module could revoke roles before
+            //                   being re-enabled again.
+            // Note that we cannot delete the module's roles configuration.
+            // This means that in case a module is disabled and then re-enabled,
+            // its roles configuration is the same as before.
+            // Note that this could potentially lead to security issues!
 
             emit ModuleDisabled(module);
         }
