@@ -99,37 +99,54 @@ abstract contract ModuleManager is
     }
 
     //--------------------------------------------------------------------------
-    // Internal Functions Implemented in Downstream Contract
+    // Internal Functions
 
     /// @dev Returns whether address `who` is authorized to mutate module
     ///      manager's state.
-    /// @dev MUST be overriden by downstream contract.
+    /// @dev MUST be overriden in downstream contract.
     function __ModuleManager_isAuthorized(address who)
         internal
         view
         virtual
         returns (bool);
 
-    //--------------------------------------------------------------------------
-    // onlyAuthorized Functions
+    function __ModuleManager_enableModule(address module) internal {
+        if (module == address(0)) {
+            revert Proposal__ModuleManager__InvalidModuleAddress();
+        }
 
-    function enableModule(address module)
-        external
-        __ModuleManager_isAuthorized
-    {
-        _enableModule(module);
+        if (_modules[module]) {
+            revert Proposal__ModuleManager__ModuleAlreadyEnabled(module);
+        }
+
+        _modules[module] = true;
+        emit ModuleEnabled(module);
     }
 
-    function disableModule(address module)
-        external
-        __ModuleManager_onlyAuthorized
-    {
+    function __ModuleManager_disableModule(address module) internal {
         if (isEnabledModule(module)) {
             delete _modules[module];
             delete _moduleRoles[module];
 
             emit ModuleDisabled(module);
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // onlyAuthorized Functions
+
+    function enableModule(address module)
+        public
+        __ModuleManager_onlyAuthorized
+    {
+        __ModuleManager_enableModule(module);
+    }
+
+    function disableModule(address module)
+        public
+        __ModuleManager_onlyAuthorized
+    {
+        __ModuleManager_disableModule(module);
     }
 
     //--------------------------------------------------------------------------
@@ -197,7 +214,7 @@ abstract contract ModuleManager is
         return isEnabledModule(module) && _moduleRoles[module][role][account];
     }
 
-    // @todo mp: Getter for modules.
+    // @todo mp: Getter for modules. Need mapping-list structure for that.
 
     /// @inheritdoc IModuleManager
     function isEnabledModule(address module)
@@ -208,21 +225,4 @@ abstract contract ModuleManager is
     {
         return _modules[module];
     }
-
-    //--------------------------------------------------------------------------
-    // Private Mutating Functions
-
-    function _enableModule(address module) private {
-        if (module == address(0)) {
-            revert Proposal__ModuleManager__InvalidModuleAddress();
-        }
-
-        if (_modules[module]) {
-            revert Proposal__ModuleManager__ModuleAlreadyEnabled(module);
-        }
-
-        _modules[module] = true;
-        emit ModuleEnabled(module);
-    }
-
 }
