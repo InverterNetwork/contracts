@@ -88,18 +88,7 @@ abstract contract ModuleManager is
 
         address module;
         for (uint i; i < modules.length; i++) {
-            module = modules[i];
-
-            if (module == address(0)) {
-                revert Proposal__ModuleManager__InvalidModuleAddress();
-            }
-
-            if (_modules[module]) {
-                revert Proposal__ModuleManager__ModuleAlreadyEnabled(module);
-            }
-
-            _modules[module] = true;
-            emit ModuleEnabled(module);
+            _enableModule(modules[i]);
 
             // @todo mp: Call into module to "register this proposal" as using
             //           that module instance?
@@ -124,12 +113,21 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // onlyAuthorized Functions
 
+    function enableModule(address module)
+        external
+        __ModuleManager_isAuthorized
+    {
+        _enableModule(module);
+    }
+
     function disableModule(address module)
         external
         __ModuleManager_onlyAuthorized
     {
         if (isEnabledModule(module)) {
             delete _modules[module];
+            delete _moduleRoles[module];
+
             emit ModuleDisabled(module);
         }
     }
@@ -210,4 +208,21 @@ abstract contract ModuleManager is
     {
         return _modules[module];
     }
+
+    //--------------------------------------------------------------------------
+    // Private Mutating Functions
+
+    function _enableModule(address module) private {
+        if (module == address(0)) {
+            revert Proposal__ModuleManager__InvalidModuleAddress();
+        }
+
+        if (_modules[module]) {
+            revert Proposal__ModuleManager__ModuleAlreadyEnabled(module);
+        }
+
+        _modules[module] = true;
+        emit ModuleEnabled(module);
+    }
+
 }
