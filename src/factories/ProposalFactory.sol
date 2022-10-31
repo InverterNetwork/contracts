@@ -2,19 +2,22 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
-import {Clones} from "@oz/proxy/Clones.sol";
 import {Context} from "@oz/utils/Context.sol";
 
-// Internal Interfaces
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
-import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Internal Interfaces
+import {
+    IProposalFactory,
+    IProposal,
+    IModule
+} from "src/factories/IProposalFactory.sol";
+import {IAuthorizer, IPaymentProcessor} from "src/proposal/IProposal.sol";
+import {IModuleFactory} from "src/factories/IModuleFactory.sol";
 
 /**
  * @title Proposal Factory
@@ -36,7 +39,7 @@ contract ProposalFactory is IProposalFactory {
 
     /// @dev The counter for the next proposal id.
     /// @dev Starts counting at 1.
-    uint private _proposalIdCounter = 1;
+    uint private _proposalIdCounter;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -63,7 +66,7 @@ contract ProposalFactory is IProposalFactory {
         // Other module data
         IModule.Metadata[] memory moduleMetadatas,
         bytes[] memory moduleConfigdatas
-    ) external returns (address) {
+    ) external returns (IProposal) {
         address clone = Clones.clone(target);
 
         // Revert if data arrays' lengths mismatch.
@@ -94,7 +97,7 @@ contract ProposalFactory is IProposalFactory {
 
         // Initialize proposal.
         IProposal(clone).init(
-            _proposalIdCounter++,
+            ++_proposalIdCounter,
             funders,
             modules,
             IAuthorizer(authorizer),
@@ -102,6 +105,6 @@ contract ProposalFactory is IProposalFactory {
             IERC20(token)
         );
 
-        return clone;
+        return IProposal(clone);
     }
 }

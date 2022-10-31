@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Internal Interfaces
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 
 /**
  * @dev Helper contract providing `_assume...` functions to check fuzzer inputs.
@@ -17,7 +17,9 @@ abstract contract FuzzInputChecker is Test {
 
     function _assumeValidFunders(address[] memory funders) internal {}
 
-    function _assumeAddressNotInSet(address[] memory set, address element) internal{
+    function _assumeAddressNotInSet(address[] memory set, address element)
+        internal
+    {
         for (uint i; i < set.length; i++) {
             // Assume element address is unique.
             vm.assume(element != set[i]);

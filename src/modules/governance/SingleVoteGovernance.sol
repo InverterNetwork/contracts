@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Dependencies
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ListAuthorizer} from "src/modules/governance/ListAuthorizer.sol";
 
 // Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {IProposal, IAuthorizer} from "src/proposal/IProposal.sol";
 
 /**
  * @title Vote-based governance module

@@ -7,8 +7,7 @@ import "forge-std/Test.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IModule} from "src/interfaces/IModule.sol";
+import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";

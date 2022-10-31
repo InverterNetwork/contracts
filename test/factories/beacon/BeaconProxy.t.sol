@@ -4,8 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // External Interfaces
-import {IBeacon} from
-    "lib/openzeppelin-contracts/contracts/proxy/beacon/IBeacon.sol";
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
 // Internal Dependencies
 import {Beacon} from "src/factories/beacon/Beacon.sol";

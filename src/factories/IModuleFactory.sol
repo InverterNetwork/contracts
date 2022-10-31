@@ -5,8 +5,7 @@ pragma solidity ^0.8.0;
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IModule} from "src/interfaces/IModule.sol";
+import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 interface IModuleFactory {
     //--------------------------------------------------------------------------

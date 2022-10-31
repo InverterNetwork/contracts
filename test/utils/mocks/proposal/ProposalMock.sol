@@ -1,21 +1,28 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// Mock Dependencies
-import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
+import {
+    IProposal,
+    IPaymentProcessor,
+    IAuthorizer
+} from "src/proposal/IProposal.sol";
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// Mock Dependencies
+import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
+import {ContributorManagerMock} from "./base/ContributorManagerMock.sol";
 
-contract ProposalMock is IProposal, ModuleManagerMock {
+contract ProposalMock is
+    IProposal,
+    ModuleManagerMock,
+    ContributorManagerMock
+{
     IAuthorizer public authorizer;
     IPaymentProcessor public paymentProcessor;
     IERC20 public token;
@@ -31,12 +38,12 @@ contract ProposalMock is IProposal, ModuleManagerMock {
 
     function init(
         uint proposalId_,
-        address[] calldata funders_,
-        address[] calldata modules_,
+        address[] memory funders_,
+        address[] memory modules_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_,
         IERC20 token_
-    ) external {
+    ) public {
         proposalId = proposalId_;
         funders = funders_;
         modules = modules_;

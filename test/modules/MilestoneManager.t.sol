@@ -9,8 +9,10 @@ import {
 } from "test/modules/ModuleTest.sol";
 
 // SuT
-import {MilestoneManager} from "src/modules/MilestoneManager.sol";
-import {IMilestoneManager} from "src/interfaces/modules/IMilestoneManager.sol";
+import {
+    MilestoneManager,
+    IMilestoneManager
+} from "src/modules/MilestoneManager.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -74,57 +76,6 @@ contract MilestoneManagerTest is ModuleTest {
     function testReinitFails() public override (ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         milestoneManager.init(_proposal, _METADATA, bytes(""));
-    }
-
-    //--------------------------------------------------------------------------
-    // Test: Access Control Functions
-
-    function testGrantContributorRole(address to) public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        milestoneManager.grantContributorRole(to);
-        assertTrue(
-            _proposal.hasRole(
-                address(milestoneManager),
-                milestoneManager.CONTRIBUTOR_ROLE(),
-                to
-            )
-        );
-    }
-
-    function testGrantContributorRoleOnlyCallableIfAuthorized(address caller)
-        public
-    {
-        _authorizer.setIsAuthorized(caller, false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.grantContributorRole(address(0xBEEF));
-    }
-
-    function testRevokeContributorRole(address from) public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        milestoneManager.grantContributorRole(from);
-
-        milestoneManager.revokeContributorRole(from);
-        assertTrue(
-            !_proposal.hasRole(
-                address(milestoneManager),
-                milestoneManager.CONTRIBUTOR_ROLE(),
-                from
-            )
-        );
-    }
-
-    function testRevokeContributorRoleOnlyCallableIfAuthorized(address caller)
-        public
-    {
-        _authorizer.setIsAuthorized(caller, false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.revokeContributorRole(address(0xBEEF));
     }
 
     //--------------------------------------------------------------------------

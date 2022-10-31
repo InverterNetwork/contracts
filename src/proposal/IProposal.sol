@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// Internal Interfaces
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
-import {IModuleManager} from "src/interfaces/IModuleManager.sol";
-
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-interface IProposal is IModuleManager {
+// Internal Interfaces
+import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
+import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
+import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+
+interface IProposal is IModuleManager, IContributorManager {
     //--------------------------------------------------------------------------
     // Errors
 
@@ -22,7 +23,7 @@ interface IProposal is IModuleManager {
     /// @notice Given {IPaymentProcessor} instance invalid.
     error Proposal__InvalidPaymentProcessor();
 
-    /// @notice Given {IERC20} instance invalid.
+    /// @notice Given {IERC20} token instance invalid.
     error Proposal__InvalidToken();
 
     /// @notice Execution of transaction failed.
@@ -52,6 +53,10 @@ interface IProposal is IModuleManager {
         external
         returns (bytes memory);
 
+    /// @notice Returns the proposal's id.
+    /// @dev Unique id set by the {ProposalFactory} during initialization.
+    function proposalId() external view returns (uint);
+
     /// @notice The {IAuthorizer} implementation used to authorize addresses.
     function authorizer() external view returns (IAuthorizer);
 
@@ -59,7 +64,8 @@ interface IProposal is IModuleManager {
     ///         payments.
     function paymentProcessor() external view returns (IPaymentProcessor);
 
-    /// @notice The {IERC20} token used for payouts.
+    /// @notice The proposal's {IERC20} token accepted for fundings and used
+    ///         for payments.
     function token() external view returns (IERC20);
 
     /// @notice The version of the proposal instance.

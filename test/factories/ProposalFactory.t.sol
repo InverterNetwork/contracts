@@ -6,13 +6,15 @@ import "forge-std/Test.sol";
 // Internal Dependencies
 import {ProposalFactory} from "src/factories/ProposalFactory.sol";
 
-// Internal Interfaces
-import {IProposalFactory} from "src/interfaces/IProposalFactory.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
-
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Internal Interfaces
+import {
+    IProposalFactory,
+    IModule,
+    IProposal
+} from "src/factories/IProposalFactory.sol";
 
 // Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
@@ -66,33 +68,29 @@ contract ProposalFactoryTest is Test {
         ERC20Mock token = new ERC20Mock("TestToken", "TST");
 
         // Deploy Proposal with id=1
-        ProposalMock proposal = ProposalMock(
-            factory.createProposal({
-                funders: funders,
-                authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-                authorizerConfigdata: bytes("Authorizer"),
-                paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
-                paymentProcessorConfigdata: bytes("PaymentProcessor"),
-                token: token,
-                moduleMetadatas: metadatas,
-                moduleConfigdatas: configdatas
-            })
-        );
+        IProposal proposal = factory.createProposal({
+            funders: funders,
+            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
+            authorizerConfigdata: bytes("Authorizer"),
+            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
+            paymentProcessorConfigdata: bytes("PaymentProcessor"),
+            token: token,
+            moduleMetadatas: metadatas,
+            moduleConfigdatas: configdatas
+        });
         assertEq(proposal.proposalId(), 1);
 
         // Deploy Proposal with id=2
-        proposal = ProposalMock(
-            factory.createProposal({
-                funders: funders,
-                authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-                authorizerConfigdata: bytes("Authorizer"),
-                paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
-                paymentProcessorConfigdata: bytes("PaymentProcessor"),
-                token: token,
-                moduleMetadatas: metadatas,
-                moduleConfigdatas: configdatas
-            })
-        );
+        proposal = factory.createProposal({
+            funders: funders,
+            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
+            authorizerConfigdata: bytes("Authorizer"),
+            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
+            paymentProcessorConfigdata: bytes("PaymentProcessor"),
+            token: token,
+            moduleMetadatas: metadatas,
+            moduleConfigdatas: configdatas
+        });
         assertEq(proposal.proposalId(), 2);
     }
 

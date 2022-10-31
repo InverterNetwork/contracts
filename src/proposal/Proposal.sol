@@ -2,29 +2,40 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
+// @todo mp: Would like to have 2 step owner.
+import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
-
-// Internal Dependencies
-import {Types} from "src/common/Types.sol";
-import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
-
-// Internal Interfaces
-import {IProposal} from "src/interfaces/IProposal.sol";
-import {IPaymentProcessor} from "src/interfaces/IPaymentProcessor.sol";
-import {IAuthorizer} from "src/interfaces/IAuthorizer.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
+// Internal Dependencies
+import {Types} from "src/common/Types.sol";
+import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
+import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
+
+// Internal Interfaces
+import {
+    IProposal,
+    IPaymentProcessor,
+    IAuthorizer
+} from "src/proposal/IProposal.sol";
+
+contract Proposal is
+    IProposal,
+    ModuleManager,
+    ContributorManager,
+    OwnableUpgradeable,
+    PausableUpgradeable
+{
     //--------------------------------------------------------------------------
     // Modifiers
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
-    modifier onlyAuthorized() {
-        if (!authorizer.isAuthorized(msg.sender)) {
+    modifier onlyOwnerOrAuthorized() {
+        if (!_isOwnerOrAuthorized(msg.sender)) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -33,11 +44,11 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The proposal's id.
-    uint private _proposalId;
-
     /// @dev The list of funders.
     address[] private _funders;
+
+    /// @inheritdoc IProposal
+    uint public proposalId;
 
     /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
@@ -45,6 +56,7 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     /// @inheritdoc IProposal
     IPaymentProcessor public override (IProposal) paymentProcessor;
 
+    /// @inheritdoc IProposal
     IERC20 public token;
 
     //--------------------------------------------------------------------------
@@ -58,18 +70,21 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
 
     /// @inheritdoc IProposal
     function init(
-        uint proposalId,
+        uint proposalId_,
         address[] calldata funders,
         address[] calldata modules,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_,
         IERC20 token_
     ) external override (IProposal) initializer {
-        _proposalId = proposalId;
+        proposalId = proposalId_;
         _funders = funders;
 
         __Pausable_init();
+        __Ownable_init();
+
         __ModuleManager_init(modules);
+        __ContributorManager_init();
 
         // Ensure that authorizer_ is an enabled module.
         if (!isEnabledModule(address(authorizer_))) {
@@ -90,12 +105,33 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     }
 
     //--------------------------------------------------------------------------
+    // Upstream Function Implementations
+
+    function __ModuleManager_isAuthorized(address who)
+        internal
+        view
+        override (ModuleManager)
+        returns (bool)
+    {
+        return _isOwnerOrAuthorized(who);
+    }
+
+    function __ContributorManager_isAuthorized(address who)
+        internal
+        view
+        override (ContributorManager)
+        returns (bool)
+    {
+        return _isOwnerOrAuthorized(who);
+    }
+
+    //--------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IProposal
     function executeTx(address target, bytes memory data)
         external
-        onlyAuthorized
+        onlyOwnerOrAuthorized
         returns (bytes memory)
     {
         bool ok;
@@ -112,5 +148,12 @@ contract Proposal is IProposal, ModuleManager, PausableUpgradeable {
     /// @inheritdoc IProposal
     function version() external pure returns (string memory) {
         return "1";
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    function _isOwnerOrAuthorized(address who) private view returns (bool) {
+        return authorizer.isAuthorized(who) || owner() == who;
     }
 }

@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule} from "src/interfaces/IModule.sol";
+import {IModule} from "src/modules/base/IModule.sol";
 
 /**
  * @dev Note that these tests are more of a specification than actual

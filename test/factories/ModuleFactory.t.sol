@@ -13,9 +13,11 @@ import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModuleFactory} from "src/interfaces/IModuleFactory.sol";
-import {IModule} from "src/interfaces/IModule.sol";
-import {IProposal} from "src/interfaces/IProposal.sol";
+import {
+    IModuleFactory,
+    IModule,
+    IProposal
+} from "src/factories/IModuleFactory.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
