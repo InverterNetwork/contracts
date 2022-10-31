@@ -10,8 +10,7 @@ import {ListAuthorizer} from "src/modules/governance/ListAuthorizer.sol";
 
 // Interfaces
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 // Mocks
 import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";

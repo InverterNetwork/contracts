@@ -16,9 +16,11 @@ import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
-import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {
+    IProposal,
+    IPaymentProcessor,
+    IAuthorizer
+} from "src/proposal/IProposal.sol";
 
 contract Proposal is
     IProposal,

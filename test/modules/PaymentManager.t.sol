@@ -10,9 +10,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {PaymentManager} from "src/modules/PaymentManager.sol";
 
 // Internal Interfaces
+import {IProposal, IPaymentProcessor} from "src/proposal/IProposal.sol";
 import {IModule} from "src/modules/base/IModule.sol";
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
