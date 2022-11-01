@@ -81,6 +81,8 @@ contract Proposal is
         _funders = funders;
         proposalId = proposalId_;
         token = token_;
+        authorizer = authorizer_;
+        paymentProcessor = paymentProcessor_;
 
         // Initialize upstream contracts.
         __Pausable_init();
