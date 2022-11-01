@@ -96,42 +96,4 @@ contract ProposalFactoryTest is Test {
         );
         assertEq(proposal.proposalId(), 2);
     }
-
-    /*
-    function testCreateProposalFailsIfModuleDataLengthMismatch(
-        address[] memory funders,
-        uint modulesLen
-    ) public {
-        // Note to stay reasonable.
-        vm.assume(funders.length < 50);
-        vm.assume(modulesLen < 50);
-
-        // Create modules metadata and configdata arrays.
-        // Note to add one more element to configdata.
-        IModule.Metadata[] memory metadatas = new IModule.Metadata[](modulesLen);
-        bytes[] memory configdatas = new bytes[](modulesLen + 1);
-        for (uint i; i < modulesLen; i++) {
-            metadatas[i] = IModule.Metadata(1, "");
-            configdatas[i] = bytes("");
-        }
-        configdatas[modulesLen] = bytes("");
-
-        // Create a mock payment Token
-        ERC20Mock token = new ERC20Mock("TestToken", "TST");
-
-        vm.expectRevert(
-            IProposalFactory.ProposalFactory__ModuleDataLengthMismatch.selector
-        );
-        factory.createProposal({
-            funders: funders,
-            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-            authorizerConfigdata: bytes("Authorizer"),
-            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
-            paymentProcessorConfigdata: bytes("PaymentProcessor"),
-            token: token,
-            moduleMetadatas: metadatas,
-            moduleConfigdatas: configdatas
-        });
-    }
-    */
 }
