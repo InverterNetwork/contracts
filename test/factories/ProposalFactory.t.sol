@@ -56,44 +56,48 @@ contract ProposalFactoryTest is Test {
         vm.assume(funders.length < 50);
         vm.assume(modulesLen < 50);
 
-        // Create modules metadata and configdata arrays.
-        IModule.Metadata[] memory metadatas = new IModule.Metadata[](modulesLen);
-        bytes[] memory configdatas = new bytes[](modulesLen);
+        // Create ProposalConfig instance.
+        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
+            .ProposalConfig(funders, IERC20(new ERC20Mock("Test Token", "TEST")));
+
+        // Create {IAuthorizer} ModuleConfig instance.
+        IProposalFactory.ModuleConfig memory authorizerConfig = IProposalFactory
+            .ModuleConfig(IModule.Metadata(1, "Authorizer"), bytes("Authorizer"));
+
+        // Create {IPaymentProcessor} ModuleConfig instance.
+        IProposalFactory.ModuleConfig memory paymentProcessorConfig =
+        IProposalFactory.ModuleConfig(
+            IModule.Metadata(1, "PaymentProcessor"), bytes("PaymentProcessor")
+        );
+
+        // Create optional ModuleConfig instances.
+        IProposalFactory.ModuleConfig[] memory moduleConfigs =
+            new IProposalFactory.ModuleConfig[](modulesLen);
         for (uint i; i < modulesLen; i++) {
-            metadatas[i] = IModule.Metadata(1, "");
-            configdatas[i] = bytes("");
+            moduleConfigs[i].metadata = IModule.Metadata(1, "");
+            moduleConfigs[i].configdata = bytes("");
         }
 
-        // Create a mock payment Token
-        ERC20Mock token = new ERC20Mock("TestToken", "TST");
-
         // Deploy Proposal with id=1
-        IProposal proposal = factory.createProposal({
-            funders: funders,
-            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-            authorizerConfigdata: bytes("Authorizer"),
-            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
-            paymentProcessorConfigdata: bytes("PaymentProcessor"),
-            token: token,
-            moduleMetadatas: metadatas,
-            moduleConfigdatas: configdatas
-        });
+        IProposal proposal = factory.createProposal(
+            proposalConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            moduleConfigs
+        );
         assertEq(proposal.proposalId(), 1);
 
         // Deploy Proposal with id=2
-        proposal = factory.createProposal({
-            funders: funders,
-            authorizerMetadata: IModule.Metadata(1, "Authorizer"),
-            authorizerConfigdata: bytes("Authorizer"),
-            paymentProcessorMetadata: IModule.Metadata(1, "PaymentProcessor"),
-            paymentProcessorConfigdata: bytes("PaymentProcessor"),
-            token: token,
-            moduleMetadatas: metadatas,
-            moduleConfigdatas: configdatas
-        });
+        proposal = factory.createProposal(
+            proposalConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            moduleConfigs
+        );
         assertEq(proposal.proposalId(), 2);
     }
 
+    /*
     function testCreateProposalFailsIfModuleDataLengthMismatch(
         address[] memory funders,
         uint modulesLen
@@ -129,4 +133,5 @@ contract ProposalFactoryTest is Test {
             moduleConfigdatas: configdatas
         });
     }
+    */
 }

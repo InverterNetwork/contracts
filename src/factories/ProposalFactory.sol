@@ -38,7 +38,7 @@ contract ProposalFactory is IProposalFactory {
     // Storage
 
     /// @dev The counter for the next proposal id.
-    /// @dev Starts counting at 1.
+    /// @dev Starts counting from 1.
     uint private _proposalIdCounter;
 
     //--------------------------------------------------------------------------
@@ -54,55 +54,46 @@ contract ProposalFactory is IProposalFactory {
 
     /// @inheritdoc IProposalFactory
     function createProposal(
-        address[] calldata funders,
-        // {IAuthorizer} data
-        IModule.Metadata memory authorizerMetadata,
-        bytes memory authorizerConfigdata,
-        // {IPaymentProcessor} data
-        IModule.Metadata memory paymentProcessorMetadata,
-        bytes memory paymentProcessorConfigdata,
-        // Token the Proposal will use
-        IERC20 token,
-        // Other module data
-        IModule.Metadata[] memory moduleMetadatas,
-        bytes[] memory moduleConfigdatas
+        ProposalConfig memory proposalConfig,
+        ModuleConfig memory authorizerConfig,
+        ModuleConfig memory paymentProcessorConfig,
+        ModuleConfig[] memory moduleConfigs
     ) external returns (IProposal) {
         address clone = Clones.clone(target);
 
-        // Revert if data arrays' lengths mismatch.
-        if (moduleMetadatas.length != moduleConfigdatas.length) {
-            revert ProposalFactory__ModuleDataLengthMismatch();
-        }
-
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
-            authorizerMetadata, IProposal(clone), authorizerConfigdata
+            authorizerConfig.metadata,
+            IProposal(clone),
+            authorizerConfig.configdata
         );
 
         // Deploy and cache {IPaymentProcessor} module.
         address paymentProcessor = IModuleFactory(moduleFactory).createModule(
-            paymentProcessorMetadata,
+            paymentProcessorConfig.metadata,
             IProposal(clone),
-            paymentProcessorConfigdata
+            paymentProcessorConfig.configdata
         );
 
         // Deploy and cache optional modules.
-        uint modulesLen = moduleMetadatas.length;
+        uint modulesLen = moduleConfigs.length;
         address[] memory modules = new address[](modulesLen);
         for (uint i; i < modulesLen; i++) {
             modules[i] = IModuleFactory(moduleFactory).createModule(
-                moduleMetadatas[i], IProposal(clone), moduleConfigdatas[i]
+                moduleConfigs[i].metadata,
+                IProposal(clone),
+                moduleConfigs[i].configdata
             );
         }
 
         // Initialize proposal.
         IProposal(clone).init(
             ++_proposalIdCounter,
-            funders,
+            proposalConfig.token,
+            proposalConfig.funders,
             modules,
             IAuthorizer(authorizer),
-            IPaymentProcessor(paymentProcessor),
-            IERC20(token)
+            IPaymentProcessor(paymentProcessor)
         );
 
         return IProposal(clone);
