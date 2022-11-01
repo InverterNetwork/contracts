@@ -369,8 +369,7 @@ contract MilestoneManagerTest is ModuleTest {
         _expectProposalCallbackFailure("__Milestone_declineMilestone(uint256)");
         milestoneManager.declineMilestone(invalidId);
     }
-
-*/
+    */
 
     //--------------------------------------------------------------------------
     // Test: Proposal Callback Functions
@@ -992,8 +991,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .selector
         );
         milestoneManager.__Milestone_declineMilestone(id);
-    }
-*/
+    }*/
 
     //--------------------------------------------------------------------------
     // Assert Helper Functions

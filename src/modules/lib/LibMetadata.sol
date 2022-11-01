@@ -19,9 +19,8 @@ library LibMetadata {
         pure
         returns (bytes32)
     {
-        return keccak256(
-            abi.encodePacked(metadata.majorVersion, metadata.gitURL)
-        );
+        return
+            keccak256(abi.encodePacked(metadata.majorVersion, metadata.gitURL));
     }
 
     /// @dev Returns whether the given metadata is valid.
