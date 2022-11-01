@@ -16,6 +16,7 @@ interface IPaymentClient {
         uint dueTo;
     }
 
+    /// @notice Function is only callable by authorized address.
     error Module__PaymentClient__CallerNotAuthorized();
 
     event PaymentAdded(address indexed recipient, uint amount);

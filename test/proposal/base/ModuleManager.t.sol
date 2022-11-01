@@ -6,38 +6,17 @@ import "forge-std/Test.sol";
 // Helpers
 import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
 
+// SuT
+import {
+    ModuleManagerMock,
+    IModuleManager
+} from "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
+
 // Mocks
-import {ModuleManagerMock} from
-    "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
-
-/**
- * Errors library for ModuleManager's custom errors.
- * Enables checking for errors with vm.expectRevert(Errors.<Error>).
- */
-library Errors {
-    bytes internal constant Proposal__ModuleManager__OnlyCallableByModule = abi
-        .encodeWithSignature("Proposal__ModuleManager__OnlyCallableByModule()");
-
-    bytes internal constant Proposal__ModuleManager__AlreadyInitialized =
-        abi.encodeWithSignature("Proposal__ModuleManager__AlreadyInitialized()");
-
-    bytes internal constant Proposal__ModuleManager__InvalidModuleAddress = abi
-        .encodeWithSignature("Proposal__ModuleManager__InvalidModuleAddress()");
-
-    function Proposal__ModuleManager__ModuleAlreadyEnabled(address module)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return abi.encodeWithSignature(
-            "Proposal__ModuleManager__ModuleAlreadyEnabled(address)", module
-        );
-    }
-}
 
 contract ModuleManagerTest is Test, FuzzInputChecker {
     // SuT
@@ -82,9 +61,14 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         _assumeValidModules(modules);
 
         // Set first module to address(0).
+        vm.assume(modules.length >= 1);
         modules[0] = address(0);
 
-        vm.expectRevert(Errors.Proposal__ModuleManager__InvalidModuleAddress);
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__InvalidModuleAddress
+                .selector
+        );
         moduleManager.init(modules);
     }
 
@@ -98,7 +82,12 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         modules[modules.length - 1] = modules[0];
 
         vm.expectRevert(
-            Errors.Proposal__ModuleManager__ModuleAlreadyEnabled(modules[0])
+            abi.encodeWithSelector(
+                IModuleManager
+                    .Proposal__ModuleManager__ModuleAlreadyEnabled
+                    .selector,
+                modules[0]
+            )
         );
         moduleManager.init(modules);
     }
@@ -113,6 +102,61 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
     //--------------------------------------------------------------------------
     // Tests: Module Management
 
+    function testEnableModule(address module) public {
+        _assumeValidModule(module);
+
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
+
+        vm.assume(!moduleManager.isEnabledModule(module));
+        moduleManager.enableModule(module);
+        assertTrue(moduleManager.isEnabledModule(module));
+    }
+
+    function testEnableModuleFailsIfCallerNotAuthorized(
+        address module,
+        address caller
+    ) public {
+        _assumeValidModule(module);
+
+        moduleManager.__ModuleManager_setIsAuthorized(caller, false);
+
+        vm.expectRevert(
+            IModuleManager.Proposal__ModuleManager__CallerNotAuthorized.selector
+        );
+        moduleManager.enableModule(module);
+    }
+
+    function testEnableModuleFailsForInvalidModuleAddress() public {
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
+
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__InvalidModuleAddress
+                .selector
+        );
+        moduleManager.enableModule(address(0));
+    }
+
+    function testEnableModuleFailsIfModuleAlreadyEnabled(address[] memory modules) public {
+        _assumeValidModules(modules);
+        vm.assume(modules.length != 0);
+
+        moduleManager.init(modules);
+
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModuleManager
+                    .Proposal__ModuleManager__ModuleAlreadyEnabled
+                    .selector,
+                modules[0]
+            )
+        );
+        moduleManager.enableModule(modules[0]);
+
+    }
+
     function testDisableModule(address module) public {
         _assumeValidModule(module);
 
@@ -125,6 +169,20 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         assertTrue(moduleManager.isEnabledModule(module));
         moduleManager.disableModule(module);
         assertTrue(!moduleManager.isEnabledModule(module));
+    }
+
+    function testDisableModuleFailsIfCallerNotAuthorized(
+        address module,
+        address caller
+    ) public {
+        _assumeValidModule(module);
+
+        moduleManager.__ModuleManager_setIsAuthorized(caller, false);
+
+        vm.expectRevert(
+            IModuleManager.Proposal__ModuleManager__CallerNotAuthorized.selector
+        );
+        moduleManager.disableModule(module);
     }
 
     //--------------------------------------------------------------------------
@@ -159,7 +217,11 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager.init(modules);
 
         vm.prank(caller);
-        vm.expectRevert(Errors.Proposal__ModuleManager__OnlyCallableByModule);
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__OnlyCallableByModule
+                .selector
+        );
         moduleManager.grantRole(role, account);
     }
 
@@ -196,7 +258,11 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager.init(modules);
 
         vm.prank(caller);
-        vm.expectRevert(Errors.Proposal__ModuleManager__OnlyCallableByModule);
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__OnlyCallableByModule
+                .selector
+        );
         moduleManager.revokeRole(role, account);
     }
 

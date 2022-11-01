@@ -40,7 +40,7 @@ abstract contract ModuleManager is
     modifier __ModuleManager_onlyAuthorized() {
         // @todo mp: Create error type + test case for functions using modifier.
         if (!__ModuleManager_isAuthorized(msg.sender)) {
-            revert("Not authorized");
+            revert Proposal__ModuleManager__CallerNotAuthorized();
         }
         _;
     }
@@ -86,7 +86,6 @@ abstract contract ModuleManager is
         //           This enables easier refactoring in future for "multi-modules".
         //           Or not???
 
-        address module;
         for (uint i; i < modules.length; i++) {
             __ModuleManager_enableModule(modules[i]);
 

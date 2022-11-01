@@ -7,6 +7,9 @@ interface IModuleManager {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice Function is only callable by authorized address.
+    error Proposal__ModuleManager__CallerNotAuthorized();
+
     /// @notice Function is only callable by activated module.
     error Proposal__ModuleManager__OnlyCallableByModule();
 
