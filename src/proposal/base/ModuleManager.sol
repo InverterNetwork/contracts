@@ -34,7 +34,6 @@ abstract contract ModuleManager is
     Initializable,
     ContextUpgradeable
 {
-    // @todo mp: Should be abstract?
     //--------------------------------------------------------------------------
     // Modifiers
 
