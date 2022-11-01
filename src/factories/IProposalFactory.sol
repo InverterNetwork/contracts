@@ -8,19 +8,30 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 interface IProposalFactory {
+    /// @notice The module's data arrays length mismatch.
     error ProposalFactory__ModuleDataLengthMismatch();
 
-    function target() external view returns (address);
-    function moduleFactory() external view returns (address);
+    struct ProposalConfig {
+        address[] funders;
+        IERC20 token;
+    }
 
+    struct ModuleConfig {
+        IModule.Metadata metadata;
+        bytes configdata;
+    }
+
+    // @todo mp: createProposal docs
     function createProposal(
-        address[] calldata funders,
-        IModule.Metadata memory authorizerMetadata,
-        bytes memory authorizerConfigdata,
-        IModule.Metadata memory paymentProcessorMetadata,
-        bytes memory paymentProcessorConfigdata,
-        IERC20 token,
-        IModule.Metadata[] memory moduleMetadatas,
-        bytes[] memory moduleConfigdatas
+        ProposalConfig memory proposalConfig,
+        ModuleConfig memory authorizerConfig,
+        ModuleConfig memory paymentProcessorConfig,
+        ModuleConfig[] memory moduleConfigs
     ) external returns (IProposal);
+
+    /// @notice Returns the {IProposal} target implementation address.
+    function target() external view returns (address);
+
+    /// @notice Returns the {IModuleFactory} implementation address.
+    function moduleFactory() external view returns (address);
 }
