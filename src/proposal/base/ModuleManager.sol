@@ -38,6 +38,7 @@ abstract contract ModuleManager is
     // Modifiers
 
     modifier __ModuleManager_onlyAuthorized() {
+        // @todo mp: Create error type + test case for functions using modifier.
         if (!__ModuleManager_isAuthorized(msg.sender)) {
             revert("Not authorized");
         }
@@ -143,6 +144,7 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // onlyAuthorized Functions
 
+    /// @inheritdoc IModuleManager
     function enableModule(address module)
         public
         __ModuleManager_onlyAuthorized
@@ -150,6 +152,7 @@ abstract contract ModuleManager is
         __ModuleManager_enableModule(module);
     }
 
+    /// @inheritdoc IModuleManager
     function disableModule(address module)
         public
         __ModuleManager_onlyAuthorized

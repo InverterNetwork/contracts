@@ -58,6 +58,17 @@ interface IModuleManager {
         Types.Operation operation
     ) external returns (bool, bytes memory);
 
+    /// @notice Enables module `module`.
+    /// @dev Only callable by authorized address.
+    /// @dev Fails if module address invalid or module already enabled.
+    /// @param module The module address to enable.
+    function enableModule(address module) external;
+
+    /// @notice Disables module `module`.
+    /// @dev Only callable by authorized address.
+    /// @param module The module address to disable.
+    function disableModule(address module) external;
+
     /// @notice Grants role `role` to account `account` in caller's access
     ///         control context.
     /// @dev Only callable by enabled module.
