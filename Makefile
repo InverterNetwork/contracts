@@ -34,6 +34,9 @@ test: ## Run whole testsuite
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
+# --------------------------------------
+# Proposal Tests
+
 .PHONY: testProposal
 testProposal: ## Run Proposal tests
 	@forge test -vvv --match-contract "Proposal"
@@ -42,20 +45,27 @@ testProposal: ## Run Proposal tests
 testModuleManager: ## Run ModuleManager tests
 	@forge test -vvv --match-contract "ModuleManager"
 
+.PHONY: testContributorManager
+testContributorManager: ## Run ContributorManager tests
+	@forge test -vvv --match-contract "ContributorManager"
+
+# --------------------------------------
+# Module Tests
+
 .PHONY: testModule
 testModule: ## Run Module tests
 	@forge test -vvv --match-contract "Module" --no-match-contract "Manager"
 
+.PHONY: testMilestoneManager
+testModuleMilestoneManager: ## Run MilestoneManager module tests
+	@forge test -vvv --match-contract "MilestoneManager"
+
+# --------------------------------------
+# Factory Tests
+
 .PHONY: testFactories
 testFactories: ## Run Factory tests
 	@forge test -vvv --match-contract "Factory"
-
-# --------------------------------------
-# Modules Tests
-
-.PHONY: testModuleMilestoneManager
-testModuleMilestoneManager: ## Run MilestoneManager module tests
-	@forge test -vvv --match-contract "MilestoneManager"
 
 # -----------------------------------------------------------------------------
 # Static Analyzers

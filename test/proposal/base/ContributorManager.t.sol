@@ -4,43 +4,46 @@ pragma solidity ^0.8.0;
 import {Test} from "forge-std/Test.sol";
 
 // Internal Dependencies
-import {Proposal} from "src/proposal/Proposal.sol";
-import {ContributorManager} from "src/modules/governance/ContributorManager.sol";
-
-// Interfaces
+import {Proposal, IProposal} from "src/proposal/Proposal.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
-// Mocks
-import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+// SuT
+import {
+    ContributorManagerMock,
+    IContributorManager
+} from "test/utils/mocks/proposal/base/ContributorManagerMock.sol";
+
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract ContributorManagerTest is Test {
-    ContributorManager contributorModule;
-
-    // Mocks
-    AuthorizerMock authorizer;
-    ProposalMock proposal;
-
-    struct MockContributor {
-        address addr;
-        bytes32 role;
-        uint salary;
-    }
-
-    MockContributor[] contributors;
+    // SuT
+    ContributorManagerMock contributorManager;
 
     function setUp() public {
-        authorizer = new AuthorizerMock();
-        authorizer.setAllAuthorized(true);
+        contributorManager = new ContributorManagerMock();
+    }
 
-        proposal = new ProposalMock(authorizer);
+    //--------------------------------------------------------------------------
+    // Tests: Initialization
 
-        contributorModule = new ContributorManager();
+    function testInit() public {
+        contributorManager.init();
+    }
 
-        //create a set of contributors:
+    function testReinitFails() public {
+        contributorManager.init();
+
+        vm.expectRevert(OZErrors.Initializable__NotInitializing);
+        contributorManager.reinit();
+    }
+
+    //--------------------------------------------------------------------------
+    // Tests: Contributor Management
+
+    /*
+        // Create a set of contributors.
         contributors.push(MockContributor(address(0xa1ba), "LEAD", 50_000));
         contributors.push(
             MockContributor(address(0xb0b), "DEV-BACKEND", 35_000)
@@ -277,4 +280,5 @@ contract ContributorManagerTest is Test {
         assertEq(contributors[0].role, newRole);
         assertEq(contributors[0].salary, newSal);
     }
+    */
 }

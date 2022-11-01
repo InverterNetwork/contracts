@@ -2,7 +2,10 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
+import {
+    ContributorManager,
+    IContributorManager
+} from "src/proposal/base/ContributorManager.sol";
 
 contract ContributorManagerMock is ContributorManager {
     mapping(address => bool) private _authorized;
