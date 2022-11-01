@@ -137,7 +137,9 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         moduleManager.enableModule(address(0));
     }
 
-    function testEnableModuleFailsIfModuleAlreadyEnabled(address[] memory modules) public {
+    function testEnableModuleFailsIfModuleAlreadyEnabled(
+        address[] memory modules
+    ) public {
         _assumeValidModules(modules);
         vm.assume(modules.length != 0);
 
@@ -154,7 +156,6 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
             )
         );
         moduleManager.enableModule(modules[0]);
-
     }
 
     function testDisableModule(address module) public {
