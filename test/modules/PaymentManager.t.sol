@@ -22,7 +22,7 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
 // @todo mp, nejc: Needs refactoring. Should not inherit from ProposalMock.
 
-contract PaymentManagerTest /*is Test, ProposalMock*/ {
+contract PaymentManagerTest { /*is Test, ProposalMock*/
 /*
 
     // contract definitions
@@ -268,6 +268,5 @@ contract PaymentManagerTest /*is Test, ProposalMock*/ {
 
         uint receiverBalanceAfter = token_.balanceOf(receiver);
         assertEq(receiverBalanceBefore + amount, receiverBalanceAfter);
-    }
-*/
+    }*/
 }
