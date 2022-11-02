@@ -203,13 +203,13 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         emit ContributorAdded(who);
     }
 
-    function removeContributor(address who, address prevContrib)
+    function removeContributor(address prevContrib, address who)
         external
         __ContributorManager_onlyAuthorized
         isContributor_(who)
         onlyConsecutiveContributors(who, prevContrib)
     {
-        _commitContributorRemoval(who, prevContrib);
+        _commitContributorRemoval(prevContrib, who);
     }
 
     function updateContributorsRole(address who, string memory role)
@@ -250,7 +250,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         isContributor_(msg.sender)
         onlyConsecutiveContributors(msg.sender, prevContrib)
     {
-        _commitContributorRemoval(msg.sender, prevContrib);
+        _commitContributorRemoval(prevContrib, msg.sender);
     }
 
     //--------------------------------------------------------------------------
@@ -259,7 +259,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     /// @dev Expects address arguments to be consecutive in the contributor
     ///      list.
     /// @dev Expects address `who` to be active contributor.
-    function _commitContributorRemoval(address who, address prevContrib)
+    function _commitContributorRemoval(address prevContrib, address who)
         private
     {
         // Remove contributor instance from registry.

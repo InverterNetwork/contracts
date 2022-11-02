@@ -22,12 +22,26 @@ contract ContributorManagerTest is Test {
     ContributorManagerMock contributorManager;
 
     // Constants
+    uint constant MAX_CONTRIBUTORS = 20;
+
     string constant NAME = "name";
     string constant ROLE = "role";
+    string constant UPDATED_ROLE = "updated role";
     uint constant SALARY = 1e18;
+    uint constant UPDATED_SALARY = 2e18;
 
     // Constants copied from SuT.
     address private constant _SENTINEL = address(0x1);
+
+    // Events copied from SuT.
+    event ContributorAdded(address indexed who);
+    event ContributorRemoved(address indexed who);
+    event ContributorsRoleUpdated(
+        address indexed who, string newRole, string oldRole
+    );
+    event ContributorsSalaryUpdated(
+        address indexed who, uint newSalary, uint oldSalary
+    );
 
     function setUp() public {
         contributorManager = new ContributorManagerMock();
@@ -64,22 +78,32 @@ contract ContributorManagerTest is Test {
     //----------------------------------
     // Tests: addContributor()
 
-    function testAddContributor(address who) public {
-        _assumeValidAddress(who);
+    function testAddContributor(address[] memory whos) public {
+        vm.assume(whos.length <= MAX_CONTRIBUTORS);
+        _assumeValidAddresses(whos);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        for (uint i; i < whos.length; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit ContributorAdded(whos[i]);
 
-        assertTrue(contributorManager.isContributor(who));
+            contributorManager.addContributor(whos[i], NAME, ROLE, SALARY);
 
-        IContributorManager.Contributor memory c =
-            contributorManager.getContributorInformation(who);
-        assertEq(c.name, NAME);
-        assertEq(c.role, ROLE);
-        assertEq(c.salary, SALARY);
+            assertTrue(contributorManager.isContributor(whos[i]));
 
+            IContributorManager.Contributor memory c =
+                contributorManager.getContributorInformation(whos[i]);
+            assertEq(c.name, NAME);
+            assertEq(c.role, ROLE);
+            assertEq(c.salary, SALARY);
+        }
+
+        // Note that list is traversed.
         address[] memory contributors = contributorManager.listContributors();
-        assertEq(contributors.length, 1);
-        assertEq(contributors[0], who);
+
+        assertEq(contributors.length, whos.length);
+        for (uint i; i < whos.length; i++) {
+            assertEq(contributors[i], whos[whos.length - i - 1]);
+        }
     }
 
     function testAddContributorFailsIfCallerNotAuthorized(address who) public {
@@ -97,9 +121,7 @@ contract ContributorManagerTest is Test {
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
     }
 
-    function testAddContributorFailsIfAlreadyContributor(address who)
-        public
-    {
+    function testAddContributorFailsIfAlreadyContributor(address who) public {
         _assumeValidAddress(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
@@ -112,9 +134,7 @@ contract ContributorManagerTest is Test {
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
     }
 
-    function testAddContributorFailsForInvalidAddress()
-        public
-    {
+    function testAddContributorFailsForInvalidAddress() public {
         address[] memory invalids = _createInvalidAddresses();
 
         for (uint i; i < invalids.length; i++) {
@@ -127,9 +147,7 @@ contract ContributorManagerTest is Test {
         }
     }
 
-    function testAddContributorFailsForInvalidName(address who)
-        public
-    {
+    function testAddContributorFailsForInvalidName(address who) public {
         _assumeValidAddress(who);
 
         string[] memory invalids = _createInvalidNames();
@@ -144,9 +162,7 @@ contract ContributorManagerTest is Test {
         }
     }
 
-    function testAddContributorFailsForInvalidRole(address who)
-        public
-    {
+    function testAddContributorFailsForInvalidRole(address who) public {
         _assumeValidAddress(who);
 
         string[] memory invalids = _createInvalidRoles();
@@ -161,9 +177,7 @@ contract ContributorManagerTest is Test {
         }
     }
 
-    function testAddContributorFailsForInvalidSalary(address who)
-        public
-    {
+    function testAddContributorFailsForInvalidSalary(address who) public {
         _assumeValidAddress(who);
 
         uint[] memory invalids = _createInvalidSalaries();
@@ -181,51 +195,312 @@ contract ContributorManagerTest is Test {
     //----------------------------------
     // Tests: removeContributor()
 
-    function testRemoveContributor() public {}
+    function testRemoveContributor(address[] memory whos) public {
+        vm.assume(whos.length != 0);
+        vm.assume(whos.length <= MAX_CONTRIBUTORS);
+        _assumeValidAddresses(whos);
 
-    function testRemoveContributorFailsIfCallerNotAuthorized() public {}
+        // The current contrib to remove.
+        address contrib;
+        // The contrib's prevContrib in the list.
+        address prevContrib;
 
-    function testRemoveContributorFailsIfNotContributor() public {}
+        // Add contributors.
+        for (uint i; i < whos.length; i++) {
+            contributorManager.addContributor(whos[i], NAME, ROLE, SALARY);
+        }
 
-    function testRemoveContributorFailsIfNotConsecutiveContributorsGiven()
+        // Remove contributors from the front until list is empty.
+        for (uint i; i < whos.length; i++) {
+            contrib = whos[whos.length - i - 1];
+
+            vm.expectEmit(true, true, true, true);
+            emit ContributorRemoved(contrib);
+
+            contributorManager.removeContributor(_SENTINEL, contrib);
+
+            assertTrue(!contributorManager.isContributor(contrib));
+
+            vm.expectRevert(
+                IContributorManager
+                    .Proposal__ContributorManager__IsNotContributor
+                    .selector
+            );
+            contributorManager.getContributorInformation(contrib);
+        }
+        assertEq(contributorManager.listContributors().length, 0);
+
+        // Add contributors again.
+        for (uint i; i < whos.length; i++) {
+            contributorManager.addContributor(whos[i], NAME, ROLE, SALARY);
+        }
+
+        // Remove contributors from the back until list is empty.
+        // Note that removing the last contributor requires the sentinel as
+        // prevContrib.
+        for (uint i; i < whos.length - 1; i++) {
+            contrib = whos[i];
+            prevContrib = whos[i + 1];
+
+            vm.expectEmit(true, true, true, true);
+            emit ContributorRemoved(contrib);
+
+            contributorManager.removeContributor(prevContrib, contrib);
+
+            assertTrue(!contributorManager.isContributor(contrib));
+
+            vm.expectRevert(
+                IContributorManager
+                    .Proposal__ContributorManager__IsNotContributor
+                    .selector
+            );
+            contributorManager.getContributorInformation(contrib);
+        }
+        // Remove last contributor.
+        contributorManager.removeContributor(_SENTINEL, whos[whos.length - 1]);
+
+        assertEq(contributorManager.listContributors().length, 0);
+    }
+
+    function testRemoveContributorFailsIfCallerNotAuthorized(address who)
         public
-    {}
+    {
+        _assumeValidAddress(who);
+
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+
+        contributorManager.__ContributorManager_setIsAuthorized(
+            address(this), false
+        );
+
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__CallerNotAuthorized
+                .selector
+        );
+        contributorManager.removeContributor(_SENTINEL, who);
+    }
+
+    function testRemoveContributorFailsIfNotContributor(address who) public {
+        _assumeValidAddress(who);
+
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__IsNotContributor
+                .selector
+        );
+        contributorManager.removeContributor(_SENTINEL, who);
+    }
+
+    function testRemoveContributorFailsIfNotConsecutiveContributorsGiven(
+        address who
+    ) public {
+        _assumeValidAddress(who);
+
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__ContributorsNotConsecutive
+                .selector
+        );
+        contributorManager.removeContributor(address(0xCAFE), who);
+    }
 
     //----------------------------------
-    // Tests: updateContributorRole()
+    // Tests: updateContributorsRole()
 
-    function testUpdateContributorsRole() public {}
+    function testUpdateContributorsRole(address who) public {
+        _assumeValidAddress(who);
 
-    function testUpdateContributorsRoleFailsIfCallerNotAuthorized() public {}
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
-    function testUpdateContributorsRoleFailsIfNotContributor() public {}
+        vm.expectEmit(true, true, true, true);
+        emit ContributorsRoleUpdated(who, UPDATED_ROLE, ROLE);
 
-    function testUpdateContributorsRoleFailsForInvalidRole() public {}
+        contributorManager.updateContributorsRole(who, UPDATED_ROLE);
+
+        IContributorManager.Contributor memory c =
+            contributorManager.getContributorInformation(who);
+        assertEq(c.role, UPDATED_ROLE);
+    }
+
+    function testUpdateContributorsRoleFailsIfCallerNotAuthorized(address who)
+        public
+    {
+        _assumeValidAddress(who);
+
+        contributorManager.__ContributorManager_setIsAuthorized(
+            address(this), false
+        );
+
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__CallerNotAuthorized
+                .selector
+        );
+        contributorManager.updateContributorsRole(who, UPDATED_ROLE);
+    }
+
+    function testUpdateContributorsRoleFailsIfNotContributor(address who)
+        public
+    {
+        _assumeValidAddress(who);
+
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__IsNotContributor
+                .selector
+        );
+        contributorManager.updateContributorsRole(who, UPDATED_ROLE);
+    }
+
+    function testUpdateContributorsRoleFailsForInvalidRole(address who)
+        public
+    {
+        _assumeValidAddress(who);
+
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+
+        string[] memory invalids = _createInvalidRoles();
+
+        for (uint i; i < invalids.length; i++) {
+            vm.expectRevert(
+                IContributorManager
+                    .Proposal__ContributorManager__InvalidContributorRole
+                    .selector
+            );
+            contributorManager.updateContributorsRole(who, invalids[i]);
+        }
+    }
 
     //----------------------------------
-    // Tests: updateContributorSalary()
+    // Tests: updateContributorsSalary()
 
-    function testUpdateContributorsSalary() public {}
+    function testUpdateContributorsSalary(address who) public {
+        _assumeValidAddress(who);
 
-    function testUpdateContributorsSalaryFailsIfCallerNotAuthorized() public {}
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
-    function testUpdateContributorsSalaryFailsIfNotContributor() public {}
+        vm.expectEmit(true, true, true, true);
+        emit ContributorsSalaryUpdated(who, UPDATED_SALARY, SALARY);
 
-    function testUpdateContributorsSalaryFailsForInvalidSalary() public {}
+        contributorManager.updateContributorsSalary(who, UPDATED_SALARY);
+
+        IContributorManager.Contributor memory c =
+            contributorManager.getContributorInformation(who);
+        assertEq(c.salary, UPDATED_SALARY);
+    }
+
+    function testUpdateContributorsSalaryFailsIfCallerNotAuthorized(address who)
+        public
+    {
+        _assumeValidAddress(who);
+
+        contributorManager.__ContributorManager_setIsAuthorized(
+            address(this), false
+        );
+
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__CallerNotAuthorized
+                .selector
+        );
+        contributorManager.updateContributorsSalary(who, UPDATED_SALARY);
+    }
+
+    function testUpdateContributorsSalaryFailsIfNotContributor(address who)
+        public
+    {
+        _assumeValidAddress(who);
+
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__IsNotContributor
+                .selector
+        );
+        contributorManager.updateContributorsSalary(who, UPDATED_SALARY);
+    }
+
+    function testUpdateContributorsSalaryFailsForInvalidSalary(address who)
+        public
+    {
+        _assumeValidAddress(who);
+
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+
+        uint[] memory invalids = _createInvalidSalaries();
+
+        for (uint i; i < invalids.length; i++) {
+            vm.expectRevert(
+                IContributorManager
+                    .Proposal__ContributorManager__InvalidContributorSalary
+                    .selector
+            );
+            contributorManager.updateContributorsSalary(who, invalids[i]);
+        }
+    }
 
     //----------------------------------
     // Tests: revokeContributor()
 
-    function testRevokeContributor() public {}
+    function testRevokeContributor(address who) public {
+        _assumeValidAddress(who);
 
-    function testRemoveContributorFailsIfCallerNotContributor() public {}
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
-    function testRevokeContributorFailsIfNotConsecutiveContributorsGiven()
+        vm.prank(who);
+        contributorManager.revokeContributor(_SENTINEL);
+
+        assertTrue(!contributorManager.isContributor(who));
+    }
+
+    function testRemoveContributorFailsIfCallerNotContributor(address who)
         public
-    {}
+    {
+        _assumeValidAddress(who);
+
+        vm.prank(who);
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__IsNotContributor
+                .selector
+        );
+        contributorManager.revokeContributor(_SENTINEL);
+    }
+
+    function testRevokeContributorFailsIfNotConsecutiveContributorsGiven(
+        address who
+    ) public {
+        _assumeValidAddress(who);
+
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+
+        vm.prank(who);
+        vm.expectRevert(
+            IContributorManager
+                .Proposal__ContributorManager__ContributorsNotConsecutive
+                .selector
+        );
+        contributorManager.revokeContributor(address(0xCAFE));
+    }
 
     //--------------------------------------------------------------------------
     // Fuzzer Helper Functions
+
+    mapping(address => bool) addressCache;
+
+    function _assumeValidAddresses(address[] memory addrs) internal {
+        for (uint i; i < addrs.length; i++) {
+            _assumeValidAddress(addrs[i]);
+
+            // Assume address unique.
+            vm.assume(!addressCache[addrs[i]]);
+
+            // Add address to cache.
+            addressCache[addrs[i]] = true;
+        }
+    }
 
     function _assumeValidAddress(address a) internal {
         address[] memory invalids = _createInvalidAddresses();
@@ -238,12 +513,16 @@ contract ContributorManagerTest is Test {
     //--------------------------------------------------------------------------
     // Data Creation Helper Functions
 
-    function _createInvalidAddresses() internal view returns (address[] memory) {
+    function _createInvalidAddresses()
+        internal
+        view
+        returns (address[] memory)
+    {
         address[] memory invalids = new address[](3);
 
-        invalids[0]= address(0);
-        invalids[1]= _SENTINEL;
-        invalids[2]= address(contributorManager);
+        invalids[0] = address(0);
+        invalids[1] = _SENTINEL;
+        invalids[2] = address(contributorManager);
 
         return invalids;
     }
@@ -251,7 +530,7 @@ contract ContributorManagerTest is Test {
     function _createInvalidNames() internal pure returns (string[] memory) {
         string[] memory invalids = new string[](1);
 
-        invalids[0]= "";
+        invalids[0] = "";
 
         return invalids;
     }
@@ -259,7 +538,7 @@ contract ContributorManagerTest is Test {
     function _createInvalidRoles() internal pure returns (string[] memory) {
         string[] memory invalids = new string[](1);
 
-        invalids[0]= "";
+        invalids[0] = "";
 
         return invalids;
     }
@@ -267,250 +546,8 @@ contract ContributorManagerTest is Test {
     function _createInvalidSalaries() internal pure returns (uint[] memory) {
         uint[] memory invalids = new uint[](1);
 
-        invalids[0]= 0;
+        invalids[0] = 0;
 
         return invalids;
     }
-
-
-
-    /*
-        // Create a set of contributors.
-        contributors.push(MockContributor(address(0xa1ba), "LEAD", 50_000));
-        contributors.push(
-            MockContributor(address(0xb0b), "DEV-BACKEND", 35_000)
-        );
-        contributors.push(
-            MockContributor(address(0xc0b1e), "COMMUNITY", 69_420)
-        );
-        contributors.push(
-            MockContributor(address(0xd0bb1e), "FREE-CONTRACTOR", 10)
-        );
-        contributors.push(
-            MockContributor(address(0xed), "DEV-FRONTEND", 35_000)
-        );
-
-        // Init proposal with contributor module.
-        address[] memory modules = new address[](1);
-        modules[0] = address(contributorModule);
-
-        proposal.init(modules);
-
-        IModule.Metadata memory data =
-            IModule.Metadata(1, "https://www.github.com");
-        contributorModule.initialize(IProposal(proposal), data);
-
-        assertEq(address(contributorModule.proposal()), address(proposal));
-        assertEq(
-            address(contributorModule.proposal().authorizer()),
-            address(authorizer)
-        );
-    }
-
-    function fillContributorList() public {
-        vm.startPrank(address(proposal));
-        for (uint i = 0; i < contributors.length; i++) {
-            contributorModule.__Contributor_addContributor(
-                contributors[i].addr,
-                contributors[i].role,
-                contributors[i].salary
-            );
-        }
-        vm.stopPrank();
-    }
-
-    function testAddContributor() public {
-        //-------------------------------------------------------
-        // Test: Add to empty list
-        fillContributorList();
-
-        //-------------------------------------------------------
-        // Test: Add to initialized list
-        MockContributor memory felicia =
-            MockContributor(address(0xfe11c1a), "AUDITOR", 100_000);
-
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_addContributor(
-            felicia.addr, felicia.role, felicia.salary
-        );
-
-        assertEq(contributorModule.isActiveContributor(felicia.addr), true);
-
-        assertEq(
-            contributorModule.listActiveContributors().length,
-            (contributors.length + 1)
-        );
-
-        //-------------------------------------------------------
-        // Test fail: add existing contributor
-        vm.expectRevert(
-            ContributorManager
-                .Module__ContributorManager__contributorAlreadyActive
-                .selector
-        );
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_addContributor(
-            felicia.addr, felicia.role, felicia.salary
-        );
-    }
-
-    function testRemoveSingleContributor() public {
-        fillContributorList();
-
-        //-------------------------------------------------------
-        // Test: Remove first contributor
-
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_removeContributor(
-            contributors[0].addr, contributors[1].addr
-        );
-
-        assertEq(
-            contributorModule.isActiveContributor(contributors[0].addr), false
-        );
-        assertEq(contributorModule.listActiveContributors().length, 4);
-
-        // test: remove last contributor
-        MockContributor memory ed = contributors[contributors.length - 1];
-
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_removeContributor(ed.addr, address(0x1));
-
-        assertEq(contributorModule.isActiveContributor(ed.addr), false);
-        assertEq(contributorModule.listActiveContributors().length, 3);
-
-        //-------------------------------------------------------
-        // Test: Remove contributor in the middle
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_removeContributor(
-            contributors[2].addr, contributors[3].addr
-        );
-
-        assertEq(
-            contributorModule.isActiveContributor(contributors[2].addr), false
-        );
-        assertEq(contributorModule.listActiveContributors().length, 2);
-
-        //-------------------------------------------------------
-        // Test fail: remove non consecutive contributors
-        vm.expectRevert(
-            ContributorManager
-                .Module__ContributorManager__ContributorsNotConsecutive
-                .selector
-        );
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_removeContributor(
-            contributors[1].addr, contributors[4].addr
-        );
-
-        //-------------------------------------------------------
-        // Test fail: Remove non existing contributor
-        ///          @note: The function removeContributor() is idempotent, so
-        ///          removing  a non existing contributor would just do nothing.
-        ///          But since we're calling "__Contributor_removeContributor()"
-        ///          directly (the call that takes place AFTER checking for
-        ///          that), the revert will be ContributorsNotConsecutive
-        ///          (which would be the problem if such a call somehow passed
-        ///          the previous checks).
-
-        vm.expectRevert(
-            ContributorManager
-                .Module__ContributorManager__ContributorsNotConsecutive
-                .selector
-        );
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_removeContributor(ed.addr, address(0x1));
-    }
-
-    function testRemoveAllContributors() public {
-        fillContributorList();
-
-        //-------------------------------------------------------
-        // Test: remove from the front until list is empty
-
-        address[] memory contribList =
-            contributorModule.listActiveContributors();
-
-        for (uint i = 0; i < contribList.length; i++) {
-            vm.prank(address(proposal));
-            contributorModule.__Contributor_removeContributor(
-                contribList[i], address(0x1)
-            );
-        }
-        assertEq(contributorModule.listActiveContributors().length, 0);
-
-        //-------------------------------------------------------
-        // Test: Remove from the back until list is empty
-        fillContributorList();
-
-        contribList = contributorModule.listActiveContributors();
-
-        for (uint i = (contribList.length - 1); i > 0; i--) {
-            vm.prank(address(proposal));
-            contributorModule.__Contributor_removeContributor(
-                contribList[i], contribList[i - 1]
-            );
-        }
-        /// @note removing the last contributor requires sending the sentinel:
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_removeContributor(
-            contribList[0], address(0x1)
-        );
-        assertEq(contributorModule.listActiveContributors().length, 0);
-    }
-
-    function testModifyContributor() public {
-        fillContributorList();
-
-        //-------------------------------------------------------
-        // Test: Remove contributor and add them again with new info
-
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_removeContributor(
-            contributors[0].addr, contributors[1].addr
-        );
-
-        assertEq(
-            contributorModule.isActiveContributor(contributors[0].addr), false
-        );
-        assertEq(
-            contributorModule.listActiveContributors().length,
-            (contributors.length - 1)
-        );
-
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_addContributor(
-            contributors[0].addr, "NEWROLE", 200_000
-        );
-
-        (bytes32 newRole, uint newSal) =
-            contributorModule.getContributorInformation(contributors[0].addr);
-
-        assertEq(
-            contributorModule.isActiveContributor(contributors[0].addr), true
-        );
-        assertEq(
-            contributorModule.listActiveContributors().length,
-            contributors.length
-        );
-        assertEq("NEWROLE", newRole);
-        assertEq(200_000, newSal);
-
-        //-------------------------------------------------------
-        // Test: Modify contributor
-        vm.prank(address(proposal));
-        contributorModule.__Contributor_modifyContributor(
-            contributors[0].addr, contributors[0].role, contributors[0].salary
-        );
-
-        (newRole, newSal) =
-            contributorModule.getContributorInformation(contributors[0].addr);
-
-        assertEq(
-            contributorModule.isActiveContributor(contributors[0].addr), true
-        );
-        assertEq(contributors[0].role, newRole);
-        assertEq(contributors[0].salary, newSal);
-    }
-    */
 }
