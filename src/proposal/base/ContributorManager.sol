@@ -41,7 +41,19 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     modifier __ContributorManager_onlyAuthorized() {
         // @todo mp, nuggan: Use _msgSender().
         if (!__ContributorManager_isAuthorized(msg.sender)) {
-            revert("Not authorized");
+            revert Proposal__ContributorManager__CallerNotAuthorized();
+        }
+        _;
+    }
+
+    modifier validAddress(address who) {
+        // @todo mp: Make gas optimized.
+        bool isZero = who == address(0);
+        bool isSentinel = who == _SENTINEL;
+        bool isThis = who == address(this);
+
+        if (isZero || isSentinel || isThis) {
+            revert Proposal__ContributorManager__InvalidContributorAddress();
         }
         _;
     }
@@ -63,18 +75,6 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     modifier validSalary(uint salary) {
         if (salary == 0) {
             revert Proposal__ContributorManager__InvalidContributorSalary();
-        }
-        _;
-    }
-
-    modifier validAddress(address who) {
-        // @todo mp: Make gas optimized.
-        bool isZero = who == address(0);
-        bool isSentinel = who == _SENTINEL;
-        bool isThis = who == address(this);
-
-        if (isZero || isSentinel || isThis) {
-            revert Proposal__ContributorManager__InvalidContributorAddress();
         }
         _;
     }
@@ -184,7 +184,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         string memory role,
         uint salary
     )
-        internal
+        external
         __ContributorManager_onlyAuthorized
         isNotContributor(who)
         validAddress(who)
@@ -204,7 +204,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     }
 
     function removeContributor(address who, address prevContrib)
-        internal
+        external
         __ContributorManager_onlyAuthorized
         isContributor_(who)
         onlyConsecutiveContributors(who, prevContrib)
@@ -213,7 +213,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     }
 
     function updateContributorsRole(address who, string memory role)
-        internal
+        external
         __ContributorManager_onlyAuthorized
         isContributor_(who)
         validRole(role)
@@ -227,7 +227,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     }
 
     function updateContributorsSalary(address who, uint salary)
-        internal
+        external
         __ContributorManager_onlyAuthorized
         isContributor_(who)
         validAddress(who)
