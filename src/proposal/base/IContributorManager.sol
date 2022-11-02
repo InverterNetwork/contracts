@@ -16,8 +16,6 @@ interface IContributorManager {
     //--------------------------------------------------------------------------
     // Errors
 
-    // @todo mp: Rename to Proposal__...
-
     /// @notice Given contributor's name invalid.
     error Proposal__ContributorManager__InvalidContributorName();
 
@@ -65,10 +63,7 @@ interface IContributorManager {
     function isContributor(address who) external view returns (bool);
 
     /// @notice Returns the list of addresses of current contributors.
-    function listContributors()
-        external
-        view
-        returns (address[] memory);
+    function listContributors() external view returns (address[] memory);
 
     /// @notice Returns the registerted {Contributor} instance for `who`.
     function getContributorInformation(address who)
