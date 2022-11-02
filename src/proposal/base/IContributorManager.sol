@@ -16,6 +16,9 @@ interface IContributorManager {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice Function is only callable by authorized address.
+    error Proposal__ContributorManager__CallerNotAuthorized();
+
     /// @notice Given contributor's name invalid.
     error Proposal__ContributorManager__InvalidContributorName();
 
