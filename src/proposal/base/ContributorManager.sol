@@ -160,11 +160,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     }
 
     /// @inheritdoc IContributorManager
-    function listContributors()
-        external
-        view
-        returns (address[] memory)
-    {
+    function listContributors() external view returns (address[] memory) {
         address[] memory result = new address[](_contributorCounter);
 
         // Populate result array.
@@ -190,11 +186,11 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     )
         internal
         __ContributorManager_onlyAuthorized
+        isNotContributor(who)
         validAddress(who)
         validName(name)
         validRole(role)
         validSalary(salary)
-        isNotContributor(who)
     {
         // Add address to _contributors mapping.
         _contributors[who] = _contributors[_SENTINEL];
@@ -219,9 +215,8 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     function updateContributorsRole(address who, string memory role)
         internal
         __ContributorManager_onlyAuthorized
-        validAddress(who)
-        validRole(role)
         isContributor_(who)
+        validRole(role)
     {
         string memory oldRole = _contributorRegistry[who].role;
 
@@ -234,9 +229,9 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     function updateContributorsSalary(address who, uint salary)
         internal
         __ContributorManager_onlyAuthorized
+        isContributor_(who)
         validAddress(who)
         validSalary(salary)
-        isContributor_(who)
     {
         uint oldSalary = _contributorRegistry[who].salary;
 

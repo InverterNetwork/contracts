@@ -46,6 +46,79 @@ contract ContributorManagerTest is Test {
     //--------------------------------------------------------------------------
     // Tests: Contributor Management
 
+    //----------------------------------
+    // Tests: addContributor()
+
+    function testAddContributor(address contributor) public {}
+
+    function testAddContributorFailsIfCallerNotAuthorized() public {}
+
+    function testAddContributorFailsIfAlreadyContributor(address contributor)
+        public
+    {}
+
+    function testAddContributorFailsForInvalidAddress(address contributor)
+        public
+    {}
+
+    function testAddContributorFailsForInvalidName(address contributor)
+        public
+    {}
+
+    function testAddContributorFailsForInvalidRole(address contributor)
+        public
+    {}
+
+    function testAddContributorFailsForInvalidSalary(address contributor)
+        public
+    {}
+
+    //----------------------------------
+    // Tests: removeContributor()
+
+    function testRemoveContributor() public {}
+
+    function testRemoveContributorFailsIfCallerNotAuthorized() public {}
+
+    function testRemoveContributorFailsIfNotContributor() public {}
+
+    function testRemoveContributorFailsIfNotConsecutiveContributorsGiven()
+        public
+    {}
+
+    //----------------------------------
+    // Tests: updateContributorRole()
+
+    function testUpdateContributorsRole() public {}
+
+    function testUpdateContributorsRoleFailsIfCallerNotAuthorized() public {}
+
+    function testUpdateContributorsRoleFailsIfNotContributor() public {}
+
+    function testUpdateContributorsRoleFailsForInvalidRole() public {}
+
+    //----------------------------------
+    // Tests: updateContributorSalary()
+
+    function testUpdateContributorsSalary() public {}
+
+    function testUpdateContributorsSalaryFailsIfCallerNotAuthorized() public {}
+
+    function testUpdateContributorsSalaryFailsIfNotContributor() public {}
+
+    function testUpdateContributorsSalaryFailsForInvalidSalary() public {}
+
+    //----------------------------------
+    // Tests: revokeContributor()
+
+    function testRevokeContributor() public {}
+
+    function testRemoveContributorFailsIfCallerNotContributor() public {}
+
+    function testRevokeContributorFailsIfNotConsecutiveContributorsGiven()
+        public
+    {}
+
     /*
         // Create a set of contributors.
         contributors.push(MockContributor(address(0xa1ba), "LEAD", 50_000));
