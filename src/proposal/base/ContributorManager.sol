@@ -178,6 +178,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     //--------------------------------------------------------------------------
     // onlyAuthorized Mutating Functions
 
+    /// @inheritdoc IContributorManager
     function addContributor(
         address who,
         string memory name,
@@ -203,6 +204,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         emit ContributorAdded(who);
     }
 
+    /// @inheritdoc IContributorManager
     function removeContributor(address prevContrib, address who)
         external
         __ContributorManager_onlyAuthorized
@@ -212,6 +214,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         _commitContributorRemoval(prevContrib, who);
     }
 
+    /// @inheritdoc IContributorManager
     function updateContributorsRole(address who, string memory role)
         external
         __ContributorManager_onlyAuthorized
@@ -226,6 +229,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         }
     }
 
+    /// @inheritdoc IContributorManager
     function updateContributorsSalary(address who, uint salary)
         external
         __ContributorManager_onlyAuthorized
