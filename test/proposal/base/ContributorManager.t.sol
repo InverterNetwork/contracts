@@ -30,6 +30,10 @@ contract ContributorManagerTest is Test {
 
     function testInit() public {
         contributorManager.init();
+
+        // List of contributors should be empty.
+        address[] memory contributors = contributorManager.listContributors();
+        assertEq(contributors.length, 0);
     }
 
     function testReinitFails() public {

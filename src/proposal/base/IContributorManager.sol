@@ -16,6 +16,8 @@ interface IContributorManager {
     //--------------------------------------------------------------------------
     // Errors
 
+    // @todo mp: Rename to Proposal__...
+
     /// @notice Given contributor's name invalid.
     error Module__ContributorManager__InvalidContributorName();
 
@@ -28,11 +30,11 @@ interface IContributorManager {
     /// @notice Given contributor's address invalid.
     error Module__ContributorManager__InvalidContributorAddress();
 
-    /// @notice Given contributor's address is active.
-    error Module__ContributorManager__ActiveContributor();
+    /// @notice Given contributor's address is contributor.
+    error Module__ContributorManager__IsContributor();
 
-    /// @notice Given contributor's address is not active.
-    error Module__ContributorManager_NotActiveContributor();
+    /// @notice Given contributor's address is not contributor.
+    error Module__ContributorManager__IsNotContributor();
 
     /// @notice The supplied contributors are not consecutive
     error Module__ContributorManager__ContributorsNotConsecutive();
@@ -59,11 +61,11 @@ interface IContributorManager {
     /// @param prevContrib The previous contributor in the contributor's list.
     function revokeContributor(address prevContrib) external;
 
-    /// @notice Returns whether `who` is registered as active contributor.
-    function isActiveContributor(address who) external view returns (bool);
+    /// @notice Returns whether `who` is a contributor.
+    function isContributor(address who) external view returns (bool);
 
-    /// @notice Returns the list of addresses of current active contributors.
-    function listActiveContributors()
+    /// @notice Returns the list of addresses of current contributors.
+    function listContributors()
         external
         view
         returns (address[] memory);

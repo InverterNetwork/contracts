@@ -39,6 +39,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     // Modifiers
 
     modifier __ContributorManager_onlyAuthorized() {
+        // @todo mp, nuggan: Use _msgSender().
         if (!__ContributorManager_isAuthorized(msg.sender)) {
             revert("Not authorized");
         }
@@ -78,22 +79,22 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         _;
     }
 
-    modifier isNotActiveContributor(address who) {
-        if (isActiveContributor(who)) {
-            revert Module__ContributorManager__ActiveContributor();
+    modifier isNotContributor(address who) {
+        if (isContributor(who)) {
+            revert Module__ContributorManager__IsContributor();
         }
         _;
     }
 
-    modifier isActiveContributor_(address who) {
-        if (!isActiveContributor(who)) {
-            revert Module__ContributorManager_NotActiveContributor();
+    modifier isContributor_(address who) {
+        if (!isContributor(who)) {
+            revert Module__ContributorManager__IsNotContributor();
         }
         _;
     }
 
     modifier onlyConsecutiveContributors(address _current, address _prev) {
-        //require that the contributors are indeed consecutive
+        // Require that the contributors are indeed consecutive.
         if (_contributors[_prev] != _current) {
             revert Module__ContributorManager__ContributorsNotConsecutive();
         }
@@ -110,8 +111,8 @@ abstract contract ContributorManager is IContributorManager, Initializable {
 
     mapping(address => Contributor) private _contributorRegistry;
 
-    /// @notice Mapping of active contributors. Every address points to the
-    ///         last one added before them.
+    /// @notice Mapping of contributors.
+    ///         Every address points to the last one added before them.
     ///         _contributors[_SENTINEL] points to the last added address,
     ///         to aid retrieval.
     ///         The first added address points to _SENTINEL to signal end of
@@ -124,7 +125,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     // Initializer
 
     function __ContributorManager_init() internal onlyInitializing {
-        // Set up the sentinel to signal an empty list of active contributors.
+        // Set up sentinel to signal empty list of contributors.
         _contributors[_SENTINEL] = _SENTINEL;
     }
 
@@ -141,107 +142,25 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         returns (bool);
 
     //--------------------------------------------------------------------------
-    // onlyAuthorized Mutating Functions
-
-    function addContributor(
-        address who,
-        string memory name,
-        string memory role,
-        uint salary
-    )
-        internal
-        __ContributorManager_onlyAuthorized
-        validAddress(who)
-        validName(name)
-        validRole(role)
-        validSalary(salary)
-        isNotActiveContributor(who)
-    {
-        // Create new Contributor instance.
-        Contributor memory c = Contributor(name, role, salary);
-
-        // Add address to _contributors mapping.
-        _contributors[who] = _contributors[_SENTINEL];
-        _contributors[_SENTINEL] = who;
-        _contributorCounter++;
-
-        // Add Contributor instance to registry.
-        _contributorRegistry[who] = c;
-
-        emit ContributorAdded(who);
-    }
-
-    function removeContributor(address who, address prevContrib)
-        internal
-        __ContributorManager_onlyAuthorized
-        isActiveContributor_(who)
-        onlyConsecutiveContributors(who, prevContrib)
-    {
-        _commitContributorRemoval(who, prevContrib);
-    }
-
-    function updateContributorsRole(address who, string memory role)
-        internal
-        __ContributorManager_onlyAuthorized
-        validAddress(who)
-        validRole(role)
-        isActiveContributor_(who)
-    {
-        string memory oldRole = _contributorRegistry[who].role;
-
-        if (!oldRole.equals(role)) {
-            emit ContributorsRoleUpdated(who, role, oldRole);
-            _contributorRegistry[who].role = role;
-        }
-    }
-
-    function updateContributorsSalary(address who, uint salary)
-        internal
-        __ContributorManager_onlyAuthorized
-        validAddress(who)
-        validSalary(salary)
-        isActiveContributor_(who)
-    {
-        uint oldSalary = _contributorRegistry[who].salary;
-
-        if (oldSalary != salary) {
-            emit ContributorsSalaryUpdated(who, salary, oldSalary);
-            _contributorRegistry[who].salary = salary;
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    // Public Mutating Functions
-
-    /// @inheritdoc IContributorManager
-    function revokeContributor(address prevContrib)
-        external
-        isActiveContributor_(msg.sender)
-        onlyConsecutiveContributors(msg.sender, prevContrib)
-    {
-        _commitContributorRemoval(msg.sender, prevContrib);
-    }
-
-    //--------------------------------------------------------------------------
     // Public View Functions
 
     /// @inheritdoc IContributorManager
     function getContributorInformation(address who)
         external
         view
-        isActiveContributor_(who)
+        isContributor_(who)
         returns (Contributor memory)
     {
         return _contributorRegistry[who];
     }
 
     /// @inheritdoc IContributorManager
-    function isActiveContributor(address who) public view returns (bool) {
+    function isContributor(address who) public view returns (bool) {
         return who != _SENTINEL && _contributors[who] != address(0);
     }
 
     /// @inheritdoc IContributorManager
-    function listActiveContributors()
+    function listContributors()
         external
         view
         returns (address[] memory)
@@ -261,6 +180,85 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     }
 
     //--------------------------------------------------------------------------
+    // onlyAuthorized Mutating Functions
+
+    function addContributor(
+        address who,
+        string memory name,
+        string memory role,
+        uint salary
+    )
+        internal
+        __ContributorManager_onlyAuthorized
+        validAddress(who)
+        validName(name)
+        validRole(role)
+        validSalary(salary)
+        isNotContributor(who)
+    {
+        // Add address to _contributors mapping.
+        _contributors[who] = _contributors[_SENTINEL];
+        _contributors[_SENTINEL] = who;
+        _contributorCounter++;
+
+        // Write new contributor instance to registry.
+        _contributorRegistry[who] = Contributor(name, role, salary);
+
+        emit ContributorAdded(who);
+    }
+
+    function removeContributor(address who, address prevContrib)
+        internal
+        __ContributorManager_onlyAuthorized
+        isContributor_(who)
+        onlyConsecutiveContributors(who, prevContrib)
+    {
+        _commitContributorRemoval(who, prevContrib);
+    }
+
+    function updateContributorsRole(address who, string memory role)
+        internal
+        __ContributorManager_onlyAuthorized
+        validAddress(who)
+        validRole(role)
+        isContributor_(who)
+    {
+        string memory oldRole = _contributorRegistry[who].role;
+
+        if (!oldRole.equals(role)) {
+            emit ContributorsRoleUpdated(who, role, oldRole);
+            _contributorRegistry[who].role = role;
+        }
+    }
+
+    function updateContributorsSalary(address who, uint salary)
+        internal
+        __ContributorManager_onlyAuthorized
+        validAddress(who)
+        validSalary(salary)
+        isContributor_(who)
+    {
+        uint oldSalary = _contributorRegistry[who].salary;
+
+        if (oldSalary != salary) {
+            emit ContributorsSalaryUpdated(who, salary, oldSalary);
+            _contributorRegistry[who].salary = salary;
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Public Mutating Functions
+
+    /// @inheritdoc IContributorManager
+    function revokeContributor(address prevContrib)
+        external
+        isContributor_(msg.sender)
+        onlyConsecutiveContributors(msg.sender, prevContrib)
+    {
+        _commitContributorRemoval(msg.sender, prevContrib);
+    }
+
+    //--------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev Expects address arguments to be consecutive in the contributor
@@ -269,12 +267,12 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     function _commitContributorRemoval(address who, address prevContrib)
         private
     {
-        // Remove Contributor instance from registry.
+        // Remove contributor instance from registry.
         delete _contributorRegistry[who];
 
-        // Remove address from active contributors list.
+        // Remove contributor address from list and decrease counter.
         _contributors[prevContrib] = _contributors[who];
-        _contributors[who] = address(0);
+        delete _contributors[who];
         _contributorCounter--;
 
         emit ContributorRemoved(who);

@@ -27,7 +27,7 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     modifier onlyContributor() {
         // @todo mp, felix: Use _msgSender().
-        if (!__Module_proposal.isActiveContributor(msg.sender)) {
+        if (!__Module_proposal.isContributor(msg.sender)) {
             revert Module__MilestoneManager__OnlyCallableByContributor();
         }
         _;
