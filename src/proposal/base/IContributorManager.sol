@@ -19,25 +19,25 @@ interface IContributorManager {
     // @todo mp: Rename to Proposal__...
 
     /// @notice Given contributor's name invalid.
-    error Module__ContributorManager__InvalidContributorName();
+    error Proposal__ContributorManager__InvalidContributorName();
 
     /// @notice Given contributor's role invalid.
-    error Module__ContributorManager__InvalidContributorRole();
+    error Proposal__ContributorManager__InvalidContributorRole();
 
     /// @notice Given contributor's salary invalid.
-    error Module__ContributorManager__InvalidContributorSalary();
+    error Proposal__ContributorManager__InvalidContributorSalary();
 
     /// @notice Given contributor's address invalid.
-    error Module__ContributorManager__InvalidContributorAddress();
+    error Proposal__ContributorManager__InvalidContributorAddress();
 
     /// @notice Given contributor's address is contributor.
-    error Module__ContributorManager__IsContributor();
+    error Proposal__ContributorManager__IsContributor();
 
     /// @notice Given contributor's address is not contributor.
-    error Module__ContributorManager__IsNotContributor();
+    error Proposal__ContributorManager__IsNotContributor();
 
     /// @notice The supplied contributors are not consecutive
-    error Module__ContributorManager__ContributorsNotConsecutive();
+    error Proposal__ContributorManager__ContributorsNotConsecutive();
 
     //--------------------------------------------------------------------------
     // Events

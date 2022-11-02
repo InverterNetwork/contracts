@@ -48,21 +48,21 @@ abstract contract ContributorManager is IContributorManager, Initializable {
 
     modifier validName(string memory name) {
         if (name.isEmpty()) {
-            revert Module__ContributorManager__InvalidContributorName();
+            revert Proposal__ContributorManager__InvalidContributorName();
         }
         _;
     }
 
     modifier validRole(string memory role) {
         if (role.isEmpty()) {
-            revert Module__ContributorManager__InvalidContributorRole();
+            revert Proposal__ContributorManager__InvalidContributorRole();
         }
         _;
     }
 
     modifier validSalary(uint salary) {
         if (salary == 0) {
-            revert Module__ContributorManager__InvalidContributorSalary();
+            revert Proposal__ContributorManager__InvalidContributorSalary();
         }
         _;
     }
@@ -74,21 +74,21 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         bool isThis = who == address(this);
 
         if (isZero || isSentinel || isThis) {
-            revert Module__ContributorManager__InvalidContributorAddress();
+            revert Proposal__ContributorManager__InvalidContributorAddress();
         }
         _;
     }
 
     modifier isNotContributor(address who) {
         if (isContributor(who)) {
-            revert Module__ContributorManager__IsContributor();
+            revert Proposal__ContributorManager__IsContributor();
         }
         _;
     }
 
     modifier isContributor_(address who) {
         if (!isContributor(who)) {
-            revert Module__ContributorManager__IsNotContributor();
+            revert Proposal__ContributorManager__IsNotContributor();
         }
         _;
     }
@@ -96,7 +96,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     modifier onlyConsecutiveContributors(address _current, address _prev) {
         // Require that the contributors are indeed consecutive.
         if (_contributors[_prev] != _current) {
-            revert Module__ContributorManager__ContributorsNotConsecutive();
+            revert Proposal__ContributorManager__ContributorsNotConsecutive();
         }
         _;
     }
