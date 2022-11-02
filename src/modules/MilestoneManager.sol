@@ -68,7 +68,7 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     modifier onlyConsecutiveMilestones(uint prevId, uint id) {
         if (_milestones[prevId] != id) {
-            revert("Not consecutive milestones");
+            revert Module__MilestoneManager__ContributorsNotConsecutive();
         }
         _;
     }
@@ -140,29 +140,33 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     function getMilestone(uint id) public view returns (Milestone memory) {
         if (!isExistingMilestone(id)) {
-            revert("Milestone does not exist");
+            revert Module__MilestoneManager__InvalidMilestoneId();
         }
 
         return _milestoneRegistry[id];
     }
 
+    // @todo mp: Rename to listMilestoneIds?
+    //           Be consistent with ContributorManager terminology.
+    // @todo mp: Check ModuleManager terminology.
     function getAllMilestoneIds() external view returns (uint[] memory) {
-        uint[] memory array = new uint[](_milestoneCounter);
+        uint[] memory result = new uint[](_milestoneCounter);
 
+        // Populate result array.
         uint index = 0;
         uint id = _milestones[_SENTINEL];
         while (id != _SENTINEL) {
-            array[index] = id;
+            result[index] = id;
             id = _milestones[id];
             index++;
         }
 
-        return array;
+        return result;
     }
 
     function getActiveMilestoneId() public view returns (uint id) {
         if (!hasActiveMilestone()) {
-            revert("No milestone currently active");
+            revert Module__MilestoneManager__NoActiveMilestone();
         }
 
         return _activeMilestone;
@@ -366,7 +370,6 @@ contract MilestoneManager is IMilestoneManager, Module {
             completed: false
         });
 
-        // Emit event.
         emit MilestoneAdded(id, duration, budget, title, details);
 
         return id;
@@ -385,7 +388,7 @@ contract MilestoneManager is IMilestoneManager, Module {
             revert Module__MilestoneManager__MilestoneNotRemovable();
         }
 
-        // Delete milestone instance from registry.
+        // Remove milestone instance from registry.
         delete _milestoneRegistry[id];
 
         // Remove milestone's id from list and decrease counter.
@@ -398,7 +401,7 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     function __Milestone_startNextMilestone() external onlyProposal {
         if (!isNextMilestoneActivateable()) {
-            revert("Milestone not activateable");
+            revert Module__MilestoneManager__MilestoneNotActivateable();
         }
 
         // Get next milestone's id and update _activeMilestone.
@@ -432,6 +435,7 @@ contract MilestoneManager is IMilestoneManager, Module {
             revert Module__MilestoneManager__MilestoneNotUpdateable();
         }
 
+        // @todo mp: Gas optimize.
         bool durationUpdated = m.duration != duration;
         bool budgetUpdated = m.budget != budget;
         bool detailsUpdated = m.details.equals(details);

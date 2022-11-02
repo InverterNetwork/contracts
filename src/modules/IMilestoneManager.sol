@@ -65,6 +65,15 @@ interface IMilestoneManager {
     /// @notice Given milestone not declineable.
     error Module__MilestoneManager__MilestoneNotDeclineable();
 
+    /// @notice Given milestone not activateable.
+    error Module__MilestoneManager__MilestoneNotActivateable();
+
+    /// @notice The supplied contributors are not consecutive
+    error Module__MilestoneManager__ContributorsNotConsecutive();
+
+    /// @notice No active milestone currently existing.
+    error Module__MilestoneManager__NoActiveMilestone();
+
     //--------------------------------------------------------------------------
     // Events
 
