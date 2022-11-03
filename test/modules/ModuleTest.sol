@@ -4,8 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Internal Interfaces
-import {IModule} from "src/modules/base/IModule.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 // Internal Libraries
 import {LibString} from "src/common/LibString.sol";

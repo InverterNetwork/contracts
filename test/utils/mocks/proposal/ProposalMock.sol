@@ -8,9 +8,11 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
-import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {
+    IProposal,
+    IPaymentProcessor,
+    IAuthorizer
+} from "src/proposal/IProposal.sol";
 
 // Mock Dependencies
 import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";

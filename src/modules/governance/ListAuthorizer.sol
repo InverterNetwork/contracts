@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Dependencies
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Interfaces

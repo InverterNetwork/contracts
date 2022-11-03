@@ -9,8 +9,10 @@ import {
 } from "test/modules/ModuleTest.sol";
 
 // SuT
-import {MilestoneManager} from "src/modules/MilestoneManager.sol";
-import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
+import {
+    MilestoneManager,
+    IMilestoneManager
+} from "src/modules/MilestoneManager.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
