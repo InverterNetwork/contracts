@@ -76,6 +76,7 @@ abstract contract PaymentClient is IPaymentClient {
         returns (PaymentOrder[] memory)
     {
         // Ensure caller is authorized to act as payment processor.
+        // Note that function is implemented in downstream contract.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(msg.sender))) {
             revert Module__PaymentClient__CallerNotAuthorized();
         }
