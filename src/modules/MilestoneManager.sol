@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
-import {Module} from "src/modules/base/Module.sol";
+import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
 
 // Internal Libraries
 import {LibString} from "src/common/LibString.sol";
@@ -26,8 +26,7 @@ contract MilestoneManager is IMilestoneManager, Module {
     // Modifiers
 
     modifier onlyContributor() {
-        // @todo mp, felix: Use _msgSender().
-        if (!__Module_proposal.isContributor(msg.sender)) {
+        if (!__Module_proposal.isContributor(_msgSender())) {
             revert Module__MilestoneManager__OnlyCallableByContributor();
         }
         _;
@@ -106,13 +105,13 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Storage
 
-    mapping(uint => Milestone) internal _milestoneRegistry;
+    mapping(uint => Milestone) private _milestoneRegistry;
 
-    mapping(uint => uint) internal _milestones;
+    mapping(uint => uint) private _milestones;
 
-    uint internal _milestoneCounter;
+    uint private _milestoneCounter;
 
-    uint internal _activeMilestone;
+    uint private _activeMilestone;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -146,18 +145,15 @@ contract MilestoneManager is IMilestoneManager, Module {
         return _milestoneRegistry[id];
     }
 
-    // @todo mp: Rename to listMilestoneIds?
-    //           Be consistent with ContributorManager terminology.
-    // @todo mp: Check ModuleManager terminology.
-    function getAllMilestoneIds() external view returns (uint[] memory) {
+    function listMilestoneIds() external view returns (uint[] memory) {
         uint[] memory result = new uint[](_milestoneCounter);
 
         // Populate result array.
         uint index = 0;
-        uint id = _milestones[_SENTINEL];
-        while (id != _SENTINEL) {
-            result[index] = id;
-            id = _milestones[id];
+        uint elem = _milestones[_SENTINEL];
+        while (elem != _SENTINEL) {
+            result[index] = elem;
+            elem = _milestones[elem];
             index++;
         }
 
