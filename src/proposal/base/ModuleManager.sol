@@ -291,7 +291,7 @@ abstract contract ModuleManager is
         emit ModuleRemoved(module);
     }
 
-    function _ensureValidModule(address module) private {
+    function _ensureValidModule(address module) private view {
         // @todo mp: Make gas optimized.
         bool isZero = module == address(0);
         bool isSentinel = module == _SENTINEL;
@@ -302,7 +302,7 @@ abstract contract ModuleManager is
         }
     }
 
-    function _ensureNotModule(address module) private {
+    function _ensureNotModule(address module) private view {
         if (isModule(module)) {
             revert Proposal__ModuleManager__IsModule();
         }

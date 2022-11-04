@@ -29,19 +29,27 @@ interface IModuleManager {
     // Events
 
     /// @notice Event emitted when module added.
+    /// @param module The module's address.
     event ModuleAdded(address indexed module);
 
     /// @notice Event emitted when module removed.
+    /// @param module The module's address.
     event ModuleRemoved(address indexed module);
 
     /// @notice Event emitted when account `account` is granted role `role` for
     ///         module `module`.
+    /// @param module The module's address.
+    /// @param role The access control role.
+    /// @param account The account the role was granted to.
     event ModuleRoleGranted(
         address indexed module, bytes32 indexed role, address indexed account
     );
 
     /// @notice Event emitted when account `account` is revoked role `role` for
     ///         module `module`.
+    /// @param module The module's address.
+    /// @param role The access control role.
+    /// @param account The account the role was revoked for.
     event ModuleRoleRevoked(
         address indexed module, bytes32 indexed role, address indexed account
     );
