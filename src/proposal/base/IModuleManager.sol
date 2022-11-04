@@ -88,6 +88,10 @@ interface IModuleManager {
     /// @return True if module added, false otherwise.
     function isModule(address module) external returns (bool);
 
+    /// @notice Returns the list of all modules.
+    /// @return List of all modules.
+    function listModules() external view returns (address[] memory);
+
     /// @notice Grants role `role` to account `account` in caller's access
     ///         control context.
     /// @dev Only callable by enabled module.
