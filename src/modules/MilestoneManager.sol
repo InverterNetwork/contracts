@@ -92,8 +92,6 @@ contract MilestoneManager is IMilestoneManager, Module {
     //--------------------------------------------------------------------------
     // Initialization
 
-    constructor() {}
-
     /// @inheritdoc Module
     function init(
         IProposal proposal_,
