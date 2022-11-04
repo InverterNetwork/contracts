@@ -288,12 +288,14 @@ contract ModuleManagerTest is Test {
     function testGrantRole(address module, bytes32 role, address account)
         public
     {
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
         types.assumeValidModule(module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
 
-        moduleManager = new ModuleManagerMock();
         moduleManager.init(modules);
 
         vm.prank(module);
@@ -308,13 +310,15 @@ contract ModuleManagerTest is Test {
         bytes32 role,
         address account
     ) public {
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
         types.assumeValidModule(module);
         vm.assume(caller != module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
 
-        moduleManager = new ModuleManagerMock();
         moduleManager.init(modules);
 
         vm.prank(caller);
@@ -329,12 +333,14 @@ contract ModuleManagerTest is Test {
     function testRevokeRole(address module, bytes32 role, address account)
         public
     {
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
         types.assumeValidModule(module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
 
-        moduleManager = new ModuleManagerMock();
         moduleManager.init(modules);
 
         vm.startPrank(module);
@@ -353,13 +359,15 @@ contract ModuleManagerTest is Test {
         bytes32 role,
         address account
     ) public {
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
         types.assumeValidModule(module);
         vm.assume(caller != module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
 
-        moduleManager = new ModuleManagerMock();
         moduleManager.init(modules);
 
         vm.prank(caller);
@@ -374,12 +382,14 @@ contract ModuleManagerTest is Test {
     function testRenounceRole(address module, bytes32 role, address account)
         public
     {
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
         types.assumeValidModule(module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
 
-        moduleManager = new ModuleManagerMock();
         moduleManager.init(modules);
 
         vm.prank(module);
@@ -396,12 +406,14 @@ contract ModuleManagerTest is Test {
         bytes32 role,
         address account
     ) public {
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
         types.assumeValidModule(module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
 
-        moduleManager = new ModuleManagerMock();
         moduleManager.init(modules);
 
         vm.prank(module);
