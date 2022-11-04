@@ -27,7 +27,7 @@ contract ContributorManagerMock is ContributorManager {
     }
 
     // Note that the `initializer` modifier is missing.
-    function reinit() external {
+    function initNoInitializer() external {
         __ContributorManager_init();
     }
 

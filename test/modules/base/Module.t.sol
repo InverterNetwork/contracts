@@ -89,18 +89,27 @@ contract ModuleTest is Test {
         assertEq(got, want);
     }
 
-    function testInitFailsForInvalidProposal() public {
-        module = new ModuleMock();
-
-        vm.expectRevert(Errors.Module__InvalidProposalAddress);
-        module.init(IProposal(address(0)), DATA);
-    }
-
     function testInitFailsForNonInitializerFunction() public {
         module = new ModuleMock();
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
         module.initNoInitializer(proposal, DATA);
+    }
+
+    function testReinitFails() public {
+        module = new ModuleMock();
+
+        module.init(proposal, DATA);
+
+        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        module.init(proposal, DATA);
+    }
+
+    function testInitFailsForInvalidProposal() public {
+        module = new ModuleMock();
+
+        vm.expectRevert(Errors.Module__InvalidProposalAddress);
+        module.init(IProposal(address(0)), DATA);
     }
 
     function testInitFailsIfMetadataInvalid(uint majorVersion) public {

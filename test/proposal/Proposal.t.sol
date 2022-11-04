@@ -16,9 +16,6 @@ import {
     IPaymentProcessor
 } from "src/proposal/IProposal.sol";
 
-// Helpers
-import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
-
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
@@ -28,9 +25,15 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract ProposalTest is Test, FuzzInputChecker {
+// Helper
+import {TypeSanityHelper} from "test/proposal/helper/TypeSanityHelper.sol";
+
+contract ProposalTest is Test {
     // SuT
     Proposal proposal;
+
+    // Helper
+    TypeSanityHelper types;
 
     // Mocks
     AuthorizerMock authorizer;
@@ -43,6 +46,8 @@ contract ProposalTest is Test, FuzzInputChecker {
         token = new ERC20Mock("TestToken", "TST");
 
         proposal = new Proposal();
+
+        types = new TypeSanityHelper(address(proposal));
     }
 
     //--------------------------------------------------------------------------
@@ -53,14 +58,14 @@ contract ProposalTest is Test, FuzzInputChecker {
         address[] memory funders,
         address[] memory modules
     ) public {
-        _assumeValidProposalId(proposalId);
-        _assumeValidFunders(funders);
-        _assumeValidModules(modules);
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidFunders(funders);
+        types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
-        _assumeAddressNotInSet(modules, address(authorizer));
-        _assumeAddressNotInSet(modules, address(paymentProcessor));
-        _assumeAddressNotInSet(modules, address(token));
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
 
         // Initialize proposal.
         proposal.init(
@@ -87,14 +92,14 @@ contract ProposalTest is Test, FuzzInputChecker {
         address[] memory funders,
         address[] memory modules
     ) public {
-        _assumeValidProposalId(proposalId);
-        _assumeValidFunders(funders);
-        _assumeValidModules(modules);
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidFunders(funders);
+        types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
-        _assumeAddressNotInSet(modules, address(authorizer));
-        _assumeAddressNotInSet(modules, address(paymentProcessor));
-        _assumeAddressNotInSet(modules, address(token));
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
 
         // Initialize proposal.
         proposal.init(

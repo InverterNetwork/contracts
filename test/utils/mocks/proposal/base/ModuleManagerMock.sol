@@ -26,7 +26,7 @@ contract ModuleManagerMock is ModuleManager {
     }
 
     // Note that the `initializer` modifier is missing.
-    function reinit(address[] calldata modules) external {
+    function initNoInitializer(address[] calldata modules) external {
         __ModuleManager_init(modules);
     }
 

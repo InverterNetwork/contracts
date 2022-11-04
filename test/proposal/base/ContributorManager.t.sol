@@ -17,9 +17,15 @@ import {
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
+// Helper
+import {TypeSanityHelper} from "test/proposal/helper/TypeSanityHelper.sol";
+
 contract ContributorManagerTest is Test {
     // SuT
     ContributorManagerMock contributorManager;
+
+    // Helper
+    TypeSanityHelper types;
 
     // Constants
     uint constant MAX_CONTRIBUTORS = 20;
@@ -47,6 +53,8 @@ contract ContributorManagerTest is Test {
         contributorManager = new ContributorManagerMock();
         contributorManager.init();
 
+        types = new TypeSanityHelper(address(contributorManager));
+
         contributorManager.__ContributorManager_setIsAuthorized(
             address(this), true
         );
@@ -68,8 +76,16 @@ contract ContributorManagerTest is Test {
         contributorManager = new ContributorManagerMock();
         contributorManager.init();
 
+        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        contributorManager.init();
+    }
+
+    function testInitFailsForNonInitializerFunction() public {
+        contributorManager = new ContributorManagerMock();
+        contributorManager.init();
+
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        contributorManager.reinit();
+        contributorManager.initNoInitializer();
     }
 
     //--------------------------------------------------------------------------
@@ -80,7 +96,7 @@ contract ContributorManagerTest is Test {
 
     function testAddContributor(address[] memory whos) public {
         vm.assume(whos.length <= MAX_CONTRIBUTORS);
-        _assumeValidAddresses(whos);
+        types.assumeValidContributors(whos);
 
         for (uint i; i < whos.length; i++) {
             vm.expectEmit(true, true, true, true);
@@ -107,7 +123,7 @@ contract ContributorManagerTest is Test {
     }
 
     function testAddContributorFailsIfCallerNotAuthorized(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.__ContributorManager_setIsAuthorized(
             address(this), false
@@ -122,7 +138,7 @@ contract ContributorManagerTest is Test {
     }
 
     function testAddContributorFailsIfAlreadyContributor(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
@@ -135,7 +151,7 @@ contract ContributorManagerTest is Test {
     }
 
     function testAddContributorFailsForInvalidAddress() public {
-        address[] memory invalids = _createInvalidAddresses();
+        address[] memory invalids = types.createInvalidContributors();
 
         for (uint i; i < invalids.length; i++) {
             vm.expectRevert(
@@ -148,9 +164,9 @@ contract ContributorManagerTest is Test {
     }
 
     function testAddContributorFailsForInvalidName(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
-        string[] memory invalids = _createInvalidNames();
+        string[] memory invalids = types.createInvalidContributorNames();
 
         for (uint i; i < invalids.length; i++) {
             vm.expectRevert(
@@ -163,9 +179,9 @@ contract ContributorManagerTest is Test {
     }
 
     function testAddContributorFailsForInvalidRole(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
-        string[] memory invalids = _createInvalidRoles();
+        string[] memory invalids = types.createInvalidContributorRoles();
 
         for (uint i; i < invalids.length; i++) {
             vm.expectRevert(
@@ -178,9 +194,9 @@ contract ContributorManagerTest is Test {
     }
 
     function testAddContributorFailsForInvalidSalary(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
-        uint[] memory invalids = _createInvalidSalaries();
+        uint[] memory invalids = types.createInvalidContributorSalaries();
 
         for (uint i; i < invalids.length; i++) {
             vm.expectRevert(
@@ -198,7 +214,7 @@ contract ContributorManagerTest is Test {
     function testRemoveContributor(address[] memory whos) public {
         vm.assume(whos.length != 0);
         vm.assume(whos.length <= MAX_CONTRIBUTORS);
-        _assumeValidAddresses(whos);
+        types.assumeValidContributors(whos);
 
         // The current contrib to remove.
         address contrib;
@@ -265,7 +281,7 @@ contract ContributorManagerTest is Test {
     function testRemoveContributorFailsIfCallerNotAuthorized(address who)
         public
     {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
@@ -282,7 +298,7 @@ contract ContributorManagerTest is Test {
     }
 
     function testRemoveContributorFailsIfNotContributor(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         vm.expectRevert(
             IContributorManager
@@ -295,7 +311,7 @@ contract ContributorManagerTest is Test {
     function testRemoveContributorFailsIfNotConsecutiveContributorsGiven(
         address who
     ) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
@@ -311,7 +327,7 @@ contract ContributorManagerTest is Test {
     // Tests: updateContributorsRole()
 
     function testUpdateContributorsRole(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
@@ -328,7 +344,7 @@ contract ContributorManagerTest is Test {
     function testUpdateContributorsRoleFailsIfCallerNotAuthorized(address who)
         public
     {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.__ContributorManager_setIsAuthorized(
             address(this), false
@@ -345,7 +361,7 @@ contract ContributorManagerTest is Test {
     function testUpdateContributorsRoleFailsIfNotContributor(address who)
         public
     {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         vm.expectRevert(
             IContributorManager
@@ -358,11 +374,11 @@ contract ContributorManagerTest is Test {
     function testUpdateContributorsRoleFailsForInvalidRole(address who)
         public
     {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
-        string[] memory invalids = _createInvalidRoles();
+        string[] memory invalids = types.createInvalidContributorRoles();
 
         for (uint i; i < invalids.length; i++) {
             vm.expectRevert(
@@ -378,7 +394,7 @@ contract ContributorManagerTest is Test {
     // Tests: updateContributorsSalary()
 
     function testUpdateContributorsSalary(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
@@ -395,7 +411,7 @@ contract ContributorManagerTest is Test {
     function testUpdateContributorsSalaryFailsIfCallerNotAuthorized(address who)
         public
     {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.__ContributorManager_setIsAuthorized(
             address(this), false
@@ -412,7 +428,7 @@ contract ContributorManagerTest is Test {
     function testUpdateContributorsSalaryFailsIfNotContributor(address who)
         public
     {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         vm.expectRevert(
             IContributorManager
@@ -425,11 +441,11 @@ contract ContributorManagerTest is Test {
     function testUpdateContributorsSalaryFailsForInvalidSalary(address who)
         public
     {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
-        uint[] memory invalids = _createInvalidSalaries();
+        uint[] memory invalids = types.createInvalidContributorSalaries();
 
         for (uint i; i < invalids.length; i++) {
             vm.expectRevert(
@@ -445,7 +461,7 @@ contract ContributorManagerTest is Test {
     // Tests: revokeContributor()
 
     function testRevokeContributor(address who) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
@@ -458,7 +474,7 @@ contract ContributorManagerTest is Test {
     function testRemoveContributorFailsIfCallerNotContributor(address who)
         public
     {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         vm.prank(who);
         vm.expectRevert(
@@ -472,7 +488,7 @@ contract ContributorManagerTest is Test {
     function testRevokeContributorFailsIfNotConsecutiveContributorsGiven(
         address who
     ) public {
-        _assumeValidAddress(who);
+        types.assumeValidContributor(who);
 
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
@@ -483,71 +499,5 @@ contract ContributorManagerTest is Test {
                 .selector
         );
         contributorManager.revokeContributor(address(0xCAFE));
-    }
-
-    //--------------------------------------------------------------------------
-    // Fuzzer Helper Functions
-
-    mapping(address => bool) addressCache;
-
-    function _assumeValidAddresses(address[] memory addrs) internal {
-        for (uint i; i < addrs.length; i++) {
-            _assumeValidAddress(addrs[i]);
-
-            // Assume address unique.
-            vm.assume(!addressCache[addrs[i]]);
-
-            // Add address to cache.
-            addressCache[addrs[i]] = true;
-        }
-    }
-
-    function _assumeValidAddress(address a) internal {
-        address[] memory invalids = _createInvalidAddresses();
-
-        for (uint i; i < invalids.length; i++) {
-            vm.assume(a != invalids[i]);
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    // Data Creation Helper Functions
-
-    function _createInvalidAddresses()
-        internal
-        view
-        returns (address[] memory)
-    {
-        address[] memory invalids = new address[](3);
-
-        invalids[0] = address(0);
-        invalids[1] = _SENTINEL;
-        invalids[2] = address(contributorManager);
-
-        return invalids;
-    }
-
-    function _createInvalidNames() internal pure returns (string[] memory) {
-        string[] memory invalids = new string[](1);
-
-        invalids[0] = "";
-
-        return invalids;
-    }
-
-    function _createInvalidRoles() internal pure returns (string[] memory) {
-        string[] memory invalids = new string[](1);
-
-        invalids[0] = "";
-
-        return invalids;
-    }
-
-    function _createInvalidSalaries() internal pure returns (uint[] memory) {
-        uint[] memory invalids = new uint[](1);
-
-        invalids[0] = 0;
-
-        return invalids;
     }
 }
