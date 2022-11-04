@@ -40,7 +40,7 @@ interface IContributorManager {
     /// @notice Given contributor's address is not contributor.
     error Proposal__ContributorManager__IsNotContributor();
 
-    /// @notice The supplied contributors are not consecutive
+    /// @notice The supplied contributors are not consecutive.
     error Proposal__ContributorManager__ContributorsNotConsecutive();
 
     //--------------------------------------------------------------------------

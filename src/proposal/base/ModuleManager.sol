@@ -41,8 +41,8 @@ abstract contract ModuleManager is
         _;
     }
 
-    modifier onlyEnableModule() {
-        if (!isEnabledModule(_msgSender())) {
+    modifier onlyModule() {
+        if (!isModule(_msgSender())) {
             revert Proposal__ModuleManager__OnlyCallableByModule();
         }
         _;
@@ -53,21 +53,21 @@ abstract contract ModuleManager is
         _;
     }
 
-    modifier isEnabledModule_(address module) {
-        if (!isEnabledModule(module)) {
-            revert("P_MM_IsNotEnabledModule");
+    modifier isModule_(address module) {
+        if (!isModule(module)) {
+            revert Proposal__ModuleManager__IsNotModule();
         }
         _;
     }
 
-    modifier isNotEnabledModule(address module) {
-        _ensureNotEnabledModule(module);
+    modifier isNotModule(address module) {
+        _ensureNotModule(module);
         _;
     }
 
     modifier onlyConsecutiveModules(address prevModule, address module) {
         if (_modules[prevModule] != module) {
-            revert("P_MM_NotConsecutive");
+            revert Proposal__ModuleManager__ModulesNotConsecutive();
         }
         _;
     }
@@ -116,12 +116,12 @@ abstract contract ModuleManager is
         for (uint i; i < modules.length; i++) {
             module = modules[i];
 
-            // Ensure module address is valid and module not already enabled.
+            // Ensure module address is valid and module not already added.
             _ensureValidModule(module);
-            _ensureNotEnabledModule(module);
+            _ensureNotModule(module);
 
-            // Commit enabling module.
-            _commitEnableModule(module);
+            // Commit adding the module.
+            _commitAddModule(module);
 
             // @todo mp: Call into module to "register this proposal" as using
             //           that module instance?
@@ -152,11 +152,11 @@ abstract contract ModuleManager is
         view
         returns (bool)
     {
-        return isEnabledModule(module) && _moduleRoles[module][role][account];
+        return isModule(module) && _moduleRoles[module][role][account];
     }
 
     /// @inheritdoc IModuleManager
-    function isEnabledModule(address module)
+    function isModule(address module)
         public
         view
         override (IModuleManager)
@@ -165,7 +165,7 @@ abstract contract ModuleManager is
         return module != _SENTINEL && _modules[module] != address(0);
     }
 
-    function listEnabledModules() external view returns (address[] memory) {
+    function listModules() external view returns (address[] memory) {
         address[] memory result = new address[](_moduleCounter);
 
         // Populate result array.
@@ -184,27 +184,27 @@ abstract contract ModuleManager is
     // onlyAuthorized Functions
 
     /// @inheritdoc IModuleManager
-    function enableModule(address module)
+    function addModule(address module)
         public
         __ModuleManager_onlyAuthorized
-        isNotEnabledModule(module)
+        isNotModule(module)
         validModule(module)
     {
-        _commitEnableModule(module);
+        _commitAddModule(module);
     }
 
     /// @inheritdoc IModuleManager
-    function disableModule(address prevModule, address module)
+    function removeModule(address prevModule, address module)
         public
         __ModuleManager_onlyAuthorized
-        isEnabledModule_(module)
+        isModule_(module)
         onlyConsecutiveModules(prevModule, module)
     {
-        _commitDisableModule(prevModule, module);
+        _commitRemoveModule(prevModule, module);
     }
 
     //--------------------------------------------------------------------------
-    // onlyEnabledModule Functions
+    // onlyModule Functions
 
     /// @inheritdoc IModuleManager
     function executeTxFromModule(
@@ -214,7 +214,7 @@ abstract contract ModuleManager is
     )
         public
         override (IModuleManager)
-        onlyEnableModule
+        onlyModule
         returns (bool, bytes memory)
     {
         bool ok;
@@ -230,7 +230,7 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function grantRole(bytes32 role, address account) public onlyEnableModule {
+    function grantRole(bytes32 role, address account) public onlyModule {
         if (!hasRole(_msgSender(), role, account)) {
             _moduleRoles[_msgSender()][role][account] = true;
             emit ModuleRoleGranted(_msgSender(), role, account);
@@ -238,10 +238,7 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function revokeRole(bytes32 role, address account)
-        public
-        onlyEnableModule
-    {
+    function revokeRole(bytes32 role, address account) public onlyModule {
         if (hasRole(_msgSender(), role, account)) {
             _moduleRoles[_msgSender()][role][account] = false;
             emit ModuleRoleRevoked(_msgSender(), role, account);
@@ -264,18 +261,18 @@ abstract contract ModuleManager is
 
     /// @dev Expects `module` to be valid module address.
     /// @dev Expects `module` to not be enabled module.
-    function _commitEnableModule(address module) private {
+    function _commitAddModule(address module) private {
         // Add address to _modules mapping.
         _modules[module] = _modules[_SENTINEL];
         _modules[_SENTINEL] = module;
         _moduleCounter++;
 
-        emit ModuleEnabled(module);
+        emit ModuleAdded(module);
     }
 
     /// @dev Expect address arguments to be consecutive in the modules list.
     /// @dev Expects address `module` to be enabled module.
-    function _commitDisableModule(address prevModule, address module) private {
+    function _commitRemoveModule(address prevModule, address module) private {
         // Remove module address from list and decrease counter.
         _modules[prevModule] = _modules[module];
         delete _modules[module];
@@ -291,7 +288,7 @@ abstract contract ModuleManager is
         // its roles configuration is the same as before.
         // Note that this could potentially lead to security issues!
 
-        emit ModuleDisabled(module);
+        emit ModuleRemoved(module);
     }
 
     function _ensureValidModule(address module) private {
@@ -305,9 +302,9 @@ abstract contract ModuleManager is
         }
     }
 
-    function _ensureNotEnabledModule(address module) private {
-        if (isEnabledModule(module)) {
-            revert("P_MM_IsEnabledModule");
+    function _ensureNotModule(address module) private {
+        if (isModule(module)) {
+            revert Proposal__ModuleManager__IsModule();
         }
     }
 }
