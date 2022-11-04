@@ -68,7 +68,7 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     modifier onlyConsecutiveMilestones(uint prevId, uint id) {
         if (_milestones[prevId] != id) {
-            revert Module__MilestoneManager__ContributorsNotConsecutive();
+            revert Module__MilestoneManager__MilestonesNotConsecutive();
         }
         _;
     }

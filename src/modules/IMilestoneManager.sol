@@ -68,8 +68,8 @@ interface IMilestoneManager {
     /// @notice Given milestone not activateable.
     error Module__MilestoneManager__MilestoneNotActivateable();
 
-    /// @notice The supplied contributors are not consecutive
-    error Module__MilestoneManager__ContributorsNotConsecutive();
+    /// @notice The supplied milestones are not consecutive
+    error Module__MilestoneManager__MilestonesNotConsecutive();
 
     /// @notice No active milestone currently existing.
     error Module__MilestoneManager__NoActiveMilestone();
