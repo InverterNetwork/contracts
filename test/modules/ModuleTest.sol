@@ -40,6 +40,8 @@ abstract contract ModuleTest is Test {
 
     //--------------------------------------------------------------------------------
     // Test: Initialization
+    //
+    // MUST be implemented in downstream contract.
 
     function testInit() public virtual;
 

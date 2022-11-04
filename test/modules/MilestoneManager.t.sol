@@ -24,10 +24,11 @@ contract MilestoneManagerTest is ModuleTest {
     MilestoneManager milestoneManager;
 
     // Constants
-    uint private constant _DURATION = 1 weeks;
-    uint private constant _BUDGET = 1000 * 1e18;
-    string private constant _TITLE = "Title";
-    string private constant _DETAILS = "Details";
+    uint constant MAX_MILESTONES = 20;
+    uint constant DURATION = 1 weeks;
+    uint constant BUDGET = 1000 * 1e18;
+    string constant TITLE = "Title";
+    string constant DETAILS = "Details";
 
     // Constant copied from SuT
     uint private constant _SENTINEL = type(uint).max;
@@ -53,6 +54,8 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.init(_proposal, _METADATA, bytes(""));
 
         _setUpProposal(milestoneManager);
+
+        _authorizer.setIsAuthorized(address(this), true);
     }
 
     //--------------------------------------------------------------------------
@@ -60,7 +63,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testInit() public override (ModuleTest) {
         // SENTINEL milestone does not exist.
-        assertTrue(!milestoneManager.isExistingMilestone(_SENTINEL));
+        assertTrue(!milestoneManager.isExistingMilestoneId(_SENTINEL));
 
         // Not current active milestone.
         assertTrue(!milestoneManager.hasActiveMilestone());
@@ -90,10 +93,10 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+            milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
         assertEq(id, 0);
         _assertMilestone(
-            0, _TITLE, block.timestamp, _DETAILS, false, false, false
+            0, TITLE, block.timestamp, DETAILS, false, false, false
         );
     }
 
@@ -102,7 +105,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+        milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
     }
 
     function testAddMilestoneCallbackFailed() public {
@@ -113,7 +116,7 @@ contract MilestoneManagerTest is ModuleTest {
         _expectProposalCallbackFailure(
             "__Milestone_addMilestone(string,uint256,string)"
         );
-        milestoneManager.addMilestone(invalidTitle, block.timestamp, _DETAILS);
+        milestoneManager.addMilestone(invalidTitle, block.timestamp, DETAILS);
     }
 
     //----------------------------------
@@ -123,13 +126,13 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp + 1, _DETAILS);
+            milestoneManager.addMilestone(TITLE, block.timestamp + 1, DETAILS);
 
         string memory newDetails = "new Details";
         milestoneManager.updateMilestoneDetails(id, newDetails);
 
         _assertMilestone(
-            id, _TITLE, block.timestamp + 1, newDetails, false, false, false
+            id, TITLE, block.timestamp + 1, newDetails, false, false, false
         );
     }
 
@@ -140,21 +143,21 @@ contract MilestoneManagerTest is ModuleTest {
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.updateMilestoneDetails(0, _DETAILS);
+        milestoneManager.updateMilestoneDetails(0, DETAILS);
     }
 
     function testUpdateMilestoneDetailsCallbackFailed() public {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+            milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
 
         uint invalidId = id + 1;
 
         _expectProposalCallbackFailure(
             "__Milestone_updateMilestoneDetails(uint256,string)"
         );
-        milestoneManager.updateMilestoneDetails(invalidId, _DETAILS);
+        milestoneManager.updateMilestoneDetails(invalidId, DETAILS);
     }
 
     //----------------------------------
@@ -164,13 +167,13 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp + 1, _DETAILS);
+            milestoneManager.addMilestone(TITLE, block.timestamp + 1, DETAILS);
 
         uint newStartDate = block.timestamp + 2;
         milestoneManager.updateMilestoneStartDate(id, newStartDate);
 
         _assertMilestone(
-            id, _TITLE, newStartDate, _DETAILS, false, false, false
+            id, TITLE, newStartDate, DETAILS, false, false, false
         );
     }
 
@@ -202,14 +205,14 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+            milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
 
         milestoneManager.removeMilestone(id);
         _assertMilestone({
             id: id,
-            title: _TITLE,
+            title: TITLE,
             startDate: block.timestamp,
-            details: _DETAILS,
+            details: DETAILS,
             submitted: false,
             completed: false,
             removed: true
@@ -242,7 +245,7 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp + 1, _DETAILS);
+            milestoneManager.addMilestone(TITLE, block.timestamp + 1, DETAILS);
 
         // Grant contributor role to address(this).
         milestoneManager.grantContributorRole(address(this));
@@ -250,9 +253,9 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.submitMilestone(id);
         _assertMilestone({
             id: id,
-            title: _TITLE,
+            title: TITLE,
             startDate: block.timestamp + 1,
-            details: _DETAILS,
+            details: DETAILS,
             submitted: true,
             completed: false,
             removed: false
@@ -293,14 +296,14 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp, _DETAILS);
+            milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
 
         milestoneManager.confirmMilestone(id);
         _assertMilestone({
             id: id,
-            title: _TITLE,
+            title: TITLE,
             startDate: block.timestamp,
-            details: _DETAILS,
+            details: DETAILS,
             submitted: false,
             completed: true,
             removed: false
@@ -333,7 +336,7 @@ contract MilestoneManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         uint id =
-            milestoneManager.addMilestone(_TITLE, block.timestamp + 1, _DETAILS);
+            milestoneManager.addMilestone(TITLE, block.timestamp + 1, DETAILS);
 
         // Note that a milestone is only declineable if currently submitted.
         milestoneManager.grantContributorRole(address(this));
@@ -342,9 +345,9 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.declineMilestone(id);
         _assertMilestone({
             id: id,
-            title: _TITLE,
+            title: TITLE,
             startDate: block.timestamp + 1,
-            details: _DETAILS,
+            details: DETAILS,
             submitted: false,
             completed: false,
             removed: false
@@ -375,30 +378,25 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: Proposal Callback Functions
 
     //----------------------------------
-    // Test: __Milestone_addMilestone()
+    // Test: addMilestone()
 
-    function test__Milestone_addMilestone() public {
-        uint numberMilestones = 10;
-
-        vm.startPrank(address(_proposal));
-
+    function testAddMilestone() public {
         uint gotId;
         uint wantId;
 
         // Add each milestone.
-        for (uint i; i < numberMilestones; i++) {
+        for (uint i; i < MAX_MILESTONES; i++) {
             wantId = i + 1; // Note that id's start at 1.
 
             vm.expectEmit(true, true, true, true);
-            emit MilestoneAdded(wantId, _DURATION, _BUDGET, _TITLE, _DETAILS);
+            emit MilestoneAdded(wantId, DURATION, BUDGET, TITLE, DETAILS);
 
-            gotId = milestoneManager.__Milestone_addMilestone(
-                _DURATION, _BUDGET, _TITLE, _DETAILS
-            );
+            gotId =
+                milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
             assertEq(gotId, wantId);
             _assertMilestone(
-                gotId, _DURATION, _BUDGET, _TITLE, _DETAILS, false, false
+                gotId, DURATION, BUDGET, TITLE, DETAILS, false, false
             );
         }
 
@@ -406,30 +404,23 @@ contract MilestoneManagerTest is ModuleTest {
         // Note that the list is traversed.
         uint[] memory ids = milestoneManager.listMilestoneIds();
 
-        assertEq(ids.length, numberMilestones);
-        for (uint i; i < numberMilestones; i++) {
-            wantId = numberMilestones - i; // Note that id's start at 1.
+        assertEq(ids.length, MAX_MILESTONES);
+        for (uint i; i < MAX_MILESTONES; i++) {
+            wantId = MAX_MILESTONES - i; // Note that id's start at 1.
 
             assertEq(ids[i], wantId);
         }
     }
 
-    function test__Milestone_addMilestoneOnlyCallableByProposal(address caller)
-        public
-    {
-        vm.assume(caller != address(_proposal));
+    function testAddMilestoneFailsIfCallerNotAuthorized() public {
+        _authorizer.setIsAuthorized(address(this), false);
 
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_addMilestone(
-            _DURATION, _BUDGET, _TITLE, _DETAILS
-        );
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
     }
 
-    function test__Milestone_addMilestoneFailsForInvalidDuration() public {
+    function testAddMilestoneFailsForInvalidDuration() public {
         uint[] memory invalids = _createInvalidDurations();
-
-        vm.startPrank(address(_proposal));
 
         for (uint i; i < invalids.length; i++) {
             vm.expectRevert(
@@ -437,9 +428,7 @@ contract MilestoneManagerTest is ModuleTest {
                     .Module__MilestoneManager__InvalidDuration
                     .selector
             );
-            milestoneManager.__Milestone_addMilestone(
-                invalids[i], _BUDGET, _TITLE, _DETAILS
-            );
+            milestoneManager.addMilestone(invalids[i], BUDGET, TITLE, DETAILS);
         }
     }
 
@@ -457,16 +446,14 @@ contract MilestoneManagerTest is ModuleTest {
                     .selector
             );
             milestoneManager.__Milestone_addMilestone(
-                _DURATION, invalids[i], _TITLE, _DETAILS
+                DURATION, invalids[i], TITLE, DETAILS
             );
         }
     }
     */
 
-    function test__Milestone_addMilestoneFailsForInvalidTitle() public {
+    function testAddMilestoneFailsForInvalidTitle() public {
         string[] memory invalidTitles = _createInvalidTitles();
-
-        vm.startPrank(address(_proposal));
 
         for (uint i; i < invalidTitles.length; i++) {
             vm.expectRevert(
@@ -474,16 +461,14 @@ contract MilestoneManagerTest is ModuleTest {
                     .Module__MilestoneManager__InvalidTitle
                     .selector
             );
-            milestoneManager.__Milestone_addMilestone(
-                _DURATION, _BUDGET, invalidTitles[i], _DETAILS
+            milestoneManager.addMilestone(
+                DURATION, BUDGET, invalidTitles[i], DETAILS
             );
         }
     }
 
-    function test__Milestone_addMilestoneFailsForInvalidDetails() public {
+    function testAddMilestoneFailsForInvalidDetails() public {
         string[] memory invalidDetails = _createInvalidDetails();
-
-        vm.startPrank(address(_proposal));
 
         for (uint i; i < invalidDetails.length; i++) {
             vm.expectRevert(
@@ -491,25 +476,21 @@ contract MilestoneManagerTest is ModuleTest {
                     .Module__MilestoneManager__InvalidDetails
                     .selector
             );
-            milestoneManager.__Milestone_addMilestone(
-                _DURATION, _BUDGET, _TITLE, invalidDetails[i]
+            milestoneManager.addMilestone(
+                DURATION, BUDGET, TITLE, invalidDetails[i]
             );
         }
     }
 
     //----------------------------------
-    // Test: __Milestone_removeMilestone()
+    // Test: removeMilestone()
 
-    function test__Milestone_removeMilestone() public {
+    function testRemoveMilestone() public {
         uint numberMilestones = 10;
-
-        vm.startPrank(address(_proposal));
 
         // Fill list with milestones.
         for (uint i; i < numberMilestones; i++) {
-            milestoneManager.__Milestone_addMilestone(
-                _DURATION, _BUDGET, _TITLE, _DETAILS
-            );
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         }
 
         // Remove milestones from the front, i.e. highest milestone id, until
@@ -520,7 +501,7 @@ contract MilestoneManagerTest is ModuleTest {
             vm.expectEmit(true, true, true, true);
             emit MilestoneRemoved(id);
 
-            milestoneManager.__Milestone_removeMilestone(_SENTINEL, id);
+            milestoneManager.removeMilestone(_SENTINEL, id);
             assertEq(
                 milestoneManager.listMilestoneIds().length,
                 numberMilestones - i - 1
@@ -529,9 +510,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Fill list again with milestones.
         for (uint i; i < numberMilestones; i++) {
-            milestoneManager.__Milestone_addMilestone(
-                _DURATION, _BUDGET, _TITLE, _DETAILS
-            );
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         }
 
         // Remove milestones from the back, i.e. lowest milestone id, until
@@ -546,32 +525,27 @@ contract MilestoneManagerTest is ModuleTest {
             vm.expectEmit(true, true, true, true);
             emit MilestoneRemoved(id);
 
-            milestoneManager.__Milestone_removeMilestone(prevId, id);
+            milestoneManager.removeMilestone(prevId, id);
             assertEq(
                 milestoneManager.listMilestoneIds().length,
                 numberMilestones - i - 1
             );
         }
 
-        milestoneManager.__Milestone_removeMilestone(
-            _SENTINEL, numberMilestones
-        );
+        milestoneManager.removeMilestone(_SENTINEL, numberMilestones);
         assertEq(milestoneManager.listMilestoneIds().length, 0);
     }
 
-    function test__Milestone_removeMilestoneOnlyCallableByProposal(
-        address caller
-    ) public {
-        vm.assume(caller != address(_proposal));
+    function testRemoveMilestoneFailsIfCallerNotAuthorized()
+        public
+    {
+        _authorizer.setIsAuthorized(address(this), false);
 
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_removeMilestone(0, 1);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.removeMilestone(0, 1);
     }
 
-    function test__Milestone_removeMilestoneFailsForInvalidId() public {
-        vm.startPrank(address(_proposal));
-
+    function testRemoveMilestoneFailsForInvalidId() public {
         uint invalidId = 1;
 
         vm.expectRevert(
@@ -579,7 +553,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__InvalidMilestoneId
                 .selector
         );
-        milestoneManager.__Milestone_removeMilestone(_SENTINEL, invalidId);
+        milestoneManager.removeMilestone(_SENTINEL, invalidId);
     }
 
     /*
@@ -588,7 +562,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         // Add and start a milestone.
-        milestoneManager.__Milestone_addMilestone(_DURATION, _BUDGET, _TITLE, _DETAILS);
+        milestoneManager.__Milestone_addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         // @todo mp: Set as completed.
 
         // Note that a milestone is not removeable if it is already completed,
@@ -613,7 +587,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
+            TITLE, block.timestamp + 1, DETAILS
         );
 
         string memory newDetails = "new Details";
@@ -624,7 +598,7 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.__Milestone_updateMilestoneDetails(id, newDetails);
 
         _assertMilestone(
-            id, _TITLE, block.timestamp + 1, newDetails, false, false, false
+            id, TITLE, block.timestamp + 1, newDetails, false, false, false
         );
     }
 
@@ -635,7 +609,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_updateMilestoneDetails(0, _DETAILS);
+        milestoneManager.__Milestone_updateMilestoneDetails(0, DETAILS);
     }
 
     function test__Milestone_updateMilestoneDetailsFailsForInvalidId() public {
@@ -648,7 +622,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__InvalidMilestoneId
                 .selector
         );
-        milestoneManager.__Milestone_updateMilestoneDetails(invalidId, _DETAILS);
+        milestoneManager.__Milestone_updateMilestoneDetails(invalidId, DETAILS);
     }
 
     function test__Milestone_updateMilestoneDetailsFailsForInvalidDetails()
@@ -660,7 +634,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Add milestone to update.
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
+            TITLE, block.timestamp + 1, DETAILS
         );
 
         for (uint i; i < invalidDetails.length; i++) {
@@ -683,7 +657,7 @@ contract MilestoneManagerTest is ModuleTest {
         // Note that a milestone is not updateable if it started already, i.e.
         // if `block.timestamp` >= `startDate`.
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
+            TITLE, block.timestamp, DETAILS
         );
 
         vm.expectRevert(
@@ -691,7 +665,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__MilestoneNotUpdateable
                 .selector
         );
-        milestoneManager.__Milestone_updateMilestoneDetails(id, _DETAILS);
+        milestoneManager.__Milestone_updateMilestoneDetails(id, DETAILS);
     }
 
     //----------------------------------
@@ -701,7 +675,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
+            TITLE, block.timestamp + 1, DETAILS
         );
 
         uint newStartDate = block.timestamp + 2;
@@ -712,7 +686,7 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.__Milestone_updateMilestoneStartDate(id, newStartDate);
 
         _assertMilestone(
-            id, _TITLE, newStartDate, _DETAILS, false, false, false
+            id, TITLE, newStartDate, DETAILS, false, false, false
         );
     }
 
@@ -757,7 +731,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Add milestone to update.
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
+            TITLE, block.timestamp + 1, DETAILS
         );
 
         vm.expectRevert(
@@ -778,7 +752,7 @@ contract MilestoneManagerTest is ModuleTest {
         // Note that a milestone is not updateable if it started already, i.e.
         // if `block.timestamp` >= `startDate`.
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
+            TITLE, block.timestamp, DETAILS
         );
 
         vm.expectRevert(
@@ -798,7 +772,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
+            TITLE, block.timestamp + 1, DETAILS
         );
 
         vm.expectEmit(true, true, true, true);
@@ -808,9 +782,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         _assertMilestone({
             id: id,
-            title: _TITLE,
+            title: TITLE,
             startDate: block.timestamp + 1,
-            details: _DETAILS,
+            details: DETAILS,
             submitted: true,
             completed: false,
             removed: false
@@ -846,7 +820,7 @@ contract MilestoneManagerTest is ModuleTest {
         // Note that a milestone is not updateable if it started already, i.e.
         // if `block.timestamp` >= `startDate`.
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
+            TITLE, block.timestamp, DETAILS
         );
 
         vm.expectRevert(
@@ -864,7 +838,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
+            TITLE, block.timestamp + 1, DETAILS
         );
 
         vm.expectEmit(true, true, true, true);
@@ -874,9 +848,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         _assertMilestone({
             id: id,
-            title: _TITLE,
+            title: TITLE,
             startDate: block.timestamp + 1,
-            details: _DETAILS,
+            details: DETAILS,
             submitted: false,
             completed: true,
             removed: false
@@ -910,7 +884,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
+            TITLE, block.timestamp, DETAILS
         );
 
         // Note that a milestone is not confirmable if it is already removed.
@@ -931,7 +905,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp + 1, _DETAILS
+            TITLE, block.timestamp + 1, DETAILS
         );
 
         // Note that a milestone is only declineable if it is submitted already.
@@ -944,9 +918,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         _assertMilestone({
             id: id,
-            title: _TITLE,
+            title: TITLE,
             startDate: block.timestamp + 1,
-            details: _DETAILS,
+            details: DETAILS,
             submitted: false,
             completed: false,
             removed: false
@@ -980,7 +954,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.startPrank(address(_proposal));
 
         uint id = milestoneManager.__Milestone_addMilestone(
-            _TITLE, block.timestamp, _DETAILS
+            TITLE, block.timestamp, DETAILS
         );
 
         // Note that a milestone is not declineable if it is not yet submitted.
@@ -1006,7 +980,7 @@ contract MilestoneManagerTest is ModuleTest {
         bool submitted,
         bool completed
     ) internal {
-        IMilestoneManager.Milestone memory m = milestoneManager.getMilestone(id);
+        IMilestoneManager.Milestone memory m = milestoneManager.getMilestoneInformation(id);
 
         assertEq(m.duration, duration);
         assertEq(m.budget, budget);
