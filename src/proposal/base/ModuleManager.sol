@@ -165,6 +165,7 @@ abstract contract ModuleManager is
         return module != _SENTINEL && _modules[module] != address(0);
     }
 
+    /// @inheritdoc IModuleManager
     function listModules() external view returns (address[] memory) {
         address[] memory result = new address[](_moduleCounter);
 
