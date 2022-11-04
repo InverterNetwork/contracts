@@ -245,21 +245,15 @@ contract ModuleManagerTest is Test {
         assertEq(moduleManager.listModules().length, 0);
     }
 
-    function testRemoveModuleFailsIfCallerNotAuthorized(address who)
-        public
-    {
+    function testRemoveModuleFailsIfCallerNotAuthorized(address who) public {
         types.assumeValidModule(who);
 
         moduleManager.addModule(who);
 
-        moduleManager.__ModuleManager_setIsAuthorized(
-            address(this), false
-        );
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
 
         vm.expectRevert(
-            IModuleManager
-                .Proposal__ModuleManager__CallerNotAuthorized
-                .selector
+            IModuleManager.Proposal__ModuleManager__CallerNotAuthorized.selector
         );
         moduleManager.removeModule(_SENTINEL, who);
     }
@@ -268,16 +262,14 @@ contract ModuleManagerTest is Test {
         types.assumeValidModule(who);
 
         vm.expectRevert(
-            IModuleManager
-                .Proposal__ModuleManager__IsNotModule
-                .selector
+            IModuleManager.Proposal__ModuleManager__IsNotModule.selector
         );
         moduleManager.removeModule(_SENTINEL, who);
     }
 
-    function testRemoveModuleFailsIfNotConsecutiveModulesGiven(
-        address who
-    ) public {
+    function testRemoveModuleFailsIfNotConsecutiveModulesGiven(address who)
+        public
+    {
         types.assumeValidModule(who);
 
         moduleManager.addModule(who);
