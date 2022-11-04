@@ -69,7 +69,7 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue(!milestoneManager.isNextMilestoneActivateable());
 
         // Current milestone list is empty.
-        uint[] memory milestones = milestoneManager.getAllMilestoneIds();
+        uint[] memory milestones = milestoneManager.listMilestoneIds();
         assertEq(milestones.length, 0);
     }
 
@@ -404,7 +404,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Assert that all milestone id's are fetchable.
         // Note that the list is traversed.
-        uint[] memory ids = milestoneManager.getAllMilestoneIds();
+        uint[] memory ids = milestoneManager.listMilestoneIds();
 
         assertEq(ids.length, numberMilestones);
         for (uint i; i < numberMilestones; i++) {
@@ -522,7 +522,7 @@ contract MilestoneManagerTest is ModuleTest {
 
             milestoneManager.__Milestone_removeMilestone(_SENTINEL, id);
             assertEq(
-                milestoneManager.getAllMilestoneIds().length,
+                milestoneManager.listMilestoneIds().length,
                 numberMilestones - i - 1
             );
         }
@@ -548,7 +548,7 @@ contract MilestoneManagerTest is ModuleTest {
 
             milestoneManager.__Milestone_removeMilestone(prevId, id);
             assertEq(
-                milestoneManager.getAllMilestoneIds().length,
+                milestoneManager.listMilestoneIds().length,
                 numberMilestones - i - 1
             );
         }
@@ -556,7 +556,7 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.__Milestone_removeMilestone(
             _SENTINEL, numberMilestones
         );
-        assertEq(milestoneManager.getAllMilestoneIds().length, 0);
+        assertEq(milestoneManager.listMilestoneIds().length, 0);
     }
 
     function test__Milestone_removeMilestoneOnlyCallableByProposal(

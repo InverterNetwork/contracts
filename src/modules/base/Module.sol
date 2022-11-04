@@ -3,7 +3,10 @@ pragma solidity ^0.8.0;
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
+import {
+    PausableUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/security/PausableUpgradeable.sol";
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
