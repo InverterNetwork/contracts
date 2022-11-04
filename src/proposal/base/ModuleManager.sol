@@ -17,9 +17,6 @@ import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
  * @dev A contract to manage modules that can execute transactions via this
  *      contract and manage own role-based access control mechanisms.
  *
- *      Note that modules can only be enabled during the initialization of the
- *      contract. It is, however, always possible to disable modules.
- *
  *      The role-based access control mechanism is based on OpenZeppelin's
  *      AccessControl contract. Each module has it's own access control context
  *      which it is able to freely manage.
@@ -38,29 +35,55 @@ abstract contract ModuleManager is
     // Modifiers
 
     modifier __ModuleManager_onlyAuthorized() {
-        // @todo mp: Create error type + test case for functions using modifier.
-        if (!__ModuleManager_isAuthorized(msg.sender)) {
+        if (!__ModuleManager_isAuthorized(_msgSender())) {
             revert Proposal__ModuleManager__CallerNotAuthorized();
         }
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable by enabled
-    ///         module.
-    modifier onlyModule() {
+    modifier onlyEnableModule() {
         if (!isEnabledModule(_msgSender())) {
             revert Proposal__ModuleManager__OnlyCallableByModule();
         }
         _;
     }
 
+    modifier validModule(address module) {
+        _ensureValidModule(module);
+        _;
+    }
+
+    modifier isEnabledModule_(address module) {
+        if (!isEnabledModule(module)) {
+            revert("P_MM_IsNotEnabledModule");
+        }
+        _;
+    }
+
+    modifier isNotEnabledModule(address module) {
+        _ensureNotEnabledModule(module);
+        _;
+    }
+
+    modifier onlyConsecutiveModules(address prevModule, address module) {
+        if (_modules[prevModule] != module) {
+            revert("P_MM_NotConsecutive");
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
+    // Constants
+
+    address private constant _SENTINEL = address(0x1);
+
     //--------------------------------------------------------------------------
     // Storage
 
     /// @dev Mapping of modules.
-    ///
-    /// @custom:invariant No modules added after initialization.
-    mapping(address => bool) private _modules;
+    mapping(address => address) private _modules;
+
+    uint private _moduleCounter;
 
     /// @dev Mapping of modules and access control roles to accounts and
     ///      whether they holds that role.
@@ -82,12 +105,23 @@ abstract contract ModuleManager is
     {
         __Context_init();
 
+        // Set up sentinel to signal empty list of modules.
+        _modules[_SENTINEL] = _SENTINEL;
+
         // @todo mp: Change modules from address to IModules.
         //           This enables easier refactoring in future for "multi-modules".
         //           Or not???
 
+        address module;
         for (uint i; i < modules.length; i++) {
-            __ModuleManager_enableModule(modules[i]);
+            module = modules[i];
+
+            // Ensure module address is valid and module not already enabled.
+            _ensureValidModule(module);
+            _ensureNotEnabledModule(module);
+
+            // Commit enabling module.
+            _commitEnableModule(module);
 
             // @todo mp: Call into module to "register this proposal" as using
             //           that module instance?
@@ -98,7 +132,7 @@ abstract contract ModuleManager is
     }
 
     //--------------------------------------------------------------------------
-    // Internal Functions
+    // Internal Functions Implemented in Downstream Contract
 
     /// @dev Returns whether address `who` is authorized to mutate module
     ///      manager's state.
@@ -109,35 +143,41 @@ abstract contract ModuleManager is
         virtual
         returns (bool);
 
-    function __ModuleManager_enableModule(address module) internal {
-        if (module == address(0)) {
-            revert Proposal__ModuleManager__InvalidModuleAddress();
-        }
+    //--------------------------------------------------------------------------
+    // Public View Functions
 
-        if (_modules[module]) {
-            revert Proposal__ModuleManager__ModuleAlreadyEnabled(module);
-        }
-
-        _modules[module] = true;
-        emit ModuleEnabled(module);
+    /// @inheritdoc IModuleManager
+    function hasRole(address module, bytes32 role, address account)
+        public
+        view
+        returns (bool)
+    {
+        return isEnabledModule(module) && _moduleRoles[module][role][account];
     }
 
-    function __ModuleManager_disableModule(address module) internal {
-        if (isEnabledModule(module)) {
-            delete _modules[module];
+    /// @inheritdoc IModuleManager
+    function isEnabledModule(address module)
+        public
+        view
+        override (IModuleManager)
+        returns (bool)
+    {
+        return module != _SENTINEL && _modules[module] != address(0);
+    }
 
-            // @todo marvin, mp: See comment.
-            //                   Should we maybe allow roles managemant for
-            //                   non-modules too?
-            //                   Then a disabled module could revoke roles before
-            //                   being re-enabled again.
-            // Note that we cannot delete the module's roles configuration.
-            // This means that in case a module is disabled and then re-enabled,
-            // its roles configuration is the same as before.
-            // Note that this could potentially lead to security issues!
+    function listEnabledModules() external view returns (address[] memory) {
+        address[] memory result = new address[](_moduleCounter);
 
-            emit ModuleDisabled(module);
+        // Populate result array.
+        uint index = 0;
+        address elem = _modules[_SENTINEL];
+        while (elem != _SENTINEL) {
+            result[index] = elem;
+            elem = _modules[elem];
+            index++;
         }
+
+        return result;
     }
 
     //--------------------------------------------------------------------------
@@ -147,20 +187,24 @@ abstract contract ModuleManager is
     function enableModule(address module)
         public
         __ModuleManager_onlyAuthorized
+        isNotEnabledModule(module)
+        validModule(module)
     {
-        __ModuleManager_enableModule(module);
+        _commitEnableModule(module);
     }
 
     /// @inheritdoc IModuleManager
-    function disableModule(address module)
+    function disableModule(address prevModule, address module)
         public
         __ModuleManager_onlyAuthorized
+        isEnabledModule_(module)
+        onlyConsecutiveModules(prevModule, module)
     {
-        __ModuleManager_disableModule(module);
+        _commitDisableModule(prevModule, module);
     }
 
     //--------------------------------------------------------------------------
-    // onlyModule Functions
+    // onlyEnabledModule Functions
 
     /// @inheritdoc IModuleManager
     function executeTxFromModule(
@@ -170,7 +214,7 @@ abstract contract ModuleManager is
     )
         public
         override (IModuleManager)
-        onlyModule
+        onlyEnableModule
         returns (bool, bytes memory)
     {
         bool ok;
@@ -186,7 +230,7 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function grantRole(bytes32 role, address account) public onlyModule {
+    function grantRole(bytes32 role, address account) public onlyEnableModule {
         if (!hasRole(_msgSender(), role, account)) {
             _moduleRoles[_msgSender()][role][account] = true;
             emit ModuleRoleGranted(_msgSender(), role, account);
@@ -194,7 +238,10 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function revokeRole(bytes32 role, address account) public onlyModule {
+    function revokeRole(bytes32 role, address account)
+        public
+        onlyEnableModule
+    {
         if (hasRole(_msgSender(), role, account)) {
             _moduleRoles[_msgSender()][role][account] = false;
             emit ModuleRoleRevoked(_msgSender(), role, account);
@@ -213,26 +260,54 @@ abstract contract ModuleManager is
     }
 
     //--------------------------------------------------------------------------
-    // Public View Functions
+    // Private Functions
 
-    /// @inheritdoc IModuleManager
-    function hasRole(address module, bytes32 role, address account)
-        public
-        view
-        returns (bool)
-    {
-        return isEnabledModule(module) && _moduleRoles[module][role][account];
+    /// @dev Expects `module` to be valid module address.
+    /// @dev Expects `module` to not be enabled module.
+    function _commitEnableModule(address module) private {
+        // Add address to _modules mapping.
+        _modules[module] = _modules[_SENTINEL];
+        _modules[_SENTINEL] = module;
+        _moduleCounter++;
+
+        emit ModuleEnabled(module);
     }
 
-    // @todo mp: Getter for modules. Need mapping-list structure for that.
+    /// @dev Expect address arguments to be consecutive in the modules list.
+    /// @dev Expects address `module` to be enabled module.
+    function _commitDisableModule(address prevModule, address module) private {
+        // Remove module address from list and decrease counter.
+        _modules[prevModule] = _modules[module];
+        delete _modules[module];
+        _moduleCounter--;
 
-    /// @inheritdoc IModuleManager
-    function isEnabledModule(address module)
-        public
-        view
-        override (IModuleManager)
-        returns (bool)
-    {
-        return _modules[module];
+        // @todo marvin, mp: See comment.
+        //                   Should we maybe allow roles managemant for
+        //                   non-modules too?
+        //                   Then a disabled module could revoke roles before
+        //                   being re-enabled again.
+        // Note that we cannot delete the module's roles configuration.
+        // This means that in case a module is disabled and then re-enabled,
+        // its roles configuration is the same as before.
+        // Note that this could potentially lead to security issues!
+
+        emit ModuleDisabled(module);
+    }
+
+    function _ensureValidModule(address module) private {
+        // @todo mp: Make gas optimized.
+        bool isZero = module == address(0);
+        bool isSentinel = module == _SENTINEL;
+        bool isThis = module == address(this);
+
+        if (isZero || isSentinel || isThis) {
+            revert Proposal__ModuleManager__InvalidModuleAddress();
+        }
+    }
+
+    function _ensureNotEnabledModule(address module) private {
+        if (isEnabledModule(module)) {
+            revert("P_MM_IsEnabledModule");
+        }
     }
 }

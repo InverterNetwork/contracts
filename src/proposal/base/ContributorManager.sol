@@ -2,17 +2,16 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
-import {Module} from "src/modules/base/Module.sol";
 
 // Internal Libraries
 import {LibString} from "src/common/LibString.sol";
 
 // Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
 import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
 
 /**
@@ -32,15 +31,18 @@ import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
  *
  * @author byterocket
  */
-abstract contract ContributorManager is IContributorManager, Initializable {
+abstract contract ContributorManager is
+    IContributorManager,
+    Initializable,
+    ContextUpgradeable
+{
     using LibString for string;
 
     //--------------------------------------------------------------------------
     // Modifiers
 
     modifier __ContributorManager_onlyAuthorized() {
-        // @todo mp, nuggan: Use _msgSender().
-        if (!__ContributorManager_isAuthorized(msg.sender)) {
+        if (!__ContributorManager_isAuthorized(_msgSender())) {
             revert Proposal__ContributorManager__CallerNotAuthorized();
         }
         _;
@@ -79,13 +81,6 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         _;
     }
 
-    modifier isNotContributor(address who) {
-        if (isContributor(who)) {
-            revert Proposal__ContributorManager__IsContributor();
-        }
-        _;
-    }
-
     modifier isContributor_(address who) {
         if (!isContributor(who)) {
             revert Proposal__ContributorManager__IsNotContributor();
@@ -93,9 +88,15 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         _;
     }
 
-    modifier onlyConsecutiveContributors(address _current, address _prev) {
-        // Require that the contributors are indeed consecutive.
-        if (_contributors[_prev] != _current) {
+    modifier isNotContributor(address who) {
+        if (isContributor(who)) {
+            revert Proposal__ContributorManager__IsContributor();
+        }
+        _;
+    }
+
+    modifier onlyConsecutiveContributors(address prevContrib, address contrib) {
+        if (_contributors[prevContrib] != contrib) {
             revert Proposal__ContributorManager__ContributorsNotConsecutive();
         }
         _;
@@ -112,6 +113,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     mapping(address => Contributor) private _contributorRegistry;
 
     /// @notice Mapping of contributors.
+    ///         TODO: Move this to docs/ and link to it.
     ///         Every address points to the last one added before them.
     ///         _contributors[_SENTINEL] points to the last added address,
     ///         to aid retrieval.
@@ -125,6 +127,8 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     // Initializer
 
     function __ContributorManager_init() internal onlyInitializing {
+        __Context_init();
+
         // Set up sentinel to signal empty list of contributors.
         _contributors[_SENTINEL] = _SENTINEL;
     }
@@ -134,7 +138,7 @@ abstract contract ContributorManager is IContributorManager, Initializable {
 
     /// @dev Returns whether address `who` is authorized to mutate contributor
     ///      manager's state.
-    /// @dev MUST be overriden by downstream contract.
+    /// @dev MUST be overriden in downstream contract.
     function __ContributorManager_isAuthorized(address who)
         internal
         view
@@ -209,9 +213,9 @@ abstract contract ContributorManager is IContributorManager, Initializable {
         external
         __ContributorManager_onlyAuthorized
         isContributor_(who)
-        onlyConsecutiveContributors(who, prevContrib)
+        onlyConsecutiveContributors(prevContrib, who)
     {
-        _commitContributorRemoval(prevContrib, who);
+        _commitRemoveContributor(prevContrib, who);
     }
 
     /// @inheritdoc IContributorManager
@@ -251,19 +255,19 @@ abstract contract ContributorManager is IContributorManager, Initializable {
     /// @inheritdoc IContributorManager
     function revokeContributor(address prevContrib)
         external
-        isContributor_(msg.sender)
-        onlyConsecutiveContributors(msg.sender, prevContrib)
+        isContributor_(_msgSender())
+        onlyConsecutiveContributors(prevContrib, _msgSender())
     {
-        _commitContributorRemoval(prevContrib, msg.sender);
+        _commitRemoveContributor(prevContrib, _msgSender());
     }
 
     //--------------------------------------------------------------------------
-    // Internal Functions
+    // Private Functions
 
     /// @dev Expects address arguments to be consecutive in the contributor
     ///      list.
-    /// @dev Expects address `who` to be active contributor.
-    function _commitContributorRemoval(address prevContrib, address who)
+    /// @dev Expects address `who` to be contributor.
+    function _commitRemoveContributor(address prevContrib, address who)
         private
     {
         // Remove contributor instance from registry.

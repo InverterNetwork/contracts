@@ -91,8 +91,8 @@ contract Proposal is
         __ContributorManager_init();
 
         // Enable necessary modules.
-        __ModuleManager_enableModule(address(authorizer_));
-        __ModuleManager_enableModule(address(paymentProcessor_));
+        enableModule(address(authorizer_));
+        enableModule(address(paymentProcessor_));
     }
 
     //--------------------------------------------------------------------------
