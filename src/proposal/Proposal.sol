@@ -48,16 +48,16 @@ contract Proposal is
     address[] private _funders;
 
     /// @inheritdoc IProposal
-    uint public proposalId;
+    uint public override (IProposal) proposalId;
+
+    /// @inheritdoc IProposal
+    IERC20 public override (IProposal) token;
 
     /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
 
     /// @inheritdoc IProposal
     IPaymentProcessor public override (IProposal) paymentProcessor;
-
-    /// @inheritdoc IProposal
-    IERC20 public token;
 
     //--------------------------------------------------------------------------
     // Initializer
@@ -71,37 +71,28 @@ contract Proposal is
     /// @inheritdoc IProposal
     function init(
         uint proposalId_,
+        IERC20 token_,
         address[] calldata funders,
         address[] calldata modules,
         IAuthorizer authorizer_,
-        IPaymentProcessor paymentProcessor_,
-        IERC20 token_
+        IPaymentProcessor paymentProcessor_
     ) external override (IProposal) initializer {
-        proposalId = proposalId_;
+        // Set storage variables.
         _funders = funders;
+        proposalId = proposalId_;
+        token = token_;
+        authorizer = authorizer_;
+        paymentProcessor = paymentProcessor_;
 
+        // Initialize upstream contracts.
         __Pausable_init();
         __Ownable_init();
-
         __ModuleManager_init(modules);
         __ContributorManager_init();
 
-        // Ensure that authorizer_ is an enabled module.
-        if (!isEnabledModule(address(authorizer_))) {
-            revert Proposal__InvalidAuthorizer();
-        }
-        authorizer = authorizer_;
-
-        // Ensure that paymentProcessor_ is an enabled module.
-        if (!isEnabledModule(address(paymentProcessor_))) {
-            revert Proposal__InvalidPaymentProcessor();
-        }
-        paymentProcessor = paymentProcessor_;
-
-        if (address(token_) == address(0)) {
-            revert Proposal__InvalidToken();
-        }
-        token = token_;
+        // Add necessary modules.
+        addModule(address(authorizer_));
+        addModule(address(paymentProcessor_));
     }
 
     //--------------------------------------------------------------------------

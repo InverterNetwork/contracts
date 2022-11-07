@@ -1,104 +1,120 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-// Helpers
-import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
+// SuT
+import {
+    ModuleManagerMock,
+    IModuleManager
+} from "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
 
 // Mocks
-import {ModuleManagerMock} from
-    "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-/**
- * Errors library for ModuleManager's custom errors.
- * Enables checking for errors with vm.expectRevert(Errors.<Error>).
- */
-library Errors {
-    bytes internal constant Proposal__ModuleManager__OnlyCallableByModule = abi
-        .encodeWithSignature("Proposal__ModuleManager__OnlyCallableByModule()");
+// Helper
+import {TypeSanityHelper} from "test/proposal/helper/TypeSanityHelper.sol";
 
-    bytes internal constant Proposal__ModuleManager__AlreadyInitialized =
-        abi.encodeWithSignature("Proposal__ModuleManager__AlreadyInitialized()");
-
-    bytes internal constant Proposal__ModuleManager__InvalidModuleAddress = abi
-        .encodeWithSignature("Proposal__ModuleManager__InvalidModuleAddress()");
-
-    function Proposal__ModuleManager__ModuleAlreadyEnabled(address module)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return abi.encodeWithSignature(
-            "Proposal__ModuleManager__ModuleAlreadyEnabled(address)", module
-        );
-    }
-}
-
-contract ModuleManagerTest is Test, FuzzInputChecker {
+contract ModuleManagerTest is Test {
     // SuT
     ModuleManagerMock moduleManager;
 
+    // Helper
+    TypeSanityHelper types;
+
+    // Constants
+    uint constant MAX_MODULES = 20;
+    address[] EMPTY_LIST = new address[](0);
+
+    // Constants copied from SuT.
+    address private constant _SENTINEL = address(0x1);
+
+    // Events copied from SuT.
+    event ModuleAdded(address indexed module);
+    event ModuleRemoved(address indexed module);
+    event ModuleRoleGranted(
+        address indexed module, bytes32 indexed role, address indexed account
+    );
+    event ModuleRoleRevoked(
+        address indexed module, bytes32 indexed role, address indexed account
+    );
+
     function setUp() public {
         moduleManager = new ModuleManagerMock();
-    }
+        moduleManager.init(EMPTY_LIST);
 
-    // @todo mp: Event emission tests missing.
+        types = new TypeSanityHelper(address(moduleManager));
+
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
+    }
 
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
     function testInit(address[] memory modules) public {
-        _assumeValidModules(modules);
+        types.assumeValidModules(modules);
 
-        // Initialize ModuleManager.
+        moduleManager = new ModuleManagerMock();
         moduleManager.init(modules);
 
-        // Check that each module is enabled.
-        address module;
-        for (uint i; i < modules.length; i++) {
-            module = modules[i];
+        // List of modules should be size of modules array.
+        address[] memory modulesAdded = moduleManager.listModules();
+        assertEq(modulesAdded.length, modules.length);
 
-            assertTrue(moduleManager.isEnabledModule(module));
+        // Each module should be added.
+        for (uint i; i < modules.length; i++) {
+            assertTrue(moduleManager.isModule(modules[i]));
         }
     }
 
-    function testReinitFails(address[] memory modules) public {
-        _assumeValidModules(modules);
+    function testReinitFails() public {
+        moduleManager = new ModuleManagerMock();
+        moduleManager.init(EMPTY_LIST);
 
-        moduleManager.init(modules);
+        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        moduleManager.init(EMPTY_LIST);
+    }
+
+    function testInitFailsForNonInitializerFunction() public {
+        moduleManager = new ModuleManagerMock();
+        moduleManager.init(EMPTY_LIST);
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        moduleManager.reinit(modules);
+        moduleManager.initNoInitializer(EMPTY_LIST);
     }
 
-    function testInitFailsForInvalidModuleAddress(address[] memory modules)
-        public
-    {
-        _assumeValidModules(modules);
+    function testInitFailsForInvalidModules() public {
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
 
-        // Set first module to address(0).
-        modules[0] = address(0);
+        address[] memory invalids = types.createInvalidModules();
 
-        vm.expectRevert(Errors.Proposal__ModuleManager__InvalidModuleAddress);
-        moduleManager.init(modules);
+        address[] memory modules = new address[](1);
+
+        for (uint i; i < invalids.length; i++) {
+            modules[0] = invalids[i];
+
+            vm.expectRevert(
+                IModuleManager
+                    .Proposal__ModuleManager__InvalidModuleAddress
+                    .selector
+            );
+            moduleManager.init(modules);
+        }
     }
 
-    function testInitFailsForDuplicateModules(address[] memory modules)
-        public
-    {
-        _assumeValidModules(modules);
+    function testInitFailsIfModuleAddedTwice() public {
+        moduleManager = new ModuleManagerMock();
 
-        // Duplicate first module.
-        vm.assume(modules.length > 1);
-        modules[modules.length - 1] = modules[0];
+        address[] memory modules = new address[](2);
+        modules[0] = address(0xCAFE);
+        modules[1] = address(0xCAFE);
 
         vm.expectRevert(
-            Errors.Proposal__ModuleManager__ModuleAlreadyEnabled(modules[0])
+            IModuleManager.Proposal__ModuleManager__IsModule.selector
         );
         moduleManager.init(modules);
     }
@@ -113,18 +129,157 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
     //--------------------------------------------------------------------------
     // Tests: Module Management
 
-    function testDisableModule(address module) public {
-        _assumeValidModule(module);
+    //----------------------------------
+    // Tests: addModules()
 
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
+    function testAddModule(address[] memory whos) public {
+        vm.assume(whos.length <= MAX_MODULES);
+        types.assumeValidModules(whos);
 
-        address[] memory modules = new address[](1);
-        modules[0] = module;
-        moduleManager.init(modules);
+        for (uint i; i < whos.length; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit ModuleAdded(whos[i]);
 
-        assertTrue(moduleManager.isEnabledModule(module));
-        moduleManager.disableModule(module);
-        assertTrue(!moduleManager.isEnabledModule(module));
+            moduleManager.addModule(whos[i]);
+
+            assertTrue(moduleManager.isModule(whos[i]));
+        }
+
+        // Note that list is traversed.
+        address[] memory modules = moduleManager.listModules();
+
+        assertEq(modules.length, whos.length);
+        for (uint i; i < whos.length; i++) {
+            assertEq(modules[i], whos[whos.length - i - 1]);
+        }
+    }
+
+    function testAddModuleFailsIfCallerNotAuthorized(address who) public {
+        types.assumeValidModule(who);
+
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
+
+        vm.expectRevert(
+            IModuleManager.Proposal__ModuleManager__CallerNotAuthorized.selector
+        );
+        moduleManager.addModule(who);
+    }
+
+    function testAddModuleFailsIfAlreadyAdded(address who) public {
+        types.assumeValidModule(who);
+
+        moduleManager.addModule(who);
+
+        vm.expectRevert(
+            IModuleManager.Proposal__ModuleManager__IsModule.selector
+        );
+        moduleManager.addModule(who);
+    }
+
+    function testAddModuleFailsForInvalidAddress() public {
+        address[] memory invalids = types.createInvalidModules();
+
+        for (uint i; i < invalids.length; i++) {
+            vm.expectRevert(
+                IModuleManager
+                    .Proposal__ModuleManager__InvalidModuleAddress
+                    .selector
+            );
+            moduleManager.addModule(invalids[i]);
+        }
+    }
+
+    //----------------------------------
+    // Tests: removeModules()
+
+    function testRemoveModules(address[] memory whos) public {
+        vm.assume(whos.length != 0);
+        vm.assume(whos.length <= MAX_MODULES);
+        types.assumeValidModules(whos);
+
+        // The current module to remove.
+        address module;
+        // The module's prevModule in the list.
+        address prevModule;
+
+        // Add modules.
+        for (uint i; i < whos.length; i++) {
+            moduleManager.addModule(whos[i]);
+        }
+
+        // Remove modules from the front until list is empty.
+        for (uint i; i < whos.length; i++) {
+            module = whos[whos.length - i - 1];
+
+            vm.expectEmit(true, true, true, true);
+            emit ModuleRemoved(module);
+
+            moduleManager.removeModule(_SENTINEL, module);
+
+            assertTrue(!moduleManager.isModule(module));
+        }
+        assertEq(moduleManager.listModules().length, 0);
+
+        // Add modules again.
+        for (uint i; i < whos.length; i++) {
+            moduleManager.addModule(whos[i]);
+        }
+
+        // Remove modules from the back until list is empty.
+        // Note that removing the last module requires the sentinel as
+        // prevModule.
+        for (uint i; i < whos.length - 1; i++) {
+            module = whos[i];
+            prevModule = whos[i + 1];
+
+            vm.expectEmit(true, true, true, true);
+            emit ModuleRemoved(module);
+
+            moduleManager.removeModule(prevModule, module);
+
+            assertTrue(!moduleManager.isModule(module));
+        }
+        // Remove last module.
+        moduleManager.removeModule(_SENTINEL, whos[whos.length - 1]);
+
+        assertEq(moduleManager.listModules().length, 0);
+    }
+
+    function testRemoveModuleFailsIfCallerNotAuthorized(address who) public {
+        types.assumeValidModule(who);
+
+        moduleManager.addModule(who);
+
+        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
+
+        vm.expectRevert(
+            IModuleManager.Proposal__ModuleManager__CallerNotAuthorized.selector
+        );
+        moduleManager.removeModule(_SENTINEL, who);
+    }
+
+    function testRemoveModuleFailsIfNotModule(address who) public {
+        types.assumeValidModule(who);
+
+        vm.expectRevert(
+            IModuleManager.Proposal__ModuleManager__IsNotModule.selector
+        );
+        moduleManager.removeModule(_SENTINEL, who);
+    }
+
+    function testRemoveModuleFailsIfNotConsecutiveModulesGiven(address who)
+        public
+    {
+        types.assumeValidModule(who);
+
+        moduleManager.addModule(who);
+
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__ModulesNotConsecutive
+                .selector
+        );
+        moduleManager.removeModule(address(0xCAFE), who);
     }
 
     //--------------------------------------------------------------------------
@@ -133,10 +288,14 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
     function testGrantRole(address module, bytes32 role, address account)
         public
     {
-        _assumeValidModule(module);
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
+        types.assumeValidModule(module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
+
         moduleManager.init(modules);
 
         vm.prank(module);
@@ -151,25 +310,37 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         bytes32 role,
         address account
     ) public {
-        _assumeValidModule(module);
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
+        types.assumeValidModule(module);
         vm.assume(caller != module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
+
         moduleManager.init(modules);
 
         vm.prank(caller);
-        vm.expectRevert(Errors.Proposal__ModuleManager__OnlyCallableByModule);
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__OnlyCallableByModule
+                .selector
+        );
         moduleManager.grantRole(role, account);
     }
 
     function testRevokeRole(address module, bytes32 role, address account)
         public
     {
-        _assumeValidModule(module);
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
+        types.assumeValidModule(module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
+
         moduleManager.init(modules);
 
         vm.startPrank(module);
@@ -188,25 +359,37 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         bytes32 role,
         address account
     ) public {
-        _assumeValidModule(module);
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
+        types.assumeValidModule(module);
         vm.assume(caller != module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
+
         moduleManager.init(modules);
 
         vm.prank(caller);
-        vm.expectRevert(Errors.Proposal__ModuleManager__OnlyCallableByModule);
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__OnlyCallableByModule
+                .selector
+        );
         moduleManager.revokeRole(role, account);
     }
 
     function testRenounceRole(address module, bytes32 role, address account)
         public
     {
-        _assumeValidModule(module);
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
+        types.assumeValidModule(module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
+
         moduleManager.init(modules);
 
         vm.prank(module);
@@ -223,18 +406,22 @@ contract ModuleManagerTest is Test, FuzzInputChecker {
         bytes32 role,
         address account
     ) public {
-        _assumeValidModule(module);
+        moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
+        types.assumeValidModule(module);
 
         address[] memory modules = new address[](1);
         modules[0] = module;
+
         moduleManager.init(modules);
 
         vm.prank(module);
         moduleManager.grantRole(role, account);
 
-        // Disable module.
+        // Remove module.
         moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
-        moduleManager.disableModule(module);
+        moduleManager.removeModule(_SENTINEL, module);
 
         assertTrue(!moduleManager.hasRole(module, role, account));
     }

@@ -2,7 +2,11 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {ModuleManager, Types} from "src/proposal/base/ModuleManager.sol";
+import {
+    ModuleManager,
+    IModuleManager,
+    Types
+} from "src/proposal/base/ModuleManager.sol";
 
 contract ModuleManagerMock is ModuleManager {
     mapping(address => bool) private _authorized;
@@ -22,7 +26,7 @@ contract ModuleManagerMock is ModuleManager {
     }
 
     // Note that the `initializer` modifier is missing.
-    function reinit(address[] calldata modules) external {
+    function initNoInitializer(address[] calldata modules) external {
         __ModuleManager_init(modules);
     }
 

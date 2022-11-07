@@ -38,11 +38,11 @@ contract ProposalMock is
 
     function init(
         uint proposalId_,
-        address[] memory funders_,
-        address[] memory modules_,
+        IERC20 token_,
+        address[] calldata funders_,
+        address[] calldata modules_,
         IAuthorizer authorizer_,
-        IPaymentProcessor paymentProcessor_,
-        IERC20 token_
+        IPaymentProcessor paymentProcessor_
     ) public {
         proposalId = proposalId_;
         funders = funders_;

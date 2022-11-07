@@ -7,36 +7,49 @@ interface IModuleManager {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Function is only callable by activated module.
-    error Proposal__ModuleManager__OnlyCallableByModule();
+    /// @notice Function is only callable by authorized address.
+    error Proposal__ModuleManager__CallerNotAuthorized();
 
-    /// @notice ModuleManager is already initialized.
-    error Proposal__ModuleManager__AlreadyInitialized();
+    /// @notice Function is only callable by modules.
+    error Proposal__ModuleManager__OnlyCallableByModule();
 
     /// @notice Given module address invalid.
     error Proposal__ModuleManager__InvalidModuleAddress();
 
-    /// @notice Given module address already enabled.
-    /// @param module The module address already enabled.
-    error Proposal__ModuleManager__ModuleAlreadyEnabled(address module);
+    /// @notice Given address is a module.
+    error Proposal__ModuleManager__IsModule();
+
+    /// @notice Given address is not a module.
+    error Proposal__ModuleManager__IsNotModule();
+
+    /// @notice The supplied modules are not consecutive.
+    error Proposal__ModuleManager__ModulesNotConsecutive();
 
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when module enabled.
-    event ModuleEnabled(address indexed module);
+    /// @notice Event emitted when module added.
+    /// @param module The module's address.
+    event ModuleAdded(address indexed module);
 
-    /// @notice Event emitted when module disabled.
-    event ModuleDisabled(address indexed module);
+    /// @notice Event emitted when module removed.
+    /// @param module The module's address.
+    event ModuleRemoved(address indexed module);
 
     /// @notice Event emitted when account `account` is granted role `role` for
     ///         module `module`.
+    /// @param module The module's address.
+    /// @param role The access control role.
+    /// @param account The account the role was granted to.
     event ModuleRoleGranted(
         address indexed module, bytes32 indexed role, address indexed account
     );
 
     /// @notice Event emitted when account `account` is revoked role `role` for
     ///         module `module`.
+    /// @param module The module's address.
+    /// @param role The access control role.
+    /// @param account The account the role was revoked for.
     event ModuleRoleRevoked(
         address indexed module, bytes32 indexed role, address indexed account
     );
@@ -57,6 +70,27 @@ interface IModuleManager {
         bytes memory data,
         Types.Operation operation
     ) external returns (bool, bytes memory);
+
+    /// @notice Adds address `module` as module.
+    /// @dev Only callable by authorized address.
+    /// @dev Fails if address invalid or address already added as module.
+    /// @param module The module address to add.
+    function addModule(address module) external;
+
+    /// @notice Removes address `module` as module.
+    /// @dev Only callable by authorized address.
+    /// @dev Fails if address not added as module.
+    /// @param module The module address to remove.
+    function removeModule(address prevModule, address module) external;
+
+    /// @notice Returns whether the address `module` is added as module.
+    /// @param module The module to check.
+    /// @return True if module added, false otherwise.
+    function isModule(address module) external returns (bool);
+
+    /// @notice Returns the list of all modules.
+    /// @return List of all modules.
+    function listModules() external view returns (address[] memory);
 
     /// @notice Grants role `role` to account `account` in caller's access
     ///         control context.
@@ -90,9 +124,4 @@ interface IModuleManager {
     function hasRole(address module, bytes32 role, address account)
         external
         returns (bool);
-
-    /// @notice Returns whether the module `module` is enabled.
-    /// @param module The module to check.
-    /// @return True if module enabled, false otherwise.
-    function isEnabledModule(address module) external returns (bool);
 }

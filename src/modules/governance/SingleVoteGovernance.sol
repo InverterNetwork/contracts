@@ -123,7 +123,7 @@ contract SingleVoteGovernance is ListAuthorizer {
         //TODO I think we DO want to allow address==address(this)? F.ex. to vote on quorum change. Depends on wether the governance is allowed to cahnge itself...
 
         //this should implicitly control for address  != 0
-        if (!__Module_proposal.isEnabledModule(_target)) {
+        if (!__Module_proposal.isModule(_target)) {
             revert Module__SingleVoteGovernance_invalidModuleAddress(_target);
         }
         _;
