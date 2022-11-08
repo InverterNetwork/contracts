@@ -536,9 +536,7 @@ contract MilestoneManagerTest is ModuleTest {
         assertEq(milestoneManager.listMilestoneIds().length, 0);
     }
 
-    function testRemoveMilestoneFailsIfCallerNotAuthorized()
-        public
-    {
+    function testRemoveMilestoneFailsIfCallerNotAuthorized() public {
         _authorizer.setIsAuthorized(address(this), false);
 
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -980,7 +978,8 @@ contract MilestoneManagerTest is ModuleTest {
         bool submitted,
         bool completed
     ) internal {
-        IMilestoneManager.Milestone memory m = milestoneManager.getMilestoneInformation(id);
+        IMilestoneManager.Milestone memory m =
+            milestoneManager.getMilestoneInformation(id);
 
         assertEq(m.duration, duration);
         assertEq(m.budget, budget);

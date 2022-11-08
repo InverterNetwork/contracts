@@ -9,11 +9,14 @@ import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {IERC20MetadataUpgradeable} from
+    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
+import {FundingVault} from "src/proposal/base/FundingVault.sol";
 
 // Internal Interfaces
 import {
@@ -24,10 +27,11 @@ import {
 
 contract Proposal is
     IProposal,
+    OwnableUpgradeable,
+    PausableUpgradeable,
     ModuleManager,
     ContributorManager,
-    OwnableUpgradeable,
-    PausableUpgradeable
+    FundingVault
 {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -43,9 +47,6 @@ contract Proposal is
 
     //--------------------------------------------------------------------------
     // Storage
-
-    /// @dev The list of funders.
-    address[] private _funders;
 
     /// @inheritdoc IProposal
     uint public override (IProposal) proposalId;
@@ -72,13 +73,11 @@ contract Proposal is
     function init(
         uint proposalId_,
         IERC20 token_,
-        address[] calldata funders,
         address[] calldata modules,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
     ) external override (IProposal) initializer {
         // Set storage variables.
-        _funders = funders;
         proposalId = proposalId_;
         token = token_;
         authorizer = authorizer_;
@@ -89,6 +88,7 @@ contract Proposal is
         __Ownable_init();
         __ModuleManager_init(modules);
         __ContributorManager_init();
+        __FundingVault_init(IERC20MetadataUpgradeable(address(token_)));
 
         // Add necessary modules.
         addModule(address(authorizer_));

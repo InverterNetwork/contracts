@@ -12,7 +12,6 @@ interface IProposalFactory {
     error ProposalFactory__ModuleDataLengthMismatch();
 
     struct ProposalConfig {
-        address[] funders;
         IERC20 token;
     }
 

@@ -53,13 +53,8 @@ contract ProposalTest is Test {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInit(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
+    function testInit(uint proposalId, address[] memory modules) public {
         types.assumeValidProposalId(proposalId);
-        types.assumeValidFunders(funders);
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
@@ -68,9 +63,7 @@ contract ProposalTest is Test {
         types.assumeElemNotInSet(modules, address(token));
 
         // Initialize proposal.
-        proposal.init(
-            proposalId, token, funders, modules, authorizer, paymentProcessor
-        );
+        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
 
         // Check that proposal's storage correctly initialized.
         assertEq(proposal.proposalId(), proposalId);
@@ -87,13 +80,10 @@ contract ProposalTest is Test {
         assertTrue(!proposal.paused());
     }
 
-    function testReinitFails(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
+    function testReinitFails(uint proposalId, address[] memory modules)
+        public
+    {
         types.assumeValidProposalId(proposalId);
-        types.assumeValidFunders(funders);
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
@@ -102,14 +92,10 @@ contract ProposalTest is Test {
         types.assumeElemNotInSet(modules, address(token));
 
         // Initialize proposal.
-        proposal.init(
-            proposalId, token, funders, modules, authorizer, paymentProcessor
-        );
+        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        proposal.init(
-            proposalId, token, funders, modules, authorizer, paymentProcessor
-        );
+        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
     }
 
     //--------------------------------------------------------------------------

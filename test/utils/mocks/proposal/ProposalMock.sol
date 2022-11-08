@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Dependencies
+import {ERC4626Upgradeable} from
+    "@oz-up/token/ERC20/extensions/ERC4626Upgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Internal Interfaces
@@ -21,14 +23,14 @@ import {ContributorManagerMock} from "./base/ContributorManagerMock.sol";
 contract ProposalMock is
     IProposal,
     ModuleManagerMock,
-    ContributorManagerMock
+    ContributorManagerMock,
+    ERC4626Upgradeable
 {
     IAuthorizer public authorizer;
     IPaymentProcessor public paymentProcessor;
     IERC20 public token;
 
     uint public proposalId;
-    address[] public funders;
     address[] public modules;
 
     // @todo mp: Add paymentProcessor to ProposalMock::contstructor.
@@ -39,13 +41,11 @@ contract ProposalMock is
     function init(
         uint proposalId_,
         IERC20 token_,
-        address[] calldata funders_,
         address[] calldata modules_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
     ) public {
         proposalId = proposalId_;
-        funders = funders_;
         modules = modules_;
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
