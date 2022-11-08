@@ -8,21 +8,46 @@ import {
     ERC4626Upgradeable
 } from "@oz-up/token/ERC20/extensions/ERC4626Upgradeable.sol";
 
+// External Libraries
+import {Strings} from "@oz/utils/Strings.sol";
+
 // Interfaces
-//import {IFunderManager} from "src/proposal/base/IFunderManager.sol";
+import {IFundingVault} from "src/proposal/base/IFundingVault.sol";
 
 /**
- * @title
+ * @title FundingVault
  *
- * @dev
+ * @dev The FundingVault is an ERC-4626 vault managing the accounting for
+ *      funder deposits.
+ *
+ *      Upon funding, the depositor receives newly minted ERC20 receipt tokens
+ *      that represent their funding.
+ *
+ *      These receipt tokens can be burned to receive back the funding, in the
+ *      appropriate share of funds still available.
  *
  * @author byterocket
  */
-abstract contract FundingVault is ERC4626Upgradeable {
-    function __FundingVault_init(IERC20MetadataUpgradeable token)
+abstract contract FundingVault is IFundingVault, ERC4626Upgradeable {
+    using Strings for uint;
+
+    function __FundingVault_init(uint id, IERC20MetadataUpgradeable token)
         internal
         onlyInitializing
     {
+        __ERC20_init(_tokenName(id), _tokenSymbol(id));
         __ERC4626_init(token);
+    }
+
+    function _tokenName(uint id) internal pure returns (string memory) {
+        return string(
+            abi.encodePacked(
+                "Inverter Funding Token - Proposal #", id.toString()
+            )
+        );
+    }
+
+    function _tokenSymbol(uint id) internal pure returns (string memory) {
+        return string(abi.encodePacked("IFT-", id.toString()));
     }
 }

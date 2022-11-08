@@ -88,7 +88,9 @@ contract Proposal is
         __Ownable_init();
         __ModuleManager_init(modules);
         __ContributorManager_init();
-        __FundingVault_init(IERC20MetadataUpgradeable(address(token_)));
+        __FundingVault_init(
+            proposalId, IERC20MetadataUpgradeable(address(token_))
+        );
 
         // Add necessary modules.
         addModule(address(authorizer_));

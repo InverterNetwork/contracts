@@ -33,22 +33,25 @@ contract FundingVaultTest is Test {
     // Tests: Initialization
 
     function testInit() public {
-        fundingVault.init(token);
+        fundingVault.init(1, token);
 
         // Check that proposal's dependencies correctly initialized.
+        // ERC20: Name and symbol set correctly.
+        assertEq(fundingVault.name(), "Inverter Funding Token - Proposal #1");
+        assertEq(fundingVault.symbol(), "IFT-1");
         // ERC4626: Asset should be set as token's address.
         assertEq(fundingVault.asset(), address(token));
     }
 
     function testReinitFails() public {
-        fundingVault.init(token);
+        fundingVault.init(1, token);
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        fundingVault.init(token);
+        fundingVault.init(1, token);
     }
 
     function testInitFailsForNonInitializerFunction() public {
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        fundingVault.initNoInitializer(token);
+        fundingVault.initNoInitializer(1, token);
     }
 }

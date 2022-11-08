@@ -10,12 +10,12 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {FundingVault} from "src/proposal/base/FundingVault.sol";
 
 contract FundingVaultMock is FundingVault {
-    function init(IERC20 token) external initializer {
-        __FundingVault_init(IERC20MetadataUpgradeable(address(token)));
+    function init(uint id, IERC20 token) external initializer {
+        __FundingVault_init(id, IERC20MetadataUpgradeable(address(token)));
     }
 
     // Note that the `initializer` modifier is missing.
-    function initNoInitializer(IERC20 token) external {
-        __FundingVault_init(IERC20MetadataUpgradeable(address(token)));
+    function initNoInitializer(uint id, IERC20 token) external {
+        __FundingVault_init(id, IERC20MetadataUpgradeable(address(token)));
     }
 }
