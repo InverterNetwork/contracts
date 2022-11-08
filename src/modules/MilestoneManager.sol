@@ -217,6 +217,23 @@ contract MilestoneManager is IMilestoneManager, Module {
             completed: false
         });
 
+        // @todo Nejc: transfer funds from Proposal to Milestone
+        //             to ensure they will be available.
+        // @dev use the delegatecall solution.
+        // bool ok;
+        // (ok, ) = _triggerProposalCallback(
+        //     abi.encodeWithSignature(
+        //         "__MilestoneManager_fetchERC20FromProposal(address,uint)",
+        //         address(this),
+        //         budget
+        //     ),
+        //     Types.Operation.DelegateCall
+        // );
+        // if (!ok) {
+        //     revert Module_ProposalCallbackFailed(
+        //       "__MilestoneManager_fetchERC20FromProposal");
+        // }
+
         emit MilestoneAdded(id, duration, budget, title, details);
 
         return id;
