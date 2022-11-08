@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Dependencies
+import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
@@ -11,6 +14,12 @@ import {LibString} from "src/common/LibString.sol";
 // Internal Interfaces
 import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// External Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title Milestone Module
@@ -265,8 +274,16 @@ contract MilestoneManager is IMilestoneManager, Module {
         // Mark milestone as started, i.e. set its startTimestamp.
         _milestoneRegistry[id].startTimestamp = block.timestamp;
 
-        // @todo Initiate payment order.
-        //       Make sure token exists.
+
+        address[] memory contributors = __Module_proposal.listContributors();
+        // @dev token should be declared in globaly if used in other functions
+        IERC20 token = __Module_proposal.token();
+        uint payout = _milestoneRegistry[_activeMilestone].budget * 1000
+            / contributors.length * 1000;
+
+        for(uint i; i < contributors.length; i++){
+            token.safeTransfer(contributors[i], payout);
+        }
     }
 
     /// @inheritdoc IMilestoneManager
