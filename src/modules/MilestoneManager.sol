@@ -30,6 +30,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  */
 contract MilestoneManager is IMilestoneManager, Module {
     using LibString for string;
+    using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
     // Modifiers
