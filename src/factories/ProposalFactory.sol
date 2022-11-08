@@ -90,7 +90,6 @@ contract ProposalFactory is IProposalFactory {
         IProposal(clone).init(
             ++_proposalIdCounter,
             proposalConfig.token,
-            proposalConfig.funders,
             modules,
             IAuthorizer(authorizer),
             IPaymentProcessor(paymentProcessor)

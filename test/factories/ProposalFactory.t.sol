@@ -49,16 +49,13 @@ contract ProposalFactoryTest is Test {
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
 
-    function testCreateProposal(address[] memory funders, uint modulesLen)
-        public
-    {
+    function testCreateProposal(uint modulesLen) public {
         // Note to stay reasonable
-        vm.assume(funders.length < 50);
         vm.assume(modulesLen < 50);
 
         // Create ProposalConfig instance.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig(funders, IERC20(new ERC20Mock("Test Token", "TEST")));
+            .ProposalConfig(IERC20(new ERC20Mock("Test Token", "TEST")));
 
         // Create {IAuthorizer} ModuleConfig instance.
         IProposalFactory.ModuleConfig memory authorizerConfig = IProposalFactory

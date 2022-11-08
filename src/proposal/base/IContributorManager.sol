@@ -100,6 +100,8 @@ interface IContributorManager {
     /// @param prevContrib The previous contributor in the contributor's list.
     function revokeContributor(address prevContrib) external;
 
+    // @todo mp: Make to one updateContributor function.
+
     /// @notice Updates `who`'s role to `role`.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if `role` invalid.
@@ -119,6 +121,8 @@ interface IContributorManager {
 
     /// @notice Returns the list of addresses of current contributors.
     function listContributors() external view returns (address[] memory);
+
+    // @todo mp: Maybe add function sizeContributors();
 
     /// @notice Returns the registerted {Contributor} instance for `who`.
     function getContributorInformation(address who)
