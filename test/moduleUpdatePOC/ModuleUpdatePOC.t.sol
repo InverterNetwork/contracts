@@ -13,13 +13,19 @@ import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModuleFactory, IModule, IProposal} from "src/factories/IModuleFactory.sol";
+import {
+    IModuleFactory,
+    IModule,
+    IProposal
+} from "src/factories/IModuleFactory.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {BeaconMock} from "test/utils/mocks/factories/beacon/BeaconMock.sol";
-import {ModuleImplementationV1Mock} from "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
-import {ModuleImplementationV2Mock} from "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
+import {ModuleImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
+import {ModuleImplementationV2Mock} from
+    "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -34,7 +40,7 @@ contract ModuleUpdatePOCTest is Test {
 
     // Constants
     // @todo mp: Move to some common contract. See todo in Milestone.t.sol too.
-    uint256 constant MAJOR_VERSION = 1;
+    uint constant MAJOR_VERSION = 1;
     string constant GIT_URL = "https://github.com/organization/module";
 
     IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
@@ -64,18 +70,16 @@ contract ModuleUpdatePOCTest is Test {
         _assumeValidProposal(proposal);
 
         // Create implementation V1 and upgrade beacon to it.
-        ModuleImplementationV1Mock implementationV1 = new ModuleImplementationV1Mock();
+        ModuleImplementationV1Mock implementationV1 =
+            new ModuleImplementationV1Mock();
         beacon.overrideImplementation(address(implementationV1));
 
         // Register beacon as Module.
         factory.registerMetadata(metadata, beacon);
 
         //Create Module Proxy in Factory
-        address proxyImplementationAddress1 = factory.createModule(
-            metadata,
-            IProposal(proposal),
-            configdata
-        );
+        address proxyImplementationAddress1 =
+            factory.createModule(metadata, IProposal(proposal), configdata);
 
         assertEq(
             ModuleImplementationV1Mock(proxyImplementationAddress1).getVersion(),
@@ -83,12 +87,12 @@ contract ModuleUpdatePOCTest is Test {
         );
 
         // Create implementation V2 and upgrade beacon to it.
-        ModuleImplementationV2Mock implementationV2 = new ModuleImplementationV2Mock();
+        ModuleImplementationV2Mock implementationV2 =
+            new ModuleImplementationV2Mock();
         beacon.overrideImplementation(address(implementationV2));
 
         assertEq(
-            ModuleImplementationV2Mock(proxyImplementationAddress1)
-                .getVersion(),
+            ModuleImplementationV2Mock(proxyImplementationAddress1).getVersion(),
             2
         );
     }

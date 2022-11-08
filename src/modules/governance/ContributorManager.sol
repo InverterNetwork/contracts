@@ -307,8 +307,9 @@ contract ContributorManager is Module {
         contributorIsActive(_who)
         returns (bytes32, uint)
     {
-        return
-            (contributorRegistry[_who].role, contributorRegistry[_who].salary);
+        return (
+            contributorRegistry[_who].role, contributorRegistry[_who].salary
+        );
     }
 
     /// @notice Returns if a specified contributor is currently active
