@@ -7,24 +7,16 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Interfaces
 import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
 import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
+import {IFundingVault} from "src/proposal/base/IFundingVault.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 
-interface IProposal is IModuleManager, IContributorManager {
+interface IProposal is IModuleManager, IContributorManager, IFundingVault {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by authorized caller.
     error Proposal__CallerNotAuthorized();
-
-    /// @notice Given {IAuthorizer} instance invalid.
-    error Proposal__InvalidAuthorizer();
-
-    /// @notice Given {IPaymentProcessor} instance invalid.
-    error Proposal__InvalidPaymentProcessor();
-
-    /// @notice Given {IERC20} token instance invalid.
-    error Proposal__InvalidToken();
 
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
@@ -33,15 +25,12 @@ interface IProposal is IModuleManager, IContributorManager {
     // Functions
 
     /// @notice Initialization function.
-    /// @dev Note that `authorizer` and `paymentProcessor` MUST be elements of
-    ///      `modules`.
     function init(
         uint proposalId,
-        address[] calldata funders,
+        IERC20 token,
         address[] calldata modules, // @todo mp: Change to IModules.
         IAuthorizer authorizer,
-        IPaymentProcessor paymentProcessor,
-        IERC20 token
+        IPaymentProcessor paymentProcessor
     ) external;
 
     /// @notice Executes a call on target `target` with call data `data`.

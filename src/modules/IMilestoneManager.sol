@@ -38,11 +38,13 @@ interface IMilestoneManager {
     /// @notice Function is only callable by contributor.
     error Module__MilestoneManager__OnlyCallableByContributor();
 
-    /// @notice Given title invalid.
-    error Module__MilestoneManager__InvalidTitle();
-
     /// @notice Given duration invalid.
     error Module__MilestoneManager__InvalidDuration();
+
+    // @todo mp, nuggan, marvin: Add error for invalid Budget here if necessary.
+
+    /// @notice Given title invalid.
+    error Module__MilestoneManager__InvalidTitle();
 
     /// @notice Given details invalid.
     error Module__MilestoneManager__InvalidDetails();
@@ -64,6 +66,15 @@ interface IMilestoneManager {
 
     /// @notice Given milestone not declineable.
     error Module__MilestoneManager__MilestoneNotDeclineable();
+
+    /// @notice Given milestone not activateable.
+    error Module__MilestoneManager__MilestoneNotActivateable();
+
+    /// @notice The supplied milestones are not consecutive
+    error Module__MilestoneManager__MilestonesNotConsecutive();
+
+    /// @notice No active milestone currently existing.
+    error Module__MilestoneManager__NoActiveMilestone();
 
     //--------------------------------------------------------------------------
     // Events
@@ -100,11 +111,14 @@ interface IMilestoneManager {
     //----------------------------------
     // Milestone View Functions
 
-    /// @notice Returns the milestone with id `id`.
+    /// @notice Returns the milestone instance with id `id`.
     /// @dev Returns empty milestone in case id `id` is invalid.
     /// @param id The id of the milstone to return.
     /// @return Milestone with id `id`.
-    function getMilestone(uint id) external view returns (Milestone memory);
+    function getMilestoneInformation(uint id)
+        external
+        view
+        returns (Milestone memory);
 
     //----------------------------------
     // Milestone Mutating Functions
@@ -112,61 +126,64 @@ interface IMilestoneManager {
     /// @notice Adds a new milestone.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if an argument invalid.
-    /// @dev Relay function that routes the function call via the proposal.
-    /// @param title The title for the new milestone.
-    /// @param startDate The starting date of the new milestone.
-    /// @param details The details of the new milestone.
+    /// @param duration The duration of the milestone.
+    /// @param budget The budget for the milestone.
+    /// @param title The milestone's title.
+    /// @param details The milestone's details.
     /// @return The newly added milestone's id.
     function addMilestone(
+        uint duration,
+        uint budget,
         string memory title,
-        uint startDate,
         string memory details
     ) external returns (uint);
 
-    /// @notice Changes a milestone's details.
-    /// @dev Only callable by authorized addresses.
-    /// @dev Relay function that routes the function call via the proposal.
-    /// @param id The milestone's id.
-    /// @param details The new details of the milestone.
-    function updateMilestoneDetails(uint id, string memory details) external;
-
-    /// @notice Changes a milestone's starting date.
-    /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if an argument invalid or milestone already removed.
-    /// @dev Relay function that routes the function call via the proposal.
-    /// @param id The milestone's id.
-    /// @param startDate The new starting date of the milestone.
-    function updateMilestoneStartDate(uint id, uint startDate) external;
-
     /// @notice Removes a milestone.
     /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if id invalid or milestone already completed.
-    /// @dev Relay function that routes the function call via the proposal.
+    /// @dev Reverts if id invalid, milestone already completed or milestone ids
+    ///      not consecutive in list.
+    /// @param prevId The previous milestone's id in the milestone list.
+    /// @param id The milestone's id to remove.
+    function removeMilestone(uint prevId, uint id) external;
+
+    // @todo startNextMilestone function doc.
+    /// @dev Only callable by authorized addresses.
+    function startNextMilestone() external;
+
+    /// @notice Updates a milestone's informations.
+    /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if an argument invalid or milestone already started.
     /// @param id The milestone's id.
-    function removeMilestone(uint id) external;
+    /// @param duration The duration of the milestone.
+    /// @param budget The budget for the milestone.
+    /// @param details The milestone's details.
+    function updateMilestone(
+        uint id,
+        uint duration,
+        uint budget,
+        string memory details
+    ) external;
 
     /// @notice Submits a milestone.
     /// @dev Only callable by addresses holding the contributor role.
-    /// @dev Reverts if id invalid or milestone already removed.
+    /// @dev Reverts if id invalid, milestone not yet started, or milestone
+    ///      already completed.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
     function submitMilestone(uint id) external;
 
-    // @todo mp, felix: Should be renamed to `completeMilestone()`?
+    // @todo mp, nuggan: Should be renamed to `completeMilestone()`?
 
     /// @notice Confirms a submitted milestone.
     /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if id invalid, milestone already removed, or milestone not
-    ///      yet submitted.
-    /// @dev Relay function that routes the function call via the proposal.
+    /// @dev Reverts if id invalid or milestone not yet submitted.
     /// @param id The milestone's id.
     function confirmMilestone(uint id) external;
 
     /// @notice Declines a submitted milestone.
     /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if id invalid, milestone already removed, milestone not
-    ///      yet submitted, or milestone already completed.
-    /// @dev Relay function that routes the function call via the proposal.
+    /// @dev Reverts if id invalid, milestone not yet submitted, or milestone
+    ///      already completed.
     /// @param id The milestone's id.
     function declineMilestone(uint id) external;
 }

@@ -16,9 +16,6 @@ import {
     IPaymentProcessor
 } from "src/proposal/IProposal.sol";
 
-// Helpers
-import {FuzzInputChecker} from "test/proposal/helper/FuzzInputChecker.sol";
-
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
@@ -28,9 +25,15 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract ProposalTest is Test, FuzzInputChecker {
+// Helper
+import {TypeSanityHelper} from "test/proposal/helper/TypeSanityHelper.sol";
+
+contract ProposalTest is Test {
     // SuT
     Proposal proposal;
+
+    // Helper
+    TypeSanityHelper types;
 
     // Mocks
     AuthorizerMock authorizer;
@@ -43,141 +46,56 @@ contract ProposalTest is Test, FuzzInputChecker {
         token = new ERC20Mock("TestToken", "TST");
 
         proposal = new Proposal();
+
+        types = new TypeSanityHelper(address(proposal));
     }
 
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInit(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
-        _assumeValidProposalId(proposalId);
-        _assumeValidFunders(funders);
-        _assumeValidModules(modules);
+    function testInit(uint proposalId, address[] memory modules) public {
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
 
-        // Make sure that the addresses we'll set manually are not already in the module list
-        _assumeAddressNotInSet(modules, address(authorizer));
-        _assumeAddressNotInSet(modules, address(paymentProcessor));
-        _assumeAddressNotInSet(modules, address(token));
-
-        // Set last two module to authorizer and paymentProcessor.
-        modules[modules.length - 1] = address(authorizer);
-        modules[modules.length - 2] = address(paymentProcessor);
+        // Make sure mock addresses are not in set of modules.
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
 
         // Initialize proposal.
-        proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor, token
-        );
+        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
 
         // Check that proposal's storage correctly initialized.
+        assertEq(proposal.proposalId(), proposalId);
+        assertEq(address(proposal.token()), address(token));
         assertEq(address(proposal.authorizer()), address(authorizer));
         assertEq(
             address(proposal.paymentProcessor()), address(paymentProcessor)
         );
-        assertEq(address(proposal.token()), address(token));
+
+        // Check that proposal's dependencies correctly initialized.
+        // Ownable:
+        assertEq(proposal.owner(), address(this));
+        // Pausable:
+        assertTrue(!proposal.paused());
     }
 
-    function testReinitFails(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
-        _assumeValidProposalId(proposalId);
-        _assumeValidFunders(funders);
-        _assumeValidModules(modules);
+    function testReinitFails(uint proposalId, address[] memory modules)
+        public
+    {
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
 
-        // Make sure that the addresses we'll set manually are not already in the module list
-        _assumeAddressNotInSet(modules, address(authorizer));
-        _assumeAddressNotInSet(modules, address(paymentProcessor));
-        _assumeAddressNotInSet(modules, address(token));
-
-        // Set last two module to authorizer and paymentProcessor.
-        modules[modules.length - 1] = address(authorizer);
-        modules[modules.length - 2] = address(paymentProcessor);
+        // Make sure mock addresses are not in set of modules.
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
 
         // Initialize proposal.
-        proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor, token
-        );
+        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor, token
-        );
-    }
-
-    function testInitFailsForInvalidAuthorizer(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
-        _assumeValidProposalId(proposalId);
-        _assumeValidFunders(funders);
-        _assumeValidModules(modules);
-
-        // Make sure that the addresses we'll set manually are not already in the module list
-        _assumeAddressNotInSet(modules, address(paymentProcessor));
-        _assumeAddressNotInSet(modules, address(token));
-
-        // Note that the authorizer is not added to the modules list.
-        modules[modules.length - 1] = address(paymentProcessor);
-
-        vm.expectRevert(IProposal.Proposal__InvalidAuthorizer.selector);
-        proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor, token
-        );
-    }
-
-    function testInitFailsForInvalidPaymentProcessor(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
-        _assumeValidProposalId(proposalId);
-        _assumeValidFunders(funders);
-        _assumeValidModules(modules);
-
-        // Make sure that the addresses we'll set manually are not already in the module list
-        _assumeAddressNotInSet(modules, address(authorizer));
-        _assumeAddressNotInSet(modules, address(token));
-
-        // Note that the paymentProcessor is not added to the modules list.
-        modules[modules.length - 1] = address(authorizer);
-
-        vm.expectRevert(IProposal.Proposal__InvalidPaymentProcessor.selector);
-        proposal.init(
-            proposalId, funders, modules, authorizer, paymentProcessor, token
-        );
-    }
-
-    function testInitFailsForInvalidToken(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
-        _assumeValidProposalId(proposalId);
-        _assumeValidFunders(funders);
-        _assumeValidModules(modules);
-
-        // Make sure that the addresses we'll set manually are not already in the module list
-        _assumeAddressNotInSet(modules, address(authorizer));
-        _assumeAddressNotInSet(modules, address(paymentProcessor));
-
-        // Set last two module to authorizer and paymentProcessor.
-        modules[modules.length - 1] = address(authorizer);
-        modules[modules.length - 2] = address(paymentProcessor);
-
-        vm.expectRevert(IProposal.Proposal__InvalidToken.selector);
-        proposal.init(
-            proposalId,
-            funders,
-            modules,
-            authorizer,
-            paymentProcessor,
-            IERC20(address(0))
-        );
+        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
     }
 
     //--------------------------------------------------------------------------

@@ -9,11 +9,14 @@ import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {IERC20MetadataUpgradeable} from
+    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
+import {FundingVault} from "src/proposal/base/FundingVault.sol";
 
 // Internal Interfaces
 import {
@@ -24,10 +27,11 @@ import {
 
 contract Proposal is
     IProposal,
+    OwnableUpgradeable,
+    PausableUpgradeable,
     ModuleManager,
     ContributorManager,
-    OwnableUpgradeable,
-    PausableUpgradeable
+    FundingVault
 {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -44,20 +48,17 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The list of funders.
-    address[] private _funders;
+    /// @inheritdoc IProposal
+    uint public override (IProposal) proposalId;
 
     /// @inheritdoc IProposal
-    uint public proposalId;
+    IERC20 public override (IProposal) token;
 
     /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
 
     /// @inheritdoc IProposal
     IPaymentProcessor public override (IProposal) paymentProcessor;
-
-    /// @inheritdoc IProposal
-    IERC20 public token;
 
     //--------------------------------------------------------------------------
     // Initializer
@@ -71,37 +72,29 @@ contract Proposal is
     /// @inheritdoc IProposal
     function init(
         uint proposalId_,
-        address[] calldata funders,
+        IERC20 token_,
         address[] calldata modules,
         IAuthorizer authorizer_,
-        IPaymentProcessor paymentProcessor_,
-        IERC20 token_
+        IPaymentProcessor paymentProcessor_
     ) external override (IProposal) initializer {
+        // Set storage variables.
         proposalId = proposalId_;
-        _funders = funders;
-
-        __Pausable_init();
-        __Ownable_init();
-
-        __ModuleManager_init(modules);
-        __ContributorManager_init();
-
-        // Ensure that authorizer_ is an enabled module.
-        if (!isEnabledModule(address(authorizer_))) {
-            revert Proposal__InvalidAuthorizer();
-        }
+        token = token_;
         authorizer = authorizer_;
-
-        // Ensure that paymentProcessor_ is an enabled module.
-        if (!isEnabledModule(address(paymentProcessor_))) {
-            revert Proposal__InvalidPaymentProcessor();
-        }
         paymentProcessor = paymentProcessor_;
 
-        if (address(token_) == address(0)) {
-            revert Proposal__InvalidToken();
-        }
-        token = token_;
+        // Initialize upstream contracts.
+        __Pausable_init();
+        __Ownable_init();
+        __ModuleManager_init(modules);
+        __ContributorManager_init();
+        __FundingVault_init(
+            proposalId, IERC20MetadataUpgradeable(address(token_))
+        );
+
+        // Add necessary modules.
+        addModule(address(authorizer_));
+        addModule(address(paymentProcessor_));
     }
 
     //--------------------------------------------------------------------------
