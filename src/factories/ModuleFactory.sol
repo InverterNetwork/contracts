@@ -27,10 +27,12 @@ import {
 /**
  * @title Module Factory
  *
- * @dev Factory for modules.
+ * @dev An owned factory for deploying modules.
  *
- *      Has owner that can register module metadata's to target
+ *      The owner can register module metadata's to an {IBeacon}
  *      implementations.
+ *      Note that a metadata's registered {IBeacon} implementation can not
+ *      changed after registration!
  *
  * @author byterocket
  */

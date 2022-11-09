@@ -22,6 +22,8 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
 /**
  * @title Proposal Factory
  *
+ * @dev An immutable factory for deploying proposals.
+ *
  * @author byterocket
  */
 contract ProposalFactory is IProposalFactory {
