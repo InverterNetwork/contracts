@@ -22,10 +22,6 @@ import {
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {BeaconMock} from "test/utils/mocks/factories/beacon/BeaconMock.sol";
-import {ImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol"; //Is also a Module
-import {ImplementationV2Mock} from
-    "test/utils/mocks/factories/beacon/ImplementationV2Mock.sol"; //Is also a Module
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -171,47 +167,6 @@ contract ModuleFactoryTest is Test {
         // @todo mp, felix: Can we test this better?
         vm.expectRevert();
         factory.createModule(metadata, IProposal(proposal), configdata);
-    }
-
-    //--------------------------------------------------------------------------
-    // Tests: Beacon Upgrades
-
-    // @todo mp, Felix: Does this tests really belong here? What does this have
-    //                  to do with the factories?
-    function testBeaconUpgrade(
-        IModule.Metadata memory metadata,
-        address proposal,
-        bytes memory configdata
-    ) public {
-        _assumeValidMetadata(metadata);
-        _assumeValidProposal(proposal);
-
-        // Create implementation V1 and upgrade beacon to it.
-        ImplementationV1Mock implementationV1 = new ImplementationV1Mock();
-        beacon.overrideImplementation(address(implementationV1));
-
-        // Register beacon as Module.
-        factory.registerMetadata(metadata, beacon);
-
-        address proxyImplementationAddress1 =
-            factory.createModule(metadata, IProposal(proposal), configdata);
-
-        assertEq(
-            ImplementationV1Mock(proxyImplementationAddress1).getVersion(), 1
-        );
-
-        // Create implementation V2 and upgrade beacon to it.
-        ImplementationV2Mock implementationV2 = new ImplementationV2Mock();
-        beacon.overrideImplementation(address(implementationV2));
-
-        assertEq(
-            ImplementationV2Mock(proxyImplementationAddress1).getVersion(), 2
-        );
-
-        // (Out of curiosity) Check that V1 Still works.
-        assertEq(
-            ImplementationV1Mock(proxyImplementationAddress1).getVersion(), 2
-        );
     }
 
     //--------------------------------------------------------------------------

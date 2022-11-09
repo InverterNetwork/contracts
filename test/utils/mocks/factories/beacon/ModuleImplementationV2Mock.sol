@@ -4,7 +4,7 @@ import "@oz/proxy/utils/Initializable.sol";
 
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 
-contract ImplementationV2Mock is ModuleMock {
+contract ModuleImplementationV2Mock is ModuleMock {
     uint public data;
 
     function initialize(uint data_) external initializer {

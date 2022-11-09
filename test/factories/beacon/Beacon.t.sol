@@ -10,10 +10,10 @@ import "@oz/utils/Address.sol";
 import {Beacon} from "src/factories/beacon/Beacon.sol";
 
 // Mocks
-import {ImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol";
-import {ImplementationV2Mock} from
-    "test/utils/mocks/factories/beacon/ImplementationV2Mock.sol";
+import {ModuleImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
+import {ModuleImplementationV2Mock} from
+    "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -37,8 +37,8 @@ contract BeaconTest is Test {
     // Test: upgradeTo
 
     function testUpgradeTo() public {
-        ImplementationV1Mock toUpgrade1 = new ImplementationV1Mock();
-        ImplementationV2Mock toUpgrade2 = new ImplementationV2Mock();
+        ModuleImplementationV1Mock toUpgrade1 = new ModuleImplementationV1Mock();
+        ModuleImplementationV2Mock toUpgrade2 = new ModuleImplementationV2Mock();
 
         vm.expectEmit(true, true, true, true);
         emit Upgraded(address(toUpgrade1));
