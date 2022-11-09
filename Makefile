@@ -34,38 +34,17 @@ test: ## Run whole testsuite
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
-# --------------------------------------
-# Proposal Tests
-
 .PHONY: testProposal
-testProposal: ## Run Proposal tests
-	@forge test -vvv --match-contract "Proposal"
+testProposal: ## Run proposal/ package tests
+	@forge test -vvv --match-path "*/proposal/*"
 
-.PHONY: testModuleManager
-testModuleManager: ## Run ModuleManager tests
-	@forge test -vvv --match-contract "ModuleManager"
-
-.PHONY: testContributorManager
-testContributorManager: ## Run ContributorManager tests
-	@forge test -vvv --match-contract "ContributorManager"
-
-# --------------------------------------
-# Module Tests
-
-.PHONY: testModule
-testModule: ## Run Module tests
-	@forge test -vvv --match-contract "Module" --no-match-contract "Manager"
-
-.PHONY: testMilestoneManager
-testModuleMilestoneManager: ## Run MilestoneManager module tests
-	@forge test -vvv --match-contract "MilestoneManager"
-
-# --------------------------------------
-# Factory Tests
+.PHONY: testModules
+testModules: ## Run modules/ package tests
+	@forge test -vvv --match-path "*/modules/*"
 
 .PHONY: testFactories
-testFactories: ## Run Factory tests
-	@forge test -vvv --match-contract "Factory"
+testFactories: ## Run factories/ package tests
+	@forge test -vvv --match-path "*/factories/*"
 
 # -----------------------------------------------------------------------------
 # Static Analyzers
@@ -90,6 +69,10 @@ report-gas: ## Print gas report and create gas snapshots file
 report-cov: ## Print coverage report and create lcov report file
 	@forge coverage --report lcov
 	@forge coverage
+
+.PHONY: report-pocs
+report-pocs: ## Print PoC tests with full stack-trace
+	@forge test -vvvv --match-contract "POC"
 
 # -----------------------------------------------------------------------------
 # Formatting
