@@ -63,8 +63,8 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given milestone not submitable.
     error Module__MilestoneManager__MilestoneNotSubmitable();
 
-    /// @notice Given milestone not confirmable.
-    error Module__MilestoneManager__MilestoneNotConfirmable();
+    /// @notice Given milestone not completed.
+    error Module__MilestoneManager__MilestoneNotCompleteable();
 
     /// @notice Given milestone not declineable.
     error Module__MilestoneManager__MilestoneNotDeclineable();
@@ -101,8 +101,8 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Event emitted when a milestone submitted.
     event MilestoneSubmitted(uint indexed id);
 
-    /// @notice Event emitted when a milestone confirmed.
-    event MilestoneConfirmed(uint indexed id);
+    /// @notice Event emitted when a milestone is completed.
+    event MilestoneCompleted(uint indexed id);
 
     /// @notice Event emitted when a milestone declined.
     event MilestoneDeclined(uint indexed id);
@@ -174,13 +174,11 @@ interface IMilestoneManager is IPaymentClient {
     /// @param id The milestone's id.
     function submitMilestone(uint id) external;
 
-    // @todo mp, nuggan: Should be renamed to `completeMilestone()`?
-
-    /// @notice Confirms a submitted milestone.
+    /// @notice Completes a milestone.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if id invalid or milestone not yet submitted.
     /// @param id The milestone's id.
-    function confirmMilestone(uint id) external;
+    function completeMilestone(uint id) external;
 
     /// @notice Declines a submitted milestone.
     /// @dev Only callable by authorized addresses.

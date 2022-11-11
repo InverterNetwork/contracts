@@ -466,36 +466,397 @@ contract MilestoneManagerTest is ModuleTest {
         }
     }
 
+    function testUpdateMilestoneFailsIfMilestoneAlreadyStarted(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotUpdateable
+                .selector
+        );
+        milestoneManager.updateMilestone(id, DURATION, BUDGET, DETAILS);
+    }
+
     //----------------------------------
     // Test: submitMilestone()
 
-    function testSubmitMilestone() public {}
+    function testSubmitMilestone(address[] memory contributors) public {
+        _addContributors(contributors);
 
-    function testSubmitMilestoneFailsIfCallerNotContributor() public {}
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
 
-    function testSubmitMilestoneFailsForInvalidId() public {}
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
-    function testSubmitMilestoneFailsIfMilestoneNotYetStarted() public {}
+        milestoneManager.startNextMilestone();
 
-    function testSubmitMilestoneFailsIfMilestoneAlreadyCompleted() public {}
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        assertTrue(milestoneManager.getMilestoneInformation(id).submitted);
+    }
+
+    function testSubmitMilestoneFailsIfCallerNotContributor(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__OnlyCallableByContributor
+                .selector
+        );
+        milestoneManager.submitMilestone(id);
+    }
+
+    function testSubmitMilestoneFailsForInvalidId(address[] memory contributors)
+        public
+    {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.submitMilestone(id + 1);
+    }
+
+    function testSubmitMilestoneFailsIfMilestoneNotYetStarted(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // Note that the milestone was not started.
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotSubmitable
+                .selector
+        );
+        milestoneManager.submitMilestone(id);
+    }
+
+    function testSubmitMilestoneFailsIfMilestoneAlreadyCompleted(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        // Note that milestone gets completed.
+        milestoneManager.completeMilestone(id);
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotSubmitable
+                .selector
+        );
+        milestoneManager.submitMilestone(id);
+    }
 
     //----------------------------------
-    // Test: confirmMilestone()
+    // Test: completeMilestone()
 
-    // @todo Rename to completeMilestone...
+    function testCompleteMilestone(address[] memory contributors) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        milestoneManager.completeMilestone(id);
+        assertTrue(milestoneManager.getMilestoneInformation(id).completed);
+    }
+
+    function testCompleteMilestoneFailsIfCallerNotAuthorized(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        _authorizer.setIsAuthorized(address(this), false);
+
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.completeMilestone(id);
+    }
+
+    function testCompleteMilestoneFailsForInvalidId(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.completeMilestone(id + 1);
+    }
+
+    function testCompleteMilestoneFailsIfMilestoneNotYetSubmitted(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Note that the milestone does not get submitted.
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotCompleteable
+                .selector
+        );
+        milestoneManager.completeMilestone(id);
+    }
 
     //----------------------------------
     // Test: declineMilestone()
 
-    function testDeclineMilestone() public {}
+    function testDeclineMilestone(address[] memory contributors) public {
+        _addContributors(contributors);
 
-    function testDeclineMilestoneFailsIfCallerNotAuthorized() public {}
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
 
-    function testDeclineMilestoneFailsForInvalidId() public {}
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
-    function testDeclineMilestoneFailsIfMilestoneNotYetSubmitted() public {}
+        milestoneManager.startNextMilestone();
 
-    function testDeclineMilestoneFailsIfMilestoneAlreadyCompleted() public {}
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        milestoneManager.declineMilestone(id);
+        assertTrue(!milestoneManager.getMilestoneInformation(id).submitted);
+    }
+
+    function testDeclineMilestoneFailsIfCallerNotAuthorized(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        _authorizer.setIsAuthorized(address(this), false);
+
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.declineMilestone(id);
+    }
+
+    function testDeclineMilestoneFailsForInvalidId(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.declineMilestone(id + 1);
+    }
+
+    function testDeclineMilestoneFailsIfMilestoneNotYetSubmitted(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Note that the milestone does not get submitted.
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotDeclineable
+                .selector
+        );
+        milestoneManager.declineMilestone(id);
+    }
+
+    function testDeclineMilestoneFailsIfMilestoneAlreadyCompleted(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        milestoneManager.completeMilestone(id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotDeclineable
+                .selector
+        );
+        milestoneManager.declineMilestone(id);
+    }
+
+    // @todo Missing tests for:
+    // Simple:
+    // - getMilestoneInformation fails if invalid id
+    // - getActiveMilestoneId
+    // - getActiveMilestoneId fails if not active milestone
+    // - isNextMilestoneActivatable returns false if no active milestone
+    // More Complex:
+    // - _ensureTokenAllowance
+    // - isAuthorizedPaymentProcessor
 
     //--------------------------------------------------------------------------
     // Assert Helper Functions
@@ -632,711 +993,4 @@ contract MilestoneManagerTest is ModuleTest {
         return invalids;
     }
     // =========================================================================
-
-    //--------------------------------------------------------------------------
-    // Test: Milestone API Functions
-
-    /*
-
-    //----------------------------------
-    // Test: addMilestone()
-
-    function testAddMilestone() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint id =
-            milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
-        assertEq(id, 0);
-        _assertMilestone(
-            0, TITLE, block.timestamp, DETAILS, false, false, false
-        );
-    }
-
-    function testAddMilestoneOnlyCallableIfAuthorized(address caller) public {
-        _authorizer.setIsAuthorized(caller, false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
-    }
-
-    function testAddMilestoneCallbackFailed() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        string memory invalidTitle = _createInvalidTitles()[0];
-
-        _expectProposalCallbackFailure(
-            "__Milestone_addMilestone(string,uint256,string)"
-        );
-        milestoneManager.addMilestone(invalidTitle, block.timestamp, DETAILS);
-    }
-
-    //----------------------------------
-    // Test: updateMilestoneDetails()
-
-    function testUpdateMilestoneDetails() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint id =
-            milestoneManager.addMilestone(TITLE, block.timestamp + 1, DETAILS);
-
-        string memory newDetails = "new Details";
-        milestoneManager.updateMilestoneDetails(id, newDetails);
-
-        _assertMilestone(
-            id, TITLE, block.timestamp + 1, newDetails, false, false, false
-        );
-    }
-
-    function testUpdateMilestoneDetailsOnlyCallableIfAuthorized(address caller)
-        public
-    {
-        _authorizer.setIsAuthorized(caller, false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.updateMilestoneDetails(0, DETAILS);
-    }
-
-    function testUpdateMilestoneDetailsCallbackFailed() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint id =
-            milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
-
-        uint invalidId = id + 1;
-
-        _expectProposalCallbackFailure(
-            "__Milestone_updateMilestoneDetails(uint256,string)"
-        );
-        milestoneManager.updateMilestoneDetails(invalidId, DETAILS);
-    }
-
-    //----------------------------------
-    // Test: updateMilestoneStartDate()
-
-    function testUpdateMilestoneStartDate() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint id =
-            milestoneManager.addMilestone(TITLE, block.timestamp + 1, DETAILS);
-
-        uint newStartDate = block.timestamp + 2;
-        milestoneManager.updateMilestoneStartDate(id, newStartDate);
-
-        _assertMilestone(
-            id, TITLE, newStartDate, DETAILS, false, false, false
-        );
-    }
-
-    function testUpdateMilestoneStartDateOnlyCallableIfAuthorized(
-        address caller
-    ) public {
-        _authorizer.setIsAuthorized(caller, false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.updateMilestoneStartDate(0, block.timestamp);
-    }
-
-    function testUpdateMilestoneStartDateCallbackFailed() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint invalidId = 1;
-
-        _expectProposalCallbackFailure(
-            "__Milestone_updateMilestoneStartDate(uint256,uint256)"
-        );
-        milestoneManager.updateMilestoneStartDate(invalidId, block.timestamp);
-    }
-
-    //----------------------------------
-    // Test: removeMilestone()
-
-    function testRemoveMilestone() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint id =
-            milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
-
-        milestoneManager.removeMilestone(id);
-        _assertMilestone({
-            id: id,
-            title: TITLE,
-            startDate: block.timestamp,
-            details: DETAILS,
-            submitted: false,
-            completed: false,
-            removed: true
-        });
-    }
-
-    function testRemoveMilestoneOnlyCallableIfAuthorized(address caller)
-        public
-    {
-        _authorizer.setIsAuthorized(caller, false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.removeMilestone(0);
-    }
-
-    function testRemoveMilestoneCallbackFailed() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint invalidId = 1;
-
-        _expectProposalCallbackFailure("__Milestone_removeMilestone(uint256)");
-        milestoneManager.removeMilestone(invalidId);
-    }
-
-    //----------------------------------
-    // Test: submitMilestone()
-
-    function testSubmitMilestone() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint id =
-            milestoneManager.addMilestone(TITLE, block.timestamp + 1, DETAILS);
-
-        // Grant contributor role to address(this).
-        milestoneManager.grantContributorRole(address(this));
-
-        milestoneManager.submitMilestone(id);
-        _assertMilestone({
-            id: id,
-            title: TITLE,
-            startDate: block.timestamp + 1,
-            details: DETAILS,
-            submitted: true,
-            completed: false,
-            removed: false
-        });
-    }
-
-    function testSubmitMilestoneOnlyCallableIfContributor(address caller)
-        public
-    {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        milestoneManager.revokeContributorRole(caller);
-
-        vm.prank(caller);
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__OnlyCallableByContributor
-                .selector
-        );
-        milestoneManager.submitMilestone(0);
-    }
-
-    function testSubmitMilestoneCallbackFailed() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        milestoneManager.grantContributorRole(address(this));
-
-        uint invalidId = 1;
-
-        _expectProposalCallbackFailure("__Milestone_submitMilestone(uint256)");
-        milestoneManager.submitMilestone(invalidId);
-    }
-
-    //----------------------------------
-    // Test: confirmMilestone()
-
-    function testConfirmMilestone() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint id =
-            milestoneManager.addMilestone(TITLE, block.timestamp, DETAILS);
-
-        milestoneManager.confirmMilestone(id);
-        _assertMilestone({
-            id: id,
-            title: TITLE,
-            startDate: block.timestamp,
-            details: DETAILS,
-            submitted: false,
-            completed: true,
-            removed: false
-        });
-    }
-
-    function testConfirmMilestoneOnlyCallableIfAuthorized(address caller)
-        public
-    {
-        _authorizer.setIsAuthorized(caller, false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.confirmMilestone(0);
-    }
-
-    function testConfirmMilestoneCallbackFailed() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint invalidId = 1;
-
-        _expectProposalCallbackFailure("__Milestone_confirmMilestone(uint256)");
-        milestoneManager.confirmMilestone(invalidId);
-    }
-
-    //----------------------------------
-    // Test: declineMilestone()
-
-    function testDeclineMilestone() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint id =
-            milestoneManager.addMilestone(TITLE, block.timestamp + 1, DETAILS);
-
-        // Note that a milestone is only declineable if currently submitted.
-        milestoneManager.grantContributorRole(address(this));
-        milestoneManager.submitMilestone(id);
-
-        milestoneManager.declineMilestone(id);
-        _assertMilestone({
-            id: id,
-            title: TITLE,
-            startDate: block.timestamp + 1,
-            details: DETAILS,
-            submitted: false,
-            completed: false,
-            removed: false
-        });
-    }
-
-    function testDeclineMilestoneOnlyCallableIfAuthorized(address caller)
-        public
-    {
-        _authorizer.setIsAuthorized(caller, false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        milestoneManager.declineMilestone(0);
-    }
-
-    function testDeclineMilestoneCallbackFailed() public {
-        _authorizer.setIsAuthorized(address(this), true);
-
-        uint invalidId = 1;
-
-        _expectProposalCallbackFailure("__Milestone_declineMilestone(uint256)");
-        milestoneManager.declineMilestone(invalidId);
-    }
-    */
-
-    //--------------------------------------------------------------------------
-    // Test: Proposal Callback Functions
-
-    /*
-    // @todo mp: Need mock to set completed field per hand.
-    function test__Milestone_removeMilestoneFailsIfMilestoneAlreadyStarted() public {
-        vm.startPrank(address(_proposal));
-
-        // Add and start a milestone.
-        milestoneManager.__Milestone_addMilestone(DURATION, BUDGET, TITLE, DETAILS);
-        // @todo mp: Set as completed.
-
-        // Note that a milestone is not removeable if it is already completed,
-        // i.e. confirmed.
-        milestoneManager.__Milestone_confirmMilestone(id);
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestoneNotRemovable
-                .selector
-        );
-        milestoneManager.__Milestone_removeMilestone(id);
-    }
-
-    //----------------------------------
-    // Test: __Milestone_startNextMilestone()
-
-    //----------------------------------
-    // Test: __Milestone_updateMilestoneDetails()
-
-    function test__Milestone_updateMilestoneDetails() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp + 1, DETAILS
-        );
-
-        string memory newDetails = "new Details";
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneDetailsUpdated(id, newDetails);
-
-        milestoneManager.__Milestone_updateMilestoneDetails(id, newDetails);
-
-        _assertMilestone(
-            id, TITLE, block.timestamp + 1, newDetails, false, false, false
-        );
-    }
-
-    function test__Milestone_updateMilestoneDetailsOnlyCallableByProposal(
-        address caller
-    ) public {
-        vm.assume(caller != address(_proposal));
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_updateMilestoneDetails(0, DETAILS);
-    }
-
-    function test__Milestone_updateMilestoneDetailsFailsForInvalidId() public {
-        vm.startPrank(address(_proposal));
-
-        uint invalidId = 1;
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidMilestoneId
-                .selector
-        );
-        milestoneManager.__Milestone_updateMilestoneDetails(invalidId, DETAILS);
-    }
-
-    function test__Milestone_updateMilestoneDetailsFailsForInvalidDetails()
-        public
-    {
-        string[] memory invalidDetails = _createInvalidDetails();
-
-        vm.startPrank(address(_proposal));
-
-        // Add milestone to update.
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp + 1, DETAILS
-        );
-
-        for (uint i; i < invalidDetails.length; i++) {
-            vm.expectRevert(
-                IMilestoneManager
-                    .Module__MilestoneManager__InvalidDetails
-                    .selector
-            );
-            milestoneManager.__Milestone_updateMilestoneDetails(
-                id, invalidDetails[i]
-            );
-        }
-    }
-
-    function test__Milestone_updateMilestoneDetailsFailsIfNotUpdateable()
-        public
-    {
-        vm.startPrank(address(_proposal));
-
-        // Note that a milestone is not updateable if it started already, i.e.
-        // if `block.timestamp` >= `startDate`.
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp, DETAILS
-        );
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestoneNotUpdateable
-                .selector
-        );
-        milestoneManager.__Milestone_updateMilestoneDetails(id, DETAILS);
-    }
-
-    //----------------------------------
-    // Test: __Milestone_updateMilestoneStartDate()
-
-    function test__Milestone_updateMilestoneStartDate() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp + 1, DETAILS
-        );
-
-        uint newStartDate = block.timestamp + 2;
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneStartDateUpdated(id, newStartDate);
-
-        milestoneManager.__Milestone_updateMilestoneStartDate(id, newStartDate);
-
-        _assertMilestone(
-            id, TITLE, newStartDate, DETAILS, false, false, false
-        );
-    }
-
-    function test__Milestone_updateMilestoneStartDateOnlyCallableByProposal(
-        address caller
-    ) public {
-        vm.assume(caller != address(_proposal));
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_updateMilestoneStartDate(
-            0, block.timestamp
-        );
-    }
-
-    function test__Milestone_updateMilestoneStartDateFailsForInvalidId()
-        public
-    {
-        vm.startPrank(address(_proposal));
-
-        uint invalidId = 1;
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidMilestoneId
-                .selector
-        );
-        milestoneManager.__Milestone_updateMilestoneStartDate(
-            invalidId, block.timestamp
-        );
-    }
-
-    function test__Milestone_updateMilestoneStartDateFailsForInvalidDetails()
-        public
-    {
-        // StartDate invalid if:
-        //  - less than block.timestamp
-        vm.warp(1);
-        uint invalidStartDate = 0;
-
-        vm.startPrank(address(_proposal));
-
-        // Add milestone to update.
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp + 1, DETAILS
-        );
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidStartDate
-                .selector
-        );
-        milestoneManager.__Milestone_updateMilestoneStartDate(
-            id, invalidStartDate
-        );
-    }
-
-    function test__Milestone_updateMilestoneStartDateFailsIfNotUpdateable()
-        public
-    {
-        vm.startPrank(address(_proposal));
-
-        // Note that a milestone is not updateable if it started already, i.e.
-        // if `block.timestamp` >= `startDate`.
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp, DETAILS
-        );
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestoneNotUpdateable
-                .selector
-        );
-        milestoneManager.__Milestone_updateMilestoneStartDate(
-            id, block.timestamp
-        );
-    }
-
-    //----------------------------------
-    // Test: __Milestone_submitMilestone()
-
-    function test__Milestone_submitMilestone() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp + 1, DETAILS
-        );
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneSubmitted(id);
-
-        milestoneManager.__Milestone_submitMilestone(id);
-
-        _assertMilestone({
-            id: id,
-            title: TITLE,
-            startDate: block.timestamp + 1,
-            details: DETAILS,
-            submitted: true,
-            completed: false,
-            removed: false
-        });
-    }
-
-    function test__Milestone_submitMilestoneOnlyCallableByProposal(
-        address caller
-    ) public {
-        vm.assume(caller != address(_proposal));
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_submitMilestone(0);
-    }
-
-    function test__Milestone_submitMilestoneFailsForInvalidId() public {
-        vm.startPrank(address(_proposal));
-
-        uint invalidId = 1;
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidMilestoneId
-                .selector
-        );
-        milestoneManager.__Milestone_submitMilestone(invalidId);
-    }
-
-    function test__Milestone_submitMilestoneFailsIfNotSubmitable() public {
-        vm.startPrank(address(_proposal));
-
-        // Note that a milestone is not updateable if it started already, i.e.
-        // if `block.timestamp` >= `startDate`.
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp, DETAILS
-        );
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestoneNotSubmitable
-                .selector
-        );
-        milestoneManager.__Milestone_submitMilestone(id);
-    }
-
-    //----------------------------------
-    // Test: __Milestone_confirmMilestone()
-
-    function test__Milestone_confirmMilestone() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp + 1, DETAILS
-        );
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneConfirmed(id);
-
-        milestoneManager.__Milestone_confirmMilestone(id);
-
-        _assertMilestone({
-            id: id,
-            title: TITLE,
-            startDate: block.timestamp + 1,
-            details: DETAILS,
-            submitted: false,
-            completed: true,
-            removed: false
-        });
-    }
-
-    function test__Milestone_confirmMilestoneOnlyCallableByProposal(
-        address caller
-    ) public {
-        vm.assume(caller != address(_proposal));
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_confirmMilestone(0);
-    }
-
-    function test__Milestone_confirmMilestoneFailsForInvalidId() public {
-        vm.startPrank(address(_proposal));
-
-        uint invalidId = 1;
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidMilestoneId
-                .selector
-        );
-        milestoneManager.__Milestone_confirmMilestone(invalidId);
-    }
-
-    function test__Milestone_confirmMilestoneFailsIfNotConfirmable() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp, DETAILS
-        );
-
-        // Note that a milestone is not confirmable if it is already removed.
-        milestoneManager.__Milestone_removeMilestone(id);
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestoneNotConfirmable
-                .selector
-        );
-        milestoneManager.__Milestone_confirmMilestone(id);
-    }
-
-    //----------------------------------
-    // Test: __Milestone_declineMilestone()
-
-    function test__Milestone_declineMilestone() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp + 1, DETAILS
-        );
-
-        // Note that a milestone is only declineable if it is submitted already.
-        milestoneManager.__Milestone_submitMilestone(id);
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneDeclined(id);
-
-        milestoneManager.__Milestone_declineMilestone(id);
-
-        _assertMilestone({
-            id: id,
-            title: TITLE,
-            startDate: block.timestamp + 1,
-            details: DETAILS,
-            submitted: false,
-            completed: false,
-            removed: false
-        });
-    }
-
-    function test__Milestone_declineMilestoneOnlyCallableByProposal(
-        address caller
-    ) public {
-        vm.assume(caller != address(_proposal));
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        milestoneManager.__Milestone_declineMilestone(0);
-    }
-
-    function test__Milestone_declineMilestoneFailsForInvalidId() public {
-        vm.startPrank(address(_proposal));
-
-        uint invalidId = 1;
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidMilestoneId
-                .selector
-        );
-        milestoneManager.__Milestone_declineMilestone(invalidId);
-    }
-
-    function test__Milestone_declineMilestoneFailsIfNotConfirmable() public {
-        vm.startPrank(address(_proposal));
-
-        uint id = milestoneManager.__Milestone_addMilestone(
-            TITLE, block.timestamp, DETAILS
-        );
-
-        // Note that a milestone is not declineable if it is not yet submitted.
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestoneNotDeclineable
-                .selector
-        );
-        milestoneManager.__Milestone_declineMilestone(id);
-    }*/
 }
