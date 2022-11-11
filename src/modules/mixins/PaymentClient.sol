@@ -35,6 +35,7 @@ abstract contract PaymentClient is IPaymentClient {
     /// @dev MUST be overriden by downstream contract.
     function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
+        view
         virtual
         returns (bool);
 

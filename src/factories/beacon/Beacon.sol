@@ -12,7 +12,7 @@ import {Address} from "@oz/utils/Address.sol";
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
 /**
- @title Beacon
+ * @title Beacon
  */
 contract Beacon is IBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
