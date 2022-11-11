@@ -25,6 +25,13 @@ import {
     IAuthorizer
 } from "src/proposal/IProposal.sol";
 
+/**
+ * @title Proposal
+ *
+ * @dev
+ *
+ * @author byterocket
+ */
 contract Proposal is
     IProposal,
     OwnableUpgradeable,
@@ -63,8 +70,8 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // Initializer
 
-    // @todo mp: Check that `_disableInitializers()` is used correctly.
-    //           Makes testing setup harder too.
+    // @todo CHECK!!!
+    ///// @custom:oz-upgrades-unsafe-allow constructor
     //constructor() {
     //    _disableInitializers();
     //}

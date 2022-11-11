@@ -11,6 +11,9 @@ import {Address} from "@oz/utils/Address.sol";
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
+/**
+ @title Beacon
+ */
 contract Beacon is IBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
     // Errors

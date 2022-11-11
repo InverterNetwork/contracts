@@ -6,7 +6,7 @@
 
 ## Installation
 
-The Proposel Inverter smart contracts are developed using the [foundry toolchain](https://getfoundry.sh).
+The Inverter smart contracts are developed using the [foundry toolchain](https://getfoundry.sh).
 
 1. Clone the repository
 2. `cd` into the repository

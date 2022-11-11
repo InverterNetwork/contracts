@@ -19,16 +19,17 @@ import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
  *
  * @dev A contract to manage a list of contributors.
  *
- *      It saves the assigned role and salary of each contributor in a registry,
- *      and keeps a list of active contributors in the style of the Gnosis Safe
- *      OwnerManager (https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol)
+ *      It saves the assigned role, name, and salary of each contributor in a
+ *      registry, and manages a list of contributors in the style of the
+ *      Gnosis Safe's [OwnerManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol).
  *
- *      Along each contributor address, the contract stores a salary and a role.
- *      This role is NOT intended for access control, but for offchain
+ *      Along each contributor address, the contract stores a salary, name, and
+ *      role. This role is NOT intended for access control, but for off-chain
  *      retrieval of team assignment or similar information.
  *
- *      Each active contributor is only represented once.
+ *      Each contributor is only represented once.
  *
+ * @author Adapted from Gnosis Safe
  * @author byterocket
  */
 abstract contract ContributorManager is

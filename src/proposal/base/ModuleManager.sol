@@ -22,8 +22,9 @@ import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
  *      which it is able to freely manage.
  *
  *      The transaction execution and module management is copied from Gnosis
- *      Safe.
+ *      Safe's [ModuleManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/ModuleManager.sol).
  *
+ * @author Adapted from Gnosis Safe
  * @author byterocket
  */
 abstract contract ModuleManager is

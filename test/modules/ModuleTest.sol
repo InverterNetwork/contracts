@@ -35,6 +35,7 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
+        // @audit-issue Inheritance error.
         _proposal.init(modules);
     }
 

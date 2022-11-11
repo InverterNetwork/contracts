@@ -7,7 +7,9 @@ import {Proxy} from "@oz/proxy/Proxy.sol";
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
-/// @custom:security-contact security@p00ls.com
+/**
+ * @title BeaconProxy
+ */
 contract BeaconProxy is Proxy {
     //--------------------------------------------------------------------------------
     // Events
