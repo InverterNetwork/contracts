@@ -74,7 +74,7 @@ abstract contract PaymentClient is IPaymentClient {
     function collectPaymentOrders()
         external
         virtual
-        returns (PaymentOrder[] memory)
+        returns (PaymentOrder[] memory, uint)
     {
         // Ensure caller is authorized to act as payment processor.
         // Note that function is implemented in downstream contract.
@@ -98,11 +98,14 @@ abstract contract PaymentClient is IPaymentClient {
         // Delete all outstanding orders.
         delete _orders;
 
+        // Cache outstanding token amount.
+        uint outstandingTokenAmountCache = _outstandingTokenAmount;
+
         // Set outstanding token amount to zero.
         _outstandingTokenAmount = 0;
 
         // Return copy of orders to payment processor.
-        return copy;
+        return (copy, outstandingTokenAmountCache);
     }
 
     /// @inheritdoc IPaymentClient
