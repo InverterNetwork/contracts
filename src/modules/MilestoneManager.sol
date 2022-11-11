@@ -335,19 +335,18 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
     }
 
-    // @audit-issue Rename to completeMilestone?
     /// @inheritdoc IMilestoneManager
-    function confirmMilestone(uint id) external onlyAuthorized validId(id) {
+    function completeMilestone(uint id) external onlyAuthorized validId(id) {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not confirmable if milestone not submitted yet.
         if (!m.submitted) {
-            revert Module__MilestoneManager__MilestoneNotConfirmable();
+            revert Module__MilestoneManager__MilestoneNotCompleteable();
         }
 
         if (!m.completed) {
             m.completed = true;
-            emit MilestoneConfirmed(id);
+            emit MilestoneCompleted(id);
         }
     }
 
