@@ -27,6 +27,11 @@ interface IPaymentClient {
     /// @notice Returns the list of outstanding payment orders.
     function paymentOrders() external view returns (PaymentOrder[] memory);
 
-    /// @notice Collects all outstanding payment orders, modifying internal state to mark them as completed.
-    function collectPaymentOrders() external returns (PaymentOrder[] memory);
+    /// @notice Collects outstanding payment orders.
+    /// @dev Marks the orders as completed for the client.
+    ///      The responsibility to fulfill the orders are now in the caller's
+    ///      hand!
+    /// @return list of payment orders
+    /// @return total amount of token to pay
+    function collectPaymentOrders() external returns (PaymentOrder[] memory, uint);
 }
