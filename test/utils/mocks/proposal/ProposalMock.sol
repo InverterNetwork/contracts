@@ -24,7 +24,7 @@ contract ProposalMock is
     IProposal,
     ModuleManagerMock,
     ContributorManagerMock,
-    ERC4626Upgradeable
+    ERC4626Upgradeable // @audit Should be FundingVaultMock.
 {
     IAuthorizer public authorizer;
     IPaymentProcessor public paymentProcessor;
