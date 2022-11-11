@@ -5,8 +5,6 @@ import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 
 contract PaymentProcessorMock is IPaymentProcessor {
-    // @todo mp, nuggan: Implement PaymentProcessorMock.
-
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 
