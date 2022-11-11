@@ -1,9 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// External Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
+import {
+    PaymentClient,
+    IPaymentProcessor
+} from "src/modules/mixins/PaymentClient.sol";
 
 // Internal Libraries
 import {LibString} from "src/common/LibString.sol";
@@ -19,8 +29,9 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *
  * @author byterocket
  */
-contract MilestoneManager is IMilestoneManager, Module {
+contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     using LibString for string;
+    using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -239,34 +250,35 @@ contract MilestoneManager is IMilestoneManager, Module {
 
     /// @inheritdoc IMilestoneManager
     function startNextMilestone() external onlyAuthorized {
-        // Pre conditions:
-        // - preMilestone confirmed
-        // - preMilestone duration ended
-
-        // Payment handling:
-        // - Payment for this milestone starts now
-        // - Need to make sure tokens exist!
-        //   - Fetch tokens from proposal to address(this) (?)
-        //   - Payment Order
-        //      - Implement PaymentClient interface
-        //      - Create PaymentOrder
-
-        // Milestone handling:
-        // - milestone starts now
-
         if (!isNextMilestoneActivateable()) {
             revert Module__MilestoneManager__MilestoneNotActivateable();
         }
 
         // Get next milestone's id and update _activeMilestone.
-        uint id = _milestones[_activeMilestone];
-        _activeMilestone = id;
+        uint next = _milestones[_activeMilestone];
+        _activeMilestone = next;
+
+        // Receive pointer to next milestone instance.
+        Milestone storage m = _milestoneRegistry[next];
 
         // Mark milestone as started, i.e. set its startTimestamp.
-        _milestoneRegistry[id].startTimestamp = block.timestamp;
+        m.startTimestamp = block.timestamp;
 
-        // @todo Initiate payment order.
-        //       Make sure token exists.
+        // Fetch current contributors from proposal.
+        address[] memory contributors = __Module_proposal.listContributors();
+        uint contributorsLen = contributors.length;
+
+        // Calculate the payout amount for each contributor.
+        // Note that currently each contributor receives the same amount.
+        uint contributorPayout = m.budget / contributorsLen;
+
+        // Add milestone's payout for each contributor as new payment order.
+        // Note that the payout SHOULD be fulfilled before the end of the
+        // milestone's duration.
+        uint dueTo = m.duration;
+        for (uint i; i < contributorsLen; i++) {
+            _addPaymentOrder(contributors[i], contributorPayout, dueTo);
+        }
     }
 
     /// @inheritdoc IMilestoneManager
@@ -311,6 +323,7 @@ contract MilestoneManager is IMilestoneManager, Module {
         }
     }
 
+    // @audit-issue Rename to completeMilestone?
     /// @inheritdoc IMilestoneManager
     function confirmMilestone(uint id) external onlyAuthorized validId(id) {
         Milestone storage m = _milestoneRegistry[id];
@@ -338,5 +351,62 @@ contract MilestoneManager is IMilestoneManager, Module {
         // Declining a milestone marks it as not submitted again.
         m.submitted = false;
         emit MilestoneDeclined(id);
+    }
+
+    //--------------------------------------------------------------------------
+    // {PaymentClient} Function Implementations
+
+    function _ensureTokenBalance(uint amount)
+        internal
+        override (PaymentClient)
+    {
+        uint balance = __Module_proposal.token().balanceOf(address(this));
+
+        if (balance < amount) {
+            // Trigger delegatecall-callback from proposal to transfer tokens
+            // to address(this).
+            _triggerProposalCallback(
+                abi.encodeWithSignature(
+                    "__Proposal_transferERC20(address,uint)",
+                    address(this),
+                    amount - balance
+                ),
+                Types.Operation.DelegateCall
+            );
+        }
+    }
+
+    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
+        internal
+        override (PaymentClient)
+    {
+        IERC20 token = __Module_proposal.token();
+        uint allowance = token.allowance(address(this), address(spender));
+
+        if (allowance < amount) {
+            token.safeIncreaseAllowance(address(spender), amount - allowance);
+        }
+    }
+
+    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
+        internal
+        view
+        override (PaymentClient)
+        returns (bool)
+    {
+        return __Module_proposal.paymentProcessor() == who;
+    }
+
+    //--------------------------------------------------------------------------
+    // Proposal Callback Functions
+
+    /// @dev WantProposalContext-callback function to transfer `amount` of
+    ///      tokens from proposal to `receiver`.
+    /// @dev For more info, see src/modules/base/Module.sol.
+    function __Proposal_transferERC20(address receiver, uint amount)
+        external
+        wantProposalContext
+    {
+        __Proposal_token.safeTransfer(receiver, amount);
     }
 }
