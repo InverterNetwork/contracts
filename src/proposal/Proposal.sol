@@ -96,12 +96,14 @@ contract Proposal is
         __ModuleManager_init(modules);
         __ContributorManager_init();
         __FundingVault_init(
-            proposalId, IERC20MetadataUpgradeable(address(token_))
+            proposalId_, IERC20MetadataUpgradeable(address(token_))
         );
 
         // Add necessary modules.
-        addModule(address(authorizer_));
-        addModule(address(paymentProcessor_));
+        // Note to not use the public addModule function as the factory
+        // is (most probably) not authorized.
+        __ModuleManager_addModule(address(authorizer_));
+        __ModuleManager_addModule(address(paymentProcessor_));
     }
 
     //--------------------------------------------------------------------------

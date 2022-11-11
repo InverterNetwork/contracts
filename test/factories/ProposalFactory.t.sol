@@ -38,7 +38,7 @@ contract ProposalFactoryTest is Test {
     function setUp() public {
         authorizer = new AuthorizerMock();
 
-        target = new ProposalMock(authorizer);
+        target = new ProposalMock(authorizer); // @audit Don't use Mock!!
         moduleFactory = new ModuleFactoryMock();
 
         factory = new ProposalFactory(address(target), address(moduleFactory));
@@ -55,7 +55,7 @@ contract ProposalFactoryTest is Test {
 
         // Create ProposalConfig instance.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig(IERC20(new ERC20Mock("Test Token", "TEST")));
+            .ProposalConfig(IERC20(new ERC20Mock("Mock Token", "MOCK")));
 
         // Create {IAuthorizer} ModuleConfig instance.
         IProposalFactory.ModuleConfig memory authorizerConfig = IProposalFactory
