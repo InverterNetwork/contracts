@@ -64,26 +64,17 @@ contract ContributorManagerTest is Test {
     // Tests: Initialization
 
     function testInit() public {
-        contributorManager = new ContributorManagerMock();
-        contributorManager.init();
-
         // List of contributors should be empty.
         address[] memory contributors = contributorManager.listContributors();
         assertEq(contributors.length, 0);
     }
 
     function testReinitFails() public {
-        contributorManager = new ContributorManagerMock();
-        contributorManager.init();
-
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         contributorManager.init();
     }
 
     function testInitFailsForNonInitializerFunction() public {
-        contributorManager = new ContributorManagerMock();
-        contributorManager.init();
-
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
         contributorManager.initNoInitializer();
     }

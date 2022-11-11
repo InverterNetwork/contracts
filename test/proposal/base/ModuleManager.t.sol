@@ -71,17 +71,11 @@ contract ModuleManagerTest is Test {
     }
 
     function testReinitFails() public {
-        moduleManager = new ModuleManagerMock();
-        moduleManager.init(EMPTY_LIST);
-
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         moduleManager.init(EMPTY_LIST);
     }
 
     function testInitFailsForNonInitializerFunction() public {
-        moduleManager = new ModuleManagerMock();
-        moduleManager.init(EMPTY_LIST);
-
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
         moduleManager.initNoInitializer(EMPTY_LIST);
     }

@@ -268,6 +268,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         address[] memory contributors = __Module_proposal.listContributors();
         uint contributorsLen = contributors.length;
 
+        // @todo marvin, nuggan: What do if no contributors given?
+        if (contributorsLen == 0) {
+            revert("No contributors");
+        }
+
         // Calculate the payout amount for each contributor.
         // Note that currently each contributor receives the same amount.
         uint contributorPayout = m.budget / contributorsLen;
@@ -287,7 +292,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint duration,
         uint budget,
         string memory details
-    ) external onlyAuthorized validId(id) validDetails(details) {
+    )
+        external
+        onlyAuthorized
+        validId(id)
+        validDuration(duration)
+        validBudget(budget)
+        validDetails(details)
+    {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not updateable if milestone started already.
@@ -365,14 +377,19 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         if (balance < amount) {
             // Trigger delegatecall-callback from proposal to transfer tokens
             // to address(this).
-            _triggerProposalCallback(
+            bool ok;
+            (ok, /*returnData*/ ) = _triggerProposalCallback(
                 abi.encodeWithSignature(
-                    "__Proposal_transferERC20(address,uint)",
+                    "__Proposal_transferERC20(address,uint256)",
                     address(this),
                     amount - balance
                 ),
                 Types.Operation.DelegateCall
             );
+
+            if (!ok) {
+                revert Module__PaymentClient__TokenTransferFailed();
+            }
         }
     }
 
