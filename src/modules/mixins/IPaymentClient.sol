@@ -19,6 +19,9 @@ interface IPaymentClient {
     /// @notice Function is only callable by authorized address.
     error Module__PaymentClient__CallerNotAuthorized();
 
+    /// @notice ERC20 token transfer failed.
+    error Module__PaymentClient__TokenTransferFailed();
+
     event PaymentAdded(address indexed recipient, uint amount);
 
     /// @notice Returns the list of outstanding payment orders.

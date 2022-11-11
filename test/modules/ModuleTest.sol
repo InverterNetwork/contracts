@@ -23,6 +23,8 @@ import {PaymentProcessorMock} from
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
+    using LibString for string;
+
     Proposal internal _proposal = new Proposal();
 
     // Mocks
@@ -47,7 +49,6 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        // @audit-issue Inheritance error.
         _proposal.init(
             _PROPOSAL_ID, _token, modules, _authorizer, _paymentProcessor
         );
@@ -85,11 +86,36 @@ abstract contract ModuleTest is Test {
     //
     // Prefixed with `_assume`.
 
+    //--------------------------------------------------------------------------------
+    // Helpers
+
     function _assumeNonEmptyString(string memory a) internal {
-        vm.assume(bytes(a).length != 0);
+        vm.assume(!a.isEmpty());
     }
 
     function _assumeTimestampNotInPast(uint a) internal {
         vm.assume(a >= block.timestamp);
+    }
+
+    // assumeElemNotInSet functions for different types:
+
+    function _assumeElemNotInSet(address[] memory set, address elem) internal {
+        for (uint i; i < set.length; i++) {
+            vm.assume(elem != set[i]);
+        }
+    }
+
+    function _assumeElemNotInSet(uint[] memory set, uint elem) internal {
+        for (uint i; i < set.length; i++) {
+            vm.assume(elem != set[i]);
+        }
+    }
+
+    function _assumeElemNotInSet(string[] memory set, string memory elem)
+        internal
+    {
+        for (uint i; i < set.length; i++) {
+            vm.assume(!elem.equals(set[i]));
+        }
     }
 }
