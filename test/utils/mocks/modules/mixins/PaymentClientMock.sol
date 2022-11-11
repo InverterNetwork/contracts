@@ -30,11 +30,7 @@ contract PaymentClientMock is IPaymentClient {
     //--------------------------------------------------------------------------
     // IPaymentClient Functions
 
-    function paymentOrders()
-        external
-        view
-        returns (PaymentOrder[] memory)
-    {
+    function paymentOrders() external view returns (PaymentOrder[] memory) {
         return _orders;
     }
 

@@ -8,7 +8,5 @@ contract PaymentProcessorMock is IPaymentProcessor {
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 
-    function processPayments(IPaymentClient client)
-        external
-    {}
+    function processPayments(IPaymentClient client) external {}
 }
