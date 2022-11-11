@@ -48,6 +48,7 @@ contract PaymentProcessorTest is ModuleTest {
 
     function testProcessPayments(address recipient, uint amount) public {
         vm.assume(recipient != address(paymentProcessor));
+        vm.assume(recipient != address(client));
         vm.assume(recipient != address(0));
         vm.assume(amount != 0);
 

@@ -46,6 +46,10 @@ testModules: ## Run modules/ package tests
 testFactories: ## Run factories/ package tests
 	@forge test -vvv --match-path "*/factories/*"
 
+.PHONY: testE2e
+testE2e: ## Rune e2e test suite
+	@forge test -vvvv --match-path "*/e2e/*"
+
 # -----------------------------------------------------------------------------
 # Static Analyzers
 
