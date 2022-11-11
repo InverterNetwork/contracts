@@ -33,5 +33,7 @@ interface IPaymentClient {
     ///      hand!
     /// @return list of payment orders
     /// @return total amount of token to pay
-    function collectPaymentOrders() external returns (PaymentOrder[] memory, uint);
+    function collectPaymentOrders()
+        external
+        returns (PaymentOrder[] memory, uint);
 }
