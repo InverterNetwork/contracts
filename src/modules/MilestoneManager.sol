@@ -105,11 +105,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal,
+        IProposal proposal_,
         Metadata memory metadata,
         bytes memory /*configdata*/
     ) external override (Module) initializer {
-        __Module_init(proposal, metadata);
+        __Module_init(proposal_, metadata);
 
         // Set up sentinel to signal empty list of milestones.
         _milestones[_SENTINEL] = _SENTINEL;
