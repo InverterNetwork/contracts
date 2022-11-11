@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+// Internal Dependencies
+import {Proposal} from "src/proposal/Proposal.sol";
+
 // Internal Interfaces
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
@@ -10,18 +13,27 @@ import {IModule, IProposal} from "src/modules/base/IModule.sol";
 import {LibString} from "src/common/LibString.sol";
 
 // Mocks
-import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
+// @todo Authorizer should be moved to utils/mocks/modules/ ?
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {PaymentProcessorMock} from
+    "test/utils/mocks/modules/PaymentProcessorMock.sol";
 
 /**
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
+    Proposal internal _proposal = new Proposal();
+
     // Mocks
     AuthorizerMock internal _authorizer = new AuthorizerMock();
-    ProposalMock internal _proposal = new ProposalMock(_authorizer);
+    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
+    PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
 
-    // Constants
+    // Proposal Constants
+    uint internal constant _PROPOSAL_ID = 1;
+
+    // Module Constants
     uint internal constant _MAJOR_VERSION = 1;
     string internal constant _GIT_URL = "https://github.com/org/module";
 
@@ -36,7 +48,9 @@ abstract contract ModuleTest is Test {
         modules[0] = address(module);
 
         // @audit-issue Inheritance error.
-        _proposal.init(modules);
+        _proposal.init(
+            _PROPOSAL_ID, _token, modules, _authorizer, _paymentProcessor
+        );
     }
 
     //--------------------------------------------------------------------------------

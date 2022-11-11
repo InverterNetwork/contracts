@@ -132,6 +132,14 @@ abstract contract ModuleManager is
         }
     }
 
+    function __ModuleManager_addModule(address module)
+        internal
+        isNotModule(module)
+        validModule(module)
+    {
+        _commitAddModule(module);
+    }
+
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
