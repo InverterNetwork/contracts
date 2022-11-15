@@ -71,7 +71,7 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue(!milestoneManager.hasActiveMilestone());
 
         // Next milestone not activateable.
-        assertTrue(!milestoneManager.isNextMilestoneActivateable());
+        assertTrue(!milestoneManager.isNextMilestoneActivatable());
 
         // Current milestone list is empty.
         uint[] memory milestones = milestoneManager.listMilestoneIds();
@@ -81,6 +81,176 @@ contract MilestoneManagerTest is ModuleTest {
     function testReinitFails() public override (ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         milestoneManager.init(_proposal, _METADATA, bytes(""));
+    }
+
+    //--------------------------------------------------------------------------
+    // Tests: Milestone View Functions
+
+    //----------------------------------
+    // Test: getMilestoneInformation()
+
+    function testGetMilesoneInformation() public {
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        _assertMilestone(id, DURATION, BUDGET, TITLE, DETAILS, false, false);
+    }
+
+    function testGetMilesoneInformationFailsIfNoMilestoneExists() public {
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.getMilestoneInformation(1);
+    }
+
+    //----------------------------------
+    // Test: listMilestoneIds()
+
+    function testListMilestoneIds(uint amount) public {
+        // Note to stay reasonable.
+        vm.assume(amount < 10);
+
+        for (uint i; i < amount; i++) {
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        }
+
+        uint[] memory ids = milestoneManager.listMilestoneIds();
+
+        for (uint i; i < amount; i++) {
+            // Note that list is traversed and id's start at 1.
+            ids[i] = amount - i;
+        }
+    }
+
+    //----------------------------------
+    // Test: getActiveMilestoneId()
+
+    function testGetActiveMilestoneId(address[] memory contributors) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        assertEq(milestoneManager.getActiveMilestoneId(), id);
+    }
+
+    function testGetActiveMilestoneIdFailsIfNoActiveMilestone() public {
+        // Note to add a milestone to not receive an `InvalidMilestoneId` error.
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__NoActiveMilestone
+                .selector
+        );
+        milestoneManager.getActiveMilestoneId();
+    }
+
+    //----------------------------------
+    // Test: hasActiveMilestone()
+
+    function testHasActiveMilestone(address[] memory contributors) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        assertTrue(milestoneManager.hasActiveMilestone());
+    }
+
+    function testHasActiveMilestoneFalseIfNoActiveMilestoneYet() public {
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        assertTrue(!milestoneManager.hasActiveMilestone());
+    }
+
+    function testHasActiveMilestoneFalseIfMilestoneAlreadyCompleted(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        milestoneManager.submitMilestone(id);
+
+        milestoneManager.completeMilestone(id);
+
+        assertTrue(!milestoneManager.hasActiveMilestone());
+    }
+
+    function testHasActiveMilestoneFalseIfMilestonesDurationOver(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        vm.warp(block.timestamp + DURATION + 1);
+        assertTrue(!milestoneManager.hasActiveMilestone());
+    }
+
+    //----------------------------------
+    // Test: isNextMilestoneActivatable()
+
+    function testIsNextMilestoneActivatable() public {
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        assertTrue(milestoneManager.isNextMilestoneActivatable());
+    }
+
+    function testIsNextMilestoneActivatableFalseIfNoNextMilestone() public {
+        assertTrue(!milestoneManager.isNextMilestoneActivatable());
+    }
+
+    function testIsNextMilestoneActivatableFalseIfHasCurrentActiveMilestone(
+        address[] memory contributors
+    )
+        public
+    {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        assertTrue(!milestoneManager.isNextMilestoneActivatable());
     }
 
     //--------------------------------------------------------------------------
@@ -281,14 +451,24 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.removeMilestone(notPrevId, id);
     }
 
+    function testRemoveMilestoneFailsIfMilestoneActive(address[] memory contributors) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id = milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        vm.expectRevert(IMilestoneManager.Module__MilestoneManager__MilestoneNotRemovable.selector);
+        milestoneManager.removeMilestone(_SENTINEL, id);
+    }
+
     //----------------------------------
     // Test: startNextMilestone()
-
-    // 1. Start Milestone
-    // 2. Contributor submits milestone
-    // 3. Authorized
-    //  a) confirms milestone
-    //  b) declines milestone
 
     function testStartNextMilestone(address[] memory contributors) public {
         _addContributors(contributors);
@@ -340,7 +520,7 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.startNextMilestone();
     }
 
-    function testStartNextMilestoneFailsIfNextMilestoneNotActivateable()
+    function testStartNextMilestoneFailsIfNextMilestoneNotActivatable()
         public
     {
         // Fails due to no current active milestone.
@@ -350,13 +530,6 @@ contract MilestoneManagerTest is ModuleTest {
                 .selector
         );
         milestoneManager.startNextMilestone();
-
-        // @todo This needs more testing.
-        // Following possibilities are missing:
-        // - hasActiveMilestone returns false due to
-        //  * !m.completed
-        //  * !m.startTimestamp + m.duration < block.timestamp
-        // - isExitingMilestoneId returns false
     }
 
     function testStartNextMilestoneFailsIfTransferOfTokensFromProposalFailed(
@@ -516,6 +689,7 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _addContributors(contributors);
+        _assumeElemNotInSet(contributors, address(this));
 
         // Mint tokens to proposal.
         // Note that these tokens are transfered to the milestone module
@@ -848,20 +1022,9 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.declineMilestone(id);
     }
 
-    // @todo Missing tests for:
-    // Simple:
-    // - getMilestoneInformation fails if invalid id
-    // - getActiveMilestoneId
-    // - getActiveMilestoneId fails if not active milestone
-    // - isNextMilestoneActivatable returns false if no active milestone
-    // More Complex:
-    // - _ensureTokenAllowance
-    // - isAuthorizedPaymentProcessor
-
     //--------------------------------------------------------------------------
     // Assert Helper Functions
 
-    // @todo Refactor to reflect updated Milestone struct.
     /// @dev Asserts milestone with given data exists.
     function _assertMilestone(
         uint id,

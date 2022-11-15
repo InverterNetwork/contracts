@@ -115,6 +115,7 @@ contract Proposal is
         override (ModuleManager)
         returns (bool)
     {
+        // @todo Not tested
         return _isOwnerOrAuthorized(who);
     }
 
@@ -141,8 +142,10 @@ contract Proposal is
         (ok, returnData) = target.call(data);
 
         if (ok) {
+            // @todo Not tested
             return returnData;
         } else {
+            // @todo Not tested
             revert Proposal__ExecuteTxFailed();
         }
     }

@@ -35,7 +35,6 @@ contract ModuleFactoryTest is Test {
     BeaconMock beacon;
 
     // Constants
-    // @todo mp: Move to some common contract. See todo in Milestone.t.sol too.
     uint constant MAJOR_VERSION = 1;
     string constant GIT_URL = "https://github.com/organization/module";
 
@@ -53,8 +52,6 @@ contract ModuleFactoryTest is Test {
         assertEq(factory.owner(), address(this));
         assertEq(factory.pendingOwner(), address(0));
     }
-
-    // @todo mp, felix: Add tests for `getTargetAndId`.
 
     //--------------------------------------------------------------------------
     // Test: registerMetadata
@@ -164,7 +161,6 @@ contract ModuleFactoryTest is Test {
         beacon.overrideImplementation(address(0));
 
         // Note that an `assert()` statement fails.
-        // @todo mp, felix: Can we test this better?
         vm.expectRevert();
         factory.createModule(metadata, IProposal(proposal), configdata);
     }

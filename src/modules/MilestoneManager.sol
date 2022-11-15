@@ -164,10 +164,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         Milestone storage m = _milestoneRegistry[_activeMilestone];
 
-        return m.completed && m.startTimestamp + m.duration < block.timestamp;
+        // Milestone active if:
+        // - milestone not yet completed
+        // - milestone started and still running
+        return !m.completed && m.startTimestamp != 0
+            && m.startTimestamp + m.duration >= block.timestamp;
     }
 
-    function isNextMilestoneActivateable() public view returns (bool) {
+    function isNextMilestoneActivatable() public view returns (bool) {
         if (hasActiveMilestone()) {
             return false;
         }
@@ -233,6 +237,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not removeable if milestone started already.
+        // Note that this also ensures completed milestones are non-removable.
         if (m.startTimestamp != 0) {
             revert Module__MilestoneManager__MilestoneNotRemovable();
         }
@@ -250,7 +255,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     /// @inheritdoc IMilestoneManager
     function startNextMilestone() external onlyAuthorized {
-        if (!isNextMilestoneActivateable()) {
+        if (!isNextMilestoneActivatable()) {
             revert Module__MilestoneManager__MilestoneNotActivateable();
         }
 
@@ -268,8 +273,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         address[] memory contributors = __Module_proposal.listContributors();
         uint contributorsLen = contributors.length;
 
-        // @todo marvin, nuggan: What do if no contributors given?
+        // @todo Fail reasonable if contributors' list empty.
         if (contributorsLen == 0) {
+            // @todo Not tested + implement reasonable failure mode.
             revert("No contributors");
         }
 

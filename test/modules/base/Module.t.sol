@@ -17,27 +17,6 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-/**
- * Errors library for Module's custom errors.
- * Enables checking for errors with vm.expectRevert(Errors.<Error>).
- */
-library Errors {
-    bytes internal constant Module__CallerNotAuthorized =
-        abi.encodeWithSignature("Module__CallerNotAuthorized()");
-
-    bytes internal constant Module__OnlyCallableByProposal =
-        abi.encodeWithSignature("Module__OnlyCallableByProposal()");
-
-    bytes internal constant Module__WantProposalContext =
-        abi.encodeWithSignature("Module__WantProposalContext()");
-
-    bytes internal constant Module__InvalidProposalAddress =
-        abi.encodeWithSignature("Module__InvalidProposalAddress()");
-
-    bytes internal constant Module__InvalidMetadata =
-        abi.encodeWithSignature("Module__InvalidMetadata()");
-}
-
 contract ModuleTest is Test {
     // SuT
     ModuleMock module;
@@ -108,7 +87,7 @@ contract ModuleTest is Test {
     function testInitFailsForInvalidProposal() public {
         module = new ModuleMock();
 
-        vm.expectRevert(Errors.Module__InvalidProposalAddress);
+        vm.expectRevert(IModule.Module__InvalidProposalAddress.selector);
         module.init(IProposal(address(0)), DATA);
     }
 
@@ -118,7 +97,7 @@ contract ModuleTest is Test {
         // Invalid if gitURL empty.
         IModule.Metadata memory data = IModule.Metadata(majorVersion, "");
 
-        vm.expectRevert(Errors.Module__InvalidMetadata);
+        vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(proposal, data);
     }
 
@@ -139,14 +118,14 @@ contract ModuleTest is Test {
     function testPauseIsAuthenticated() public {
         authorizer.setAllAuthorized(false);
 
-        vm.expectRevert(Errors.Module__CallerNotAuthorized);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         module.pause();
     }
 
     function testUnpauseIsAuthenticated() public {
         authorizer.setAllAuthorized(false);
 
-        vm.expectRevert(Errors.Module__CallerNotAuthorized);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         module.unpause();
     }
 }
