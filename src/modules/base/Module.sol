@@ -10,7 +10,7 @@ import {
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
-import {ProposalStorage} from "src/generated/ProposalStorage.sol";
+import {ProposalStorage} from "src/generated/ProposalStorage.gen.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
