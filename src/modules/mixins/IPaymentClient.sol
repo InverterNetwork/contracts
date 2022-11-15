@@ -22,10 +22,22 @@ interface IPaymentClient {
     /// @notice ERC20 token transfer failed.
     error Module__PaymentClient__TokenTransferFailed();
 
+    /// @notice Given recipient invalid.
+    error Module__PaymentClient__InvalidRecipient();
+
+    /// @notice Given amount invalid.
+    error Module__PaymentClient__InvalidAmount();
+
+    /// @notice Given dueTo invalid.
+    error Module__PaymentClient__InvalidDueTo();
+
     event PaymentAdded(address indexed recipient, uint amount);
 
     /// @notice Returns the list of outstanding payment orders.
     function paymentOrders() external view returns (PaymentOrder[] memory);
+
+    /// @notice Returns the total outstanding token payment amount.
+    function outstandingTokenAmount() external view returns (uint);
 
     /// @notice Collects outstanding payment orders.
     /// @dev Marks the orders as completed for the client.

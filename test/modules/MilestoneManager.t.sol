@@ -236,9 +236,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testIsNextMilestoneActivatableFalseIfHasCurrentActiveMilestone(
         address[] memory contributors
-    )
-        public
-    {
+    ) public {
         _addContributors(contributors);
 
         // Mint tokens to proposal.
@@ -451,7 +449,9 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.removeMilestone(notPrevId, id);
     }
 
-    function testRemoveMilestoneFailsIfMilestoneActive(address[] memory contributors) public {
+    function testRemoveMilestoneFailsIfMilestoneActive(
+        address[] memory contributors
+    ) public {
         _addContributors(contributors);
 
         // Mint tokens to proposal.
@@ -459,11 +459,16 @@ contract MilestoneManagerTest is ModuleTest {
         // when the payment orders are created.
         _token.mint(address(_proposal), BUDGET);
 
-        uint id = milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
         milestoneManager.startNextMilestone();
 
-        vm.expectRevert(IMilestoneManager.Module__MilestoneManager__MilestoneNotRemovable.selector);
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotRemovable
+                .selector
+        );
         milestoneManager.removeMilestone(_SENTINEL, id);
     }
 
@@ -1147,11 +1152,12 @@ contract MilestoneManagerTest is ModuleTest {
         view
         returns (address[] memory)
     {
-        address[] memory invalids = new address[](3);
+        address[] memory invalids = new address[](4);
 
         invalids[0] = address(0);
         invalids[1] = _SENTINEL_CONTRIBUTOR;
         invalids[2] = address(_proposal);
+        invalids[3] = address(milestoneManager);
 
         return invalids;
     }
