@@ -21,14 +21,14 @@ contract PaymentProcessorTest is ModuleTest {
     PaymentProcessor paymentProcessor = new PaymentProcessor();
 
     // Mocks
-    PaymentClientMock client = new PaymentClientMock();
+    PaymentClientMock paymentClient = new PaymentClientMock(_token);
 
     function setUp() public {
         _setUpProposal(paymentProcessor);
 
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
 
-        // Note that no authorization is needed.
+        paymentClient.setIsAuthorized(address(paymentProcessor), true);
     }
 
     //--------------------------------------------------------------------------
@@ -48,25 +48,19 @@ contract PaymentProcessorTest is ModuleTest {
 
     function testProcessPayments(address recipient, uint amount) public {
         vm.assume(recipient != address(paymentProcessor));
-        vm.assume(recipient != address(client));
+        vm.assume(recipient != address(paymentClient));
         vm.assume(recipient != address(0));
         vm.assume(amount != 0);
 
         // Add payment order to client.
-        client.addPaymentOrder(recipient, amount, block.timestamp);
+        paymentClient.addPaymentOrder(recipient, amount, block.timestamp);
 
-        // Mint tokens to client.
-        _token.mint(address(client), amount);
-
-        // Approve amount of tokens from client for paymentProcessor.
-        client.approve(_token, address(paymentProcessor), amount);
-
-        // Call processPayments
-        paymentProcessor.processPayments(client);
+        // Call processPayments.
+        paymentProcessor.processPayments(paymentClient);
 
         // Check correct balances.
         assertEq(_token.balanceOf(address(recipient)), amount);
-        assertEq(_token.balanceOf(address(client)), 0);
+        assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);

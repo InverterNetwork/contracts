@@ -9,6 +9,30 @@ import {
 
 abstract contract PaymentClient is IPaymentClient {
     //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier validRecipient(address recipient) {
+        if (recipient == address(0) || recipient == address(this)) {
+            revert Module__PaymentClient__InvalidRecipient();
+        }
+        _;
+    }
+
+    modifier validAmount(uint amount) {
+        if (amount == 0) {
+            revert Module__PaymentClient__InvalidAmount();
+        }
+        _;
+    }
+
+    modifier validDueTo(uint dueTo) {
+        if (dueTo < block.timestamp) {
+            revert Module__PaymentClient__InvalidDueTo();
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
     // State
 
     /// @dev The list of oustanding orders.
@@ -49,6 +73,9 @@ abstract contract PaymentClient is IPaymentClient {
     function _addPaymentOrder(address recipient, uint amount, uint dueTo)
         internal
         virtual
+        validRecipient(recipient)
+        validAmount(amount)
+        validDueTo(dueTo)
     {
         // Create new PaymentOrder instance.
         PaymentOrder memory order =
@@ -116,5 +143,9 @@ abstract contract PaymentClient is IPaymentClient {
         returns (PaymentOrder[] memory)
     {
         return _orders;
+    }
+
+    function outstandingTokenAmount() external view virtual returns (uint) {
+        return _outstandingTokenAmount;
     }
 }

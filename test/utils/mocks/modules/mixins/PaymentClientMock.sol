@@ -1,59 +1,65 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// SuT
+import {
+    PaymentClient, IPaymentClient
+} from "src/modules/mixins/PaymentClient.sol";
 
-import {IPaymentClient} from "src/modules/mixins/PaymentClient.sol";
+// Internal Interfaces
+import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 
-contract PaymentClientMock is IPaymentClient {
-    IPaymentClient.PaymentOrder[] internal _orders;
+// Mocks
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-    uint internal _outstandingTokenAmount;
+contract PaymentClientMock is PaymentClient {
+    ERC20Mock token;
+
+    mapping(address => bool) authorized;
+
+    constructor(ERC20Mock token_) {
+        token = token_;
+    }
+
+    //--------------------------------------------------------------------------
+    // Mock Functions
+
+    function setIsAuthorized(address who, bool to) external {
+        authorized[who] = to;
+    }
+
+    //--------------------------------------------------------------------------
+    // IPaymentClient Wrapper Functions
 
     function addPaymentOrder(address recipient, uint amount, uint dueTo)
         external
     {
-        _outstandingTokenAmount += amount;
-
-        _orders.push(
-            IPaymentClient.PaymentOrder(
-                recipient, amount, block.timestamp, dueTo
-            )
-        );
-    }
-
-    function approve(IERC20 token, address spender, uint amount) external {
-        token.approve(spender, amount);
+        _addPaymentOrder(recipient, amount, dueTo);
     }
 
     //--------------------------------------------------------------------------
-    // IPaymentClient Functions
+    // IPaymentClient Overriden Functions
 
-    function paymentOrders() external view returns (PaymentOrder[] memory) {
-        return _orders;
+    function _ensureTokenBalance(uint amount)
+        internal
+        override (PaymentClient)
+    {
+        token.mint(address(this), amount);
     }
 
-    function collectPaymentOrders()
-        external
-        returns (PaymentOrder[] memory, uint)
+    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
+        internal
+        override (PaymentClient)
     {
-        // Create a copy of all orders to return.
-        PaymentOrder[] memory copy = new PaymentOrder[](_orders.length);
-        for (uint i; i < _orders.length; i++) {
-            copy[i] = _orders[i];
-        }
+        token.approve(address(spender), amount);
+    }
 
-        // Delete all outstanding orders.
-        delete _orders;
-
-        // Cache outstanding token amount.
-        uint outstandingTokenAmountCache = _outstandingTokenAmount;
-
-        // Set outstanding token amount to zero.
-        _outstandingTokenAmount = 0;
-
-        // Return copy of orders to payment processor.
-        return (copy, outstandingTokenAmountCache);
+    function _isAuthorizedPaymentProcessor(IPaymentProcessor)
+        internal
+        view
+        override (PaymentClient)
+        returns (bool)
+    {
+        return authorized[msg.sender];
     }
 }
