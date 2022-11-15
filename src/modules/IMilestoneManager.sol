@@ -43,7 +43,7 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given duration invalid.
     error Module__MilestoneManager__InvalidDuration();
 
-    // @todo mp, nuggan, marvin: Add error for invalid Budget here if necessary.
+    // @audit-info If later needed, add error for invalid budget.
 
     /// @notice Given title invalid.
     error Module__MilestoneManager__InvalidTitle();
@@ -148,7 +148,10 @@ interface IMilestoneManager is IPaymentClient {
     /// @param id The milestone's id to remove.
     function removeMilestone(uint prevId, uint id) external;
 
-    // @todo startNextMilestone function doc.
+    /// @notice Starts the next milestones.
+    /// @dev Creates the payment orders to pay contributors.
+    /// @dev Reverts if next milestone not activatable or proposal's contributor
+    ///      list empty.
     /// @dev Only callable by authorized addresses.
     function startNextMilestone() external;
 

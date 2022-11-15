@@ -39,7 +39,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // State
 
-    // @todo marvin, nuggan: Does this need to be authorized?
+    // @audit Does processPaymets() need to be authorized?
 
     /// @inheritdoc IPaymentProcessor
     function processPayments(IPaymentClient client) external {

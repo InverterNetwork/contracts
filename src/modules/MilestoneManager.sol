@@ -23,9 +23,23 @@ import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
 /**
- * @title Milestone Module
+ * @title MilestoneManager
  *
- * @dev @todo felix: Add contract documentation
+ * @dev Module to manage milestones for a proposal.
+ *
+ *      A milestone can exists in 4 different states:
+ *        - added
+ *              The milestone got added to the contract.
+ *        - active
+ *              When a milestone is started, it initias payment orders to pay
+ *              the proposal's contributors.
+ *              A milestone is active, until either its duration is over or it's
+ *              marked as completed.
+ *        - submitted
+ *              A proposal contributor marked the milestone as submitted.
+ *        - completed
+ *              After a milestone was submitted, it can be marked as completed.
+ *              This marks the end of the milestone.
  *
  * @author byterocket
  */
