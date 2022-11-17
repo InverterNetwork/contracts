@@ -7,6 +7,9 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
+
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
 import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
@@ -44,13 +47,13 @@ contract ListAuthorizerTest is Test {
         IModule.Metadata(_MAJOR_VERSION, _GIT_URL);
 
     function setUp() public {
-        _authorizer = new ListAuthorizer();
+        address authImpl = address(new ListAuthorizer());
+        _authorizer = ListAuthorizer(Clones.clone(authImpl));
 
-        _proposal = new Proposal();
+        address impl = address(new Proposal());
+        _proposal = Proposal(Clones.clone(impl));
 
         ModuleMock module = new  ModuleMock();
-        module.init(_proposal, _METADATA);
-
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
@@ -63,7 +66,9 @@ contract ListAuthorizerTest is Test {
             _paymentProcessor
         );
 
-        _authorizer.initialize(IProposal(_proposal), _METADATA);
+        address[] memory initialAuth;
+
+        _authorizer.initialize(IProposal(_proposal), initialAuth, _METADATA);
 
         //authorize one address and deauthorize the deployer.
         _authorizer.addToAuthorized(ALBA);
@@ -74,13 +79,37 @@ contract ListAuthorizerTest is Test {
         assertEq(_authorizer.getAmountAuthorized(), 1);
     }
 
-    function testInit() public {
+    function testInitWithInitialAuthorized() public {
         //This checks initialization on a "new" authorizer.
         // Note that the Proposal created in the setup (and used here) doesn't know anything about this authorizer.
 
-        ListAuthorizer testAuthorizer = new ListAuthorizer();
+        address authImpl = address(new ListAuthorizer());
+        ListAuthorizer testAuthorizer = ListAuthorizer(Clones.clone(authImpl));
 
-        testAuthorizer.initialize(IProposal(_proposal), _METADATA);
+        address[] memory initialAuth = new address[](2);
+        initialAuth[0] = ALBA;
+        initialAuth[1] = BOB;
+
+        testAuthorizer.initialize(IProposal(_proposal), initialAuth, _METADATA);
+
+        //assertEq(ListAuthorizer.__Module_proposal, _proposal);
+        //assertEq(ListAuthorizer.__Module_metadata, _METADATA);
+        assertEq(testAuthorizer.isAuthorized(address(this)), false);
+        assertEq(testAuthorizer.isAuthorized(ALBA), true);
+        assertEq(testAuthorizer.isAuthorized(BOB), true);
+        assertEq(testAuthorizer.getAmountAuthorized(), 2);
+    }
+
+    function testInitWithoutInitialAuthorized() public {
+        //This checks initialization on a "new" authorizer.
+        // Note that the Proposal created in the setup (and used here) doesn't know anything about this authorizer.
+
+        address authImpl = address(new ListAuthorizer());
+        ListAuthorizer testAuthorizer = ListAuthorizer(Clones.clone(authImpl));
+
+        address[] memory initialAuth;
+
+        testAuthorizer.initialize(IProposal(_proposal), initialAuth, _METADATA);
 
         //assertEq(ListAuthorizer.__Module_proposal, _proposal);
         //assertEq(ListAuthorizer.__Module_metadata, _METADATA);
@@ -91,9 +120,13 @@ contract ListAuthorizerTest is Test {
     function testReinitFails() public {
         ProposalMock newProposal = new ProposalMock(_authorizer);
 
+        address[] memory initialAuth = new address[](2);
+        initialAuth[0] = ALBA;
+        initialAuth[1] = BOB;
+
         vm.expectRevert();
         vm.prank(ALBA);
-        _authorizer.initialize(IProposal(newProposal), _METADATA);
+        _authorizer.initialize(IProposal(newProposal), initialAuth, _METADATA);
 
         //assertEq(ListAuthorizer.__Module_proposal, _proposal);
         //assertEq(ListAuthorizer.__Module_metadata, _METADATA);
@@ -112,8 +145,25 @@ contract ListAuthorizerTest is Test {
         assertEq(_authorizer.getAmountAuthorized(), (amountAuth + 1));
     }
 
+    function testRemoveLastAuthorizedFails() public {
+        //this test leaves an empty authorizer list. If we choose to disallow that it will need to be cahnged.
+        uint amountAuth = _authorizer.getAmountAuthorized();
+
+        vm.prank(address(ALBA));
+        _authorizer.removeFromAuthorized(ALBA);
+
+        //The callback reverts, but not the whole tx, so it basically fails but silently.
+        //Whats the best way to handle this?
+
+        assertEq(_authorizer.isAuthorized(ALBA), true);
+        assertEq(_authorizer.getAmountAuthorized(), amountAuth);
+    }
+
     function testRemoveAuthorized() public {
         //this test leaves an empty authorizer list. If we choose to disallow that it will need to be cahnged.
+        vm.prank(ALBA);
+        _authorizer.addToAuthorized(BOB);
+
         uint amountAuth = _authorizer.getAmountAuthorized();
 
         vm.prank(address(ALBA));
@@ -130,6 +180,22 @@ contract ListAuthorizerTest is Test {
         _authorizer.transferAuthorization(BOB);
 
         assertEq(_authorizer.isAuthorized(ALBA), false);
+        assertEq(_authorizer.isAuthorized(BOB), true);
+        assertEq(_authorizer.getAmountAuthorized(), (amountAuth));
+    }
+
+    function testTransferAuthorizationToAlreadyAuthirizedFails() public {
+        vm.prank(ALBA);
+        _authorizer.addToAuthorized(BOB);
+
+        uint amountAuth = _authorizer.getAmountAuthorized();
+
+        //Again, callback reverts but the func only diesnt't do anything
+
+        vm.prank(address(ALBA));
+        _authorizer.transferAuthorization(BOB);
+
+        assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(_authorizer.isAuthorized(BOB), true);
         assertEq(_authorizer.getAmountAuthorized(), (amountAuth));
     }

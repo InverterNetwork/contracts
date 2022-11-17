@@ -32,6 +32,7 @@ contract ListAuthorizer is IAuthorizer, Module {
     // Errors
     error Module__AddressAlreadyAuthorized();
     error Module__AddressAlreadyNotAuthorized();
+    error Module__AuthorizerListCannotBeEmpty();
 
     //--------------------------------------------------------------------------
     // Events
@@ -39,6 +40,15 @@ contract ListAuthorizer is IAuthorizer, Module {
     event AddedAuthorizedAddress(address added);
 
     event RemovedAuthorizedAddress(address removed);
+
+    //--------------------------------------------------------------------------
+    // Modifiers
+    modifier notLastAuthorizer() {
+        if (amountAuthorized == 1) {
+            revert Module__AuthorizerListCannotBeEmpty();
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Storage
@@ -50,15 +60,24 @@ contract ListAuthorizer is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // Initialization
 
-    function initialize(IProposal proposal, Metadata memory metadata)
-        external
-        initializer
-    {
+    function initialize(
+        IProposal proposal,
+        address[] calldata initialAuthorized,
+        Metadata memory metadata
+    ) public initializer {
         __Module_init(proposal, metadata);
 
         //authorize the calling address
-        authorized[_msgSender()] = true;
-        amountAuthorized++;
+        //@note: THIS IS CHANGED! Mention. Since we now take a list of initial authorized addresses, we set the msgSender as authorized only if the supplied array is empty
+        if (initialAuthorized.length == 0) {
+            authorized[_msgSender()] = true;
+            amountAuthorized++;
+        } else {
+            for (uint i = 0; i < initialAuthorized.length; i++) {
+                authorized[initialAuthorized[i]] = true;
+                amountAuthorized++;
+            }
+        }
 
         emit AddedAuthorizedAddress(_msgSender());
     }
@@ -111,6 +130,7 @@ contract ListAuthorizer is IAuthorizer, Module {
         public
         virtual
         onlyProposal
+        notLastAuthorizer
     {
         //@question TODO Do we want to allow an empty authorizer list?
         //          My first impulse would be no...
@@ -144,7 +164,7 @@ contract ListAuthorizer is IAuthorizer, Module {
         onlyProposal
     {
         //I think in this case we actually DO want to revert if the receiving address is already authorized to avoid confusion. The opposite could lead to think that somebedy has "double vote" or something like that. It also saves us implementing quorum management logic downstream.
-        if (authorized[_to]) {
+        if (isAuthorized(_to)) {
             revert Module__AddressAlreadyAuthorized();
         }
 
