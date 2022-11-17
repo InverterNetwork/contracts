@@ -102,6 +102,9 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // and faulty update from the beacon's owner, the beacon should be
         // considered dangerous. We therefore make sure that nothing else can
         // happen in this tx and burn all remainig gas.
+        // Note that while the inverter's beacon implementation forbids an
+        // implementation update to non-contract addresses, we can not ensure
+        // a module does not use a different beacon implementation.
         assert(beacon.implementation() != address(0));
 
         address implementation = address(new BeaconProxy(beacon));
