@@ -50,12 +50,7 @@ abstract contract ContributorManager is
     }
 
     modifier validAddress(address who) {
-        // @todo mp: Make gas optimized.
-        bool isZero = who == address(0);
-        bool isSentinel = who == _SENTINEL;
-        bool isThis = who == address(this);
-
-        if (isZero || isSentinel || isThis) {
+        if (who == address(0) || who == _SENTINEL || who == address(this)) {
             revert Proposal__ContributorManager__InvalidContributorAddress();
         }
         _;
