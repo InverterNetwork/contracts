@@ -87,7 +87,6 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
-        // @todo mp: Add comment to function doc?!
 
         IBeacon beacon;
         (beacon, /*id*/ ) = getBeaconAndId(metadata);
@@ -96,17 +95,14 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        // @todo mp: This is not cool... Check needs to be there because
-        //           contract can change after registration, but the error
-        //           should be more "exceptional".
-        //           This should _really_ NOT happen!
-        // Update:   It indicates the module is broken and should NOT be
-        //           trusted. Better to burn all gas and make sure nothing
-        //           can happen in this tx anymore (?)
+        // Note that a beacon's implementation address can not be the zero
+        // address when the beacon is registered. The beacon must have been
+        // updated since then.
+        // As a zero address implementation indicates an unrecoverable state
+        // and faulty update from the beacon's owner, the beacon should be
+        // considered dangerous. We therefore make sure that nothing else can
+        // happen in this tx and burn all remainig gas.
         assert(beacon.implementation() != address(0));
-        //if (IBeacon(target).implementation() == address(0)) {
-        //    revert ModuleFactory__InvalidBeaconImplementation();
-        //}
 
         address implementation = address(new BeaconProxy(beacon));
 
