@@ -161,7 +161,7 @@ contract ListAuthorizer is IAuthorizer, Module {
     function transferAuthorization(address _who) external onlyAuthorized {
         _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__ListAuthorizer_transferAuthorization(address)",
+                "__ListAuthorizer_transferAuthorization(address,address)",
                 _msgSender(),
                 _who
             ),
