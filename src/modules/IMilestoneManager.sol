@@ -78,6 +78,9 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice No active milestone currently existing.
     error Module__MilestoneManager__NoActiveMilestone();
 
+    /// @notice Milestone could not be started as there are no contributors.
+    error Module__MilestoneManager__NoContributors();
+
     //--------------------------------------------------------------------------
     // Events
 

@@ -530,6 +530,15 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.startNextMilestone();
     }
 
+    function testStartNextMilestoneFailsIfContributorsListEmpty() public {
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        vm.expectRevert(
+            IMilestoneManager.Module__MilestoneManager__NoContributors.selector
+        );
+        milestoneManager.startNextMilestone();
+    }
+
     function testStartNextMilestoneFailsIfNextMilestoneNotActivatable()
         public
     {

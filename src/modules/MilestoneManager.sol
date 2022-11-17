@@ -287,10 +287,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         address[] memory contributors = __Module_proposal.listContributors();
         uint contributorsLen = contributors.length;
 
-        // @todo Fail reasonable if contributors' list empty.
+        // Fail if contributors list is empty.
         if (contributorsLen == 0) {
-            // @todo Not tested + implement reasonable failure mode.
-            revert("No contributors");
+            revert Module__MilestoneManager__NoContributors();
         }
 
         // Calculate the payout amount for each contributor.
