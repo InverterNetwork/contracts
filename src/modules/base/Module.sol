@@ -105,11 +105,9 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Initialization
 
-    // @todo mp: Check that `_disableInitializers()` is used correctly.
-    //           Makes testing setup harder too.
-    //constructor() {
-    //    _disableInitializers();
-    //}
+    constructor() {
+        _disableInitializers();
+    }
 
     // @todo mp: Can metaData be calldata? Depends on Factories.
 

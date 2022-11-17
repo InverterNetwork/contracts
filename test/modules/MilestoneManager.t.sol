@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
+
 import {
     ModuleTest,
     IModule,
@@ -52,10 +55,12 @@ contract MilestoneManagerTest is ModuleTest {
     event MilestoneDeclined(uint indexed id);
 
     function setUp() public {
-        milestoneManager = new MilestoneManager();
-        milestoneManager.init(_proposal, _METADATA, bytes(""));
+        address impl = address(new MilestoneManager());
+        milestoneManager = MilestoneManager(Clones.clone(impl));
 
         _setUpProposal(milestoneManager);
+
+        milestoneManager.init(_proposal, _METADATA, bytes(""));
 
         _authorizer.setIsAuthorized(address(this), true);
     }

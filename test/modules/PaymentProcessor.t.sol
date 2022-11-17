@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
+
 import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 // SuT
@@ -18,12 +21,15 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PaymentProcessorTest is ModuleTest {
     // SuT
-    PaymentProcessor paymentProcessor = new PaymentProcessor();
+    PaymentProcessor paymentProcessor;
 
     // Mocks
     PaymentClientMock paymentClient = new PaymentClientMock(_token);
 
     function setUp() public {
+        address impl = address(new PaymentProcessor());
+        paymentProcessor = PaymentProcessor(Clones.clone(impl));
+
         _setUpProposal(paymentProcessor);
 
         paymentProcessor.init(_proposal, _METADATA, bytes(""));

@@ -70,11 +70,9 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // Initializer
 
-    // @todo CHECK!!!
-    ///// @custom:oz-upgrades-unsafe-allow constructor
-    //constructor() {
-    //    _disableInitializers();
-    //}
+    constructor() {
+        _disableInitializers();
+    }
 
     /// @inheritdoc IProposal
     function init(
