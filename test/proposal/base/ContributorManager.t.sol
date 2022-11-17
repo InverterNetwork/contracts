@@ -42,12 +42,7 @@ contract ContributorManagerTest is Test {
     // Events copied from SuT.
     event ContributorAdded(address indexed who);
     event ContributorRemoved(address indexed who);
-    event ContributorsRoleUpdated(
-        address indexed who, string newRole, string oldRole
-    );
-    event ContributorsSalaryUpdated(
-        address indexed who, uint newSalary, uint oldSalary
-    );
+    event ContributorUpdated(address indexed who, string role, uint salary);
 
     function setUp() public {
         contributorManager = new ContributorManagerMock();
@@ -317,22 +312,7 @@ contract ContributorManagerTest is Test {
     //----------------------------------
     // Tests: updateContributorsRole()
 
-    function testUpdateContributorsRole(address who) public {
-        types.assumeValidContributor(who);
-
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
-
-        vm.expectEmit(true, true, true, true);
-        emit ContributorsRoleUpdated(who, UPDATED_ROLE, ROLE);
-
-        contributorManager.updateContributorsRole(who, UPDATED_ROLE);
-
-        IContributorManager.Contributor memory c =
-            contributorManager.getContributorInformation(who);
-        assertEq(c.role, UPDATED_ROLE);
-    }
-
-    function testUpdateContributorsRoleFailsIfCallerNotAuthorized(address who)
+    function testUpdateContributorFailsIfCallerNotAuthorized(address who)
         public
     {
         types.assumeValidContributor(who);
@@ -346,12 +326,10 @@ contract ContributorManagerTest is Test {
                 .Proposal__ContributorManager__CallerNotAuthorized
                 .selector
         );
-        contributorManager.updateContributorsRole(who, UPDATED_ROLE);
+        contributorManager.updateContributor(who, UPDATED_ROLE, SALARY);
     }
 
-    function testUpdateContributorsRoleFailsIfNotContributor(address who)
-        public
-    {
+    function testUpdateContributorFailsIfNotContributor(address who) public {
         types.assumeValidContributor(who);
 
         vm.expectRevert(
@@ -359,7 +337,22 @@ contract ContributorManagerTest is Test {
                 .Proposal__ContributorManager__IsNotContributor
                 .selector
         );
-        contributorManager.updateContributorsRole(who, UPDATED_ROLE);
+        contributorManager.updateContributor(who, UPDATED_ROLE, SALARY);
+    }
+
+    function testUpdateContributorsRole(address who) public {
+        types.assumeValidContributor(who);
+
+        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+
+        vm.expectEmit(true, true, true, true);
+        emit ContributorUpdated(who, UPDATED_ROLE, SALARY);
+
+        contributorManager.updateContributor(who, UPDATED_ROLE, SALARY);
+
+        IContributorManager.Contributor memory c =
+            contributorManager.getContributorInformation(who);
+        assertEq(c.role, UPDATED_ROLE);
     }
 
     function testUpdateContributorsRoleFailsForInvalidRole(address who)
@@ -377,12 +370,9 @@ contract ContributorManagerTest is Test {
                     .Proposal__ContributorManager__InvalidContributorRole
                     .selector
             );
-            contributorManager.updateContributorsRole(who, invalids[i]);
+            contributorManager.updateContributor(who, invalids[i], SALARY);
         }
     }
-
-    //----------------------------------
-    // Tests: updateContributorsSalary()
 
     function testUpdateContributorsSalary(address who) public {
         types.assumeValidContributor(who);
@@ -390,43 +380,13 @@ contract ContributorManagerTest is Test {
         contributorManager.addContributor(who, NAME, ROLE, SALARY);
 
         vm.expectEmit(true, true, true, true);
-        emit ContributorsSalaryUpdated(who, UPDATED_SALARY, SALARY);
+        emit ContributorUpdated(who, ROLE, UPDATED_SALARY);
 
-        contributorManager.updateContributorsSalary(who, UPDATED_SALARY);
+        contributorManager.updateContributor(who, ROLE, UPDATED_SALARY);
 
         IContributorManager.Contributor memory c =
             contributorManager.getContributorInformation(who);
         assertEq(c.salary, UPDATED_SALARY);
-    }
-
-    function testUpdateContributorsSalaryFailsIfCallerNotAuthorized(address who)
-        public
-    {
-        types.assumeValidContributor(who);
-
-        contributorManager.__ContributorManager_setIsAuthorized(
-            address(this), false
-        );
-
-        vm.expectRevert(
-            IContributorManager
-                .Proposal__ContributorManager__CallerNotAuthorized
-                .selector
-        );
-        contributorManager.updateContributorsSalary(who, UPDATED_SALARY);
-    }
-
-    function testUpdateContributorsSalaryFailsIfNotContributor(address who)
-        public
-    {
-        types.assumeValidContributor(who);
-
-        vm.expectRevert(
-            IContributorManager
-                .Proposal__ContributorManager__IsNotContributor
-                .selector
-        );
-        contributorManager.updateContributorsSalary(who, UPDATED_SALARY);
     }
 
     function testUpdateContributorsSalaryFailsForInvalidSalary(address who)
@@ -444,7 +404,7 @@ contract ContributorManagerTest is Test {
                     .Proposal__ContributorManager__InvalidContributorSalary
                     .selector
             );
-            contributorManager.updateContributorsSalary(who, invalids[i]);
+            contributorManager.updateContributor(who, ROLE, invalids[i]);
         }
     }
 

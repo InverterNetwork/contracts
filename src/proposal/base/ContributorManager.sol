@@ -215,32 +215,19 @@ abstract contract ContributorManager is
     }
 
     /// @inheritdoc IContributorManager
-    function updateContributorsRole(address who, string memory role)
+    function updateContributor(address who, string memory role, uint salary)
         external
         __ContributorManager_onlyAuthorized
         isContributor_(who)
         validRole(role)
-    {
-        string memory oldRole = _contributorRegistry[who].role;
-
-        if (!oldRole.equals(role)) {
-            emit ContributorsRoleUpdated(who, role, oldRole);
-            _contributorRegistry[who].role = role;
-        }
-    }
-
-    /// @inheritdoc IContributorManager
-    function updateContributorsSalary(address who, uint salary)
-        external
-        __ContributorManager_onlyAuthorized
-        isContributor_(who)
-        validAddress(who)
         validSalary(salary)
     {
+        string memory oldRole = _contributorRegistry[who].role;
         uint oldSalary = _contributorRegistry[who].salary;
 
-        if (oldSalary != salary) {
-            emit ContributorsSalaryUpdated(who, salary, oldSalary);
+        if (!oldRole.equals(role) || oldSalary != salary) {
+            emit ContributorUpdated(who, role, salary);
+            _contributorRegistry[who].role = role;
             _contributorRegistry[who].salary = salary;
         }
     }

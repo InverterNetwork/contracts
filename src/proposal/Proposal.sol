@@ -115,7 +115,6 @@ contract Proposal is
         override (ModuleManager)
         returns (bool)
     {
-        // @todo Not tested
         return _isOwnerOrAuthorized(who);
     }
 
