@@ -37,10 +37,13 @@ interface IModule {
     //--------------------------------------------------------------------------
     // Functions
 
-    // @todo mp: Function doc for `init()`.
-
+    /// @notice The module's initializer function.
     /// @dev Can be overriden in downstream contract.
     /// @dev Has to call `__Module_init()`.
+    /// @param proposal The module's proposal instance.
+    /// @param metadata The module's metadata.
+    /// @param configdata Variable config data for specific module
+    ///                   implementation.
     function init(
         IProposal proposal,
         Metadata memory metadata,
