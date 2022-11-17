@@ -6,8 +6,8 @@ import "forge-std/Test.sol";
 // External Libraries
 import "@oz/utils/Address.sol";
 
-// Internal Dependencies
-import {Beacon} from "src/factories/beacon/Beacon.sol";
+// SuT
+import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 
 // Mocks
 import {ModuleImplementationV1Mock} from
@@ -31,10 +31,14 @@ contract BeaconTest is Test {
 
     function testDeploymentInvariants() public {
         assertEq(beacon.implementation(), address(0));
+
+        // Ownable2Step invariants:
+        assertEq(beacon.owner(), address(this));
+        assertEq(beacon.pendingOwner(), address(0));
     }
 
     //--------------------------------------------------------------------------------
-    // Test: upgradeTo
+    // Test: upgradeTo()
 
     function testUpgradeTo() public {
         ModuleImplementationV1Mock toUpgrade1 = new ModuleImplementationV1Mock();
@@ -70,11 +74,9 @@ contract BeaconTest is Test {
     }
 
     //--------------------------------------------------------------------------------
-    // Test: ERC-165
+    // Test: ERC-165's supportInterface()
 
-    function testERC165Supported() public {
-        // @todo felix, mp: Add test to check for following interfaces:
-        //          - ERC 165
-        //          - IBeacon
+    function testSupportsInterface() public {
+        assertTrue(beacon.supportsInterface(type(IBeacon).interfaceId));
     }
 }
