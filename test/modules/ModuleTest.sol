@@ -3,6 +3,9 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
+
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
 
@@ -25,21 +28,21 @@ import {PaymentProcessorMock} from
 abstract contract ModuleTest is Test {
     using LibString for string;
 
-    Proposal internal _proposal = new Proposal();
+    Proposal _proposal;
 
     // Mocks
-    AuthorizerMock internal _authorizer = new AuthorizerMock();
-    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
+    AuthorizerMock _authorizer = new AuthorizerMock();
+    ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
 
     // Proposal Constants
-    uint internal constant _PROPOSAL_ID = 1;
+    uint constant _PROPOSAL_ID = 1;
 
     // Module Constants
-    uint internal constant _MAJOR_VERSION = 1;
-    string internal constant _GIT_URL = "https://github.com/org/module";
+    uint constant _MAJOR_VERSION = 1;
+    string constant _GIT_URL = "https://github.com/org/module";
 
-    IModule.Metadata internal _METADATA =
+    IModule.Metadata _METADATA =
         IModule.Metadata(_MAJOR_VERSION, _GIT_URL);
 
     //--------------------------------------------------------------------------------
@@ -48,6 +51,9 @@ abstract contract ModuleTest is Test {
     function _setUpProposal(IModule module) internal virtual {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
+
+        address impl = address(new Proposal());
+        _proposal = Proposal(Clones.clone(impl));
 
         _proposal.init(
             _PROPOSAL_ID,

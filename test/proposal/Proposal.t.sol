@@ -3,6 +3,9 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
+
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
@@ -45,7 +48,8 @@ contract ProposalTest is Test {
         paymentProcessor = new PaymentProcessorMock();
         token = new ERC20Mock("TestToken", "TST");
 
-        proposal = new Proposal();
+        address impl = address(new Proposal());
+        proposal = Proposal(Clones.clone(impl));
 
         types = new TypeSanityHelper(address(proposal));
     }

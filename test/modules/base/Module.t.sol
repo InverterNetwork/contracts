@@ -3,6 +3,9 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
+
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -37,7 +40,9 @@ contract ModuleTest is Test {
 
         proposal = new ProposalMock(authorizer);
 
-        module = new ModuleMock();
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
+
         module.init(proposal, DATA);
 
         // Initialize proposal to enable module.
@@ -50,10 +55,6 @@ contract ModuleTest is Test {
     // Tests: Initialization
 
     function testInit() public {
-        module = new ModuleMock();
-
-        module.init(proposal, DATA);
-
         // Proposal correctly written to storage.
         assertEq(address(module.proposal()), address(proposal));
 
@@ -69,30 +70,29 @@ contract ModuleTest is Test {
     }
 
     function testInitFailsForNonInitializerFunction() public {
-        module = new ModuleMock();
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
         module.initNoInitializer(proposal, DATA);
     }
 
     function testReinitFails() public {
-        module = new ModuleMock();
-
-        module.init(proposal, DATA);
-
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         module.init(proposal, DATA);
     }
 
     function testInitFailsForInvalidProposal() public {
-        module = new ModuleMock();
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(IModule.Module__InvalidProposalAddress.selector);
         module.init(IProposal(address(0)), DATA);
     }
 
     function testInitFailsIfMetadataInvalid(uint majorVersion) public {
-        module = new ModuleMock();
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
 
         // Invalid if gitURL empty.
         IModule.Metadata memory data = IModule.Metadata(majorVersion, "");
