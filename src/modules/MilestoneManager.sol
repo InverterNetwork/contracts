@@ -292,16 +292,18 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__NoContributors();
         }
 
-        // Calculate the payout amount for each contributor.
-        // Note that currently each contributor receives the same amount.
-        uint contributorPayout = m.budget / contributorsLen;
+        if (m.budget != 0) {
+            // Calculate the payout amount for each contributor.
+            // Note that currently each contributor receives the same amount.
+            uint contributorPayout = m.budget / contributorsLen;
 
-        // Add milestone's payout for each contributor as new payment order.
-        // Note that the payout SHOULD be fulfilled before the end of the
-        // milestone's duration.
-        uint dueTo = m.duration;
-        for (uint i; i < contributorsLen; i++) {
-            _addPaymentOrder(contributors[i], contributorPayout, dueTo);
+            // Add milestone's payout for each contributor as new payment order.
+            // Note that the payout SHOULD be fulfilled before the end of the
+            // milestone's duration.
+            uint dueTo = m.duration;
+            for (uint i; i < contributorsLen; i++) {
+                _addPaymentOrder(contributors[i], contributorPayout, dueTo);
+            }
         }
     }
 
