@@ -309,7 +309,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
     }
 
-    // Note that there are currently no invalid budgets defined.
+    // Note that there are currently no invalid budgets defined (Issue #97).
     // If this changes:
     // 1. Adjust `createInvalidBudget()` function
     // 2. Add error type to IMilestoneManager
@@ -611,7 +611,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
     }
 
-    // Note that there are currently no invalid budgets defined.
+    // Note that there are currently no invalid budgets defined (Issue #97).
     // If this changes:
     // 1. Adjust `createInvalidBudget()` function
     // 2. Add error type to IMilestoneManager
@@ -1083,6 +1083,8 @@ contract MilestoneManagerTest is ModuleTest {
     /// @dev Returns an element of each category of invalid budgets.
     function _createInvalidBudgets() internal pure returns (uint[] memory) {
         uint[] memory invalids = new uint[](0);
+
+        // Note that there are currently no invalid budgets defined (Issue #97).
 
         return invalids;
     }

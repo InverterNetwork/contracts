@@ -65,7 +65,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     modifier validBudget(uint budget) {
-        // @todo mp, marvin, nuggan: No constraints for a milestone budget?
+        // Note that there are no constraints for a budget (Issue #97).
         _;
     }
 
