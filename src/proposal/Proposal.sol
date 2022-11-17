@@ -93,6 +93,8 @@ contract Proposal is
         // Initialize upstream contracts.
         __Pausable_init();
         __Ownable_init();
+        // @todo mp: Currently factory is owner. Need to transfer owner to
+        //           factory caller!
         __ModuleManager_init(modules);
         __ContributorManager_init();
         __FundingVault_init(
