@@ -142,10 +142,8 @@ contract Proposal is
         (ok, returnData) = target.call(data);
 
         if (ok) {
-            // @todo Not tested
             return returnData;
         } else {
-            // @todo Not tested
             revert Proposal__ExecuteTxFailed();
         }
     }

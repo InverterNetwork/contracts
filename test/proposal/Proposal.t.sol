@@ -127,8 +127,89 @@ contract ProposalTest is Test {
     //--------------------------------------------------------------------------
     // Tests: Transaction Execution
 
-    function testExecuteTx() public {
-        // @todo mp: Add Proposal::executeTx tests.
+    function testExecuteTx(uint proposalId, address[] memory modules) public {
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        bytes memory returnData = proposal.executeTx(
+            address(this), abi.encodeWithSignature("ok()")
+        );
+        assertTrue(abi.decode(returnData, (bool)));
+    }
+
+    function testExecuteTxFailsIfCallFails(uint proposalId, address[] memory modules) public {
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        vm.expectRevert(IProposal.Proposal__ExecuteTxFailed.selector);
+        proposal.executeTx(address(this), abi.encodeWithSignature("fails()"));
+    }
+
+    function testExecuteTxFailsIfCallerNotAuthorized(uint proposalId, address[] memory modules) public {
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(0xCAFE), // Note to not be the owner
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), false);
+
+        vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);
+        proposal.executeTx(address(this), abi.encodeWithSignature("ok()"));
+    }
+
+    function ok() public pure returns (bool) {
+        return true;
+    }
+
+    function fails() public pure {
+        revert("failed");
     }
 
     //--------------------------------------------------------------------------
