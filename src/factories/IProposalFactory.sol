@@ -20,7 +20,14 @@ interface IProposalFactory {
         bytes configdata;
     }
 
-    // @todo mp: createProposal docs
+    /// @notice Creates a new proposal with caller being the proposal's owner.
+    /// @param proposalConfig The proposal's config data.
+    /// @param authorizerConfig The config data for the proposal's {IAuthorizer}
+    ///                         instance.
+    /// @param paymentProcessorConfig The config data for the proposal's
+    ///                               {IPaymentProcessor} instance.
+    /// @param moduleConfigs Variable length set of optional module's config
+    ///                      data.
     function createProposal(
         ProposalConfig memory proposalConfig,
         ModuleConfig memory authorizerConfig,
