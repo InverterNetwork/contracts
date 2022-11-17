@@ -148,13 +148,15 @@ contract ProposalTest is Test {
 
         authorizer.setIsAuthorized(address(this), true);
 
-        bytes memory returnData = proposal.executeTx(
-            address(this), abi.encodeWithSignature("ok()")
-        );
+        bytes memory returnData =
+            proposal.executeTx(address(this), abi.encodeWithSignature("ok()"));
         assertTrue(abi.decode(returnData, (bool)));
     }
 
-    function testExecuteTxFailsIfCallFails(uint proposalId, address[] memory modules) public {
+    function testExecuteTxFailsIfCallFails(
+        uint proposalId,
+        address[] memory modules
+    ) public {
         types.assumeValidProposalId(proposalId);
         types.assumeValidModules(modules);
 
@@ -179,7 +181,10 @@ contract ProposalTest is Test {
         proposal.executeTx(address(this), abi.encodeWithSignature("fails()"));
     }
 
-    function testExecuteTxFailsIfCallerNotAuthorized(uint proposalId, address[] memory modules) public {
+    function testExecuteTxFailsIfCallerNotAuthorized(
+        uint proposalId,
+        address[] memory modules
+    ) public {
         types.assumeValidProposalId(proposalId);
         types.assumeValidModules(modules);
 
