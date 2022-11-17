@@ -16,9 +16,9 @@ import {
     IProposal
 } from "src/factories/IProposalFactory.sol";
 
+import {Proposal} from "src/proposal/Proposal.sol";
+
 // Mocks
-import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {ModuleFactoryMock} from
     "test/utils/mocks/factories/ModuleFactoryMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -30,16 +30,15 @@ contract ProposalFactoryTest is Test {
     // SuT
     ProposalFactory factory;
 
+    Proposal target;
+
     // Mocks
-    AuthorizerMock authorizer;
-    ProposalMock target;
     ModuleFactoryMock moduleFactory;
 
     function setUp() public {
-        authorizer = new AuthorizerMock();
-
-        target = new ProposalMock(authorizer); // @audit Don't use Mock!!
         moduleFactory = new ModuleFactoryMock();
+
+        target = new Proposal();
 
         factory = new ProposalFactory(address(target), address(moduleFactory));
     }
@@ -55,7 +54,10 @@ contract ProposalFactoryTest is Test {
 
         // Create ProposalConfig instance.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig(IERC20(new ERC20Mock("Mock Token", "MOCK")));
+            .ProposalConfig({
+            owner: address(this),
+            token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
+        });
 
         // Create {IAuthorizer} ModuleConfig instance.
         IProposalFactory.ModuleConfig memory authorizerConfig = IProposalFactory
@@ -82,7 +84,18 @@ contract ProposalFactoryTest is Test {
             paymentProcessorConfig,
             moduleConfigs
         );
+
+        // Check that proposal's strorage correctly initialized.
         assertEq(proposal.proposalId(), 1);
+        assertEq(address(proposal.token()), address(proposalConfig.token));
+        assertTrue(address(proposal.authorizer()) != address(0));
+        assertTrue(address(proposal.paymentProcessor()) != address(0));
+
+        // Check that other proposal's dependencies correctly initialized.
+        // Ownable:
+        assertEq(proposal.owner(), address(proposalConfig.owner));
+        // Pausable:
+        assertTrue(!proposal.paused());
 
         // Deploy Proposal with id=2
         proposal = factory.createProposal(
@@ -91,6 +104,7 @@ contract ProposalFactoryTest is Test {
             paymentProcessorConfig,
             moduleConfigs
         );
+        // Only check that proposal's id is correct.
         assertEq(proposal.proposalId(), 2);
     }
 }

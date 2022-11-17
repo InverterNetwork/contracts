@@ -27,6 +27,7 @@ interface IProposal is IModuleManager, IContributorManager, IFundingVault {
     /// @notice Initialization function.
     function init(
         uint proposalId,
+        address owner,
         IERC20 token,
         address[] calldata modules, // @todo mp: Change to IModules.
         IAuthorizer authorizer,
@@ -59,4 +60,8 @@ interface IProposal is IModuleManager, IContributorManager, IFundingVault {
 
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);
+
+    function owner() external view returns (address);
+
+    function paused() external view returns (bool);
 }

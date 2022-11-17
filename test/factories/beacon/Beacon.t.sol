@@ -32,7 +32,8 @@ contract BeaconTest is Test {
     function testDeploymentInvariants() public {
         assertEq(beacon.implementation(), address(0));
 
-        // Ownable2Step invariants:
+        // Check that proposal's dependencies correctly initialized.
+        // Ownable2Step:
         assertEq(beacon.owner(), address(this));
         assertEq(beacon.pendingOwner(), address(0));
     }

@@ -50,7 +50,12 @@ abstract contract ModuleTest is Test {
         modules[0] = address(module);
 
         _proposal.init(
-            _PROPOSAL_ID, _token, modules, _authorizer, _paymentProcessor
+            _PROPOSAL_ID,
+            address(this),
+            _token,
+            modules,
+            _authorizer,
+            _paymentProcessor
         );
     }
 
