@@ -327,12 +327,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotUpdateable();
         }
 
-        // @todo mp: Gas optimize.
-        bool durationUpdated = m.duration != duration;
-        bool budgetUpdated = m.budget != budget;
-        bool detailsUpdated = m.details.equals(details);
-
-        if (durationUpdated || budgetUpdated || detailsUpdated) {
+        if (
+            m.duration != duration || m.budget != budget
+                || m.details.equals(details)
+        ) {
             m.duration = duration;
             m.budget = budget;
             m.details = details;
