@@ -63,10 +63,18 @@ contract ProposalTest is Test {
         types.assumeElemNotInSet(modules, address(token));
 
         // Initialize proposal.
-        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
 
         // Check that proposal's storage correctly initialized.
         assertEq(proposal.proposalId(), proposalId);
+        assertEq(address(proposal.owner()), address(this));
         assertEq(address(proposal.token()), address(token));
         assertEq(address(proposal.authorizer()), address(authorizer));
         assertEq(
@@ -92,10 +100,24 @@ contract ProposalTest is Test {
         types.assumeElemNotInSet(modules, address(token));
 
         // Initialize proposal.
-        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        proposal.init(proposalId, token, modules, authorizer, paymentProcessor);
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
     }
 
     //--------------------------------------------------------------------------

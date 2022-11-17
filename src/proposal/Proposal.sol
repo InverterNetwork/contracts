@@ -79,27 +79,27 @@ contract Proposal is
     /// @inheritdoc IProposal
     function init(
         uint proposalId_,
+        address owner_,
         IERC20 token_,
         address[] calldata modules,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
     ) external override (IProposal) initializer {
-        // Set storage variables.
-        proposalId = proposalId_;
-        token = token_;
-        authorizer = authorizer_;
-        paymentProcessor = paymentProcessor_;
-
         // Initialize upstream contracts.
         __Pausable_init();
         __Ownable_init();
-        // @todo mp: Currently factory is owner. Need to transfer owner to
-        //           factory caller!
         __ModuleManager_init(modules);
         __ContributorManager_init();
         __FundingVault_init(
             proposalId_, IERC20MetadataUpgradeable(address(token_))
         );
+
+        // Set storage variables.
+        proposalId = proposalId_;
+        _transferOwnership(owner_);
+        token = token_;
+        authorizer = authorizer_;
+        paymentProcessor = paymentProcessor_;
 
         // Add necessary modules.
         // Note to not use the public addModule function as the factory
@@ -155,6 +155,24 @@ contract Proposal is
     /// @inheritdoc IProposal
     function version() external pure returns (string memory) {
         return "1";
+    }
+
+    function owner()
+        public
+        view
+        override (OwnableUpgradeable, IProposal)
+        returns (address)
+    {
+        return super.owner();
+    }
+
+    function paused()
+        public
+        view
+        override (PausableUpgradeable, IProposal)
+        returns (bool)
+    {
+        return super.paused();
     }
 
     //--------------------------------------------------------------------------

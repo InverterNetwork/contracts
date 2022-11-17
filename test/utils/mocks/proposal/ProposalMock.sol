@@ -7,7 +7,9 @@ import {IERC20MetadataUpgradeable} from
     "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 // External Dependencies
+import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 
 // Internal Interfaces
 import {
@@ -23,6 +25,8 @@ import {FundingVaultMock} from "./base/FundingVaultMock.sol";
 
 contract ProposalMock is
     IProposal,
+    OwnableUpgradeable,
+    PausableUpgradeable,
     ModuleManagerMock, // @todo Should not be mocks!
     ContributorManagerMock,
     FundingVaultMock
@@ -41,21 +45,25 @@ contract ProposalMock is
 
     function init(
         uint proposalId_,
+        address owner_,
         IERC20 token_,
         address[] calldata modules_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
     ) public initializer {
-        proposalId = proposalId_;
-        authorizer = authorizer_;
-        paymentProcessor = paymentProcessor_;
-        token = token_;
-
+        __Pausable_init();
+        __Ownable_init();
         __ModuleManager_init(modules_);
         __ContributorManager_init();
         __FundingVault_init(
             proposalId_, IERC20MetadataUpgradeable(address(token_))
         );
+
+        proposalId = proposalId_;
+        _transferOwnership(owner_);
+        authorizer = authorizer_;
+        paymentProcessor = paymentProcessor_;
+        token = token_;
 
         __ModuleManager_addModule(address(authorizer_));
         __ModuleManager_addModule(address(paymentProcessor_));
@@ -68,5 +76,23 @@ contract ProposalMock is
 
     function version() external pure returns (string memory) {
         return "1";
+    }
+
+    function owner()
+        public
+        view
+        override (OwnableUpgradeable, IProposal)
+        returns (address)
+    {
+        return super.owner();
+    }
+
+    function paused()
+        public
+        view
+        override (PausableUpgradeable, IProposal)
+        returns (bool)
+    {
+        return super.paused();
     }
 }

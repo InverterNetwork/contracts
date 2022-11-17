@@ -12,6 +12,7 @@ interface IProposalFactory {
     error ProposalFactory__ModuleDataLengthMismatch();
 
     struct ProposalConfig {
+        address owner;
         IERC20 token;
     }
 

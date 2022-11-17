@@ -91,6 +91,7 @@ contract ProposalFactory is IProposalFactory {
         // Initialize proposal.
         IProposal(clone).init(
             ++_proposalIdCounter,
+            proposalConfig.owner,
             proposalConfig.token,
             modules,
             IAuthorizer(authorizer),
