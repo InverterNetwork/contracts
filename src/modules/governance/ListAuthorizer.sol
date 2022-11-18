@@ -31,7 +31,6 @@ contract ListAuthorizer is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // Errors
     error Module__AddressAlreadyAuthorized();
-    error Module__AddressAlreadyNotAuthorized();
     error Module__AuthorizerListCannotBeEmpty();
 
     //--------------------------------------------------------------------------
@@ -116,12 +115,19 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @dev Relay Function that routes the function call via the proposal
     /// @param _who The address to add to the list of authorized addresses.
     function addToAuthorized(address _who) external onlyAuthorized {
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__ListAuthorizer_addToAuthorized(address)", _who
             ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 
     /// @notice Removes an address from the list of authorized addresses.
@@ -147,12 +153,19 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @dev Relay Function that routes the function call via the proposal
     /// @param _who Address to remove authorization from
     function removeFromAuthorized(address _who) external onlyAuthorized {
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__ListAuthorizer_removeFromAuthorized(address)", _who
             ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 
     /// @notice Transfers authorization from the calling address to a new one.
@@ -179,7 +192,9 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @dev Relay Function that routes the function call via the proposal
     /// @param _who The address to transfer the authorization to
     function transferAuthorization(address _who) external onlyAuthorized {
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__ListAuthorizer_transferAuthorization(address,address)",
                 _msgSender(),
@@ -187,5 +202,10 @@ contract ListAuthorizer is IAuthorizer, Module {
             ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 }

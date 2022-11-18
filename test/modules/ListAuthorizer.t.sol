@@ -146,21 +146,22 @@ contract ListAuthorizerTest is Test {
     }
 
     function testRemoveLastAuthorizedFails() public {
-        //this test leaves an empty authorizer list. If we choose to disallow that it will need to be cahnged.
         uint amountAuth = _authorizer.getAmountAuthorized();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ListAuthorizer.Module__AuthorizerListCannotBeEmpty.selector
+            )
+        );
 
         vm.prank(address(ALBA));
         _authorizer.removeFromAuthorized(ALBA);
-
-        //The callback reverts, but not the whole tx, so it basically fails but silently.
-        //Whats the best way to handle this?
 
         assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(_authorizer.getAmountAuthorized(), amountAuth);
     }
 
     function testRemoveAuthorized() public {
-        //this test leaves an empty authorizer list. If we choose to disallow that it will need to be cahnged.
         vm.prank(ALBA);
         _authorizer.addToAuthorized(BOB);
 
@@ -184,13 +185,19 @@ contract ListAuthorizerTest is Test {
         assertEq(_authorizer.getAmountAuthorized(), (amountAuth));
     }
 
-    function testTransferAuthorizationToAlreadyAuthirizedFails() public {
+    function testTransferAuthorizationToAlreadyAuthorizedFails() public {
         vm.prank(ALBA);
         _authorizer.addToAuthorized(BOB);
 
         uint amountAuth = _authorizer.getAmountAuthorized();
 
-        //Again, callback reverts but the func only diesnt't do anything
+        //Again, callback reverts but the func only doesnt't do anything
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ListAuthorizer.Module__AddressAlreadyAuthorized.selector
+            )
+        );
 
         vm.prank(address(ALBA));
         _authorizer.transferAuthorization(BOB);

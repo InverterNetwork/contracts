@@ -253,10 +253,17 @@ contract SingleVoteGovernance is ListAuthorizer {
     function changeQuorum(uint8 _new) external onlyProposal {
         /// @question: Technically, we can avoid this func altogether, since it will only be called after a vote through executeTxModule, which could directly call __Governance_changeQuorum and save gas.
 
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature("__Governance_changeQuorum(uint8)", _new),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 
     /// @notice Sets a new vote duration
@@ -271,18 +278,25 @@ contract SingleVoteGovernance is ListAuthorizer {
 
     /// @notice Sets a new vote duration
     /// @dev    Relay Function that routes the function call via the proposal.
-    ///         The onlyProposal modifier forces a quorum change to als go
+    ///         The onlyProposal modifier forces a quorum change to go
     ///         through governance.
     /// @param _new The new vote duration
     function changeVoteDuration(uint _new) external onlyProposal {
         /// @question: Technically, we can avoid this func altogether, since it will only be called after a vote through executeTxModule, which could directly call __Governance_changeQuorum and save gas.
 
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_changeVoteDuration(uint)", _new
+                "__Governance_changeVoteDuration(uint256)", _new
             ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 
     /// @notice Creates a new vote
@@ -315,7 +329,9 @@ contract SingleVoteGovernance is ListAuthorizer {
         external
         onlyAuthorized
     {
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
                 "__Governance_createVote(address,bytes)",
                 _target,
@@ -323,6 +339,11 @@ contract SingleVoteGovernance is ListAuthorizer {
             ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 
     /// @notice Vote "yes" and execute action if quorum is reached
@@ -356,12 +377,21 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @dev Relay Function that routes the function call via the proposal
     /// @param _voteID The ID of the vote to vote on
     function voteInFavor(uint _voteID) external onlyAuthorized {
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_voteInFavor(address,uint)", _msgSender(), _voteID
+                "__Governance_voteInFavor(address,uint256)",
+                _msgSender(),
+                _voteID
             ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 
     /// @notice Vote "no"
@@ -391,12 +421,21 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @dev Relay Function that routes the function call via the proposal
     /// @param _voteID The ID of the vote to vote on
     function voteAgainst(uint _voteID) external onlyAuthorized {
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_voteAgainst(address,uint)", _msgSender(), _voteID
+                "__Governance_voteAgainst(address,uint256)",
+                _msgSender(),
+                _voteID
             ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 
     /// @notice Vote "abstain"
@@ -426,12 +465,21 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @dev Relay Function that routes the function call via the proposal
     /// @param _voteID The ID of the vote to vote on
     function voteAbstain(uint _voteID) external onlyAuthorized {
-        _triggerProposalCallback(
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
             abi.encodeWithSignature(
-                "__Governance_voteAbstain(address,uint)", _msgSender(), _voteID
+                "__Governance_voteAbstain(address,uint256)",
+                _msgSender(),
+                _voteID
             ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 
     /// @notice Execute a vote. Only called by voteInFavor once quorum
@@ -458,18 +506,22 @@ contract SingleVoteGovernance is ListAuthorizer {
         emit VoteEnacted(_voteID, voteRegistry[_voteID].executionResult);
     }
 
-    /// @notice Execute a vote. Only called by voteInFavor once quorum
-    ///         is reached
+    /// @notice Execute a completed vote.
     /// @dev Relay Function that routes the function call via the proposal
     /// @param _voteID The ID of the vote to execute
-    function executeVote(uint _voteID)
-        external
-        voteIsActive(_voteID)
-        quorumReached(_voteID)
-    {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Governance_executeVote(uint)", _voteID),
+    function executeVote(uint _voteID) external {
+        bool ok;
+        bytes memory returnData;
+        (ok, returnData) = _triggerProposalCallback(
+            abi.encodeWithSignature(
+                "__Governance_executeVote(uint256)", _voteID
+            ),
             Types.Operation.Call
         );
+        if (!ok) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 }
