@@ -77,6 +77,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     event VotedAbstain(address who, uint voteID);
     event AttemptedDoubleVote(address who, uint voteID);
 
+    event VoteCreated(uint _voteID);
     event VoteEnacted(uint voteID, bool executionResult);
     event VoteCancelled(uint _voteID);
 
@@ -302,6 +303,8 @@ contract SingleVoteGovernance is ListAuthorizer {
         voteRegistry[voteIDCounter].encodedAction = _encodedAction;
 
         voteIDCounter++;
+
+        emit VoteCreated((voteIDCounter - 1));
     }
 
     /// @notice Creates a new vote

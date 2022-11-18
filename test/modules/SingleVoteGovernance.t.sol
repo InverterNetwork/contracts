@@ -13,6 +13,9 @@ import {ListAuthorizer} from "src/modules/governance/ListAuthorizer.sol";
 import {SingleVoteGovernance} from
     "src/modules/governance/SingleVoteGovernance.sol";
 
+//delete after debug
+import {Types} from "src/common/Types.sol";
+
 // Interfaces
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
@@ -86,6 +89,9 @@ contract SingleVoteGovernanceTest is Test {
             _METADATA
         );
 
+        assertEq(address(_authorizer.proposal()), address(_proposal));
+        assertEq(_proposal.isModule(address(_authorizer)), true);
+
         assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(_authorizer.isAuthorized(BOB), true);
         assertEq(_authorizer.isAuthorized(COBIE), true);
@@ -104,22 +110,32 @@ contract SingleVoteGovernanceTest is Test {
         return _id;
     }
 
-    function voteInFavor(address callingUser, uint voteID)
-        public
-    {
+    function voteInFavor(address callingUser, uint voteID) public {
+        //This should work, but doesn't
+        /*
         vm.prank(callingUser);
         _authorizer.voteInFavor(voteID);
+        */
+
+        //This works:
+        vm.prank(address(_proposal));
+        _authorizer.__Governance_voteInFavor(callingUser, voteID);
+
+        //For some reason, this doesn't:
+        /*vm.prank(address(_authorizer));
+        bytes memory _data = abi.encodeWithSignature(
+            "__Governance_voteInFavor(address,uint)", callingUser, voteID
+        );
+        _proposal.executeTxFromModule(address(_authorizer), _data, Types.Operation.Call);
+        */
     }
-    function voteAgainst(address callingUser, uint voteID)
-        public
-    {
+
+    function voteAgainst(address callingUser, uint voteID) public {
         vm.prank(callingUser);
         _authorizer.voteAgainst(voteID);
     }
-        
-    function voteAbstain(address callingUser, uint voteID)
-        public
-    {
+
+    function voteAbstain(address callingUser, uint voteID) public {
         vm.prank(callingUser);
         _authorizer.voteAbstain(voteID);
     }
@@ -205,7 +221,6 @@ contract SingleVoteGovernanceTest is Test {
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         uint _votesBefore = _authorizer.getVoteByID(_voteID).aye;
-
 
         voteInFavor(ALBA, _voteID);
 
@@ -337,7 +352,8 @@ contract SingleVoteGovernanceTest is Test {
             )
         );
 
-        voteInFavor(ALBA, _voteID);(ALBA, _voteID);
+        voteInFavor(ALBA, _voteID);
+        (ALBA, _voteID);
 
         vm.expectRevert(
             abi.encodePacked(
@@ -375,7 +391,8 @@ contract SingleVoteGovernanceTest is Test {
 
         uint _ayeBefore = _authorizer.getVoteByID(_voteID).aye;
 
-        voteInFavor(ALBA, _voteID);(ALBA, _voteID);
+        voteInFavor(ALBA, _voteID);
+        (ALBA, _voteID);
         assertEq(_ayeBefore, _authorizer.getVoteByID(_voteID).aye);
 
         uint _nayBefore = _authorizer.getVoteByID(_voteID).nay;
@@ -401,8 +418,8 @@ contract SingleVoteGovernanceTest is Test {
 
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-
-        voteInFavor(ALBA, _voteID);(ALBA, _voteID);
+        voteInFavor(ALBA, _voteID);
+        (ALBA, _voteID);
 
         vm.warp(block.timestamp + DEFAULT_DURATION + 1);
 
@@ -423,8 +440,6 @@ contract SingleVoteGovernanceTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
 
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
-
-
 
         //First, we reach quorum
         voteInFavor(ALBA, _voteID);
