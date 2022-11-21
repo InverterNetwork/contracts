@@ -40,7 +40,8 @@ contract SingleVoteGovernanceTest is Test {
     address COBIE = address(0xc0b1e);
     address DOBBIE = address(0xd0bb1e);
     address ED = address(0xed);
-    uint8 constant DEFAULT_QUORUM = 2;
+    address[] initialAuthorized;
+    uint constant DEFAULT_QUORUM = 2;
     uint constant DEFAULT_DURATION = 100;
 
     // Proposal Constants
@@ -73,12 +74,12 @@ contract SingleVoteGovernanceTest is Test {
             _paymentProcessor
         );
 
-        address[] memory initialAuthorized = new address[](3);
+        initialAuthorized = new address[](3);
         initialAuthorized[0] = ALBA;
         initialAuthorized[1] = BOB;
         initialAuthorized[2] = COBIE;
 
-        uint8 _startingQuorum = DEFAULT_QUORUM;
+        uint _startingQuorum = DEFAULT_QUORUM;
         uint _startingDuration = DEFAULT_DURATION;
 
         _authorizer.initialize(
@@ -126,10 +127,53 @@ contract SingleVoteGovernanceTest is Test {
         _authorizer.voteAbstain(voteID);
     }
 
+    function speedrunSuccessfulVote(
+        address _target,
+        bytes memory _action,
+        address[] memory _voters
+    ) public returns (uint) {
+        if (_voters.length == 0) {
+            revert("Voterlist empty");
+        }
+        uint _voteID = createVote(_voters[0], _target, _action);
+
+        for (uint i; i < _voters.length; i++) {
+            voteInFavor(_voters[i], _voteID);
+        }
+
+        // the voting time passes
+        vm.warp(block.timestamp + _authorizer.getVoteDuration() + 1);
+
+        return _voteID;
+    }
+
+    function speedrunRejectedVote(
+        address _target,
+        bytes memory _action,
+        address[] memory _voters
+    ) public returns (uint) {
+        if (_voters.length == 0) {
+            revert("Voterlist empty");
+        }
+        uint _voteID = createVote(_voters[0], _target, _action);
+
+        for (uint i; i < _voters.length; i++) {
+            if (i == _authorizer.getRequiredQuorum()) {
+                break;
+            }
+            voteInFavor(_voters[i], _voteID);
+        }
+
+        // the voting time passes
+        vm.warp(block.timestamp + _authorizer.getVoteDuration() + 1);
+
+        return _voteID;
+    }
+
     function getMockValidVote() public view returns (address, bytes memory) {
         address _moduleAddress = address(_authorizer);
         bytes memory _msg =
-            abi.encodeWithSignature("__Governance_changeQuorum(uint8)", 1);
+            abi.encodeWithSignature("__Governance_changeQuorum(uint)", 1);
 
         return (_moduleAddress, _msg);
     }
@@ -164,7 +208,25 @@ contract SingleVoteGovernanceTest is Test {
 
     // Test add authorized address and have it create vote
     function testCreateVoteWithRecentlyAuthorizedAddress() public {
-        // TODO only testable in the normal flow (executeTxFromModule)
+        //create vote to add authorized address
+
+        bytes memory _encodedAction =
+            abi.encodeWithSignature("addToAuthorized(address)", DOBBIE);
+        uint _voteID = speedrunSuccessfulVote(
+            address(_authorizer), _encodedAction, initialAuthorized
+        );
+        _authorizer.executeVote(_voteID);
+
+        //sucess
+        assertEq(_authorizer.isAuthorized(DOBBIE), true);
+
+        //prank as that address and create a vote
+        (address _moduleAddress, bytes memory _msg) = getMockValidVote();
+        uint _newVote = createVote(DOBBIE, _moduleAddress, _msg);
+        voteInFavor(DOBBIE, _newVote);
+
+        //assert that voting worked (so vote exists)
+        assertEq(_authorizer.hasVoted(DOBBIE, _newVote), true);
     }
 
     // Test fail create votes with wrong addresses and actions
@@ -214,7 +276,7 @@ contract SingleVoteGovernanceTest is Test {
         assert(_authorizer.hasVoted(BOB, _voteID) == true);
         assert(_authorizer.getVoteByID(_voteID).aye == (_votesBefore + 2));
 
-        // TODO: test normal flow (executeTxFromModule) too !!!
+
     }
 
     // Test vote for _proposal as unauthorized address
@@ -246,7 +308,7 @@ contract SingleVoteGovernanceTest is Test {
         assert(_authorizer.hasVoted(ALBA, _voteID) == true);
         assert(_authorizer.hasVoted(BOB, _voteID) == true);
         assert(_authorizer.getVoteByID(_voteID).nay == (_votesBefore + 2));
-        // TODO: test normal flow (executeTxFromModule) too !!!
+
     }
     // Test vote against _proposal as unauthorized address
 
@@ -279,7 +341,7 @@ contract SingleVoteGovernanceTest is Test {
         assert(_authorizer.hasVoted(BOB, _voteID) == true);
         assert(_authorizer.getVoteByID(_voteID).abstain == (_votesBefore + 2));
 
-        // TODO: test normal flow (executeTxFromModule) too !!!
+
     }
     // Test abstain from _proposal as unauthorized address
 
@@ -363,7 +425,23 @@ contract SingleVoteGovernanceTest is Test {
     // ------------ VOTE EXECUTION TESTS ------------
     // Test executing vote that passed
     function testVoteExecution() public {
-        // TODO: Probably to be movedto E2E testing?
+        // Here we will test a "standard" execution process to change the vote Duration. The process will be:
+
+        // record initial state
+        uint durationBefore = _authorizer.getVoteDuration();
+        // somebody creates a vote
+
+        bytes memory _encodedAction =
+            abi.encodeWithSignature("changeVoteDuration(uint256)", 5000);
+
+        uint _voteID = speedrunSuccessfulVote(
+            address(_authorizer), _encodedAction, initialAuthorized
+        );
+        // the vote gets executed by anybody
+        _authorizer.executeVote(_voteID);
+
+        // the proposal state has changed
+        assertEq(_authorizer.getVoteDuration(), 5000);
     }
 
     // Test fail execute vote that didn't pass
@@ -416,7 +494,34 @@ contract SingleVoteGovernanceTest is Test {
     // Test fail execute an already executed vote
 
     function testDoubleExecution() public {
-        //TODO Blocked by execution test
+        // First we do a normal vote + execution
+
+        // record initial state
+        uint durationBefore = _authorizer.getVoteDuration();
+        // somebody creates a vote
+
+        bytes memory _encodedAction =
+            abi.encodeWithSignature("changeVoteDuration(uint256)", 5000);
+        uint _voteID = speedrunSuccessfulVote(
+            address(_authorizer), _encodedAction, initialAuthorized
+        );
+
+        // the vote gets executed by anybody
+        _authorizer.executeVote(_voteID);
+
+        // the proposal state has changed
+        assertEq(_authorizer.getVoteDuration(), 5000);
+
+        // now we test we can't execute again:
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SingleVoteGovernance
+                    .Module__SingleVoteGovernance__voteAlreadyExecuted
+                    .selector,
+                _voteID
+            )
+        );
+        _authorizer.executeVote(_voteID);
     }
 
     // ------------ QUORUM TESTS ------------
@@ -427,7 +532,7 @@ contract SingleVoteGovernanceTest is Test {
 
     // Test set a new quorum
     function testSetQuorum() public {
-        uint8 _newQ = 1;
+        uint _newQ = 1;
 
         vm.prank(address(_proposal));
         _authorizer.changeQuorum(_newQ);
@@ -437,7 +542,7 @@ contract SingleVoteGovernanceTest is Test {
 
     // Test fail set a quorum that's too damn high
     function testSetUnreachableQuorum() public {
-        uint8 _newQ = uint8(_authorizer.getAmountAuthorized() + 1);
+        uint _newQ = uint(_authorizer.getAmountAuthorized() + 1);
 
         vm.expectRevert(
             SingleVoteGovernance
@@ -450,7 +555,7 @@ contract SingleVoteGovernanceTest is Test {
     // Test fail set quorum to zero
 
     function testSetZeroQuorum() public {
-        uint8 _newQ = 0;
+        uint _newQ = 0;
 
         vm.expectRevert(
             SingleVoteGovernance
@@ -482,7 +587,7 @@ contract SingleVoteGovernanceTest is Test {
     // Test fail quorum change as unauthorized address (not _proposal)
 
     function testUnauthorizedQuorumChange() public {
-        uint8 _newQ = 1;
+        uint _newQ = 1;
 
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
         vm.prank(ALBA); //authorized, but not Proposal
@@ -493,11 +598,38 @@ contract SingleVoteGovernanceTest is Test {
     // @note: Make sure the above happens by mocking a whole voting process (blocked by the first voting exec test)
     function testGovernanceQuorumChangeTiming() public {
         //TODO blocked by execution test
+
+        //quorum is 2
+
+        //create vote for quorum increase by 1
+        //create vote for 1 more authorized voter
+        //
+        // create vote to decrease quorum by 1
+        // create vote for 1 more authorized voter
+        
+
+
     }
 
     //Test that the change thorugh governance works
     function testGovernanceQuorumChange() public {
-        //TODO blocked by execution test
+        // record initial state
+        uint durationBefore = _authorizer.getRequiredQuorum();
+        uint _newQuorum = 1;
+        // somebody creates a vote
+
+        bytes memory _encodedAction =
+            abi.encodeWithSignature("changeQuorum(uint256)", _newQuorum);
+        uint _voteID = speedrunSuccessfulVote(
+            address(_authorizer), _encodedAction, initialAuthorized
+        );
+
+        // the vote gets executed by anybody
+        _authorizer.executeVote(_voteID);
+
+        // the proposal state has changed
+        assertEq(_authorizer.getRequiredQuorum(), 1);
+
     }
 
     // ------------ VOTE DURATION TESTS ------------
@@ -518,6 +650,7 @@ contract SingleVoteGovernanceTest is Test {
 
     //Test that the change through governance works
     function testGovernanceVoteDurationChange() public {
-        //TODO blocked by execution test
+        //covered in:
+        testVoteExecution();
     }
 }

@@ -39,7 +39,7 @@ contract SingleVoteGovernance is ListAuthorizer {
         bytes encodedAction;
         address targetAddress;
         uint voteClosesAt;
-        bool quorumReached;
+        uint requiredQuorum;
         // execution information
         uint executedAt;
         bool executionResult;
@@ -56,6 +56,7 @@ contract SingleVoteGovernance is ListAuthorizer {
 
     error Module__SingleVoteGovernance__voteStillActive(uint voteID);
     error Module__SingleVoteGovernance__voteExpired(uint voteID);
+    error Module__SingleVoteGovernance__voteAlreadyExecuted(uint _voteID);
 
     error Module__SingleVoteGovernance__quorumNotReached(uint voteID);
 
@@ -69,7 +70,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     //--------------------------------------------------------------------------
     // Events
 
-    event QuorumModified(uint8 oldQuorum, uint8 newQuorum);
+    event QuorumModified(uint oldQuorum, uint newQuorum);
     event VoteDurationModified(uint oldDuration, uint newDuration);
 
     event VotedInFavor(address who, uint voteID);
@@ -101,16 +102,23 @@ contract SingleVoteGovernance is ListAuthorizer {
         _;
     }
 
+    modifier voteNotExecuted(uint _voteID) {
+        if (voteRegistry[_voteID].executionResult == true) {
+            revert Module__SingleVoteGovernance__voteAlreadyExecuted(_voteID);
+        }
+        _;
+    }
+
     /// @notice Verifies that a given vote did reach the quorum (at the time it was voted on)
     modifier quorumReached(uint _voteID) {
-        if (!voteRegistry[_voteID].quorumReached == true) {
+        if (!(voteRegistry[_voteID].aye >= voteRegistry[_voteID].requiredQuorum)) {
             revert Module__SingleVoteGovernance__quorumNotReached(_voteID);
         }
         _;
     }
 
     /// @notice Verifies that the suggested quorum change wouldn't break the system
-    modifier validQuorum(uint8 _quorum, uint _amountAuthorized) {
+    modifier validQuorum(uint _quorum, uint _amountAuthorized) {
         if (_quorum == 0) {
             revert Module__SingleVoteGovernance__quorumIsZero();
         }
@@ -155,7 +163,7 @@ contract SingleVoteGovernance is ListAuthorizer {
 
     /// @notice Quorum necessary to pass/deny a vote
     /// question: do we want to keep this as uint8??
-    uint8 private quorum;
+    uint private quorum;
     /// @notice Duration of the voting period
     uint private voteDuration;
 
@@ -165,7 +173,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     function initialize(
         IProposal proposal,
         address[] calldata initialAuthorized,
-        uint8 _startingQuorum,
+        uint _startingQuorum,
         uint _voteDuration,
         Metadata memory metadata
     ) external {
@@ -223,7 +231,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     // Public Callable Funtions
 
     /// @notice Returns the current required quorum
-    function getRequiredQuorum() external view returns (uint8) {
+    function getRequiredQuorum() external view returns (uint) {
         return quorum;
     }
 
@@ -263,12 +271,12 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @dev    The onlyProposal modifier forces a quorum change to go
     ///         through governance.
 
-    function changeQuorum(uint8 _new)
+    function changeQuorum(uint _new)
         external
         onlyProposal
         validQuorum(_new, getAmountAuthorized())
     {
-        uint8 old = quorum;
+        uint old = quorum;
         quorum = _new;
 
         emit QuorumModified(old, quorum);
@@ -299,6 +307,7 @@ contract SingleVoteGovernance is ListAuthorizer {
             block.timestamp + voteDuration;
         voteRegistry[voteIDCounter].targetAddress = _target;
         voteRegistry[voteIDCounter].encodedAction = _encodedAction;
+        voteRegistry[voteIDCounter].requiredQuorum = quorum;
 
         voteIDCounter++;
 
@@ -319,11 +328,11 @@ contract SingleVoteGovernance is ListAuthorizer {
 
             // makes the vote executable once quorum is reached
             /// @dev There's an edge case where a quorum change gets approved, but before it get's executed a new vote gets created (with the old quorum still). In this case, the new quorum shuold apply once it gets executed, so this if/else structure should account for  checking everytime a new vote comes in if the current quorum has been passed.
-            if (voteRegistry[_voteID].aye >= quorum) {
+            /*if (voteRegistry[_voteID].aye == voteRegistry[_voteID].requiredQuorum) {
                 voteRegistry[_voteID].quorumReached = true;
             } else {
                 voteRegistry[_voteID].quorumReached = false;
-            }
+            }*/
 
             emit VotedInFavor(_msgSender(), _voteID);
         } else {
@@ -344,9 +353,9 @@ contract SingleVoteGovernance is ListAuthorizer {
             voteRegistry[_voteID].voters.push(_msgSender());
             voteRegistry[_voteID].nay++;
 
-            if (voteRegistry[_voteID].aye < quorum) {
+            /*if (voteRegistry[_voteID].aye < quorum) {
                 voteRegistry[_voteID].quorumReached = false;
-            }
+            }*/
 
             emit VotedAgainst(_msgSender(), _voteID);
         } else {
@@ -367,9 +376,9 @@ contract SingleVoteGovernance is ListAuthorizer {
             voteRegistry[_voteID].voters.push(_msgSender());
             voteRegistry[_voteID].abstain++;
 
-            if (voteRegistry[_voteID].aye < quorum) {
+            /*if (voteRegistry[_voteID].aye < quorum) {
                 voteRegistry[_voteID].quorumReached = false;
-            }
+            }*/
 
             emit VotedAbstain(_msgSender(), _voteID);
         } else {
@@ -385,6 +394,7 @@ contract SingleVoteGovernance is ListAuthorizer {
         external
         quorumReached(_voteID)
         voteNotActive(_voteID)
+        voteNotExecuted(_voteID)
     {
         // Tell the proposal to execute the vote
         (
@@ -395,7 +405,6 @@ contract SingleVoteGovernance is ListAuthorizer {
             voteRegistry[_voteID].encodedAction,
             Types.Operation.Call
         );
-
         voteRegistry[_voteID].executedAt = block.timestamp;
 
         emit VoteEnacted(_voteID, voteRegistry[_voteID].executionResult);
