@@ -150,7 +150,9 @@ contract ListAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ListAuthorizer.Module__AuthorizerListCannotBeEmpty.selector
+                ListAuthorizer
+                    .Module__ListAuthorizer__AuthorizerListCannotBeEmpty
+                    .selector
             )
         );
 
@@ -195,7 +197,9 @@ contract ListAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ListAuthorizer.Module__AddressAlreadyAuthorized.selector
+                ListAuthorizer
+                    .Module__ListAuthorizer__AddressAlreadyAuthorized
+                    .selector
             )
         );
 

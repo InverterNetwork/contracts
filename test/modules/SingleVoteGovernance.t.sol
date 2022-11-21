@@ -96,6 +96,7 @@ contract SingleVoteGovernanceTest is Test {
         assertEq(_authorizer.isAuthorized(BOB), true);
         assertEq(_authorizer.isAuthorized(COBIE), true);
         assertEq(_authorizer.isAuthorized(address(this)), false);
+        assertEq(_authorizer.isAuthorized(address(_proposal)), true);
         assertEq(_authorizer.getAmountAuthorized(), 3);
     }
 
@@ -157,13 +158,8 @@ contract SingleVoteGovernanceTest is Test {
 
         assertEq(_authorizer.isAuthorized(DOBBIE), false);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(DOBBIE); //authorized, but not Proposal
+        vm.prank(DOBBIE); //unauthorized
         _authorizer.createVote(_moduleAddress, _msg);
-
-        // fail if authorized user tries to call the ProposalContext function directly
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(ALBA); //authorized, but not Proposal
-        _authorizer.__Governance_createVote(_moduleAddress, _msg);
     }
 
     // Test add authorized address and have it create vote
@@ -178,7 +174,7 @@ contract SingleVoteGovernanceTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SingleVoteGovernance
-                    .Module__SingleVoteGovernance_invalidModuleAddress
+                    .Module__SingleVoteGovernance__invalidModuleAddress
                     .selector,
                 0x42
             )
@@ -189,7 +185,7 @@ contract SingleVoteGovernanceTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SingleVoteGovernance
-                    .Module__SingleVoteGovernance_invalidEncodedAction
+                    .Module__SingleVoteGovernance__invalidEncodedAction
                     .selector,
                 ""
             )
@@ -231,11 +227,6 @@ contract SingleVoteGovernanceTest is Test {
         // fail if the external function is called by unauthorized address
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         voteInFavor(DOBBIE, _voteID);
-
-        // fail if the ProposalContext function is called directly by authorized address
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(ALBA); //authorized, but not Proposal
-        _authorizer.__Governance_voteInFavor(ALBA, _voteID);
     }
 
     // Test vote against _proposal
@@ -263,11 +254,6 @@ contract SingleVoteGovernanceTest is Test {
         //will fail
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
-
-        // fail if authorized user tries to call the ProposalContext function directly
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(ALBA); //authorized, but not Proposal
-        _authorizer.__Governance_voteAgainst(ALBA, _voteID);
 
         // fail if the external function is called by unauthorized address
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -304,11 +290,6 @@ contract SingleVoteGovernanceTest is Test {
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         // fail if authorized user tries to call the ProposalContext function directly
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(ALBA); //authorized, but not Proposal
-        _authorizer.__Governance_voteAbstain(ALBA, _voteID);
-
-        // fail if authorized user tries to call the ProposalContext function directly
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         voteAbstain(DOBBIE, _voteID);
     }
@@ -325,7 +306,7 @@ contract SingleVoteGovernanceTest is Test {
         vm.expectRevert(
             abi.encodePacked(
                 SingleVoteGovernance
-                    .Module__SingleVoteGovernance_voteExpired
+                    .Module__SingleVoteGovernance__voteExpired
                     .selector,
                 _voteID
             )
@@ -337,7 +318,7 @@ contract SingleVoteGovernanceTest is Test {
         vm.expectRevert(
             abi.encodePacked(
                 SingleVoteGovernance
-                    .Module__SingleVoteGovernance_voteExpired
+                    .Module__SingleVoteGovernance__voteExpired
                     .selector,
                 _voteID
             )
@@ -347,7 +328,7 @@ contract SingleVoteGovernanceTest is Test {
         vm.expectRevert(
             abi.encodePacked(
                 SingleVoteGovernance
-                    .Module__SingleVoteGovernance_voteExpired
+                    .Module__SingleVoteGovernance__voteExpired
                     .selector,
                 _voteID
             )
@@ -399,7 +380,7 @@ contract SingleVoteGovernanceTest is Test {
         vm.expectRevert(
             abi.encodePacked(
                 SingleVoteGovernance
-                    .Module__SingleVoteGovernance_quorumNotReached
+                    .Module__SingleVoteGovernance__quorumNotReached
                     .selector,
                 _voteID
             )
@@ -422,7 +403,7 @@ contract SingleVoteGovernanceTest is Test {
         vm.expectRevert(
             abi.encodePacked(
                 SingleVoteGovernance
-                    .Module__SingleVoteGovernance_voteStillActive
+                    .Module__SingleVoteGovernance__voteStillActive
                     .selector,
                 _voteID
             )
@@ -460,7 +441,7 @@ contract SingleVoteGovernanceTest is Test {
 
         vm.expectRevert(
             SingleVoteGovernance
-                .Module__SingleVoteGovernance_quorumUnreachable
+                .Module__SingleVoteGovernance__quorumUnreachable
                 .selector
         );
         vm.prank(address(_proposal));
@@ -473,7 +454,7 @@ contract SingleVoteGovernanceTest is Test {
 
         vm.expectRevert(
             SingleVoteGovernance
-                .Module__SingleVoteGovernance_quorumIsZero
+                .Module__SingleVoteGovernance__quorumIsZero
                 .selector
         );
         vm.prank(address(_proposal));
@@ -482,26 +463,26 @@ contract SingleVoteGovernanceTest is Test {
     // Test fail remove Authorized addresses until quorum is unreachble
 
     function testRemoveTooManyAuthorized() public {
-        vm.prank(ALBA);
+        assertEq(address(_proposal), address(_authorizer.proposal()));
+
+        vm.startPrank(address(_proposal));
         _authorizer.removeFromAuthorized(COBIE);
 
         //this call would leave a 1 person list with 2 quorum
         vm.expectRevert(
             SingleVoteGovernance
-                .Module__SingleVoteGovernance_quorumUnreachable
+                .Module__SingleVoteGovernance__quorumUnreachable
                 .selector
         );
-        vm.prank(ALBA);
+        //vm.prank(address(_proposal));
         _authorizer.removeFromAuthorized(BOB);
+
+        vm.stopPrank();
     }
     // Test fail quorum change as unauthorized address (not _proposal)
 
     function testUnauthorizedQuorumChange() public {
         uint8 _newQ = 1;
-
-        vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
-        vm.prank(ALBA); //authorized, but not Proposal
-        _authorizer.__Governance_changeQuorum(_newQ);
 
         vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
         vm.prank(ALBA); //authorized, but not Proposal
@@ -511,6 +492,11 @@ contract SingleVoteGovernanceTest is Test {
     //      -> About this: Quorum changes can only be done by the _proposal, which means that any quorum change must pass through governance. This guarantees that any previous vote with the old quorum will have finished before it changes.
     // @note: Make sure the above happens by mocking a whole voting process (blocked by the first voting exec test)
     function testGovernanceQuorumChangeTiming() public {
+        //TODO blocked by execution test
+    }
+
+    //Test that the change thorugh governance works
+    function testGovernanceQuorumChange() public {
         //TODO blocked by execution test
     }
 
@@ -528,5 +514,10 @@ contract SingleVoteGovernanceTest is Test {
         _authorizer.changeVoteDuration(_newDur);
 
         assertEq(_authorizer.getVoteDuration(), _newDur);
+    }
+
+    //Test that the change through governance works
+    function testGovernanceVoteDurationChange() public {
+        //TODO blocked by execution test
     }
 }

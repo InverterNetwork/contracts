@@ -54,17 +54,17 @@ contract SingleVoteGovernance is ListAuthorizer {
     //--------------------------------------------------------------------------
     // Errors
 
-    error Module__SingleVoteGovernance_voteStillActive(uint voteID);
-    error Module__SingleVoteGovernance_voteExpired(uint voteID);
+    error Module__SingleVoteGovernance__voteStillActive(uint voteID);
+    error Module__SingleVoteGovernance__voteExpired(uint voteID);
 
-    error Module__SingleVoteGovernance_quorumNotReached(uint voteID);
+    error Module__SingleVoteGovernance__quorumNotReached(uint voteID);
 
-    error Module__SingleVoteGovernance_invalidModuleAddress(address addr);
-    error Module__SingleVoteGovernance_invalidEncodedAction(bytes action);
-    error Module__SingleVoteGovernance_invalidVoterAddress(address addr);
+    error Module__SingleVoteGovernance__invalidModuleAddress(address addr);
+    error Module__SingleVoteGovernance__invalidEncodedAction(bytes action);
+    error Module__SingleVoteGovernance__invalidVoterAddress(address addr);
 
-    error Module__SingleVoteGovernance_quorumIsZero();
-    error Module__SingleVoteGovernance_quorumUnreachable();
+    error Module__SingleVoteGovernance__quorumIsZero();
+    error Module__SingleVoteGovernance__quorumUnreachable();
 
     //--------------------------------------------------------------------------
     // Events
@@ -88,7 +88,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     modifier voteIsActive(uint _voteID) {
         //TODO check for voteIDCounter too
         if (!(voteRegistry[_voteID].voteClosesAt >= block.timestamp)) {
-            revert Module__SingleVoteGovernance_voteExpired(_voteID);
+            revert Module__SingleVoteGovernance__voteExpired(_voteID);
         }
         _;
     }
@@ -96,7 +96,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @notice Verifies that a given vote is not active anymore
     modifier voteNotActive(uint _voteID) {
         if (!(voteRegistry[_voteID].voteClosesAt < block.timestamp)) {
-            revert Module__SingleVoteGovernance_voteStillActive(_voteID);
+            revert Module__SingleVoteGovernance__voteStillActive(_voteID);
         }
         _;
     }
@@ -104,7 +104,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @notice Verifies that a given vote did reach the quorum (at the time it was voted on)
     modifier quorumReached(uint _voteID) {
         if (!voteRegistry[_voteID].quorumReached == true) {
-            revert Module__SingleVoteGovernance_quorumNotReached(_voteID);
+            revert Module__SingleVoteGovernance__quorumNotReached(_voteID);
         }
         _;
     }
@@ -112,10 +112,10 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @notice Verifies that the suggested quorum change wouldn't break the system
     modifier validQuorum(uint8 _quorum, uint _amountAuthorized) {
         if (_quorum == 0) {
-            revert Module__SingleVoteGovernance_quorumIsZero();
+            revert Module__SingleVoteGovernance__quorumIsZero();
         }
         if (_quorum > _amountAuthorized) {
-            revert Module__SingleVoteGovernance_quorumUnreachable();
+            revert Module__SingleVoteGovernance__quorumUnreachable();
         }
         _;
     }
@@ -124,7 +124,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     modifier validModuleAddress(address _target) {
         //this should implicitly control for address  != 0
         if (!__Module_proposal.isModule(_target)) {
-            revert Module__SingleVoteGovernance_invalidModuleAddress(_target);
+            revert Module__SingleVoteGovernance__invalidModuleAddress(_target);
         }
         _;
     }
@@ -132,7 +132,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @notice Verifies that the action to be executed after the vote is valid
     modifier validAction(bytes calldata _action) {
         if (_action.length == 0) {
-            revert Module__SingleVoteGovernance_invalidEncodedAction(_action);
+            revert Module__SingleVoteGovernance__invalidEncodedAction(_action);
         }
         /// @question  Should we do more in-depth checks? Like if the encoded action exists in the target module?
         _;
@@ -141,7 +141,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     modifier validVoter(address _voter) {
         /// @notice: Usually, this modifier will just repeat the check already done in the original voteInFavor/Against/etc call. I still think it's valuable to keep it for the case the call is happening out of the encoded action of a vote, and thus escaped that check. It's a slightly convoluted attack vector, since that call vote would have to have passed through governance, but still possible...
         if (!isAuthorized(_voter)) {
-            revert Module__SingleVoteGovernance_invalidVoterAddress(_voter);
+            revert Module__SingleVoteGovernance__invalidVoterAddress(_voter);
         }
         _;
     }
@@ -179,17 +179,44 @@ contract SingleVoteGovernance is ListAuthorizer {
     //--------------------------------------------------------------------------
     // Parent Function overrides:
 
-    /// @dev  adds the validQuorum modifier to removeFromAuthorized to make sure
-    /// that removing users doesn't end up with unreachable quorum.
+    /// @dev    Overrides the parent function to authorize the proposal
+    ///         contract by default, so callbacks for governance execution
+    ///          don't fail
+    /// @notice Returns whether an address is authorized to facilitate
+    ///         the current transaction.
+    /// @param  _who  The address on which to perform the check.
+    function isAuthorized(address _who) public view override returns (bool) {
+        return (_who == address(__Module_proposal)) || super.isAuthorized(_who);
+    }
+
+    /// @dev    Overrides the parent function to make it onlyProposal, to force
+    ///         changes to go through Governance
+    /// @dev    Also adds the validQuorum modifier to removeFromAuthorized to
+    ///         make sure that removing users doesn't end up with unreachable
+    ///         quorum.
     /// @notice Removes an address from the list of authorized addresses.
     /// @param _who Address to remove authorization from
-    function __ListAuthorizer_removeFromAuthorized(address _who)
+    function removeFromAuthorized(address _who)
         public
         override
         onlyProposal
         validQuorum(quorum, (getAmountAuthorized() - 1))
     {
-        super.__ListAuthorizer_removeFromAuthorized(_who);
+        super.removeFromAuthorized(_who);
+    }
+
+    /// @dev    Overrides the parent function to make it onlyProposal, to force
+    ///         changes to go through Governance
+    /// @notice Adds a new address to the list of authorized addresses.
+    /// @param _who The address to add to the list of authorized addresses.
+    function addToAuthorized(address _who) public override onlyProposal {
+        super.addToAuthorized(_who);
+    }
+
+    /// @notice Transfers authorization from the calling address to a new one.
+    /// @param _to The address to transfer the authorization to
+    function transferAuthorization(address _to) public override onlyProposal {
+        super.addToAuthorized(_to);
     }
 
     //--------------------------------------------------------------------------
@@ -233,8 +260,10 @@ contract SingleVoteGovernance is ListAuthorizer {
     ///             2) if sbd votes aye and newQuorum<=aye<oldQuorum vote becomes (wrongly?) executable
     /// @notice Sets a new quorum
     /// @param _new The new quorum
+    /// @dev    The onlyProposal modifier forces a quorum change to go
+    ///         through governance.
 
-    function __Governance_changeQuorum(uint8 _new)
+    function changeQuorum(uint8 _new)
         external
         onlyProposal
         validQuorum(_new, getAmountAuthorized())
@@ -245,30 +274,11 @@ contract SingleVoteGovernance is ListAuthorizer {
         emit QuorumModified(old, quorum);
     }
 
-    /// @notice Sets a new quorum
-    /// @dev    Relay Function that routes the function call via the proposal.
-    ///         The onlyProposal modifier forces a quorum change to als go
-    ///         through governance.
-    /// @param _new The new quorum
-    function changeQuorum(uint8 _new) external onlyProposal {
-        /// @question: Technically, we can avoid this func altogether, since it will only be called after a vote through executeTxModule, which could directly call __Governance_changeQuorum and save gas.
-
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature("__Governance_changeQuorum(uint8)", _new),
-            Types.Operation.Call
-        );
-        if (!ok) {
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
-        }
-    }
-
     /// @notice Sets a new vote duration
     /// @param _new The new vote duration
-    function __Governance_changeVoteDuration(uint _new) external onlyProposal {
+    /// @dev    The onlyProposal modifier forces a quorum change to go
+    ///         through governance.
+    function changeVoteDuration(uint _new) external onlyProposal {
         // @question: Should we have min and max vote duration?
         uint old = voteDuration;
         voteDuration = _new;
@@ -276,38 +286,12 @@ contract SingleVoteGovernance is ListAuthorizer {
         emit VoteDurationModified(old, voteDuration);
     }
 
-    /// @notice Sets a new vote duration
-    /// @dev    Relay Function that routes the function call via the proposal.
-    ///         The onlyProposal modifier forces a quorum change to go
-    ///         through governance.
-    /// @param _new The new vote duration
-    function changeVoteDuration(uint _new) external onlyProposal {
-        /// @question: Technically, we can avoid this func altogether, since it will only be called after a vote through executeTxModule, which could directly call __Governance_changeQuorum and save gas.
-
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Governance_changeVoteDuration(uint256)", _new
-            ),
-            Types.Operation.Call
-        );
-        if (!ok) {
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
-        }
-    }
-
     /// @notice Creates a new vote
     /// @param _target The Module from which to execute the action
     /// @param _encodedAction The ABI encoded action to execute if it passes
-    function __Governance_createVote(
-        address _target,
-        bytes calldata _encodedAction
-    )
+    function createVote(address _target, bytes calldata _encodedAction)
         external
-        onlyProposal
+        onlyAuthorized
         validModuleAddress(_target)
         validAction(_encodedAction)
     {
@@ -321,41 +305,16 @@ contract SingleVoteGovernance is ListAuthorizer {
         emit VoteCreated((voteIDCounter - 1));
     }
 
-    /// @notice Creates a new vote
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param _target The Module from which to execute the action
-    /// @param _encodedAction The ABI encoded action to execute if it passes
-    function createVote(address _target, bytes calldata _encodedAction)
-        external
-        onlyAuthorized
-    {
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Governance_createVote(address,bytes)",
-                _target,
-                _encodedAction
-            ),
-            Types.Operation.Call
-        );
-        if (!ok) {
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
-        }
-    }
-
     /// @notice Vote "yes" and execute action if quorum is reached
     /// @param _voteID The ID of the vote to vote on
-    function __Governance_voteInFavor(address _voter, uint _voteID)
+    function voteInFavor(uint _voteID)
         external
-        onlyProposal
+        onlyAuthorized
         voteIsActive(_voteID)
-        validVoter(_voter)
+        validVoter(_msgSender())
     {
-        if (!hasVoted(_voter, _voteID)) {
-            voteRegistry[_voteID].voters.push(_voter);
+        if (!hasVoted(_msgSender(), _voteID)) {
+            voteRegistry[_voteID].voters.push(_msgSender());
             voteRegistry[_voteID].aye++;
 
             // makes the vote executable once quorum is reached
@@ -366,128 +325,64 @@ contract SingleVoteGovernance is ListAuthorizer {
                 voteRegistry[_voteID].quorumReached = false;
             }
 
-            emit VotedInFavor(_voter, _voteID);
+            emit VotedInFavor(_msgSender(), _voteID);
         } else {
             //If the user already voted the  function doesn't fail, but at least we inform them that the vote wasn't counted
-            emit AttemptedDoubleVote(_voter, _voteID);
-        }
-    }
-
-    /// @notice Vote "yes" and execute action if quorum is reached
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param _voteID The ID of the vote to vote on
-    function voteInFavor(uint _voteID) external onlyAuthorized {
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Governance_voteInFavor(address,uint256)",
-                _msgSender(),
-                _voteID
-            ),
-            Types.Operation.Call
-        );
-        if (!ok) {
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
+            emit AttemptedDoubleVote(_msgSender(), _voteID);
         }
     }
 
     /// @notice Vote "no"
     /// @param _voteID The ID of the vote to vote on
-    function __Governance_voteAgainst(address _voter, uint _voteID)
+    function voteAgainst(uint _voteID)
         external
-        onlyProposal
+        onlyAuthorized
         voteIsActive(_voteID)
-        validVoter(_voter)
+        validVoter(_msgSender())
     {
-        if (!hasVoted(_voter, _voteID)) {
-            voteRegistry[_voteID].voters.push(_voter);
+        if (!hasVoted(_msgSender(), _voteID)) {
+            voteRegistry[_voteID].voters.push(_msgSender());
             voteRegistry[_voteID].nay++;
 
             if (voteRegistry[_voteID].aye < quorum) {
                 voteRegistry[_voteID].quorumReached = false;
             }
 
-            emit VotedAgainst(_voter, _voteID);
+            emit VotedAgainst(_msgSender(), _voteID);
         } else {
             //If the user already voted the  function doesn't fail, but at least we inform them that the vote wasn't counted
-            emit AttemptedDoubleVote(_voter, _voteID);
-        }
-    }
-
-    /// @notice Vote "no"
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param _voteID The ID of the vote to vote on
-    function voteAgainst(uint _voteID) external onlyAuthorized {
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Governance_voteAgainst(address,uint256)",
-                _msgSender(),
-                _voteID
-            ),
-            Types.Operation.Call
-        );
-        if (!ok) {
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
+            emit AttemptedDoubleVote(_msgSender(), _voteID);
         }
     }
 
     /// @notice Vote "abstain"
     /// @param _voteID The ID of the vote to vote on
-    function __Governance_voteAbstain(address _voter, uint _voteID)
+    function voteAbstain(uint _voteID)
         external
-        onlyProposal
+        onlyAuthorized
         voteIsActive(_voteID)
-        validVoter(_voter)
+        validVoter(_msgSender())
     {
-        if (!hasVoted(_voter, _voteID)) {
-            voteRegistry[_voteID].voters.push(_voter);
+        if (!hasVoted(_msgSender(), _voteID)) {
+            voteRegistry[_voteID].voters.push(_msgSender());
             voteRegistry[_voteID].abstain++;
 
             if (voteRegistry[_voteID].aye < quorum) {
                 voteRegistry[_voteID].quorumReached = false;
             }
 
-            emit VotedAbstain(_voter, _voteID);
+            emit VotedAbstain(_msgSender(), _voteID);
         } else {
             //If the user already voted the  function doesn't fail, but at least we inform them that the vote wasn't counted
-            emit AttemptedDoubleVote(_voter, _voteID);
-        }
-    }
-
-    /// @notice Vote "no" and abort action if quorum is reached
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param _voteID The ID of the vote to vote on
-    function voteAbstain(uint _voteID) external onlyAuthorized {
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Governance_voteAbstain(address,uint256)",
-                _msgSender(),
-                _voteID
-            ),
-            Types.Operation.Call
-        );
-        if (!ok) {
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
+            emit AttemptedDoubleVote(_msgSender(), _voteID);
         }
     }
 
     /// @notice Execute a vote. Only called by voteInFavor once quorum
     ///         is reached
     /// @param _voteID The ID of the vote to execute
-    function __Governance_executeVote(uint _voteID)
+    function executeVote(uint _voteID)
         external
-        onlyProposal
         quorumReached(_voteID)
         voteNotActive(_voteID)
     {
@@ -504,24 +399,5 @@ contract SingleVoteGovernance is ListAuthorizer {
         voteRegistry[_voteID].executedAt = block.timestamp;
 
         emit VoteEnacted(_voteID, voteRegistry[_voteID].executionResult);
-    }
-
-    /// @notice Execute a completed vote.
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param _voteID The ID of the vote to execute
-    function executeVote(uint _voteID) external {
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) = _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__Governance_executeVote(uint256)", _voteID
-            ),
-            Types.Operation.Call
-        );
-        if (!ok) {
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
-        }
     }
 }
