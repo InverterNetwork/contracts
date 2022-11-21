@@ -18,10 +18,11 @@ interface IMilestoneManager is IPaymentClient {
         uint budget;
         /// @dev The timestamp the milestone started.
         uint startTimestamp;
-        /// @dev Whether the milestone got submitted already.
+        /// @dev Represents the data that is accompanied when a milestone is submitted.
+        ///      A Milestone is counted as submitted when the submissionData bytes array is not empty.
         ///      Note that only accounts holding the {CONTRIBUTOR_ROLE()} can
-        ///      submit milestones.
-        bool submitted;
+        ///      set submittedData and therefor submit milestones.
+        bytes submissionData;
         /// @dev Whether the milestone is completed.
         ///      A milestone is completed if it got confirmed and started more
         ///      than duration seconds ago.
@@ -53,6 +54,9 @@ interface IMilestoneManager is IPaymentClient {
 
     /// @notice Given milestone id invalid.
     error Module__MilestoneManager__InvalidMilestoneId();
+
+    /// @dev The given submissionData is invalid
+    error Module__MilestoneManage__InvalidSubmissionData();
 
     /// @notice Given milestone not updateable.
     error Module__MilestoneManager__MilestoneNotUpdateable();
@@ -98,11 +102,11 @@ interface IMilestoneManager is IPaymentClient {
         uint indexed id, uint duration, uint budget, string details
     );
 
-    /// @notice Event emitted when a milestone removed.
+    /// @notice Event emitted when a milestone is removed.
     event MilestoneRemoved(uint indexed id);
 
-    /// @notice Event emitted when a milestone submitted.
-    event MilestoneSubmitted(uint indexed id);
+    /// @notice Event emitted when a milestone is submitted.
+    event MilestoneSubmitted(uint indexed id, bytes indexed submissionData);
 
     /// @notice Event emitted when a milestone is completed.
     event MilestoneCompleted(uint indexed id);
@@ -178,7 +182,7 @@ interface IMilestoneManager is IPaymentClient {
     ///      already completed.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
-    function submitMilestone(uint id) external;
+    function submitMilestone(uint id, bytes calldata submissionData) external;
 
     /// @notice Completes a milestone.
     /// @dev Only callable by authorized addresses.
