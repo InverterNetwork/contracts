@@ -36,7 +36,9 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *              A milestone is active, until either its duration is over or it's
  *              marked as completed.
  *        - submitted
- *              A proposal contributor marked the milestone as submitted by changing the submittedData to not empty.
+ *              A proposal contributor marks a milestone as submitted by
+ *              submitting non-empty data that can be interpreted and evaluated
+ *              by off-chain systems.
  *        - completed
  *              After a milestone was submitted, it can be marked as completed.
  *              This marks the end of the milestone.
@@ -69,8 +71,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
-    modifier validTitle(string memory title) {
-        if (title.isEmpty()) {
+    modifier validTitle(string memory title_) {
+        if (title_.isEmpty()) {
             revert Module__MilestoneManager__InvalidTitle();
         }
         _;
@@ -143,6 +145,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Public View Functions
 
+    /// @inheritdoc IMilestoneManager
     function getMilestoneInformation(uint id)
         public
         view
@@ -155,6 +158,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return _milestoneRegistry[id];
     }
 
+    /// @inheritdoc IMilestoneManager
     function listMilestoneIds() external view returns (uint[] memory) {
         uint[] memory result = new uint[](_milestoneCounter);
 
@@ -170,6 +174,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return result;
     }
 
+    /// @inheritdoc IMilestoneManager
     function getActiveMilestoneId() public view returns (uint id) {
         if (!hasActiveMilestone()) {
             revert Module__MilestoneManager__NoActiveMilestone();
@@ -178,6 +183,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return _activeMilestone;
     }
 
+    /// @inheritdoc IMilestoneManager
     function hasActiveMilestone() public view returns (bool) {
         if (!isExistingMilestoneId(_activeMilestone)) {
             return false;
@@ -185,23 +191,20 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         Milestone storage m = _milestoneRegistry[_activeMilestone];
 
-        // Milestone active if:
-        // - milestone not yet completed
-        // - milestone started and still running
+        // Milestone active if not completed and already started but duration
+        // not yet over.
         return !m.completed && m.startTimestamp != 0
             && m.startTimestamp + m.duration >= block.timestamp;
     }
 
+    /// @inheritdoc IMilestoneManager
     function isNextMilestoneActivatable() public view returns (bool) {
-        if (hasActiveMilestone()) {
-            return false;
-        }
-
         uint next = _milestones[_activeMilestone];
 
         return isExistingMilestoneId(next);
     }
 
+    /// @inheritdoc IMilestoneManager
     function isExistingMilestoneId(uint id) public view returns (bool) {
         return id != _SENTINEL && _milestones[id] != 0;
     }

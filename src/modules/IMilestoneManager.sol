@@ -44,7 +44,7 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given duration invalid.
     error Module__MilestoneManager__InvalidDuration();
 
-    // @audit-info If later needed, add error for invalid budget.
+    // @audit-info If needed, add error for invalid budget here.
 
     /// @notice Given title invalid.
     error Module__MilestoneManager__InvalidTitle();
@@ -128,6 +128,28 @@ interface IMilestoneManager is IPaymentClient {
         external
         view
         returns (Milestone memory);
+
+    /// @notice Returns total list of milestone ids.
+    /// @dev List is in ascending order.
+    /// @return List of milestone ids.
+    function listMilestoneIds() external view returns (uint[] memory);
+
+    /// @notice Returns the current active milestone's id.
+    /// @dev Reverts in case there is no active milestone.
+    /// @return Current active milestone id.
+    function getActiveMilestoneId() external view returns (uint);
+
+    /// @notice Returns whether there exists a current active milestone.
+    /// @return True if current active milestone exists, false otherwise.
+    function hasActiveMilestone() external view returns (bool);
+
+    /// @notice Returns whether the next milestone is activatable.
+    /// @return True if next milestone activatable, false otherwise.
+    function isNextMilestoneActivatable() external view returns (bool);
+
+    /// @notice Returns whether milestone with id `id` exists.
+    /// @return True if milestone with id `id` exists, false otherwise.
+    function isExistingMilestoneId(uint id) external view returns (bool);
 
     //----------------------------------
     // Milestone Mutating Functions
