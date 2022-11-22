@@ -3,26 +3,23 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 
+
+// SuT
+import {SingleVoteGovernance, ListAuthorizer} from
+    "src/modules/governance/SingleVoteGovernance.sol";
+
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
-import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
-import {ListAuthorizer} from "src/modules/governance/ListAuthorizer.sol";
-import {SingleVoteGovernance} from
-    "src/modules/governance/SingleVoteGovernance.sol";
 
-//delete after debug
-import {Types} from "src/common/Types.sol";
 
 // Interfaces
-import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 // Mocks
-import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {PaymentProcessorMock} from
@@ -53,6 +50,7 @@ contract SingleVoteGovernanceTest is Test {
 
     IModule.Metadata internal _METADATA =
         IModule.Metadata(_MAJOR_VERSION, _GIT_URL);
+
 
     function setUp() public {
         address authImpl = address(new SingleVoteGovernance());
@@ -101,14 +99,16 @@ contract SingleVoteGovernanceTest is Test {
         assertEq(_authorizer.getAmountAuthorized(), 3);
     }
 
+    //TODO test call to nonexistent vote ID
+    //TODO test proposal tryign to call onauthorized functions through governance
+
     /// Helper functions for common calls
     function createVote(address callingUser, address _addr, bytes memory _msg)
         public
         returns (uint)
     {
-        uint _id = _authorizer.getNextVoteID();
         vm.prank(callingUser);
-        _authorizer.createVote(_addr, _msg);
+        uint _id = _authorizer.createVote(_addr, _msg);
         return _id;
     }
 
@@ -158,7 +158,7 @@ contract SingleVoteGovernanceTest is Test {
         uint _voteID = createVote(_voters[0], _target, _action);
 
         for (uint i; i < _voters.length; i++) {
-            if (i == _authorizer.getRequiredQuorum()) {
+            if (i == _authorizer.getQuorum()) {
                 break;
             }
             voteInFavor(_voters[i], _voteID);
@@ -275,8 +275,6 @@ contract SingleVoteGovernanceTest is Test {
         assert(_authorizer.hasVoted(ALBA, _voteID) == true);
         assert(_authorizer.hasVoted(BOB, _voteID) == true);
         assert(_authorizer.getVoteByID(_voteID).aye == (_votesBefore + 2));
-
-
     }
 
     // Test vote for _proposal as unauthorized address
@@ -308,7 +306,6 @@ contract SingleVoteGovernanceTest is Test {
         assert(_authorizer.hasVoted(ALBA, _voteID) == true);
         assert(_authorizer.hasVoted(BOB, _voteID) == true);
         assert(_authorizer.getVoteByID(_voteID).nay == (_votesBefore + 2));
-
     }
     // Test vote against _proposal as unauthorized address
 
@@ -340,8 +337,6 @@ contract SingleVoteGovernanceTest is Test {
         assert(_authorizer.hasVoted(ALBA, _voteID) == true);
         assert(_authorizer.hasVoted(BOB, _voteID) == true);
         assert(_authorizer.getVoteByID(_voteID).abstain == (_votesBefore + 2));
-
-
     }
     // Test abstain from _proposal as unauthorized address
 
@@ -427,21 +422,21 @@ contract SingleVoteGovernanceTest is Test {
     function testVoteExecution() public {
         // Here we will test a "standard" execution process to change the vote Duration. The process will be:
 
-        // record initial state
-        uint durationBefore = _authorizer.getVoteDuration();
-        // somebody creates a vote
+        uint _newDuration = 5000;
 
+        // somebody creates a vote
         bytes memory _encodedAction =
-            abi.encodeWithSignature("changeVoteDuration(uint256)", 5000);
+            abi.encodeWithSignature("changeVoteDuration(uint256)", _newDuration);
 
         uint _voteID = speedrunSuccessfulVote(
             address(_authorizer), _encodedAction, initialAuthorized
         );
+
         // the vote gets executed by anybody
         _authorizer.executeVote(_voteID);
 
         // the proposal state has changed
-        assertEq(_authorizer.getVoteDuration(), 5000);
+        assertEq(_authorizer.getVoteDuration(), _newDuration);
     }
 
     // Test fail execute vote that didn't pass
@@ -495,13 +490,12 @@ contract SingleVoteGovernanceTest is Test {
 
     function testDoubleExecution() public {
         // First we do a normal vote + execution
+        uint _newDuration = 5000;
 
-        // record initial state
-        uint durationBefore = _authorizer.getVoteDuration();
         // somebody creates a vote
 
         bytes memory _encodedAction =
-            abi.encodeWithSignature("changeVoteDuration(uint256)", 5000);
+            abi.encodeWithSignature("changeVoteDuration(uint256)", _newDuration);
         uint _voteID = speedrunSuccessfulVote(
             address(_authorizer), _encodedAction, initialAuthorized
         );
@@ -510,7 +504,7 @@ contract SingleVoteGovernanceTest is Test {
         _authorizer.executeVote(_voteID);
 
         // the proposal state has changed
-        assertEq(_authorizer.getVoteDuration(), 5000);
+        assertEq(_authorizer.getVoteDuration(), _newDuration);
 
         // now we test we can't execute again:
         vm.expectRevert(
@@ -527,7 +521,7 @@ contract SingleVoteGovernanceTest is Test {
     // ------------ QUORUM TESTS ------------
     // Test get correct quorum
     function testGetQuorum() public {
-        assertEq(_authorizer.getRequiredQuorum(), DEFAULT_QUORUM);
+        assertEq(_authorizer.getQuorum(), DEFAULT_QUORUM);
     }
 
     // Test set a new quorum
@@ -537,7 +531,7 @@ contract SingleVoteGovernanceTest is Test {
         vm.prank(address(_proposal));
         _authorizer.changeQuorum(_newQ);
 
-        assertEq(_authorizer.getRequiredQuorum(), _newQ);
+        assertEq(_authorizer.getQuorum(), _newQ);
     }
 
     // Test fail set a quorum that's too damn high
@@ -559,7 +553,7 @@ contract SingleVoteGovernanceTest is Test {
 
         vm.expectRevert(
             SingleVoteGovernance
-                .Module__SingleVoteGovernance__quorumIsZero
+                .Module__SingleVoteGovernance__quorumCannotBeZero
                 .selector
         );
         vm.prank(address(_proposal));
@@ -597,25 +591,14 @@ contract SingleVoteGovernanceTest is Test {
     //      -> About this: Quorum changes can only be done by the _proposal, which means that any quorum change must pass through governance. This guarantees that any previous vote with the old quorum will have finished before it changes.
     // @note: Make sure the above happens by mocking a whole voting process (blocked by the first voting exec test)
     function testGovernanceQuorumChangeTiming() public {
-        //TODO blocked by execution test
-
-        //quorum is 2
-
-        //create vote for quorum increase by 1
-        //create vote for 1 more authorized voter
-        //
-        // create vote to decrease quorum by 1
-        // create vote for 1 more authorized voter
-        
-
-
+        //TODO not needed anymore, we now store the required quorum on creation.
     }
 
     //Test that the change thorugh governance works
     function testGovernanceQuorumChange() public {
-        // record initial state
-        uint durationBefore = _authorizer.getRequiredQuorum();
+
         uint _newQuorum = 1;
+
         // somebody creates a vote
 
         bytes memory _encodedAction =
@@ -628,8 +611,7 @@ contract SingleVoteGovernanceTest is Test {
         _authorizer.executeVote(_voteID);
 
         // the proposal state has changed
-        assertEq(_authorizer.getRequiredQuorum(), 1);
-
+        assertEq(_authorizer.getQuorum(), 1);
     }
 
     // ------------ VOTE DURATION TESTS ------------

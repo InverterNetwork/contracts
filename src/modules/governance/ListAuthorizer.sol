@@ -15,7 +15,7 @@ import {IProposal, IAuthorizer} from "src/proposal/IProposal.sol";
  * @title A simple List-based Authorizer
  *
  * @dev
- * This Module handles the authorization of several of the smart contract
+ * This Module handles the authorization of the smart contract
  * functions
  *
  * It keeps a list authorized addresses and implements the IAuthorizers
@@ -37,7 +37,6 @@ contract ListAuthorizer is IAuthorizer, Module {
     // Events
 
     event AddedAuthorizedAddress(address added);
-
     event RemovedAuthorizedAddress(address removed);
 
     //--------------------------------------------------------------------------
@@ -61,24 +60,20 @@ contract ListAuthorizer is IAuthorizer, Module {
 
     function initialize(
         IProposal proposal,
-        address[] calldata initialAuthorized,
+        address[] calldata initialAuthorizers,
         Metadata memory metadata
     ) public initializer {
         __Module_init(proposal, metadata);
 
-        //authorize the calling address
-        //@note: THIS IS CHANGED! Mention. Since we now take a list of initial authorized addresses, we set the msgSender as authorized only if the supplied array is empty
-        if (initialAuthorized.length == 0) {
-            authorized[_msgSender()] = true;
-            amountAuthorized++;
+        if (initialAuthorizers.length == 0) {
+            revert Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
         } else {
-            for (uint i = 0; i < initialAuthorized.length; i++) {
-                authorized[initialAuthorized[i]] = true;
+            for (uint i = 0; i < initialAuthorizers.length; i++) {
+                authorized[initialAuthorizers[i]] = true;
                 amountAuthorized++;
+                emit AddedAuthorizedAddress(initialAuthorizers[i]);
             }
         }
-
-        emit AddedAuthorizedAddress(_msgSender());
     }
 
     //--------------------------------------------------------------------------
@@ -132,7 +127,7 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @notice Transfers authorization from the calling address to a new one.
     /// @param _to The address to transfer the authorization to
     function transferAuthorization(address _to) public virtual onlyAuthorized {
-        //I think in this case we actually DO want to revert if the receiving address is already authorized to avoid confusion. The opposite could lead to think that somebedy has "double vote" or something like that. It also saves us implementing quorum management logic downstream.
+        //In this particular case, I think the method shouldn't be idempotent to avoid confusion.
         if (isAuthorized(_to)) {
             revert Module__ListAuthorizer__AddressAlreadyAuthorized();
         }

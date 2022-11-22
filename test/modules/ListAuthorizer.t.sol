@@ -7,21 +7,22 @@ pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 
+// SuT
+import {
+    ListAuthorizer,
+    IAuthorizer
+} from "src/modules/governance/ListAuthorizer.sol";
+
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
-import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
-import {ListAuthorizer} from "src/modules/governance/ListAuthorizer.sol";
 
 // Interfaces
-import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 // Mocks
-import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {PaymentProcessorMock} from
@@ -50,8 +51,8 @@ contract ListAuthorizerTest is Test {
         address authImpl = address(new ListAuthorizer());
         _authorizer = ListAuthorizer(Clones.clone(authImpl));
 
-        address impl = address(new Proposal());
-        _proposal = Proposal(Clones.clone(impl));
+        address propImpl = address(new Proposal());
+        _proposal = Proposal(Clones.clone(propImpl));
 
         ModuleMock module = new  ModuleMock();
         address[] memory modules = new address[](1);
@@ -66,11 +67,12 @@ contract ListAuthorizerTest is Test {
             _paymentProcessor
         );
 
-        address[] memory initialAuth;
+        address[] memory initialAuth = new address[](1);
+        initialAuth[0] = address(this);
 
         _authorizer.initialize(IProposal(_proposal), initialAuth, _METADATA);
 
-        //authorize one address and deauthorize the deployer.
+        //authorize one address and deauthorize the initializer.
         _authorizer.addToAuthorized(ALBA);
         _authorizer.removeFromAuthorized(address(this));
 
@@ -80,8 +82,8 @@ contract ListAuthorizerTest is Test {
     }
 
     function testInitWithInitialAuthorized() public {
-        //This checks initialization on a "new" authorizer.
-        // Note that the Proposal created in the setup (and used here) doesn't know anything about this authorizer.
+        //Checks that address list gets correctly stored on initialization
+        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizator.
 
         address authImpl = address(new ListAuthorizer());
         ListAuthorizer testAuthorizer = ListAuthorizer(Clones.clone(authImpl));
@@ -92,45 +94,25 @@ contract ListAuthorizerTest is Test {
 
         testAuthorizer.initialize(IProposal(_proposal), initialAuth, _METADATA);
 
-        //assertEq(ListAuthorizer.__Module_proposal, _proposal);
-        //assertEq(ListAuthorizer.__Module_metadata, _METADATA);
-        assertEq(testAuthorizer.isAuthorized(address(this)), false);
+        assertEq(address(testAuthorizer.proposal()), address(_proposal));
         assertEq(testAuthorizer.isAuthorized(ALBA), true);
         assertEq(testAuthorizer.isAuthorized(BOB), true);
+        assertEq(testAuthorizer.isAuthorized(address(this)), false);
         assertEq(testAuthorizer.getAmountAuthorized(), 2);
     }
 
-    function testInitWithoutInitialAuthorized() public {
-        //This checks initialization on a "new" authorizer.
-        // Note that the Proposal created in the setup (and used here) doesn't know anything about this authorizer.
-
-        address authImpl = address(new ListAuthorizer());
-        ListAuthorizer testAuthorizer = ListAuthorizer(Clones.clone(authImpl));
-
-        address[] memory initialAuth;
-
-        testAuthorizer.initialize(IProposal(_proposal), initialAuth, _METADATA);
-
-        //assertEq(ListAuthorizer.__Module_proposal, _proposal);
-        //assertEq(ListAuthorizer.__Module_metadata, _METADATA);
-        assertEq(testAuthorizer.isAuthorized(address(this)), true);
-        assertEq(testAuthorizer.getAmountAuthorized(), 1);
-    }
-
     function testReinitFails() public {
-        ProposalMock newProposal = new ProposalMock(_authorizer);
+        //Create a mock new proposal
+        Proposal newProposal = Proposal(Clones.clone(address(new Proposal())));
 
-        address[] memory initialAuth = new address[](2);
-        initialAuth[0] = ALBA;
-        initialAuth[1] = BOB;
+        address[] memory initialAuth = new address[](1);
+        initialAuth[0] = address(this);
 
         vm.expectRevert();
-        vm.prank(ALBA);
         _authorizer.initialize(IProposal(newProposal), initialAuth, _METADATA);
 
-        //assertEq(ListAuthorizer.__Module_proposal, _proposal);
-        //assertEq(ListAuthorizer.__Module_metadata, _METADATA);
         assertEq(_authorizer.isAuthorized(address(this)), false);
+        assertEq(address(_authorizer.proposal()), address(_proposal));
         assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(_authorizer.getAmountAuthorized(), 1);
     }
@@ -193,8 +175,6 @@ contract ListAuthorizerTest is Test {
 
         uint amountAuth = _authorizer.getAmountAuthorized();
 
-        //Again, callback reverts but the func only doesnt't do anything
-
         vm.expectRevert(
             abi.encodeWithSelector(
                 ListAuthorizer
@@ -202,7 +182,6 @@ contract ListAuthorizerTest is Test {
                     .selector
             )
         );
-
         vm.prank(address(ALBA));
         _authorizer.transferAuthorization(BOB);
 
@@ -211,21 +190,24 @@ contract ListAuthorizerTest is Test {
         assertEq(_authorizer.getAmountAuthorized(), (amountAuth));
     }
 
-    function testAccessControl() public {
-        uint amountAuth = _authorizer.getAmountAuthorized();
-
+    function testUnauthorizedCallsFail() public {
         //test if a non authorized address fails authorization
         address SIFU = address(0x51f00);
         assertEq(_authorizer.isAuthorized(SIFU), false);
 
-        //add authorized address/remove it and test authorization
+        //add without authorization fails
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(SIFU));
+        _authorizer.addToAuthorized(SIFU);
 
-        vm.startPrank(address(ALBA));
-        _authorizer.addToAuthorized(BOB);
-        _authorizer.removeFromAuthorized(BOB);
-        vm.stopPrank();
+        //remove without authorization fails
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(SIFU));
+        _authorizer.removeFromAuthorized(ALBA);
 
-        assertEq(_authorizer.isAuthorized(BOB), false);
-        assertEq(_authorizer.getAmountAuthorized(), (amountAuth));
+        //transfer withour authorization fails
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.prank(address(SIFU));
+        _authorizer.removeFromAuthorized(address(1337));
     }
 }
