@@ -46,7 +46,7 @@ contract Proposal is
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
     modifier onlyOwnerOrAuthorized() {
-        if (!_isOwnerOrAuthorized(msg.sender)) {
+        if (!_isOwnerOrAuthorized(_msgSender())) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
