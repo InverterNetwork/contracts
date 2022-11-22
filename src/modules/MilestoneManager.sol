@@ -156,7 +156,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     function listMilestoneIds() external view returns (uint[] memory) {
-        uint[] memory result = new uint256[](_milestoneCounter);
+        uint[] memory result = new uint[](_milestoneCounter);
 
         // Populate result array.
         uint index = 0;
@@ -347,11 +347,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function submitMilestone(uint id, bytes calldata _submissionData)
+    function submitMilestone(uint id, bytes calldata submissionData)
         external
         onlyContributor
         validId(id)
-        validSubmissionData(_submissionData)
+        validSubmissionData(submissionData)
     {
         Milestone storage m = _milestoneRegistry[id];
 
@@ -361,8 +361,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
 
         if (m.submissionData.length == 0) {
-            m.submissionData = _submissionData;
-            emit MilestoneSubmitted(id, _submissionData);
+            m.submissionData = submissionData;
+            emit MilestoneSubmitted(id, submissionData);
         }
     }
 

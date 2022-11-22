@@ -34,6 +34,7 @@ contract MilestoneManagerTest is ModuleTest {
     uint constant BUDGET = 1000 * 1e18;
     string constant TITLE = "Title";
     string constant DETAILS = "Details";
+    bytes constant SUBMISSION_DATA = "SubmissionData";
 
     // Constant copied from SuT
     uint private constant _SENTINEL = type(uint).max;
@@ -201,7 +202,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         milestoneManager.completeMilestone(id);
 
@@ -684,11 +685,11 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testSubmitMilestone(
         address[] memory contributors,
-        bytes calldata _submissionData
+        bytes calldata submissionData
     ) public {
         _addContributors(contributors);
 
-        vm.assume(_submissionData.length != 0);
+        vm.assume(submissionData.length != 0);
 
         // Mint tokens to proposal.
         // Note that these tokens are transfered to the milestone module
@@ -702,7 +703,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, _submissionData);
+        milestoneManager.submitMilestone(id, submissionData);
 
         assertTrue(
             milestoneManager.getMilestoneInformation(id).submissionData.length
@@ -711,21 +712,21 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue(
             keccak256(
                 milestoneManager.getMilestoneInformation(id).submissionData
-            ) == keccak256(_submissionData)
+            ) == keccak256(submissionData)
         );
     }
 
     function testSubmitMilestoneSubmissionDataNotChangeable(
         address[] memory contributors,
-        bytes calldata _submissionData1,
-        bytes calldata _submissionData2
+        bytes calldata submissionData1,
+        bytes calldata submissionData2
     ) public {
         _addContributors(contributors);
 
-        vm.assume(_submissionData1.length != 0);
-        vm.assume(_submissionData2.length != 0);
+        vm.assume(submissionData1.length != 0);
+        vm.assume(submissionData2.length != 0);
         //Assume submissionData 1 and 2 is different
-        vm.assume(keccak256(_submissionData1) != keccak256(_submissionData2));
+        vm.assume(keccak256(submissionData1) != keccak256(submissionData2));
 
         // Mint tokens to proposal.
         // Note that these tokens are transfered to the milestone module
@@ -740,25 +741,26 @@ contract MilestoneManagerTest is ModuleTest {
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
         //submit submissionData1
-        milestoneManager.submitMilestone(id, _submissionData1);
+        milestoneManager.submitMilestone(id, submissionData1);
 
         //assert that submissionData is submissionData1
         assertTrue(
             keccak256(
                 milestoneManager.getMilestoneInformation(id).submissionData
-            ) == keccak256(_submissionData1)
+            ) == keccak256(submissionData1)
         );
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
         //submit submissionData2
-        milestoneManager.submitMilestone(id, _submissionData1);
+        milestoneManager.submitMilestone(id, submissionData1);
 
         //assert that submissionData did not change
-        assertTrue(
+        assertEq(
             keccak256(
                 milestoneManager.getMilestoneInformation(id).submissionData
-            ) == keccak256(_submissionData1)
+            ),
+            keccak256(submissionData1)
         );
     }
 
@@ -858,7 +860,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__MilestoneNotSubmitable
                 .selector
         );
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
     }
 
     function testSubmitMilestoneFailsIfMilestoneAlreadyCompleted(
@@ -878,7 +880,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         // Note that milestone gets completed.
         milestoneManager.completeMilestone(id);
@@ -890,7 +892,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__MilestoneNotSubmitable
                 .selector
         );
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
     }
 
     //----------------------------------
@@ -911,7 +913,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         milestoneManager.completeMilestone(id);
         assertTrue(milestoneManager.getMilestoneInformation(id).completed);
@@ -934,7 +936,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         _authorizer.setIsAuthorized(address(this), false);
 
@@ -959,7 +961,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         vm.expectRevert(
             IMilestoneManager
@@ -1012,12 +1014,12 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         milestoneManager.declineMilestone(id);
-        assertTrue(
-            milestoneManager.getMilestoneInformation(id).submissionData.length
-                == 0
+        assertEq(
+            milestoneManager.getMilestoneInformation(id).submissionData.length,
+            0
         );
     }
 
@@ -1038,7 +1040,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         _authorizer.setIsAuthorized(address(this), false);
 
@@ -1063,7 +1065,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         vm.expectRevert(
             IMilestoneManager
@@ -1115,7 +1117,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id, "0");
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         milestoneManager.completeMilestone(id);
 
@@ -1173,7 +1175,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     /// @dev Returns an element of each category of invalid durations.
     function _createInvalidDurations() internal pure returns (uint[] memory) {
-        uint[] memory invalids = new uint256[](1);
+        uint[] memory invalids = new uint[](1);
 
         invalids[0] = 0;
 
@@ -1182,7 +1184,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     /// @dev Returns an element of each category of invalid budgets.
     function _createInvalidBudgets() internal pure returns (uint[] memory) {
-        uint[] memory invalids = new uint256[](0);
+        uint[] memory invalids = new uint[](0);
 
         // Note that there are currently no invalid budgets defined (Issue #97).
 
