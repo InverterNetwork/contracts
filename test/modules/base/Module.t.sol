@@ -30,9 +30,12 @@ contract ModuleTest is Test {
 
     // Constants
     uint constant MAJOR_VERSION = 1;
-    string constant GIT_URL = "https://github.com/organization/module";
+    uint constant MINOR_VERSION = 1;
+    string constant URL = "https://github.com/organization/module";
+    string constant TITLE = "Payment Processor";
 
-    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
+    IModule.Metadata DATA =
+        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     function setUp() public {
         authorizer = new AuthorizerMock();
@@ -58,15 +61,21 @@ contract ModuleTest is Test {
         // Proposal correctly written to storage.
         assertEq(address(module.proposal()), address(proposal));
 
-        // Metadata correctly written to storage.
-        bytes32 got = LibMetadata.identifier(module.info());
-        bytes32 want = LibMetadata.identifier(DATA);
-        assertEq(got, want);
+        // Identifier correctly computed.
+        assertEq(module.identifier(), LibMetadata.identifier(DATA));
 
-        // Module's identifier correctly computed.
-        got = module.identifier();
-        want = LibMetadata.identifier(DATA);
-        assertEq(got, want);
+        // Version correctly set.
+        uint majorVersion;
+        uint minorVersion;
+        (majorVersion, minorVersion) = module.version();
+        assertEq(majorVersion, MAJOR_VERSION);
+        assertEq(minorVersion, MINOR_VERSION);
+
+        // URL correctly set.
+        assertEq(module.url(), URL);
+
+        // Title correctly set.
+        assertEq(module.title(), TITLE);
     }
 
     function testInitFailsForNonInitializerFunction() public {
@@ -90,15 +99,21 @@ contract ModuleTest is Test {
         module.init(IProposal(address(0)), DATA);
     }
 
-    function testInitFailsIfMetadataInvalid(uint majorVersion) public {
+    function testInitFailsIfMetadataInvalid() public {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        // Invalid if gitURL empty.
-        IModule.Metadata memory data = IModule.Metadata(majorVersion, "");
-
+        // Invalid if url empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
-        module.init(proposal, data);
+        module.init(
+            proposal, IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE)
+        );
+
+        // Invalid if title empty.
+        vm.expectRevert(IModule.Module__InvalidMetadata.selector);
+        module.init(
+            proposal, IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, "")
+        );
     }
 
     //--------------------------------------------------------------------------

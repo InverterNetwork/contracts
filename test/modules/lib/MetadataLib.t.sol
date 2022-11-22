@@ -9,25 +9,34 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {IModule} from "src/modules/base/IModule.sol";
 
-/**
- * @dev Note that these tests are more of a specification than actual
- *      functionality tests.
- */
 contract LibMetadataTest is Test {
     function setUp() public {}
 
-    function testIdentifierIsHashOfMajorVersionAndGitURL(
-        IModule.Metadata memory data
-    ) public {
+    /// @dev The identifier is defined as the hash of the major version, url
+    ///      and title.
+    function testIdentifier(IModule.Metadata memory data) public {
         bytes32 got = LibMetadata.identifier(data);
         bytes32 want =
-            keccak256(abi.encodePacked(data.majorVersion, data.gitURL));
+            keccak256(abi.encodePacked(data.majorVersion, data.url, data.title));
 
         assertEq(got, want);
     }
 
-    function testMetadataInvalidIfGitURLEmpty(uint majorVersion) public {
-        IModule.Metadata memory data = IModule.Metadata(majorVersion, "");
+    function testMetadataInvalidIfURLEmpty(uint majorVersion, uint minorVersion)
+        public
+    {
+        IModule.Metadata memory data =
+            IModule.Metadata(majorVersion, minorVersion, "", "title");
+
+        assertTrue(!LibMetadata.isValid(data));
+    }
+
+    function testMetadataInvalidIfTitleEmpty(
+        uint majorVersion,
+        uint minorVersion
+    ) public {
+        IModule.Metadata memory data =
+            IModule.Metadata(majorVersion, minorVersion, "url", "");
 
         assertTrue(!LibMetadata.isValid(data));
     }

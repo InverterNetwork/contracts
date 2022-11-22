@@ -36,9 +36,12 @@ contract ModuleFactoryTest is Test {
 
     // Constants
     uint constant MAJOR_VERSION = 1;
-    string constant GIT_URL = "https://github.com/organization/module";
+    uint constant MINOR_VERSION = 1;
+    string constant URL = "https://github.com/organization/module";
+    string constant TITLE = "Payment Processor";
 
-    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
+    IModule.Metadata DATA =
+        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     function setUp() public {
         module = new ModuleMock();
@@ -78,11 +81,17 @@ contract ModuleFactoryTest is Test {
     }
 
     function testRegisterMetadataFailsIfMetadataInvalid() public {
-        // Invalid if gitURL empty.
-        IModule.Metadata memory data = IModule.Metadata(1, "");
-
+        // Invalid if url empty.
         vm.expectRevert(IModuleFactory.ModuleFactory__InvalidMetadata.selector);
-        factory.registerMetadata(data, beacon);
+        factory.registerMetadata(
+            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE), beacon
+        );
+
+        // Invalid if title empty.
+        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidMetadata.selector);
+        factory.registerMetadata(
+            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""), beacon
+        );
     }
 
     function testRegisterMetadataFailsIfAlreadyRegistered() public {

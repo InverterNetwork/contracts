@@ -7,9 +7,9 @@ import {IProposal} from "src/proposal/IProposal.sol";
 interface IModule {
     struct Metadata {
         uint majorVersion;
-        // maybe string description?
-        string gitURL; // @todo mp: Assumed to be the unique key.
-            //           What if more than one module per repo?
+        uint minorVersion;
+        string url;
+        string title;
     }
 
     //--------------------------------------------------------------------------
@@ -52,13 +52,22 @@ interface IModule {
 
     /// @notice Returns the module's identifier.
     /// @dev The identifier is defined as the keccak256 hash of the module's
-    ///      abi packed encoded major version and git url.
+    ///      abi packed encoded major version, url and title.
     /// @return The module's identifier.
     function identifier() external view returns (bytes32);
 
-    /// @notice Returns the module's metadata info.
-    /// @return The module's {Metadata} struct instance.
-    function info() external view returns (Metadata memory);
+    /// @notice Returns the module's version.
+    /// @return The module's major version.
+    /// @return The module's minor version.
+    function version() external view returns (uint, uint);
+
+    /// @notice Returns the module's URL.
+    /// @return The module's URL.
+    function url() external view returns (string memory);
+
+    /// @notice Returns the module's title.
+    /// @return The module's title.
+    function title() external view returns (string memory);
 
     /// @notice Returns the module's {IProposal} proposal instance.
     /// @return The module's proposal.
