@@ -41,11 +41,13 @@ contract ListAuthorizerTest is Test {
     uint internal constant _PROPOSAL_ID = 1;
 
     // Module Constants
-    uint internal constant _MAJOR_VERSION = 1;
-    string internal constant _GIT_URL = "https://github.com/org/module";
+    uint constant MAJOR_VERSION = 1;
+    uint constant MINOR_VERSION = 1;
+    string constant URL = "https://github.com/organization/module";
+    string constant TITLE = "Module";
 
-    IModule.Metadata internal _METADATA =
-        IModule.Metadata(_MAJOR_VERSION, _GIT_URL);
+    IModule.Metadata _METADATA =
+        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     function setUp() public {
         address authImpl = address(new ListAuthorizer());

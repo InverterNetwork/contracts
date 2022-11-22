@@ -40,10 +40,13 @@ contract SingleVoteGovernanceTest is Test {
     // For the proposal
     uint internal constant _PROPOSAL_ID = 1;
     // For the metadata
-    uint internal constant _MAJOR_VERSION = 1;
-    string internal constant _GIT_URL = "https://github.com/org/module";
-    IModule.Metadata internal _METADATA =
-        IModule.Metadata(_MAJOR_VERSION, _GIT_URL);
+    uint constant MAJOR_VERSION = 1;
+    uint constant MINOR_VERSION = 1;
+    string constant URL = "https://github.com/organization/module";
+    string constant TITLE = "Module";
+
+    IModule.Metadata _METADATA =
+        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     // Mocks
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
