@@ -240,7 +240,7 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue(!milestoneManager.isNextMilestoneActivatable());
     }
 
-    function testIsNextMilestoneActivatableFalseIfHasCurrentActiveMilestone(
+    function testIsNextMilestoneActivatableTrueEvenIfHasCurrentActiveMilestone(
         address[] memory contributors
     ) public {
         _addContributors(contributors);
@@ -250,11 +250,15 @@ contract MilestoneManagerTest is ModuleTest {
         // when the payment orders are created.
         _token.mint(address(_proposal), BUDGET);
 
+        // Add two milestones.
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // Start first milestone.
         milestoneManager.startNextMilestone();
 
-        assertTrue(!milestoneManager.isNextMilestoneActivatable());
+        // Second milestone is activatable.
+        assertTrue(milestoneManager.isNextMilestoneActivatable());
     }
 
     //--------------------------------------------------------------------------
