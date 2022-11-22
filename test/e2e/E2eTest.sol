@@ -4,11 +4,14 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 
 // Factories
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
-import {ProposalFactory} from "src/factories/ProposalFactory.sol";
+import {ModuleFactory, IModuleFactory} from "src/factories/ModuleFactory.sol";
+import {
+    ProposalFactory,
+    IProposalFactory
+} from "src/factories/ProposalFactory.sol";
 
 // Proposal
-import {Proposal} from "src/proposal/Proposal.sol";
+import {Proposal, IProposal} from "src/proposal/Proposal.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
@@ -29,44 +32,51 @@ contract E2eTest is Test {
     ProposalFactory proposalFactory;
 
     // Proposal implementation.
-    Proposal proposal;
+    Proposal proposalImpl;
 
-    // Module implementations, beacons and Metadata.
-    PaymentProcessor paymentProcessorModule;
+    //-- Module implementations, beacons, config for factory, and metadata.
+
+    PaymentProcessor paymentProcessorImpl;
     Beacon paymentProcessorBeacon;
     address paymentProcessorBeaconOwner = address(0x1BEAC0);
-    IModule.Metadata paymentProcessorModuleMetadata = IModule.Metadata(
+    IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/payment-processor",
         "PaymentProcessor"
     );
+    IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
+        IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
 
-    MilestoneManager milestoneManagerModule;
+    MilestoneManager milestoneManagerImpl;
     Beacon milestoneManagerBeacon;
     address milestoneManagerBeaconOwner = address(0x2BEAC0);
-    IModule.Metadata milestoneManagerModuleMetadata = IModule.Metadata(
+    IModule.Metadata milestoneManagerMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/milestone-manager",
         "MilestoneManager"
     );
+    IProposalFactory.ModuleConfig milestoneManagerFactoryConfig =
+        IProposalFactory.ModuleConfig(milestoneManagerMetadata, bytes(""));
 
-    AuthorizerMock authorizerModule;
+    AuthorizerMock authorizerImpl;
     Beacon authorizerBeacon;
     address authorizerBeaconOwner = address(0x3BEAC0);
-    IModule.Metadata authorizerModuleMetadata = IModule.Metadata(
+    IModule.Metadata authorizerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/authorizer", "Authorizer"
     );
+    IProposalFactory.ModuleConfig authorizerFactoryConfig =
+        IProposalFactory.ModuleConfig(authorizerMetadata, bytes(""));
 
     function setUp() public {
         // Deploy Proposal implementation.
-        proposal = new Proposal();
+        proposalImpl = new Proposal();
 
         // Deploy module implementations.
-        paymentProcessorModule = new PaymentProcessor();
-        milestoneManagerModule = new MilestoneManager();
-        authorizerModule = new AuthorizerMock();
+        paymentProcessorImpl = new PaymentProcessor();
+        milestoneManagerImpl = new MilestoneManager();
+        authorizerImpl = new AuthorizerMock();
 
         // Deploy module beacons.
         vm.prank(paymentProcessorBeaconOwner);
@@ -78,26 +88,41 @@ contract E2eTest is Test {
 
         // Set beacon's implementations.
         vm.prank(paymentProcessorBeaconOwner);
-        paymentProcessorBeacon.upgradeTo(address(paymentProcessorModule));
+        paymentProcessorBeacon.upgradeTo(address(paymentProcessorImpl));
         vm.prank(milestoneManagerBeaconOwner);
-        milestoneManagerBeacon.upgradeTo(address(milestoneManagerModule));
+        milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
         vm.prank(authorizerBeaconOwner);
-        authorizerBeacon.upgradeTo(address(authorizerModule));
+        authorizerBeacon.upgradeTo(address(authorizerImpl));
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
         proposalFactory =
-            new ProposalFactory(address(proposal), address(moduleFactory));
+            new ProposalFactory(address(proposalImpl), address(moduleFactory));
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            paymentProcessorModuleMetadata, IBeacon(paymentProcessorBeacon)
+            paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
         );
         moduleFactory.registerMetadata(
-            milestoneManagerModuleMetadata, IBeacon(milestoneManagerBeacon)
+            milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
         );
         moduleFactory.registerMetadata(
-            authorizerModuleMetadata, IBeacon(authorizerBeacon)
+            authorizerMetadata, IBeacon(authorizerBeacon)
+        );
+    }
+
+    function _createNewProposalWithAllModules(
+        IProposalFactory.ProposalConfig memory config
+    ) internal returns (IProposal) {
+        IProposalFactory.ModuleConfig[] memory optionalModules =
+            new IProposalFactory.ModuleConfig[](1);
+        optionalModules[0] = milestoneManagerFactoryConfig;
+
+        return proposalFactory.createProposal(
+            config,
+            authorizerFactoryConfig,
+            paymentProcessorFactoryConfig,
+            optionalModules
         );
     }
 }
