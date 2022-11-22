@@ -190,8 +190,18 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     }
 
     /// @inheritdoc IModule
-    function info() external view returns (Metadata memory) {
-        return __Module_metadata;
+    function version() external view returns (uint, uint) {
+        return (__Module_metadata.majorVersion, __Module_metadata.minorVersion);
+    }
+
+    /// @inheritdoc IModule
+    function url() external view returns (string memory) {
+        return __Module_metadata.url;
+    }
+
+    /// @inheritdoc IModule
+    function title() external view returns (string memory) {
+        return __Module_metadata.title;
     }
 
     /// @inheritdoc IModule

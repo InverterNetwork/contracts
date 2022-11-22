@@ -40,9 +40,12 @@ abstract contract ModuleTest is Test {
 
     // Module Constants
     uint constant _MAJOR_VERSION = 1;
-    string constant _GIT_URL = "https://github.com/org/module";
+    uint constant _MINOR_VERSION = 1;
+    string constant _URL = "https://github.com/organization/module";
+    string constant _TITLE = "Module";
 
-    IModule.Metadata _METADATA = IModule.Metadata(_MAJOR_VERSION, _GIT_URL);
+    IModule.Metadata _METADATA =
+        IModule.Metadata(_MAJOR_VERSION, _MINOR_VERSION, _URL, _TITLE);
 
     //--------------------------------------------------------------------------------
     // Setup

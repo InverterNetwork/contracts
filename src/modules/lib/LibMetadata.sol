@@ -19,8 +19,11 @@ library LibMetadata {
         pure
         returns (bytes32)
     {
-        return
-            keccak256(abi.encodePacked(metadata.majorVersion, metadata.gitURL));
+        return keccak256(
+            abi.encodePacked(
+                metadata.majorVersion, metadata.url, metadata.title
+            )
+        );
     }
 
     /// @dev Returns whether the given metadata is valid.
@@ -31,8 +34,13 @@ library LibMetadata {
         pure
         returns (bool)
     {
-        // Invalid if git url empty.
-        if (bytes(metadata.gitURL).length == 0) {
+        // Invalid if url empty.
+        if (bytes(metadata.url).length == 0) {
+            return false;
+        }
+
+        // Invalid if title empty.
+        if (bytes(metadata.title).length == 0) {
             return false;
         }
 

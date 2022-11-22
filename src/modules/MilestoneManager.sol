@@ -36,7 +36,7 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *              A milestone is active, until either its duration is over or it's
  *              marked as completed.
  *        - submitted
- *              A proposal contributor marked the milestone as submitted.
+ *              A proposal contributor marked the milestone as submitted by changing the submittedData to not empty.
  *        - completed
  *              After a milestone was submitted, it can be marked as completed.
  *              This marks the end of the milestone.
@@ -79,6 +79,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     modifier validDetails(string memory details) {
         if (details.isEmpty()) {
             revert Module__MilestoneManager__InvalidDetails();
+        }
+        _;
+    }
+
+    modifier validSubmissionData(bytes calldata submissionData) {
+        if (submissionData.length == 0) {
+            revert Module__MilestoneManage__InvalidSubmissionData();
         }
         _;
     }
@@ -232,7 +239,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             title: title,
             details: details,
             startTimestamp: 0,
-            submitted: false,
+            submissionData: "",
             completed: false
         });
 
@@ -340,7 +347,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function submitMilestone(uint id) external onlyContributor validId(id) {
+    function submitMilestone(uint id, bytes calldata submissionData)
+        external
+        onlyContributor
+        validId(id)
+        validSubmissionData(submissionData)
+    {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not submitable if milestone not started yet or already completed.
@@ -348,9 +360,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotSubmitable();
         }
 
-        if (!m.submitted) {
-            m.submitted = true;
-            emit MilestoneSubmitted(id);
+        if (m.submissionData.length == 0) {
+            m.submissionData = submissionData;
+            emit MilestoneSubmitted(id, submissionData);
         }
     }
 
@@ -359,7 +371,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not confirmable if milestone not submitted yet.
-        if (!m.submitted) {
+        if (m.submissionData.length == 0) {
             revert Module__MilestoneManager__MilestoneNotCompleteable();
         }
 
@@ -374,12 +386,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not declineable if milestone not submitted yet or already completed.
-        if (!m.submitted || m.completed) {
+        if (m.submissionData.length == 0 || m.completed) {
             revert Module__MilestoneManager__MilestoneNotDeclineable();
         }
 
-        // Declining a milestone marks it as not submitted again.
-        m.submitted = false;
+        // Declining a milestone removes the submitionData and therefore marks it as not submitted again.
+        m.submissionData = "";
         emit MilestoneDeclined(id);
     }
 

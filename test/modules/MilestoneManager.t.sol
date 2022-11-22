@@ -34,6 +34,7 @@ contract MilestoneManagerTest is ModuleTest {
     uint constant BUDGET = 1000 * 1e18;
     string constant TITLE = "Title";
     string constant DETAILS = "Details";
+    bytes constant SUBMISSION_DATA = "SubmissionData";
 
     // Constant copied from SuT
     uint private constant _SENTINEL = type(uint).max;
@@ -50,7 +51,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint indexed id, uint duration, uint budget, string details
     );
     event MilestoneRemoved(uint indexed id);
-    event MilestoneSubmitted(uint indexed id);
+    event MilestoneSubmitted(uint indexed id, bytes indexed submissionData);
     event MilestoneConfirmed(uint indexed id);
     event MilestoneDeclined(uint indexed id);
 
@@ -98,7 +99,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
-        _assertMilestone(id, DURATION, BUDGET, TITLE, DETAILS, false, false);
+        _assertMilestone(id, DURATION, BUDGET, TITLE, DETAILS, "", false);
     }
 
     function testGetMilesoneInformationFailsIfNoMilestoneExists() public {
@@ -201,7 +202,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         milestoneManager.completeMilestone(id);
 
@@ -277,9 +278,7 @@ contract MilestoneManagerTest is ModuleTest {
                 milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
             assertEq(gotId, wantId);
-            _assertMilestone(
-                gotId, DURATION, BUDGET, TITLE, DETAILS, false, false
-            );
+            _assertMilestone(gotId, DURATION, BUDGET, TITLE, DETAILS, "", false);
         }
 
         // Assert that all milestone id's are fetchable.
@@ -584,7 +583,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.updateMilestone(id, duration, budget, details);
 
-        _assertMilestone(id, duration, budget, TITLE, details, false, false);
+        _assertMilestone(id, duration, budget, TITLE, details, "", false);
     }
 
     function testUpdateMilestoneFailsIfCallerNotAuthorized() public {
@@ -684,8 +683,13 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: submitMilestone()
 
-    function testSubmitMilestone(address[] memory contributors) public {
+    function testSubmitMilestone(
+        address[] memory contributors,
+        bytes calldata submissionData
+    ) public {
         _addContributors(contributors);
+
+        vm.assume(submissionData.length != 0);
 
         // Mint tokens to proposal.
         // Note that these tokens are transfered to the milestone module
@@ -699,9 +703,65 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, submissionData);
 
-        assertTrue(milestoneManager.getMilestoneInformation(id).submitted);
+        assertTrue(
+            milestoneManager.getMilestoneInformation(id).submissionData.length
+                != 0
+        );
+        assertTrue(
+            keccak256(
+                milestoneManager.getMilestoneInformation(id).submissionData
+            ) == keccak256(submissionData)
+        );
+    }
+
+    function testSubmitMilestoneSubmissionDataNotChangeable(
+        address[] memory contributors,
+        bytes calldata submissionData1,
+        bytes calldata submissionData2
+    ) public {
+        _addContributors(contributors);
+
+        vm.assume(submissionData1.length != 0);
+        vm.assume(submissionData2.length != 0);
+        //Assume submissionData 1 and 2 is different
+        vm.assume(keccak256(submissionData1) != keccak256(submissionData2));
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        //submit submissionData1
+        milestoneManager.submitMilestone(id, submissionData1);
+
+        //assert that submissionData is submissionData1
+        assertTrue(
+            keccak256(
+                milestoneManager.getMilestoneInformation(id).submissionData
+            ) == keccak256(submissionData1)
+        );
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        //submit submissionData2
+        milestoneManager.submitMilestone(id, submissionData1);
+
+        //assert that submissionData did not change
+        assertEq(
+            keccak256(
+                milestoneManager.getMilestoneInformation(id).submissionData
+            ),
+            keccak256(submissionData1)
+        );
     }
 
     function testSubmitMilestoneFailsIfCallerNotContributor(
@@ -725,7 +785,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__OnlyCallableByContributor
                 .selector
         );
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, "");
     }
 
     function testSubmitMilestoneFailsForInvalidId(address[] memory contributors)
@@ -750,7 +810,32 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__InvalidMilestoneId
                 .selector
         );
-        milestoneManager.submitMilestone(id + 1);
+        milestoneManager.submitMilestone(id + 1, "");
+    }
+
+    function testSubmitMilestoneFailsForInvalidSubmissionData(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Milestone must be submitted by a contributor.
+        vm.prank(contributors[0]);
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManage__InvalidSubmissionData
+                .selector
+        );
+        milestoneManager.submitMilestone(id, "");
     }
 
     function testSubmitMilestoneFailsIfMilestoneNotYetStarted(
@@ -775,7 +860,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__MilestoneNotSubmitable
                 .selector
         );
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
     }
 
     function testSubmitMilestoneFailsIfMilestoneAlreadyCompleted(
@@ -795,7 +880,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         // Note that milestone gets completed.
         milestoneManager.completeMilestone(id);
@@ -807,7 +892,7 @@ contract MilestoneManagerTest is ModuleTest {
                 .Module__MilestoneManager__MilestoneNotSubmitable
                 .selector
         );
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
     }
 
     //----------------------------------
@@ -828,7 +913,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         milestoneManager.completeMilestone(id);
         assertTrue(milestoneManager.getMilestoneInformation(id).completed);
@@ -851,7 +936,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         _authorizer.setIsAuthorized(address(this), false);
 
@@ -876,7 +961,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         vm.expectRevert(
             IMilestoneManager
@@ -929,10 +1014,13 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         milestoneManager.declineMilestone(id);
-        assertTrue(!milestoneManager.getMilestoneInformation(id).submitted);
+        assertEq(
+            milestoneManager.getMilestoneInformation(id).submissionData.length,
+            0
+        );
     }
 
     function testDeclineMilestoneFailsIfCallerNotAuthorized(
@@ -952,7 +1040,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         _authorizer.setIsAuthorized(address(this), false);
 
@@ -977,7 +1065,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         vm.expectRevert(
             IMilestoneManager
@@ -1029,7 +1117,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Milestone must be submitted by a contributor.
         vm.prank(contributors[0]);
-        milestoneManager.submitMilestone(id);
+        milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         milestoneManager.completeMilestone(id);
 
@@ -1051,7 +1139,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint budget,
         string memory title,
         string memory details,
-        bool submitted,
+        bytes memory submissionData,
         bool completed
     ) internal {
         IMilestoneManager.Milestone memory m =
@@ -1063,7 +1151,7 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue(m.title.equals(title));
         assertTrue(m.details.equals(details));
 
-        assertEq(m.submitted, submitted);
+        assertEq(keccak256(m.submissionData), keccak256(submissionData));
         assertEq(m.completed, completed);
     }
 

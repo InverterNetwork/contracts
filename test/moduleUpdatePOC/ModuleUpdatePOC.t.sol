@@ -41,11 +41,13 @@ contract ModuleUpdatePOCTest is Test {
     BeaconMock beacon;
 
     // Constants
-    // @todo mp: Move to some common contract. See todo in Milestone.t.sol too.
     uint constant MAJOR_VERSION = 1;
-    string constant GIT_URL = "https://github.com/organization/module";
+    uint constant MINOR_VERSION = 1;
+    string constant URL = "https://github.com/organization/module";
+    string constant TITLE = "Module";
 
-    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
+    IModule.Metadata DATA =
+        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     function setUp() public {
         module = new ModuleMock();

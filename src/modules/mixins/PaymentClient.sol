@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
+// External Dependencies
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+
 // Internal Dependencies
 import {
     IPaymentClient,
     IPaymentProcessor
 } from "src/modules/mixins/IPaymentClient.sol";
 
-abstract contract PaymentClient is IPaymentClient {
+abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -105,7 +108,7 @@ abstract contract PaymentClient is IPaymentClient {
     {
         // Ensure caller is authorized to act as payment processor.
         // Note that function is implemented in downstream contract.
-        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(msg.sender))) {
+        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(_msgSender()))) {
             revert Module__PaymentClient__CallerNotAuthorized();
         }
 
@@ -113,7 +116,7 @@ abstract contract PaymentClient is IPaymentClient {
         // address(this).
         // Note that function is implemented in downstream contract.
         _ensureTokenAllowance(
-            IPaymentProcessor(msg.sender), _outstandingTokenAmount
+            IPaymentProcessor(_msgSender()), _outstandingTokenAmount
         );
 
         // Create a copy of all orders to return.

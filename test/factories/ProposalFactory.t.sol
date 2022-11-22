@@ -61,19 +61,26 @@ contract ProposalFactoryTest is Test {
 
         // Create {IAuthorizer} ModuleConfig instance.
         IProposalFactory.ModuleConfig memory authorizerConfig = IProposalFactory
-            .ModuleConfig(IModule.Metadata(1, "Authorizer"), bytes("Authorizer"));
+            .ModuleConfig(
+            IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
+            bytes("data")
+        );
 
         // Create {IPaymentProcessor} ModuleConfig instance.
         IProposalFactory.ModuleConfig memory paymentProcessorConfig =
         IProposalFactory.ModuleConfig(
-            IModule.Metadata(1, "PaymentProcessor"), bytes("PaymentProcessor")
+            IModule.Metadata(
+                1, 1, "https://paymentprocessor.com", "PaymentProcessor"
+            ),
+            bytes("data")
         );
 
         // Create optional ModuleConfig instances.
         IProposalFactory.ModuleConfig[] memory moduleConfigs =
             new IProposalFactory.ModuleConfig[](modulesLen);
         for (uint i; i < modulesLen; i++) {
-            moduleConfigs[i].metadata = IModule.Metadata(1, "");
+            moduleConfigs[i].metadata =
+                IModule.Metadata(1, 1, "https://module.com", "Module");
             moduleConfigs[i].configdata = bytes("");
         }
 

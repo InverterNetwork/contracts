@@ -46,7 +46,7 @@ contract Proposal is
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
     modifier onlyOwnerOrAuthorized() {
-        if (!_isOwnerOrAuthorized(msg.sender)) {
+        if (!_isOwnerOrAuthorized(_msgSender())) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -94,10 +94,12 @@ contract Proposal is
 
         // Set storage variables.
         proposalId = proposalId_;
-        _transferOwnership(owner_);
         token = token_;
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
+
+        // Transfer ownerhsip of proposal to owner argument.
+        _transferOwnership(owner_);
 
         // Add necessary modules.
         // Note to not use the public addModule function as the factory
