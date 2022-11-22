@@ -91,7 +91,7 @@ contract SingleVoteGovernance is ListAuthorizer {
 
     /// @notice Verifies that a given vote ID belongs to an active vote
     modifier voteIsActive(uint _voteID) {
-        if (_voteID > voteIDCounter) {
+        if (_voteID >= voteIDCounter) {
             revert Module__SingleVoteGovernance__nonexistentVoteId(_voteID);
         }
         if ((voteRegistry[_voteID].voteClosesAt < block.timestamp)) {
@@ -187,7 +187,7 @@ contract SingleVoteGovernance is ListAuthorizer {
         uint _startingQuorum,
         uint _voteDuration,
         Metadata memory metadata
-    ) external validQuorum(_startingQuorum)  {
+    ) external validQuorum(_startingQuorum) {
         super.initialize(proposal, initialAuthorized, metadata);
 
         quorum = _startingQuorum;
@@ -199,7 +199,7 @@ contract SingleVoteGovernance is ListAuthorizer {
 
     /// @dev    Overrides the parent function to authorize the proposal
     ///         contract by default, so callbacks for governance execution
-    ///         in other modules don't fail 
+    ///         in other modules don't fail
     /// @notice Returns whether an address is authorized to facilitate
     ///         the current transaction.
     /// @param  _who  The address on which to perform the check.
@@ -230,7 +230,6 @@ contract SingleVoteGovernance is ListAuthorizer {
     function addToAuthorized(address _who) public override onlyProposal {
         super.addToAuthorized(_who);
     }
-
 
     /// @dev    Overrides the parent function to make it onlyProposal, to force
     ///         changes to go through Governance
@@ -301,30 +300,28 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @param _encodedAction The ABI encoded action to execute if it passes
     function createVote(address _target, bytes calldata _encodedAction)
         external
-        onlyAuthorized
+        authorizedVoter(_msgSender())
         validModuleAddress(_target)
         validAction(_encodedAction)
-        returns(uint)
+        returns (uint)
     {
-        uint _id= voteIDCounter;
+        uint _id = voteIDCounter;
 
         voteRegistry[voteIDCounter].voteClosesAt =
             block.timestamp + voteDuration;
         voteRegistry[voteIDCounter].requiredQuorum = quorum;
-        
+
         voteRegistry[voteIDCounter].targetAddress = _target;
         voteRegistry[voteIDCounter].encodedAction = _encodedAction;
-
 
         voteIDCounter++;
 
         emit VoteCreated(_id);
 
         return _id;
-
     }
 
-    /// @notice Vote "yes" 
+    /// @notice Vote "yes"
     /// @param _voteID The ID of the vote to vote on
     function voteInFavor(uint _voteID)
         external
@@ -378,7 +375,7 @@ contract SingleVoteGovernance is ListAuthorizer {
         }
     }
 
-    /// @notice Execute a vote. 
+    /// @notice Execute a vote.
     /// @param _voteID The ID of the vote to execute
     function executeVote(uint _voteID)
         external
@@ -388,13 +385,24 @@ contract SingleVoteGovernance is ListAuthorizer {
     {
         // Tell the proposal to execute the vote
         (
-            voteRegistry[_voteID].executionResult,
-            voteRegistry[_voteID].returnData
+            bool executionResult,
+            bytes memory returnData
         ) = __Module_proposal.executeTxFromModule(
             voteRegistry[_voteID].targetAddress,
             voteRegistry[_voteID].encodedAction,
             Types.Operation.Call
         );
+
+
+
+        if (!executionResult) {
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
+
+        voteRegistry[_voteID].executionResult = executionResult;
+        voteRegistry[_voteID].returnData = returnData;
         voteRegistry[_voteID].executedAt = block.timestamp;
 
         emit VoteEnacted(_voteID, voteRegistry[_voteID].executionResult);
