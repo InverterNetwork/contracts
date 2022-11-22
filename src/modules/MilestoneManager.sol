@@ -193,15 +193,29 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         // Milestone active if not completed and already started but duration
         // not yet over.
-        return !m.completed && m.startTimestamp != 0
-            && m.startTimestamp + m.duration >= block.timestamp;
+        uint startTimestamp = m.startTimestamp;
+        return !m.completed && startTimestamp != 0
+            && startTimestamp + m.duration >= block.timestamp;
     }
 
     /// @inheritdoc IMilestoneManager
     function isNextMilestoneActivatable() public view returns (bool) {
+        // Return false if next milestone does not exist.
         uint next = _milestones[_activeMilestone];
+        if (!isExistingMilestoneId(next)) {
+            return false;
+        }
 
-        return isExistingMilestoneId(next);
+        // Return true if current active milestone does not exist.
+        if (!isExistingMilestoneId(_activeMilestone)) {
+            return true;
+        }
+
+        Milestone storage m = _milestoneRegistry[_activeMilestone];
+
+        // Milestone is activatable if current milestone started and its
+        // duration exceeded.
+        return m.startTimestamp + m.duration < block.timestamp;
     }
 
     /// @inheritdoc IMilestoneManager

@@ -230,17 +230,11 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: isNextMilestoneActivatable()
 
-    function testIsNextMilestoneActivatable() public {
-        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
-
-        assertTrue(milestoneManager.isNextMilestoneActivatable());
-    }
-
-    function testIsNextMilestoneActivatableFalseIfNoNextMilestone() public {
+    function testNextMilestoneNotActivatableIfNoNextMilestone() public {
         assertTrue(!milestoneManager.isNextMilestoneActivatable());
     }
 
-    function testIsNextMilestoneActivatableTrueEvenIfHasCurrentActiveMilestone(
+    function testNextMilestoneNotActivatableIfCurrentMilestoneStartedAndDurationNotExceeded(
         address[] memory contributors
     ) public {
         _addContributors(contributors);
@@ -250,14 +244,37 @@ contract MilestoneManagerTest is ModuleTest {
         // when the payment orders are created.
         _token.mint(address(_proposal), BUDGET);
 
-        // Add two milestones.
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
-        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
-
-        // Start first milestone.
         milestoneManager.startNextMilestone();
 
-        // Second milestone is activatable.
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        assertTrue(!milestoneManager.isNextMilestoneActivatable());
+    }
+
+    function testNextMilestoneActivatableIfFirstMilestone() public {
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        assertTrue(milestoneManager.isNextMilestoneActivatable());
+    }
+
+    function testNextMilestoneActivatableIfCurrentMilestoneStartedAndDurationExceeded(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        milestoneManager.startNextMilestone();
+
+        // Wait until milestones duration is over.
+        vm.warp(block.timestamp + DURATION + 1);
+
         assertTrue(milestoneManager.isNextMilestoneActivatable());
     }
 
