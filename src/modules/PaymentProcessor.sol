@@ -20,10 +20,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
 contract PaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
 
-    /// @notice The payment token.
-    /// @dev Cache to save multiple `__Module_proposal.token()` calls.
-    IERC20 public token;
-
     /// @inheritdoc Module
     function init(
         IProposal proposal_,
@@ -31,15 +27,15 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         bytes memory /*configdata*/
     ) external override (Module) initializer {
         __Module_init(proposal_, metadata);
-
-        // Cache the proposal's token.
-        token = proposal_.token();
     }
 
     //--------------------------------------------------------------------------
-    // State
+    // IPaymentProcessor Functions
 
-    // @audit Does processPaymets() need to be authorized?
+    /// @inheritdoc IPaymentProcessor
+    function token() public view returns (IERC20) {
+        return __Module_proposal.token();
+    }
 
     /// @inheritdoc IPaymentProcessor
     function processPayments(IPaymentClient client) external {
@@ -55,7 +51,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
             recipient = orders[i].recipient;
             amount = orders[i].amount;
 
-            token.safeTransferFrom(address(client), recipient, amount);
+            token().safeTransferFrom(address(client), recipient, amount);
         }
     }
 }
