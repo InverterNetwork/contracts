@@ -144,7 +144,9 @@ contract PaymentClientTest is Test {
         uint[] memory amounts = new uint[](2);
         uint[] memory dueTos = new uint[](3);
 
-        vm.expectRevert(IPaymentClient.Module__PaymentClient__ArrayLengthMismatch.selector);
+        vm.expectRevert(
+            IPaymentClient.Module__PaymentClient__ArrayLengthMismatch.selector
+        );
         paymentClient.addPaymentOrders(recipients, amounts, dueTos);
     }
 
