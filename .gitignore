@@ -9,6 +9,3 @@ out/
 
 # Dotenv file
 .env
-
-# VSCode
-.vscode/

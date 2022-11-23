@@ -52,9 +52,7 @@ contract ProposaFundManagement is E2eTest {
 
             // With this amount of receipt tokens, alice could withdraw her
             // whole deposit again.
-            assertEq(
-                proposal.previewRedeem(proposal.balanceOf(alice)), 1000e18
-            );
+            assertEq(proposal.previewRedeem(proposal.balanceOf(alice)), 1000e18);
         }
         vm.stopPrank();
 
@@ -73,10 +71,7 @@ contract ProposaFundManagement is E2eTest {
 
             // With this amount of receipt tokens, bob could withdraw her whole
             // deposit again.
-            assertEq(
-                proposal.previewRedeem(proposal.balanceOf(bob)), 5000e18
-            );
-
+            assertEq(proposal.previewRedeem(proposal.balanceOf(bob)), 5000e18);
         }
         vm.stopPrank();
 
@@ -89,14 +84,18 @@ contract ProposaFundManagement is E2eTest {
         // Alice is now able to withdraw half her funded tokens.
         vm.startPrank(alice);
         {
-            assertEq(proposal.redeem(proposal.balanceOf(alice), alice, alice), 500e18);
+            assertEq(
+                proposal.redeem(proposal.balanceOf(alice), alice, alice), 500e18
+            );
         }
         vm.stopPrank();
 
         // Bob is also able to withdraw half of his funded tokens.
         vm.startPrank(bob);
         {
-            assertEq(proposal.redeem(proposal.balanceOf(bob), bob, bob), 2500e18);
+            assertEq(
+                proposal.redeem(proposal.balanceOf(bob), bob, bob), 2500e18
+            );
         }
         vm.stopPrank();
 
