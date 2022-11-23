@@ -111,6 +111,8 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         IModule(implementation).init(proposal, metadata, configdata);
 
+        emit ModuleCreated(address(proposal), implementation, metadata.title);
+
         return implementation;
     }
 
