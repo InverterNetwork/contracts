@@ -15,23 +15,17 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     // Modifiers
 
     modifier validRecipient(address recipient) {
-        if (!_isValidRecipient(recipient)) {
-            revert Module__PaymentClient__InvalidRecipient();
-        }
+        _ensureValidRecipient(recipient);
         _;
     }
 
     modifier validAmount(uint amount) {
-        if (!_isValidAmount(amount)) {
-            revert Module__PaymentClient__InvalidAmount();
-        }
+        _ensureValidAmount(amount);
         _;
     }
 
     modifier validDueTo(uint dueTo) {
-        if (!_isValidDueTo(dueTo)) {
-            revert Module__PaymentClient__InvalidDueTo();
-        }
+        _ensureValidDueTo(dueTo);
         _;
     }
 
@@ -98,27 +92,21 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         uint[] memory amounts,
         uint[] memory dueTos
     ) internal virtual {
-        uint len = recipients.length;
+        uint orderAmount = recipients.length;
 
         // Revert if arrays' length mismatch.
-        if (len != amounts.length || len != dueTos.length) {
+        if (orderAmount != amounts.length || orderAmount != dueTos.length) {
             revert Module__PaymentClient__ArrayLengthMismatch();
         }
 
-        uint totalOrdersAmount;
-        for (uint i; i < len; i++) {
-            if (!_isValidRecipient(recipients[i])) {
-                revert Module__PaymentClient__InvalidRecipient();
-            }
-            if (!_isValidAmount(amounts[i])) {
-                revert Module__PaymentClient__InvalidAmount();
-            }
-            if (!_isValidDueTo(dueTos[i])) {
-                revert Module__PaymentClient__InvalidDueTo();
-            }
+        uint totalTokenAmount;
+        for (uint i; i < orderAmount; i++) {
+            _ensureValidRecipient(recipients[i]);
+            _ensureValidAmount(amounts[i]);
+            _ensureValidDueTo(dueTos[i]);
 
             // Add order's amount to total amount of new orders.
-            totalOrdersAmount += amounts[i];
+            totalTokenAmount += amounts[i];
 
             // Add new order to list of oustanding orders.
             _orders.push(
@@ -131,7 +119,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         }
 
         // Adds total orders' amount to current outstanding amount.
-        _outstandingTokenAmount += totalOrdersAmount;
+        _outstandingTokenAmount += totalTokenAmount;
 
         // Ensure our token balance is sufficient.
         // Note that functions is implemented in downstream contract.
@@ -147,9 +135,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         uint orderAmount = recipients.length;
 
         for (uint i; i < orderAmount; i++) {
-            if (!_isValidRecipient(recipients[i])) {
-                revert Module__PaymentClient__InvalidRecipient();
-            }
+            _ensureValidRecipient(recipients[i]);
 
             // Add new order to list of oustanding orders.
             _orders.push(
@@ -225,15 +211,21 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Private Functions
 
-    function _isValidRecipient(address recipient) private view returns (bool) {
-        return recipient != address(0) && recipient != address(this);
+    function _ensureValidRecipient(address recipient) private view {
+        if (recipient == address(0) || recipient == address(this)) {
+            revert Module__PaymentClient__InvalidRecipient();
+        }
     }
 
-    function _isValidAmount(uint amount) private pure returns (bool) {
-        return amount != 0;
+    function _ensureValidAmount(uint amount) private pure {
+        if (amount == 0) {
+            revert Module__PaymentClient__InvalidAmount();
+        }
     }
 
-    function _isValidDueTo(uint dueTo) private view returns (bool) {
-        return dueTo >= block.timestamp;
+    function _ensureValidDueTo(uint dueTo) private view {
+        if (dueTo < block.timestamp) {
+            revert Module__PaymentClient__InvalidDueTo();
+        }
     }
 }

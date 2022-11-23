@@ -139,6 +139,15 @@ contract PaymentClientTest is Test {
         assertEq(paymentClient.outstandingTokenAmount(), 300e18);
     }
 
+    function testAddPaymentOrdersFailsIfArraysLengthMismatch() public {
+        address[] memory recipients = new address[](1);
+        uint[] memory amounts = new uint[](2);
+        uint[] memory dueTos = new uint[](3);
+
+        vm.expectRevert(IPaymentClient.Module__PaymentClient__ArrayLengthMismatch.selector);
+        paymentClient.addPaymentOrders(recipients, amounts, dueTos);
+    }
+
     //----------------------------------
     // Test: addIdenticalPaymentOrders()
 
