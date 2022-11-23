@@ -5,7 +5,8 @@ import {Module, IProposal} from "src/modules/base/Module.sol";
 
 contract ModuleMock is Module {
     function init(IProposal proposal_, Metadata memory data)
-        external
+        public
+        virtual
         initializer
     {
         __Module_init(proposal_, data);

@@ -33,9 +33,7 @@ interface IModuleFactory {
 
     /// @notice Event emitted when new module created for a proposal.
     event ModuleCreated(
-        address indexed proposal,
-        address indexed module,
-        string moduleTitle
+        address indexed proposal, address indexed module, string moduleTitle
     );
 
     //--------------------------------------------------------------------------
