@@ -58,6 +58,8 @@ interface IProposal is IModuleManager, IContributorManager, IFundingVault {
     ///         for payments.
     function token() external view returns (IERC20);
 
+    function isAuthorized(address who) external view returns (bool);
+
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);
 

@@ -78,6 +78,10 @@ contract ProposalMock is
         return "1";
     }
 
+    function isAuthorized(address who) external view returns (bool) {
+        return owner() == who || authorizer.isAuthorized(who);
+    }
+
     function owner()
         public
         view

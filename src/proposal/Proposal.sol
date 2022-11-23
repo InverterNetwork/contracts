@@ -154,6 +154,10 @@ contract Proposal is
         return "1";
     }
 
+    function isAuthorized(address who) external view returns (bool) {
+        return _isOwnerOrAuthorized(who);
+    }
+
     function owner()
         public
         view
@@ -176,6 +180,6 @@ contract Proposal is
     // Internal Functions
 
     function _isOwnerOrAuthorized(address who) private view returns (bool) {
-        return authorizer.isAuthorized(who) || owner() == who;
+        return owner() == who || authorizer.isAuthorized(who);
     }
 }
