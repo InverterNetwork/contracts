@@ -20,7 +20,6 @@ Please also make sure to run our pre-commit hook before creating a PR:
 make pre-commit
 ```
 
-This hook will update gas metrics, format the code, and update the code
-coverage.
+This hook will update gas and code coverage metrics, and format the code.
 
 _DISCLAIMER: Adapted from the [ethers-rs contributing guide](https://github.com/gakonst/ethers-rs/blob/master/CONTRIBUTING.md)._
