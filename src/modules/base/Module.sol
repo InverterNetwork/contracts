@@ -61,6 +61,8 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @dev onlyAuthorized functions SHOULD only be used to trigger callbacks
     ///      from the proposal via the `triggerProposalCallback()` function.
     modifier onlyAuthorized() {
+        // @todo Use proposal's isAuthorized function that is owner || authorizer.isAuthorized.
+        // This ensures the owner always has access to all modules.
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (!authorizer.isAuthorized(_msgSender())) {
             revert Module__CallerNotAuthorized();

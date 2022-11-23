@@ -12,7 +12,7 @@ import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
  * E2e test demonstrating how to register a new module at the ModuleFactory.
  */
 contract RegisterModuleAtFactory is E2eTest {
-    function testRegisterModuleAtModuleFactory() public {
+    function test_e2e_RegisterModuleAtModuleFactory() public {
         // First deploy a new Module implementation.
         // We will use the PaymentProcessor module as example.
         PaymentProcessor module = new PaymentProcessor();
