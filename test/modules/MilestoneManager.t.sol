@@ -515,7 +515,6 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Check that milestoneManager's token balance is sufficient for the
         // payment orders.
-        // @todo marvin, nuggan: How to handle rounding errors?
         uint totalPayout = payout * contributors.length;
         assertTrue(_token.balanceOf(address(milestoneManager)) >= totalPayout);
     }

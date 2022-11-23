@@ -213,14 +213,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function addMilestone(
         uint duration,
         uint budget,
-        string memory title,
+        string memory title_,
         string memory details
     )
         external
         onlyAuthorized
         validDuration(duration)
         validBudget(budget)
-        validTitle(title)
+        validTitle(title_)
         validDetails(details)
         returns (uint)
     {
@@ -236,14 +236,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneRegistry[id] = Milestone({
             duration: duration,
             budget: budget,
-            title: title,
+            title: title_,
             details: details,
             startTimestamp: 0,
             submissionData: "",
             completed: false
         });
 
-        emit MilestoneAdded(id, duration, budget, title, details);
+        emit MilestoneAdded(id, duration, budget, title_, details);
 
         return id;
     }
@@ -307,10 +307,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             // Add milestone's payout for each contributor as new payment order.
             // Note that the payout SHOULD be fulfilled before the end of the
             // milestone's duration.
-            uint dueTo = m.duration;
-            for (uint i; i < contributorsLen; i++) {
-                _addPaymentOrder(contributors[i], contributorPayout, dueTo);
-            }
+            _addIdenticalPaymentOrders(
+                contributors, contributorPayout, m.duration
+            );
         }
     }
 

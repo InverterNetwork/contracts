@@ -37,6 +37,22 @@ contract PaymentClientMock is PaymentClient {
         _addPaymentOrder(recipient, amount, dueTo);
     }
 
+    function addPaymentOrders(
+        address[] memory recipients,
+        uint[] memory amounts,
+        uint[] memory dueTos
+    ) external {
+        _addPaymentOrders(recipients, amounts, dueTos);
+    }
+
+    function addIdenticalPaymentOrders(
+        address[] memory recipients,
+        uint amount,
+        uint dueTo
+    ) external {
+        _addIdenticalPaymentOrders(recipients, amount, dueTo);
+    }
+
     //--------------------------------------------------------------------------
     // IPaymentClient Overriden Functions
 
