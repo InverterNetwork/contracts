@@ -65,18 +65,12 @@ analyze-c4udit: ## Run c4udit analyzer against project
 # Reports
 
 .PHONY: report-gas
-report-gas: ## Print gas report and create gas snapshots file
-	@forge snapshot
+report-gas: ## Print gas report
 	@forge test --gas-report
 
 .PHONY: report-cov
-report-cov: ## Print coverage report and create lcov report file
-	@forge coverage --report lcov
+report-cov: ## Print coverage report
 	@forge coverage
-
-.PHONY: report-pocs
-report-pocs: ## Print PoC tests with full stack-trace
-	@forge test -vvvv --match-contract "POC"
 
 # -----------------------------------------------------------------------------
 # Formatting
@@ -88,6 +82,15 @@ fmt: ## Format code
 .PHONY: fmt-check
 fmt-check: ## Check whether code formatted correctly
 	@forge fmt --check
+
+# -----------------------------------------------------------------------------
+# Git
+
+.PHONY: pre-commit
+pre-commit: ## Git pre-commit hook
+	@forge fmt
+	@forge coverage --report lcov
+	@forge snapshot
 
 # -----------------------------------------------------------------------------
 # Help Command
