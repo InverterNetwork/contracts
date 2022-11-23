@@ -5,7 +5,10 @@ pragma solidity ^0.8.13;
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // Internal Dependencies
-import {IPaymentClient, IPaymentProcessor} from "src/modules/mixins/IPaymentClient.sol";
+import {
+    IPaymentClient,
+    IPaymentProcessor
+} from "src/modules/mixins/IPaymentClient.sol";
 
 abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     //--------------------------------------------------------------------------
@@ -70,11 +73,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     /// @param recipient The recipient of the payment.
     /// @param amount The amount to be paid out.
     /// @param dueTo Timestamp at which the payment SHOULD be fulfilled.
-    function _addPaymentOrder(
-        address recipient,
-        uint amount,
-        uint dueTo
-    )
+    function _addPaymentOrder(address recipient, uint amount, uint dueTo)
         internal
         virtual
         validRecipient(recipient)
@@ -82,12 +81,8 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         validDueTo(dueTo)
     {
         // Create new PaymentOrder instance.
-        PaymentOrder memory order = PaymentOrder(
-            recipient,
-            amount,
-            block.timestamp,
-            dueTo
-        );
+        PaymentOrder memory order =
+            PaymentOrder(recipient, amount, block.timestamp, dueTo);
 
         // Add order's token amount to current outstanding amount.
         _outstandingTokenAmount += amount;
@@ -121,8 +116,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         // address(this).
         // Note that function is implemented in downstream contract.
         _ensureTokenAllowance(
-            IPaymentProcessor(_msgSender()),
-            _outstandingTokenAmount
+            IPaymentProcessor(_msgSender()), _outstandingTokenAmount
         );
 
         // Create a copy of all orders to return.
