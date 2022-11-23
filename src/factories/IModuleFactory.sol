@@ -31,6 +31,13 @@ interface IModuleFactory {
         IModule.Metadata indexed metadata, IBeacon indexed beacon
     );
 
+    /// @notice Event emitted when new module created for a proposal.
+    event ModuleCreated(
+        address indexed proposal,
+        address indexed module,
+        string moduleTitle
+    );
+
     //--------------------------------------------------------------------------
     // Functions
 
