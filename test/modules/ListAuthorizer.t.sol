@@ -72,7 +72,9 @@ contract ListAuthorizerTest is Test {
         address[] memory initialAuth = new address[](1);
         initialAuth[0] = address(this);
 
-        _authorizer.initialize(IProposal(_proposal), initialAuth, _METADATA);
+        _authorizer.init(
+            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+        );
 
         //authorize one address and deauthorize the initializer.
         _authorizer.addToAuthorized(ALBA);
@@ -94,8 +96,9 @@ contract ListAuthorizerTest is Test {
         initialAuth[0] = ALBA;
         initialAuth[1] = BOB;
 
-        testAuthorizer.initialize(IProposal(_proposal), initialAuth, _METADATA);
-
+        testAuthorizer.init(
+            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+        );
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
         assertEq(testAuthorizer.isAuthorized(ALBA), true);
         assertEq(testAuthorizer.isAuthorized(BOB), true);
@@ -111,8 +114,9 @@ contract ListAuthorizerTest is Test {
         initialAuth[0] = address(this);
 
         vm.expectRevert();
-        _authorizer.initialize(IProposal(newProposal), initialAuth, _METADATA);
-
+        _authorizer.init(
+            IProposal(newProposal), _METADATA, abi.encode(initialAuth)
+        );
         assertEq(_authorizer.isAuthorized(address(this)), false);
         assertEq(address(_authorizer.proposal()), address(_proposal));
         assertEq(_authorizer.isAuthorized(ALBA), true);

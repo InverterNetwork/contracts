@@ -89,12 +89,16 @@ contract SingleVoteGovernance is ListAuthorizer {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Verifies that a given vote ID belongs to an active vote
-    modifier voteIsActive(uint _voteID) {
+    modifier voteExists(uint _voteID) {
         if (_voteID >= voteIDCounter) {
             revert Module__SingleVoteGovernance__nonexistentVoteId(_voteID);
         }
-        if ((voteRegistry[_voteID].voteClosesAt < block.timestamp)) {
+        _;
+    }
+
+    /// @notice Verifies that a given vote ID belongs to an active vote
+    modifier voteIsActive(uint _voteID) {
+        if (voteRegistry[_voteID].voteClosesAt < block.timestamp) {
             revert Module__SingleVoteGovernance__voteExpired(_voteID);
         }
         _;
@@ -102,7 +106,7 @@ contract SingleVoteGovernance is ListAuthorizer {
 
     /// @notice Verifies that a given vote is not active anymore
     modifier voteNotActive(uint _voteID) {
-        if ((voteRegistry[_voteID].voteClosesAt >= block.timestamp)) {
+        if (voteRegistry[_voteID].voteClosesAt >= block.timestamp) {
             revert Module__SingleVoteGovernance__voteStillActive(_voteID);
         }
         _;
@@ -180,15 +184,33 @@ contract SingleVoteGovernance is ListAuthorizer {
 
     //--------------------------------------------------------------------------
     // Constructor and/or Initialization
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory configdata
+    ) external override initializer {
+        address[] memory initialAuthorized;
+        uint _startingQuorum;
+        uint _voteDuration;
+        (initialAuthorized, _startingQuorum, _voteDuration) =
+            abi.decode(configdata, (address[], uint, uint));
+        __SingleVoteGovernance_init(
+            proposal_,
+            metadata,
+            initialAuthorized,
+            _startingQuorum,
+            _voteDuration
+        );
+    }
 
-    function initialize(
+    function __SingleVoteGovernance_init(
         IProposal proposal,
-        address[] calldata initialAuthorized,
+        Metadata memory metadata,
+        address[] memory initialAuthorized,
         uint _startingQuorum,
-        uint _voteDuration,
-        Metadata memory metadata
-    ) external validQuorum(_startingQuorum) {
-        super.initialize(proposal, initialAuthorized, metadata);
+        uint _voteDuration
+    ) internal onlyInitializing validQuorum(_startingQuorum) {
+        __ListAuthorizer_init(proposal, metadata, initialAuthorized);
 
         quorum = _startingQuorum;
         voteDuration = _voteDuration;
@@ -325,6 +347,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @param _voteID The ID of the vote to vote on
     function voteInFavor(uint _voteID)
         external
+        voteExists(_voteID)
         voteIsActive(_voteID)
         authorizedVoter(_msgSender())
     {
@@ -343,6 +366,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @param _voteID The ID of the vote to vote on
     function voteAgainst(uint _voteID)
         external
+        voteExists(_voteID)
         voteIsActive(_voteID)
         authorizedVoter(_msgSender())
     {
@@ -361,6 +385,7 @@ contract SingleVoteGovernance is ListAuthorizer {
     /// @param _voteID The ID of the vote to vote on
     function voteAbstain(uint _voteID)
         external
+        voteExists(_voteID)
         voteIsActive(_voteID)
         authorizedVoter(_msgSender())
     {
@@ -384,16 +409,12 @@ contract SingleVoteGovernance is ListAuthorizer {
         voteNotExecuted(_voteID)
     {
         // Tell the proposal to execute the vote
-        (
-            bool executionResult,
-            bytes memory returnData
-        ) = __Module_proposal.executeTxFromModule(
+        (bool executionResult, bytes memory returnData) = __Module_proposal
+            .executeTxFromModule(
             voteRegistry[_voteID].targetAddress,
             voteRegistry[_voteID].encodedAction,
             Types.Operation.Call
         );
-
-
 
         if (!executionResult) {
             assembly {

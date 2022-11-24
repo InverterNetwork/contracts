@@ -89,12 +89,10 @@ contract SingleVoteGovernanceTest is Test {
         uint _startingQuorum = DEFAULT_QUORUM;
         uint _startingDuration = DEFAULT_DURATION;
 
-        _authorizer.initialize(
+        _authorizer.init(
             IProposal(_proposal),
-            initialAuthorized,
-            _startingQuorum,
-            _startingDuration,
-            _METADATA
+            _METADATA,
+            abi.encode(initialAuthorized, _startingQuorum, _startingDuration)
         );
 
         assertEq(address(_authorizer.proposal()), address(_proposal));
@@ -617,9 +615,7 @@ contract SingleVoteGovernanceTest is Test {
             address(_authorizer), _encodedAction, initialAuthorized
         );
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector
-            )
+            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
         );
         _authorizer.executeVote(attackID_4);
     }

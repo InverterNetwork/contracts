@@ -58,11 +58,21 @@ contract ListAuthorizer is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // Initialization
 
-    function initialize(
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory configdata
+    ) external virtual override initializer {
+        address[] memory initialAuthorizers =
+            abi.decode(configdata, (address[]));
+        __ListAuthorizer_init(proposal_, metadata, initialAuthorizers);
+    }
+
+    function __ListAuthorizer_init(
         IProposal proposal,
-        address[] calldata initialAuthorizers,
-        Metadata memory metadata
-    ) public initializer {
+        Metadata memory metadata,
+        address[] memory initialAuthorizers
+    ) internal onlyInitializing {
         __Module_init(proposal, metadata);
 
         if (initialAuthorizers.length == 0) {
