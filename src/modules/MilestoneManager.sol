@@ -256,10 +256,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestones[id] = _SENTINEL;
         _last = id;
 
-        // Add milestone's id to list.
-        //_milestones[id] = _milestones[_SENTINEL];
-        //_milestones[_SENTINEL] = id;
-
         // Add milestone instance to registry.
         _milestoneRegistry[id] = Milestone({
             duration: duration,
