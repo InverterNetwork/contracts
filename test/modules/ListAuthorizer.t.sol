@@ -87,7 +87,7 @@ contract ListAuthorizerTest is Test {
 
     function testInitWithInitialAuthorized() public {
         //Checks that address list gets correctly stored on initialization
-        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizator.
+        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
 
         address authImpl = address(new ListAuthorizer());
         ListAuthorizer testAuthorizer = ListAuthorizer(Clones.clone(authImpl));
@@ -121,6 +121,42 @@ contract ListAuthorizerTest is Test {
         assertEq(address(_authorizer.proposal()), address(_proposal));
         assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(_authorizer.getAmountAuthorized(), 1);
+    }
+
+    function testInitWithEmptyInitialAuthorizedFails() public {
+        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+
+        address authImpl = address(new ListAuthorizer());
+        ListAuthorizer testAuthorizer = ListAuthorizer(Clones.clone(authImpl));
+
+        address[] memory initialAuth;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ListAuthorizer
+                    .Module__ListAuthorizer__invalidInitialAuthorizers
+                    .selector
+            )
+        );
+        testAuthorizer.init(
+            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+        );
+        
+        
+        //test faulty list (zero addresses)
+        initialAuth = new address[](2);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ListAuthorizer
+                    .Module__ListAuthorizer__invalidInitialAuthorizers
+                    .selector
+            )
+        );
+        testAuthorizer.init(
+            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+        );
+        assertEq(address(testAuthorizer.proposal()), address(0));
+        assertEq(testAuthorizer.getAmountAuthorized(), 0);
     }
 
     function testAddAuthorized() public {

@@ -32,6 +32,7 @@ contract ListAuthorizer is IAuthorizer, Module {
     // Errors
     error Module__ListAuthorizer__AddressAlreadyAuthorized();
     error Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
+    error Module__ListAuthorizer__invalidInitialAuthorizers();
 
     //--------------------------------------------------------------------------
     // Events
@@ -44,6 +45,18 @@ contract ListAuthorizer is IAuthorizer, Module {
     modifier notLastAuthorizer() {
         if (amountAuthorized == 1) {
             revert Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
+        }
+        _;
+    }
+
+    modifier validInitialAuthorizers(address[] memory _initialAuthorizers) {
+        if(_initialAuthorizers.length == 0){
+            revert Module__ListAuthorizer__invalidInitialAuthorizers();
+        }
+        for(uint i; i< _initialAuthorizers.length; i++) {
+            if (_initialAuthorizers[i] == address(0) ){
+            revert Module__ListAuthorizer__invalidInitialAuthorizers();
+            }
         }
         _;
     }
@@ -72,17 +85,17 @@ contract ListAuthorizer is IAuthorizer, Module {
         IProposal proposal,
         Metadata memory metadata,
         address[] memory initialAuthorizers
-    ) internal onlyInitializing {
+    )
+        internal
+        onlyInitializing
+        validInitialAuthorizers(initialAuthorizers)
+    {
         __Module_init(proposal, metadata);
 
-        if (initialAuthorizers.length == 0) {
-            revert Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
-        } else {
-            for (uint i = 0; i < initialAuthorizers.length; i++) {
-                authorized[initialAuthorizers[i]] = true;
-                amountAuthorized++;
-                emit AddedAuthorizedAddress(initialAuthorizers[i]);
-            }
+        for (uint i = 0; i < initialAuthorizers.length; i++) {
+            authorized[initialAuthorizers[i]] = true;
+            amountAuthorized++;
+            emit AddedAuthorizedAddress(initialAuthorizers[i]);
         }
     }
 
