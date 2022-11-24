@@ -403,10 +403,7 @@ contract MilestoneManagerTest is ModuleTest {
             emit MilestoneRemoved(id);
 
             milestoneManager.removeMilestone(_SENTINEL, id);
-            assertEq(
-                milestoneManager.listMilestoneIds().length,
-                amount - i - 1
-            );
+            assertEq(milestoneManager.listMilestoneIds().length, amount - i - 1);
         }
 
         // Fill list again with milestones.

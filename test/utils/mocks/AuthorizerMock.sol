@@ -28,8 +28,11 @@ contract AuthorizerMock is IAuthorizer, Module {
     ) public override (Module) initializer {
         __Module_init(proposal_, metadata);
 
-        // Authorize owner of proposal.
-        //_authorized[proposal_.owner()] = true;
+        // Read first authorized address from configdata.
+        address authorized = abi.decode(configdata, (address));
+        require(authorized != address(0), "Zero address can not be authorized");
+
+        _authorized[authorized] = true;
     }
 
     //--------------------------------------------------------------------------

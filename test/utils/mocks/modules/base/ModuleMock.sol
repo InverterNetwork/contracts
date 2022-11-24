@@ -4,11 +4,12 @@ pragma solidity ^0.8.13;
 import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
 
 contract ModuleMock is Module {
-    function init(
-        IProposal proposal_,
-        Metadata memory metadata,
-        bytes memory
-    ) public virtual override (Module) initializer {
+    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
+        public
+        virtual
+        override (Module)
+        initializer
+    {
         __Module_init(proposal_, metadata);
     }
 

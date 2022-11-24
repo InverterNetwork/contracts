@@ -66,8 +66,9 @@ contract E2eTest is Test {
     IModule.Metadata authorizerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/authorizer", "Authorizer"
     );
-    IProposalFactory.ModuleConfig authorizerFactoryConfig =
-        IProposalFactory.ModuleConfig(authorizerMetadata, bytes(""));
+    // Note that the IAuthorizer's first authorized address is address(this).
+    IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory
+        .ModuleConfig(authorizerMetadata, abi.encode(address(this)));
 
     function setUp() public {
         // Deploy Proposal implementation.
