@@ -233,6 +233,7 @@ contract SingleVoteGovernanceTest is Test {
         assertEq(_authorizer.hasVoted(DOBBIE, _newVote), true);
     }
 
+
     // Fail to create votes with wrong addresses and actions
     function testCreateWithInvalidVoteParamters() public {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
@@ -619,6 +620,40 @@ contract SingleVoteGovernanceTest is Test {
         );
         _authorizer.executeVote(attackID_4);
     }
+
+    function testAuthorizationTransfer() public {
+
+        // first, test a normal successful authorization transfer
+        vm.prank(BOB);
+        _authorizer.transferAuthorization(DOBBIE);
+
+        assertEq(_authorizer.isAuthorized(BOB), false);
+        assertEq(_authorizer.isAuthorized(DOBBIE), true);
+
+        address[] memory newAuthorized= new address[](2);
+        newAuthorized[0] = ALBA;
+        newAuthorized[1] = DOBBIE; 
+
+        // make sure that a transfer passed through governance fails, since the proposal is always authorized (and therefore could transfer endlessly)
+
+        bytes memory _encodedAction =
+            abi.encodeWithSignature("transferAuthorization(address)", ED);
+        uint _voteID = speedrunSuccessfulVote(
+            address(_authorizer), _encodedAction, newAuthorized
+        );
+
+        vm.expectRevert(
+            IModule
+                .Module__CallerNotAuthorized
+                .selector
+        );
+        _authorizer.executeVote(_voteID);
+
+        assertEq(_authorizer.isAuthorized(ED), false);
+
+
+    }
+
 
     //--------------------------------------------------------------------------
     // TEST: QUORUM
