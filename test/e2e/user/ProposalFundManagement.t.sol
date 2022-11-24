@@ -67,7 +67,7 @@ contract ProposaFundManagement is E2eTest {
 
             // After the deposit, bob received some amount of receipt tokens
             // from the proposal.
-            assertTrue(proposal.balanceOf(alice) > 0);
+            assertTrue(proposal.balanceOf(bob) > 0);
 
             // With this amount of receipt tokens, bob could withdraw her whole
             // deposit again.
