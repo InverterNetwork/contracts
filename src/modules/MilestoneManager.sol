@@ -109,8 +109,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Constants
 
+    /// @dev Marks the beginning of the list.
     /// @dev Unrealistic to have that many milestones.
     uint internal constant _SENTINEL = type(uint).max;
+
+    /// @dev Marks the last element of the list.
+    /// @dev Always links back to the _SENTINEL.
+    uint internal _last;
 
     //--------------------------------------------------------------------------
     // Storage
@@ -134,8 +139,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     ) external override (Module) initializer {
         __Module_init(proposal_, metadata);
 
-        // Set up sentinel to signal empty list of milestones.
+        // Set up empty list of milestones.
         _milestones[_SENTINEL] = _SENTINEL;
+        _last = _SENTINEL;
 
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
         // be interpreted as active.
@@ -245,9 +251,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Note that ids therefore start at 1.
         uint id = ++_milestoneCounter;
 
+        // Add milestone's id to end of list.
+        _milestones[_last] = id;
+        _milestones[id] = _SENTINEL;
+        _last = id;
+
         // Add milestone's id to list.
-        _milestones[id] = _milestones[_SENTINEL];
-        _milestones[_SENTINEL] = id;
+        //_milestones[id] = _milestones[_SENTINEL];
+        //_milestones[_SENTINEL] = id;
 
         // Add milestone instance to registry.
         _milestoneRegistry[id] = Milestone({
@@ -287,6 +298,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestones[prevId] = _milestones[id];
         delete _milestones[id];
         _milestoneCounter--;
+
+        // In case last element was removed, update _last to its previous
+        // element.
+        if (id == _last) {
+            _last = prevId;
+        }
 
         emit MilestoneRemoved(id);
     }
