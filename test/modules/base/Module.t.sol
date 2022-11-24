@@ -34,8 +34,10 @@ contract ModuleTest is Test {
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Payment Processor";
 
-    IModule.Metadata DATA =
+    IModule.Metadata METADATA =
         IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+
+    bytes CONFIGDATA = bytes("");
 
     function setUp() public {
         authorizer = new AuthorizerMock();
@@ -46,7 +48,7 @@ contract ModuleTest is Test {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        module.init(proposal, DATA);
+        module.init(proposal, METADATA, CONFIGDATA);
 
         // Initialize proposal to enable module.
         address[] memory modules = new address[](1);
@@ -62,7 +64,7 @@ contract ModuleTest is Test {
         assertEq(address(module.proposal()), address(proposal));
 
         // Identifier correctly computed.
-        assertEq(module.identifier(), LibMetadata.identifier(DATA));
+        assertEq(module.identifier(), LibMetadata.identifier(METADATA));
 
         // Version correctly set.
         uint majorVersion;
@@ -83,12 +85,12 @@ contract ModuleTest is Test {
         module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        module.initNoInitializer(proposal, DATA);
+        module.initNoInitializer(proposal, METADATA, CONFIGDATA);
     }
 
     function testReinitFails() public {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        module.init(proposal, DATA);
+        module.init(proposal, METADATA, CONFIGDATA);
     }
 
     function testInitFailsForInvalidProposal() public {
@@ -96,7 +98,7 @@ contract ModuleTest is Test {
         module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(IModule.Module__InvalidProposalAddress.selector);
-        module.init(IProposal(address(0)), DATA);
+        module.init(IProposal(address(0)), METADATA, CONFIGDATA);
     }
 
     function testInitFailsIfMetadataInvalid() public {
@@ -106,13 +108,17 @@ contract ModuleTest is Test {
         // Invalid if url empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(
-            proposal, IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE)
+            proposal,
+            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE),
+            CONFIGDATA
         );
 
         // Invalid if title empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(
-            proposal, IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, "")
+            proposal,
+            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""),
+            CONFIGDATA
         );
     }
 
