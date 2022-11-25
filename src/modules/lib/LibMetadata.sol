@@ -6,7 +6,7 @@ import {IModule} from "src/modules/base/IModule.sol";
 /**
  * @title Metadata Library
  *
- * @dev Provides common functions {IModule}'s Metadata type.
+ * @dev Provides common functions for {IModule}'s Metadata type.
  *
  * @author byterocket
  */

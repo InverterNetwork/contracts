@@ -29,7 +29,7 @@ interface IProposal is IModuleManager, IContributorManager, IFundingVault {
         uint proposalId,
         address owner,
         IERC20 token,
-        address[] calldata modules, // @todo mp: Change to IModules.
+        address[] calldata modules,
         IAuthorizer authorizer,
         IPaymentProcessor paymentProcessor
     ) external;

@@ -30,9 +30,8 @@ import {
  * @dev An owned factory for deploying modules.
  *
  *      The owner can register module metadata's to an {IBeacon}
- *      implementations.
- *      Note that a metadata's registered {IBeacon} implementation can not
- *      changed after registration!
+ *      implementations. Note that a metadata's registered {IBeacon}
+ *      implementation can not be changed after registration!
  *
  * @author byterocket
  */
@@ -61,9 +60,6 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
     //--------------------------------------------------------------------------
     // Storage
-
-    // @todo mp: ModuleFactory needs to know/manage minorVersion.
-    //           Module does not have knowledge about this anymore!
 
     /// @dev Mapping of metadata identifier to {IBeacon} instance.
     /// @dev MetadataLib.identifier(metadata) => {IBeacon}
@@ -101,7 +97,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // As a zero address implementation indicates an unrecoverable state
         // and faulty update from the beacon's owner, the beacon should be
         // considered dangerous. We therefore make sure that nothing else can
-        // happen in this tx and burn all remainig gas.
+        // happen in this tx and burn all remaining gas.
         // Note that while the inverter's beacon implementation forbids an
         // implementation update to non-contract addresses, we can not ensure
         // a module does not use a different beacon implementation.

@@ -101,22 +101,19 @@ abstract contract ContributorManager is
     //--------------------------------------------------------------------------
     // Constants
 
+    /// @dev Marks the beginning and end of the _modules list.
     address private constant _SENTINEL = address(0x1);
 
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Registry mapping contributor addresses to Contributor structs.
     mapping(address => Contributor) private _contributorRegistry;
 
-    /// @notice Mapping of contributors.
-    ///         TODO: Move this to docs/ and link to it.
-    ///         Every address points to the last one added before them.
-    ///         _contributors[_SENTINEL] points to the last added address,
-    ///         to aid retrieval.
-    ///         The first added address points to _SENTINEL to signal end of
-    ///         list.
+    /// @notice List of contributor addresses.
     mapping(address => address) private _contributors;
 
+    /// @dev Counter for number of contributors in the _contributors list.
     uint private _contributorCounter;
 
     //--------------------------------------------------------------------------
@@ -173,6 +170,11 @@ abstract contract ContributorManager is
         }
 
         return result;
+    }
+
+    /// @inheritdoc IContributorManager
+    function contributorsSize() external view returns (uint) {
+        return _contributorCounter;
     }
 
     //--------------------------------------------------------------------------
