@@ -9,6 +9,8 @@ import {
     IModuleManager
 } from "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
 
+import {Types} from "src/common/Types.sol";
+
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 
@@ -116,8 +118,91 @@ contract ModuleManagerTest is Test {
     //--------------------------------------------------------------------------
     // Tests: Transaction Execution
 
-    function testExecuteTxFromModule() public {
-        // @todo mp: Add ModuleManager::executeTxFromModule tests.
+    function testExecuteTxFromModuleOnlyCallableByModule() public {
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__OnlyCallableByModule
+                .selector
+        );
+        moduleManager.executeTxFromModule(
+            address(this), bytes(""), Types.Operation.Call
+        );
+    }
+
+    function testExecuteTxFromModuleViaCall() public {
+        address module = address(0xCAFE);
+        moduleManager.addModule(module);
+
+        bool ok_;
+        bytes memory returnData;
+
+        vm.prank(module);
+        (ok_, returnData) = moduleManager.executeTxFromModule(
+            address(this), abi.encodeWithSignature("ok()"), Types.Operation.Call
+        );
+
+        assertTrue(ok_);
+        assertTrue(abi.decode(returnData, (bool)));
+    }
+
+    function testExecuteTxFromModuleViaDelegateCall() public {
+        address module = address(0xCAFE);
+        moduleManager.addModule(module);
+
+        bool ok_;
+        bytes memory returnData;
+
+        vm.prank(module);
+        (ok_, returnData) = moduleManager.executeTxFromModule(
+            address(this),
+            abi.encodeWithSignature("ok()"),
+            Types.Operation.DelegateCall
+        );
+
+        assertTrue(ok_);
+        assertTrue(abi.decode(returnData, (bool)));
+    }
+
+    function testExecuteTxFromModuleViaCallFails() public {
+        address module = address(0xCAFE);
+        moduleManager.addModule(module);
+
+        bool ok_;
+        bytes memory returnData;
+
+        vm.prank(module);
+        (ok_, returnData) = moduleManager.executeTxFromModule(
+            address(this),
+            abi.encodeWithSignature("fails()"),
+            Types.Operation.Call
+        );
+
+        assertTrue(!ok_);
+    }
+
+    function testExecuteTxFromModuleViaDelegateCallFails() public {
+        address module = address(0xCAFE);
+        moduleManager.addModule(module);
+
+        bool ok_;
+        bytes memory returnData;
+
+        vm.prank(module);
+        (ok_, returnData) = moduleManager.executeTxFromModule(
+            address(this),
+            abi.encodeWithSignature("fails()"),
+            Types.Operation.DelegateCall
+        );
+
+        assertTrue(!ok_);
+    }
+
+    function ok() public pure returns (bool) {
+        return true;
+    }
+
+    function fails() public pure {
+        revert("failed");
     }
 
     //--------------------------------------------------------------------------

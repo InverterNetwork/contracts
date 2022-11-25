@@ -54,7 +54,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         (orders, totalAmount) = client.collectPaymentOrders();
 
         // Cache token.
-        IERC20 token = token();
+        IERC20 token_ = token();
 
         // Transfer tokens from {IPaymentClient} to order recipients.
         address recipient;
@@ -63,7 +63,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
             recipient = orders[i].recipient;
             amount = orders[i].amount;
 
-            token.safeTransferFrom(address(client), recipient, amount);
+            token_.safeTransferFrom(address(client), recipient, amount);
         }
     }
 }
