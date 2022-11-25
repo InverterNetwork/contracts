@@ -118,7 +118,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
             emit PaymentAdded(recipients[i], amounts[i]);
         }
 
-        // Adds total orders' amount to current outstanding amount.
+        // Add total orders' amount to current outstanding amount.
         _outstandingTokenAmount += totalTokenAmount;
 
         // Ensure our token balance is sufficient.
@@ -145,7 +145,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
             emit PaymentAdded(recipients[i], amount);
         }
 
-        // Adds total orders' amount to current outstanding amount.
+        // Add total orders' amount to current outstanding amount.
         _outstandingTokenAmount += amount * orderAmount;
 
         // Ensure our token balance is sufficient.
@@ -190,7 +190,8 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         // Set outstanding token amount to zero.
         _outstandingTokenAmount = 0;
 
-        // Return copy of orders to payment processor.
+        // Return copy of orders and orders' total token amount to payment
+        // processor.
         return (copy, outstandingTokenAmountCache);
     }
 

@@ -61,8 +61,6 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @dev onlyAuthorized functions SHOULD only be used to trigger callbacks
     ///      from the proposal via the `triggerProposalCallback()` function.
     modifier onlyAuthorized() {
-        // @todo Use proposal's isAuthorized function that is owner || authorizer.isAuthorized.
-        // This ensures the owner always has access to all modules.
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (!authorizer.isAuthorized(_msgSender())) {
             revert Module__CallerNotAuthorized();
@@ -148,39 +146,18 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     }
 
     //--------------------------------------------------------------------------
-    // onlyProposal Functions
-    //
-    // Proposal callback functions executed via `call`.
-
-    /// @notice Callback function to pause the module.
-    /// @dev Only callable by the proposal.
-    function __Module_pause() external onlyProposal {
-        _pause();
-    }
-
-    /// @notice Callback function to unpause the module.
-    /// @dev Only callable by the proposal.
-    function __Module_unpause() external onlyProposal {
-        _unpause();
-    }
-
-    //--------------------------------------------------------------------------
     // onlyAuthorized Functions
     //
     // API functions for authenticated users.
 
     /// @inheritdoc IModule
     function pause() external override (IModule) onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Module_pause()"), Types.Operation.Call
-        );
+        _pause();
     }
 
     /// @inheritdoc IModule
     function unpause() external override (IModule) onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Module_unpause()"), Types.Operation.Call
-        );
+        _unpause();
     }
 
     //--------------------------------------------------------------------------
