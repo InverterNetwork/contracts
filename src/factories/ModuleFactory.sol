@@ -30,9 +30,8 @@ import {
  * @dev An owned factory for deploying modules.
  *
  *      The owner can register module metadata's to an {IBeacon}
- *      implementations.
- *      Note that a metadata's registered {IBeacon} implementation can not
- *      changed after registration!
+ *      implementations. Note that a metadata's registered {IBeacon}
+ *      implementation can not be changed after registration!
  *
  * @author byterocket
  */

@@ -28,8 +28,12 @@ import {IAuthorizer} from "src/modules/IAuthorizer.sol";
  *      callbacks (via `call` or `delegatecall`) and a modifier to authenticate
  *      callers via the module's proposal.
  *
- *      TODO mp: Update docs. Includes now:
- *          - versioning
+ *      Each module is identified via a unique identifier based on its major
+ *      version, title, and url given in the metadata.
+ *
+ *      Using proxy contracts, e.g. beacons, enables globally updating module
+ *      instances when its minor version changes, but supports differentiating
+ *      otherwise equal modules with different major versions.
  *
  * @author byterocket
  */
@@ -109,22 +113,17 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
         _disableInitializers();
     }
 
-    // @todo mp: Can metaData be calldata? Depends on Factories.
-
-    // @todo mp: param metaData data missing in function doc.
-    //           Refactor @dev, function name is `init()`.
-
     /// @inheritdoc IModule
     function init(
         IProposal proposal_,
         Metadata memory metadata,
         bytes memory /*configdata*/
-    ) external virtual initializer {
+    ) public virtual initializer {
         __Module_init(proposal_, metadata);
     }
 
     /// @dev The initialization function MUST be called by the upstream
-    ///      contract in their `initialize()` function.
+    ///      contract in their overriden `init()` function.
     /// @param proposal_ The module's proposal.
     function __Module_init(IProposal proposal_, Metadata memory metadata)
         internal
@@ -169,22 +168,22 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     }
 
     /// @inheritdoc IModule
-    function version() external view returns (uint, uint) {
+    function version() public view returns (uint, uint) {
         return (__Module_metadata.majorVersion, __Module_metadata.minorVersion);
     }
 
     /// @inheritdoc IModule
-    function url() external view returns (string memory) {
+    function url() public view returns (string memory) {
         return __Module_metadata.url;
     }
 
     /// @inheritdoc IModule
-    function title() external view returns (string memory) {
+    function title() public view returns (string memory) {
         return __Module_metadata.title;
     }
 
     /// @inheritdoc IModule
-    function proposal() external view returns (IProposal) {
+    function proposal() public view returns (IProposal) {
         return __Module_proposal;
     }
 
