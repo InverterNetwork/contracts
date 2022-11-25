@@ -44,6 +44,11 @@ library LibMetadata {
             return false;
         }
 
+        // Invalid if version is v0.0.
+        if (metadata.majorVersion == 0 && metadata.minorVersion == 0) {
+            return false;
+        }
+
         return true;
     }
 }
