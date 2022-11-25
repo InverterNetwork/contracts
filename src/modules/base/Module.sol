@@ -118,7 +118,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
         IProposal proposal_,
         Metadata memory metadata,
         bytes memory /*configdata*/
-    ) public virtual initializer {
+    ) external virtual initializer {
         __Module_init(proposal_, metadata);
     }
 

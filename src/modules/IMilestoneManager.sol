@@ -12,16 +12,17 @@ interface IMilestoneManager is IPaymentClient {
         ///      MUST not be zero.
         uint duration;
         /// @dev The budget for the milestone.
-        ///      That is the number of tokens payed during the milestone's
-        ///      duration.
+        ///      That is the number of tokens payed to contributors when the
+        ///      milestone starts.
         ///      CAN be zero.
         uint budget;
         /// @dev The timestamp the milestone started.
         uint startTimestamp;
         /// @dev Represents the data that is accompanied when a milestone is submitted.
-        ///      A Milestone is counted as submitted when the submissionData bytes array is not empty.
+        ///      A Milestone is interpreted as being submitted when the
+        ///      submissionData bytes array is not empty.
         ///      Note that only accounts holding the {CONTRIBUTOR_ROLE()} can
-        ///      set submittedData and therefor submit milestones.
+        ///      set submittedData and therefore submit milestones.
         bytes submissionData;
         /// @dev Whether the milestone is completed.
         ///      A milestone is completed if it got confirmed and started more
@@ -106,7 +107,7 @@ interface IMilestoneManager is IPaymentClient {
     event MilestoneRemoved(uint indexed id);
 
     /// @notice Event emitted when a milestone is submitted.
-    event MilestoneSubmitted(uint indexed id, bytes indexed submissionData);
+    event MilestoneSubmitted(uint indexed id, bytes submissionData);
 
     /// @notice Event emitted when a milestone is completed.
     event MilestoneCompleted(uint indexed id);

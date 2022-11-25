@@ -10,6 +10,14 @@ import {
     IPaymentProcessor
 } from "src/modules/mixins/IPaymentClient.sol";
 
+/**
+ * @title PaymentClient
+ *
+ * @dev The PaymentClient mixin enables modules to create payment orders that
+ *      are processable by a proposal's {IPaymentProcessor} module.
+ *
+ * @author byterocket
+ */
 abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -87,6 +95,11 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         emit PaymentAdded(recipient, amount);
     }
 
+    /// @dev Adds a set of new {PaymentOrder}s to the list of outstanding
+    ///      orders.
+    /// @param recipients The list of recipients of the payments.
+    /// @param amounts The amounts to be paid out.
+    /// @param dueTos Timestamps at which the payments SHOULD be fulfilled.
     function _addPaymentOrders(
         address[] memory recipients,
         uint[] memory amounts,
@@ -126,7 +139,11 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         _ensureTokenBalance(_outstandingTokenAmount);
     }
 
-    /// @dev Adds a bulk of payment orders with identical amount and dueTo.
+    /// @dev Adds a set of new identical {PaymentOrder}s to the list of
+    ///      outstanding orders.
+    /// @param recipients The list of recipients of the payments.
+    /// @param amount The amount to be paid out in each order.
+    /// @param dueTo Timestamp at which the payments SHOULD be fulfilled.
     function _addIdenticalPaymentOrders(
         address[] memory recipients,
         uint amount,
@@ -205,6 +222,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         return _orders;
     }
 
+    /// @inheritdoc IPaymentClient
     function outstandingTokenAmount() external view virtual returns (uint) {
         return _outstandingTokenAmount;
     }
