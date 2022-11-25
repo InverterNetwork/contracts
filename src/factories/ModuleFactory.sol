@@ -62,9 +62,6 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     //--------------------------------------------------------------------------
     // Storage
 
-    // @todo mp: ModuleFactory needs to know/manage minorVersion.
-    //           Module does not have knowledge about this anymore!
-
     /// @dev Mapping of metadata identifier to {IBeacon} instance.
     /// @dev MetadataLib.identifier(metadata) => {IBeacon}
     mapping(bytes32 => IBeacon) private _beacons;
@@ -101,7 +98,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // As a zero address implementation indicates an unrecoverable state
         // and faulty update from the beacon's owner, the beacon should be
         // considered dangerous. We therefore make sure that nothing else can
-        // happen in this tx and burn all remainig gas.
+        // happen in this tx and burn all remaining gas.
         // Note that while the inverter's beacon implementation forbids an
         // implementation update to non-contract addresses, we can not ensure
         // a module does not use a different beacon implementation.

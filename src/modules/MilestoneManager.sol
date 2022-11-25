@@ -120,12 +120,17 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Registry mapping milestone ids to Milestone structs.
     mapping(uint => Milestone) private _milestoneRegistry;
 
+    /// @dev List of milestone id's.
     mapping(uint => uint) private _milestones;
 
+    /// @dev Counter for number of milestone id's in the _milestones list.
     uint private _milestoneCounter;
 
+    /// @dev The current active milestone's id.
+    /// @dev Uses _SENTINEL to indicate no current active milestone.
     uint private _activeMilestone;
 
     //--------------------------------------------------------------------------
