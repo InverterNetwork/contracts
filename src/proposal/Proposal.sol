@@ -28,7 +28,19 @@ import {
 /**
  * @title Proposal
  *
- * @dev
+ * @dev A new funding primitive to enable multiple actors within a decentralized
+ *      network to collaborate on proposals.
+ *
+ *      A proposal is composed of a [funding mechanism](./base/FundingVault),
+ *      a set of [contributors](./base/ContributorManager), and a set of
+ *      [modules](./base/ModuleManager).
+ *
+ *      The token being accepted for funding is non-changeable and set during
+ *      initialization. Authorization is performed via calling a non-changeable
+ *      {IAuthorizer} instance. Payments, initiated by modules, are processed
+ *      via a non-changeable {IPaymentProcessor} instance.
+ *
+ *      Each proposal has a unique id set during initialization.
  *
  * @author byterocket
  */

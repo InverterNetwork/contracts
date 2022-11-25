@@ -111,10 +111,6 @@ abstract contract ModuleManager is
         // Set up sentinel to signal empty list of modules.
         _modules[_SENTINEL] = _SENTINEL;
 
-        // @todo mp: Change modules from address to IModules.
-        //           This enables easier refactoring in future for "multi-modules".
-        //           Or not???
-
         address module;
         for (uint i; i < modules.length; i++) {
             module = modules[i];
@@ -273,7 +269,7 @@ abstract contract ModuleManager is
     /// @dev Expects `module` to be valid module address.
     /// @dev Expects `module` to not be enabled module.
     function _commitAddModule(address module) private {
-        // Add address to _modules mapping.
+        // Add address to _modules list.
         _modules[module] = _modules[_SENTINEL];
         _modules[_SENTINEL] = module;
         _moduleCounter++;
@@ -281,7 +277,7 @@ abstract contract ModuleManager is
         emit ModuleAdded(module);
     }
 
-    /// @dev Expect address arguments to be consecutive in the modules list.
+    /// @dev Expects address arguments to be consecutive in the modules list.
     /// @dev Expects address `module` to be enabled module.
     function _commitRemoveModule(address prevModule, address module) private {
         // Remove module address from list and decrease counter.

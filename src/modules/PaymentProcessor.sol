@@ -17,6 +17,15 @@ import {Module} from "src/modules/base/Module.sol";
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
 
+/**
+ * @title PaymentProcessor
+ *
+ * @dev The PaymentProcessor is a module to process payment orders from other
+ *      modules. In order to process a module's payment orders, the module must
+ *      implement the {IPaymentClient} interface.
+ *
+ * @author byterocket
+ */
 contract PaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
 
@@ -44,6 +53,9 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         uint totalAmount;
         (orders, totalAmount) = client.collectPaymentOrders();
 
+        // Cache token.
+        IERC20 token = token();
+
         // Transfer tokens from {IPaymentClient} to order recipients.
         address recipient;
         uint amount;
@@ -51,7 +63,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
             recipient = orders[i].recipient;
             amount = orders[i].amount;
 
-            token().safeTransferFrom(address(client), recipient, amount);
+            token.safeTransferFrom(address(client), recipient, amount);
         }
     }
 }
