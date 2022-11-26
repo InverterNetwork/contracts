@@ -140,8 +140,7 @@ contract ListAuthorizerTest is Test {
         testAuthorizer.init(
             IProposal(_proposal), _METADATA, abi.encode(initialAuth)
         );
-        
-        
+
         //test faulty list (zero addresses)
         initialAuth = new address[](2);
 

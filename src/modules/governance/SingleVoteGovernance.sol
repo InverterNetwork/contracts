@@ -253,12 +253,16 @@ contract SingleVoteGovernance is ListAuthorizer {
         super.addToAuthorized(_who);
     }
 
-    /// @dev    Overrides the parent function to make sure that only 
-    ///         authorized voters can transfer their authorization, and not the 
-    ///         proposal (through a successful governance vote)       
+    /// @dev    Overrides the parent function to make sure that only
+    ///         authorized voters can transfer their authorization, and not the
+    ///         proposal (through a successful governance vote)
     /// @notice Transfers authorization from the calling address to a new one.
     /// @param _to The address to transfer the authorization to
-    function transferAuthorization(address _to) public override authorizedVoter(_msgSender()) {
+    function transferAuthorization(address _to)
+        public
+        override
+        authorizedVoter(_msgSender())
+    {
         super.transferAuthorization(_to);
     }
 

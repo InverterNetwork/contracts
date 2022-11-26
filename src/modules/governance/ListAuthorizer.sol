@@ -50,12 +50,12 @@ contract ListAuthorizer is IAuthorizer, Module {
     }
 
     modifier validInitialAuthorizers(address[] memory _initialAuthorizers) {
-        if(_initialAuthorizers.length == 0){
+        if (_initialAuthorizers.length == 0) {
             revert Module__ListAuthorizer__invalidInitialAuthorizers();
         }
-        for(uint i; i< _initialAuthorizers.length; i++) {
-            if (_initialAuthorizers[i] == address(0) ){
-            revert Module__ListAuthorizer__invalidInitialAuthorizers();
+        for (uint i; i < _initialAuthorizers.length; i++) {
+            if (_initialAuthorizers[i] == address(0)) {
+                revert Module__ListAuthorizer__invalidInitialAuthorizers();
             }
         }
         _;
@@ -85,11 +85,7 @@ contract ListAuthorizer is IAuthorizer, Module {
         IProposal proposal,
         Metadata memory metadata,
         address[] memory initialAuthorizers
-    )
-        internal
-        onlyInitializing
-        validInitialAuthorizers(initialAuthorizers)
-    {
+    ) internal onlyInitializing validInitialAuthorizers(initialAuthorizers) {
         __Module_init(proposal, metadata);
 
         for (uint i = 0; i < initialAuthorizers.length; i++) {
