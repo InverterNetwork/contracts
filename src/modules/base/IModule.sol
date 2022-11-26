@@ -43,7 +43,7 @@ interface IModule {
     /// @param proposal The module's proposal instance.
     /// @param metadata The module's metadata.
     /// @param configdata Variable config data for specific module
-    ///                   implementation.
+    ///                   implementations.
     function init(
         IProposal proposal,
         Metadata memory metadata,

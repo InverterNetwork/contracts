@@ -12,16 +12,17 @@ interface IMilestoneManager is IPaymentClient {
         ///      MUST not be zero.
         uint duration;
         /// @dev The budget for the milestone.
-        ///      That is the number of tokens payed during the milestone's
-        ///      duration.
+        ///      That is the number of tokens payed to contributors when the
+        ///      milestone starts.
         ///      CAN be zero.
         uint budget;
         /// @dev The timestamp the milestone started.
         uint startTimestamp;
         /// @dev Represents the data that is accompanied when a milestone is submitted.
-        ///      A Milestone is counted as submitted when the submissionData bytes array is not empty.
+        ///      A Milestone is interpreted as being submitted when the
+        ///      submissionData bytes array is not empty.
         ///      Note that only accounts holding the {CONTRIBUTOR_ROLE()} can
-        ///      set submittedData and therefor submit milestones.
+        ///      set submittedData and therefore submit milestones.
         bytes submissionData;
         /// @dev Whether the milestone is completed.
         ///      A milestone is completed if it got confirmed and started more
@@ -44,7 +45,7 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given duration invalid.
     error Module__MilestoneManager__InvalidDuration();
 
-    // @audit-info If later needed, add error for invalid budget.
+    // @audit-info If needed, add error for invalid budget here.
 
     /// @notice Given title invalid.
     error Module__MilestoneManager__InvalidTitle();
@@ -106,7 +107,7 @@ interface IMilestoneManager is IPaymentClient {
     event MilestoneRemoved(uint indexed id);
 
     /// @notice Event emitted when a milestone is submitted.
-    event MilestoneSubmitted(uint indexed id, bytes indexed submissionData);
+    event MilestoneSubmitted(uint indexed id, bytes submissionData);
 
     /// @notice Event emitted when a milestone is completed.
     event MilestoneCompleted(uint indexed id);
@@ -128,6 +129,28 @@ interface IMilestoneManager is IPaymentClient {
         external
         view
         returns (Milestone memory);
+
+    /// @notice Returns total list of milestone ids.
+    /// @dev List is in ascending order.
+    /// @return List of milestone ids.
+    function listMilestoneIds() external view returns (uint[] memory);
+
+    /// @notice Returns the current active milestone's id.
+    /// @dev Reverts in case there is no active milestone.
+    /// @return Current active milestone id.
+    function getActiveMilestoneId() external view returns (uint);
+
+    /// @notice Returns whether there exists a current active milestone.
+    /// @return True if current active milestone exists, false otherwise.
+    function hasActiveMilestone() external view returns (bool);
+
+    /// @notice Returns whether the next milestone is activatable.
+    /// @return True if next milestone activatable, false otherwise.
+    function isNextMilestoneActivatable() external view returns (bool);
+
+    /// @notice Returns whether milestone with id `id` exists.
+    /// @return True if milestone with id `id` exists, false otherwise.
+    function isExistingMilestoneId(uint id) external view returns (bool);
 
     //----------------------------------
     // Milestone Mutating Functions

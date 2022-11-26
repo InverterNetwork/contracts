@@ -36,7 +36,9 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *              A milestone is active, until either its duration is over or it's
  *              marked as completed.
  *        - submitted
- *              A proposal contributor marked the milestone as submitted by changing the submittedData to not empty.
+ *              A proposal contributor marks a milestone as submitted by
+ *              submitting non-empty data that can be interpreted and evaluated
+ *              by off-chain systems.
  *        - completed
  *              After a milestone was submitted, it can be marked as completed.
  *              This marks the end of the milestone.
@@ -69,8 +71,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
-    modifier validTitle(string memory title) {
-        if (title.isEmpty()) {
+    modifier validTitle(string memory title_) {
+        if (title_.isEmpty()) {
             revert Module__MilestoneManager__InvalidTitle();
         }
         _;
@@ -107,18 +109,28 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Constants
 
+    /// @dev Marks the beginning of the list.
     /// @dev Unrealistic to have that many milestones.
     uint internal constant _SENTINEL = type(uint).max;
+
+    /// @dev Marks the last element of the list.
+    /// @dev Always links back to the _SENTINEL.
+    uint internal _last;
 
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Registry mapping milestone ids to Milestone structs.
     mapping(uint => Milestone) private _milestoneRegistry;
 
+    /// @dev List of milestone id's.
     mapping(uint => uint) private _milestones;
 
+    /// @dev Counter for number of milestone id's in the _milestones list.
     uint private _milestoneCounter;
 
+    /// @dev The current active milestone's id.
+    /// @dev Uses _SENTINEL to indicate no current active milestone.
     uint private _activeMilestone;
 
     //--------------------------------------------------------------------------
@@ -132,8 +144,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     ) external override (Module) initializer {
         __Module_init(proposal_, metadata);
 
-        // Set up sentinel to signal empty list of milestones.
+        // Set up empty list of milestones.
         _milestones[_SENTINEL] = _SENTINEL;
+        _last = _SENTINEL;
 
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
         // be interpreted as active.
@@ -143,6 +156,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Public View Functions
 
+    /// @inheritdoc IMilestoneManager
     function getMilestoneInformation(uint id)
         public
         view
@@ -155,6 +169,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return _milestoneRegistry[id];
     }
 
+    /// @inheritdoc IMilestoneManager
     function listMilestoneIds() external view returns (uint[] memory) {
         uint[] memory result = new uint[](_milestoneCounter);
 
@@ -170,6 +185,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return result;
     }
 
+    /// @inheritdoc IMilestoneManager
     function getActiveMilestoneId() public view returns (uint id) {
         if (!hasActiveMilestone()) {
             revert Module__MilestoneManager__NoActiveMilestone();
@@ -178,6 +194,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return _activeMilestone;
     }
 
+    /// @inheritdoc IMilestoneManager
     function hasActiveMilestone() public view returns (bool) {
         if (!isExistingMilestoneId(_activeMilestone)) {
             return false;
@@ -185,23 +202,34 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         Milestone storage m = _milestoneRegistry[_activeMilestone];
 
-        // Milestone active if:
-        // - milestone not yet completed
-        // - milestone started and still running
-        return !m.completed && m.startTimestamp != 0
-            && m.startTimestamp + m.duration >= block.timestamp;
+        // Milestone active if not completed and already started but duration
+        // not yet over.
+        uint startTimestamp = m.startTimestamp;
+        return !m.completed && startTimestamp != 0
+            && startTimestamp + m.duration >= block.timestamp;
     }
 
+    /// @inheritdoc IMilestoneManager
     function isNextMilestoneActivatable() public view returns (bool) {
-        if (hasActiveMilestone()) {
+        // Return false if next milestone does not exist.
+        uint next = _milestones[_activeMilestone];
+        if (!isExistingMilestoneId(next)) {
             return false;
         }
 
-        uint next = _milestones[_activeMilestone];
+        // Return true if current active milestone does not exist.
+        if (!isExistingMilestoneId(_activeMilestone)) {
+            return true;
+        }
 
-        return isExistingMilestoneId(next);
+        Milestone storage m = _milestoneRegistry[_activeMilestone];
+
+        // Milestone is activatable if current milestone started and its
+        // duration exceeded.
+        return m.startTimestamp + m.duration < block.timestamp;
     }
 
+    /// @inheritdoc IMilestoneManager
     function isExistingMilestoneId(uint id) public view returns (bool) {
         return id != _SENTINEL && _milestones[id] != 0;
     }
@@ -213,14 +241,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function addMilestone(
         uint duration,
         uint budget,
-        string memory title,
+        string memory title_,
         string memory details
     )
         external
         onlyAuthorized
         validDuration(duration)
         validBudget(budget)
-        validTitle(title)
+        validTitle(title_)
         validDetails(details)
         returns (uint)
     {
@@ -228,22 +256,23 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Note that ids therefore start at 1.
         uint id = ++_milestoneCounter;
 
-        // Add milestone's id to list.
-        _milestones[id] = _milestones[_SENTINEL];
-        _milestones[_SENTINEL] = id;
+        // Add milestone's id to end of list.
+        _milestones[_last] = id;
+        _milestones[id] = _SENTINEL;
+        _last = id;
 
         // Add milestone instance to registry.
         _milestoneRegistry[id] = Milestone({
             duration: duration,
             budget: budget,
-            title: title,
+            title: title_,
             details: details,
             startTimestamp: 0,
             submissionData: "",
             completed: false
         });
 
-        emit MilestoneAdded(id, duration, budget, title, details);
+        emit MilestoneAdded(id, duration, budget, title_, details);
 
         return id;
     }
@@ -270,6 +299,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestones[prevId] = _milestones[id];
         delete _milestones[id];
         _milestoneCounter--;
+
+        // In case last element was removed, update _last to its previous
+        // element.
+        if (id == _last) {
+            _last = prevId;
+        }
 
         emit MilestoneRemoved(id);
     }
@@ -307,10 +342,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             // Add milestone's payout for each contributor as new payment order.
             // Note that the payout SHOULD be fulfilled before the end of the
             // milestone's duration.
-            uint dueTo = m.duration;
-            for (uint i; i < contributorsLen; i++) {
-                _addPaymentOrder(contributors[i], contributorPayout, dueTo);
-            }
+            _addIdenticalPaymentOrders(
+                contributors, contributorPayout, m.duration
+            );
         }
     }
 

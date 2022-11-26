@@ -92,6 +92,9 @@ interface IModuleManager {
     /// @return List of all modules.
     function listModules() external view returns (address[] memory);
 
+    /// @notice Returns the number of modules.
+    function modulesSize() external view returns (uint);
+
     /// @notice Grants role `role` to account `account` in caller's access
     ///         control context.
     /// @dev Only callable by enabled module.

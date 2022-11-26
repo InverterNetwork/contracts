@@ -116,7 +116,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testListMilestoneIds(uint amount) public {
         // Note to stay reasonable.
-        vm.assume(amount < 10);
+        vm.assume(amount < MAX_MILESTONES);
 
         for (uint i; i < amount; i++) {
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
@@ -125,8 +125,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint[] memory ids = milestoneManager.listMilestoneIds();
 
         for (uint i; i < amount; i++) {
-            // Note that list is traversed and id's start at 1.
-            ids[i] = amount - i;
+            assertEq(ids[i], i + 1); // Note that id's start at one.
         }
     }
 
@@ -230,17 +229,11 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: isNextMilestoneActivatable()
 
-    function testIsNextMilestoneActivatable() public {
-        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
-
-        assertTrue(milestoneManager.isNextMilestoneActivatable());
-    }
-
-    function testIsNextMilestoneActivatableFalseIfNoNextMilestone() public {
+    function testNextMilestoneNotActivatableIfNoNextMilestone() public {
         assertTrue(!milestoneManager.isNextMilestoneActivatable());
     }
 
-    function testIsNextMilestoneActivatableFalseIfHasCurrentActiveMilestone(
+    function testNextMilestoneNotActivatableIfCurrentMilestoneStartedAndDurationNotExceeded(
         address[] memory contributors
     ) public {
         _addContributors(contributors);
@@ -251,10 +244,37 @@ contract MilestoneManagerTest is ModuleTest {
         _token.mint(address(_proposal), BUDGET);
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        milestoneManager.startNextMilestone();
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        assertTrue(!milestoneManager.isNextMilestoneActivatable());
+    }
+
+    function testNextMilestoneActivatableIfFirstMilestone() public {
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        assertTrue(milestoneManager.isNextMilestoneActivatable());
+    }
+
+    function testNextMilestoneActivatableIfCurrentMilestoneStartedAndDurationExceeded(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
         milestoneManager.startNextMilestone();
 
-        assertTrue(!milestoneManager.isNextMilestoneActivatable());
+        // Wait until milestones duration is over.
+        vm.warp(block.timestamp + DURATION + 1);
+
+        assertTrue(milestoneManager.isNextMilestoneActivatable());
     }
 
     //--------------------------------------------------------------------------
@@ -263,33 +283,29 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: addMilestone()
 
-    function testAddMilestone() public {
-        uint gotId;
-        uint wantId;
+    function testAddMilestone(uint amount) public {
+        // Note to stay reasonable.
+        vm.assume(amount < MAX_MILESTONES);
+
+        uint id;
 
         // Add each milestone.
-        for (uint i; i < MAX_MILESTONES; i++) {
-            wantId = i + 1; // Note that id's start at 1.
-
+        for (uint i; i < amount; i++) {
             vm.expectEmit(true, true, true, true);
-            emit MilestoneAdded(wantId, DURATION, BUDGET, TITLE, DETAILS);
+            emit MilestoneAdded(i + 1, DURATION, BUDGET, TITLE, DETAILS);
 
-            gotId =
-                milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+            id = milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
-            assertEq(gotId, wantId);
-            _assertMilestone(gotId, DURATION, BUDGET, TITLE, DETAILS, "", false);
+            assertEq(id, i + 1); // Note that id's start at 1.
+            _assertMilestone(id, DURATION, BUDGET, TITLE, DETAILS, "", false);
         }
 
         // Assert that all milestone id's are fetchable.
-        // Note that the list is traversed.
         uint[] memory ids = milestoneManager.listMilestoneIds();
 
-        assertEq(ids.length, MAX_MILESTONES);
-        for (uint i; i < MAX_MILESTONES; i++) {
-            wantId = MAX_MILESTONES - i; // Note that id's start at 1.
-
-            assertEq(ids[i], wantId);
+        assertEq(ids.length, amount);
+        for (uint i; i < amount; i++) {
+            assertEq(ids[i], i + 1); // Note that id's start at 1.
         }
     }
 
@@ -368,55 +384,52 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: removeMilestone()
 
-    function testRemoveMilestone() public {
-        uint numberMilestones = 10;
+    function testRemoveMilestone(uint amount) public {
+        // Note to stay reasonable.
+        vm.assume(amount < MAX_MILESTONES);
+        vm.assume(amount != 0);
 
         // Fill list with milestones.
-        for (uint i; i < numberMilestones; i++) {
+        for (uint i; i < amount; i++) {
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         }
 
-        // Remove milestones from the front, i.e. highest milestone id, until
+        // Remove milestones from the front, i.e. lowest milestone id, until
         // list is empty.
-        for (uint i; i < numberMilestones; i++) {
-            uint id = numberMilestones - i; // Note that id's start at 1.
+        for (uint i; i < amount; i++) {
+            uint id = i + 1; // Note that id's start at 1.
 
             vm.expectEmit(true, true, true, true);
             emit MilestoneRemoved(id);
 
             milestoneManager.removeMilestone(_SENTINEL, id);
-            assertEq(
-                milestoneManager.listMilestoneIds().length,
-                numberMilestones - i - 1
-            );
+            assertEq(milestoneManager.listMilestoneIds().length, amount - i - 1);
         }
 
         // Fill list again with milestones.
-        for (uint i; i < numberMilestones; i++) {
+        for (uint i; i < amount; i++) {
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         }
 
-        // Remove milestones from the back, i.e. lowest milestone id, until
+        // Remove milestones from the back, i.e. highest milestone id, until
         // list is empty.
-        // Note that removing the last milestone requires the sentinel as
-        // prevId.
-        for (uint i; i < numberMilestones - 1; i++) {
+        for (uint i; i < amount; i++) {
             // Note that id's start at 1.
-            uint prevId = i + 2;
-            uint id = i + 1;
+            uint prevId = amount - i - 1;
+            uint id = amount - i;
+
+            // Note that removing the last milestone requires the sentinel as
+            // prevId.
+            if (prevId == 0) {
+                prevId = _SENTINEL;
+            }
 
             vm.expectEmit(true, true, true, true);
             emit MilestoneRemoved(id);
 
             milestoneManager.removeMilestone(prevId, id);
-            assertEq(
-                milestoneManager.listMilestoneIds().length,
-                numberMilestones - i - 1
-            );
+            assertEq(milestoneManager.listMilestoneIds().length, amount - i - 1);
         }
-
-        milestoneManager.removeMilestone(_SENTINEL, numberMilestones);
-        assertEq(milestoneManager.listMilestoneIds().length, 0);
     }
 
     function testRemoveMilestoneFailsIfCallerNotAuthorized() public {
@@ -490,6 +503,12 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // Add a second milestone to make sure the correct one, i.e. first
+        // added, is started.
+        milestoneManager.addMilestone(
+            DURATION + 1, BUDGET + 1, "Title2", "Details2"
+        );
+
         milestoneManager.startNextMilestone();
 
         // Check that milestone started.
@@ -506,7 +525,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint payout = BUDGET / orders.length;
         for (uint i; i < orders.length; i++) {
-            // Note that list is traversed.
+            // Note that the contributors list is traversed.
             assertEq(orders[i].recipient, contributors[orders.length - 1 - i]);
             assertEq(orders[i].amount, payout);
             assertEq(orders[i].createdAt, block.timestamp);
@@ -515,7 +534,6 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Check that milestoneManager's token balance is sufficient for the
         // payment orders.
-        // @todo marvin, nuggan: How to handle rounding errors?
         uint totalPayout = payout * contributors.length;
         assertTrue(_token.balanceOf(address(milestoneManager)) >= totalPayout);
     }

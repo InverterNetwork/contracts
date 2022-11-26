@@ -31,6 +31,9 @@ interface IPaymentClient {
     /// @notice Given dueTo invalid.
     error Module__PaymentClient__InvalidDueTo();
 
+    /// @notice Given arrays' length mismatch.
+    error Module__PaymentClient__ArrayLengthMismatch();
+
     event PaymentAdded(address indexed recipient, uint amount);
 
     /// @notice Returns the list of outstanding payment orders.

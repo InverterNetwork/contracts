@@ -10,28 +10,30 @@ import {
     IPaymentProcessor
 } from "src/modules/mixins/IPaymentClient.sol";
 
+/**
+ * @title PaymentClient
+ *
+ * @dev The PaymentClient mixin enables modules to create payment orders that
+ *      are processable by a proposal's {IPaymentProcessor} module.
+ *
+ * @author byterocket
+ */
 abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
 
     modifier validRecipient(address recipient) {
-        if (recipient == address(0) || recipient == address(this)) {
-            revert Module__PaymentClient__InvalidRecipient();
-        }
+        _ensureValidRecipient(recipient);
         _;
     }
 
     modifier validAmount(uint amount) {
-        if (amount == 0) {
-            revert Module__PaymentClient__InvalidAmount();
-        }
+        _ensureValidAmount(amount);
         _;
     }
 
     modifier validDueTo(uint dueTo) {
-        if (dueTo < block.timestamp) {
-            revert Module__PaymentClient__InvalidDueTo();
-        }
+        _ensureValidDueTo(dueTo);
         _;
     }
 
@@ -80,10 +82,6 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         validAmount(amount)
         validDueTo(dueTo)
     {
-        // Create new PaymentOrder instance.
-        PaymentOrder memory order =
-            PaymentOrder(recipient, amount, block.timestamp, dueTo);
-
         // Add order's token amount to current outstanding amount.
         _outstandingTokenAmount += amount;
 
@@ -91,10 +89,85 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         // Note that function is implemented in downstream contract.
         _ensureTokenBalance(_outstandingTokenAmount);
 
-        // Add order to list of oustanding orders.
-        _orders.push(order);
+        // Add new order to list of oustanding orders.
+        _orders.push(PaymentOrder(recipient, amount, block.timestamp, dueTo));
 
         emit PaymentAdded(recipient, amount);
+    }
+
+    /// @dev Adds a set of new {PaymentOrder}s to the list of outstanding
+    ///      orders.
+    /// @param recipients The list of recipients of the payments.
+    /// @param amounts The amounts to be paid out.
+    /// @param dueTos Timestamps at which the payments SHOULD be fulfilled.
+    function _addPaymentOrders(
+        address[] memory recipients,
+        uint[] memory amounts,
+        uint[] memory dueTos
+    ) internal virtual {
+        uint orderAmount = recipients.length;
+
+        // Revert if arrays' length mismatch.
+        if (orderAmount != amounts.length || orderAmount != dueTos.length) {
+            revert Module__PaymentClient__ArrayLengthMismatch();
+        }
+
+        uint totalTokenAmount;
+        for (uint i; i < orderAmount; i++) {
+            _ensureValidRecipient(recipients[i]);
+            _ensureValidAmount(amounts[i]);
+            _ensureValidDueTo(dueTos[i]);
+
+            // Add order's amount to total amount of new orders.
+            totalTokenAmount += amounts[i];
+
+            // Add new order to list of oustanding orders.
+            _orders.push(
+                PaymentOrder(
+                    recipients[i], amounts[i], block.timestamp, dueTos[i]
+                )
+            );
+
+            emit PaymentAdded(recipients[i], amounts[i]);
+        }
+
+        // Add total orders' amount to current outstanding amount.
+        _outstandingTokenAmount += totalTokenAmount;
+
+        // Ensure our token balance is sufficient.
+        // Note that functions is implemented in downstream contract.
+        _ensureTokenBalance(_outstandingTokenAmount);
+    }
+
+    /// @dev Adds a set of new identical {PaymentOrder}s to the list of
+    ///      outstanding orders.
+    /// @param recipients The list of recipients of the payments.
+    /// @param amount The amount to be paid out in each order.
+    /// @param dueTo Timestamp at which the payments SHOULD be fulfilled.
+    function _addIdenticalPaymentOrders(
+        address[] memory recipients,
+        uint amount,
+        uint dueTo
+    ) internal virtual validAmount(amount) validDueTo(dueTo) {
+        uint orderAmount = recipients.length;
+
+        for (uint i; i < orderAmount; i++) {
+            _ensureValidRecipient(recipients[i]);
+
+            // Add new order to list of oustanding orders.
+            _orders.push(
+                PaymentOrder(recipients[i], amount, block.timestamp, dueTo)
+            );
+
+            emit PaymentAdded(recipients[i], amount);
+        }
+
+        // Add total orders' amount to current outstanding amount.
+        _outstandingTokenAmount += amount * orderAmount;
+
+        // Ensure our token balance is sufficient.
+        // Note that functions is implemented in downstream contract.
+        _ensureTokenBalance(_outstandingTokenAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -134,7 +207,8 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         // Set outstanding token amount to zero.
         _outstandingTokenAmount = 0;
 
-        // Return copy of orders to payment processor.
+        // Return copy of orders and orders' total token amount to payment
+        // processor.
         return (copy, outstandingTokenAmountCache);
     }
 
@@ -148,7 +222,29 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         return _orders;
     }
 
+    /// @inheritdoc IPaymentClient
     function outstandingTokenAmount() external view virtual returns (uint) {
         return _outstandingTokenAmount;
+    }
+
+    //--------------------------------------------------------------------------
+    // Private Functions
+
+    function _ensureValidRecipient(address recipient) private view {
+        if (recipient == address(0) || recipient == address(this)) {
+            revert Module__PaymentClient__InvalidRecipient();
+        }
+    }
+
+    function _ensureValidAmount(uint amount) private pure {
+        if (amount == 0) {
+            revert Module__PaymentClient__InvalidAmount();
+        }
+    }
+
+    function _ensureValidDueTo(uint dueTo) private view {
+        if (dueTo < block.timestamp) {
+            revert Module__PaymentClient__InvalidDueTo();
+        }
     }
 }

@@ -17,12 +17,17 @@ import {Module} from "src/modules/base/Module.sol";
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
 
+/**
+ * @title PaymentProcessor
+ *
+ * @dev The PaymentProcessor is a module to process payment orders from other
+ *      modules. In order to process a module's payment orders, the module must
+ *      implement the {IPaymentClient} interface.
+ *
+ * @author byterocket
+ */
 contract PaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
-
-    /// @notice The payment token.
-    /// @dev Cache to save multiple `__Module_proposal.token()` calls.
-    IERC20 public token;
 
     /// @inheritdoc Module
     function init(
@@ -31,15 +36,15 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         bytes memory /*configdata*/
     ) external override (Module) initializer {
         __Module_init(proposal_, metadata);
-
-        // Cache the proposal's token.
-        token = proposal_.token();
     }
 
     //--------------------------------------------------------------------------
-    // State
+    // IPaymentProcessor Functions
 
-    // @audit Does processPaymets() need to be authorized?
+    /// @inheritdoc IPaymentProcessor
+    function token() public view returns (IERC20) {
+        return __Module_proposal.token();
+    }
 
     /// @inheritdoc IPaymentProcessor
     function processPayments(IPaymentClient client) external {
@@ -47,6 +52,9 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         IPaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
         (orders, totalAmount) = client.collectPaymentOrders();
+
+        // Cache token.
+        IERC20 token = token();
 
         // Transfer tokens from {IPaymentClient} to order recipients.
         address recipient;
