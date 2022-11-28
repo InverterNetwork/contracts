@@ -22,6 +22,22 @@ contract LibMetadataTest is Test {
         assertEq(got, want);
     }
 
+    function testMetadataIsValid(
+        uint majorVersion,
+        uint minorVersion,
+        string memory url,
+        string memory title
+    ) public {
+        vm.assume(majorVersion != 0 || minorVersion != 0);
+        vm.assume(bytes(url).length != 0);
+        vm.assume(bytes(title).length != 0);
+
+        IModule.Metadata memory data =
+            IModule.Metadata(majorVersion, minorVersion, url, title);
+
+        assertTrue(LibMetadata.isValid(data));
+    }
+
     function testMetadataInvalidIfURLEmpty(uint majorVersion, uint minorVersion)
         public
     {
@@ -37,6 +53,12 @@ contract LibMetadataTest is Test {
     ) public {
         IModule.Metadata memory data =
             IModule.Metadata(majorVersion, minorVersion, "url", "");
+
+        assertTrue(!LibMetadata.isValid(data));
+    }
+
+    function testMetadataInvalidIfVersionOnlyZero() public {
+        IModule.Metadata memory data = IModule.Metadata(0, 0, "url", "title");
 
         assertTrue(!LibMetadata.isValid(data));
     }

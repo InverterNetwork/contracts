@@ -2,10 +2,8 @@
 pragma solidity ^0.8.13;
 
 // External Dependencies
-// @todo mp: Would like to have 2 step owner.
 import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -47,7 +45,6 @@ import {
 contract Proposal is
     IProposal,
     OwnableUpgradeable,
-    PausableUpgradeable,
     ModuleManager,
     ContributorManager,
     FundingVault
@@ -96,7 +93,6 @@ contract Proposal is
         IPaymentProcessor paymentProcessor_
     ) external override (IProposal) initializer {
         // Initialize upstream contracts.
-        __Pausable_init();
         __Ownable_init();
         __ModuleManager_init(modules);
         __ContributorManager_init();
@@ -173,15 +169,6 @@ contract Proposal is
         returns (address)
     {
         return super.owner();
-    }
-
-    function paused()
-        public
-        view
-        override (PausableUpgradeable, IProposal)
-        returns (bool)
-    {
-        return super.paused();
     }
 
     //--------------------------------------------------------------------------

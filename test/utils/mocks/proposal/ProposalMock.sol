@@ -9,7 +9,6 @@ import {IERC20MetadataUpgradeable} from
 // External Dependencies
 import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-import {PausableUpgradeable} from "@oz-up/security/PausableUpgradeable.sol";
 
 // Internal Interfaces
 import {
@@ -26,7 +25,6 @@ import {FundingVaultMock} from "./base/FundingVaultMock.sol";
 contract ProposalMock is
     IProposal,
     OwnableUpgradeable,
-    PausableUpgradeable,
     ModuleManagerMock, // @todo Should not be mocks!
     ContributorManagerMock,
     FundingVaultMock
@@ -51,7 +49,6 @@ contract ProposalMock is
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
     ) public initializer {
-        __Pausable_init();
         __Ownable_init();
         __ModuleManager_init(modules_);
         __ContributorManager_init();
@@ -85,14 +82,5 @@ contract ProposalMock is
         returns (address)
     {
         return super.owner();
-    }
-
-    function paused()
-        public
-        view
-        override (PausableUpgradeable, IProposal)
-        returns (bool)
-    {
-        return super.paused();
     }
 }
