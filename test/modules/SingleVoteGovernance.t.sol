@@ -723,12 +723,9 @@ contract SingleVoteGovernanceTest is Test {
         address[] memory _from = new address[](middle);
         address[] memory _to = new address[](middle);
 
-
-
-        for (uint i = 0; i < middle; i ++) {
+        for (uint i = 0; i < middle; i++) {
             _from[i] = users[i];
-            _to[i] = users[users.length-(1+i)];
-      
+            _to[i] = users[users.length - (1 + i)];
         }
 
         batchAddAuthorized(_from);
