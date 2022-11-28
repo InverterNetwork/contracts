@@ -34,8 +34,7 @@ contract ListAuthorizerTest is Test {
     Proposal internal _proposal = new Proposal();
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
-    address ALBA = address(0xa1ba);
-    address BOB = address(0xb0b);
+    address ALBA = address(0xa1ba); //default authorized person
 
     // Proposal Constants
     uint internal constant _PROPOSAL_ID = 1;
@@ -85,25 +84,28 @@ contract ListAuthorizerTest is Test {
         assertEq(_authorizer.getAmountAuthorized(), 1);
     }
 
-    function testInitWithInitialAuthorized() public {
+    function testInitWithInitialAuthorized(address[] memory initialAuth)
+        public
+    {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
 
         address authImpl = address(new ListAuthorizer());
         ListAuthorizer testAuthorizer = ListAuthorizer(Clones.clone(authImpl));
 
-        address[] memory initialAuth = new address[](2);
-        initialAuth[0] = ALBA;
-        initialAuth[1] = BOB;
+        _validateAuthorizedList(initialAuth);
 
         testAuthorizer.init(
             IProposal(_proposal), _METADATA, abi.encode(initialAuth)
         );
+
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
-        assertEq(testAuthorizer.isAuthorized(ALBA), true);
-        assertEq(testAuthorizer.isAuthorized(BOB), true);
+
+        for (uint i; i < initialAuth.length; i++) {
+            assertEq(testAuthorizer.isAuthorized(initialAuth[i]), true);
+        }
         assertEq(testAuthorizer.isAuthorized(address(this)), false);
-        assertEq(testAuthorizer.getAmountAuthorized(), 2);
+        assertEq(testAuthorizer.getAmountAuthorized(), initialAuth.length);
     }
 
     function testReinitFails() public {
@@ -158,14 +160,24 @@ contract ListAuthorizerTest is Test {
         assertEq(testAuthorizer.getAmountAuthorized(), 0);
     }
 
-    function testAddAuthorized() public {
+    function testAddAuthorized(address[] memory newAuthorized) public {
         uint amountAuth = _authorizer.getAmountAuthorized();
 
-        vm.prank(address(ALBA));
-        _authorizer.addToAuthorized(BOB);
+        _validateAuthorizedList(newAuthorized);
 
-        assertEq(_authorizer.isAuthorized(BOB), true);
-        assertEq(_authorizer.getAmountAuthorized(), (amountAuth + 1));
+        vm.startPrank(address(ALBA));
+        for (uint i; i < newAuthorized.length; i++) {
+            _authorizer.addToAuthorized(newAuthorized[i]);
+        }
+        vm.stopPrank();
+
+        for (uint i; i < newAuthorized.length; i++) {
+            assertEq(_authorizer.isAuthorized(newAuthorized[i]), true);
+        }
+        assertEq(
+            _authorizer.getAmountAuthorized(),
+            (amountAuth + newAuthorized.length)
+        );
     }
 
     function testRemoveLastAuthorizedFails() public {
@@ -186,69 +198,164 @@ contract ListAuthorizerTest is Test {
         assertEq(_authorizer.getAmountAuthorized(), amountAuth);
     }
 
-    function testRemoveAuthorized() public {
-        vm.prank(ALBA);
-        _authorizer.addToAuthorized(BOB);
-
+    function testRemoveAuthorized(address[] memory newAuthorized) public {
         uint amountAuth = _authorizer.getAmountAuthorized();
 
-        vm.prank(address(ALBA));
-        _authorizer.removeFromAuthorized(ALBA);
+        _validateAuthorizedList(newAuthorized);
 
-        assertEq(_authorizer.isAuthorized(ALBA), false);
-        assertEq(_authorizer.getAmountAuthorized(), (amountAuth - 1));
-    }
+        vm.startPrank(address(ALBA));
+        for (uint i; i < newAuthorized.length; i++) {
+            _authorizer.addToAuthorized(newAuthorized[i]);
+        }
+        vm.stopPrank();
 
-    function testTransferAuthorization() public {
-        uint amountAuth = _authorizer.getAmountAuthorized();
+        vm.startPrank(address(ALBA));
+        for (uint i; i < newAuthorized.length; i++) {
+            _authorizer.removeFromAuthorized(newAuthorized[i]);
+        }
+        vm.stopPrank();
 
-        vm.prank(address(ALBA));
-        _authorizer.transferAuthorization(BOB);
-
-        assertEq(_authorizer.isAuthorized(ALBA), false);
-        assertEq(_authorizer.isAuthorized(BOB), true);
-        assertEq(_authorizer.getAmountAuthorized(), (amountAuth));
-    }
-
-    function testTransferAuthorizationToAlreadyAuthorizedFails() public {
-        vm.prank(ALBA);
-        _authorizer.addToAuthorized(BOB);
-
-        uint amountAuth = _authorizer.getAmountAuthorized();
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ListAuthorizer
-                    .Module__ListAuthorizer__AddressAlreadyAuthorized
-                    .selector
-            )
-        );
-        vm.prank(address(ALBA));
-        _authorizer.transferAuthorization(BOB);
+        for (uint i; i < newAuthorized.length; i++) {
+            assertEq(_authorizer.isAuthorized(newAuthorized[i]), false);
+        }
 
         assertEq(_authorizer.isAuthorized(ALBA), true);
-        assertEq(_authorizer.isAuthorized(BOB), true);
-        assertEq(_authorizer.getAmountAuthorized(), (amountAuth));
+        assertEq(_authorizer.getAmountAuthorized(), amountAuth);
     }
 
-    function testUnauthorizedCallsFail() public {
-        //test if a non authorized address fails authorization
-        address SIFU = address(0x51f00);
-        assertEq(_authorizer.isAuthorized(SIFU), false);
+    function testTransferAuthorization(address[] memory authList) public {
+        _validateAuthorizedList(authList);
 
-        //add without authorization fails
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(SIFU));
-        _authorizer.addToAuthorized(SIFU);
+        uint amountAuth = _authorizer.getAmountAuthorized();
 
-        //remove without authorization fails
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(SIFU));
-        _authorizer.removeFromAuthorized(ALBA);
+        //transfers authorization to the next one on the list
+        for (uint i; i < authList.length; i++) {
+            if (i % 2 == 0) {
+                vm.prank(ALBA);
+                _authorizer.addToAuthorized(authList[i]);
+            } else {
+                vm.prank(authList[i - 1]);
+                _authorizer.transferAuthorization(authList[i]);
+            }
+        }
 
-        //transfer withour authorization fails
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        vm.prank(address(SIFU));
-        _authorizer.removeFromAuthorized(address(1337));
+        for (uint i = 1; i < authList.length; i += 2) {
+            assertEq(_authorizer.isAuthorized(authList[i - 1]), false);
+            assertEq(_authorizer.isAuthorized(authList[i]), true);
+        }
+        assertEq(
+            _authorizer.getAmountAuthorized(),
+            (amountAuth + (authList.length / 2) + (authList.length % 2))
+        );
     }
+
+    function testTransferAuthorizationToAlreadyAuthorizedFails(
+        address[] memory authList
+    ) public {
+        _validateAuthorizedList(authList);
+
+        for (uint i; i < authList.length; i++) {
+            vm.prank(ALBA);
+            _authorizer.addToAuthorized(authList[i]);
+        }
+        uint amountAuth = _authorizer.getAmountAuthorized();
+
+        for (uint i = 1; i < authList.length; i++) {
+            vm.prank(authList[i]);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    ListAuthorizer
+                        .Module__ListAuthorizer__AddressAlreadyAuthorized
+                        .selector
+                )
+            );
+            _authorizer.transferAuthorization(authList[i - 1]);
+        }
+
+        for (uint i = 1; i < authList.length; i++) {
+            assertEq(_authorizer.isAuthorized(authList[i]), true);
+        }
+        assertEq(_authorizer.getAmountAuthorized(), amountAuth);
+    }
+
+    function testUnauthorizedCallsFail(address[] memory nonAuthUsers) public {
+        _validateAuthorizedList(nonAuthUsers);
+        
+        for(uint i; i<nonAuthUsers.length; i++){
+            //test if a non authorized address, fails authorization
+            address ATTACKER = nonAuthUsers[i];
+            assertEq(_authorizer.isAuthorized(ATTACKER), false);
+
+            //add without authorization fails
+            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.prank(address(ATTACKER));
+            _authorizer.addToAuthorized(ATTACKER);
+
+            //remove without authorization fails
+            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.prank(address(ATTACKER));
+            _authorizer.removeFromAuthorized(ATTACKER);
+
+            //transfer withour authorization fails
+            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.prank(address(ATTACKER));
+            _authorizer.removeFromAuthorized(address(1337));
+        }
+    }
+
+    // =========================================================================
+    // Test Helper Functions
+
+    function _validateAuthorizedList(address[] memory contribs)
+        internal
+        returns (address[] memory)
+    {
+        vm.assume(contribs.length != 0);
+        vm.assume(contribs.length < 20);
+        assumeValidContributors(contribs);
+
+        return contribs;
+    }
+   // Adapted from proposal/helper/TypeSanityHelper.sol
+
+    mapping(address => bool) contributorCache;
+
+    function assumeValidContributors(address[] memory addrs) public {
+        for (uint i; i < addrs.length; i++) {
+            assumeValidContributor(addrs[i]);
+
+            // Assume contributor address unique.
+            vm.assume(!contributorCache[addrs[i]]);
+
+            // Add contributor address to cache.
+            contributorCache[addrs[i]] = true;
+        }
+    }
+
+    function assumeValidContributor(address a) public {
+        address[] memory invalids = createInvalidContributors();
+
+        for (uint i; i < invalids.length; i++) {
+            vm.assume(a != invalids[i]);
+        }
+    }
+
+    function createInvalidContributors()
+        public
+        view
+        returns (address[] memory)
+    {
+        address[] memory invalids = new address[](7);
+
+        invalids[0] = address(0);
+        invalids[1] = address(_proposal);
+        invalids[2] = address(_authorizer);
+        invalids[3] = address(_paymentProcessor);
+        invalids[4] = address(_token);
+        invalids[5] = address(this);
+        invalids[6] = ALBA;
+
+        return invalids;
+    }
+    // =========================================================================
 }
