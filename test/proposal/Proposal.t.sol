@@ -88,8 +88,6 @@ contract ProposalTest is Test {
         // Check that proposal's dependencies correctly initialized.
         // Ownable:
         assertEq(proposal.owner(), address(this));
-        // Pausable:
-        assertTrue(!proposal.paused());
     }
 
     function testReinitFails(uint proposalId, address[] memory modules)

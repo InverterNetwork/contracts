@@ -62,6 +62,4 @@ interface IProposal is IModuleManager, IContributorManager, IFundingVault {
     function version() external pure returns (string memory);
 
     function owner() external view returns (address);
-
-    function paused() external view returns (bool);
 }
