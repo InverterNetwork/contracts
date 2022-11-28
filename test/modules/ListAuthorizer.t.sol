@@ -280,8 +280,8 @@ contract ListAuthorizerTest is Test {
 
     function testUnauthorizedCallsFail(address[] memory nonAuthUsers) public {
         _validateAuthorizedList(nonAuthUsers);
-        
-        for(uint i; i<nonAuthUsers.length; i++){
+
+        for (uint i; i < nonAuthUsers.length; i++) {
             //test if a non authorized address, fails authorization
             address ATTACKER = nonAuthUsers[i];
             assertEq(_authorizer.isAuthorized(ATTACKER), false);
@@ -316,7 +316,7 @@ contract ListAuthorizerTest is Test {
 
         return contribs;
     }
-   // Adapted from proposal/helper/TypeSanityHelper.sol
+    // Adapted from proposal/helper/TypeSanityHelper.sol
 
     mapping(address => bool) contributorCache;
 
