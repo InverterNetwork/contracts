@@ -54,13 +54,10 @@ contract SingleVoteGovernanceTest is Test {
     ModuleMock module = new  ModuleMock();
     // Mock users
     // intial authorizd users
-    address[] authorizedUsers;
     address internal constant ALBA = address(0xa1ba);
     address internal constant BOB = address(0xb0b);
     address internal constant COBIE = address(0xc0b1e);
 
-    address internal constant DOBBIE = address(0xd0bb1e);
-    address internal constant ED = address(0xed);
 
     function setUp() public {
         // Set up a proposal
@@ -742,14 +739,14 @@ contract SingleVoteGovernanceTest is Test {
         // make sure that a transfer passed through governance fails, since the proposal is always authorized (and therefore could transfer endlessly)
 
         bytes memory _encodedAction =
-            abi.encodeWithSignature("transferAuthorization(address)", ED);
+            abi.encodeWithSignature("transferAuthorization(address)", _from[0]);
         uint _voteID =
             speedrunSuccessfulVote(address(_authorizer), _encodedAction, _to);
 
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         _authorizer.executeVote(_voteID);
 
-        assertEq(_authorizer.isAuthorized(ED), false);
+        assertEq(_authorizer.isAuthorized(_from[0]), false);
     }
 
     //--------------------------------------------------------------------------
