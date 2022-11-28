@@ -63,3 +63,43 @@ A module should be able to always access any funds inside the proposal and take 
 
 1. Users are authenticated using the proposal's `IAuthenticator` instance.
 2. All access management is handled solely by the proposal.
+
+# Contract Notes
+
+## Common/Types.sol
+
+Declare an enum Type that has `delegatecall` and `call` as its members. Will be used in other contracts to specify if we need to do a delegatecall or a call to a specific contract, especially in the Module contracts.
+
+## Common/LibString.sol
+
+Contains two functions:
+1. Function to check if two strings are equal.
+2. Function to check if a string is empty.
+
+## Generated/ProposalStorage.gen.sol
+
+Built using the Proposal storage tool. Provides the storage layout of the Proposal contract.
+
+## Modules/Base/Module.sol
+
+*Includes inferences from the IModule.sol too*
+
+1. Declares a `Metadata` struct including `majorVersion`, `minorVersion`, `url` and `title`. So, basically each module has to have it's own metadata.
+2. Declares a bunch of errors.
+3. **Module's identifier** -> keccak256 hash of the module's abi packed encoded major version, url and title
+4. The `Module.sol` contract inherits the `ProposalStorage` contract and hence it's variable slots come above Module's variables
+5. Module's variables are prefixed with `__Module_`.
+6. Modifiers:
+    + onlyAuthorized -> only authorized addresses should be able to call certain functions. Uses IAuthorizer.
+    + onlyProposal -> only proposal should be able to call certain function. Should only access variables starting with __Module_
+    + wantProposalContext -> Guarentees a particular function is not executed in the Module context.
+7. Initialize the Module, using the `init` function, this pushes the Proposal and Module Metadata to storage.
+
+### Interesting
+
+1. The function `_triggerProposalCallback` in `Module.sol` calls `__ModuleProposal_.executeTxFromModule` and the `to` address of the (delegate)call is `address(this)` which is the address of `Module.sol`
+
+## modules/lib/LibMetadata.sol
+
+1. generate a given module's identifier
+2. check whether a given module's metadata is valid or not. Should have a title and url and the version should not be 0.0
