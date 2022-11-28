@@ -22,19 +22,19 @@ and a modifier to authenticate callers via the module's proposal using the
 ### Proposal Callbacks
 
 A module can trigger a callback from its proposal via the internal
-`triggerProposalCallback(funcData, op)` function.
+`_triggerProposalCallback(funcData, op)` function.
 The `op` argument specifies whether the callback is executed via `call` or
 `delegatecall`, i.e. whether the callback is executed in the proposal's context
 or the module's context.
 
 ### Callbacks executed in the Proposal's Context
 
-In order to easily access the proposal's storage in proposal callback functions
-invoked via `delegatecall`, the contract inherits from the auto-generated
-`ProposalStorage` contract (`src/generated/ProposalStorage.sol`)
+In order to easily access the proposal's storage in a given proposal, callback functions are 
+invoked via `delegatecall`, the *base module* contract inherits from the auto-generated
+`ProposalStorage` contract (`src/generated/ProposalStorage.gen.sol`)
 to mirror the proposal's storage layout.
 
-All variables inherited from the `ProposalStorage` are prefixed with `__Proposal_`.
+All variables inherited from the `ProposalStorage` are prefixed with `__Proposal_` and declared as `internal` for convenience.
 
 Per convention, such `delegatecall`-callbacks **SHOULD**:
 
@@ -50,7 +50,7 @@ An example for this could be:
 function doSmth(
         uint256 dataNumber,
         string memory dataString,
-    ) external returns(uint256,bool){
+    ) public returns(uint256,bool){
         bool ok;
         bytes memory returnData;
 
@@ -73,7 +73,10 @@ function __Proposal_doSmth(
         string memory dataString,
     ) external wantProposalContext returns(uint256){
         //do Smth in Proposalcontext
-        return 1,true;
+        doSmth(dataNumber, dataString);
+        
+        // Example return data:
+        // return 1,true;
     }
 ```
 
