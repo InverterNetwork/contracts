@@ -42,13 +42,24 @@ A module should be able to always access any funds inside the proposal and take 
 
 ### What even is Module context and Proposal context
 
-Based on my limited understanding till now:
+1. Based on my limited understanding till now:
 
 + Anyhow if a call can affect the storage of the Proposal contract, it is the Proposal context
++ Alternatively, if the msg.sender *seems* to be the Proposal contract, it is the Proposal context
 
 + Anyhow if a call can affect the storage of the Module contract, it is the Module context
++ Alternatively, if the msg.sender *seems* to be the Module contract, it is the Module context.
 
-7. For making the `delegatecall`(s) to the `Proposal` contract, we import the generated contract `ProposalStorage` into the `Module` contract and access (specifically) the variables imported from `ProposalStorage`.
-    + The function used to this is named: `_triggerProposalCallback`
+2. Proposal Context -> `delegatecall` -> `wantProposalContext` modifier -> `__Proposal_` prefix -> only `ProposalStorage` vars accessible
++ Explanation: A module uses the triggerProposalCallback function inherited from Module.sol. This function calls the Proposal, which in turn calls back to the Module via delegatecall. So the call executed in the Module is called via delegatecall from the Proposal, therefore in the Proposal's context
 
-8. For making `call`(s) in the 
+3. Module Context -> `call` -> `onlyProposal` modifier -> `__Module_` prefix -> `ProposalStorage` vars inaccisible 
+
+### Initialization
+
+1. You must implement the `init` function in your downstream modules to correctly initialize the storage.
+
+### User Authentication
+
+1. Users are authenticated using the proposal's `IAuthenticator` instance.
+2. All access management is handled solely by the proposal.

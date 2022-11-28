@@ -126,7 +126,7 @@ function __ExampleModule_doSmth(
 ## Initialization
 
 The contract provides a `__Module_init(proposal)` function for initialization
-that **MUST** be called during the dowmstream's `init()` function order to
+that **MUST** be called during the downstream module contract's `init()` function in order to
 correctly initialize the storage.
 
 The `init()` function is declared inside the base `Module` contract and,
