@@ -58,7 +58,6 @@ contract SingleVoteGovernanceTest is Test {
     address internal constant BOB = address(0xb0b);
     address internal constant COBIE = address(0xc0b1e);
 
-
     function setUp() public {
         // Set up a proposal
         address authImpl = address(new SingleVoteGovernance());
