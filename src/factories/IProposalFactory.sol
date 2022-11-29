@@ -56,5 +56,5 @@ interface IProposalFactory {
 
     /// @notice Returns the {IProposal} address that corresponds to the given id.
     /// @param id The requested proposal's id.
-    function getProposalByID(uint256 id) external view returns (address);
+    function getProposalByID(uint id) external view returns (address);
 }

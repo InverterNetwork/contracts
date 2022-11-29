@@ -10,12 +10,17 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
-import {IProposalFactory, IModule, IProposal} from "src/factories/IProposalFactory.sol";
+import {
+    IProposalFactory,
+    IModule,
+    IProposal
+} from "src/factories/IProposalFactory.sol";
 
 import {Proposal} from "src/proposal/Proposal.sol";
 
 // Mocks
-import {ModuleFactoryMock} from "test/utils/mocks/factories/ModuleFactoryMock.sol";
+import {ModuleFactoryMock} from
+    "test/utils/mocks/factories/ModuleFactoryMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
@@ -31,34 +36,29 @@ contract ProposalFactoryTest is Test {
     ModuleFactoryMock moduleFactory;
 
     // Metadata
-    IProposalFactory.ProposalConfig proposalConfig =
-        IProposalFactory.ProposalConfig({
-            owner: address(this),
-            token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
-        });
+    IProposalFactory.ProposalConfig proposalConfig = IProposalFactory
+        .ProposalConfig({
+        owner: address(this),
+        token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
+    });
 
-    IProposalFactory.ModuleConfig authorizerConfig =
-        IProposalFactory.ModuleConfig(
-            IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
-            bytes("data")
-        );
+    IProposalFactory.ModuleConfig authorizerConfig = IProposalFactory
+        .ModuleConfig(
+        IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
+        bytes("data")
+    );
 
-    IProposalFactory.ModuleConfig paymentProcessorConfig =
-        IProposalFactory.ModuleConfig(
-            IModule.Metadata(
-                1,
-                1,
-                "https://paymentprocessor.com",
-                "PaymentProcessor"
-            ),
-            bytes("data")
-        );
+    IProposalFactory.ModuleConfig paymentProcessorConfig = IProposalFactory
+        .ModuleConfig(
+        IModule.Metadata(
+            1, 1, "https://paymentprocessor.com", "PaymentProcessor"
+        ),
+        bytes("data")
+    );
 
-    IProposalFactory.ModuleConfig moduleConfig =
-        IProposalFactory.ModuleConfig(
-            IModule.Metadata(1, 1, "https://module.com", "Module"),
-            bytes("")
-        );
+    IProposalFactory.ModuleConfig moduleConfig = IProposalFactory.ModuleConfig(
+        IModule.Metadata(1, 1, "https://module.com", "Module"), bytes("")
+    );
 
     function setUp() public {
         moduleFactory = new ModuleFactoryMock();
@@ -68,13 +68,11 @@ contract ProposalFactoryTest is Test {
         factory = new ProposalFactory(address(target), address(moduleFactory));
     }
 
-    function testValidProposalId(uint256 getId, uint256 proposalsCreated)
-        public
-    {
+    function testValidProposalId(uint getId, uint proposalsCreated) public {
         // Note to stay reasonable
         vm.assume(proposalsCreated < 50);
 
-        for (uint256 i = 0; i < proposalsCreated; i++) {
+        for (uint i = 0; i < proposalsCreated; i++) {
             _deployProposal();
         }
         if (getId > proposalsCreated) {
@@ -90,16 +88,16 @@ contract ProposalFactoryTest is Test {
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
 
-    function testCreateProposal(uint256 modulesLen) public {
+    function testCreateProposal(uint modulesLen) public {
         // Note to stay reasonable
         vm.assume(modulesLen < 50);
 
         // Create optional ModuleConfig instances.
-        IProposalFactory.ModuleConfig[]
-            memory moduleConfigs = new IProposalFactory.ModuleConfig[](
+        IProposalFactory.ModuleConfig[] memory moduleConfigs =
+        new IProposalFactory.ModuleConfig[](
                 modulesLen
             );
-        for (uint256 i; i < modulesLen; i++) {
+        for (uint i; i < modulesLen; i++) {
             moduleConfigs[i] = moduleConfig;
         }
 
@@ -132,11 +130,11 @@ contract ProposalFactoryTest is Test {
         assertEq(proposal.proposalId(), 2);
     }
 
-    function testProposalMapping(uint256 proposalAmount) public {
+    function testProposalMapping(uint proposalAmount) public {
         // Note to stay reasonable
         vm.assume(proposalAmount < 50);
 
-        for (uint256 i = 1; i < proposalAmount; i++) {
+        for (uint i = 1; i < proposalAmount; i++) {
             address proposal = _deployProposal();
             assertEq(proposal, factory.getProposalByID(i));
         }
@@ -144,8 +142,8 @@ contract ProposalFactoryTest is Test {
 
     function _deployProposal() private returns (address) {
         //Create Empty ModuleConfig
-        IProposalFactory.ModuleConfig[]
-            memory moduleConfigs = new IProposalFactory.ModuleConfig[](0);
+        IProposalFactory.ModuleConfig[] memory moduleConfigs =
+            new IProposalFactory.ModuleConfig[](0);
 
         // Deploy Proposal
         IProposal proposal = factory.createProposal(
