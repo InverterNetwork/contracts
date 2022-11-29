@@ -30,3 +30,27 @@ Modifier to guarantee function is only callable by the proposal. `onlyProposal` 
 ## View Function(s)
 
 ## Write Function(s)
+
+### 1. init
+
+`function init( IProposal proposal, Metadata memory metadata, bytes memory configdata) external;`
+
+The module's initializer function. CAN be overriden by downstream contract. MUST call `__Module_init()`.
+
+#### Parameter(s)
+
+1. IProposal proposal -> The module's proposal instance.
+2. Metadata metadata -> The module's metadata.
+3. bytes configdata -> Variable config data for specific module implementations.
+
+### 2. pause
+
+`function pause() external;`
+
+Pauses the module. Only callable by authorized addresses.
+
+### 3. unpause
+
+`function unpause() external;`
+
+Unpauses the module. Only callable by authorized addresses.
