@@ -15,7 +15,7 @@ import {IProposal, IAuthorizer} from "src/proposal/IProposal.sol";
  * @title A simple List-based Authorizer
  *
  * @dev
- * This Module handles the authorization of several of the smart contract
+ * This Module handles the authorization of the smart contract
  * functions
  *
  * It keeps a list authorized addresses and implements the IAuthorizers
@@ -30,15 +30,36 @@ import {IProposal, IAuthorizer} from "src/proposal/IProposal.sol";
 contract ListAuthorizer is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // Errors
-    error Module__AddressAlreadyAuthorized();
-    error Module__AddressAlreadyNotAuthorized();
+    error Module__ListAuthorizer__AddressAlreadyAuthorized();
+    error Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
+    error Module__ListAuthorizer__invalidInitialAuthorizers();
 
     //--------------------------------------------------------------------------
     // Events
 
     event AddedAuthorizedAddress(address added);
-
     event RemovedAuthorizedAddress(address removed);
+
+    //--------------------------------------------------------------------------
+    // Modifiers
+    modifier notLastAuthorizer() {
+        if (amountAuthorized == 1) {
+            revert Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
+        }
+        _;
+    }
+
+    modifier validInitialAuthorizers(address[] memory _initialAuthorizers) {
+        if (_initialAuthorizers.length == 0) {
+            revert Module__ListAuthorizer__invalidInitialAuthorizers();
+        }
+        for (uint i; i < _initialAuthorizers.length; i++) {
+            if (_initialAuthorizers[i] == address(0)) {
+                revert Module__ListAuthorizer__invalidInitialAuthorizers();
+            }
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Storage
@@ -50,17 +71,28 @@ contract ListAuthorizer is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // Initialization
 
-    function initialize(IProposal proposal, Metadata memory metadata)
-        external
-        initializer
-    {
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory configdata
+    ) external virtual override initializer {
+        address[] memory initialAuthorizers =
+            abi.decode(configdata, (address[]));
+        __ListAuthorizer_init(proposal_, metadata, initialAuthorizers);
+    }
+
+    function __ListAuthorizer_init(
+        IProposal proposal,
+        Metadata memory metadata,
+        address[] memory initialAuthorizers
+    ) internal onlyInitializing validInitialAuthorizers(initialAuthorizers) {
         __Module_init(proposal, metadata);
 
-        //authorize the calling address
-        authorized[_msgSender()] = true;
-        amountAuthorized++;
-
-        emit AddedAuthorizedAddress(_msgSender());
+        for (uint i = 0; i < initialAuthorizers.length; i++) {
+            authorized[initialAuthorizers[i]] = true;
+            amountAuthorized++;
+            emit AddedAuthorizedAddress(initialAuthorizers[i]);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -69,7 +101,13 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @notice Returns whether an address is authorized to facilitate
     ///         the current transaction.
     /// @param  _who  The address on which to perform the check.
-    function isAuthorized(address _who) public view override returns (bool) {
+    function isAuthorized(address _who)
+        public
+        view
+        virtual
+        override
+        returns (bool)
+    {
         return authorized[_who];
     }
 
@@ -80,11 +118,7 @@ contract ListAuthorizer is IAuthorizer, Module {
 
     /// @notice Adds a new address to the list of authorized addresses.
     /// @param _who The address to add to the list of authorized addresses.
-    function __ListAuthorizer_addToAuthorized(address _who)
-        public
-        virtual
-        onlyProposal
-    {
+    function addToAuthorized(address _who) public virtual onlyAuthorized {
         if (!isAuthorized(_who)) {
             authorized[_who] = true;
             amountAuthorized++;
@@ -93,28 +127,14 @@ contract ListAuthorizer is IAuthorizer, Module {
         }
     }
 
-    /// @notice Adds a new address to the list of authorized addresses.
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param _who The address to add to the list of authorized addresses.
-    function addToAuthorized(address _who) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__ListAuthorizer_addToAuthorized(address)", _who
-            ),
-            Types.Operation.Call
-        );
-    }
-
     /// @notice Removes an address from the list of authorized addresses.
     /// @param _who Address to remove authorization from
-    function __ListAuthorizer_removeFromAuthorized(address _who)
+    function removeFromAuthorized(address _who)
         public
         virtual
-        onlyProposal
+        onlyAuthorized
+        notLastAuthorizer
     {
-        //@question TODO Do we want to allow an empty authorizer list?
-        //          My first impulse would be no...
-
         if (isAuthorized(_who)) {
             authorized[_who] = false;
             amountAuthorized--;
@@ -123,49 +143,18 @@ contract ListAuthorizer is IAuthorizer, Module {
         }
     }
 
-    /// @notice Removes an address from the list of authorized addresses.
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param _who Address to remove authorization from
-    function removeFromAuthorized(address _who) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__ListAuthorizer_removeFromAuthorized(address)", _who
-            ),
-            Types.Operation.Call
-        );
-    }
-
     /// @notice Transfers authorization from the calling address to a new one.
-    /// @param _from The address to transfer the authorization from
     /// @param _to The address to transfer the authorization to
-    function __ListAuthorizer_transferAuthorization(address _from, address _to)
-        public
-        virtual
-        onlyProposal
-    {
-        //I think in this case we actually DO want to revert if the receiving address is already authorized to avoid confusion. The opposite could lead to think that somebedy has "double vote" or something like that. It also saves us implementing quorum management logic downstream.
-        if (authorized[_to]) {
-            revert Module__AddressAlreadyAuthorized();
+    function transferAuthorization(address _to) public virtual onlyAuthorized {
+        //In this particular case, I think the method shouldn't be idempotent to avoid confusion.
+        if (isAuthorized(_to)) {
+            revert Module__ListAuthorizer__AddressAlreadyAuthorized();
         }
 
         authorized[_to] = true;
-        authorized[_from] = false;
+        authorized[_msgSender()] = false;
 
         emit AddedAuthorizedAddress(_to);
-        emit RemovedAuthorizedAddress(_from);
-    }
-
-    /// @notice Transfers authorization from the calling address to a new one.
-    /// @dev Relay Function that routes the function call via the proposal
-    /// @param _who The address to transfer the authorization to
-    function transferAuthorization(address _who) external onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature(
-                "__ListAuthorizer_transferAuthorization(address)",
-                _msgSender(),
-                _who
-            ),
-            Types.Operation.Call
-        );
+        emit RemovedAuthorizedAddress(_msgSender());
     }
 }
