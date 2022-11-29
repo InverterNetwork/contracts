@@ -91,3 +91,53 @@ Returns the number of contributors.
 #### Return Data
 
 uint -> Number of contributors.
+
+## Write Function(s)
+
+### 1. addContributor
+
+`function addContributor(address who, string memory name, string memory role, uint salary) external __ContributorManager_onlyAuthorized isNotContributor(who) validAddress(who) validName(name) validRole(role) validSalary(salary)`
+
+Adds address `who` as a new contributor. This function is only callable by authorized addresses and reverts if an argument invalid.
+
+#### Parameters
+
+1. address who -> The address `who` that is to be added as a contributor
+2. string name -> The contributor's name
+3. string role -> The contributor's role
+4. uint salary -> The contributor's salary
+
+### 2. removeContributor
+
+`function removeContributor(address prevContrib, address who) external __ContributorManager_onlyAuthorized isContributor_(who)
+ onlyConsecutiveContributors(prevContrib, who)`
+
+Removes address `who` from being a contributor. This function is only callable by authorized addresses and reverts if `who` not a contributor. Function also reverts if `prevContrib` is not the previous element in the contributor's list.
+
+#### Parameters
+
+1. address prevContrib -> The previous contributor in the contributor's list.
+2. address who -> The contributor's address to remove.
+
+### 3. updateContributor
+
+`function updateContributor(address who, string memory role, uint salary) external __ContributorManager_onlyAuthorized isContributor_(who) validRole(role) validSalary(salary)`
+
+Updates `who` role and/or salary. This function is only callable by authorized addresses and reverts if the `role` or `salary` parameter is invalid.
+
+#### Parameters
+
+1. address who -> The contributor's address.
+2. string role -> The contributor's new role.
+3. uint salary -> The contributor's new salary.
+
+### 4. revokeContributor
+
+`function revokeContributor(address prevContrib) external isContributor_(_msgSender()) onlyConsecutiveContributors(prevContrib, _msgSender())`
+
+Revokes the caller from being a contributor.
+
+#### Parameters
+
+1. address prevContrib -> The previous contributor in the contributor's list.
+

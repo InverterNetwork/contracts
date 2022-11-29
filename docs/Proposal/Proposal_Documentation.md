@@ -21,13 +21,13 @@
 
 `function version() external pure returns (string memory)`
 
-1. Returns the version of the proposal instance.
+Returns the version of the proposal instance.
 
 ### 2. owner
 
 `function owner() public view override (OwnableUpgradeable, IProposal) returns (address)`
 
-1. Returns the owner of the Proposal.
+Returns the owner of the Proposal.
 
 ## Write Function(s)
 
@@ -58,3 +58,7 @@ Executes a call on target `target` with call data `data`. This function is only 
 
 1. address target -> The address to call
 2. bytes data -> Calldata that will be used in the call
+
+#### Return Data
+
+1. bytes -> The return data of the call made in the function `executeTx`.
