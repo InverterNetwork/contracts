@@ -10,17 +10,12 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
-import {
-    IProposalFactory,
-    IModule,
-    IProposal
-} from "src/factories/IProposalFactory.sol";
+import {IProposalFactory, IModule, IProposal} from "src/factories/IProposalFactory.sol";
 
 import {Proposal} from "src/proposal/Proposal.sol";
 
 // Mocks
-import {ModuleFactoryMock} from
-    "test/utils/mocks/factories/ModuleFactoryMock.sol";
+import {ModuleFactoryMock} from "test/utils/mocks/factories/ModuleFactoryMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
@@ -35,6 +30,36 @@ contract ProposalFactoryTest is Test {
     // Mocks
     ModuleFactoryMock moduleFactory;
 
+    // Metadata
+    IProposalFactory.ProposalConfig proposalConfig =
+        IProposalFactory.ProposalConfig({
+            owner: address(this),
+            token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
+        });
+
+    IProposalFactory.ModuleConfig authorizerConfig =
+        IProposalFactory.ModuleConfig(
+            IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
+            bytes("data")
+        );
+
+    IProposalFactory.ModuleConfig paymentProcessorConfig =
+        IProposalFactory.ModuleConfig(
+            IModule.Metadata(
+                1,
+                1,
+                "https://paymentprocessor.com",
+                "PaymentProcessor"
+            ),
+            bytes("data")
+        );
+
+    IProposalFactory.ModuleConfig moduleConfig =
+        IProposalFactory.ModuleConfig(
+            IModule.Metadata(1, 1, "https://module.com", "Module"),
+            bytes("")
+        );
+
     function setUp() public {
         moduleFactory = new ModuleFactoryMock();
 
@@ -48,40 +73,17 @@ contract ProposalFactoryTest is Test {
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
 
-    function testCreateProposal(uint modulesLen) public {
+    function testCreateProposal(uint256 modulesLen) public {
         // Note to stay reasonable
         vm.assume(modulesLen < 50);
 
-        // Create ProposalConfig instance.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig({
-            owner: address(this),
-            token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
-        });
-
-        // Create {IAuthorizer} ModuleConfig instance.
-        IProposalFactory.ModuleConfig memory authorizerConfig = IProposalFactory
-            .ModuleConfig(
-            IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
-            bytes("data")
-        );
-
-        // Create {IPaymentProcessor} ModuleConfig instance.
-        IProposalFactory.ModuleConfig memory paymentProcessorConfig =
-        IProposalFactory.ModuleConfig(
-            IModule.Metadata(
-                1, 1, "https://paymentprocessor.com", "PaymentProcessor"
-            ),
-            bytes("data")
-        );
-
         // Create optional ModuleConfig instances.
-        IProposalFactory.ModuleConfig[] memory moduleConfigs =
-            new IProposalFactory.ModuleConfig[](modulesLen);
-        for (uint i; i < modulesLen; i++) {
-            moduleConfigs[i].metadata =
-                IModule.Metadata(1, 1, "https://module.com", "Module");
-            moduleConfigs[i].configdata = bytes("");
+        IProposalFactory.ModuleConfig[]
+            memory moduleConfigs = new IProposalFactory.ModuleConfig[](
+                modulesLen
+            );
+        for (uint256 i; i < modulesLen; i++) {
+            moduleConfigs[i] = moduleConfig;
         }
 
         // Deploy Proposal with id=1
