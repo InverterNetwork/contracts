@@ -38,7 +38,7 @@ contract ProposalFactory is IProposalFactory {
     /// @dev Maps the id to the proposals
     mapping(uint256 => address) private _proposals;
 
-    /// @dev The counter for the next proposal id.
+    /// @dev The counter of the current proposal id.
     /// @dev Starts counting from 1.
     uint256 private _proposalIdCounter;
 
@@ -47,7 +47,7 @@ contract ProposalFactory is IProposalFactory {
 
     /// @notice Modifier to guarantee that the given id is valid
     modifier validProposalId(uint256 id) {
-        if (id >= _proposalIdCounter) {
+        if (id > _proposalIdCounter) {
             revert ProposalFactory__InvalidId();
         }
         _;
