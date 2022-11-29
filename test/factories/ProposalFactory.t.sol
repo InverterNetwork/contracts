@@ -68,6 +68,23 @@ contract ProposalFactoryTest is Test {
         factory = new ProposalFactory(address(target), address(moduleFactory));
     }
 
+    function testValidProposalId(uint256 getId, uint256 proposalsCreated)
+        public
+    {
+        // Note to stay reasonable
+        vm.assume(proposalsCreated < 50);
+
+        for (uint256 i = 0; i < proposalsCreated; i++) {
+            _deployProposal();
+        }
+        if (getId > proposalsCreated) {
+            vm.expectRevert(
+                IProposalFactory.ProposalFactory__InvalidId.selector
+            );
+        }
+        factory.getProposalByID(getId);
+    }
+
     function testDeploymentInvariants() public {
         assertEq(factory.target(), address(target));
         assertEq(factory.moduleFactory(), address(moduleFactory));
@@ -113,5 +130,31 @@ contract ProposalFactoryTest is Test {
         );
         // Only check that proposal's id is correct.
         assertEq(proposal.proposalId(), 2);
+    }
+
+    function testProposalMapping(uint256 proposalAmount) public {
+        // Note to stay reasonable
+        vm.assume(proposalAmount < 50);
+
+        for (uint256 i = 0; i < proposalAmount; i++) {
+            address proposal = _deployProposal();
+            assertEq(proposal, factory.getProposalByID(i));
+        }
+    }
+
+    function _deployProposal() private returns (address) {
+        //Create Empty ModuleConfig
+        IProposalFactory.ModuleConfig[]
+            memory moduleConfigs = new IProposalFactory.ModuleConfig[](0);
+
+        // Deploy Proposal
+        IProposal proposal = factory.createProposal(
+            proposalConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            moduleConfigs
+        );
+
+        return address(proposal);
     }
 }
