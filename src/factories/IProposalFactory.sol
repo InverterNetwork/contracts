@@ -8,8 +8,17 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 interface IProposalFactory {
+    //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Given id is invalid.
+    error ProposalFactory__InvalidId();
+
     /// @notice The module's data arrays length mismatch.
     error ProposalFactory__ModuleDataLengthMismatch();
+
+    //--------------------------------------------------------------------------
+    // Structs
 
     struct ProposalConfig {
         address owner;
@@ -20,6 +29,9 @@ interface IProposalFactory {
         IModule.Metadata metadata;
         bytes configdata;
     }
+
+    //--------------------------------------------------------------------------
+    // Functions
 
     /// @notice Creates a new proposal with caller being the proposal's owner.
     /// @param proposalConfig The proposal's config data.
@@ -41,4 +53,8 @@ interface IProposalFactory {
 
     /// @notice Returns the {IModuleFactory} implementation address.
     function moduleFactory() external view returns (address);
+
+    /// @notice Returns the {IProposal} address that corresponds to the given id.
+    /// @param id The requested proposal's id.
+    function getProposalByID(uint id) external view returns (address);
 }
