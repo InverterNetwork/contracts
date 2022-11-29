@@ -74,7 +74,7 @@ contract ProposalFactory is IProposalFactory {
         address clone = Clones.clone(target);
 
         //Map proposal clone
-        _proposals[_proposalIdCounter] = clone;
+        _proposals[++_proposalIdCounter] = clone;
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
@@ -103,7 +103,7 @@ contract ProposalFactory is IProposalFactory {
 
         // Initialize proposal.
         IProposal(clone).init(
-            ++_proposalIdCounter,
+            _proposalIdCounter,
             proposalConfig.owner,
             proposalConfig.token,
             modules,

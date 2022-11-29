@@ -136,7 +136,7 @@ contract ProposalFactoryTest is Test {
         // Note to stay reasonable
         vm.assume(proposalAmount < 50);
 
-        for (uint256 i = 0; i < proposalAmount; i++) {
+        for (uint256 i = 1; i < proposalAmount; i++) {
             address proposal = _deployProposal();
             assertEq(proposal, factory.getProposalByID(i));
         }
