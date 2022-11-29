@@ -54,8 +54,17 @@ contract Proposal is
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
-    modifier onlyOwnerOrAuthorized() {
-        if (!_isOwnerOrAuthorized(_msgSender())) {
+    modifier onlyAuthorized() {
+        if (!authorizer.isAuthorized(_msgSender())) {
+            revert Proposal__CallerNotAuthorized();
+        }
+        _;
+    }
+
+    /// @notice Modifier to guarantee function is only callable by authorized
+    ///         address or owner.
+    modifier onlyAuthorizedOrOwner() {
+        if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != owner()) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -125,7 +134,7 @@ contract Proposal is
         override (ModuleManager)
         returns (bool)
     {
-        return _isOwnerOrAuthorized(who);
+        return authorizer.isAuthorized(who);
     }
 
     function __ContributorManager_isAuthorized(address who)
@@ -134,7 +143,7 @@ contract Proposal is
         override (ContributorManager)
         returns (bool)
     {
-        return _isOwnerOrAuthorized(who);
+        return authorizer.isAuthorized(who) || who == owner();
     }
 
     //--------------------------------------------------------------------------
@@ -143,7 +152,7 @@ contract Proposal is
     /// @inheritdoc IProposal
     function executeTx(address target, bytes memory data)
         external
-        onlyOwnerOrAuthorized
+        onlyAuthorized
         returns (bytes memory)
     {
         bool ok;
@@ -169,12 +178,5 @@ contract Proposal is
         returns (address)
     {
         return super.owner();
-    }
-
-    //--------------------------------------------------------------------------
-    // Internal Functions
-
-    function _isOwnerOrAuthorized(address who) private view returns (bool) {
-        return authorizer.isAuthorized(who) || owner() == who;
     }
 }

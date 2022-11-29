@@ -62,11 +62,22 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
-    /// @dev onlyAuthorized functions SHOULD only be used to trigger callbacks
-    ///      from the proposal via the `triggerProposalCallback()` function.
     modifier onlyAuthorized() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (!authorizer.isAuthorized(_msgSender())) {
+            revert Module__CallerNotAuthorized();
+        }
+        _;
+    }
+
+    /// @notice Modifier to guarantee function is only callable by either
+    ///         addresses authorized via Proposal or the Proposal's owner.
+    modifier onlyAuthorizedOrOwner() {
+        IAuthorizer authorizer = __Module_proposal.authorizer();
+        if (
+            !authorizer.isAuthorized(_msgSender())
+                && __Module_proposal.owner() != _msgSender()
+        ) {
             revert Module__CallerNotAuthorized();
         }
         _;
@@ -150,12 +161,12 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     // API functions for authenticated users.
 
     /// @inheritdoc IModule
-    function pause() external override (IModule) onlyAuthorized {
+    function pause() external override (IModule) onlyAuthorizedOrOwner {
         _pause();
     }
 
     /// @inheritdoc IModule
-    function unpause() external override (IModule) onlyAuthorized {
+    function unpause() external override (IModule) onlyAuthorizedOrOwner {
         _unpause();
     }
 
