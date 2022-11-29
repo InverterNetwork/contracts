@@ -44,3 +44,50 @@ Modifier to ensure that `prevContrib` and `contrib` are consecutive contributors
 
 ## View Function(s)
 
+### 1. getContributorInformation
+
+`function getContributorInformation(address who) external view isContributor_(who) returns (Contributor memory)`
+
+Returns the registerted `Contributor` instance for address `who`.
+
+#### Parameter(s)
+
+1. address who -> The address (which is a valid `Contributor`) for which you need information
+
+#### Return Data
+
+1. Contributor -> Contributor instance of the address `who`
+
+### 2. isContributor
+
+`function isContributor(address who) public view returns (bool)`
+
+Returns whether the address `who` is a contributor.
+
+#### Parameter(s)
+
+1. address who -> The address for which you want to check whether it is a contributor or not.
+
+#### Return Data
+
+1. bool -> Returns true if `who` was a contributor otherwise returns false.
+
+### 3. listContributor
+
+`function listContributors() external view returns (address[] memory)`
+
+Returns the list of addresses of current contributors.
+
+#### Return Data
+
+address[] -> An array of addresses of valid contributors.
+
+### 4. contributorsSize
+
+`function contributorsSize() external view returns (uint)`
+
+Returns the number of contributors.
+
+#### Return Data
+
+uint -> Number of contributors.
