@@ -11,11 +11,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
-import {
-    IProposalFactory,
-    IProposal,
-    IModule
-} from "src/factories/IProposalFactory.sol";
+import {IProposalFactory, IProposal, IModule} from "src/factories/IProposalFactory.sol";
 import {IAuthorizer, IPaymentProcessor} from "src/proposal/IProposal.sol";
 import {IModuleFactory} from "src/factories/IModuleFactory.sol";
 
@@ -39,9 +35,23 @@ contract ProposalFactory is IProposalFactory {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Maps the id to the proposals
+    mapping(uint256 => address) private _proposals;
+
     /// @dev The counter for the next proposal id.
     /// @dev Starts counting from 1.
-    uint private _proposalIdCounter;
+    uint256 private _proposalIdCounter;
+
+    //--------------------------------------------------------------------------------
+    // Modifier
+
+    /// @notice Modifier to guarantee that the given id is valid
+    modifier validProposalId(uint256 id) {
+        if (id >= _proposalIdCounter) {
+            revert ProposalFactory__InvalidId();
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -63,6 +73,9 @@ contract ProposalFactory is IProposalFactory {
     ) external returns (IProposal) {
         address clone = Clones.clone(target);
 
+        //Map proposal clone
+        _proposals[_proposalIdCounter] = clone;
+
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerConfig.metadata,
@@ -78,9 +91,9 @@ contract ProposalFactory is IProposalFactory {
         );
 
         // Deploy and cache optional modules.
-        uint modulesLen = moduleConfigs.length;
+        uint256 modulesLen = moduleConfigs.length;
         address[] memory modules = new address[](modulesLen);
-        for (uint i; i < modulesLen; i++) {
+        for (uint256 i; i < modulesLen; i++) {
             modules[i] = IModuleFactory(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
                 IProposal(clone),
@@ -99,5 +112,15 @@ contract ProposalFactory is IProposalFactory {
         );
 
         return IProposal(clone);
+    }
+
+    /// @inheritdoc IProposalFactory
+    function getProposalByID(uint256 id)
+        external
+        view
+        validProposalId(id)
+        returns (address)
+    {
+        return _proposals[id];
     }
 }
