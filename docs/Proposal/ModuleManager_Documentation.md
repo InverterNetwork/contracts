@@ -88,12 +88,71 @@ uint -> the number of modules.
 
 ### 1. addModule
 
+`function addModule(address module) external;`
+
+Adds address `module` as module. This function is only callable by authorized address and fails if address is invalid or address already added as module.
+
+#### Parameter(s)
+
+1. address module -> The module address to add.
+
 ### 2. removeModule
+
+`function removeModule(address prevModule, address module) external;`
+
+Removes address `module` as module. This function is only callable by authorized address and fails if address not added as module.
+
+#### Parameter(s)
+
+1. address prevModule -> The module previous to the address `module` in the list of modules
+2. address module -> The module address to remove.
 
 ### 3. executeTxFromModule
 
+`function executeTxFromModule(address to, bytes memory data, Types.Operation operation) external returns (bool, bytes memory);`
+
+Executes a call to `to` with call data `data` either via call or delegatecall. This function is only callable by enabled modules.
+
+#### Parameter(s)
+
+1. address to -> The address where we need to make a call.
+2. bytes data -> The call data to be sent with the call.
+3. Types.Operation operation -> The operation type. Either call or delegatecall.
+
+#### Return Data
+
+1. bool -> Boolean indicating whether the call succeeded.
+2. bytes -> The return data of the call (in bytes).
+
 ### 4. grantRole
+
+`function grantRole(bytes32 role, address account) external;`
+
+Grants role `role` to account `account` in caller's access control context. This function is only callable by enabled module.
+
+#### Parameter(s)
+
+1. bytes32 role -> The access control role.
+2. address account ->  The account to revoke role for.
 
 ### 5. revokeRole
 
+`function revokeRole(bytes32 role, address account) external;`
+
+Revokes role `role` from account `account` in caller's access control context. This function is only callable by enabled module.
+
+#### Parameter(s)
+
+1. bytes32 role -> The access control role.
+2. address account ->  The account to revoke role for.
+
 ### 6. renounceRole
+
+`function renounceRole(address module, bytes32 role) external;`
+
+Renounces the caller's role `role` in module's `module` access control context.
+
+#### Parameter(s)
+
+1. address module -> The module in which's access control context the role should be renounced.
+2. bytes32 role -> The access control role.
