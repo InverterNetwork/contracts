@@ -137,17 +137,27 @@ contract ProposalCreation is Test {
     }
 
     // This function creates a new Proposal
-
+    // For this we create a few config files, that we'll later use in the Proposalfactory:
+    // -proposalFactoryConfig: Contains the owner and paymentToken address
+    // -authorizerFactoryConfig: Contains initially Authorized Addresses, that can use onlyAuthorized functions in the proposal
+    //                           Notice that we have to decrypt the initialAuthorizedAddresses into a bytes format for correct
+    //                           creation of the module in the ModuleFactory
+    // -paymentProcessorFactoryConfig: Just signals the Factory, that we want to integrate the PaymentProcessor here
+    // -optionalModules: This array would contain further moduleConfigs in the same styling like before to signal
+    //                   the proposalFactory that we want to integrate the defined modules.
     function createNewProposal() public returns (IProposal) {
+        //The Token used for Payment processes in the proposal
+        // Could be WEI or USDC or other ERC20.
+        IERC20 paymentToken = new ERC20Mock("Mock Token", "MOCK");
+
         // Create ProposalConfig instance.
         IProposalFactory.ProposalConfig memory proposalFactoryConfig =
         IProposalFactory.ProposalConfig({
-            owner: address(this), //@todo can be anything
-            token: IERC20(new ERC20Mock("Mock Token", "MOCK")) //@todo add WEI or stable Coin as example
+            owner: address(this),
+            token: paymentToken
         });
 
         //Create ModuleConfig for Authorizer
-
         address[] memory initialAuthorizedAddresses = new address[](1);
         initialAuthorizedAddresses[0] = address(this);
 
@@ -177,26 +187,39 @@ contract ProposalCreation is Test {
         return proposal;
     }
 
+    //Just a formal test to see the use case of creating a new Proposal
     function testCreateNewProposal() public {
         //See createNewProposal()
         createNewProposal();
     }
 
+    //We're adding and removing a Module during the lifetime of the proposal
     function testManageModulesLiveOnPorposal() public {
         //Create Proposal
         IProposal proposal = createNewProposal();
 
-        //Some Modules might need additional Deployment/Configuration data
+        //--------------------------------------------------------------------------------
+        // Adding Module
+
+        //Create milestoneManagerConfigdata
+        //Note: This bytes array is used for transmitting data in a generalized way
+        //      to the modules during they initilization via the modulefactory
+        //      Some Modules might need additional Deployment/Configuration data
         bytes memory milestoneManagerConfigdata = bytes("");
 
+        //Create the module via the moduleFactory
         address milestoneManager = moduleFactory.createModule(
             milestoneManagerMetadata, proposal, milestoneManagerConfigdata
         );
 
-        //Add Module -> milestoneManager
+        //Add Module to the proposal
         proposal.addModule(milestoneManager);
 
+        //--------------------------------------------------------------------------------
+        // Removing Module
+
         //Remove Module -> milestoneManager
+        //@todo This structure is pretty painful in my opinion
         address previousModule;
         address[] memory modules = proposal.listModules();
 
@@ -214,9 +237,13 @@ contract ProposalCreation is Test {
         proposal.removeModule(previousModule, milestoneManager);
     }
 
+    //We're adding and removing a Contributor here
     function testManageContributors() public {
         //Create Proposal
         IProposal proposal = createNewProposal();
+
+        //--------------------------------------------------------------------------------
+        // Add Contributor
 
         //Set example Contributor
         address who = address(0xA);
@@ -227,9 +254,12 @@ contract ProposalCreation is Test {
         //Add Contributor -> who
         proposal.addContributor(who, name, role, salary);
 
+        //--------------------------------------------------------------------------------
+        // Remove Contributor
+
         //Remove Contributor -> who
         address previousContributor;
-        address[] memory contributors = proposal.listContributors();
+        address[] memory contributors = proposal.listContributors(); //@todo This structure is pretty painful in my opinion
 
         // Get previous Contributor
         for (uint i = 0; i < contributors.length; i++) {
