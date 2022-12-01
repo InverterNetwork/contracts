@@ -128,6 +128,8 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
+    /// @dev Only addresses authorized via the {IAuthorizer} instance can manage
+    ///      modules.
     function __ModuleManager_isAuthorized(address who)
         internal
         view
@@ -137,6 +139,8 @@ contract Proposal is
         return authorizer.isAuthorized(who);
     }
 
+    /// @dev Addresses authorized via the {IAuthorizer} instance and the
+    ///      proposal's owner can manage contributors.
     function __ContributorManager_isAuthorized(address who)
         internal
         view
