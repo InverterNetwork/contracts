@@ -105,6 +105,18 @@ interface IContributorManager {
     /// @notice Returns the list of addresses of current contributors.
     function listContributors() external view returns (address[] memory);
 
+    /// @notice Fetches the id of the previous Contributor in the list
+    /// @dev Reverts if who is invalid
+    /// @dev This should ideally be only used in a frontend context
+    ///      because iterating through the list and finding the previous element
+    ///      causes an O(n) runtime of the given list and should ideally be outsourced off-chain.
+    /// @param who the address of which the previous element in the list should be found.
+    /// @return The address of the previous Contributor.
+    function getPreviousContributor(address who)
+        external
+        view
+        returns (address);
+
     /// @notice Returns the number of contributors.
     function contributorsSize() external view returns (uint);
 
