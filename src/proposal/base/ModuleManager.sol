@@ -192,23 +192,17 @@ abstract contract ModuleManager is
         external
         view
         validModule(module)
-        returns (address)
+        returns (address previousModule)
     {
-        address previousModule;
         address[] memory modules = listModules();
 
-        uint _length = modules.length;
-        for (uint i; i < _length; i++) {
+        uint len = modules.length;
+
+        for (uint i; i < len; i++) {
             if (modules[i] == module) {
-                if (i == 0) {
-                    previousModule = _SENTINEL;
-                } else {
-                    previousModule = modules[i - 1];
-                    break;
-                }
+                return i != 0 ? modules[i - 1] : _SENTINEL;
             }
         }
-        return previousModule;
     }
 
     //--------------------------------------------------------------------------

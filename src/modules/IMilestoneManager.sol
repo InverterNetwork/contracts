@@ -141,8 +141,11 @@ interface IMilestoneManager is IPaymentClient {
     ///      because iterating through the list and finding the previous element
     ///      causes an O(n) runtime of the given list and should ideally be outsourced off-chain.
     /// @param id the id of which the previous element in the list should be found.
-    /// @return The id of the previous milestone.
-    function getPreviousMilestoneId(uint id) external view returns (uint);
+    /// @return prevId The id of the previous milestone.
+    function getPreviousMilestoneId(uint id)
+        external
+        view
+        returns (uint prevId);
 
     /// @notice Returns the current active milestone's id.
     /// @dev Reverts in case there is no active milestone.
