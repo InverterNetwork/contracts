@@ -98,11 +98,11 @@ interface IModuleManager {
     ///      because iterating through the list and finding the previous element
     ///      causes an O(n) runtime of the given list and should ideally be outsourced off-chain.
     /// @param module the address of which the previous element in the list should be found.
-    /// @return The address of the previous module.
+    /// @return previousModule The address of the previous module.
     function getPreviousModule(address module)
         external
         view
-        returns (address);
+        returns (address previousModule);
 
     /// @notice Returns the number of modules.
     function modulesSize() external view returns (uint);

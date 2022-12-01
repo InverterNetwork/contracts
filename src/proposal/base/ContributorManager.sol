@@ -182,23 +182,17 @@ abstract contract ContributorManager is
         external
         view
         isContributor_(contributor)
-        returns (address)
+        returns (address previousContributor)
     {
-        address previousContributor;
         address[] memory contributors = listContributors();
 
-        uint _length = contributors.length;
-        for (uint i; i < _length; i++) {
+        uint len = contributors.length;
+
+        for (uint i; i < len; i++) {
             if (contributors[i] == contributor) {
-                if (i == 0) {
-                    previousContributor = _SENTINEL;
-                } else {
-                    previousContributor = contributors[i - 1];
-                    break;
-                }
+                return i != 0 ? contributors[i - 1] : _SENTINEL;
             }
         }
-        return previousContributor;
     }
 
     //--------------------------------------------------------------------------
