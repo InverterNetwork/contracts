@@ -170,8 +170,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function listMilestoneIds() external view returns (uint[] memory) {
-        uint[] memory result = new uint[](_milestoneCounter);
+    function listMilestoneIds() public view returns (uint[] memory) {
+        uint[] memory result = new uint256[](_milestoneCounter);
 
         // Populate result array.
         uint index = 0;
@@ -232,6 +232,30 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function isExistingMilestoneId(uint id) public view returns (bool) {
         return id != _SENTINEL && _milestones[id] != 0;
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function getPreviousMilestoneId(uint id)
+        external
+        view
+        validId(id)
+        returns (uint)
+    {
+        uint previousId;
+        uint[] memory milestoneIds = listMilestoneIds();
+
+        uint _length = milestoneIds.length;
+        for (uint i; i < _length; i++) {
+            if (milestoneIds[i] == id) {
+                if (i == 0) {
+                    previousId = _SENTINEL;
+                } else {
+                    previousId = milestoneIds[i - 1];
+                    break;
+                }
+            }
+        }
+        return previousId;
     }
 
     //--------------------------------------------------------------------------

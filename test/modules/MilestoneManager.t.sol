@@ -130,6 +130,36 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     //----------------------------------
+    // Tests: getPreviousMilestone()
+
+    function testGetPreviousMilestone(uint whos, uint randomWho) public {
+        vm.assume(whos > 0);
+        //Ids start at 1
+        vm.assume(randomWho > 0);
+
+        vm.assume(whos <= MAX_MILESTONES);
+
+        //Make sure one of the existing contributors gets picked
+        vm.assume(randomWho < whos);
+
+        for (uint i; i < whos; i++) {
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        }
+
+        uint prevMilestoneId;
+
+        if (randomWho == 1) {
+            prevMilestoneId = _SENTINEL;
+        } else {
+            prevMilestoneId = randomWho - 1;
+        }
+
+        assertEq(
+            milestoneManager.getPreviousMilestoneId(randomWho), prevMilestoneId
+        );
+    }
+
+    //----------------------------------
     // Test: getActiveMilestoneId()
 
     function testGetActiveMilestoneId(address[] memory contributors) public {
@@ -1193,7 +1223,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     /// @dev Returns an element of each category of invalid durations.
     function _createInvalidDurations() internal pure returns (uint[] memory) {
-        uint[] memory invalids = new uint[](1);
+        uint[] memory invalids = new uint256[](1);
 
         invalids[0] = 0;
 
@@ -1202,7 +1232,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     /// @dev Returns an element of each category of invalid budgets.
     function _createInvalidBudgets() internal pure returns (uint[] memory) {
-        uint[] memory invalids = new uint[](0);
+        uint[] memory invalids = new uint256[](0);
 
         // Note that there are currently no invalid budgets defined (Issue #97).
 
