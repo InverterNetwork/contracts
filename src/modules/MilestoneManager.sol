@@ -245,7 +245,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         string memory details
     )
         external
-        onlyAuthorized
+        onlyAuthorizedOrOwner
         validDuration(duration)
         validBudget(budget)
         validTitle(title_)
@@ -280,7 +280,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function removeMilestone(uint prevId, uint id)
         external
-        onlyAuthorized
+        onlyAuthorizedOrOwner
         validId(id)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -310,7 +310,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function startNextMilestone() external onlyAuthorized {
+    function startNextMilestone() external onlyAuthorizedOrOwner {
         if (!isNextMilestoneActivatable()) {
             revert Module__MilestoneManager__MilestoneNotActivateable();
         }
@@ -356,7 +356,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         string memory details
     )
         external
-        onlyAuthorized
+        onlyAuthorizedOrOwner
         validId(id)
         validDuration(duration)
         validBudget(budget)
@@ -401,7 +401,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function completeMilestone(uint id) external onlyAuthorized validId(id) {
+    function completeMilestone(uint id)
+        external
+        onlyAuthorizedOrOwner
+        validId(id)
+    {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not confirmable if milestone not submitted yet.
@@ -416,7 +420,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function declineMilestone(uint id) external onlyAuthorized validId(id) {
+    function declineMilestone(uint id)
+        external
+        onlyAuthorizedOrOwner
+        validId(id)
+    {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not declineable if milestone not submitted yet or already completed.

@@ -54,8 +54,17 @@ contract Proposal is
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
-    modifier onlyOwnerOrAuthorized() {
-        if (!_isOwnerOrAuthorized(_msgSender())) {
+    modifier onlyAuthorized() {
+        if (!authorizer.isAuthorized(_msgSender())) {
+            revert Proposal__CallerNotAuthorized();
+        }
+        _;
+    }
+
+    /// @notice Modifier to guarantee function is only callable by authorized
+    ///         address or owner.
+    modifier onlyAuthorizedOrOwner() {
+        if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != owner()) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -119,22 +128,26 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
+    /// @dev Only addresses authorized via the {IAuthorizer} instance can manage
+    ///      modules.
     function __ModuleManager_isAuthorized(address who)
         internal
         view
         override (ModuleManager)
         returns (bool)
     {
-        return _isOwnerOrAuthorized(who);
+        return authorizer.isAuthorized(who);
     }
 
+    /// @dev Addresses authorized via the {IAuthorizer} instance and the
+    ///      proposal's owner can manage contributors.
     function __ContributorManager_isAuthorized(address who)
         internal
         view
         override (ContributorManager)
         returns (bool)
     {
-        return _isOwnerOrAuthorized(who);
+        return authorizer.isAuthorized(who) || who == owner();
     }
 
     //--------------------------------------------------------------------------
@@ -143,7 +156,7 @@ contract Proposal is
     /// @inheritdoc IProposal
     function executeTx(address target, bytes memory data)
         external
-        onlyOwnerOrAuthorized
+        onlyAuthorized
         returns (bytes memory)
     {
         bool ok;
@@ -169,12 +182,5 @@ contract Proposal is
         returns (address)
     {
         return super.owner();
-    }
-
-    //--------------------------------------------------------------------------
-    // Internal Functions
-
-    function _isOwnerOrAuthorized(address who) private view returns (bool) {
-        return authorizer.isAuthorized(who) || owner() == who;
     }
 }

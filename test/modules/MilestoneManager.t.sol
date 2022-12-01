@@ -309,9 +309,13 @@ contract MilestoneManagerTest is ModuleTest {
         }
     }
 
-    function testAddMilestoneFailsIfCallerNotAuthorized() public {
-        _authorizer.setIsAuthorized(address(this), false);
+    function testAddMilestoneFailsIfCallerNotAuthorizedOrOwner(address caller)
+        public
+    {
+        _authorizer.setIsAuthorized(caller, false);
+        vm.assume(caller != _proposal.owner());
 
+        vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
     }
@@ -432,9 +436,13 @@ contract MilestoneManagerTest is ModuleTest {
         }
     }
 
-    function testRemoveMilestoneFailsIfCallerNotAuthorized() public {
-        _authorizer.setIsAuthorized(address(this), false);
+    function testRemoveMilestoneFailsIfCallerNotAuthorizedOrOwner(
+        address caller
+    ) public {
+        _authorizer.setIsAuthorized(caller, false);
+        vm.assume(caller != _proposal.owner());
 
+        vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.removeMilestone(0, 1);
     }
@@ -538,11 +546,15 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue(_token.balanceOf(address(milestoneManager)) >= totalPayout);
     }
 
-    function testStartNextMilestoneFailsIfCallerNotAuthorized() public {
+    function testStartNextMilestoneFailsIfCallerNotAuthorizedOrOwner(
+        address caller
+    ) public {
+        _authorizer.setIsAuthorized(caller, false);
+        vm.assume(caller != _proposal.owner());
+
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
-        _authorizer.setIsAuthorized(address(this), false);
-
+        vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.startNextMilestone();
     }
@@ -604,12 +616,16 @@ contract MilestoneManagerTest is ModuleTest {
         _assertMilestone(id, duration, budget, TITLE, details, "", false);
     }
 
-    function testUpdateMilestoneFailsIfCallerNotAuthorized() public {
+    function testUpdateMilestoneFailsIfCallerNotAuthorizedOrOwner(
+        address caller
+    ) public {
+        _authorizer.setIsAuthorized(caller, false);
+        vm.assume(caller != _proposal.owner());
+
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
-        _authorizer.setIsAuthorized(address(this), false);
-
+        vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.updateMilestone(id, DURATION, BUDGET, DETAILS);
     }
@@ -937,9 +953,13 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue(milestoneManager.getMilestoneInformation(id).completed);
     }
 
-    function testCompleteMilestoneFailsIfCallerNotAuthorized(
+    function testCompleteMilestoneFailsIfCallerNotAuthorizedOrOwner(
+        address caller,
         address[] memory contributors
     ) public {
+        _authorizer.setIsAuthorized(caller, false);
+        vm.assume(caller != _proposal.owner());
+
         _addContributors(contributors);
 
         // Mint tokens to proposal.
@@ -956,8 +976,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.prank(contributors[0]);
         milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
-        _authorizer.setIsAuthorized(address(this), false);
-
+        vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.completeMilestone(id);
     }
@@ -1042,8 +1061,12 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     function testDeclineMilestoneFailsIfCallerNotAuthorized(
+        address caller,
         address[] memory contributors
     ) public {
+        _authorizer.setIsAuthorized(caller, false);
+        vm.assume(caller != _proposal.owner());
+
         _addContributors(contributors);
 
         // Mint tokens to proposal.
@@ -1060,8 +1083,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.prank(contributors[0]);
         milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
-        _authorizer.setIsAuthorized(address(this), false);
-
+        vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.declineMilestone(id);
     }
