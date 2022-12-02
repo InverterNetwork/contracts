@@ -54,8 +54,14 @@ testE2e: ## Rune e2e test suite
 # Static Analyzers
 
 .PHONY: analyze-slither
-analyze-slither: ## Run slither analyzer against project
-	@slither .
+analyze-slither: ## Run slither analyzer against project (requires solc-select)
+	@forge build --extra-output abi --extra-output userdoc --extra-output devdoc --extra-output evm.methodIdentifiers
+	@solc-select use 0.8.13
+	@slither --ignore-compile src/common   || \
+	slither --ignore-compile src/factories || \
+	slither --ignore-compile src/generated || \
+	slither --ignore-compile src/modules   || \
+	slither --ignore-compile src/proposal
 
 .PHONY: analyze-c4udit
 analyze-c4udit: ## Run c4udit analyzer against project
