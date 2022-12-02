@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
@@ -7,9 +7,9 @@ import {IProposal} from "src/proposal/IProposal.sol";
 interface IModule {
     struct Metadata {
         uint majorVersion;
-        // maybe string description?
-        string gitURL; // @todo mp: Assumed to be the unique key.
-            //           What if more than one module per repo?
+        uint minorVersion;
+        string url;
+        string title;
     }
 
     //--------------------------------------------------------------------------
@@ -37,10 +37,13 @@ interface IModule {
     //--------------------------------------------------------------------------
     // Functions
 
-    // @todo mp: Function doc for `init()`.
-
-    /// @dev Can be overriden in downstream contract.
-    /// @dev Has to call `__Module_init()`.
+    /// @notice The module's initializer function.
+    /// @dev CAN be overriden by downstream contract.
+    /// @dev MUST call `__Module_init()`.
+    /// @param proposal The module's proposal instance.
+    /// @param metadata The module's metadata.
+    /// @param configdata Variable config data for specific module
+    ///                   implementations.
     function init(
         IProposal proposal,
         Metadata memory metadata,
@@ -49,13 +52,22 @@ interface IModule {
 
     /// @notice Returns the module's identifier.
     /// @dev The identifier is defined as the keccak256 hash of the module's
-    ///      abi packed encoded major version and git url.
+    ///      abi packed encoded major version, url and title.
     /// @return The module's identifier.
     function identifier() external view returns (bytes32);
 
-    /// @notice Returns the module's metadata info.
-    /// @return The module's {Metadata} struct instance.
-    function info() external view returns (Metadata memory);
+    /// @notice Returns the module's version.
+    /// @return The module's major version.
+    /// @return The module's minor version.
+    function version() external view returns (uint, uint);
+
+    /// @notice Returns the module's URL.
+    /// @return The module's URL.
+    function url() external view returns (string memory);
+
+    /// @notice Returns the module's title.
+    /// @return The module's title.
+    function title() external view returns (string memory);
 
     /// @notice Returns the module's {IProposal} proposal instance.
     /// @return The module's proposal.

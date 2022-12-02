@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -8,11 +8,20 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 interface IProposalFactory {
+    //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Given id is invalid.
+    error ProposalFactory__InvalidId();
+
     /// @notice The module's data arrays length mismatch.
     error ProposalFactory__ModuleDataLengthMismatch();
 
+    //--------------------------------------------------------------------------
+    // Structs
+
     struct ProposalConfig {
-        address[] funders;
+        address owner;
         IERC20 token;
     }
 
@@ -21,7 +30,17 @@ interface IProposalFactory {
         bytes configdata;
     }
 
-    // @todo mp: createProposal docs
+    //--------------------------------------------------------------------------
+    // Functions
+
+    /// @notice Creates a new proposal with caller being the proposal's owner.
+    /// @param proposalConfig The proposal's config data.
+    /// @param authorizerConfig The config data for the proposal's {IAuthorizer}
+    ///                         instance.
+    /// @param paymentProcessorConfig The config data for the proposal's
+    ///                               {IPaymentProcessor} instance.
+    /// @param moduleConfigs Variable length set of optional module's config
+    ///                      data.
     function createProposal(
         ProposalConfig memory proposalConfig,
         ModuleConfig memory authorizerConfig,
@@ -34,4 +53,8 @@ interface IProposalFactory {
 
     /// @notice Returns the {IModuleFactory} implementation address.
     function moduleFactory() external view returns (address);
+
+    /// @notice Returns the {IProposal} address that corresponds to the given id.
+    /// @param id The requested proposal's id.
+    function getProposalByID(uint id) external view returns (address);
 }

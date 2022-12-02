@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
@@ -29,6 +29,11 @@ interface IModuleFactory {
     /// @notice Event emitted when new beacon registered for metadata.
     event MetadataRegistered(
         IModule.Metadata indexed metadata, IBeacon indexed beacon
+    );
+
+    /// @notice Event emitted when new module created for a proposal.
+    event ModuleCreated(
+        address indexed proposal, address indexed module, string moduleTitle
     );
 
     //--------------------------------------------------------------------------

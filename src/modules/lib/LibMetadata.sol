@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import {IModule} from "src/modules/base/IModule.sol";
 
 /**
  * @title Metadata Library
  *
- * @dev Provides common functions {IModule}'s Metadata type.
+ * @dev Provides common functions for {IModule}'s Metadata type.
  *
  * @author byterocket
  */
@@ -19,8 +19,11 @@ library LibMetadata {
         pure
         returns (bytes32)
     {
-        return
-            keccak256(abi.encodePacked(metadata.majorVersion, metadata.gitURL));
+        return keccak256(
+            abi.encodePacked(
+                metadata.majorVersion, metadata.url, metadata.title
+            )
+        );
     }
 
     /// @dev Returns whether the given metadata is valid.
@@ -31,8 +34,18 @@ library LibMetadata {
         pure
         returns (bool)
     {
-        // Invalid if git url empty.
-        if (bytes(metadata.gitURL).length == 0) {
+        // Invalid if url empty.
+        if (bytes(metadata.url).length == 0) {
+            return false;
+        }
+
+        // Invalid if title empty.
+        if (bytes(metadata.title).length == 0) {
+            return false;
+        }
+
+        // Invalid if version is v0.0.
+        if (metadata.majorVersion == 0 && metadata.minorVersion == 0) {
             return false;
         }
 

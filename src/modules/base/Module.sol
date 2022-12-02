@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
@@ -10,7 +10,7 @@ import {
 
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
-import {ProposalStorage} from "src/generated/ProposalStorage.sol";
+import {ProposalStorage} from "src/generated/ProposalStorage.gen.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -28,8 +28,12 @@ import {IAuthorizer} from "src/modules/IAuthorizer.sol";
  *      callbacks (via `call` or `delegatecall`) and a modifier to authenticate
  *      callers via the module's proposal.
  *
- *      TODO mp: Update docs. Includes now:
- *          - versioning
+ *      Each module is identified via a unique identifier based on its major
+ *      version, title, and url given in the metadata.
+ *
+ *      Using proxy contracts, e.g. beacons, enables globally updating module
+ *      instances when its minor version changes, but supports differentiating
+ *      otherwise equal modules with different major versions.
  *
  * @author byterocket
  */
@@ -58,11 +62,22 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
-    /// @dev onlyAuthorized functions SHOULD only be used to trigger callbacks
-    ///      from the proposal via the `triggerProposalCallback()` function.
     modifier onlyAuthorized() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (!authorizer.isAuthorized(_msgSender())) {
+            revert Module__CallerNotAuthorized();
+        }
+        _;
+    }
+
+    /// @notice Modifier to guarantee function is only callable by either
+    ///         addresses authorized via Proposal or the Proposal's owner.
+    modifier onlyAuthorizedOrOwner() {
+        IAuthorizer authorizer = __Module_proposal.authorizer();
+        if (
+            !authorizer.isAuthorized(_msgSender())
+                && __Module_proposal.owner() != _msgSender()
+        ) {
             revert Module__CallerNotAuthorized();
         }
         _;
@@ -105,16 +120,9 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Initialization
 
-    // @todo mp: Check that `_disableInitializers()` is used correctly.
-    //           Makes testing setup harder too.
-    //constructor() {
-    //    _disableInitializers();
-    //}
-
-    // @todo mp: Can metaData be calldata? Depends on Factories.
-
-    // @todo mp: param metaData data missing in function doc.
-    //           Refactor @dev, function name is `init()`.
+    constructor() {
+        _disableInitializers();
+    }
 
     /// @inheritdoc IModule
     function init(
@@ -126,7 +134,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     }
 
     /// @dev The initialization function MUST be called by the upstream
-    ///      contract in their `initialize()` function.
+    ///      contract in their overriden `init()` function.
     /// @param proposal_ The module's proposal.
     function __Module_init(IProposal proposal_, Metadata memory metadata)
         internal
@@ -148,39 +156,18 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     }
 
     //--------------------------------------------------------------------------
-    // onlyProposal Functions
-    //
-    // Proposal callback functions executed via `call`.
-
-    /// @notice Callback function to pause the module.
-    /// @dev Only callable by the proposal.
-    function __Module_pause() external onlyProposal {
-        _pause();
-    }
-
-    /// @notice Callback function to unpause the module.
-    /// @dev Only callable by the proposal.
-    function __Module_unpause() external onlyProposal {
-        _unpause();
-    }
-
-    //--------------------------------------------------------------------------
     // onlyAuthorized Functions
     //
     // API functions for authenticated users.
 
     /// @inheritdoc IModule
-    function pause() external override (IModule) onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Module_pause()"), Types.Operation.Call
-        );
+    function pause() external override (IModule) onlyAuthorizedOrOwner {
+        _pause();
     }
 
     /// @inheritdoc IModule
-    function unpause() external override (IModule) onlyAuthorized {
-        _triggerProposalCallback(
-            abi.encodeWithSignature("__Module_unpause()"), Types.Operation.Call
-        );
+    function unpause() external override (IModule) onlyAuthorizedOrOwner {
+        _unpause();
     }
 
     //--------------------------------------------------------------------------
@@ -192,12 +179,22 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     }
 
     /// @inheritdoc IModule
-    function info() external view returns (Metadata memory) {
-        return __Module_metadata;
+    function version() public view returns (uint, uint) {
+        return (__Module_metadata.majorVersion, __Module_metadata.minorVersion);
     }
 
     /// @inheritdoc IModule
-    function proposal() external view returns (IProposal) {
+    function url() public view returns (string memory) {
+        return __Module_metadata.url;
+    }
+
+    /// @inheritdoc IModule
+    function title() public view returns (string memory) {
+        return __Module_metadata.title;
+    }
+
+    /// @inheritdoc IModule
+    function proposal() public view returns (IProposal) {
         return __Module_proposal;
     }
 

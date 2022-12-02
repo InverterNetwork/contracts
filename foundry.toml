@@ -16,6 +16,7 @@ fuzz_runs = 256
 line_length = 80
 int_types = "short"
 number_underscore = "thousands"
+ignore = ['src/generated/*']
 
 [profile.ci]
 fuzz_runs = 1_000

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import {Types} from "src/common/Types.sol";
 
@@ -54,21 +54,11 @@ interface IContributorManager {
     /// @param who The contributor's address.
     event ContributorRemoved(address indexed who);
 
-    /// @notice Event emitted when contributor's role update.
+    /// @notice Event emitted when contributor's role and/or salary updated.
     /// @param who The contributor's address.
-    /// @param newRole The contributor's new role.
-    /// @param oldRole The contributor's old role.
-    event ContributorsRoleUpdated(
-        address indexed who, string newRole, string oldRole
-    );
-
-    /// @notice Event emitted when contributor's salary update.
-    /// @param who The contributor's address.
-    /// @param newSalary The contributor's new salary.
-    /// @param oldSalary The contributor's old salary.
-    event ContributorsSalaryUpdated(
-        address indexed who, uint newSalary, uint oldSalary
-    );
+    /// @param role The contributor's role.
+    /// @param salary The contributor's salary.
+    event ContributorUpdated(address indexed who, string role, uint salary);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -100,25 +90,23 @@ interface IContributorManager {
     /// @param prevContrib The previous contributor in the contributor's list.
     function revokeContributor(address prevContrib) external;
 
-    /// @notice Updates `who`'s role to `role`.
+    /// @notice Updates `who` role and/or salary.
     /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if `role` invalid.
+    /// @dev Reverts if `role` or `salary` invalid.
     /// @param who The contributor's address.
     /// @param role The contributor's new role.
-    function updateContributorsRole(address who, string memory role) external;
-
-    /// @notice Updates `who`'s salary to `salary`.
-    /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if `salary` invalid.
-    /// @param who The contributor's address.
     /// @param salary The contributor's new salary.
-    function updateContributorsSalary(address who, uint salary) external;
+    function updateContributor(address who, string memory role, uint salary)
+        external;
 
     /// @notice Returns whether `who` is a contributor.
     function isContributor(address who) external view returns (bool);
 
     /// @notice Returns the list of addresses of current contributors.
     function listContributors() external view returns (address[] memory);
+
+    /// @notice Returns the number of contributors.
+    function contributorsSize() external view returns (uint);
 
     /// @notice Returns the registerted {Contributor} instance for `who`.
     function getContributorInformation(address who)

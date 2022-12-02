@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -17,27 +20,6 @@ import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-/**
- * Errors library for Module's custom errors.
- * Enables checking for errors with vm.expectRevert(Errors.<Error>).
- */
-library Errors {
-    bytes internal constant Module__CallerNotAuthorized =
-        abi.encodeWithSignature("Module__CallerNotAuthorized()");
-
-    bytes internal constant Module__OnlyCallableByProposal =
-        abi.encodeWithSignature("Module__OnlyCallableByProposal()");
-
-    bytes internal constant Module__WantProposalContext =
-        abi.encodeWithSignature("Module__WantProposalContext()");
-
-    bytes internal constant Module__InvalidProposalAddress =
-        abi.encodeWithSignature("Module__InvalidProposalAddress()");
-
-    bytes internal constant Module__InvalidMetadata =
-        abi.encodeWithSignature("Module__InvalidMetadata()");
-}
-
 contract ModuleTest is Test {
     // SuT
     ModuleMock module;
@@ -48,9 +30,14 @@ contract ModuleTest is Test {
 
     // Constants
     uint constant MAJOR_VERSION = 1;
-    string constant GIT_URL = "https://github.com/organization/module";
+    uint constant MINOR_VERSION = 1;
+    string constant URL = "https://github.com/organization/module";
+    string constant TITLE = "Payment Processor";
 
-    IModule.Metadata DATA = IModule.Metadata(MAJOR_VERSION, GIT_URL);
+    IModule.Metadata METADATA =
+        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+
+    bytes CONFIGDATA = bytes("");
 
     function setUp() public {
         authorizer = new AuthorizerMock();
@@ -58,8 +45,10 @@ contract ModuleTest is Test {
 
         proposal = new ProposalMock(authorizer);
 
-        module = new ModuleMock();
-        module.init(proposal, DATA);
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
+
+        module.init(proposal, METADATA, CONFIGDATA);
 
         // Initialize proposal to enable module.
         address[] memory modules = new address[](1);
@@ -71,55 +60,66 @@ contract ModuleTest is Test {
     // Tests: Initialization
 
     function testInit() public {
-        module = new ModuleMock();
-
-        module.init(proposal, DATA);
-
         // Proposal correctly written to storage.
         assertEq(address(module.proposal()), address(proposal));
 
-        // Metadata correctly written to storage.
-        bytes32 got = LibMetadata.identifier(module.info());
-        bytes32 want = LibMetadata.identifier(DATA);
-        assertEq(got, want);
+        // Identifier correctly computed.
+        assertEq(module.identifier(), LibMetadata.identifier(METADATA));
 
-        // Module's identifier correctly computed.
-        got = module.identifier();
-        want = LibMetadata.identifier(DATA);
-        assertEq(got, want);
+        // Version correctly set.
+        uint majorVersion;
+        uint minorVersion;
+        (majorVersion, minorVersion) = module.version();
+        assertEq(majorVersion, MAJOR_VERSION);
+        assertEq(minorVersion, MINOR_VERSION);
+
+        // URL correctly set.
+        assertEq(module.url(), URL);
+
+        // Title correctly set.
+        assertEq(module.title(), TITLE);
     }
 
     function testInitFailsForNonInitializerFunction() public {
-        module = new ModuleMock();
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        module.initNoInitializer(proposal, DATA);
+        module.initNoInitializer(proposal, METADATA, CONFIGDATA);
     }
 
     function testReinitFails() public {
-        module = new ModuleMock();
-
-        module.init(proposal, DATA);
-
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        module.init(proposal, DATA);
+        module.init(proposal, METADATA, CONFIGDATA);
     }
 
     function testInitFailsForInvalidProposal() public {
-        module = new ModuleMock();
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
 
-        vm.expectRevert(Errors.Module__InvalidProposalAddress);
-        module.init(IProposal(address(0)), DATA);
+        vm.expectRevert(IModule.Module__InvalidProposalAddress.selector);
+        module.init(IProposal(address(0)), METADATA, CONFIGDATA);
     }
 
-    function testInitFailsIfMetadataInvalid(uint majorVersion) public {
-        module = new ModuleMock();
+    function testInitFailsIfMetadataInvalid() public {
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
 
-        // Invalid if gitURL empty.
-        IModule.Metadata memory data = IModule.Metadata(majorVersion, "");
+        // Invalid if url empty.
+        vm.expectRevert(IModule.Module__InvalidMetadata.selector);
+        module.init(
+            proposal,
+            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE),
+            CONFIGDATA
+        );
 
-        vm.expectRevert(Errors.Module__InvalidMetadata);
-        module.init(proposal, data);
+        // Invalid if title empty.
+        vm.expectRevert(IModule.Module__InvalidMetadata.selector);
+        module.init(
+            proposal,
+            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""),
+            CONFIGDATA
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -139,14 +139,14 @@ contract ModuleTest is Test {
     function testPauseIsAuthenticated() public {
         authorizer.setAllAuthorized(false);
 
-        vm.expectRevert(Errors.Module__CallerNotAuthorized);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         module.pause();
     }
 
     function testUnpauseIsAuthenticated() public {
         authorizer.setAllAuthorized(false);
 
-        vm.expectRevert(Errors.Module__CallerNotAuthorized);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         module.unpause();
     }
 }

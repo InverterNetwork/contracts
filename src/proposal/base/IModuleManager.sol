@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import {Types} from "src/common/Types.sol";
 
@@ -91,6 +91,9 @@ interface IModuleManager {
     /// @notice Returns the list of all modules.
     /// @return List of all modules.
     function listModules() external view returns (address[] memory);
+
+    /// @notice Returns the number of modules.
+    function modulesSize() external view returns (uint);
 
     /// @notice Grants role `role` to account `account` in caller's access
     ///         control context.

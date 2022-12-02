@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
@@ -16,9 +16,9 @@ import {
     IProposal
 } from "src/factories/IProposalFactory.sol";
 
+import {Proposal} from "src/proposal/Proposal.sol";
+
 // Mocks
-import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
 import {ModuleFactoryMock} from
     "test/utils/mocks/factories/ModuleFactoryMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -30,18 +30,57 @@ contract ProposalFactoryTest is Test {
     // SuT
     ProposalFactory factory;
 
+    Proposal target;
+
     // Mocks
-    AuthorizerMock authorizer;
-    ProposalMock target;
     ModuleFactoryMock moduleFactory;
 
-    function setUp() public {
-        authorizer = new AuthorizerMock();
+    // Metadata
+    IProposalFactory.ProposalConfig proposalConfig = IProposalFactory
+        .ProposalConfig({
+        owner: address(this),
+        token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
+    });
 
-        target = new ProposalMock(authorizer);
+    IProposalFactory.ModuleConfig authorizerConfig = IProposalFactory
+        .ModuleConfig(
+        IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
+        bytes("data")
+    );
+
+    IProposalFactory.ModuleConfig paymentProcessorConfig = IProposalFactory
+        .ModuleConfig(
+        IModule.Metadata(
+            1, 1, "https://paymentprocessor.com", "PaymentProcessor"
+        ),
+        bytes("data")
+    );
+
+    IProposalFactory.ModuleConfig moduleConfig = IProposalFactory.ModuleConfig(
+        IModule.Metadata(1, 1, "https://module.com", "Module"), bytes("")
+    );
+
+    function setUp() public {
         moduleFactory = new ModuleFactoryMock();
 
+        target = new Proposal();
+
         factory = new ProposalFactory(address(target), address(moduleFactory));
+    }
+
+    function testValidProposalId(uint getId, uint proposalsCreated) public {
+        // Note to stay reasonable
+        vm.assume(proposalsCreated < 50);
+
+        for (uint i = 0; i < proposalsCreated; i++) {
+            _deployProposal();
+        }
+        if (getId > proposalsCreated) {
+            vm.expectRevert(
+                IProposalFactory.ProposalFactory__InvalidId.selector
+            );
+        }
+        factory.getProposalByID(getId);
     }
 
     function testDeploymentInvariants() public {
@@ -49,33 +88,17 @@ contract ProposalFactoryTest is Test {
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
 
-    function testCreateProposal(address[] memory funders, uint modulesLen)
-        public
-    {
+    function testCreateProposal(uint modulesLen) public {
         // Note to stay reasonable
-        vm.assume(funders.length < 50);
         vm.assume(modulesLen < 50);
-
-        // Create ProposalConfig instance.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig(funders, IERC20(new ERC20Mock("Test Token", "TEST")));
-
-        // Create {IAuthorizer} ModuleConfig instance.
-        IProposalFactory.ModuleConfig memory authorizerConfig = IProposalFactory
-            .ModuleConfig(IModule.Metadata(1, "Authorizer"), bytes("Authorizer"));
-
-        // Create {IPaymentProcessor} ModuleConfig instance.
-        IProposalFactory.ModuleConfig memory paymentProcessorConfig =
-        IProposalFactory.ModuleConfig(
-            IModule.Metadata(1, "PaymentProcessor"), bytes("PaymentProcessor")
-        );
 
         // Create optional ModuleConfig instances.
         IProposalFactory.ModuleConfig[] memory moduleConfigs =
-            new IProposalFactory.ModuleConfig[](modulesLen);
+        new IProposalFactory.ModuleConfig[](
+                modulesLen
+            );
         for (uint i; i < modulesLen; i++) {
-            moduleConfigs[i].metadata = IModule.Metadata(1, "");
-            moduleConfigs[i].configdata = bytes("");
+            moduleConfigs[i] = moduleConfig;
         }
 
         // Deploy Proposal with id=1
@@ -85,7 +108,16 @@ contract ProposalFactoryTest is Test {
             paymentProcessorConfig,
             moduleConfigs
         );
+
+        // Check that proposal's strorage correctly initialized.
         assertEq(proposal.proposalId(), 1);
+        assertEq(address(proposal.token()), address(proposalConfig.token));
+        assertTrue(address(proposal.authorizer()) != address(0));
+        assertTrue(address(proposal.paymentProcessor()) != address(0));
+
+        // Check that other proposal's dependencies correctly initialized.
+        // Ownable:
+        assertEq(proposal.owner(), address(proposalConfig.owner));
 
         // Deploy Proposal with id=2
         proposal = factory.createProposal(
@@ -94,6 +126,33 @@ contract ProposalFactoryTest is Test {
             paymentProcessorConfig,
             moduleConfigs
         );
+        // Only check that proposal's id is correct.
         assertEq(proposal.proposalId(), 2);
+    }
+
+    function testProposalMapping(uint proposalAmount) public {
+        // Note to stay reasonable
+        vm.assume(proposalAmount < 50);
+
+        for (uint i = 1; i < proposalAmount; i++) {
+            address proposal = _deployProposal();
+            assertEq(proposal, factory.getProposalByID(i));
+        }
+    }
+
+    function _deployProposal() private returns (address) {
+        //Create Empty ModuleConfig
+        IProposalFactory.ModuleConfig[] memory moduleConfigs =
+            new IProposalFactory.ModuleConfig[](0);
+
+        // Deploy Proposal
+        IProposal proposal = factory.createProposal(
+            proposalConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            moduleConfigs
+        );
+
+        return address(proposal);
     }
 }

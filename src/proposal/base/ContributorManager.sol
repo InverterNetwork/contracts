@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Dependencies
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
@@ -19,16 +19,17 @@ import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
  *
  * @dev A contract to manage a list of contributors.
  *
- *      It saves the assigned role and salary of each contributor in a registry,
- *      and keeps a list of active contributors in the style of the Gnosis Safe
- *      OwnerManager (https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol)
+ *      It saves the assigned role, name, and salary of each contributor in a
+ *      registry, and manages a list of contributors in the style of the
+ *      Gnosis Safe's [OwnerManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol).
  *
- *      Along each contributor address, the contract stores a salary and a role.
- *      This role is NOT intended for access control, but for offchain
+ *      Along each contributor address, the contract stores a salary, name, and
+ *      role. This role is NOT intended for access control, but for off-chain
  *      retrieval of team assignment or similar information.
  *
- *      Each active contributor is only represented once.
+ *      Each contributor is only represented once.
  *
+ * @author Adapted from Gnosis Safe
  * @author byterocket
  */
 abstract contract ContributorManager is
@@ -49,12 +50,7 @@ abstract contract ContributorManager is
     }
 
     modifier validAddress(address who) {
-        // @todo mp: Make gas optimized.
-        bool isZero = who == address(0);
-        bool isSentinel = who == _SENTINEL;
-        bool isThis = who == address(this);
-
-        if (isZero || isSentinel || isThis) {
+        if (who == address(0) || who == _SENTINEL || who == address(this)) {
             revert Proposal__ContributorManager__InvalidContributorAddress();
         }
         _;
@@ -105,22 +101,19 @@ abstract contract ContributorManager is
     //--------------------------------------------------------------------------
     // Constants
 
+    /// @dev Marks the beginning and end of the _modules list.
     address private constant _SENTINEL = address(0x1);
 
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Registry mapping contributor addresses to Contributor structs.
     mapping(address => Contributor) private _contributorRegistry;
 
-    /// @notice Mapping of contributors.
-    ///         TODO: Move this to docs/ and link to it.
-    ///         Every address points to the last one added before them.
-    ///         _contributors[_SENTINEL] points to the last added address,
-    ///         to aid retrieval.
-    ///         The first added address points to _SENTINEL to signal end of
-    ///         list.
+    /// @notice List of contributor addresses.
     mapping(address => address) private _contributors;
 
+    /// @dev Counter for number of contributors in the _contributors list.
     uint private _contributorCounter;
 
     //--------------------------------------------------------------------------
@@ -179,6 +172,11 @@ abstract contract ContributorManager is
         return result;
     }
 
+    /// @inheritdoc IContributorManager
+    function contributorsSize() external view returns (uint) {
+        return _contributorCounter;
+    }
+
     //--------------------------------------------------------------------------
     // onlyAuthorized Mutating Functions
 
@@ -219,32 +217,19 @@ abstract contract ContributorManager is
     }
 
     /// @inheritdoc IContributorManager
-    function updateContributorsRole(address who, string memory role)
+    function updateContributor(address who, string memory role, uint salary)
         external
         __ContributorManager_onlyAuthorized
         isContributor_(who)
         validRole(role)
-    {
-        string memory oldRole = _contributorRegistry[who].role;
-
-        if (!oldRole.equals(role)) {
-            emit ContributorsRoleUpdated(who, role, oldRole);
-            _contributorRegistry[who].role = role;
-        }
-    }
-
-    /// @inheritdoc IContributorManager
-    function updateContributorsSalary(address who, uint salary)
-        external
-        __ContributorManager_onlyAuthorized
-        isContributor_(who)
-        validAddress(who)
         validSalary(salary)
     {
+        string memory oldRole = _contributorRegistry[who].role;
         uint oldSalary = _contributorRegistry[who].salary;
 
-        if (oldSalary != salary) {
-            emit ContributorsSalaryUpdated(who, salary, oldSalary);
+        if (!oldRole.equals(role) || oldSalary != salary) {
+            emit ContributorUpdated(who, role, salary);
+            _contributorRegistry[who].role = role;
             _contributorRegistry[who].salary = salary;
         }
     }

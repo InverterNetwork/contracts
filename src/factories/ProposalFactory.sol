@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Dependencies
 import {Context} from "@oz/utils/Context.sol";
@@ -22,6 +22,8 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
 /**
  * @title Proposal Factory
  *
+ * @dev An immutable factory for deploying proposals.
+ *
  * @author byterocket
  */
 contract ProposalFactory is IProposalFactory {
@@ -37,9 +39,23 @@ contract ProposalFactory is IProposalFactory {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The counter for the next proposal id.
+    /// @dev Maps the id to the proposals
+    mapping(uint => address) private _proposals;
+
+    /// @dev The counter of the current proposal id.
     /// @dev Starts counting from 1.
     uint private _proposalIdCounter;
+
+    //--------------------------------------------------------------------------------
+    // Modifier
+
+    /// @notice Modifier to guarantee that the given id is valid
+    modifier validProposalId(uint id) {
+        if (id > _proposalIdCounter) {
+            revert ProposalFactory__InvalidId();
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -60,6 +76,9 @@ contract ProposalFactory is IProposalFactory {
         ModuleConfig[] memory moduleConfigs
     ) external returns (IProposal) {
         address clone = Clones.clone(target);
+
+        //Map proposal clone
+        _proposals[++_proposalIdCounter] = clone;
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
@@ -88,14 +107,24 @@ contract ProposalFactory is IProposalFactory {
 
         // Initialize proposal.
         IProposal(clone).init(
-            ++_proposalIdCounter,
+            _proposalIdCounter,
+            proposalConfig.owner,
             proposalConfig.token,
-            proposalConfig.funders,
             modules,
             IAuthorizer(authorizer),
             IPaymentProcessor(paymentProcessor)
         );
 
         return IProposal(clone);
+    }
+
+    /// @inheritdoc IProposalFactory
+    function getProposalByID(uint id)
+        external
+        view
+        validProposalId(id)
+        returns (address)
+    {
+        return _proposals[id];
     }
 }

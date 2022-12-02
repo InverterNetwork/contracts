@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
@@ -12,8 +12,8 @@ import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
 
 // Mocks
 import {BeaconMock} from "test/utils/mocks/factories/beacon/BeaconMock.sol";
-import {ImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol";
+import {ModuleImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
 
 contract BeaconProxyTest is Test {
     // SuT
@@ -21,7 +21,7 @@ contract BeaconProxyTest is Test {
 
     // Mocks
     BeaconMock beacon;
-    ImplementationV1Mock implementation;
+    ModuleImplementationV1Mock implementation;
 
     // Events copied from SuT
     event BeaconUpgraded(IBeacon indexed beacon);
@@ -29,7 +29,7 @@ contract BeaconProxyTest is Test {
     function setUp() public {
         beacon = new BeaconMock();
 
-        implementation = new ImplementationV1Mock();
+        implementation = new ModuleImplementationV1Mock();
         beacon.overrideImplementation(address(implementation));
 
         proxy = new BeaconProxy(beacon);
@@ -46,9 +46,9 @@ contract BeaconProxyTest is Test {
     // Test: _implementation
 
     function testImplementation(uint data) public {
-        ImplementationV1Mock(address(proxy)).initialize(data);
+        ModuleImplementationV1Mock(address(proxy)).initialize(data);
 
-        assertEq(ImplementationV1Mock(address(proxy)).data(), data);
-        assertEq(ImplementationV1Mock(address(proxy)).getVersion(), 1);
+        assertEq(ModuleImplementationV1Mock(address(proxy)).data(), data);
+        assertEq(ModuleImplementationV1Mock(address(proxy)).getVersion(), 1);
     }
 }

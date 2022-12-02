@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Dependencies
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
@@ -11,6 +11,9 @@ import {Address} from "@oz/utils/Address.sol";
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
+/**
+ * @title Beacon
+ */
 contract Beacon is IBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
     // Errors

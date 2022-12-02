@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // Internal Interfaces
 import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
@@ -19,11 +19,36 @@ interface IPaymentClient {
     /// @notice Function is only callable by authorized address.
     error Module__PaymentClient__CallerNotAuthorized();
 
+    /// @notice ERC20 token transfer failed.
+    error Module__PaymentClient__TokenTransferFailed();
+
+    /// @notice Given recipient invalid.
+    error Module__PaymentClient__InvalidRecipient();
+
+    /// @notice Given amount invalid.
+    error Module__PaymentClient__InvalidAmount();
+
+    /// @notice Given dueTo invalid.
+    error Module__PaymentClient__InvalidDueTo();
+
+    /// @notice Given arrays' length mismatch.
+    error Module__PaymentClient__ArrayLengthMismatch();
+
     event PaymentAdded(address indexed recipient, uint amount);
 
     /// @notice Returns the list of outstanding payment orders.
     function paymentOrders() external view returns (PaymentOrder[] memory);
 
-    /// @notice Collects all outstanding payment orders, modifying internal state to mark them as completed.
-    function collectPaymentOrders() external returns (PaymentOrder[] memory);
+    /// @notice Returns the total outstanding token payment amount.
+    function outstandingTokenAmount() external view returns (uint);
+
+    /// @notice Collects outstanding payment orders.
+    /// @dev Marks the orders as completed for the client.
+    ///      The responsibility to fulfill the orders are now in the caller's
+    ///      hand!
+    /// @return list of payment orders
+    /// @return total amount of token to pay
+    function collectPaymentOrders()
+        external
+        returns (PaymentOrder[] memory, uint);
 }

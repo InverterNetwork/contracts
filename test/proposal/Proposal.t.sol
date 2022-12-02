@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -45,7 +48,8 @@ contract ProposalTest is Test {
         paymentProcessor = new PaymentProcessorMock();
         token = new ERC20Mock("TestToken", "TST");
 
-        proposal = new Proposal();
+        address impl = address(new Proposal());
+        proposal = Proposal(Clones.clone(impl));
 
         types = new TypeSanityHelper(address(proposal));
     }
@@ -53,13 +57,8 @@ contract ProposalTest is Test {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInit(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
+    function testInit(uint proposalId, address[] memory modules) public {
         types.assumeValidProposalId(proposalId);
-        types.assumeValidFunders(funders);
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
@@ -69,11 +68,17 @@ contract ProposalTest is Test {
 
         // Initialize proposal.
         proposal.init(
-            proposalId, token, funders, modules, authorizer, paymentProcessor
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
         );
 
         // Check that proposal's storage correctly initialized.
         assertEq(proposal.proposalId(), proposalId);
+        assertEq(address(proposal.owner()), address(this));
         assertEq(address(proposal.token()), address(token));
         assertEq(address(proposal.authorizer()), address(authorizer));
         assertEq(
@@ -83,17 +88,12 @@ contract ProposalTest is Test {
         // Check that proposal's dependencies correctly initialized.
         // Ownable:
         assertEq(proposal.owner(), address(this));
-        // Pausable:
-        assertTrue(!proposal.paused());
     }
 
-    function testReinitFails(
-        uint proposalId,
-        address[] memory funders,
-        address[] memory modules
-    ) public {
+    function testReinitFails(uint proposalId, address[] memory modules)
+        public
+    {
         types.assumeValidProposalId(proposalId);
-        types.assumeValidFunders(funders);
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
@@ -103,20 +103,116 @@ contract ProposalTest is Test {
 
         // Initialize proposal.
         proposal.init(
-            proposalId, token, funders, modules, authorizer, paymentProcessor
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
         );
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         proposal.init(
-            proposalId, token, funders, modules, authorizer, paymentProcessor
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
         );
     }
 
     //--------------------------------------------------------------------------
     // Tests: Transaction Execution
 
-    function testExecuteTx() public {
-        // @todo mp: Add Proposal::executeTx tests.
+    function testExecuteTx(uint proposalId, address[] memory modules) public {
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        bytes memory returnData =
+            proposal.executeTx(address(this), abi.encodeWithSignature("ok()"));
+        assertTrue(abi.decode(returnData, (bool)));
+    }
+
+    function testExecuteTxFailsIfCallFails(
+        uint proposalId,
+        address[] memory modules
+    ) public {
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        vm.expectRevert(IProposal.Proposal__ExecuteTxFailed.selector);
+        proposal.executeTx(address(this), abi.encodeWithSignature("fails()"));
+    }
+
+    function testExecuteTxFailsIfCallerNotAuthorized(
+        uint proposalId,
+        address[] memory modules
+    ) public {
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(0xCAFE), // Note to not be the owner
+            token,
+            modules,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), false);
+
+        vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);
+        proposal.executeTx(address(this), abi.encodeWithSignature("ok()"));
+    }
+
+    function ok() public pure returns (bool) {
+        return true;
+    }
+
+    function fails() public pure {
+        revert("failed");
     }
 
     //--------------------------------------------------------------------------

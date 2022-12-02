@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
 // External Libraries
 import "@oz/utils/Address.sol";
 
-// Internal Dependencies
-import {Beacon} from "src/factories/beacon/Beacon.sol";
+// SuT
+import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 
 // Mocks
-import {ImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon/ImplementationV1Mock.sol";
-import {ImplementationV2Mock} from
-    "test/utils/mocks/factories/beacon/ImplementationV2Mock.sol";
+import {ModuleImplementationV1Mock} from
+    "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
+import {ModuleImplementationV2Mock} from
+    "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -31,14 +31,19 @@ contract BeaconTest is Test {
 
     function testDeploymentInvariants() public {
         assertEq(beacon.implementation(), address(0));
+
+        // Check that proposal's dependencies correctly initialized.
+        // Ownable2Step:
+        assertEq(beacon.owner(), address(this));
+        assertEq(beacon.pendingOwner(), address(0));
     }
 
     //--------------------------------------------------------------------------------
-    // Test: upgradeTo
+    // Test: upgradeTo()
 
     function testUpgradeTo() public {
-        ImplementationV1Mock toUpgrade1 = new ImplementationV1Mock();
-        ImplementationV2Mock toUpgrade2 = new ImplementationV2Mock();
+        ModuleImplementationV1Mock toUpgrade1 = new ModuleImplementationV1Mock();
+        ModuleImplementationV2Mock toUpgrade2 = new ModuleImplementationV2Mock();
 
         vm.expectEmit(true, true, true, true);
         emit Upgraded(address(toUpgrade1));
@@ -70,11 +75,9 @@ contract BeaconTest is Test {
     }
 
     //--------------------------------------------------------------------------------
-    // Test: ERC-165
+    // Test: ERC-165's supportInterface()
 
-    function testERC165Supported() public {
-        // @todo felix, mp: Add test to check for following interfaces:
-        //          - ERC 165
-        //          - IBeacon
+    function testSupportsInterface() public {
+        assertTrue(beacon.supportsInterface(type(IBeacon).interfaceId));
     }
 }

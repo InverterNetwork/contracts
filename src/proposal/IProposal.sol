@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -7,10 +7,11 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Interfaces
 import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
 import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
+import {IFundingVault} from "src/proposal/base/IFundingVault.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 
-interface IProposal is IModuleManager, IContributorManager {
+interface IProposal is IModuleManager, IContributorManager, IFundingVault {
     //--------------------------------------------------------------------------
     // Errors
 
@@ -26,9 +27,9 @@ interface IProposal is IModuleManager, IContributorManager {
     /// @notice Initialization function.
     function init(
         uint proposalId,
+        address owner,
         IERC20 token,
-        address[] calldata funders,
-        address[] calldata modules, // @todo mp: Change to IModules.
+        address[] calldata modules,
         IAuthorizer authorizer,
         IPaymentProcessor paymentProcessor
     ) external;
@@ -59,4 +60,6 @@ interface IProposal is IModuleManager, IContributorManager {
 
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);
+
+    function owner() external view returns (address);
 }

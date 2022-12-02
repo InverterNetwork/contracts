@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Dependencies
 import {Proxy} from "@oz/proxy/Proxy.sol";
@@ -7,7 +7,9 @@ import {Proxy} from "@oz/proxy/Proxy.sol";
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
-/// @custom:security-contact security@p00ls.com
+/**
+ * @title BeaconProxy
+ */
 contract BeaconProxy is Proxy {
     //--------------------------------------------------------------------------------
     // Events

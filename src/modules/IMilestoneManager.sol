@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
-interface IMilestoneManager {
+import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
+
+interface IMilestoneManager is IPaymentClient {
     //--------------------------------------------------------------------------
     // Types
 
@@ -10,16 +12,18 @@ interface IMilestoneManager {
         ///      MUST not be zero.
         uint duration;
         /// @dev The budget for the milestone.
-        ///      That is the number of tokens payed during the milestone's
-        ///      duration.
+        ///      That is the number of tokens payed to contributors when the
+        ///      milestone starts.
         ///      CAN be zero.
         uint budget;
         /// @dev The timestamp the milestone started.
         uint startTimestamp;
-        /// @dev Whether the milestone got submitted already.
+        /// @dev Represents the data that is accompanied when a milestone is submitted.
+        ///      A Milestone is interpreted as being submitted when the
+        ///      submissionData bytes array is not empty.
         ///      Note that only accounts holding the {CONTRIBUTOR_ROLE()} can
-        ///      submit milestones.
-        bool submitted;
+        ///      set submittedData and therefore submit milestones.
+        bytes submissionData;
         /// @dev Whether the milestone is completed.
         ///      A milestone is completed if it got confirmed and started more
         ///      than duration seconds ago.
@@ -41,7 +45,7 @@ interface IMilestoneManager {
     /// @notice Given duration invalid.
     error Module__MilestoneManager__InvalidDuration();
 
-    // @todo mp, nuggan, marvin: Add error for invalid Budget here if necessary.
+    // @audit-info If needed, add error for invalid budget here.
 
     /// @notice Given title invalid.
     error Module__MilestoneManager__InvalidTitle();
@@ -52,6 +56,9 @@ interface IMilestoneManager {
     /// @notice Given milestone id invalid.
     error Module__MilestoneManager__InvalidMilestoneId();
 
+    /// @dev The given submissionData is invalid
+    error Module__MilestoneManage__InvalidSubmissionData();
+
     /// @notice Given milestone not updateable.
     error Module__MilestoneManager__MilestoneNotUpdateable();
 
@@ -61,8 +68,8 @@ interface IMilestoneManager {
     /// @notice Given milestone not submitable.
     error Module__MilestoneManager__MilestoneNotSubmitable();
 
-    /// @notice Given milestone not confirmable.
-    error Module__MilestoneManager__MilestoneNotConfirmable();
+    /// @notice Given milestone not completed.
+    error Module__MilestoneManager__MilestoneNotCompleteable();
 
     /// @notice Given milestone not declineable.
     error Module__MilestoneManager__MilestoneNotDeclineable();
@@ -75,6 +82,9 @@ interface IMilestoneManager {
 
     /// @notice No active milestone currently existing.
     error Module__MilestoneManager__NoActiveMilestone();
+
+    /// @notice Milestone could not be started as there are no contributors.
+    error Module__MilestoneManager__NoContributors();
 
     //--------------------------------------------------------------------------
     // Events
@@ -93,14 +103,14 @@ interface IMilestoneManager {
         uint indexed id, uint duration, uint budget, string details
     );
 
-    /// @notice Event emitted when a milestone removed.
+    /// @notice Event emitted when a milestone is removed.
     event MilestoneRemoved(uint indexed id);
 
-    /// @notice Event emitted when a milestone submitted.
-    event MilestoneSubmitted(uint indexed id);
+    /// @notice Event emitted when a milestone is submitted.
+    event MilestoneSubmitted(uint indexed id, bytes submissionData);
 
-    /// @notice Event emitted when a milestone confirmed.
-    event MilestoneConfirmed(uint indexed id);
+    /// @notice Event emitted when a milestone is completed.
+    event MilestoneCompleted(uint indexed id);
 
     /// @notice Event emitted when a milestone declined.
     event MilestoneDeclined(uint indexed id);
@@ -119,6 +129,28 @@ interface IMilestoneManager {
         external
         view
         returns (Milestone memory);
+
+    /// @notice Returns total list of milestone ids.
+    /// @dev List is in ascending order.
+    /// @return List of milestone ids.
+    function listMilestoneIds() external view returns (uint[] memory);
+
+    /// @notice Returns the current active milestone's id.
+    /// @dev Reverts in case there is no active milestone.
+    /// @return Current active milestone id.
+    function getActiveMilestoneId() external view returns (uint);
+
+    /// @notice Returns whether there exists a current active milestone.
+    /// @return True if current active milestone exists, false otherwise.
+    function hasActiveMilestone() external view returns (bool);
+
+    /// @notice Returns whether the next milestone is activatable.
+    /// @return True if next milestone activatable, false otherwise.
+    function isNextMilestoneActivatable() external view returns (bool);
+
+    /// @notice Returns whether milestone with id `id` exists.
+    /// @return True if milestone with id `id` exists, false otherwise.
+    function isExistingMilestoneId(uint id) external view returns (bool);
 
     //----------------------------------
     // Milestone Mutating Functions
@@ -146,7 +178,10 @@ interface IMilestoneManager {
     /// @param id The milestone's id to remove.
     function removeMilestone(uint prevId, uint id) external;
 
-    // @todo startNextMilestone function doc.
+    /// @notice Starts the next milestones.
+    /// @dev Creates the payment orders to pay contributors.
+    /// @dev Reverts if next milestone not activatable or proposal's contributor
+    ///      list empty.
     /// @dev Only callable by authorized addresses.
     function startNextMilestone() external;
 
@@ -170,15 +205,13 @@ interface IMilestoneManager {
     ///      already completed.
     /// @dev Relay function that routes the function call via the proposal.
     /// @param id The milestone's id.
-    function submitMilestone(uint id) external;
+    function submitMilestone(uint id, bytes calldata submissionData) external;
 
-    // @todo mp, nuggan: Should be renamed to `completeMilestone()`?
-
-    /// @notice Confirms a submitted milestone.
+    /// @notice Completes a milestone.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if id invalid or milestone not yet submitted.
     /// @param id The milestone's id.
-    function confirmMilestone(uint id) external;
+    function completeMilestone(uint id) external;
 
     /// @notice Declines a submitted milestone.
     /// @dev Only callable by authorized addresses.

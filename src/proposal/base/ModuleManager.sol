@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // External Dependencies
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
@@ -22,8 +22,9 @@ import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
  *      which it is able to freely manage.
  *
  *      The transaction execution and module management is copied from Gnosis
- *      Safe.
+ *      Safe's [ModuleManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/ModuleManager.sol).
  *
+ * @author Adapted from Gnosis Safe
  * @author byterocket
  */
 abstract contract ModuleManager is
@@ -75,14 +76,16 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // Constants
 
+    /// @dev Marks the beginning and end of the _modules list.
     address private constant _SENTINEL = address(0x1);
 
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Mapping of modules.
+    /// @dev List of modules.
     mapping(address => address) private _modules;
 
+    /// @dev Counter for number of modules in the _modules list.
     uint private _moduleCounter;
 
     /// @dev Mapping of modules and access control roles to accounts and
@@ -108,10 +111,6 @@ abstract contract ModuleManager is
         // Set up sentinel to signal empty list of modules.
         _modules[_SENTINEL] = _SENTINEL;
 
-        // @todo mp: Change modules from address to IModules.
-        //           This enables easier refactoring in future for "multi-modules".
-        //           Or not???
-
         address module;
         for (uint i; i < modules.length; i++) {
             module = modules[i];
@@ -122,13 +121,15 @@ abstract contract ModuleManager is
 
             // Commit adding the module.
             _commitAddModule(module);
-
-            // @todo mp: Call into module to "register this proposal" as using
-            //           that module instance?
-            // This would make it possible to have "multi-modules".
-            // One module contract that is an active module for infinite many
-            // proposals by saving it's state on a per-proposal basis.
         }
+    }
+
+    function __ModuleManager_addModule(address module)
+        internal
+        isNotModule(module)
+        validModule(module)
+    {
+        _commitAddModule(module);
     }
 
     //--------------------------------------------------------------------------
@@ -179,6 +180,11 @@ abstract contract ModuleManager is
         }
 
         return result;
+    }
+
+    /// @inheritdoc IModuleManager
+    function modulesSize() external view returns (uint) {
+        return _moduleCounter;
     }
 
     //--------------------------------------------------------------------------
@@ -263,7 +269,7 @@ abstract contract ModuleManager is
     /// @dev Expects `module` to be valid module address.
     /// @dev Expects `module` to not be enabled module.
     function _commitAddModule(address module) private {
-        // Add address to _modules mapping.
+        // Add address to _modules list.
         _modules[module] = _modules[_SENTINEL];
         _modules[_SENTINEL] = module;
         _moduleCounter++;
@@ -271,7 +277,7 @@ abstract contract ModuleManager is
         emit ModuleAdded(module);
     }
 
-    /// @dev Expect address arguments to be consecutive in the modules list.
+    /// @dev Expects address arguments to be consecutive in the modules list.
     /// @dev Expects address `module` to be enabled module.
     function _commitRemoveModule(address prevModule, address module) private {
         // Remove module address from list and decrease counter.
@@ -279,11 +285,6 @@ abstract contract ModuleManager is
         delete _modules[module];
         _moduleCounter--;
 
-        // @todo marvin, mp: See comment.
-        //                   Should we maybe allow roles managemant for
-        //                   non-modules too?
-        //                   Then a disabled module could revoke roles before
-        //                   being re-enabled again.
         // Note that we cannot delete the module's roles configuration.
         // This means that in case a module is disabled and then re-enabled,
         // its roles configuration is the same as before.
@@ -293,12 +294,10 @@ abstract contract ModuleManager is
     }
 
     function _ensureValidModule(address module) private view {
-        // @todo mp: Make gas optimized.
-        bool isZero = module == address(0);
-        bool isSentinel = module == _SENTINEL;
-        bool isThis = module == address(this);
-
-        if (isZero || isSentinel || isThis) {
+        if (
+            module == address(0) || module == _SENTINEL
+                || module == address(this)
+        ) {
             revert Proposal__ModuleManager__InvalidModuleAddress();
         }
     }
