@@ -359,7 +359,6 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-     
         ISingleVoteGovernor.Proposal storage _prop =
             getFullProposalData(_voteID);
         uint _votesBefore = _prop.forVotes;
@@ -438,7 +437,7 @@ contract SingleVoteGovernorTest is Test {
         vm.warp(startTime + DEFAULT_DURATION);
         voteAgainst(BOB, _voteID);
 
-               _prop = getFullProposalData(_voteID);
+        _prop = getFullProposalData(_voteID);
 
         assertEq(_prop.receipts[ALBA].hasVoted, true);
         assertEq(_prop.receipts[ALBA].support, 1);
@@ -834,6 +833,14 @@ contract SingleVoteGovernorTest is Test {
             assertEq(_authorizer.isVoter(_from[i]), false);
             assertEq(_authorizer.isVoter(_to[i]), true);
         }
+    }
+
+    function testOnlyGovernanceIsAuthorized(address _other) public {
+        vm.assume(_other != address(_authorizer));
+
+        vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);
+        vm.prank(_other);
+        _proposal.executeTx(address(0), "");
     }
 
     //--------------------------------------------------------------------------
