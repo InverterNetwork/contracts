@@ -28,6 +28,15 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         _;
     }
 
+    /// @notice Verifies that the targeted module address is indeed active in the Proposal.
+    modifier validTargetModule(address _target) {
+        //this should implicitly control for address  != 0
+        if (!__Module_proposal.isModule(_target)) {
+            revert Module__SingleVoteGovernor__InvalidTargetModule();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
@@ -138,6 +147,19 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     }
 
     //--------------------------------------------------------------------------
+    // Data Retrieval Functions
+
+    function getReceipt(uint _ID, address voter)
+        public
+        view
+        returns (Receipt memory)
+    {
+        Receipt memory _r = proposals[_ID].receipts[voter];
+
+        return (_r);
+    }
+
+    //--------------------------------------------------------------------------
     // Configuration Functions
 
     function setQuorum(uint newQuorum) external onlySelf {
@@ -180,6 +202,16 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     }
 
     function removeVoter(address who) external onlySelf {
+        //Revert if trying to remove the last voter
+        if (voterCount == 1) {
+            revert Module__SingleVoteGovernor__EmptyVoters();
+        }
+
+        //Revert if removal would leave quorum unreachable
+        if (voterCount == quorum) {
+            revert Module__SingleVoteGovernor__UnreachableQuorum();
+        }
+
         if (isVoter[who]) {
             delete isVoter[who];
             unchecked {
@@ -208,6 +240,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     function createProposal(address target, bytes calldata action)
         external
         onlyVoter
+        validTargetModule(target)
         returns (uint)
     {
         // Cache proposal's id.
@@ -244,12 +277,22 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             revert Module__SingleVoteGovernor__InvalidSupport();
         }
 
+        //Revert if proposalID invalid
+        if (proposalId >= proposalCount) {
+            revert Module__SingleVoteGovernor__InvalidProposalId();
+        }
+
         // Get pointer to the proposal.
         Proposal storage proposal_ = proposals[proposalId];
 
         // Revert if proposalId invalid.
         if (proposal_.startTimestamp == 0) {
             revert Module__SingleVoteGovernor__InvalidProposalId();
+        }
+
+        // Revert if voting duration exceeded
+        if (block.timestamp > proposal_.endTimestamp) {
+            revert Module__SingleVoteGovernor__ProposalVotingPhaseClosed();
         }
 
         // Revert if caller attempts to double vote.
@@ -279,13 +322,18 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         Proposal storage proposal_ = proposals[proposalId];
 
         // Revert if proposalId invalid.
-        if (proposal_.startTimestamp == 0) {
+        if (proposalId >= proposalCount) {
             revert Module__SingleVoteGovernor__InvalidProposalId();
         }
 
         // Revert if voting duration not exceeded.
-        if (proposal_.endTimestamp < block.timestamp) {
+        if (block.timestamp < proposal_.endTimestamp) {
             revert Module__SingleVoteGovernor__ProposalInVotingPhase();
+        }
+
+        //Revert if necessary quorum was not reached
+        if (proposal_.forVotes < proposal_.requiredQuorum) {
+            revert Module__SingleVoteGovernor__QuorumNotReached();
         }
 
         // Revert if proposal already executed.

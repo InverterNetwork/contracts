@@ -53,9 +53,15 @@ contract ListAuthorizer is IAuthorizer, Module {
         if (_initialAuthorizers.length == 0) {
             revert Module__ListAuthorizer__invalidInitialAuthorizers();
         }
-        for (uint i; i < _initialAuthorizers.length; i++) {
+        for (uint i; i < _initialAuthorizers.length - 1; i++) {
             if (_initialAuthorizers[i] == address(0)) {
                 revert Module__ListAuthorizer__invalidInitialAuthorizers();
+            }
+            for (uint j = i + 1; j < _initialAuthorizers.length; j++) {
+                if (_initialAuthorizers[i] == _initialAuthorizers[j]) {
+                    //duplicate address
+                    revert Module__ListAuthorizer__invalidInitialAuthorizers();
+                }
             }
         }
         _;

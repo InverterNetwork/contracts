@@ -37,13 +37,16 @@ interface ISingleVoteGovernor is IAuthorizer {
     error Module__SingleVoteGovernor__EmptyVoters();
     error Module__SingleVoteGovernor__UnreachableQuorum();
     error Module__SingleVoteGovernor__InvalidVotingDuration();
+    error Module__SingleVoteGovernor__InvalidTargetModule();
     error Module__SingleVoteGovernor__CallerNotVoter();
     error Module__SingleVoteGovernor__IsAlreadyVoter();
     error Module__SingleVoteGovernor__InvalidSupport();
     error Module__SingleVoteGovernor__InvalidProposalId();
     error Module__SingleVoteGovernor__AttemptedDoubleVote();
     error Module__SingleVoteGovernor__ProposalInVotingPhase();
+    error Module__SingleVoteGovernor__ProposalVotingPhaseClosed();
     error Module__SingleVoteGovernor__ProposalAlreadyExecuted();
+    error Module__SingleVoteGovernor__QuorumNotReached();
 
     //--------------------------------------------------------------------------
     // Events
