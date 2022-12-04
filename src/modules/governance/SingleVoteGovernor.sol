@@ -53,10 +53,10 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     mapping(address => bool) public isVoter;
 
     /// @inheritdoc ISingleVoteGovernor
-    mapping(uint => Proposal) public proposals;
+    mapping(uint => Motion) public motions;
 
     /// @inheritdoc ISingleVoteGovernor
-    uint public proposalCount;
+    uint public motionCount;
 
     /// @inheritdoc ISingleVoteGovernor
     uint public voterCount;
@@ -161,7 +161,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         view
         returns (Receipt memory)
     {
-        Receipt memory _r = proposals[_ID].receipts[voter];
+        Receipt memory _r = motions[_ID].receipts[voter];
 
         return (_r);
     }
@@ -244,38 +244,38 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
     // Governance Functions
 
-    function createProposal(address target, bytes calldata action)
+    function createMotion(address target, bytes calldata action)
         external
         onlyVoter
         validTargetModule(target)
         returns (uint)
     {
-        // Cache proposal's id.
-        uint proposalId = proposalCount;
+        // Cache motion's id.
+        uint motionId = motionCount;
 
-        // Get pointer to proposal.
-        // Note that the proposal instance is uninitialized.
-        Proposal storage proposal_ = proposals[proposalId];
+        // Get pointer to motion.
+        // Note that the motion instance is uninitialized.
+        Motion storage motion_ = motions[motionId];
 
-        // Initialize proposal.
-        proposal_.target = target;
-        proposal_.action = action;
+        // Initialize motion.
+        motion_.target = target;
+        motion_.action = action;
 
-        proposal_.startTimestamp = block.timestamp;
-        proposal_.endTimestamp = block.timestamp + voteDuration;
-        proposal_.requiredQuorum = quorum;
+        motion_.startTimestamp = block.timestamp;
+        motion_.endTimestamp = block.timestamp + voteDuration;
+        motion_.requiredQuorum = quorum;
 
-        emit ProposalCreated(proposalId);
+        emit MotionCreated(motionId);
 
-        // Increase the proposal count.
+        // Increase the motion count.
         unchecked {
-            ++proposalCount;
+            ++motionCount;
         }
 
-        return proposalId;
+        return motionId;
     }
 
-    function castVote(uint proposalId, uint8 support) external onlyVoter {
+    function castVote(uint motionId, uint8 support) external onlyVoter {
         // Revert if support invalid.
         // 0 = for
         // 1 = against
@@ -284,75 +284,75 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             revert Module__SingleVoteGovernor__InvalidSupport();
         }
 
-        //Revert if proposalID invalid
-        if (proposalId >= proposalCount) {
-            revert Module__SingleVoteGovernor__InvalidProposalId();
+        //Revert if motionID invalid
+        if (motionId >= motionCount) {
+            revert Module__SingleVoteGovernor__InvalidMotionId();
         }
 
-        // Get pointer to the proposal.
-        Proposal storage proposal_ = proposals[proposalId];
+        // Get pointer to the motion.
+        Motion storage motion_ = motions[motionId];
 
         // Revert if voting duration exceeded
-        if (block.timestamp > proposal_.endTimestamp) {
-            revert Module__SingleVoteGovernor__ProposalVotingPhaseClosed();
+        if (block.timestamp > motion_.endTimestamp) {
+            revert Module__SingleVoteGovernor__MotionVotingPhaseClosed();
         }
 
         // Revert if caller attempts to double vote.
-        if (proposal_.receipts[msg.sender].hasVoted) {
+        if (motion_.receipts[msg.sender].hasVoted) {
             revert Module__SingleVoteGovernor__AttemptedDoubleVote();
         }
 
         if (support == 0) {
             unchecked {
-                ++proposal_.forVotes;
+                ++motion_.forVotes;
             }
         } else if (support == 1) {
             unchecked {
-                ++proposal_.againstVotes;
+                ++motion_.againstVotes;
             }
         } else if (support == 2) {
             unchecked {
-                ++proposal_.abstainVotes;
+                ++motion_.abstainVotes;
             }
         }
 
-        proposal_.receipts[msg.sender] = Receipt(true, support);
+        motion_.receipts[msg.sender] = Receipt(true, support);
     }
 
-    function executeProposal(uint proposalId) external {
-        // Get pointer to the proposal.
-        Proposal storage proposal_ = proposals[proposalId];
+    function executeMotion(uint motionId) external {
+        // Get pointer to the motion.
+        Motion storage motion_ = motions[motionId];
 
-        // Revert if proposalId invalid.
-        if (proposalId >= proposalCount) {
-            revert Module__SingleVoteGovernor__InvalidProposalId();
+        // Revert if motionId invalid.
+        if (motionId >= motionCount) {
+            revert Module__SingleVoteGovernor__InvalidMotionId();
         }
 
         // Revert if voting duration not exceeded.
-        if (block.timestamp < proposal_.endTimestamp) {
-            revert Module__SingleVoteGovernor__ProposalInVotingPhase();
+        if (block.timestamp < motion_.endTimestamp) {
+            revert Module__SingleVoteGovernor__MotionInVotingPhase();
         }
 
         //Revert if necessary quorum was not reached
-        if (proposal_.forVotes < proposal_.requiredQuorum) {
+        if (motion_.forVotes < motion_.requiredQuorum) {
             revert Module__SingleVoteGovernor__QuorumNotReached();
         }
 
-        // Revert if proposal already executed.
-        if (proposal_.executedAt != 0) {
-            revert Module__SingleVoteGovernor__ProposalAlreadyExecuted();
+        // Revert if motion already executed.
+        if (motion_.executedAt != 0) {
+            revert Module__SingleVoteGovernor__MotionAlreadyExecuted();
         }
 
         // Execute `action` on `target`.
         bool result;
         bytes memory returnData;
-        (result, returnData) = proposal_.target.call(proposal_.action);
+        (result, returnData) = motion_.target.call(motion_.action);
 
         // Save execution's result.
-        proposal_.executedAt = block.timestamp;
-        proposal_.executionResult = result;
-        proposal_.executionReturnData = returnData;
+        motion_.executedAt = block.timestamp;
+        motion_.executionResult = result;
+        motion_.executionReturnData = returnData;
 
-        emit ProposalExecuted(proposalId);
+        emit MotionExecuted(motionId);
     }
 }

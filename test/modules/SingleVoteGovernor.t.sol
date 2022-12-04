@@ -56,7 +56,7 @@ contract SingleVoteGovernorTest is Test {
     address internal constant ALBA = address(0xa1ba);
     address internal constant BOB = address(0xb0b);
     address internal constant COBIE = address(0xc0b1e);
-    ISingleVoteGovernor.Proposal _bufProp;
+    ISingleVoteGovernor.Motion _bufMotion;
 
     function setUp() public {
         // Set up a proposal
@@ -122,7 +122,7 @@ contract SingleVoteGovernorTest is Test {
         returns (uint)
     {
         vm.prank(callingUser);
-        uint _id = _authorizer.createProposal(_addr, _msg);
+        uint _id = _authorizer.createMotion(_addr, _msg);
         return _id;
     }
 
@@ -135,7 +135,7 @@ contract SingleVoteGovernorTest is Test {
             uint _voteID = speedrunSuccessfulVote(
                 address(_authorizer), _encodedAction, initialVoters
             );
-            _authorizer.executeProposal(_voteID);
+            _authorizer.executeMotion(_voteID);
 
             currentVoters.push(users[i]);
             assertEq(_authorizer.isVoter(users[i]), true);
@@ -209,9 +209,9 @@ contract SingleVoteGovernorTest is Test {
         return (_moduleAddress, _msg);
     }
 
-    function getFullProposalData(uint voteId)
+    function getFullMotionData(uint voteId)
         internal
-        returns (ISingleVoteGovernor.Proposal storage)
+        returns (ISingleVoteGovernor.Motion storage)
     {
         (
             address _addr,
@@ -225,26 +225,26 @@ contract SingleVoteGovernorTest is Test {
             uint _excAt,
             bool _excRes,
             bytes memory _excData
-        ) = _authorizer.proposals(voteId);
+        ) = _authorizer.motions(voteId);
 
-        _bufProp.target = _addr;
-        _bufProp.action = _act;
-        _bufProp.startTimestamp = _start;
-        _bufProp.endTimestamp = _end;
-        _bufProp.requiredQuorum = _quorum;
-        _bufProp.forVotes = _for;
-        _bufProp.againstVotes = _against;
-        _bufProp.abstainVotes = _abstain;
-        _bufProp.executedAt = _excAt;
-        _bufProp.executionResult = _excRes;
-        _bufProp.executionReturnData = _excData;
+        _bufMotion.target = _addr;
+        _bufMotion.action = _act;
+        _bufMotion.startTimestamp = _start;
+        _bufMotion.endTimestamp = _end;
+        _bufMotion.requiredQuorum = _quorum;
+        _bufMotion.forVotes = _for;
+        _bufMotion.againstVotes = _against;
+        _bufMotion.abstainVotes = _abstain;
+        _bufMotion.executedAt = _excAt;
+        _bufMotion.executionResult = _excRes;
+        _bufMotion.executionReturnData = _excData;
 
         for (uint i; i < currentVoters.length; i++) {
-            _bufProp.receipts[currentVoters[i]] =
+            _bufMotion.receipts[currentVoters[i]] =
                 _authorizer.getReceipt(voteId, currentVoters[i]);
         }
 
-        return _bufProp;
+        return _bufMotion;
     }
 
     //--------------------------------------------------------------------------
@@ -420,21 +420,21 @@ contract SingleVoteGovernorTest is Test {
         for (uint i; i < initialVoters.length; i++) {
             uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-            ISingleVoteGovernor.Proposal storage _prop =
-                getFullProposalData(_voteID);
+            ISingleVoteGovernor.Motion storage _motion =
+                getFullMotionData(_voteID);
 
-            assertEq(_authorizer.proposalCount(), (_voteID + 1));
-            assertEq(_prop.target, _moduleAddress);
-            assertEq(_prop.action, _msg);
-            assertEq(_prop.startTimestamp, block.timestamp);
-            assertEq(_prop.endTimestamp, (block.timestamp + DEFAULT_DURATION));
-            assertEq(_prop.requiredQuorum, DEFAULT_QUORUM);
-            assertEq(_prop.forVotes, 0);
-            assertEq(_prop.againstVotes, 0);
-            assertEq(_prop.abstainVotes, 0);
-            assertEq(_prop.executedAt, 0);
-            assertEq(_prop.executionResult, false);
-            assertEq(_prop.executionReturnData, "");
+            assertEq(_authorizer.motionCount(), (_voteID + 1));
+            assertEq(_motion.target, _moduleAddress);
+            assertEq(_motion.action, _msg);
+            assertEq(_motion.startTimestamp, block.timestamp);
+            assertEq(_motion.endTimestamp, (block.timestamp + DEFAULT_DURATION));
+            assertEq(_motion.requiredQuorum, DEFAULT_QUORUM);
+            assertEq(_motion.forVotes, 0);
+            assertEq(_motion.againstVotes, 0);
+            assertEq(_motion.abstainVotes, 0);
+            assertEq(_motion.executedAt, 0);
+            assertEq(_motion.executionResult, false);
+            assertEq(_motion.executionReturnData, "");
         }
     }
 
@@ -452,7 +452,7 @@ contract SingleVoteGovernorTest is Test {
                     .selector
             );
             vm.prank(users[i]);
-            _authorizer.createProposal(_moduleAddress, _msg);
+            _authorizer.createMotion(_moduleAddress, _msg);
         }
     }
 
@@ -516,8 +516,7 @@ contract SingleVoteGovernorTest is Test {
             )
         );
         vm.prank(ALBA);
-        _authorizer.createProposal(wrongModule, _msg);
-
+        _authorizer.createMotion(wrongModule, _msg);
     }
 
     //--------------------------------------------------------------------------
@@ -532,9 +531,8 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        ISingleVoteGovernor.Proposal storage _prop =
-            getFullProposalData(_voteID);
-        uint _votesBefore = _prop.forVotes;
+        ISingleVoteGovernor.Motion storage _motion = getFullMotionData(_voteID);
+        uint _votesBefore = _motion.forVotes;
 
         voteInFavor(ALBA, _voteID);
 
@@ -549,20 +547,20 @@ contract SingleVoteGovernorTest is Test {
         vm.warp(startTime + DEFAULT_DURATION);
         voteInFavor(BOB, _voteID);
 
-        _prop = getFullProposalData(_voteID);
+        _motion = getFullMotionData(_voteID);
 
-        assertEq(_prop.receipts[ALBA].hasVoted, true);
-        assertEq(_prop.receipts[ALBA].support, 0);
+        assertEq(_motion.receipts[ALBA].hasVoted, true);
+        assertEq(_motion.receipts[ALBA].support, 0);
 
-        assertEq(_prop.receipts[BOB].hasVoted, true);
-        assertEq(_prop.receipts[BOB].support, 0);
+        assertEq(_motion.receipts[BOB].hasVoted, true);
+        assertEq(_motion.receipts[BOB].support, 0);
 
         for (uint i; i < users.length; i++) {
-            assertEq(_prop.receipts[users[i]].hasVoted, true);
-            assertEq(_prop.receipts[users[i]].support, 0);
+            assertEq(_motion.receipts[users[i]].hasVoted, true);
+            assertEq(_motion.receipts[users[i]].support, 0);
         }
 
-        assertEq(_prop.forVotes, (_votesBefore + 2 + users.length));
+        assertEq(_motion.forVotes, (_votesBefore + 2 + users.length));
     }
 
     // Fail to vote in favor as unauthorized address
@@ -593,9 +591,8 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        ISingleVoteGovernor.Proposal storage _prop =
-            getFullProposalData(_voteID);
-        uint _votesBefore = _prop.againstVotes;
+        ISingleVoteGovernor.Motion storage _motion = getFullMotionData(_voteID);
+        uint _votesBefore = _motion.againstVotes;
 
         voteAgainst(ALBA, _voteID);
 
@@ -610,20 +607,20 @@ contract SingleVoteGovernorTest is Test {
         vm.warp(startTime + DEFAULT_DURATION);
         voteAgainst(BOB, _voteID);
 
-        _prop = getFullProposalData(_voteID);
+        _motion = getFullMotionData(_voteID);
 
-        assertEq(_prop.receipts[ALBA].hasVoted, true);
-        assertEq(_prop.receipts[ALBA].support, 1);
+        assertEq(_motion.receipts[ALBA].hasVoted, true);
+        assertEq(_motion.receipts[ALBA].support, 1);
 
-        assertEq(_prop.receipts[BOB].hasVoted, true);
-        assertEq(_prop.receipts[BOB].support, 1);
+        assertEq(_motion.receipts[BOB].hasVoted, true);
+        assertEq(_motion.receipts[BOB].support, 1);
 
         for (uint i; i < users.length; i++) {
-            assertEq(_prop.receipts[users[i]].hasVoted, true);
-            assertEq(_prop.receipts[users[i]].support, 1);
+            assertEq(_motion.receipts[users[i]].hasVoted, true);
+            assertEq(_motion.receipts[users[i]].support, 1);
         }
 
-        assertEq(_prop.againstVotes, (_votesBefore + 2 + users.length));
+        assertEq(_motion.againstVotes, (_votesBefore + 2 + users.length));
     }
 
     // Fail to vote against as unauthorized address
@@ -653,9 +650,8 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        ISingleVoteGovernor.Proposal storage _prop =
-            getFullProposalData(_voteID);
-        uint _votesBefore = _prop.abstainVotes;
+        ISingleVoteGovernor.Motion storage _motion = getFullMotionData(_voteID);
+        uint _votesBefore = _motion.abstainVotes;
 
         voteAbstain(ALBA, _voteID);
 
@@ -685,20 +681,20 @@ contract SingleVoteGovernorTest is Test {
             assertEq(_r.support, 2);
         }
 
-        _prop = getFullProposalData(_voteID);
+        _motion = getFullMotionData(_voteID);
 
-        assertEq(_prop.receipts[ALBA].hasVoted, true);
-        assertEq(_prop.receipts[ALBA].support, 2);
+        assertEq(_motion.receipts[ALBA].hasVoted, true);
+        assertEq(_motion.receipts[ALBA].support, 2);
 
-        assertEq(_prop.receipts[BOB].hasVoted, true);
-        assertEq(_prop.receipts[BOB].support, 2);
+        assertEq(_motion.receipts[BOB].hasVoted, true);
+        assertEq(_motion.receipts[BOB].support, 2);
 
         for (uint i; i < users.length; i++) {
-            assertEq(_prop.receipts[users[i]].hasVoted, true);
-            assertEq(_prop.receipts[users[i]].support, 2);
+            assertEq(_motion.receipts[users[i]].hasVoted, true);
+            assertEq(_motion.receipts[users[i]].support, 2);
         }
 
-        assertEq(_prop.abstainVotes, (_votesBefore + 2 + users.length));
+        assertEq(_motion.abstainVotes, (_votesBefore + 2 + users.length));
     }
 
     // Fail to vote abstain as unauthorized address
@@ -732,7 +728,7 @@ contract SingleVoteGovernorTest is Test {
             // For
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__ProposalVotingPhaseClosed
+                    .Module__SingleVoteGovernor__MotionVotingPhaseClosed
                     .selector
             );
 
@@ -741,7 +737,7 @@ contract SingleVoteGovernorTest is Test {
             // Against
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__ProposalVotingPhaseClosed
+                    .Module__SingleVoteGovernor__MotionVotingPhaseClosed
                     .selector
             );
             voteAgainst(ALBA, _voteID);
@@ -749,7 +745,7 @@ contract SingleVoteGovernorTest is Test {
             //Abstain
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__ProposalVotingPhaseClosed
+                    .Module__SingleVoteGovernor__MotionVotingPhaseClosed
                     .selector
             );
             voteAbstain(ALBA, _voteID);
@@ -769,7 +765,7 @@ contract SingleVoteGovernorTest is Test {
             // For
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidProposalId
+                    .Module__SingleVoteGovernor__InvalidMotionId
                     .selector
             );
 
@@ -778,7 +774,7 @@ contract SingleVoteGovernorTest is Test {
             // Against
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidProposalId
+                    .Module__SingleVoteGovernor__InvalidMotionId
                     .selector
             );
 
@@ -787,7 +783,7 @@ contract SingleVoteGovernorTest is Test {
             //Abstain
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidProposalId
+                    .Module__SingleVoteGovernor__InvalidMotionId
                     .selector
             );
             voteAbstain(ALBA, wrongID);
@@ -863,9 +859,9 @@ contract SingleVoteGovernorTest is Test {
         );
 
         // 3) The vote gets executed (by anybody)
-        _authorizer.executeProposal(_voteID);
+        _authorizer.executeMotion(_voteID);
 
-        // 4) The proposal state has changed
+        // 4) The module state has changed
         assertEq(_authorizer.voteDuration(), _newDuration);
     }
     // Fail to execute vote that didn't pass
@@ -874,10 +870,10 @@ contract SingleVoteGovernorTest is Test {
         //No votes exist yet, everyting should fail
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__InvalidProposalId
+                .Module__SingleVoteGovernor__InvalidMotionId
                 .selector
         );
-        _authorizer.executeProposal(wrongId);
+        _authorizer.executeMotion(wrongId);
     }
 
     // Fail to execute vote that didn't pass
@@ -895,7 +891,7 @@ contract SingleVoteGovernorTest is Test {
                 .Module__SingleVoteGovernor__QuorumNotReached
                 .selector
         );
-        _authorizer.executeProposal(_voteID);
+        _authorizer.executeMotion(_voteID);
     }
 
     //Fail to execute vote while voting is open
@@ -911,11 +907,11 @@ contract SingleVoteGovernorTest is Test {
         vm.expectRevert(
             abi.encodePacked(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__ProposalInVotingPhase
+                    .Module__SingleVoteGovernor__MotionInVotingPhase
                     .selector
             )
         );
-        _authorizer.executeProposal(_voteID);
+        _authorizer.executeMotion(_voteID);
     }
 
     // Fail to execute an already executed vote
@@ -930,20 +926,20 @@ contract SingleVoteGovernorTest is Test {
         );
 
         // 2) Then the vote gets executed by anybody
-        _authorizer.executeProposal(_voteID);
+        _authorizer.executeMotion(_voteID);
 
-        // 3) the proposal state has changed
+        // 3) the module state has changed
         assertEq(_authorizer.voteDuration(), _newDuration);
 
         // 4) Now we test that we can't execute again:
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__ProposalAlreadyExecuted
+                    .Module__SingleVoteGovernor__MotionAlreadyExecuted
                     .selector
             )
         );
-        _authorizer.executeProposal(_voteID);
+        _authorizer.executeMotion(_voteID);
     }
 
     function testOnlyGovernanceIsAuthorized(address _other) public {
@@ -1099,7 +1095,7 @@ contract SingleVoteGovernorTest is Test {
     }
 
     // Set a new quorum
-    function testProposalSetQuorum() public {
+    function testMotionSetQuorum() public {
         uint _newQ = 1;
 
         vm.prank(address(_authorizer));
@@ -1146,7 +1142,7 @@ contract SingleVoteGovernorTest is Test {
         );
 
         // 2) The vote gets executed by anybody
-        _authorizer.executeProposal(_voteID);
+        _authorizer.executeMotion(_voteID);
 
         // 3) The proposal state has changed
         assertEq(_authorizer.quorum(), _newQuorum);
@@ -1161,7 +1157,7 @@ contract SingleVoteGovernorTest is Test {
     }
 
     // Set new vote duration
-    function testProposalSetVoteDuration() public {
+    function testMotionSetVoteDuration() public {
         uint _newDur = 3 days;
 
         vm.prank(address(_authorizer));
@@ -1171,7 +1167,7 @@ contract SingleVoteGovernorTest is Test {
     }
 
     // Fail to set vote durations out of bounds
-    function testProposalSetInvalidVoteDuration() public {
+    function testMotionSetInvalidVoteDuration() public {
         uint _oldDur = _authorizer.voteDuration();
         uint _newDur = 3 weeks;
 
