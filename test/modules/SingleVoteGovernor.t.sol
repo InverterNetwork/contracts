@@ -248,6 +248,169 @@ contract SingleVoteGovernorTest is Test {
     }
 
     //--------------------------------------------------------------------------
+    // TESTS: INITIALIZATION
+
+    function testInitWithInitialVoters(address[] memory testVoters) public {
+        //Checks that address list gets correctly stored on initialization
+        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+
+        vm.assume(testVoters.length >= 2);
+        _validateUserList(testVoters);
+
+        address authImpl = address(new SingleVoteGovernor());
+        SingleVoteGovernor testAuthorizer =
+            SingleVoteGovernor(Clones.clone(authImpl));
+
+        //Since the authorizer we are working with is not the default one,
+        // we must manually control that the fuzzer doesn't feed us its address
+        for (uint i; i < testVoters.length; i++) {
+            vm.assume(testVoters[i] != address(testAuthorizer));
+        }
+
+        testAuthorizer.init(
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
+        );
+
+        assertEq(address(testAuthorizer.proposal()), address(_proposal));
+
+        for (uint i; i < testVoters.length; i++) {
+            assertEq(testAuthorizer.isVoter(testVoters[i]), true);
+        }
+        assertEq(testAuthorizer.isVoter(address(this)), false);
+        assertEq(testAuthorizer.voterCount(), testVoters.length);
+    }
+
+    function testInitWithDuplicateInitialVotersFails(
+        address[] memory testVoters,
+        uint8 position
+    ) public {
+        //Checks that address list gets correctly stored on initialization
+        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+
+        vm.assume(testVoters.length >= 2);
+        vm.assume(position > 0 && position < testVoters.length);
+
+        address authImpl = address(new SingleVoteGovernor());
+        SingleVoteGovernor testAuthorizer =
+            SingleVoteGovernor(Clones.clone(authImpl));
+
+        _validateUserList(testVoters);
+
+        //Since the authorizer we are working with is not the default one,
+        // we must manually control that the fuzzer doesn't feed us its address
+        for (uint i; i < testVoters.length; i++) {
+            vm.assume(testVoters[i] != address(testAuthorizer));
+        }
+
+        testVoters[position] = testVoters[0];
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISingleVoteGovernor
+                    .Module__SingleVoteGovernor__IsAlreadyVoter
+                    .selector
+            )
+        );
+        testAuthorizer.init(
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
+        );
+    }
+
+    function testReinitFails() public {
+        //Create a mock new proposal
+        Proposal newProposal = Proposal(Clones.clone(address(new Proposal())));
+
+        address[] memory testVoters = new address[](1);
+        testVoters[0] = address(this);
+
+        vm.expectRevert();
+        _authorizer.init(
+            IProposal(newProposal),
+            _METADATA,
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
+        );
+
+        assertEq(_authorizer.isAuthorized(address(_authorizer)), true);
+        assertEq(_authorizer.isVoter(ALBA), true);
+        assertEq(_authorizer.isVoter(BOB), true);
+        assertEq(_authorizer.isVoter(COBIE), true);
+        assertEq(_authorizer.voterCount(), 3);
+    }
+
+    function testInitWithInvalidInitialVotersFails() public {
+        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+
+        address authImpl = address(new SingleVoteGovernor());
+        SingleVoteGovernor testAuthorizer =
+            SingleVoteGovernor(Clones.clone(authImpl));
+
+        address[] memory testVoters;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISingleVoteGovernor
+                    .Module__SingleVoteGovernor__EmptyVoters
+                    .selector
+            )
+        );
+        testAuthorizer.init(
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
+        );
+
+        //test faulty list (zero addresses)
+        testVoters = new address[](2);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISingleVoteGovernor
+                    .Module__SingleVoteGovernor__InvalidVoterAddress
+                    .selector
+            )
+        );
+        testAuthorizer.init(
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
+        );
+
+        testVoters[0] = address(testAuthorizer);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISingleVoteGovernor
+                    .Module__SingleVoteGovernor__InvalidVoterAddress
+                    .selector
+            )
+        );
+        testAuthorizer.init(
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
+        );
+
+        testVoters[0] = address(_proposal);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISingleVoteGovernor
+                    .Module__SingleVoteGovernor__InvalidVoterAddress
+                    .selector
+            )
+        );
+        testAuthorizer.init(
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
+        );
+
+        assertEq(address(testAuthorizer.proposal()), address(0));
+        assertEq(testAuthorizer.voterCount(), 0);
+    }
+
+    //--------------------------------------------------------------------------
     // TESTS: VOTE CREATION
 
     // Create vote correctly
@@ -293,6 +456,28 @@ contract SingleVoteGovernorTest is Test {
         }
     }
 
+    function testUnauthorizedVoterAddition(address[] memory users) public {
+        _validateUserList(users);
+        batchAddAuthorized(users);
+
+        for (uint i; i < users.length; i++) {
+            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.prank(users[i]); //authorized, but not Module
+            _authorizer.addVoter(users[i]);
+        }
+    }
+
+    function testUnauthorizedVoterRemoval(address[] memory users) public {
+        _validateUserList(users);
+        batchAddAuthorized(users);
+
+        for (uint i; i < users.length; i++) {
+            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.prank(users[i]); //authorized, but not Module
+            _authorizer.removeVoter(users[i]);
+        }
+    }
+
     // Add authorized address and have it create a vote
     function testCreateVoteWithRecentlyAuthorizedAddress(address[] memory users)
         public
@@ -321,6 +506,7 @@ contract SingleVoteGovernorTest is Test {
         vm.assume(wrongModule != address(_paymentProcessor));
 
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
+        delete _moduleAddress; //get rid of the ugly warning
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -332,19 +518,6 @@ contract SingleVoteGovernorTest is Test {
         vm.prank(ALBA);
         _authorizer.createProposal(wrongModule, _msg);
 
-        //Maybe discard this?
-        /*
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ISingleVoteGovernor
-                    .Module__SingleVoteGovernance__invalidEncodedAction
-                    .selector,
-                ""
-            )
-        );
-        vm.prank(ALBA);
-        _authorizer.createProposal(_moduleAddress, "");
-        */
     }
 
     //--------------------------------------------------------------------------
@@ -621,6 +794,22 @@ contract SingleVoteGovernorTest is Test {
         }
     }
 
+    // Fail to vote with a different value than the allowed three
+    function testCastInvalidVote(uint8 wrongVote) public {
+        vm.assume(wrongVote > 2);
+        //create vote
+        (address _moduleAddress, bytes memory _msg) = getMockValidVote();
+        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+
+        vm.expectRevert(
+            ISingleVoteGovernor
+                .Module__SingleVoteGovernor__InvalidSupport
+                .selector
+        );
+        vm.prank(ALBA);
+        _authorizer.castVote(_voteID, wrongVote);
+    }
+
     // Fail vote for after already voting (testing the three vote variants)
     function testDoubleVoting(address[] memory users) public {
         _validateUserList(users);
@@ -678,6 +867,17 @@ contract SingleVoteGovernorTest is Test {
 
         // 4) The proposal state has changed
         assertEq(_authorizer.voteDuration(), _newDuration);
+    }
+    // Fail to execute vote that didn't pass
+
+    function testExecuteInexistentVote(uint wrongId) public {
+        //No votes exist yet, everyting should fail
+        vm.expectRevert(
+            ISingleVoteGovernor
+                .Module__SingleVoteGovernor__InvalidProposalId
+                .selector
+        );
+        _authorizer.executeProposal(wrongId);
     }
 
     // Fail to execute vote that didn't pass
@@ -746,70 +946,64 @@ contract SingleVoteGovernorTest is Test {
         _authorizer.executeProposal(_voteID);
     }
 
-    // Fail to execute governance functions through governance-approved callbacks (testing all 4 limited functions)
-    function testGovernanceLoopFails() public {
-        // This isn't relevant anymore with the new contracts (since "onlyVoters" can vote)
-        /* // 1) Create (but don't execute) a set of passed votes which could act on future governance decisions
+    function testOnlyGovernanceIsAuthorized(address _other) public {
+        vm.assume(_other != address(_authorizer));
 
-        uint _futureVoteID = (_authorizer.proposalCount() + 3);
-
-        bytes memory _encodedAction =
-            abi.encodeWithSignature("castVote(uint256)", _futureVoteID);
-
-        uint attackID_1 = speedrunSuccessfulVote(
-            address(_authorizer), _encodedAction, initialVoters
-        );
-
-        _encodedAction =
-            abi.encodeWithSignature("voteAgainst(uint256)", _futureVoteID);
-
-        uint attackID_2 = speedrunSuccessfulVote(
-            address(_authorizer), _encodedAction, initialVoters
-        );
-
-        _encodedAction =
-            abi.encodeWithSignature("voteAbstain(uint256)", _futureVoteID);
-
-        uint attackID_3 = speedrunSuccessfulVote(
-            address(_authorizer), _encodedAction, initialVoters
-        );
-
-        //create a vote susceptible to be attacked
-        (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _targetVoteID = createVote(ALBA, _moduleAddress, _msg);
-        assertEq(_futureVoteID, _targetVoteID);
-
-        // All execution attempts should fail
-        vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
-        );
-        _authorizer.executeProposal(attackID_1);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
-        );
-        _authorizer.executeProposal(attackID_2);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
-        );
-        _authorizer.executeProposal(attackID_3);
-
-        //Also check that vote creation isn't allowed this way
-        (_moduleAddress, _msg) = getMockValidVote();
-        _encodedAction = abi.encodeWithSignature(
-            "createProposal(address,bytes)", _moduleAddress, _msg
-        );
-        uint attackID_4 = speedrunSuccessfulVote(
-            address(_authorizer), _encodedAction, initialVoters
-        );
-        vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
-        );
-        _authorizer.executeProposal(attackID_4);*/
+        vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);
+        vm.prank(_other);
+        _proposal.executeTx(address(0), "");
     }
 
-    function testAuthorizationTransfer(address[] memory users) public {
+    //--------------------------------------------------------------------------
+    // TEST: VOTER MANAGEMENT
+    function testAddVoters(address[] memory users) public {
+        _validateUserList(users);
+
+        vm.startPrank(address(_authorizer));
+        for (uint i; i < users.length; i++) {
+            _authorizer.addVoter(users[i]);
+        }
+
+        for (uint i; i < users.length; i++) {
+            assertEq(_authorizer.isVoter(users[i]), true);
+        }
+        //test idempotence. We do the same again and verify that nothing fails and everything stays the same.
+        for (uint i; i < users.length; i++) {
+            _authorizer.addVoter(users[i]);
+        }
+
+        for (uint i; i < users.length; i++) {
+            assertEq(_authorizer.isVoter(users[i]), true);
+        }
+
+        vm.stopPrank();
+    }
+
+    function testRemoveVoter(address[] memory users) public {
+        _validateUserList(users);
+        batchAddAuthorized(users);
+
+        vm.startPrank(address(_authorizer));
+        for (uint i; i < users.length; i++) {
+            _authorizer.removeVoter(users[i]);
+        }
+
+        for (uint i; i < users.length; i++) {
+            assertEq(_authorizer.isVoter(users[i]), false);
+        }
+        //test idempotence. We do the same again and verify that nothing fails and everything stays the same.
+        for (uint i; i < users.length; i++) {
+            _authorizer.removeVoter(users[i]);
+        }
+
+        for (uint i; i < users.length; i++) {
+            assertEq(_authorizer.isVoter(users[i]), false);
+        }
+
+        vm.stopPrank();
+    }
+
+    function testVotingTransfer(address[] memory users) public {
         vm.assume(users.length > 4);
         _validateUserList(users);
 
@@ -835,47 +1029,32 @@ contract SingleVoteGovernorTest is Test {
         }
     }
 
-    function testOnlyGovernanceIsAuthorized(address _other) public {
-        vm.assume(_other != address(_authorizer));
+    function testVotingTransferToAuthorizedFails(address[] memory users)
+        public
+    {
+        vm.assume(users.length > 2);
+        _validateUserList(users);
 
-        vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);
-        vm.prank(_other);
-        _proposal.executeTx(address(0), "");
-    }
+        batchAddAuthorized(users);
 
-    //--------------------------------------------------------------------------
-    // TEST: QUORUM
+        for (uint i; i < users.length - 1; i++) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    ISingleVoteGovernor
+                        .Module__SingleVoteGovernor__IsAlreadyVoter
+                        .selector
+                )
+            );
+            vm.prank(users[i]);
+            _authorizer.transferVotingRights(users[i + 1]);
 
-    // Get correct quorum
-    function testGetQuorum() public {
-        assertEq(_authorizer.quorum(), DEFAULT_QUORUM);
-    }
-
-    // Set a new quorum
-    function testProposalSetQuorum() public {
-        uint _newQ = 1;
-
-        vm.prank(address(_authorizer));
-        _authorizer.setQuorum(_newQ);
-
-        assertEq(_authorizer.quorum(), _newQ);
-    }
-
-    // Fail to set a quorum that's too damn high
-    function testSetUnreachableQuorum(uint _newQ) public {
-        vm.assume(_newQ > _authorizer.voterCount());
-
-        vm.expectRevert(
-            ISingleVoteGovernor
-                .Module__SingleVoteGovernor__UnreachableQuorum
-                .selector
-        );
-        vm.prank(address(_authorizer));
-        _authorizer.setQuorum(_newQ);
+            assertEq(_authorizer.isVoter(users[i]), true);
+            assertEq(_authorizer.isVoter(users[i]), true);
+        }
     }
 
     // Fail to remove Authorized addresses until quorum is unreachble
-    function testRemoveTooManyAuthorized() public {
+    function testRemoveTooManyVoters() public {
         assertEq(address(_proposal), address(_authorizer.proposal()));
 
         vm.startPrank(address(_authorizer));
@@ -909,6 +1088,37 @@ contract SingleVoteGovernorTest is Test {
         _authorizer.removeVoter(ALBA);
 
         vm.stopPrank();
+    }
+
+    //--------------------------------------------------------------------------
+    // TEST: QUORUM
+
+    // Get correct quorum
+    function testGetQuorum() public {
+        assertEq(_authorizer.quorum(), DEFAULT_QUORUM);
+    }
+
+    // Set a new quorum
+    function testProposalSetQuorum() public {
+        uint _newQ = 1;
+
+        vm.prank(address(_authorizer));
+        _authorizer.setQuorum(_newQ);
+
+        assertEq(_authorizer.quorum(), _newQ);
+    }
+
+    // Fail to set a quorum that's too damn high
+    function testSetUnreachableQuorum(uint _newQ) public {
+        vm.assume(_newQ > _authorizer.voterCount());
+
+        vm.expectRevert(
+            ISingleVoteGovernor
+                .Module__SingleVoteGovernor__UnreachableQuorum
+                .selector
+        );
+        vm.prank(address(_authorizer));
+        _authorizer.setQuorum(_newQ);
     }
 
     // Fail to change quorum when not the module itself
@@ -960,10 +1170,55 @@ contract SingleVoteGovernorTest is Test {
         assertEq(_authorizer.voteDuration(), _newDur);
     }
 
+    // Fail to set vote durations out of bounds
+    function testProposalSetInvalidVoteDuration() public {
+        uint _oldDur = _authorizer.voteDuration();
+        uint _newDur = 3 weeks;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISingleVoteGovernor
+                    .Module__SingleVoteGovernor__InvalidVotingDuration
+                    .selector
+            )
+        );
+        vm.prank(address(_authorizer));
+        _authorizer.setVotingDuration(_newDur);
+
+        _newDur = 1 hours;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISingleVoteGovernor
+                    .Module__SingleVoteGovernor__InvalidVotingDuration
+                    .selector
+            )
+        );
+        vm.prank(address(_authorizer));
+        _authorizer.setVotingDuration(_newDur);
+
+        assertEq(_authorizer.voteDuration(), _oldDur);
+    }
+
     //Set new duration bygoing through governance
     function testGovernanceVoteDurationChange() public {
         //already covered in:
         testVoteExecution();
+    }
+
+    // Fail to change vote duration when not the module itself
+    function testUnauthorizedGovernanceVoteDurationChange(
+        address[] memory users
+    ) public {
+        _validateUserList(users);
+        batchAddAuthorized(users);
+
+        uint _newDuration = 5 days;
+        for (uint i; i < users.length; i++) {
+            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.prank(users[i]); //authorized, but not Proposal
+            _authorizer.setVotingDuration(_newDuration);
+        }
     }
 
     // =========================================================================

@@ -112,6 +112,13 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         for (uint i; i < votersLen; i++) {
             voter = voters[i];
 
+            if (
+                voter == address(0) || voter == address(this)
+                    || voter == address(proposal())
+            ) {
+                revert Module__SingleVoteGovernor__InvalidVoterAddress();
+            }
+
             if (isVoter[voter]) {
                 revert Module__SingleVoteGovernor__IsAlreadyVoter();
             }
@@ -284,11 +291,6 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
         // Get pointer to the proposal.
         Proposal storage proposal_ = proposals[proposalId];
-
-        // Revert if proposalId invalid.
-        if (proposal_.startTimestamp == 0) {
-            revert Module__SingleVoteGovernor__InvalidProposalId();
-        }
 
         // Revert if voting duration exceeded
         if (block.timestamp > proposal_.endTimestamp) {

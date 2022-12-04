@@ -35,6 +35,7 @@ interface ISingleVoteGovernor is IAuthorizer {
     // Errors
 
     error Module__SingleVoteGovernor__EmptyVoters();
+    error Module__SingleVoteGovernor__InvalidVoterAddress();
     error Module__SingleVoteGovernor__UnreachableQuorum();
     error Module__SingleVoteGovernor__InvalidVotingDuration();
     error Module__SingleVoteGovernor__InvalidTargetModule();
