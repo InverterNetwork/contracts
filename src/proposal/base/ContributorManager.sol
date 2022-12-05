@@ -157,7 +157,7 @@ abstract contract ContributorManager is
     }
 
     /// @inheritdoc IContributorManager
-    function listContributors() public view returns (address[] memory) {
+    function listContributors() external view returns (address[] memory) {
         address[] memory result = new address[](_contributorCounter);
 
         // Populate result array.
@@ -175,24 +175,6 @@ abstract contract ContributorManager is
     /// @inheritdoc IContributorManager
     function contributorsSize() external view returns (uint) {
         return _contributorCounter;
-    }
-
-    /// @inheritdoc IContributorManager
-    function getPreviousContributor(address contributor)
-        external
-        view
-        isContributor_(contributor)
-        returns (address previousContributor)
-    {
-        address[] memory contributors = listContributors();
-
-        uint len = contributors.length;
-
-        for (uint i; i < len; i++) {
-            if (contributors[i] == contributor) {
-                return i != 0 ? contributors[i - 1] : _SENTINEL;
-            }
-        }
     }
 
     //--------------------------------------------------------------------------

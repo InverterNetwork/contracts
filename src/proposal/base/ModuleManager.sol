@@ -167,7 +167,7 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function listModules() public view returns (address[] memory) {
+    function listModules() external view returns (address[] memory) {
         address[] memory result = new address[](_moduleCounter);
 
         // Populate result array.
@@ -185,24 +185,6 @@ abstract contract ModuleManager is
     /// @inheritdoc IModuleManager
     function modulesSize() external view returns (uint) {
         return _moduleCounter;
-    }
-
-    /// @inheritdoc IModuleManager
-    function getPreviousModule(address module)
-        external
-        view
-        validModule(module)
-        returns (address previousModule)
-    {
-        address[] memory modules = listModules();
-
-        uint len = modules.length;
-
-        for (uint i; i < len; i++) {
-            if (modules[i] == module) {
-                return i != 0 ? modules[i - 1] : _SENTINEL;
-            }
-        }
     }
 
     //--------------------------------------------------------------------------

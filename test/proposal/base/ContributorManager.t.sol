@@ -75,39 +75,6 @@ contract ContributorManagerTest is Test {
     }
 
     //--------------------------------------------------------------------------
-    // Tests: Public View Functions
-
-    //----------------------------------
-    // Tests: getPreviousContributor()
-
-    function testGetPreviousContributor(address[] memory whos, uint randomWho)
-        public
-    {
-        vm.assume(whos.length <= MAX_CONTRIBUTORS);
-        types.assumeValidContributors(whos);
-
-        //Make sure one of the existing contributors gets picked
-        vm.assume(randomWho < whos.length);
-
-        for (uint i; i < whos.length; i++) {
-            contributorManager.addContributor(whos[i], NAME, ROLE, SALARY);
-        }
-
-        address prevContr;
-
-        if (randomWho == whos.length - 1) {
-            prevContr = _SENTINEL;
-        } else {
-            prevContr = whos[randomWho + 1];
-        }
-
-        assertEq(
-            contributorManager.getPreviousContributor(whos[randomWho]),
-            prevContr
-        );
-    }
-
-    //--------------------------------------------------------------------------
     // Tests: Contributor Management
 
     //----------------------------------
