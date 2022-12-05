@@ -28,20 +28,6 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         _;
     }
 
-    /// @notice Verifies that the targeted module address is indeed active in the Proposal or the Proposal itself.
-    modifier validTargetModule(address _target) {
-        //this should implicitly control for address  != 0
-        if (
-            !(
-                __Module_proposal.isModule(_target)
-                    || _target == address(__Module_proposal)
-            )
-        ) {
-            revert Module__SingleVoteGovernor__InvalidTargetModule();
-        }
-        _;
-    }
-
     //--------------------------------------------------------------------------
     // Constants
 
@@ -220,7 +206,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         }
 
         //Revert if removal would leave quorum unreachable
-        if (voterCount == quorum) {
+        if (voterCount <= quorum) {
             revert Module__SingleVoteGovernor__UnreachableQuorum();
         }
 
@@ -252,7 +238,6 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     function createMotion(address target, bytes calldata action)
         external
         onlyVoter
-        validTargetModule(target)
         returns (uint)
     {
         // Cache motion's id.

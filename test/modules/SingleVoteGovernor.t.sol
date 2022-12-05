@@ -499,26 +499,6 @@ contract SingleVoteGovernorTest is Test {
         }
     }
 
-    // Fail to create votes with wrong addresses and actions
-    function testCreateWithInvalidVoteParamters(address wrongModule) public {
-        vm.assume(wrongModule != address(module));
-        vm.assume(wrongModule != address(_authorizer));
-        vm.assume(wrongModule != address(_paymentProcessor));
-
-        (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        delete _moduleAddress; //get rid of the ugly warning
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidTargetModule
-                    .selector
-            )
-        );
-        vm.prank(ALBA);
-        _authorizer.createMotion(wrongModule, _msg);
-    }
-
     //--------------------------------------------------------------------------
     // TESTS: VOTING
 
