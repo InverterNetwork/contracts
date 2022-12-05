@@ -29,6 +29,57 @@ Modifier to guarantee function is only callable by the proposal. `onlyProposal` 
 
 ## View Function(s)
 
+### 1. identifier
+
+`function identifier() external view returns (bytes32);`
+
+Returns the module's identifier. The identifier is defined as the keccak256 hash of the module's abi packed encoded major version, url and title.
+
+#### Return Data
+
+1. Returns the module's identifier. (Each module is identified via a unique identifier based on its major version, title, and url given in the metadata.)
+
+### 2. version
+
+`function version() external view returns (uint, uint);`
+
+This function returns the module's version.
+
+#### Return data
+
+1. The module's major version.
+2. The module's minor version.
+
+### 3. url
+
+`function url() external view returns (string memory);`
+
+This function returns the module's URL.
+
+#### Return data
+
+1. The module's URL.
+
+### 4. title
+
+`function title() external view returns (string memory);`
+
+This function returns the module's title.
+
+#### Return data
+
+1. The module's title.
+
+### 5. proposal
+
+`function proposal() external view returns (IProposal);`
+
+This function returns the module's {IProposal} proposal instance.
+
+#### Return data
+
+1. The module's proposal.
+
 ## Write Function(s)
 
 ### 1. init
