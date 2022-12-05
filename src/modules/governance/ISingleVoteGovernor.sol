@@ -7,7 +7,7 @@ interface ISingleVoteGovernor is IAuthorizer {
     //--------------------------------------------------------------------------
     // Types
 
-    struct Proposal {
+    struct Motion {
         // Execution data.
         address target;
         bytes action;
@@ -35,15 +35,18 @@ interface ISingleVoteGovernor is IAuthorizer {
     // Errors
 
     error Module__SingleVoteGovernor__EmptyVoters();
+    error Module__SingleVoteGovernor__InvalidVoterAddress();
     error Module__SingleVoteGovernor__UnreachableQuorum();
     error Module__SingleVoteGovernor__InvalidVotingDuration();
     error Module__SingleVoteGovernor__CallerNotVoter();
     error Module__SingleVoteGovernor__IsAlreadyVoter();
     error Module__SingleVoteGovernor__InvalidSupport();
-    error Module__SingleVoteGovernor__InvalidProposalId();
+    error Module__SingleVoteGovernor__InvalidMotionId();
     error Module__SingleVoteGovernor__AttemptedDoubleVote();
-    error Module__SingleVoteGovernor__ProposalInVotingPhase();
-    error Module__SingleVoteGovernor__ProposalAlreadyExecuted();
+    error Module__SingleVoteGovernor__MotionInVotingPhase();
+    error Module__SingleVoteGovernor__MotionVotingPhaseClosed();
+    error Module__SingleVoteGovernor__MotionAlreadyExecuted();
+    error Module__SingleVoteGovernor__QuorumNotReached();
 
     //--------------------------------------------------------------------------
     // Events
@@ -52,8 +55,8 @@ interface ISingleVoteGovernor is IAuthorizer {
     event VoterRemoved(address indexed who);
     event QuorumUpdated(uint oldQuorum, uint newQuorum);
     event VoteDurationUpdated(uint oldVotingDuration, uint newVotingDuration);
-    event ProposalCreated(uint indexed proposalId);
-    event ProposalExecuted(uint indexed proposalId);
+    event MotionCreated(uint indexed motionId);
+    event MotionExecuted(uint indexed motionId);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -63,7 +66,7 @@ interface ISingleVoteGovernor is IAuthorizer {
 
     function isVoter(address who) external view returns (bool);
 
-    function proposals(uint proposalId)
+    function motions(uint motionId)
         external
         view
         returns (
@@ -80,7 +83,7 @@ interface ISingleVoteGovernor is IAuthorizer {
             bytes memory
         );
 
-    function proposalCount() external view returns (uint);
+    function motionCount() external view returns (uint);
     function voterCount() external view returns (uint);
 
     function quorum() external view returns (uint);
@@ -89,9 +92,9 @@ interface ISingleVoteGovernor is IAuthorizer {
     function setQuorum(uint newQuorum) external;
     function setVotingDuration(uint newVoteDuration) external;
 
-    function createProposal(address target, bytes calldata action)
+    function createMotion(address target, bytes calldata action)
         external
         returns (uint);
-    function castVote(uint proposalId, uint8 support) external;
-    function executeProposal(uint proposalId) external;
+    function castVote(uint motionId, uint8 support) external;
+    function executeMotion(uint motionId) external;
 }
