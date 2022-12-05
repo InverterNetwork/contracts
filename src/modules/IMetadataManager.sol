@@ -19,10 +19,6 @@ interface IMetadataManager {
         string[] categories;
     }
 
-    struct TeamMetadata {
-        MemberMetadata[] members;
-    }
-
     struct MemberMetadata {
         string name;
         address account;
@@ -34,22 +30,20 @@ interface IMetadataManager {
 
     /// @notice Event emitted when the owner metadata changed.
     event OwnerMetadataUpdated(
-        string indexed name,
-        address indexed account,
-        string indexed twitterHandle
+        string name, address account, string twitterHandle
     );
 
     /// @notice Event emitted when the proposal metadata changed.
     event ProposalMetadataUpdated(
-        string indexed title,
-        string indexed descriptionShort,
-        string indexed descriptionLong,
+        string title,
+        string descriptionShort,
+        string descriptionLong,
         string[] externalMedias,
         string[] categories
     );
 
     /// @notice Event emitted when the team metadata changed.
-    event TeamMetadataUpdated(MemberMetadata[] indexed members);
+    event TeamMetadataUpdated(MemberMetadata[] members);
 
     /// @notice Event emitted when the fundingToken changed.
     event FundingTokenUpdated(address indexed fundingToken);

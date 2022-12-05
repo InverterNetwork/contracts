@@ -22,9 +22,9 @@ contract MetadataManager is IMetadataManager, Module {
     //--------------------------------------------------------------------------
     // Storage
 
-    OwnerMetadata private ownerMetadata;
-    ProposalMetadata private proposalMetadata;
-    TeamMetadata private teamMetadata;
+    OwnerMetadata private _ownerMetadata;
+    ProposalMetadata private _proposalMetadata;
+    MemberMetadata[] private _teamMetadata;
     IERC20 public fundingToken;
 
     //--------------------------------------------------------------------------
@@ -39,19 +39,20 @@ contract MetadataManager is IMetadataManager, Module {
         __Module_init(proposal_, metadata);
 
         (
-            OwnerMetadata memory _ownerMetadata,
-            ProposalMetadata memory _proposalMetadata,
-            TeamMetadata memory _teamMetadata,
+            OwnerMetadata memory ownerMetadata_,
+            ProposalMetadata memory proposalMetadata_,
+            MemberMetadata[] memory teamMetadata_,
             IERC20 _fundingToken
         ) = abi.decode(
-            configdata, (OwnerMetadata, ProposalMetadata, TeamMetadata, IERC20)
+            configdata,
+            (OwnerMetadata, ProposalMetadata, MemberMetadata[], IERC20)
         );
 
-        _setOwnerMetadata(_ownerMetadata);
+        _setOwnerMetadata(ownerMetadata_);
 
-        _setProposalMetadata(_proposalMetadata);
+        _setProposalMetadata(proposalMetadata_);
 
-        _setTeamMetadata(_teamMetadata);
+        _setTeamMetadata(teamMetadata_);
 
         _setFundingToken(_fundingToken);
     }
@@ -60,7 +61,7 @@ contract MetadataManager is IMetadataManager, Module {
     // Getter Functions
 
     function getOwnerMetadata() external view returns (OwnerMetadata memory) {
-        return ownerMetadata;
+        return _ownerMetadata;
     }
 
     function getProposalMetadata()
@@ -68,66 +69,75 @@ contract MetadataManager is IMetadataManager, Module {
         view
         returns (ProposalMetadata memory)
     {
-        return proposalMetadata;
+        return _proposalMetadata;
     }
 
-    function getTeamMetadata() external view returns (TeamMetadata memory) {
-        return teamMetadata;
+    function getTeamMetadata()
+        external
+        view
+        returns (MemberMetadata[] memory)
+    {
+        return _teamMetadata;
     }
 
     //--------------------------------------------------------------------------
     // Setter Functions
 
-    function setOwnerMetadata(OwnerMetadata calldata _ownerMetadata)
+    function setOwnerMetadata(OwnerMetadata calldata ownerMetadata_)
         external
         onlyAuthorizedOrOwner
     {
-        _setOwnerMetadata(_ownerMetadata);
+        _setOwnerMetadata(ownerMetadata_);
     }
 
-    function _setOwnerMetadata(OwnerMetadata memory _ownerMetadata) private {
-        ownerMetadata = _ownerMetadata;
+    function _setOwnerMetadata(OwnerMetadata memory ownerMetadata_) private {
+        _ownerMetadata = ownerMetadata_;
         emit OwnerMetadataUpdated(
-            _ownerMetadata.name,
-            _ownerMetadata.account,
-            _ownerMetadata.twitterHandle
+            ownerMetadata_.name,
+            ownerMetadata_.account,
+            ownerMetadata_.twitterHandle
             );
     }
 
-    function setProposalMetadata(ProposalMetadata calldata _proposalMetadata)
+    function setProposalMetadata(ProposalMetadata calldata proposalMetadata_)
         public
         onlyAuthorizedOrOwner
     {
-        _setProposalMetadata(_proposalMetadata);
+        _setProposalMetadata(proposalMetadata_);
     }
 
-    function _setProposalMetadata(ProposalMetadata memory _proposalMetadata)
+    function _setProposalMetadata(ProposalMetadata memory proposalMetadata_)
         private
     {
-        proposalMetadata = _proposalMetadata;
+        _proposalMetadata = proposalMetadata_;
         emit ProposalMetadataUpdated(
-            _proposalMetadata.title,
-            _proposalMetadata.descriptionShort,
-            _proposalMetadata.descriptionLong,
-            _proposalMetadata.externalMedias,
-            _proposalMetadata.categories
+            proposalMetadata_.title,
+            proposalMetadata_.descriptionShort,
+            proposalMetadata_.descriptionLong,
+            proposalMetadata_.externalMedias,
+            proposalMetadata_.categories
             );
     }
 
-    function setTeamMetadata(TeamMetadata calldata _teamMetadata)
+    function setTeamMetadata(MemberMetadata[] calldata teamMetadata_)
         external
         onlyAuthorizedOrOwner
     {
-        _setTeamMetadata(_teamMetadata);
+        _setTeamMetadata(teamMetadata_);
     }
 
-    function _setTeamMetadata(TeamMetadata memory _teamMetadata) private {
-        uint len = _teamMetadata.members.length;
-        for (uint i = 0; i < len; i++) {
-            teamMetadata.members.push(_teamMetadata.members[i]);
+    function _setTeamMetadata(MemberMetadata[] memory teamMetadata_) private {
+        uint len = _teamMetadata.length;
+        for (uint i; i < len; i++) {
+            _teamMetadata.pop;
         }
 
-        emit TeamMetadataUpdated(_teamMetadata.members);
+        len = teamMetadata_.length;
+        for (uint i; i < len; i++) {
+            _teamMetadata.push(teamMetadata_[i]);
+        }
+
+        emit TeamMetadataUpdated(teamMetadata_);
     }
 
     function _setFundingToken(IERC20 _fundingToken) private {
