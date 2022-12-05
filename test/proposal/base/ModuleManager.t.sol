@@ -116,6 +116,36 @@ contract ModuleManagerTest is Test {
     }
 
     //--------------------------------------------------------------------------
+    // Tests: Public View Functions
+
+    //----------------------------------
+    // Tests: getPreviousContributor()
+
+    function testGetPreviousModule(address[] memory whos, uint randomWho)
+        public
+    {
+        vm.assume(whos.length <= MAX_MODULES);
+        types.assumeValidModules(whos);
+
+        //Make sure one of the existing contributors gets picked
+        vm.assume(randomWho < whos.length);
+
+        for (uint i; i < whos.length; i++) {
+            moduleManager.addModule(whos[i]);
+        }
+
+        address prevModules;
+
+        if (randomWho == whos.length - 1) {
+            prevModules = _SENTINEL;
+        } else {
+            prevModules = whos[randomWho + 1];
+        }
+
+        assertEq(moduleManager.getPreviousModule(whos[randomWho]), prevModules);
+    }
+
+    //--------------------------------------------------------------------------
     // Tests: Transaction Execution
 
     function testExecuteTxFromModuleOnlyCallableByModule() public {

@@ -108,6 +108,35 @@ contract ListAuthorizerTest is Test {
         assertEq(testAuthorizer.getAmountAuthorized(), initialAuth.length);
     }
 
+    function testInitWithDuplicateInitialAuthorizedFails(
+        address[] memory initialAuth,
+        uint8 position
+    ) public {
+        //Checks that address list gets correctly stored on initialization
+        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+
+        vm.assume(initialAuth.length >= 2);
+        vm.assume(position > 0 && position < initialAuth.length);
+
+        address authImpl = address(new ListAuthorizer());
+        ListAuthorizer testAuthorizer = ListAuthorizer(Clones.clone(authImpl));
+
+        _validateAuthorizedList(initialAuth);
+
+        initialAuth[position] = initialAuth[0];
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ListAuthorizer
+                    .Module__ListAuthorizer__invalidInitialAuthorizers
+                    .selector
+            )
+        );
+        testAuthorizer.init(
+            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+        );
+    }
+
     function testReinitFails() public {
         //Create a mock new proposal
         Proposal newProposal = Proposal(Clones.clone(address(new Proposal())));
