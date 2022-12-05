@@ -218,21 +218,8 @@ contract ProposalCreation is Test {
         //--------------------------------------------------------------------------------
         // Removing Module
 
-        //Remove Module -> milestoneManager
-        //@todo This structure is pretty painful in my opinion
-        address previousModule;
-        address[] memory modules = proposal.listModules();
-
-        for (uint i = 0; i < modules.length; i++) {
-            if (modules[i] == milestoneManager) {
-                if (i == 0) {
-                    previousModule = address(0x1); //Address 0x1 is the sentinel
-                } else {
-                    previousModule = modules[i - 1];
-                    break;
-                }
-            }
-        }
+        //Note: This function is ideally called via the frontend, see the documentation of the getPreviousModule Function
+        address previousModule = proposal.getPreviousModule(milestoneManager);
 
         proposal.removeModule(previousModule, milestoneManager);
     }
@@ -258,20 +245,9 @@ contract ProposalCreation is Test {
         // Remove Contributor
 
         //Remove Contributor -> who
-        address previousContributor;
-        address[] memory contributors = proposal.listContributors(); //@todo This structure is pretty painful in my opinion
 
-        // Get previous Contributor
-        for (uint i = 0; i < contributors.length; i++) {
-            if (contributors[i] == who) {
-                if (i == 0) {
-                    previousContributor = address(0x1); //Address 0x1 is the sentinel
-                } else {
-                    previousContributor = contributors[i - 1];
-                    break;
-                }
-            }
-        }
+        //Note: This function is ideally called via the frontend, see the documentation of the getPreviousModule Function
+        address previousContributor = proposal.getPreviousContributor(who);
 
         proposal.removeContributor(previousContributor, who);
     }
