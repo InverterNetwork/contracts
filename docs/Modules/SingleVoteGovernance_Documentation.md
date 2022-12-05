@@ -85,46 +85,122 @@ This function removes an address from the list of authorized addresses. The `val
 
 `function __Governance_changeQuorum(uint8 _new) external onlyProposal validQuorum(_new, getAmountAuthorized())`
 
+This function helps set a new quorum.
+
+#### Parameters
+
+1. uint8 _new -> The new quorum
+
 ### 4. changeQuorum
 
 `function changeQuorum(uint8 _new) external onlyProposal`
+
+This function helps set a new quorum. It is Relay Function that routes the function call via the proposal. The `onlyProposal` modifier forces a quorum change to also go through governance.
+
+#### Parameters
+
+1. uint8 _new -> The new quorum
 
 ### 5. __Governance_changeVoteDuration
 
 `function __Governance_changeVoteDuration(uint _new) external onlyProposal`
 
+This function helps set a new vote duration. 
+
+#### Parameters
+
+1. uint _new -> The new vote duration
+
 ### 6. changeVoteDuration
 
 `function changeVoteDuration(uint _new) external onlyProposal`
+
+This function helps set a new vote duration. It is Relay Function that routes the function call via the proposal. The `onlyProposal` modifier forces a quorum change to also go through governance.
+
+#### Parameters
+
+1. uint _new -> The new vote duration
 
 ### 7. __Governance_createVote
 
 `function __Governance_createVote( address _target, bytes calldata _encodedAction) external onlyProposal validModuleAddress(_target) validAction(_encodedAction)`
 
+This function helps create a new `vote`.
+
+#### Parameters
+
+1. address _target -> The Module from which to execute the action
+2. bytes _encodedAction -> The ABI encoded action to execute if it passes
+
 ### 8. createVote
 
 `function createVote(address _target, bytes calldata _encodedAction) external onlyAuthorized`
+
+This function helps create a new `vote`. It is Relay Function that routes the function call via the proposal.
+
+#### Parameters
+
+1. address _target -> The Module from which to execute the action
+2. bytes _encodedAction -> The ABI encoded action to execute if it passes
 
 ### 9. __Governance_confirmAction
 
 `function __Governance_confirmAction(address _voter, uint _voteID) external onlyProposal voteIsActive(_voteID)`
 
+This function helps vote "yes" and execute action if quorum is reached.
+
+#### Parameters
+
+1. address _voter -> Address of voter
+2. uint _voteID -> The ID of the vote to vote on
+
 ### 10. confirmAction
 
 `function confirmAction(uint _voteID) external onlyAuthorized`
+
+This function helps vote "yes" and execute action if quorum is reached. It is Relay Function that routes the function call via the proposal.
+
+#### Parameters
+
+1. uint _voteID -> The ID of the vote to vote on
 
 ### 11. __Governance_cancelAction
 
 `function __Governance_cancelAction(address _voter, uint _voteID) external onlyProposal voteIsActive(_voteID)`
 
+This function helps vote "no" and abort action if quorum is reached.
+
+#### Parameters
+
+1. address _voter -> Address of voter
+2. uint _voteID -> The ID of the vote to vote on
+
 ### 12. cancelAction
 
 `function cancelAction(uint _voteID) external onlyAuthorized`
+
+This function helps vote "no" and abort action if quorum is reached. It is Relay Function that routes the function call via the proposal.
+
+#### Parameters
+
+1. uint _voteID -> The ID of the vote to vote on
 
 ### 13. __Governance_executeVote
 
 `function __Governance_executeVote(uint _voteID) external onlyProposal quorumReached(_voteID) voteNotActive(_voteID)`
 
+This function helps execute a vote. Only called by confirmAction once quorum is reached.
+
+#### Parameters
+
+1. uint _voteID -> The ID of the vote to vote on
+
 ### 14. executeVote
 
 `function executeVote(uint _voteID) external voteIsActive(_voteID) quorumReached(_voteID)`
+
+This function helps execute a vote. Only called by confirmAction once quorum is reached. It is Relay Function that routes the function call via the proposal.
+
+#### Parameters
+
+1. uint _voteID -> The ID of the vote to vote on
