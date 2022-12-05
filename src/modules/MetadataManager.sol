@@ -122,12 +122,9 @@ contract MetadataManager is IMetadataManager, Module {
     }
 
     function _setTeamMetadata(MemberMetadata[] memory teamMetadata_) private {
-        uint len = _teamMetadata.length;
-        for (uint i; i < len; i++) {
-            _teamMetadata.pop;
-        }
+        delete _teamMetadata;
 
-        len = teamMetadata_.length;
+        uint len = teamMetadata_.length;
         for (uint i; i < len; i++) {
             _teamMetadata.push(teamMetadata_[i]);
         }
