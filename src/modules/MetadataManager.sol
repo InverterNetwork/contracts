@@ -25,7 +25,6 @@ contract MetadataManager is IMetadataManager, Module {
     OwnerMetadata private _ownerMetadata;
     ProposalMetadata private _proposalMetadata;
     MemberMetadata[] private _teamMetadata;
-    IERC20 public fundingToken;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -41,11 +40,9 @@ contract MetadataManager is IMetadataManager, Module {
         (
             OwnerMetadata memory ownerMetadata_,
             ProposalMetadata memory proposalMetadata_,
-            MemberMetadata[] memory teamMetadata_,
-            IERC20 _fundingToken
+            MemberMetadata[] memory teamMetadata_
         ) = abi.decode(
-            configdata,
-            (OwnerMetadata, ProposalMetadata, MemberMetadata[], IERC20)
+            configdata, (OwnerMetadata, ProposalMetadata, MemberMetadata[])
         );
 
         _setOwnerMetadata(ownerMetadata_);
@@ -53,8 +50,6 @@ contract MetadataManager is IMetadataManager, Module {
         _setProposalMetadata(proposalMetadata_);
 
         _setTeamMetadata(teamMetadata_);
-
-        _setFundingToken(_fundingToken);
     }
 
     //--------------------------------------------------------------------------
@@ -138,10 +133,5 @@ contract MetadataManager is IMetadataManager, Module {
         }
 
         emit TeamMetadataUpdated(teamMetadata_);
-    }
-
-    function _setFundingToken(IERC20 _fundingToken) private {
-        fundingToken = _fundingToken;
-        emit FundingTokenUpdated(address(_fundingToken));
     }
 }

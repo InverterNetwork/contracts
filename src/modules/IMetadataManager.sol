@@ -44,7 +44,4 @@ interface IMetadataManager {
 
     /// @notice Event emitted when the team metadata changed.
     event TeamMetadataUpdated(MemberMetadata[] members);
-
-    /// @notice Event emitted when the fundingToken changed.
-    event FundingTokenUpdated(address indexed fundingToken);
 }

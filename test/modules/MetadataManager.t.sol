@@ -6,9 +6,6 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
 //Internal Dependencies
 import {
     ModuleTest,
@@ -75,9 +72,7 @@ contract MetadataManagerTest is ModuleTest {
         metadataManager.init(
             _proposal,
             _METADATA,
-            abi.encode(
-                OWNER_METADATA, PROPOSAL_METADATA, TEAM_METADATA, IERC20(_token)
-            )
+            abi.encode(OWNER_METADATA, PROPOSAL_METADATA, TEAM_METADATA)
         );
     }
 
@@ -100,11 +95,6 @@ contract MetadataManagerTest is ModuleTest {
         // TEAM_METADATA
 
         assertMetadataManagerTeamMetadataEqualTo(TEAM_METADATA);
-
-        //-----------------------
-        // fundingToken
-
-        assertEq(address(metadataManager.fundingToken()), address(_token));
     }
 
     function testReinitFails() public override (ModuleTest) {
