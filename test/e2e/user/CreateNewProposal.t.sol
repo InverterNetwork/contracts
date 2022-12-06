@@ -20,6 +20,10 @@ import {
     MilestoneManager
 } from "src/modules/MilestoneManager.sol";
 
+import {
+    IMetadataManager, MetadataManager
+} from "src/modules/MetadataManager.sol";
+
 //Beacon
 import {IBeacon, Beacon} from "src/factories/beacon/Beacon.sol";
 
@@ -50,16 +54,24 @@ contract ProposalCreation is Test {
     IAuthorizer authorizerTemplate; //This is just the template thats referenced in the Factory later
     IPaymentProcessor paymentProcessorTemplate; //Just a template
     IMilestoneManager milestoneManagerTemplate; //Just a template
+    IMetadataManager metadataManagerTemplate; //Just a template
 
     //Module Beacons
     Beacon authorizerBeacon;
     Beacon paymentProcessorBeacon;
     Beacon milestoneManagerBeacon;
+    Beacon metadataManagerBeacon;
 
     //Metadata for Modules
     IModule.Metadata authorizerMetadata;
     IModule.Metadata paymentProcessorMetadata;
     IModule.Metadata milestoneManagerMetadata;
+    IModule.Metadata metadataManagerMetadata;
+
+    //Proposal Metadata
+    IMetadataManager.OwnerMetadata ownerMetadata;
+    IMetadataManager.ProposalMetadata proposalMetadata;
+    IMetadataManager.MemberMetadata[] teamMetadata;
 
     //Module Factory
     IModuleFactory moduleFactory;
@@ -75,25 +87,35 @@ contract ProposalCreation is Test {
     // -Authorizer: A Module that declares who can access the main functionalities of the proposal
     // -PaymentProcessor: A Module that enables Token distribution
     // -MilestoneManager: A Module that enables Declaration of Milestones and upon fullfillment, uses the Payment Processor for salary distributions
+    // -MetadataManager: A Module contains metadata for the proposal
     // -Beacons: A Proxy Contract structure that enables to update all proxy contracts at the same time (EIP-1967)
     // -ModuleFactory: A factory that creates Modules. Modules have to be registered with Metadata and the intended beacon, which contains the module template, for it to be used
     // -ProposalFactory: A Factory that creates Proposals. Needs to have a Proposal Template and a module factory as a reference.
 
     function setUp() public {
+        //==========================================
+        //Create Beacons
+
         //Create Module Templates
         authorizerTemplate = new ListAuthorizer();
         paymentProcessorTemplate = new PaymentProcessor();
         milestoneManagerTemplate = new MilestoneManager();
+        metadataManagerTemplate = new MetadataManager();
 
         //Create Beacons for every Module
         authorizerBeacon = new Beacon();
         paymentProcessorBeacon = new Beacon();
         milestoneManagerBeacon = new Beacon();
+        metadataManagerBeacon = new Beacon();
 
         //Upgrade Beacons to correct implementation
         authorizerBeacon.upgradeTo(address(authorizerTemplate));
         paymentProcessorBeacon.upgradeTo(address(paymentProcessorTemplate));
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerTemplate));
+        metadataManagerBeacon.upgradeTo(address(metadataManagerTemplate));
+
+        //==========================================
+        //Setup Factory
 
         //Create Metadata for the Modules
         authorizerMetadata = IModule.Metadata(
@@ -112,6 +134,13 @@ contract ProposalCreation is Test {
             "MilestoneManager"
         );
 
+        metadataManagerMetadata = IModule.Metadata(
+            1,
+            1,
+            "https://github.com/inverter/metadata-manager",
+            "MetadataManager"
+        );
+
         //Create Module Factory
         moduleFactory = new ModuleFactory();
 
@@ -125,6 +154,41 @@ contract ProposalCreation is Test {
         moduleFactory.registerMetadata(
             milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
         );
+        moduleFactory.registerMetadata(
+            metadataManagerMetadata, IBeacon(metadataManagerBeacon)
+        );
+
+        //==========================================
+        //Set up Proposal Metadata
+
+        ownerMetadata = IMetadataManager.OwnerMetadata(
+            "Name", address(0xBEEF), "TwitterHandle"
+        );
+
+        proposalMetadata = IMetadataManager.ProposalMetadata(
+            "Title",
+            "DescriptionShort",
+            "DescriptionLong",
+            new string[](0),
+            new string[](0)
+        );
+
+        proposalMetadata.externalMedias.push("externalMedia1");
+        proposalMetadata.externalMedias.push("externalMedia2");
+        proposalMetadata.externalMedias.push("externalMedia3");
+
+        proposalMetadata.categories.push("category1");
+        proposalMetadata.categories.push("category2");
+        proposalMetadata.categories.push("category3");
+
+        teamMetadata.push(
+            IMetadataManager.MemberMetadata(
+                "Name", address(0xBEEF), "Something"
+            )
+        );
+
+        //==========================================
+        //Set up Proposal Factory
 
         //Create proposal template
         proposalTemplate = new Proposal();
@@ -143,7 +207,7 @@ contract ProposalCreation is Test {
     //                           Notice that we have to decrypt the initialAuthorizedAddresses into a bytes format for correct
     //                           creation of the module in the ModuleFactory
     // -paymentProcessorFactoryConfig: Just signals the Factory, that we want to integrate the PaymentProcessor here
-    // -optionalModules: This array would contain further moduleConfigs in the same styling like before to signal
+    // -optionalModules: This array contains further moduleConfigs in the same styling like before to signal
     //                   the proposalFactory that we want to integrate the defined modules.
     function createNewProposal() public returns (IProposal) {
         //The Token used for Payment processes in the proposal
@@ -171,10 +235,18 @@ contract ProposalCreation is Test {
             IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
 
         //Create optionalModule array
-        //We keep it empty for now, because Authorizer and PaymentProcessor are the only necessary Modules
-        //The ModuleConfig structure would follow the structure shown above
+
+        //Technically Authorizer and PaymentProcessor are the only necessary Modules, but we'll inlcude the metadata manager as an example
+
+        //Note: Its possible to submit a zero size array too
         IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](0);
+            new IProposalFactory.ModuleConfig[](1);
+
+        //Add MetadataManager as a optional Module
+        optionalModules[0] = IProposalFactory.ModuleConfig(
+            metadataManagerMetadata,
+            abi.encode(ownerMetadata, proposalMetadata, teamMetadata)
+        );
 
         //Create proposal using the different needed configs
         IProposal proposal = proposalFactory.createProposal(
