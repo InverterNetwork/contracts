@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
+// External Dependencies
+import {ERC1155Upgradeable} from "@oz-up/token/ERC1155/ERC1155Upgradeable.sol";
+
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
@@ -45,7 +48,12 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *
  * @author byterocket
  */
-contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
+contract MilestoneManager is
+    IMilestoneManager,
+    Module,
+    PaymentClient,
+    ERC1155Upgradeable
+{
     using LibString for string;
     using SafeERC20 for IERC20;
 
@@ -117,10 +125,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Always links back to the _SENTINEL.
     uint internal _last;
 
+    // @audit Should be a module argument.
+    string internal constant _URI = "";
+
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Registry mapping milestone ids to Milestone structs.
+    /// @dev Registry mapping milestone id's to Milestone structs.
     mapping(uint => Milestone) private _milestoneRegistry;
 
     /// @dev List of milestone id's.
@@ -133,6 +144,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Uses _SENTINEL to indicate no current active milestone.
     uint private _activeMilestone;
 
+    /// @dev Mapping of milestone id's to their amount of funding.
+    /// @custom:invariant Equals the total supply of an ERC-1155 id.
+    mapping(uint => uint) private _fundsPerMilestone;
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -142,7 +157,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         Metadata memory metadata,
         bytes memory /*configdata*/
     ) external override (Module) initializer {
+        // Initialize upstream contracts.
         __Module_init(proposal_, metadata);
+        __ERC1155_init(_URI);
 
         // Set up empty list of milestones.
         _milestones[_SENTINEL] = _SENTINEL;
@@ -455,37 +472,101 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     //--------------------------------------------------------------------------
+    // Funding Implementation
+    //
+    // Funding is managed via a balance for the specific milestone id.
+    // For the accounting, the ERC-1155 standard is used with the id being
+    // the milestone's id, and the balance the amount of funding per address.
+
+    function deposit(uint id, uint amount)
+        external
+        validId(id)
+        validAmount(amount)
+    {
+        // Get storage pointer to milestone.
+        Milestone storage m = _milestoneRegistry[id];
+
+        // Revert if milestone already started.
+        if (m.startTimestamp != 0) {
+            revert("Milestone already started");
+        }
+
+        // Fetch deposit tokens from caller.
+        // Note that the token is assumed to not enable reentrancy. @audit Reasonable?
+        __Module_proposal.token().safeTransferFrom(
+            msg.sender, address(this), amount
+        );
+
+        // Update the total funds available for the milestone.
+        _fundsPerMilestone[id] += amount;
+
+        // Mint funding tokens to caller.
+        // Note that the _mint function includes a callback into the caller,
+        // therefore enabling reentrancy.
+        _mint(msg.sender, id, amount, bytes(""));
+    }
+
+    function withdraw(uint id, uint amount)
+        external
+        validId(id)
+        validAmount(id)
+    {
+        // Get storage pointer to milestone.
+        Milestone storage m = _milestoneRegistry[id];
+
+        // Revert if milestone started but not completed.
+        if (m.startTimestamp != 0 && !m.completed) {
+            revert("Milestone active");
+        }
+
+        // Burn funding tokens from caller.
+        // Note that the _burn function has no callback to the caller.
+        _burn(msg.sender, id, amount);
+
+        // Send tokens to caller.
+        // Note that the token is assumed to not enable reentrancy. @audit Reasonable?
+        __Module_proposal.token().safeTransfer(msg.sender, amount);
+
+        // Update the total funds available for the milestone.
+        _fundsPerMilestone[id] -= amount;
+    }
+
+    //--------------------------------------------------------------------------
     // {PaymentClient} Function Implementations
 
+    /// @dev Ensures the funding of the current active milestone is at least
+    ///      `amount`.
+    /// @dev From this point on the tokens are allocated for the payment,
+    ///      meaning they can not be withdrawn anymore.
     function _ensureTokenBalance(uint amount)
         internal
         override (PaymentClient)
     {
-        uint balance = __Module_proposal.token().balanceOf(address(this));
+        // Cache the proposal's token instance.
+        IERC20 token = __Module_proposal.token();
 
-        if (balance < amount) {
-            // Trigger delegatecall-callback from proposal to transfer tokens
-            // to address(this).
-            bool ok;
-            (ok, /*returnData*/ ) = _triggerProposalCallback(
-                abi.encodeWithSignature(
-                    "__Proposal_transferERC20(address,uint256)",
-                    address(this),
-                    amount - balance
-                ),
-                Types.Operation.DelegateCall
-            );
+        // Get the total funding for this milestone.
+        uint funding = _fundsPerMilestone[_activeMilestone];
 
-            if (!ok) {
-                revert Module__PaymentClient__TokenTransferFailed();
-            }
+        // This check should never fail.
+        assert(token.balanceOf(address(this)) >= funding);
+
+        // Revert if funding not sufficient.
+        if (funding < amount) {
+            revert("Not enough funding for milestone");
         }
+
+        // Account `amount` is being allocated, i.e. non-withdrawable, by
+        // updating the milestone's available funds.
+        _fundsPerMilestone[_activeMilestone] -= amount;
     }
 
+    /// @dev Ensures the token allowance for `spender` is at least `amount`.
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
         override (PaymentClient)
     {
+        // @audit Use normal approve.
         IERC20 token = __Module_proposal.token();
         uint allowance = token.allowance(address(this), address(spender));
 
@@ -501,18 +582,5 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         returns (bool)
     {
         return __Module_proposal.paymentProcessor() == who;
-    }
-
-    //--------------------------------------------------------------------------
-    // Proposal Callback Functions
-
-    /// @dev WantProposalContext-callback function to transfer `amount` of
-    ///      tokens from proposal to `receiver`.
-    /// @dev For more info, see src/modules/base/Module.sol.
-    function __Proposal_transferERC20(address receiver, uint amount)
-        external
-        wantProposalContext
-    {
-        __Proposal_token.safeTransfer(receiver, amount);
     }
 }
