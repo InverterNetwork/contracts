@@ -142,37 +142,62 @@ The newly added milestone's id.
 
 `function removeMilestone(uint prevId, uint id) external;`
 
+This function removes a milestone. Only callable by authorized addresses and reverts if id invalid, milestone already completed or milestone ids not consecutive in list.
+
 #### Parameters
+
+uint prevId -> The previous milestone's id in the milestone list
+uint id -> The milestone's id to remove.
 
 ### 3. startNextMilestone
 
 `function startNextMilestone() external;`
 
-#### Parameters
+The function starts the next milestones and creates the payment orders to pay contributors. It reverts if next milestone is not activatable or proposal's contributor list is empty. Only callable by authorized addresses.
 
 ### 4. updateMilestone
 
 `function updateMilestone(uint id,uint duration,uint budget,string memory details) external;`
 
+This function updates a milestone's informations. Only callable by authorized addresses and reverts if an argument invalid or milestone already started.
+
 #### Parameters
+
+1. uint id -> The milestone's id.
+2. uint duration -> The duration of the milestone.
+3. uint budget -> The budget for the milestone.
+4. string details -> The milestone's details.
 
 ### 5. submitMilestone
 
 `function submitMilestone(uint id, bytes calldata submissionData) external;`
 
+This function submits a milestone. Only callable by addresses holding the contributor role and everts if id invalid, milestone not yet started, or milestone is already completed. It is a relay function that routes the function call via the proposal.
+
 #### Parameters
+
+1. uint id -> The milestone's id.
+2. bytes submissionData -> Represents the data that is accompanied when a milestone is submitted. A Milestone is interpreted as being submitted when the submissionData bytes array is not empty. Note that only accounts holding the {CONTRIBUTOR_ROLE()} can set submittedData and therefore submit milestones.
 
 ### 6. completeMilestone
 
 `function completeMilestone(uint id) external;`
 
+This function helps complete a milestone. Only callable by authorized addresses. Reverts if `id` is invalid or milestone not yet submitted.
+
 #### Parameters
+
+1. uint id -> The milestone's id.
 
 ### 7. declineMilestone
 
 `function declineMilestone(uint id) external;`
 
+This function is used to decline a submitted milestone. Only callable by authorized addresses. Reverts if id invalid, milestone not yet submitted, or milestone already completed.
+
 #### Parameters
+
+1. uint id -> The milestone's id.
 
 
 
