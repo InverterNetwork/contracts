@@ -55,10 +55,124 @@ Modifier to ensure provided IDs are of consecutive milestones in the list of mil
 
 ## View Function(s)
 
+### 1. getMilestoneInformation
 
+`function getMilestoneInformation(uint id) external view returns (Milestone memory);`
+
+This function returns the milestone instance with id `id`. It will returns empty milestone in case id `id` is invalid.
+
+#### Parameters
+
+uint id -> The id of the milestone to return.
+
+#### Return Data
+
+1. Milestone with id `id`.
+
+### 2. listMilestoneIds
+
+`function listMilestoneIds() external view returns (uint[] memory);`
+
+This function returns total list of milestone ids. The list is in ascending order.
+
+#### Return Data
+
+1. List of milestone ids.
+
+### 3. getActiveMilestoneId
+
+`function getActiveMilestoneId() external view returns (uint);`
+
+This function returns the current active milestone's id. It will revert in case there is no active milestone.
+
+#### Return Data
+
+Current active milestone id.
+
+### 4. hasActiveMilestone
+
+`function hasActiveMilestone() external view returns (bool);`
+
+This function returns whether there exists a current active milestone.
+
+#### Return Data
+
+True if current active milestone exists, false otherwise.
+
+### 5. isNextMilestoneActivatable
+
+`function isNextMilestoneActivatable() external view returns (bool);`
+
+This function returns whether the next milestone is activatable.
+
+#### Return Data
+
+True if next milestone activatable, false otherwise.
+
+### 6. isExisitingMilestoneId
+
+`function isExistingMilestoneId(uint id) external view returns (bool);`
+
+This function returns whether milestone with id `id` exists.
+
+#### Return Data
+
+True if milestone with id `id` exists, false otherwise.
 
 ## Write Function(s)
 
+### 1. addMilestone
+
+`function addMilestone(uint duration,uint budget,string memory title,string memory details) external returns (uint);`
+
+This function adds a new milestone and is only callable by authorized addresses. Reverts if an argument invalid.
+
+#### Parameters
+
+1. uint duration -> duration The duration of the milestone.
+2. uint budget -> budget The budget for the milestone.
+3. string title -> title The milestone's title.
+4. string details -> details The milestone's details.
+
+#### Return Data
+
+The newly added milestone's id.
+
+### 2. removeMilestone
+
+`function removeMilestone(uint prevId, uint id) external;`
+
+#### Parameters
+
+### 3. startNextMilestone
+
+`function startNextMilestone() external;`
+
+#### Parameters
+
+### 4. updateMilestone
+
+`function updateMilestone(uint id,uint duration,uint budget,string memory details) external;`
+
+#### Parameters
+
+### 5. submitMilestone
+
+`function submitMilestone(uint id, bytes calldata submissionData) external;`
+
+#### Parameters
+
+### 6. completeMilestone
+
+`function completeMilestone(uint id) external;`
+
+#### Parameters
+
+### 7. declineMilestone
+
+`function declineMilestone(uint id) external;`
+
+#### Parameters
 
 
 
