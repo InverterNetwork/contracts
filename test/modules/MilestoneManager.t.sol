@@ -38,6 +38,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     // Constant copied from SuT
     uint private constant _SENTINEL = type(uint).max;
+    string private constant _URI = "";
 
     // Events copied from SuT
     event MilestoneAdded(
@@ -82,6 +83,9 @@ contract MilestoneManagerTest is ModuleTest {
         // Current milestone list is empty.
         uint[] memory milestones = milestoneManager.listMilestoneIds();
         assertEq(milestones.length, 0);
+
+        // ERC-1155 initialized.
+        assertEq(milestoneManager.uri(0), _URI);
     }
 
     function testReinitFails() public override (ModuleTest) {
@@ -1197,6 +1201,66 @@ contract MilestoneManagerTest is ModuleTest {
                 .selector
         );
         milestoneManager.declineMilestone(id);
+    }
+
+    //--------------------------------------------------------------------------
+    // Tests: Milestone Funding
+
+    function testDeposit(address caller, uint amount) public {
+        vm.assume(caller != address(0));
+        vm.assume(amount != 0);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // Mint tokens to caller.
+        _token.mint(caller, amount);
+
+        // Deposit tokens for the milestone.
+        vm.startPrank(caller);
+        {
+            _token.approve(address(milestoneManager), amount);
+            milestoneManager.deposit(id, amount);
+        }
+        vm.stopPrank();
+
+        // Deposit fetched from caller to milestone module.
+        assertEq(_token.balanceOf(address(milestoneManager)), amount);
+
+        // Caller received ERC-1155 receipt token on a 1:1 ratio.
+        assertEq(milestoneManager.balanceOf(caller, id), amount);
+    }
+
+    function testWithdraw(address caller, uint amount) public {
+        vm.assume(caller != address(0));
+        vm.assume(amount != 0 && amount % 2 == 0);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // Mint tokens to caller.
+        _token.mint(caller, amount);
+
+        // Deposit tokens for the milestone.
+        vm.startPrank(caller);
+        {
+            _token.approve(address(milestoneManager), amount);
+            milestoneManager.deposit(id, amount);
+        }
+        vm.stopPrank();
+
+        // Withdraw half of the deposited tokens.
+        vm.prank(caller);
+        milestoneManager.withdraw(id, amount / 2);
+
+        // Half of the deposit send to caller.
+        assertEq(_token.balanceOf(address(caller)), amount/ 2);
+
+        // The other hald stayed in milestone module.
+        assertEq(_token.balanceOf(address(milestoneManager)), amount/ 2);
+
+        // Half of caller's ERC-1155 receipt tokens burned.
+        assertEq(milestoneManager.balanceOf(caller, id), amount / 2);
     }
 
     //--------------------------------------------------------------------------

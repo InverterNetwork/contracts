@@ -145,7 +145,8 @@ contract MilestoneManager is
     uint private _activeMilestone;
 
     /// @dev Mapping of milestone id's to their amount of funding.
-    /// @custom:invariant Equals the total supply of an ERC-1155 id.
+    ///
+    /// @custom:invariant Equals the sum of all ERC-1155 id balances.
     mapping(uint => uint) private _fundsPerMilestone;
 
     //--------------------------------------------------------------------------
@@ -476,7 +477,8 @@ contract MilestoneManager is
     //
     // Funding is managed via a balance for the specific milestone id.
     // For the accounting, the ERC-1155 standard is used with the id being
-    // the milestone's id, and the balance the amount of funding per address.
+    // the milestone's id, and the sum of all id's balances the amount of
+    // available funds per milestone.
 
     function deposit(uint id, uint amount)
         external
