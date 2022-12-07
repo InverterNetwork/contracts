@@ -104,6 +104,9 @@ contract Proposal is
         __Ownable_init();
         __ModuleManager_init(modules);
         __ContributorManager_init();
+        __FundingManager_init(
+            proposalId_, IERC20MetadataUpgradeable(address(token_)).decimals()
+        );
 
         // Set storage variables.
         proposalId = proposalId_;
@@ -172,7 +175,7 @@ contract Proposal is
     function token()
         public
         view
-        override (IProposal, FundingManager)
+        override (FundingManager, IProposal)
         returns (IERC20)
     {
         return _token;
