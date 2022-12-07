@@ -1263,6 +1263,79 @@ contract MilestoneManagerTest is ModuleTest {
         assertEq(milestoneManager.balanceOf(caller, id), amount / 2);
     }
 
+    function testBookkeepingIssue(address caller1, address caller2, address[] memory contribs) public {
+        vm.assume(caller1 != address(0) && caller2!= address(0) && caller1 != caller2);
+        uint amount = BUDGET;
+
+        _addContributors(contribs);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // Mint tokens to caller.
+        _token.mint(caller1, amount);
+        _token.mint(caller2, amount);
+
+        // Caller 1 deposits tokens for the milestone.
+        vm.startPrank(caller1);
+        {
+            _token.approve(address(milestoneManager), amount);
+            milestoneManager.deposit(id, amount);
+        }
+        vm.stopPrank();
+
+        // Caller 2 deposits tokens for the milestone.
+        vm.startPrank(caller2);
+        {
+            _token.approve(address(milestoneManager), amount);
+            milestoneManager.deposit(id, amount);
+        }
+        vm.stopPrank();
+
+        // Deposit fetched from caller to milestone module.
+        assertEq(_token.balanceOf(address(milestoneManager)), 2*amount);
+
+        // Callers received ERC-1155 receipt token on a 1:1 ratio.
+        assertEq(milestoneManager.balanceOf(caller1, id), amount);
+        assertEq(milestoneManager.balanceOf(caller2, id), amount);
+
+
+        // == The manager has now more than enough fund ti fund the milestone ==
+
+
+        // Now we mock the milestone process
+        milestoneManager.startNextMilestone();
+        vm.warp(block.timestamp + DURATION + 1);
+
+        bytes memory submissionData = "test";
+        vm.prank(contribs[0]);
+        milestoneManager.submitMilestone(id, submissionData);
+
+        milestoneManager.completeMilestone(id);
+
+        //We assume the tokens have been spent by the processor
+        _token.burn(address(milestoneManager), amount);
+
+        // == Situation right now:
+        //      - Both still have funding tokens for the whole budget
+        assertEq(milestoneManager.balanceOf(caller1, id), amount);
+        assertEq(milestoneManager.balanceOf(caller2, id), amount);
+
+        // Caller 1 is to remove all of his tokens after completion effective having contributed nothing.
+        //Ideally he should be only able to take half
+        vm.prank(caller1);
+        milestoneManager.withdraw(id, amount);
+
+        assertEq(_token.balanceOf(address(caller1)), amount);
+        // The manager is empty
+        assertEq(_token.balanceOf(address(milestoneManager)), 0);
+
+
+        
+
+
+    }
+
     //--------------------------------------------------------------------------
     // Assert Helper Functions
 
