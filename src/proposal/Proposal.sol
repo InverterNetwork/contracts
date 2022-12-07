@@ -14,7 +14,7 @@ import {IERC20MetadataUpgradeable} from
 import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
-import {FundingVault} from "src/proposal/base/FundingVault.sol";
+import {FundingManager} from "src/proposal/base/FundingManager.sol";
 
 // Internal Interfaces
 import {
@@ -47,7 +47,7 @@ contract Proposal is
     OwnableUpgradeable,
     ModuleManager,
     ContributorManager,
-    FundingVault
+    FundingManager
 {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -73,11 +73,10 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @inheritdoc IProposal
-    uint public override (IProposal) proposalId;
+    IERC20 private _token;
 
     /// @inheritdoc IProposal
-    IERC20 public override (IProposal) token;
+    uint public override (IProposal) proposalId;
 
     /// @inheritdoc IProposal
     IAuthorizer public override (IProposal) authorizer;
@@ -105,13 +104,10 @@ contract Proposal is
         __Ownable_init();
         __ModuleManager_init(modules);
         __ContributorManager_init();
-        __FundingVault_init(
-            proposalId_, IERC20MetadataUpgradeable(address(token_))
-        );
 
         // Set storage variables.
         proposalId = proposalId_;
-        token = token_;
+        _token = token_;
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
 
@@ -151,7 +147,7 @@ contract Proposal is
     }
 
     //--------------------------------------------------------------------------
-    // Public Functions
+    // onlyAuthorized Functions
 
     /// @inheritdoc IProposal
     function executeTx(address target, bytes memory data)
@@ -168,6 +164,18 @@ contract Proposal is
         } else {
             revert Proposal__ExecuteTxFailed();
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // View Functions
+
+    function token()
+        public
+        view
+        override (IProposal, FundingManager)
+        returns (IERC20)
+    {
+        return _token;
     }
 
     /// @inheritdoc IProposal

@@ -7,11 +7,10 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Interfaces
 import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
 import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
-import {IFundingVault} from "src/proposal/base/IFundingVault.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 
-interface IProposal is IModuleManager, IContributorManager, IFundingVault {
+interface IProposal is IModuleManager, IContributorManager {
     //--------------------------------------------------------------------------
     // Errors
 

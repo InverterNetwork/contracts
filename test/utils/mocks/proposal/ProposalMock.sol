@@ -20,14 +20,12 @@ import {
 // Mock Dependencies
 import {ModuleManagerMock} from "./base/ModuleManagerMock.sol";
 import {ContributorManagerMock} from "./base/ContributorManagerMock.sol";
-import {FundingVaultMock} from "./base/FundingVaultMock.sol";
 
 contract ProposalMock is
     IProposal,
     OwnableUpgradeable,
     ModuleManagerMock, // @todo Should not be mocks!
-    ContributorManagerMock,
-    FundingVaultMock
+    ContributorManagerMock
 {
     uint public proposalId;
     IERC20 public token;
@@ -52,9 +50,6 @@ contract ProposalMock is
         __Ownable_init();
         __ModuleManager_init(modules_);
         __ContributorManager_init();
-        __FundingVault_init(
-            proposalId_, IERC20MetadataUpgradeable(address(token_))
-        );
 
         proposalId = proposalId_;
         _transferOwnership(owner_);
