@@ -1254,17 +1254,23 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.withdraw(id, amount / 2);
 
         // Half of the deposit send to caller.
-        assertEq(_token.balanceOf(address(caller)), amount/ 2);
+        assertEq(_token.balanceOf(address(caller)), amount / 2);
 
         // The other hald stayed in milestone module.
-        assertEq(_token.balanceOf(address(milestoneManager)), amount/ 2);
+        assertEq(_token.balanceOf(address(milestoneManager)), amount / 2);
 
         // Half of caller's ERC-1155 receipt tokens burned.
         assertEq(milestoneManager.balanceOf(caller, id), amount / 2);
     }
 
-    function testBookkeepingIssue(address caller1, address caller2, address[] memory contribs) public {
-        vm.assume(caller1 != address(0) && caller2!= address(0) && caller1 != caller2);
+    function testBookkeepingIssue(
+        address caller1,
+        address caller2,
+        address[] memory contribs
+    ) public {
+        vm.assume(
+            caller1 != address(0) && caller2 != address(0) && caller1 != caller2
+        );
         uint amount = BUDGET;
 
         _addContributors(contribs);
@@ -1293,15 +1299,13 @@ contract MilestoneManagerTest is ModuleTest {
         vm.stopPrank();
 
         // Deposit fetched from caller to milestone module.
-        assertEq(_token.balanceOf(address(milestoneManager)), 2*amount);
+        assertEq(_token.balanceOf(address(milestoneManager)), 2 * amount);
 
         // Callers received ERC-1155 receipt token on a 1:1 ratio.
         assertEq(milestoneManager.balanceOf(caller1, id), amount);
         assertEq(milestoneManager.balanceOf(caller2, id), amount);
 
-
         // == The manager has now more than enough fund ti fund the milestone ==
-
 
         // Now we mock the milestone process
         milestoneManager.startNextMilestone();
@@ -1329,11 +1333,6 @@ contract MilestoneManagerTest is ModuleTest {
         assertEq(_token.balanceOf(address(caller1)), amount);
         // The manager is empty
         assertEq(_token.balanceOf(address(milestoneManager)), 0);
-
-
-        
-
-
     }
 
     //--------------------------------------------------------------------------
