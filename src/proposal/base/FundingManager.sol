@@ -13,7 +13,10 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
 
+import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
+
 abstract contract FundingManager is
+    IFundingManager,
     ElasticReceiptTokenUpgradeable,
     Initializable
 {
@@ -33,27 +36,50 @@ abstract contract FundingManager is
         );
     }
 
-    function token() public virtual returns (IERC20);
+    /// @dev Implemented in Proposal.
+    function token() public view virtual returns (IERC20);
 
+    /// @dev Returns the current token balance as supply target.
     function _supplyTarget()
         internal
+        view
         override (ElasticReceiptTokenUpgradeable)
         returns (uint)
     {
-        token().balanceOf(address(this));
+        return token().balanceOf(address(this));
     }
 
-    function deposit(uint amount) external {
-        // Mint token on a 1:1 basis to caller.
-        _mint(msg.sender, amount);
+    //--------------------------------------------------------------------------
+    // Public Mutating Functions
 
-        // Fetch deposit from caller.
-        token().safeTransferFrom(msg.sender, address(this), amount);
+    function deposit(uint amount) external {
+        _deposit(msg.sender, msg.sender, amount);
+    }
+
+    function depositFor(address to, uint amount) external {
+        _deposit(msg.sender, to, amount);
     }
 
     function withdraw(uint amount) external {
-        _burn(msg.sender, amount);
+        _withdraw(msg.sender, msg.sender, amount);
+    }
 
-        token().safeTransfer(msg.sender, amount);
+    function withdrawTo(address to, uint amount) external {
+        _withdraw(msg.sender, to, amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Mutating Functions
+
+    function _deposit(address from, address to, uint amount) internal {
+        _mint(to, amount);
+
+        token().safeTransferFrom(from, address(this), amount);
+    }
+
+    function _withdraw(address from, address to, uint amount) internal {
+        amount = _burn(from, amount);
+
+        token().safeTransfer(to, amount);
     }
 }
