@@ -6,16 +6,21 @@ import "forge-std/Test.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
+import {Proposal} from "src/proposal/Proposal.sol";
+
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
-import {ProposalMock} from "test/utils/mocks/proposal/ProposalMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {PaymentProcessorMock} from "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -24,8 +29,9 @@ contract ModuleTest is Test {
     // SuT
     ModuleMock module;
 
+    Proposal proposal;
+
     // Mocks
-    ProposalMock proposal;
     AuthorizerMock authorizer;
 
     // Constants
@@ -43,7 +49,8 @@ contract ModuleTest is Test {
         authorizer = new AuthorizerMock();
         authorizer.setAllAuthorized(true);
 
-        proposal = new ProposalMock(authorizer);
+        address proposalImpl = address(new Proposal());
+        proposal = Proposal(Clones.clone(proposalImpl));
 
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
@@ -53,7 +60,14 @@ contract ModuleTest is Test {
         // Initialize proposal to enable module.
         address[] memory modules = new address[](1);
         modules[0] = address(module);
-        proposal.init(modules);
+        proposal.init(
+            1,
+            address(this),
+            IERC20(new ERC20Mock("Mock", "MOCK")),
+            modules,
+            authorizer,
+            new PaymentProcessorMock()
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -136,16 +150,20 @@ contract ModuleTest is Test {
         assertTrue(!module.paused());
     }
 
-    function testPauseIsAuthenticated() public {
+    function testPauseIsAuthenticated(address caller) public {
+        vm.assume(caller != proposal.owner());
         authorizer.setAllAuthorized(false);
 
+        vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         module.pause();
     }
 
-    function testUnpauseIsAuthenticated() public {
+    function testUnpauseIsAuthenticated(address caller) public {
+        vm.assume(caller != proposal.owner());
         authorizer.setAllAuthorized(false);
 
+        vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         module.unpause();
     }
