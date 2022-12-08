@@ -19,7 +19,8 @@ import {Proposal} from "src/proposal/Proposal.sol";
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
-import {PaymentProcessorMock} from "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {PaymentProcessorMock} from
+    "test/utils/mocks/modules/PaymentProcessorMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
