@@ -513,6 +513,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         external
         wantProposalContext
     {
-        __Proposal_token.safeTransfer(receiver, amount);
+        __Proposal__token.safeTransfer(receiver, amount);
     }
 }
