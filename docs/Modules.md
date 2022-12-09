@@ -3,7 +3,7 @@
 Modules are used within the Proposal Inverter to implement specific business
 logic that can be added to a proposal during it's initilization.
 
-## Trust assumptions
+## Trust assumptions 
 
 Modules must be trusted by the proposal creator.
 
