@@ -6,7 +6,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- *
  * IMPORTANT:
  *  - underlier -> The elastic (rebasing) token that is being wrapped
  *  - token     -> The token being created, i.e. address(this)
@@ -20,15 +19,10 @@ contract IFT is ERC20 {
 
     IERC20 private _underlier;
 
-    constructor(
-        IERC20 underlier,
-        uint maxUnderlierSupply,
-        string memory name_,
-        string memory symbol_
-    ) ERC20(name_, symbol_) {
+    constructor(IERC20 underlier, string memory name_, string memory symbol_)
+        ERC20(name_, symbol_)
+    {
         _underlier = underlier;
-
-        _MAX_UNDERLIER_SUPPLY = maxUnderlierSupply;
     }
 
     //--------------------------------------------------------------------------

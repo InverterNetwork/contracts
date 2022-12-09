@@ -49,7 +49,6 @@ abstract contract FundingManager is
         return IERC20(
             new IFT(
             IERC20(address(this)),
-            MAX_SUPPLY,
             string(abi.encodePacked("Inverter Funding Token - Proposal #", id)),
             string(abi.encodePacked("IFT-", id))
             )
