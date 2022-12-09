@@ -19,7 +19,7 @@ contract FundingManagerMock is FundingManager {
     {
         _token = token_;
 
-        __FundingManager_init(proposalId_, decimals_);
+        __FundingManager_init(proposalId_, token_);
     }
 
     // Note that the `initializer` modifier is missing.
@@ -28,7 +28,7 @@ contract FundingManagerMock is FundingManager {
     {
         _token = token_;
 
-        __FundingManager_init(proposalId_, decimals_);
+        __FundingManager_init(proposalId_, token_);
     }
 
     function token() public view override (FundingManager) returns (IERC20) {

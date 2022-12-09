@@ -8,10 +8,14 @@ import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {IERC20MetadataUpgradeable} from
+    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
+
+import {IFT} from "src/proposal/token/IFT.sol";
 
 import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
 
@@ -23,16 +27,32 @@ abstract contract FundingManager is
     using Strings for uint;
     using SafeERC20 for IERC20;
 
-    function __FundingManager_init(uint proposalId_, uint8 decimals_)
+    function __FundingManager_init(uint proposalId_, IERC20 token_)
         internal
         onlyInitializing
+        returns (IERC20)
     {
         string memory id = proposalId_.toString();
 
+        // Initial upstream contracts.
         __ElasticReceiptToken_init(
+            string(
+                abi.encodePacked(
+                    "elastic Inverter Funding Token - Proposal #", id
+                )
+            ),
+            string(abi.encodePacked("eIFT-", id)),
+            IERC20MetadataUpgradeable(address(token_)).decimals()
+        );
+
+        // Deploy and return fixed-supply wrapper token.
+        return IERC20(
+            new IFT(
+            IERC20(address(this)),
+            MAX_SUPPLY,
             string(abi.encodePacked("Inverter Funding Token - Proposal #", id)),
-            string(abi.encodePacked("IFT-", id)),
-            decimals_
+            string(abi.encodePacked("IFT-", id))
+            )
         );
     }
 

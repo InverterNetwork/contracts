@@ -16,7 +16,6 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract FundingManagerTest is Test {
-
     // SuT
     FundingManagerMock fundingManager;
 
@@ -34,11 +33,7 @@ contract FundingManagerTest is Test {
         underlier = new ERC20Mock("Mock", "MOCK");
 
         fundingManager = new FundingManagerMock();
-        fundingManager.init(
-            underlier,
-            PROPOSAL_ID,
-            DECIMALS
-        );
+        fundingManager.init(underlier, PROPOSAL_ID, DECIMALS);
     }
 
     //--------------------------------------------------------------------------
@@ -46,8 +41,11 @@ contract FundingManagerTest is Test {
 
     function testInit() public {
         assertEq(fundingManager.decimals(), DECIMALS);
-        assertEq(fundingManager.name(), "Inverter Funding Token - Proposal #1");
-        assertEq(fundingManager.symbol(), "IFT-1");
+        assertEq(
+            fundingManager.name(),
+            "elastic Inverter Funding Token - Proposal #1"
+        );
+        assertEq(fundingManager.symbol(), "eIFT-1");
 
         assertEq(fundingManager.totalSupply(), 0);
         assertEq(fundingManager.scaledTotalSupply(), 0);
@@ -99,5 +97,4 @@ contract FundingManagerTest is Test {
         // User has half the token balance as before.
         assertEq(fundingManager.balanceOf(user), amount - expenses);
     }
-
 }

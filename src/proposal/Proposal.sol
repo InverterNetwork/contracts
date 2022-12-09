@@ -75,6 +75,8 @@ contract Proposal is
 
     IERC20 private _token;
 
+    IERC20 private _receiptToken;
+
     /// @inheritdoc IProposal
     uint public override (IProposal) proposalId;
 
@@ -104,13 +106,14 @@ contract Proposal is
         __Ownable_init();
         __ModuleManager_init(modules);
         __ContributorManager_init();
-        __FundingManager_init(
-            proposalId_, IERC20MetadataUpgradeable(address(token_)).decimals()
-        );
+        IERC20 receiptToken_ = __FundingManager_init(proposalId_, token_);
 
         // Set storage variables.
         proposalId = proposalId_;
+
         _token = token_;
+        _receiptToken = receiptToken_;
+
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
 
@@ -172,6 +175,7 @@ contract Proposal is
     //--------------------------------------------------------------------------
     // View Functions
 
+    /// @inheritdoc IProposal
     function token()
         public
         view
