@@ -35,12 +35,52 @@ contract ProposalFactoryTest is Test {
     // Mocks
     ModuleFactoryMock moduleFactory;
 
+    // Metadata
+    IProposalFactory.ProposalConfig proposalConfig = IProposalFactory
+        .ProposalConfig({
+        owner: address(this),
+        token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
+    });
+
+    IProposalFactory.ModuleConfig authorizerConfig = IProposalFactory
+        .ModuleConfig(
+        IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
+        bytes("data")
+    );
+
+    IProposalFactory.ModuleConfig paymentProcessorConfig = IProposalFactory
+        .ModuleConfig(
+        IModule.Metadata(
+            1, 1, "https://paymentprocessor.com", "PaymentProcessor"
+        ),
+        bytes("data")
+    );
+
+    IProposalFactory.ModuleConfig moduleConfig = IProposalFactory.ModuleConfig(
+        IModule.Metadata(1, 1, "https://module.com", "Module"), bytes("")
+    );
+
     function setUp() public {
         moduleFactory = new ModuleFactoryMock();
 
         target = new Proposal();
 
         factory = new ProposalFactory(address(target), address(moduleFactory));
+    }
+
+    function testValidProposalId(uint getId, uint proposalsCreated) public {
+        // Note to stay reasonable
+        vm.assume(proposalsCreated < 50);
+
+        for (uint i = 0; i < proposalsCreated; i++) {
+            _deployProposal();
+        }
+        if (getId > proposalsCreated) {
+            vm.expectRevert(
+                IProposalFactory.ProposalFactory__InvalidId.selector
+            );
+        }
+        factory.getProposalByID(getId);
     }
 
     function testDeploymentInvariants() public {
@@ -52,36 +92,13 @@ contract ProposalFactoryTest is Test {
         // Note to stay reasonable
         vm.assume(modulesLen < 50);
 
-        // Create ProposalConfig instance.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig({
-            owner: address(this),
-            token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
-        });
-
-        // Create {IAuthorizer} ModuleConfig instance.
-        IProposalFactory.ModuleConfig memory authorizerConfig = IProposalFactory
-            .ModuleConfig(
-            IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
-            bytes("data")
-        );
-
-        // Create {IPaymentProcessor} ModuleConfig instance.
-        IProposalFactory.ModuleConfig memory paymentProcessorConfig =
-        IProposalFactory.ModuleConfig(
-            IModule.Metadata(
-                1, 1, "https://paymentprocessor.com", "PaymentProcessor"
-            ),
-            bytes("data")
-        );
-
         // Create optional ModuleConfig instances.
         IProposalFactory.ModuleConfig[] memory moduleConfigs =
-            new IProposalFactory.ModuleConfig[](modulesLen);
+        new IProposalFactory.ModuleConfig[](
+                modulesLen
+            );
         for (uint i; i < modulesLen; i++) {
-            moduleConfigs[i].metadata =
-                IModule.Metadata(1, 1, "https://module.com", "Module");
-            moduleConfigs[i].configdata = bytes("");
+            moduleConfigs[i] = moduleConfig;
         }
 
         // Deploy Proposal with id=1
@@ -111,5 +128,31 @@ contract ProposalFactoryTest is Test {
         );
         // Only check that proposal's id is correct.
         assertEq(proposal.proposalId(), 2);
+    }
+
+    function testProposalMapping(uint proposalAmount) public {
+        // Note to stay reasonable
+        vm.assume(proposalAmount < 50);
+
+        for (uint i = 1; i < proposalAmount; i++) {
+            address proposal = _deployProposal();
+            assertEq(proposal, factory.getProposalByID(i));
+        }
+    }
+
+    function _deployProposal() private returns (address) {
+        //Create Empty ModuleConfig
+        IProposalFactory.ModuleConfig[] memory moduleConfigs =
+            new IProposalFactory.ModuleConfig[](0);
+
+        // Deploy Proposal
+        IProposal proposal = factory.createProposal(
+            proposalConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            moduleConfigs
+        );
+
+        return address(proposal);
     }
 }

@@ -170,8 +170,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function listMilestoneIds() external view returns (uint[] memory) {
-        uint[] memory result = new uint[](_milestoneCounter);
+    function listMilestoneIds() public view returns (uint[] memory) {
+        uint[] memory result = new uint256[](_milestoneCounter);
 
         // Populate result array.
         uint index = 0;
@@ -234,6 +234,23 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return id != _SENTINEL && _milestones[id] != 0;
     }
 
+    /// @inheritdoc IMilestoneManager
+    function getPreviousMilestoneId(uint id)
+        external
+        view
+        validId(id)
+        returns (uint prevId)
+    {
+        uint[] memory milestoneIds = listMilestoneIds();
+
+        uint len = milestoneIds.length;
+        for (uint i; i < len; i++) {
+            if (milestoneIds[i] == id) {
+                return i != 0 ? milestoneIds[i - 1] : _SENTINEL;
+            }
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Milestone API Functions
 
@@ -245,7 +262,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         string memory details
     )
         external
-        onlyAuthorized
+        onlyAuthorizedOrOwner
         validDuration(duration)
         validBudget(budget)
         validTitle(title_)
@@ -280,7 +297,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function removeMilestone(uint prevId, uint id)
         external
-        onlyAuthorized
+        onlyAuthorizedOrOwner
         validId(id)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -310,7 +327,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function startNextMilestone() external onlyAuthorized {
+    function startNextMilestone() external onlyAuthorizedOrOwner {
         if (!isNextMilestoneActivatable()) {
             revert Module__MilestoneManager__MilestoneNotActivateable();
         }
@@ -356,7 +373,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         string memory details
     )
         external
-        onlyAuthorized
+        onlyAuthorizedOrOwner
         validId(id)
         validDuration(duration)
         validBudget(budget)
@@ -401,7 +418,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function completeMilestone(uint id) external onlyAuthorized validId(id) {
+    function completeMilestone(uint id)
+        external
+        onlyAuthorizedOrOwner
+        validId(id)
+    {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not confirmable if milestone not submitted yet.
@@ -416,7 +437,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function declineMilestone(uint id) external onlyAuthorized validId(id) {
+    function declineMilestone(uint id)
+        external
+        onlyAuthorizedOrOwner
+        validId(id)
+    {
         Milestone storage m = _milestoneRegistry[id];
 
         // Not declineable if milestone not submitted yet or already completed.
