@@ -46,7 +46,11 @@ This function returns the list of outstanding payment orders.
 
 `function collectPaymentOrders() external returns (PaymentOrder[] memory, uint);`
 
-This function helps collect outstanding payment orders.
+This function helps collect outstanding payment orders. Callable only by the proposal's IPaymentProcessor. This function returns the list of all payment orders.
+
+This function ensures that the IPaymentProcessor is able to fetch all tokens from the initiator/creator of the orders by ensuring sufficient token allowance.
+
+> NOTE: Collecting the payment orders means that the `IPaymentClient` will mark the orders as being fulfilled and delete them. The sole responsibility to actually fulfill the orders by transfering the tokens lies with the `IPaymentProcessor`.
 
 #### Return data
 
