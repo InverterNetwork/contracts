@@ -46,7 +46,7 @@ In order to guarantee the callback is NOT executed in the module's context,
 
 An example for this could be:
 
-```
+```solidity
 function doSmth(
         uint256 dataNumber,
         string memory dataString,
@@ -92,7 +92,7 @@ via the `onlyProposal` modifier!
 
 An example for this could be:
 
-```
+```solidity
 function doSmth(
         uint256 dataNumber,
         string memory dataString,
@@ -138,7 +138,7 @@ Users are authenticated using the proposal's `IAuthenticator` instance.
 This ensures that all access management is handled solely by the proposal.
 An Example for this could be:
 
-```
+```solidity
 // Define a role for contributors.
     bytes32 CONTRIBUTOR_ROLE =
         keccak256("milestoneContributor");
