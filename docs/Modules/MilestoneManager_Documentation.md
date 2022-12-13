@@ -153,7 +153,7 @@ uint id -> The milestone's id to remove.
 
 `function startNextMilestone() external;`
 
-The function starts the next milestones and creates the payment orders to pay contributors. It reverts if next milestone is not activatable or proposal's contributor list is empty. Only callable by authorized addresses.
+The function starts the next milestones and creates the payment orders to pay contributors. It reverts if next milestone is not activatable or proposal's contributor list is empty or in case the token amount to pay the contributors can not be fetched from the proposal. Only callable by authorized addresses.
 
 ### 4. updateMilestone
 
