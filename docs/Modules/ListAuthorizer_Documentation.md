@@ -38,17 +38,7 @@ This function returns the number of authorized addresses
 
 ## Write Function(s)
 
-### 1. __ListAuthorizer_addToAuthorized
-
-`function __ListAuthorizer_addToAuthorized(address _who) public`
-
-This function adds a new address to the list of authorized addresses.
-
-#### Parameters
-
-1. address _who -> The address to add to the list of authorized addresses.
-
-### 2. addToAuthorized
+### 1. addToAuthorized
 
 `function addToAuthorized(address _who) external`
 
@@ -58,7 +48,7 @@ This function adds a new address to the list of authorized addresses. It is esse
 
 1. address _who -> The address to add to the list of authorized addresses.
 
-### 3. __ListAuthorizer_removeFromAuthorized
+### 2. __ListAuthorizer_removeFromAuthorized
 
 `function __ListAuthorizer_removeFromAuthorized(address _who) public`
 
@@ -68,7 +58,7 @@ This function removes an address from the list of authorized addresses.
 
 1. address _who -> The address to remove from the list of authorized addresses.
 
-### 4. removeFromAuthorized
+### 3. removeFromAuthorized
 
 `function removeFromAuthorized(address _who) external`
 
@@ -78,7 +68,7 @@ This function removes an address from the list of authorized addresses. It is es
 
 1. address _who -> The address to remove from the list of authorized addresses.
 
-### 5. __ListAuthorizer_transferAuthorization
+### 4. __ListAuthorizer_transferAuthorization
 
 `function __ListAuthorizer_transferAuthorization(address _from, address _to) public`
 
@@ -89,7 +79,7 @@ This function transfers authorization from the calling address to a new one.
 1. address _from -> The address to transfer the authorization from
 2. address _to -> The address to transfer the authorization to
 
-### 6. transferAuthorization
+### 5. transferAuthorization
 
 `function transferAuthorization(address _who) external`
 
@@ -99,7 +89,7 @@ This function transfers authorization from the calling address to a new one. It 
 
 1. address _who -> The address to transfer the authorization to
 
-### 7. initialize
+### 6. initialize
 
 `function initialize(IProposal proposal, Metadata memory metadata) external`
 

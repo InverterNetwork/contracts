@@ -29,6 +29,8 @@ Returns the IERC20 token the payment processor can process.
 
 Processes all payments from an {IPaymentClient} instance. It's up to the the implementation to keep up with what has been paid out or not.
 
+> NOTE: From the perspective of `IPaymentClient`, the orders are fulfilled as soon as the `collectPaymentOrders` function is called. The responsibility to actually send the tokens lies then with the `IPaymentProcessor`, and should be done in exactly this function - `processPayments`.
+
 #### Parameters
 
 1. IPaymentClient client -> The {IPaymentClient} instance to process its to payments.
