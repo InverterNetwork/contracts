@@ -31,7 +31,7 @@ Modifier to ensure that the duration is non-zero.
 
 ### 3. validBudget(uint budget)
 
-This modifier does not really do anything, lol. Can be changed to fit in the scope of the budget.
+This is a skeleton modifier and does not implement any checks. Added for ease of implementation for future contraints regarding the budget field.
 
 ### 4. validTitle(string memory title_)
 
@@ -59,7 +59,7 @@ Modifier to ensure provided IDs are of consecutive milestones in the list of mil
 
 `function getMilestoneInformation(uint id) external view returns (Milestone memory);`
 
-This function returns the milestone instance with id `id`. It will returns empty milestone in case id `id` is invalid.
+This function returns the milestone instance with id `id`. Function reverts in case `id` is invalid.
 
 #### Parameters
 

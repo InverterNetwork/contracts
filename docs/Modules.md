@@ -71,7 +71,7 @@ function doSmth(
 function __Proposal_doSmth(
         uint256 dataNumber,
         string memory dataString,
-    ) external wantProposalContext returns(uint256){
+    ) external wantProposalContext returns(uint256, bool){
         //do Smth in Proposalcontext
         doSmth(dataNumber, dataString);
         
