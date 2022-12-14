@@ -105,9 +105,7 @@ contract FundingManagerTest is Test {
         uint[] deposits;
     }
 
-    function testDepositWithdraw(UserDeposits memory input)
-        public
-    {
+    function testDepositWithdraw(UserDeposits memory input) public {
         vm.assume(input.users.length <= input.deposits.length);
         vm.assume(input.users.length > 1);
         vm.assume(input.users.length < 1000);
@@ -146,7 +144,9 @@ contract FundingManagerTest is Test {
             vm.prank(input.users[i]);
             fundingManager.deposit(input.deposits[i]);
 
-            assertEq(fundingManager.balanceOf(input.users[i]), input.deposits[i]);
+            assertEq(
+                fundingManager.balanceOf(input.users[i]), input.deposits[i]
+            );
         }
 
         // The fundingManager spends an amount of underliers.
@@ -158,7 +158,11 @@ contract FundingManagerTest is Test {
         fundingManager.rebase();
         for (uint i; i < input.users.length / 2; i++) {
             // Note that we can be off-by-one due to rounding.
-            assertApproxEqAbs(fundingManager.balanceOf(input.users[i]), input.deposits[i] / 2, 1);
+            assertApproxEqAbs(
+                fundingManager.balanceOf(input.users[i]),
+                input.deposits[i] / 2,
+                1
+            );
         }
 
         // The other half of the users deposit their underliers.
@@ -166,7 +170,9 @@ contract FundingManagerTest is Test {
             vm.prank(input.users[i]);
             fundingManager.deposit(input.deposits[i]);
 
-            assertEq(fundingManager.balanceOf(input.users[i]), input.deposits[i]);
+            assertEq(
+                fundingManager.balanceOf(input.users[i]), input.deposits[i]
+            );
         }
     }
 }

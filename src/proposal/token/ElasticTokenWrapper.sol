@@ -5,19 +5,22 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
+import {IElasticTokenWrapper} from "src/proposal/token/IElasticTokenWrapper.sol";
+
 /**
  * IMPORTANT:
- *  - underlier -> The elastic (rebasing) token that is being wrapped
- *  - token     -> The token being created, i.e. address(this)
- *  - uAmount   -> An amount of underlier tokens
- *  - Amount    -> An amount of tokens
+ *  - underlier    -> The elastic (rebasing) token that is being wrapped
+ *  - token        -> The token being created, i.e. address(this)
+ *  - uAmount      -> An amount of underlier tokens
+ *  - Amount       -> An amount of tokens
+ *  - uTotalSupply -> The total supply of the underlier token
  */
-contract IFT is ERC20 {
+contract ElasticTokenWrapper is IElasticTokenWrapper, ERC20 {
     using SafeERC20 for IERC20;
 
     uint public constant MAX_TOKEN_SUPPLY = 10_000_000e18; // 10M
 
-    IERC20 private _underlier;
+    IERC20 private immutable _underlier;
 
     constructor(IERC20 underlier, string memory name_, string memory symbol_)
         ERC20(name_, symbol_)
@@ -28,18 +31,18 @@ contract IFT is ERC20 {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @dev Deposit `uAmount` of underlier tokens and mints tokens to `to`.
+    /// @dev Deposits `uAmount` of underlier tokens and mints tokens to `to`.
     /// @return Returns the amount of tokens minted.
     function depositFor(address to, uint uAmount) external returns (uint) {
-        uint amount = _fromUnderlier(uAmount, _underlierTotalSupply());
+        uint amount = _fromUnderlier(uAmount, _uTotalSupply());
         _deposit(msg.sender, to, uAmount, amount);
         return amount;
     }
 
-    /// @dev Burns `amount` of tokens and send underlier tokens to `to`.
+    /// @dev Burns `amount` of tokens and sends underlier tokens to `to`.
     /// @return Returns the amount of underlier tokens send.
     function burnTo(address to, uint amount) external returns (uint) {
-        uint uAmount = _toUnderlier(amount, _underlierTotalSupply());
+        uint uAmount = _toUnderlier(amount, _uTotalSupply());
         _withdraw(msg.sender, to, uAmount, amount);
         return uAmount;
     }
@@ -52,19 +55,25 @@ contract IFT is ERC20 {
     }
 
     function totalUnderlying() external view returns (uint) {
-        return _toUnderlier(totalSupply(), _underlierTotalSupply());
+        return _toUnderlier(totalSupply(), _uTotalSupply());
     }
 
     function balanceOfUnderlying(address owner) external view returns (uint) {
-        return _toUnderlier(balanceOf(owner), _underlierTotalSupply());
+        return _toUnderlier(balanceOf(owner), _uTotalSupply());
     }
 
     function underlyingToToken(uint uAmount) external view returns (uint) {
-        return _fromUnderlier(uAmount, _underlierTotalSupply());
+        uint uTotalSupply = _uTotalSupply();
+
+        if (uTotalSupply == 0) {
+            revert ElasticTokenWrapper__TotalSupplyOfUnderlierIsZero();
+        }
+
+        return _fromUnderlier(uAmount, _uTotalSupply());
     }
 
     function tokenToUnderlying(uint amount) external view returns (uint) {
-        return _toUnderlier(amount, _underlierTotalSupply());
+        return _toUnderlier(amount, _uTotalSupply());
     }
 
     //--------------------------------------------------------------------------
@@ -73,9 +82,9 @@ contract IFT is ERC20 {
     function _deposit(address from, address to, uint uAmount, uint amount)
         private
     {
-        _underlier.safeTransferFrom(from, address(this), amount);
+        _underlier.safeTransferFrom(from, address(this), uAmount);
 
-        _mint(to, uAmount);
+        _mint(to, amount);
     }
 
     function _withdraw(address from, address to, uint uAmount, uint amount)
@@ -89,7 +98,7 @@ contract IFT is ERC20 {
     //--------------------------------------------------------------------------
     // Private View Functions
 
-    function _underlierTotalSupply() private view returns (uint) {
+    function _uTotalSupply() private view returns (uint) {
         return _underlier.totalSupply();
     }
 

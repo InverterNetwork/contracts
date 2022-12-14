@@ -15,7 +15,7 @@ import {IERC20MetadataUpgradeable} from
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
 
-import {IFT} from "src/proposal/token/IFT.sol";
+import {ElasticTokenWrapper} from "src/proposal/token/ElasticTokenWrapper.sol";
 
 import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
 
@@ -45,9 +45,9 @@ abstract contract FundingManager is
             IERC20MetadataUpgradeable(address(token_)).decimals()
         );
 
-        // Deploy and return fixed-supply wrapper token.
+        // Deploy and store fixed-supply wrapper token.
         return IERC20(
-            new IFT(
+            new ElasticTokenWrapper(
             IERC20(address(this)),
             string(abi.encodePacked("Inverter Funding Token - Proposal #", id)),
             string(abi.encodePacked("IFT-", id))
