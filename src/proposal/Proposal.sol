@@ -186,6 +186,11 @@ contract Proposal is
     }
 
     /// @inheritdoc IProposal
+    function receiptToken() public view override (IProposal) returns (IERC20) {
+        return _receiptToken;
+    }
+
+    /// @inheritdoc IProposal
     function version() external pure returns (string memory) {
         return "1";
     }

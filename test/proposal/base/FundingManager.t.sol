@@ -133,7 +133,7 @@ contract FundingManagerTest is Test {
             underlier.mint(input.users[i], input.deposits[i]);
         }
 
-        // Each users gives infinite allowance to fundingManager.
+        // Each user gives infinite allowance to fundingManager.
         for (uint i; i < input.users.length; i++) {
             vm.prank(input.users[i]);
             underlier.approve(address(fundingManager), type(uint).max);
@@ -154,7 +154,7 @@ contract FundingManagerTest is Test {
         underlier.burn(address(fundingManager), expenses);
 
         // The users who funded tokens, lost half their receipt tokens.
-        // Note to rebase because balanceOf of a non-state mutating function.
+        // Note to rebase because balanceOf is not a token-state mutating function.
         fundingManager.rebase();
         for (uint i; i < input.users.length / 2; i++) {
             // Note that we can be off-by-one due to rounding.
@@ -168,7 +168,7 @@ contract FundingManagerTest is Test {
         // The other half of the users deposit their underliers.
         for (uint i = input.users.length / 2; i < input.users.length; i++) {
             vm.prank(input.users[i]);
-            fundingManager.deposit(input.deposits[i]);
+            fundingManager.depositFor(input.users[i], input.deposits[i]);
 
             assertEq(
                 fundingManager.balanceOf(input.users[i]), input.deposits[i]

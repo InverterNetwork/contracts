@@ -68,7 +68,7 @@ contract ElasticTokenWrapperTest is Test {
         vm.prank(user);
         uint wrappedAmount = tokenWrapper.depositFor(user, depositAmount);
 
-        // Simulate rebase by burning tokens.
+        // Simulate rebase by minting/burning tokens.
         uint rebasePercInBpsAbs =
             rebasePercInBps < 0 ? uint(-rebasePercInBps) : uint(rebasePercInBps);
         uint supplyDelta = (depositAmount * rebasePercInBpsAbs) / 10_000;
