@@ -124,8 +124,7 @@ True if milestone with id `id` exists, false otherwise.
 `function getPreviousMilestoneId(uint id) external view returns (uint prevId);`
 
 This function fetches the id of the previous milestone in the list and reverts if `id` invalid.
-This function should ideally be called from the front-end or from any off-chain source since running this on-chain would result in a 
-lot of gas consumption owing to O(n) runtime.
+This function should ideally be called from the front-end or from any off-chain source since running this on-chain would result in a lot of gas consumption owing to O(n) runtime.
 
 #### Parameters
 

@@ -84,6 +84,21 @@ Returns the number of modules.
 
 uint -> the number of modules.
 
+### 5. getPreviousModule
+
+`function getPreviousModule(address module) external view returns (address previousModule);`
+
+This function fetches the `id` of the previous Module in the list and reverts if the `id` is invalid.
+This function should ideally be called from the front-end or from any off-chain source since running this on-chain would result in a lot of gas consumption owing to O(n) runtime.
+
+#### Parameter(s)
+
+1. address module -> The address of which the previous element in the list should be found.
+
+#### Return Data
+
+1. address previousModule -> The address of the previous module.
+
 ## Write Function(s)
 
 ### 1. addModule

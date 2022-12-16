@@ -92,6 +92,21 @@ Returns the number of contributors.
 
 uint -> Number of contributors.
 
+### 5. getPreviousContributor
+
+`function getPreviousContributor(address who) external view returns (address previousContributor);`
+
+This function fetches the id of the previous Contributor in the list and reverts if `who` is invalid. 
+This function should ideally be called from the front-end or from any off-chain source since running this on-chain would result in a lot of gas consumption owing to O(n) runtime.
+
+#### Parameter(s)
+
+1. address who -> The address of which the previous element in the list should be found.
+
+#### Return Data
+
+1. The address of the previous Contributor.
+
 ## Write Function(s)
 
 ### 1. addContributor
