@@ -7,7 +7,7 @@
     - added:
           The milestone got added to the contract.
     - active:
-          When a milestone is started, it initias payment orders to pay
+          When a milestone is started, it initiates payment orders to pay
           the proposal's contributors.
           A milestone is active, until either its duration is over or it's
           marked as completed.
