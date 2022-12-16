@@ -2,7 +2,7 @@
 
 ## Things to know
 
-1. The FundingVault is an [ERC-4626](https://ethereum.org/en/developers/docs/standards/tokens/erc-4626/) vault managing the accounting for funder deposits.
+1. **Subject to change:** The FundingVault is an [ERC-4626](https://ethereum.org/en/developers/docs/standards/tokens/erc-4626/) vault managing the accounting for funder deposits.
 2. After funding a particular proposal, the depositors receive newly minted ERC20 receipt tokens (similar to the concept of LP tokens) that represent their funding.
 3. These receipt tokens can be burned to receive back the funding, in proportion of available funds.
 
