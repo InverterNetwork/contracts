@@ -10,51 +10,83 @@
 
 ## Modifier(s)
 
-### 1. voteIsActive(uint _voteID)
+### 1. onlySelf
 
-Given the `_voteID`, this modifier verifies that a given vote is still active.
+This modifier ensures that the `msg.sender` is not the same as the `SingleVoteGovernor` contract (address this).
 
-### 2. voteNotActive(uint _voteID)
+### 2. onlyVoter
 
-Given the `_voteID`, this modifier verifies that a given vote is not active anymore.
-
-### 3. quorumReached(uint _voteID)
-
-Given the `_voteID`, this modifier verifies that a given vote did reach the quorum (at the time it was voted on).
-
-### 4. validQuorum(uint8 _quorum, uint _amountAuthorized)
-
-Given the `quorum` and `amountAuthorized`, this modifier verifies that the suggested quorum change wouldn't break the system
-
-### 5. validModuleAddress(address _target)
-
-Given the `_target`, this modifier verifies that the targeted module address is indeed active in the `Proposal`
-
-### 6. validAction(bytes calldata _action)
-
-Given the `_action`, this modifier verifies that the action to be executed after the vote is valid.
+This modifier ensures that the `msg.sender` is an authorised voter (member of the mapping `isVoter`).
 
 ## View Function(s)
 
-### 1. getRequiredQuorum
+### 1. isAuthorized
 
-`function getRequiredQuorum() external view returns(uint8)`
+`function isAuthorized(address who) public view returns (bool);`
 
-This function returns the current required quorum.
+This function checks whether the address `who` is authorized or not.
 
-#### Return Data
+#### Parameter(s)
 
-1. Current required quorum
-
-### 2. getVoteDuration
-
-`function getVoteDuration() external view returns (uint)`
-
-This function returns the current voting duration
+1. address who -> The address whose authorization you want to check.
 
 #### Return Data
 
-1. Current Voting Duration
+1. bool -> True if address `who` is authorized(), false otherwise.
+
+> NOTE: The governance contract (`SingleVoteGovernance.sol`) itself is only authorized.
+
+### 2. getReceipt
+
+`function getReceipt(uint _ID, address voter) public view returns (Receipt memory);`
+
+> NOTE 1: `Receipt` is the a struct containing `bool hasVoted` and `uint8 support`.
+> NOTE 2: `Motion` is a struct with the following structure:
+`    struct Motion {
+        // Execution data.
+        address target;
+        bytes action;
+        // Governance data.
+        uint startTimestamp;
+        uint endTimestamp;
+        uint requiredQuorum;
+        // Voting result.
+        uint forVotes;
+        uint againstVotes;
+        uint abstainVotes;
+        mapping(address => Receipt) receipts;
+        // Execution result.
+        uint executedAt;
+        bool executionResult;
+        bytes executionReturnData;
+    }`
+
+This function helps to fetch the `Receipt` (see `NOTE 1` above) of the `Motion`(see `NOTE 2` above) with id of `_ID` and associated with address `voter`. 
+
+#### Parameter(s)
+
+1. uint _ID -> The identifying number of the `Motion` for which you want to see the `Receipt`.
+2. address voter -> Given the `_ID` of the `Motion`, the address of the voter for which you want to see the `Receipt`.
+
+#### Return Data
+
+1. Receipt -> A `Receipt` of the address `voter` from the `Motion` with id `_ID`.
+
+### 3. MAX_DURATION_DURATION
+
+`function MAX_VOTING_DURATION() external view returns (uint);`
+
+#### Return Data
+
+1. uint -> The maximum duration for voting, which is currently hardcodd to `2 weeks`.
+
+### 4. MIN_VOTING_DURATION
+
+`function MIN_VOTING_DURATION() external view returns (uint);`
+
+#### Return Data
+
+1. uint -> The minimum duration for voting, which is currently hardcoded to `1 days`.
 
 ## Write Function(s)
 
@@ -71,136 +103,70 @@ This function initializes the module and then sets the `quorum` and `voteDuratio
 3. uint _voteDuration -> The duration for the votes
 4. Metadata metadata -> The module's metadata.
 
-### 2. __ListAuthorizer_removeFromAuthorized
+### 2. setQuorum
 
-`function __ListAuthorizer_removeFromAuthorized(address _who) public`
+`function setQuorum(uint newQuorum) external;`
 
-This function removes an address from the list of authorized addresses. The `validQuorum` modifier is added to `removeFromAuthorized` to make sure that removing users doesn't end up with unreachable quorum.
+#### Parameter(s)
 
-#### Parameters
+### 3. setVotingDuration
 
-1. address _who -> Address to remove authorization from
+`function setVotingDuration(uint newVoteDuration) external;`
 
-### 3. __Governance_changeQuorum
+#### Parameter(s)
 
-`function __Governance_changeQuorum(uint8 _new) external onlyProposal validQuorum(_new, getAmountAuthorized())`
+1. uint newVoteDuration -> 
 
-This function helps set a new quorum.
+### 4. addVoter
 
-#### Parameters
+`function addVoter(address who) external;`
 
-1. uint8 _new -> The new quorum
+#### Parameter(s)
 
-### 4. changeQuorum
+1. address who ->
 
-`function changeQuorum(uint8 _new) external onlyProposal`
+### 5. removeVoter
 
-This function helps set a new quorum. It is Relay Function that routes the function call via the proposal. The `onlyProposal` modifier forces a quorum change to also go through governance.
+`function removeVoter(address who) external;`
 
-#### Parameters
+#### Parameter(s)
 
-1. uint8 _new -> The new quorum
+1. address who -> 
 
-### 5. __Governance_changeVoteDuration
+### 6. transferVotingRights
 
-`function __Governance_changeVoteDuration(uint _new) external onlyProposal`
+`function transferVotingRights(address to) external;`
 
-This function helps set a new vote duration. 
+#### Parameter(s)
 
-#### Parameters
+1. address to -> 
 
-1. uint _new -> The new vote duration
+### 7. createMotion
 
-### 6. changeVoteDuration
+`function createMotion(address target, bytes calldata action) external returns (uint);`
 
-`function changeVoteDuration(uint _new) external onlyProposal`
+#### Parameter(s)
 
-This function helps set a new vote duration. It is Relay Function that routes the function call via the proposal. The `onlyProposal` modifier forces a quorum change to also go through governance.
+1. address target ->
+2. bytes action ->
 
-#### Parameters
+#### Return Data
 
-1. uint _new -> The new vote duration
+1. uint -> 
 
-### 7. __Governance_createVote
+### 8. castVote
 
-`function __Governance_createVote( address _target, bytes calldata _encodedAction) external onlyProposal validModuleAddress(_target) validAction(_encodedAction)`
+`function castVote(uint motionId, uint8 support) external;`
 
-This function helps create a new `vote`.
+#### Parameter(s)
 
-#### Parameters
+1. uint motionId ->
+2. uint8 support ->
 
-1. address _target -> The Module from which to execute the action
-2. bytes _encodedAction -> The ABI encoded action to execute if it passes
+### 9. executeMotion
 
-### 8. createVote
+`function executeMotion(uint motionId) external;`
 
-`function createVote(address _target, bytes calldata _encodedAction) external onlyAuthorized`
+#### Parameter(s)
 
-This function helps create a new `vote`. It is Relay Function that routes the function call via the proposal.
-
-#### Parameters
-
-1. address _target -> The Module from which to execute the action
-2. bytes _encodedAction -> The ABI encoded action to execute if it passes
-
-### 9. __Governance_confirmAction
-
-`function __Governance_confirmAction(address _voter, uint _voteID) external onlyProposal voteIsActive(_voteID)`
-
-This function helps vote "yes" and execute action if quorum is reached.
-
-#### Parameters
-
-1. address _voter -> Address of voter
-2. uint _voteID -> The ID of the vote to vote on
-
-### 10. confirmAction
-
-`function confirmAction(uint _voteID) external onlyAuthorized`
-
-This function helps vote "yes" and execute action if quorum is reached. It is Relay Function that routes the function call via the proposal.
-
-#### Parameters
-
-1. uint _voteID -> The ID of the vote to vote on
-
-### 11. __Governance_cancelAction
-
-`function __Governance_cancelAction(address _voter, uint _voteID) external onlyProposal voteIsActive(_voteID)`
-
-This function helps vote "no" and abort action if quorum is reached.
-
-#### Parameters
-
-1. address _voter -> Address of voter
-2. uint _voteID -> The ID of the vote to vote on
-
-### 12. cancelAction
-
-`function cancelAction(uint _voteID) external onlyAuthorized`
-
-This function helps vote "no" and abort action if quorum is reached. It is Relay Function that routes the function call via the proposal.
-
-#### Parameters
-
-1. uint _voteID -> The ID of the vote to vote on
-
-### 13. __Governance_executeVote
-
-`function __Governance_executeVote(uint _voteID) external onlyProposal quorumReached(_voteID) voteNotActive(_voteID)`
-
-This function helps execute a vote. Only called by confirmAction once quorum is reached.
-
-#### Parameters
-
-1. uint _voteID -> The ID of the vote to vote on
-
-### 14. executeVote
-
-`function executeVote(uint _voteID) external voteIsActive(_voteID) quorumReached(_voteID)`
-
-This function helps execute a vote. Only called by confirmAction once quorum is reached. It is Relay Function that routes the function call via the proposal.
-
-#### Parameters
-
-1. uint _voteID -> The ID of the vote to vote on
+1. uint motionId -> 
