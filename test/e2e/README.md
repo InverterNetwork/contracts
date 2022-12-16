@@ -2,4 +2,4 @@
 
 Contains test suite using mocks only for external contracts.
 
-Can be used as PoCs, use-case showcasing, and living documentation.
+Can be used as PoCs and living documentation.
