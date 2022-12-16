@@ -55,6 +55,16 @@ contract MilestoneLifecycle is E2eTest {
             "The second milestone, right after the first one"
         );
 
+        // IMPORTANT
+        // =========
+        // Due to how the underlying rebase mechanism works, it is necessary
+        // to always have some amount of tokens in the proposal.
+        // It's best, if the owner deposits them right after deployment.
+        uint initialDeposit = 10e18;
+        token.mint(address(this), initialDeposit);
+        token.approve(address(proposal), initialDeposit);
+        proposal.deposit(initialDeposit);
+
         // Before we can start a milestone, two things need to be present:
         // 1. A non-empty list of contributors in the proposal
         // 2. The amount of funding to pay the contributors for the milestone
@@ -76,19 +86,14 @@ contract MilestoneLifecycle is E2eTest {
         vm.startPrank(funder1);
         {
             token.approve(address(proposal), 1000e18);
-            proposal.deposit(1000e18, funder1);
+            proposal.deposit(1000e18);
         }
         vm.stopPrank();
 
         // The proposal now has 1k tokens of funding. Exactly the amount needed
         // for the first milestone.
-        assertEq(proposal.totalAssets(), 1000e18);
-
-        // IMPORTANT
-        // =========
-        // Due to how ERC-4626 works, it is not possible to deposit tokens once
-        // the vault reached a balance of zero.
-        token.mint(address(proposal), 1);
+        assertEq(token.balanceOf(address(proposal)), 1000e18 + initialDeposit);
+        assertEq(proposal.totalSupply(), 1000e18 + initialDeposit);
 
         // Now we start the first milestone.
         milestoneManager.startNextMilestone();
@@ -98,7 +103,7 @@ contract MilestoneLifecycle is E2eTest {
         // processed by a PaymentProcessor module. Note however, that the
         // orders are guaranteed to be payable, i.e. the tokens are already
         // fetched from the proposal.
-        assertEq(token.balanceOf(address(proposal)), 1);
+        assertEq(token.balanceOf(address(proposal)), initialDeposit);
 
         // The address of the proposal's PaymentProcessor can be read from the
         // logs during the proposal's creation.
@@ -148,7 +153,7 @@ contract MilestoneLifecycle is E2eTest {
         vm.startPrank(funder2);
         {
             token.approve(address(proposal), 10_000e18);
-            proposal.deposit(10_000e18, funder2);
+            proposal.deposit(10_000e18);
         }
         vm.stopPrank();
 
@@ -160,20 +165,19 @@ contract MilestoneLifecycle is E2eTest {
         // Now start the next proposal...
         milestoneManager.startNextMilestone();
         // ...which leaves 5k of tokens left in the proposal.
-        assertEq(token.balanceOf(address(proposal)), 5000e18 + 1);
+        assertEq(token.balanceOf(address(proposal)), 5000e18 + initialDeposit);
 
         // These tokens can now be withdrawn by funder1 and funder2.
         vm.startPrank(funder1);
         {
-            proposal.redeem(proposal.balanceOf(funder1), funder1, funder1);
-        }
-        vm.stopPrank();
-        vm.startPrank(funder2);
-        {
-            proposal.redeem(proposal.balanceOf(funder2), funder2, funder2);
+            proposal.withdraw(proposal.balanceOf(funder1));
         }
         vm.stopPrank();
 
-        //milestoneManager.startNextMilestone();
+        vm.startPrank(funder2);
+        {
+            proposal.withdraw(proposal.balanceOf(funder2));
+        }
+        vm.stopPrank();
     }
 }

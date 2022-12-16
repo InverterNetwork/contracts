@@ -8,7 +8,6 @@ import {IProposal} from "src/proposal/Proposal.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-
 /**
  * E2e test demonstrating a proposal's fund management.
  *
@@ -20,6 +19,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * The withdrawal amount of funds is _always_ in relation of the amount of
  * receipt tokens to the total amount of funds left in the proposal.
  */
+
 contract ProposaFundManagement is E2eTest {
     address alice = address(0xA11CE);
     address bob = address(0x606);
@@ -33,9 +33,19 @@ contract ProposaFundManagement is E2eTest {
 
         IProposal proposal = _createNewProposalWithAllModules(proposalConfig);
 
+        // IMPORTANT
+        // =========
+        // Due to how the underlying rebase mechanism works, it is necessary
+        // to always have some amount of tokens in the proposal.
+        // It's best, if the owner deposits them right after deployment.
+        uint initialDeposit = 10e18;
+        token.mint(address(this), initialDeposit);
+        token.approve(address(proposal), initialDeposit);
+        proposal.deposit(initialDeposit);
+
         // Mint some tokens to alice and bob in order to fund the proposal.
         token.mint(alice, 1000e18);
-        token.mint(bob, 10_000e18);
+        token.mint(bob, 5000e18);
 
         // Alice funds the proposal with 1k tokens.
         vm.startPrank(alice);
@@ -44,15 +54,11 @@ contract ProposaFundManagement is E2eTest {
             token.approve(address(proposal), 1000e18);
 
             // Deposit tokens, i.e. fund the proposal.
-            proposal.deposit(1000e18, alice);
+            proposal.deposit(1000e18);
 
             // After the deposit, alice received some amount of receipt tokens
             // from the proposal.
             assertTrue(proposal.balanceOf(alice) > 0);
-
-            // With this amount of receipt tokens, alice could withdraw her
-            // whole deposit again.
-            assertEq(proposal.previewRedeem(proposal.balanceOf(alice)), 1000e18);
         }
         vm.stopPrank();
 
@@ -63,39 +69,33 @@ contract ProposaFundManagement is E2eTest {
             token.approve(address(proposal), 5000e18);
 
             // Deposit tokens, i.e. fund the proposal.
-            proposal.deposit(5000e18, bob);
+            proposal.deposit(5000e18);
 
             // After the deposit, bob received some amount of receipt tokens
             // from the proposal.
             assertTrue(proposal.balanceOf(bob) > 0);
-
-            // With this amount of receipt tokens, bob could withdraw her whole
-            // deposit again.
-            assertEq(proposal.previewRedeem(proposal.balanceOf(bob)), 5000e18);
         }
         vm.stopPrank();
 
         // If the proposal spends half their tokens, i.e. for a milestone,
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
-        // Note that we simulate proposal spending by just burning their tokens.
+        // Note that we simulate proposal spending by just burning tokens.
         token.burn(address(proposal), token.balanceOf(address(proposal)) / 2);
 
         // Alice is now able to withdraw half her funded tokens.
         vm.startPrank(alice);
         {
-            assertEq(
-                proposal.redeem(proposal.balanceOf(alice), alice, alice), 500e18
-            );
+            proposal.withdraw(proposal.balanceOf(alice));
+            assertEq(token.balanceOf(alice), 500e18);
         }
         vm.stopPrank();
 
         // Bob is also able to withdraw half of his funded tokens.
         vm.startPrank(bob);
         {
-            assertEq(
-                proposal.redeem(proposal.balanceOf(bob), bob, bob), 2500e18
-            );
+            proposal.withdraw(proposal.balanceOf(bob));
+            assertEq(token.balanceOf(bob), 2500e18);
         }
         vm.stopPrank();
 
