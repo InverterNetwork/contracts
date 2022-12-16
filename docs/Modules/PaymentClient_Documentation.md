@@ -16,7 +16,7 @@ Modifier to ensure that the `amount` is non-zero.
 
 ### 3. validDueTo(uint dueTo)
 
-Modifier to ensure that the due time is less than `block.timestamp`.
+Modifier to ensure that the due time is greater than `block.timestamp` (i.e. lies in the future).
 
 ## View Function(s)
 
