@@ -32,7 +32,7 @@ import {ModuleImplementationV2Mock} from
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract ModuleUpdatePOCTest is Test {
+contract ModuleUpdateTest is Test {
     // SuT
     ModuleFactory factory;
 
