@@ -12,7 +12,7 @@
 
 ### 1. onlySelf
 
-This modifier ensures that the `msg.sender` is not the same as the `SingleVoteGovernor` contract (address this).
+This modifier ensures that the `msg.sender` is the same as the `SingleVoteGovernor` contract (address this).
 
 ### 2. onlyVoter
 
@@ -94,7 +94,7 @@ This function helps to fetch the `Receipt` (see `NOTE 1` above) of the `Motion`(
 
 `function initialize(IProposal proposal, uint8 _startingQuorum, uint _voteDuration, Metadata memory metadata) external`
 
-This function initializes the module and then sets the `quorum` and `voteDuration`.
+This function initializes the module and then sets the `quorum`, list of voters and `voteDuration`.
 
 #### Parameters
 
@@ -106,41 +106,57 @@ This function initializes the module and then sets the `quorum` and `voteDuratio
 
 `function setQuorum(uint newQuorum) external;`
 
+This function can only be called by the `SingleVoteGovernance` contract and it sets/updates the `quorum` of the proposal.
+
 #### Parameter(s)
 
-1. uint newQuorum ->
+1. uint newQuorum -> The new value of the `quorum`.
+
+> NOTE: 0 is a valid quorum value
 
 ### 3. setVotingDuration
 
 `function setVotingDuration(uint newVoteDuration) external;`
 
+This function can only be called by the `SingleVoteGovernance` contract and it sets/updates the `voteDuration` of the proposal.
+
 #### Parameter(s)
 
-1. uint newVoteDuration -> 
+1. uint newVoteDuration -> The new `voteDuration`.
+
+> NOTE: The `newVoteDuration` must be between the `MIN_VOTING_DURATION` and `MAX_VOTING_DURATION`.
 
 ### 4. addVoter
 
 `function addVoter(address who) external;`
 
+This function is used to add address `who` as a voter in case they are not already added as a voter.
+
 #### Parameter(s)
 
-1. address who ->
+1. address who -> The address of the voter to add to the voting list.
 
 ### 5. removeVoter
 
 `function removeVoter(address who) external;`
 
+Callable only by the `SingleVoteGovernance` contract and used to remove the address `who` as a valid voter. This will revert in case address `who` is the last voter or if removing `who` will lead to the `quorum` never being reached.
+
 #### Parameter(s)
 
-1. address who -> 
+1. address who -> The address of the voter to remove from the voting list.
 
 ### 6. transferVotingRights
 
 `function transferVotingRights(address to) external;`
 
+This function can only be called by a valid voter and used to transfer the voting rights of the `msg.sender` to address `to`. Also, this function would revert if the address `to` is already a voter.
+
 #### Parameter(s)
 
-1. address to -> 
+1. address to -> The address to whom you want to transfer your voting rights to.
+
+> NOTE: You cannot transfer your voting rights to `address(0)`
 
 ### 7. createMotion
 
