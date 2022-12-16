@@ -42,7 +42,7 @@ This function returns the number of authorized addresses
 
 `function addToAuthorized(address _who) external`
 
-This function adds a new address to the list of authorized addresses. It is essentially a relay function that routes the function call via the proposal.
+This function adds a new address to the list of authorized addresses.
 
 #### Parameters
 
@@ -62,7 +62,7 @@ This function removes an address from the list of authorized addresses.
 
 `function removeFromAuthorized(address _who) external`
 
-This function removes an address from the list of authorized addresses. It is essentially a relay function that routes the function call via the proposal
+This function removes an address from the list of authorized addresses.
 
 #### Parameters
 
@@ -83,7 +83,7 @@ This function transfers authorization from the calling address to a new one.
 
 `function transferAuthorization(address _who) external`
 
-This function transfers authorization from the calling address to a new one. It is essentially a relay function that routes the function call via the proposal.
+This function transfers authorization from the calling address to a new one.
 
 #### Parameters
 
