@@ -10,7 +10,11 @@
 
 ## Modifier(s)
 
-### 1. onlyOwnerOrAuthorized
+### 1. onlyAuthorized
+
+1. Modifier to guarantee function is only callable by authorized address.
+
+### 2. onlyOwnerOrAuthorized
 
 1. Modifier to guarantee function is only callable by authorized addresses.
 2. Uses the IAuthorizer module to check authorized addresses.
