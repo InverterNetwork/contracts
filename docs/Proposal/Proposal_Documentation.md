@@ -52,7 +52,7 @@ Returns the owner of the Proposal.
 
 `function executeTx(address target, bytes memory data) external onlyOwnerOrAuthorized returns (bytes memory)`
 
-Executes a call on target `target` with call data `data`. This function is only callable by authorized caller.
+Executes a call on target `target` with call data `data`. This function is only callable by authorized caller and **will revert** if transaction fails.
 
 #### Parameters
 
