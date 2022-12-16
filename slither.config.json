@@ -3,6 +3,7 @@
     "solc_remaps": [
         "forge-std/=lib/forge-std/src/",
         "@oz-up/=lib/openzeppelin-contracts-upgradeable/contracts/",
-        "@oz/=lib/openzeppelin-contracts/contracts/"
+        "@oz/=lib/openzeppelin-contracts/contracts/",
+        "@elastic-receipt-token/=lib/elastic-receipt-token/src/"
     ]
 }
