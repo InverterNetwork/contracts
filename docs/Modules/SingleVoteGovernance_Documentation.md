@@ -99,15 +99,16 @@ This function initializes the module and then sets the `quorum` and `voteDuratio
 #### Parameters
 
 1. IProposal proposal -> The module's proposal instance.
-2. uint8 _startingQuorum -> The initial quorum. (The minimum number of votes that must be cast to make the voting valid.)
-3. uint _voteDuration -> The duration for the votes
-4. Metadata metadata -> The module's metadata.
+2. Metadata metadata -> The module's metadata.
+3. bytes configData -> Encrypted data which contains list of voters, the required quorum, and the voting duration.
 
 ### 2. setQuorum
 
 `function setQuorum(uint newQuorum) external;`
 
 #### Parameter(s)
+
+1. uint newQuorum ->
 
 ### 3. setVotingDuration
 
@@ -145,28 +146,37 @@ This function initializes the module and then sets the `quorum` and `voteDuratio
 
 `function createMotion(address target, bytes calldata action) external returns (uint);`
 
+This function is used to create a new `Motion` with the given `target` address and the given `action` bytes. This function is callable only by a valid voter and returns the ID of the newly created `Motion`.
+
 #### Parameter(s)
 
-1. address target ->
-2. bytes action ->
+1. address target -> The target address for creating the new `Motion`.
+2. bytes action -> The action bytes for creating the new `Motion`.
 
 #### Return Data
 
-1. uint -> 
+1. uint -> ID of the new `Motion` that was created.
 
 ### 8. castVote
 
 `function castVote(uint motionId, uint8 support) external;`
 
+This function is used to cast vote (support) to a `Motion` with ID `motionId`. The function revert if `support` is invalid. Otherwise, 
+0 == for
+1 == against
+2 == abstain
+
 #### Parameter(s)
 
-1. uint motionId ->
-2. uint8 support ->
+1. uint motionId -> The ID of the `Motion` where you want to cast vote
+2. uint8 support -> Vote in support, against or abstain.
 
 ### 9. executeMotion
 
 `function executeMotion(uint motionId) external;`
 
+This function is used to execute the `Motion` with id of `motionId`. This function will revert if `motionId` is invalid or voting duration has passed or if the motion has already been executed or the necessary quorum was not reached.
+
 #### Parameter(s)
 
-1. uint motionId -> 
+1. uint motionId -> The ID of the `Motion` to execute
