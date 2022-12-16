@@ -2,7 +2,7 @@
 
 ## Things to know
 
-1. A proposal is composed of a funding mechanism (FundingVault.sol), a set of contributors (ContributorManager.sol), and a set of modules (ModuleManager.sol).
+1. **Subject to change, based on usage of FundingVault:** A proposal is composed of a funding mechanism (FundingVault.sol), a set of contributors (ContributorManager.sol), and a set of modules (ModuleManager.sol).
 2. Each proposal has a unique id.
 3. The token being accepted for funding is non-changeable and set during initialization.
 4. Authorizations are done via an IAuthorizer instance. This is also static and cannot be changed, once set.
