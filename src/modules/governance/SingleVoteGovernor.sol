@@ -28,6 +28,16 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         _;
     }
 
+    modifier isValidVoterAddress(address voter) {
+        if (
+            voter == address(0) || voter == address(this)
+                || voter == address(proposal())
+        ) {
+            revert Module__SingleVoteGovernor__InvalidVoterAddress();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
@@ -189,7 +199,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
     // Voter Management Functions
 
-    function addVoter(address who) external onlySelf {
+    function addVoter(address who) external onlySelf isValidVoterAddress(who) {
         if (!isVoter[who]) {
             isVoter[who] = true;
             unchecked {
@@ -219,7 +229,11 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         }
     }
 
-    function transferVotingRights(address to) external onlyVoter {
+    function transferVotingRights(address to)
+        external
+        onlyVoter
+        isValidVoterAddress(to)
+    {
         // Revert if `to` is already voter.
         if (isVoter[to]) {
             revert Module__SingleVoteGovernor__IsAlreadyVoter();
