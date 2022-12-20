@@ -99,7 +99,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     /// @dev As long as wantProposalContext-protected functions only access the
     ///      proposal storage variables (`__Proposal_`) inherited from
     ///      {ProposalStorage}, the module's own state is never mutated.
-    /// @dev Note that it's therefore save to not authenticate the caller in
+    /// @dev Note that it's therefore safe to not authenticate the caller in
     ///      these functions. A function only accessing the proposal storage
     ///      variables, as recommended, can not alter it's own module's storage.
     /// @dev Note to use function prefix `__Proposal_`.

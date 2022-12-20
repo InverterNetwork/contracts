@@ -66,10 +66,10 @@ interface IContributorManager {
     /// @notice Adds `who` as new contributor.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if an argument invalid.
-    /// @dev who The contributor's address to add as contributor.
-    /// @dev name The contributor's name.
-    /// @dev role The contributor's role.
-    /// @dev salary The contributor's salary.
+    /// @param who The contributor's address to add as contributor.
+    /// @param name The contributor's name.
+    /// @param role The contributor's role.
+    /// @param salary The contributor's salary.
     function addContributor(
         address who,
         string memory name,
@@ -80,10 +80,9 @@ interface IContributorManager {
     /// @notice Removes `who` from being a contributor.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if `who` not a contributor.
-    /// @dev Reverts if `prevContrib` not previous element in the contributor's
-    ///      list.
+    /// @dev Reverts if `prevContrib` not previous element in the contributor's list
     /// @param prevContrib The previous contributor in the contributor's list.
-    /// @dev who The contributor's address to remove.
+    /// @param who The contributor's address to remove.
     function removeContributor(address prevContrib, address who) external;
 
     /// @notice Revokes the caller from being a contributor.
