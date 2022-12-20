@@ -40,9 +40,14 @@ This function checks whether the address `who` is authorized or not.
 
 `function getReceipt(uint _ID, address voter) public view returns (Receipt memory);`
 
+This function helps to fetch the `Receipt` (see `NOTE 1` below) of a `Motion`(see `NOTE 2` below) with id of `_ID` and associated with the address `voter`.
+
 > NOTE 1: `Receipt` is the a struct containing `bool hasVoted` and `uint8 support`.
+
 > NOTE 2: `Motion` is a struct with the following structure:
-`    struct Motion {
+
+```
+struct Motion {
         // Execution data.
         address target;
         bytes action;
@@ -59,13 +64,12 @@ This function checks whether the address `who` is authorized or not.
         uint executedAt;
         bool executionResult;
         bytes executionReturnData;
-    }`
-
-This function helps to fetch the `Receipt` (see `NOTE 1` above) of the `Motion`(see `NOTE 2` above) with id of `_ID` and associated with address `voter`. 
+    }
+```
 
 #### Parameter(s)
 
-1. uint _ID -> The identifying number of the `Motion` for which you want to see the `Receipt`.
+1. uint \_ID -> The identifying number of the `Motion` for which you want to see the `Receipt`.
 2. address voter -> Given the `_ID` of the `Motion`, the address of the voter for which you want to see the `Receipt`.
 
 #### Return Data
@@ -78,7 +82,7 @@ This function helps to fetch the `Receipt` (see `NOTE 1` above) of the `Motion`(
 
 #### Return Data
 
-1. uint -> The maximum duration for voting, which is currently hardcodd to `2 weeks`.
+1. uint -> The maximum duration for voting, which is currently hardcoded to `2 weeks`.
 
 ### 4. MIN_VOTING_DURATION
 
@@ -177,7 +181,7 @@ This function is used to create a new `Motion` with the given `target` address a
 
 `function castVote(uint motionId, uint8 support) external;`
 
-This function is used to cast vote (support) to a `Motion` with ID `motionId`. The function revert if `support` is invalid. Otherwise, 
+This function is used to cast vote (support) to a `Motion` with ID `motionId`. The function revert if `support` is invalid. Otherwise,
 0 == for
 1 == against
 2 == abstain
