@@ -1,4 +1,5 @@
 # FundingVault.sol
+File: [FundingVault.sol](../../src/proposal/base/FundingVault.sol)
 
 ## Things to know
 

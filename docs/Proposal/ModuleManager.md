@@ -1,4 +1,5 @@
 # ModuleManager.sol
+File: [ModuleManager.sol](../../src/proposal/base/ModuleManager.sol)
 
 ## Things to know
 
@@ -6,7 +7,7 @@
 2. The role-based access control mechanism is based on [OpenZeppelin's AccessControl contract](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/AccessControl.sol).
 3. Each module has it's own access control context which it is able to freely manage.
 
-## Module(s)
+## Modifier(s)
 
 ### 1. __ModuleManager_onlyAuthorized
 
@@ -14,7 +15,7 @@ Modifier to ensure that `msg.sender` is authorized to mutate module manager's st
 
 ### 2. onlyModule
 
-Modifier to ensure that the `msg.sender` is a valid module. The `msg.sender` is in the `_modules` list and is neither address(0) nor the _SENTINEL address (used to denote the beginning or end of the list)
+Modifier to ensure that the `msg.sender` is a valid module. The `msg.sender` is in the `_modules` list and is neither `address(0)` nor the `_SENTINEL` address (used to denote the beginning or end of the list)
 
 ### 3. validModule(address module)
 
@@ -22,7 +23,7 @@ Modifier to ensure that the address `module` is a valid module. This is same as 
 
 ### 4. isModule_(address module)
 
-Modifier to ensure that the address `module` is a valid module. The `module` address is in the `_modules` list and is neither address(0) nor the _SENTINEL address(used to denote the beginning or end of the list).
+Modifier to ensure that the address `module` is a valid module. The `module` address is in the `_modules` list and is neither `address(0)` nor the `_SENTINEL` address(used to denote the beginning or end of the list).
 
 ### 5. isNotModule(address module)
 
@@ -42,13 +43,13 @@ Returns whether the account `account` holds the role `role` in the module's `mod
 
 #### Parameter(s)
 
-1. address module -> The module in which's access control context the role is checked.
-2. bytes32 role -> The access control role.
-3. address account -> The account to check role for.
+1. `address module` -> The module in which's access control context the role is checked.
+2. `bytes32 role` -> The access control role.
+3. `address account` -> The account to check role for.
 
 #### Return Data
 
-bool -> Returns true if the account `account` holds the role `role` in the module's `module` access control context else returns false.
+`bool` -> Returns true if the account `account` holds the role `role` in the module's `module` access control context else returns `false`.
 
 ### 2. isModule
 
@@ -58,11 +59,11 @@ Returns whether the address `module` is added as module.
 
 #### Parameter(s)
 
-1. address module -> The module to check.
+1. `address module` -> The module to check.
 
 #### Return Data
 
-bool -> True if address `module` was a valid module else false.
+`bool` -> True if address `module` was a valid module else false.
 
 ### 3. listModules
 
@@ -72,7 +73,7 @@ Returns the list of all modules.
 
 #### Return Data
 
-address[] -> the array of addresses containing valid modules.
+`address[]` -> the array of addresses containing valid modules.
 
 ### 4. modulesSize
 
@@ -82,7 +83,7 @@ Returns the number of modules.
 
 #### Return Data
 
-uint -> the number of modules.
+`uint` -> the number of modules.
 
 ### 5. getPreviousModule
 
@@ -93,11 +94,11 @@ This function should ideally be called from the front-end or from any off-chain 
 
 #### Parameter(s)
 
-1. address module -> The address of which the previous element in the list should be found.
+1. `address module` -> The address of which the previous element in the list should be found.
 
 #### Return Data
 
-1. address previousModule -> The address of the previous module.
+1. `address previousModule` -> The address of the previous module.
 
 ## Write Function(s)
 
@@ -109,7 +110,7 @@ Adds address `module` as module. This function is only callable by authorized ad
 
 #### Parameter(s)
 
-1. address module -> The module address to add.
+1. `address module` -> The module address to add.
 
 ### 2. removeModule
 
@@ -119,8 +120,8 @@ Removes address `module` as module. This function is only callable by authorized
 
 #### Parameter(s)
 
-1. address prevModule -> The module previous to the address `module` in the list of modules
-2. address module -> The module address to remove.
+1. `address prevModule` -> The module previous to the address `module` in the list of modules
+2. `address module` -> The module address to remove.
 
 ### 3. executeTxFromModule
 
@@ -130,14 +131,14 @@ Executes a call to `to` with call data `data` either via call or delegatecall. T
 
 #### Parameter(s)
 
-1. address to -> The address where we need to make a call.
-2. bytes data -> The call data to be sent with the call.
-3. Types.Operation operation -> The operation type. Either call or delegatecall.
+1. `address to` -> The address where we need to make a call.
+2. `bytes data` -> The call data to be sent with the call.
+3. `Types.Operation operation` -> The operation type. Either call or delegatecall.
 
 #### Return Data
 
-1. bool -> Boolean indicating whether the call succeeded.
-2. bytes -> The return data of the call (in bytes).
+1. `bool` -> Boolean indicating whether the call succeeded.
+2. `bytes` -> The return data of the call (in bytes).
 
 ### 4. grantRole
 
@@ -147,8 +148,8 @@ Grants role `role` to account `account` in caller's access control context. This
 
 #### Parameter(s)
 
-1. bytes32 role -> The access control role.
-2. address account ->  The account to revoke role for.
+1. `bytes32 role` -> The access control role.
+2. `address account` ->  The account to revoke role for.
 
 ### 5. revokeRole
 
@@ -158,8 +159,8 @@ Revokes role `role` from account `account` in caller's access control context. T
 
 #### Parameter(s)
 
-1. bytes32 role -> The access control role.
-2. address account ->  The account to revoke role for.
+1. `bytes32 role` -> The access control role.
+2. `address account` ->  The account to revoke role for.
 
 ### 6. renounceRole
 
@@ -169,5 +170,5 @@ Renounces the caller's role `role` in module's `module` access control context.
 
 #### Parameter(s)
 
-1. address module -> The module in which's access control context the role should be renounced.
-2. bytes32 role -> The access control role.
+1. `address module` -> The module in which's access control context the role should be renounced.
+2. `bytes32 role` -> The access control role.

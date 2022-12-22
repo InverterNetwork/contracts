@@ -1,4 +1,5 @@
 # Module.sol
+File: [Module.sol](../../src/modules/base/Module.sol)
 
 ## Things to know
 
@@ -19,7 +20,7 @@ Modifier to guarantee function is only callable by addresses authorized via Prop
 
 Modifier to guarantee that the function is not executed in the module's context.
 As long as wantProposalContext-protected functions only access the proposal storage variables (`__Proposal_`) inherited from
-{ProposalStorage}, the module's own state is never mutated.
+`{ProposalStorage}`, the module's own state is never mutated.
 It's therefore safe to not authenticate the caller in these functions. A function only accessing the proposal storage variables, as recommended, can not alter it's own module's storage.
 Advised to use function prefix `__Proposal_`.
 
@@ -90,9 +91,9 @@ The module's initializer function. CAN be overriden by downstream contract. MUST
 
 #### Parameter(s)
 
-1. IProposal proposal -> The module's proposal instance.
-2. Metadata metadata -> The module's metadata.
-3. bytes configdata -> Variable config data for specific module implementations.
+1. `IProposal proposal` -> The module's proposal instance.
+2. `Metadata metadata` -> The module's metadata.
+3. `bytes configdata` -> Variable config data for specific module implementations.
 
 ### 2. pause
 

@@ -1,9 +1,10 @@
 # PaymentProcessor.sol
+File: [PaymentProcessor.sol](../../src/modules/PaymentProcessor.sol)
 
 ## Things to know
 
 1. The PaymentProcessor is a module to process payment orders from other modules. 
-2. In order to process a module's payment orders, the module must implement the {IPaymentClient} interface.
+2. In order to process a module's payment orders, the module must implement the `{IPaymentClient}` interface.
 
 ## Modifier(s)
 
@@ -19,7 +20,7 @@ Returns the IERC20 token the payment processor can process.
 
 #### Return Data
 
-1. IERC20 token that the payment processor can process.
+1. `IERC20` token that the payment processor can process.
 
 ## Write Function(s)
 
@@ -27,10 +28,10 @@ Returns the IERC20 token the payment processor can process.
 
 `function processPayments(IPaymentClient client) external;`
 
-Processes all payments from an {IPaymentClient} instance. It's up to the the implementation to keep up with what has been paid out or not.
+Processes all payments from an `{IPaymentClient}` instance. It's up to the the implementation to keep up with what has been paid out or not.
 
 > NOTE: From the perspective of `IPaymentClient`, the orders are fulfilled as soon as the `collectPaymentOrders` function is called. The responsibility to actually send the tokens lies then with the `IPaymentProcessor`, and should be done in exactly this function - `processPayments`.
 
 #### Parameters
 
-1. IPaymentClient client -> The {IPaymentClient} instance to process its to payments.
+1. `IPaymentClient client` -> The `{IPaymentClient}` instance to process its to payments.

@@ -1,4 +1,5 @@
 # ContributorManager.sol
+File: [ContributorManager.sol](../../src/proposal/base/ContributorManager.sol)
 
 ## Things to know
 
@@ -16,7 +17,7 @@ Modifier to ensure that the `msg.sender` is authorized to mutate contributor man
 
 ### 2. validAddress(address who)
 
-Modifier to ensure that the `who` address is valid. The `who` address should not be address(0), address(0x1) or address(ContributorManager).
+Modifier to ensure that the `who` address is valid. The `who` address should not be `address(0)`, `address(0x1)` or `address(ContributorManager)`.
 
 ### 3. validName(string memory name)
 
@@ -52,11 +53,11 @@ Returns the registerted `Contributor` instance for address `who`.
 
 #### Parameter(s)
 
-1. address who -> The address (which is a valid `Contributor`) for which you need information
+1. `address who` -> The address (which is a valid `Contributor`) for which you need information
 
 #### Return Data
 
-1. Contributor -> Contributor instance of the address `who`
+1. `Contributor` -> Contributor instance of the address `who`
 
 ### 2. isContributor
 
@@ -66,11 +67,11 @@ Returns whether the address `who` is a contributor.
 
 #### Parameter(s)
 
-1. address who -> The address for which you want to check whether it is a contributor or not.
+1. `address who` -> The address for which you want to check whether it is a contributor or not.
 
 #### Return Data
 
-1. bool -> Returns true if `who` was a contributor otherwise returns false.
+1. `bool` -> Returns true if `who` was a contributor otherwise returns false.
 
 ### 3. listContributor
 
@@ -90,7 +91,7 @@ Returns the number of contributors.
 
 #### Return Data
 
-uint -> Number of contributors.
+`uint` -> Number of contributors.
 
 ### 5. getPreviousContributor
 
@@ -101,7 +102,7 @@ This function should ideally be called from the front-end or from any off-chain 
 
 #### Parameter(s)
 
-1. address who -> The address of which the previous element in the list should be found.
+1. `address who` -> The address of which the previous element in the list should be found.
 
 #### Return Data
 
@@ -117,10 +118,10 @@ Adds address `who` as a new contributor. This function is only callable by autho
 
 #### Parameters
 
-1. address who -> The address `who` that is to be added as a contributor
-2. string name -> The contributor's name
-3. string role -> The contributor's role
-4. uint salary -> The contributor's salary
+1. `address who` -> The address `who` that is to be added as a contributor
+2. `string name` -> The contributor's name
+3. `string role` -> The contributor's role
+4. `uint salary` -> The contributor's salary
 
 ### 2. removeContributor
 
@@ -131,8 +132,8 @@ Removes address `who` from being a contributor. This function is only callable b
 
 #### Parameters
 
-1. address prevContrib -> The previous contributor in the contributor's list.
-2. address who -> The contributor's address to remove.
+1. `address prevContrib` -> The previous contributor in the contributor's list.
+2. `address who` -> The contributor's address to remove.
 
 ### 3. updateContributor
 
@@ -142,9 +143,9 @@ Updates `who` role and/or salary. This function is only callable by authorized a
 
 #### Parameters
 
-1. address who -> The contributor's address.
-2. string role -> The contributor's new role.
-3. uint salary -> The contributor's new salary.
+1. `address who` -> The contributor's address.
+2. `string role` -> The contributor's new role.
+3. `uint salary` -> The contributor's new salary.
 
 ### 4. revokeContributor
 
@@ -154,5 +155,5 @@ Revokes the caller from being a contributor.
 
 #### Parameters
 
-1. address prevContrib -> The previous contributor in the contributor's list.
+1. `address prevContrib` -> The previous contributor in the contributor's list.
 
