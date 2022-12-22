@@ -1,7 +1,8 @@
 # PaymentClient.sol
+File: [PaymentClient.sol](../../src/modules/mixins/PaymentClient.sol)
 
 ## Things to know
-1. The PaymentClient mixin enables modules to create payment orders that are processable by a proposal's {IPaymentProcessor} module.
+1. The PaymentClient mixin enables modules to create payment orders that are processable by a proposal's `{IPaymentProcessor}` module.
 2. Mixins are libraries that are atomic units which are composable with other mixins and encapsulate the internal state variables and associated logic of a single, concrete, concept, providing internal constants and internal or private functions, which may be (typically) be associated with some structured data storage
 
 ## Modifier(s)

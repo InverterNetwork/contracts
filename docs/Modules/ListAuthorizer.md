@@ -1,4 +1,5 @@
 # ListAuthorizer.sol
+File: [ListAuthorizer.sol](../../src/modules/governance/ListAuthorizer.sol)
 
 ## Things to know
 
@@ -20,11 +21,11 @@ This function returns whether an address is authorized to facilitate the current
 
 #### Parameters
 
-1. address _who -> The address on which to perform the check.
+1. `address _who` -> The address on which to perform the check.
 
 #### Return Data
 
-1. Whether address _who is authorized to carry out the given transaction or not
+1. Whether address `_who` is authorized to carry out the given transaction or not
 
 ### 2. getAmountAuthorized
 
@@ -46,7 +47,7 @@ This function adds a new address to the list of authorized addresses.
 
 #### Parameters
 
-1. address _who -> The address to add to the list of authorized addresses.
+1. `address _who` -> The address to add to the list of authorized addresses.
 
 ### 2. __ListAuthorizer_removeFromAuthorized
 
@@ -56,7 +57,7 @@ This function removes an address from the list of authorized addresses.
 
 #### Parameters
 
-1. address _who -> The address to remove from the list of authorized addresses.
+1. `address _who` -> The address to remove from the list of authorized addresses.
 
 ### 3. removeFromAuthorized
 
@@ -66,7 +67,7 @@ This function removes an address from the list of authorized addresses.
 
 #### Parameters
 
-1. address _who -> The address to remove from the list of authorized addresses.
+1. `address _who` -> The address to remove from the list of authorized addresses.
 
 ### 4. __ListAuthorizer_transferAuthorization
 
@@ -76,8 +77,8 @@ This function transfers authorization from the calling address to a new one.
 
 #### Parameters
 
-1. address _from -> The address to transfer the authorization from
-2. address _to -> The address to transfer the authorization to
+1. `address _from` -> The address to transfer the authorization from
+2. `address _to` -> The address to transfer the authorization to
 
 ### 5. transferAuthorization
 
@@ -87,7 +88,7 @@ This function transfers authorization from the calling address to a new one.
 
 #### Parameters
 
-1. address _who -> The address to transfer the authorization to
+1. `address _who` -> The address to transfer the authorization to
 
 ### 6. initialize
 
@@ -99,5 +100,5 @@ Adds `msg.sender` as an authorized address and adds to the number of authorized 
 
 #### Parameter(s)
 
-1. IProposal proposal -> The module's proposal instance.
-2. Metadata metadata -> The module's metadata.
+1. `IProposal proposal` -> The module's proposal instance.
+2. `Metadata metadata` -> The module's metadata.
