@@ -85,119 +85,134 @@ contract VestingPaymentProcessorTest is ModuleTest {
             // Check correct balances.
             assertEq(_token.balanceOf(address(recipient)), amount);
             assertEq(paymentProcessor.releasable(address(recipient)), 0);
-
         }
-
 
         assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
-
     }
 
-    function testUpdatePayments(address[] memory recipients,
-        uint128[] memory amounts) public {
-            //@todo
-    }
-    
-
-    // TODO: do when VestingProcessor is finished.
-/* 
-    function testUpdateAndRestartPayments(address[] memory recipients,
-        uint128[] memory amounts, uint64[] memory durations
+    // Sanity check
+/*     function testVestingCalculation(
+        address[] memory recipients,
+        uint128[] memory amounts
     ) public {
         vm.assume(recipients.length <= amounts.length);
-        vm.assume(amounts.length <= durations.length);
         assumeValidRecipients(recipients);
         assumeValidAmounts(amounts);
-        assumeValidDurations(durations);
 
-        //add first batch of payment orders. 
-        // @dev To have different values, we multiply the amounts supplied by foundry. Since we are casting to uint256, we don't overflow 
-        
-        for (uint i; i < recipients.length; i++) {
+        for (uint i = 0; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint amount = uint(amounts[i]);
-            uint duration = uint(durations[i]);
+            uint amount = amounts[i];
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, duration
+                recipient, amount, (block.timestamp + 1000)
             );
         }
 
-        // Call processPayments.
         paymentProcessor.processPayments(paymentClient);
+        vm.warp(block.timestamp + 500);
 
-
-        //check everything is alright
-
-        //warp to some point in the future
-        vm.warp(block.timestamp + (3 days));
-
-
-        // now, at some point in vesting, we add the next batch, which updates the balances + times for some, or restarts for others
-        for (uint i; i < recipients.length; i++) {
+        for (uint i = 0; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint amount = uint(amounts[i]);
-            uint duration = uint(durations[i]);
+            uint amount = amounts[i] / 2;
 
-            // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                recipient, amount, duration);
+            assertEq(
+                amount,
+                paymentProcessor.vestedAmount(block.timestamp, recipient)
+            );
         }
+    }
+ */
+         function testUpdateFinishedPayments(
+        address[] memory recipients,
+        uint128[] memory amounts
+    ) public {
+        //workers who were paid before get new payment.
+        //@todo
+    }
 
-        // Call processPayments.
-        paymentProcessor.processPayments(paymentClient);
+    function testUpdateRunningPayments(
+        address[] memory recipients,
+        uint128[] memory amounts
+    ) public {
+        //we create a set of payments
+        // before the period finishes, we change them and assign new amounts+release schedule
+        // workers get all the funds that had vested, and the new ones work as expected.
 
-        //warp a bit more
-        vm.warp(block.timestamp + (3 days));
-
-        //go through all recipients
-
-
+        vm.assume(recipients.length <= amounts.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts);
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
             uint amount = uint(amounts[i]*2);
-            uint duration = uint(durations[i]*2);
-
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + duration)
+                recipient, amount, (block.timestamp + 400)
             );
+        }
 
-            // Call processPayments.
-            paymentProcessor.processPayments(paymentClient);
+        // Call processPayments.
+        paymentProcessor.processPayments(paymentClient);
 
-            //some (but not all) time passes
-            vm.warp(block.timestamp + duration/2);
+        vm.warp(block.timestamp + 200);
 
-            uint amtBefore = _token.balanceOf(address(recipient));
+
+        //check how much each address can claim:
+        uint[] memory claims = new uint[](recipients.length);
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            claims[i] = paymentProcessor.vestedAmount(block.timestamp, recipient);
+            assertEq(claims[i], amounts[i]);
+        }
+
+        //add a modified round of vesting (but don't process it yet):
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint newAmount = uint(amounts[i]*3);
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, newAmount, (block.timestamp + (6 days))
+            );
+        }
+
+        // Call processPayments again.
+        paymentProcessor.processPayments(paymentClient);
+
+
+        //we check everybody received what they were owed and can't claim for the new one
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            assertEq(_token.balanceOf(recipient), claims[i]);
+            assertEq(paymentProcessor.vestedAmount(block.timestamp,recipient), 0);
+        }
+
+        //at the end of the new period, everybody was only able to claim the new salary + what they earned before.
+        vm.warp(block.timestamp + (6 days) + 1);
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]*4);
 
             vm.prank(address(recipient));
             paymentProcessor.claim(paymentClient);
 
-            uint amtClaimed = _token.balanceOf(address(recipient)) - amtBefore;
-
-            // Check correct balances.
-            assertEq(amtClaimed, (amount/2)+amtBefore);
-            assertEq(_token.balanceOf(address(paymentClient)), amount-amtClaimed);
-
-            // Invariant: Payment processor does not hold funds.
-            assertEq(_token.balanceOf(address(paymentProcessor)), 0);
-
-
-
-
+            // Check that balances are correct and that noody can claim anything else 
+            assertEq(_token.balanceOf(address(recipient)), amount);
+            assertEq(paymentProcessor.releasable(address(recipient)), 0);
         }
 
+        assertEq(_token.balanceOf(address(paymentClient)), 0);
 
-
-        // @todo
-    } */
+        // Invariant: Payment processor does not hold funds.
+        assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+    }
+    
 
     mapping(address => bool) recipientCache;
 
