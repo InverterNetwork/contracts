@@ -66,28 +66,138 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + 100)
+                recipient, amount, (block.timestamp + (7 days))
             );
+        }
 
-            // Call processPayments.
-            paymentProcessor.processPayments(paymentClient);
+        // Call processPayments.
+        paymentProcessor.processPayments(paymentClient);
 
-            vm.warp(block.timestamp + 101);
+        vm.warp(block.timestamp + (7 days) + 1);
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+
             vm.prank(address(recipient));
             paymentProcessor.claim(paymentClient);
 
             // Check correct balances.
             assertEq(_token.balanceOf(address(recipient)), amount);
-            assertEq(_token.balanceOf(address(paymentClient)), 0);
+            assertEq(paymentProcessor.releasable(address(recipient)), 0);
+
+        }
+
+
+        assertEq(_token.balanceOf(address(paymentClient)), 0);
+
+        // Invariant: Payment processor does not hold funds.
+        assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+
+    }
+
+    function testUpdatePayments(address[] memory recipients,
+        uint128[] memory amounts) public {
+            //@todo
+    }
+    
+
+    // TODO: do when VestingProcessor is finished.
+/* 
+    function testUpdateAndRestartPayments(address[] memory recipients,
+        uint128[] memory amounts, uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(amounts.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts);
+        assumeValidDurations(durations);
+
+        //add first batch of payment orders. 
+        // @dev To have different values, we multiply the amounts supplied by foundry. Since we are casting to uint256, we don't overflow 
+        
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+            uint duration = uint(durations[i]);
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, duration
+            );
+        }
+
+        // Call processPayments.
+        paymentProcessor.processPayments(paymentClient);
+
+
+        //check everything is alright
+
+        //warp to some point in the future
+        vm.warp(block.timestamp + (3 days));
+
+
+        // now, at some point in vesting, we add the next batch, which updates the balances + times for some, or restarts for others
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+            uint duration = uint(durations[i]);
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, duration);
+        }
+
+        // Call processPayments.
+        paymentProcessor.processPayments(paymentClient);
+
+        //warp a bit more
+        vm.warp(block.timestamp + (3 days));
+
+        //go through all recipients
+
+
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]*2);
+            uint duration = uint(durations[i]*2);
+
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + duration)
+            );
+
+            // Call processPayments.
+            paymentProcessor.processPayments(paymentClient);
+
+            //some (but not all) time passes
+            vm.warp(block.timestamp + duration/2);
+
+            uint amtBefore = _token.balanceOf(address(recipient));
+
+            vm.prank(address(recipient));
+            paymentProcessor.claim(paymentClient);
+
+            uint amtClaimed = _token.balanceOf(address(recipient)) - amtBefore;
+
+            // Check correct balances.
+            assertEq(amtClaimed, (amount/2)+amtBefore);
+            assertEq(_token.balanceOf(address(paymentClient)), amount-amtClaimed);
 
             // Invariant: Payment processor does not hold funds.
             assertEq(_token.balanceOf(address(paymentProcessor)), 0);
-        }
-    }
 
-    function testUpdatePayments(address recipient, uint amount) public {
+
+
+
+        }
+
+
+
         // @todo
-    }
+    } */
 
     mapping(address => bool) recipientCache;
 
@@ -126,6 +236,12 @@ contract VestingPaymentProcessorTest is ModuleTest {
     function assumeValidAmounts(uint128[] memory amounts) public {
         for (uint i; i < amounts.length; i++) {
             vm.assume(amounts[i] != 0);
+        }
+    }
+
+    function assumeValidDurations(uint64[] memory durations) public {
+        for (uint i; i < durations.length; i++) {
+            vm.assume(durations[i] != 0);
         }
     }
 }

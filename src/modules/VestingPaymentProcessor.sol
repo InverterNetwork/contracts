@@ -112,7 +112,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     ///         In OZ VestingWallet this method is named release().
     function claim(IPaymentClient client) external {
         if (vestings[msg.sender]._enabled) {
-            uint amount = releasable();
+            uint amount = releasable(msg.sender);
             vestings[msg.sender]._released += amount;
 
             // Cache token.
@@ -173,13 +173,13 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         // @todo Nejc: Verify there's enough tokens in proposal for the payment.
         // @todo Nejc: before adding payment make sure contributor is wListed.
 
-        //@todo Nuggan: Update VestingWallet if there's a running payment already (just add amt + duration)
-
         if (
             block.timestamp
                 < (vestings[_contributor]._start + vestings[_contributor]._duration)
         ) {
             //there is a running payment, update
+            
+            //@todo releasable() stays the same, we distribute the remaining amounts over the new schedule (bigger one of the end dates)
 
             vestings[_contributor]._salary += _salary;
 
@@ -188,8 +188,17 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             vestings[_contributor]._duration = newEndDate;
 
             emit PaymentUpdated(_contributor, _salary, newEndDate);
+        } else if (
+            (block.timestamp
+                > (vestings[_contributor]._start + vestings[_contributor]._duration)) && 
+                (releasable(_contributor) != 0)
+                
+            ) {
+            //there's a finished unclaimed payment, add them to the new one as claimable
+
+            //actually this should be merged with the one above
         } else {
-            //either there's no payment or it finished, create new one
+            //there's no payment, create new one
 
             vestings[_contributor] =
                 VestingWallet(_salary, 0, _start, _duration, true);
@@ -283,9 +292,9 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @notice Getter for the amount of releasable tokens.
-    function releasable() public view returns (uint) {
-        return vestedAmount(uint(block.timestamp), msg.sender)
-            - released(msg.sender);
+    function releasable(address contributor) public view returns (uint) {
+        return vestedAmount(uint(block.timestamp), contributor)
+            - released(contributor);
     }
 
     function token() public view returns (IERC20) {
