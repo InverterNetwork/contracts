@@ -7,11 +7,11 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Interfaces
 import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
 import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
-import {IFundingVault} from "src/proposal/base/IFundingVault.sol";
+import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
 import {IAuthorizer} from "src/modules/IAuthorizer.sol";
 import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
 
-interface IProposal is IModuleManager, IContributorManager, IFundingVault {
+interface IProposal is IModuleManager, IContributorManager, IFundingManager {
     //--------------------------------------------------------------------------
     // Errors
 
@@ -57,6 +57,9 @@ interface IProposal is IModuleManager, IContributorManager, IFundingVault {
     /// @notice The proposal's {IERC20} token accepted for fundings and used
     ///         for payments.
     function token() external view returns (IERC20);
+
+    /// @notice The proposal's non-rebasing receipt token.
+    function receiptToken() external view returns (IERC20);
 
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);

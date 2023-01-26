@@ -66,10 +66,10 @@ interface IContributorManager {
     /// @notice Adds `who` as new contributor.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if an argument invalid.
-    /// @dev who The contributor's address to add as contributor.
-    /// @dev name The contributor's name.
-    /// @dev role The contributor's role.
-    /// @dev salary The contributor's salary.
+    /// @param who The contributor's address to add as contributor.
+    /// @param name The contributor's name.
+    /// @param role The contributor's role.
+    /// @param salary The contributor's salary.
     function addContributor(
         address who,
         string memory name,
@@ -80,10 +80,9 @@ interface IContributorManager {
     /// @notice Removes `who` from being a contributor.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if `who` not a contributor.
-    /// @dev Reverts if `prevContrib` not previous element in the contributor's
-    ///      list.
+    /// @dev Reverts if `prevContrib` not previous element in the contributor's list
     /// @param prevContrib The previous contributor in the contributor's list.
-    /// @dev who The contributor's address to remove.
+    /// @param who The contributor's address to remove.
     function removeContributor(address prevContrib, address who) external;
 
     /// @notice Revokes the caller from being a contributor.
@@ -104,6 +103,18 @@ interface IContributorManager {
 
     /// @notice Returns the list of addresses of current contributors.
     function listContributors() external view returns (address[] memory);
+
+    /// @notice Fetches the id of the previous Contributor in the list
+    /// @dev Reverts if who is invalid
+    /// @dev This should ideally be only used in a frontend context
+    ///      because iterating through the list and finding the previous element
+    ///      causes an O(n) runtime of the given list and should ideally be outsourced off-chain.
+    /// @param who the address of which the previous element in the list should be found.
+    /// @return previousContributor The address of the previous Contributor.
+    function getPreviousContributor(address who)
+        external
+        view
+        returns (address previousContributor);
 
     /// @notice Returns the number of contributors.
     function contributorsSize() external view returns (uint);
