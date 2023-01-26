@@ -118,6 +118,10 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @inheritdoc IPaymentProcessor
     function processPayments(IPaymentClient client) external {
+        // First, we remove all payments that would be overwritten
+        // Doing it at the start ensures that collectPaymentOrders will always start from a blank slate concerning balances/allowances.
+        _cancelRunningOrders(client);
+
         // Collect outstanding orders and their total token amount.
         IPaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
@@ -137,12 +141,22 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             _start = orders[i].createdAt;
             _duration = (orders[i].dueTo - _start);
 
+            _addPayment(_recipient, _amount, _start, _duration);
+        }
+    }
+
+    function _cancelRunningOrders(IPaymentClient client) internal {
+        IPaymentClient.PaymentOrder[] memory orders;
+        orders = client.paymentOrders();
+
+        address _recipient;
+        for (uint i; i < orders.length; i++) {
+            _recipient = orders[i].recipient;
+
             //check if running payment order exists. If it does, remove it
             if (start(_recipient) != 0) {
                 _removePayment(client, _recipient);
             }
-
-            _addPayment(_recipient, _amount, _start, _duration);
         }
     }
 
@@ -210,7 +224,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Calculates the amount of tokens that has already vested.
     /// @param contributor Contributor's address.
-    function vestedAmount(uint timestamp, address contributor)
+    function vestedAmount(address contributor, uint timestamp)
         public
         view
         returns (uint)
@@ -220,7 +234,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Getter for the amount of releasable tokens.
     function releasable(address contributor) public view returns (uint) {
-        return vestedAmount(uint(block.timestamp), contributor)
+        return vestedAmount(contributor, uint(block.timestamp))
             - released(contributor);
     }
 
@@ -237,18 +251,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         //we send the funds the contributor has a right to.
         _claim(client, contributor);
 
-        // outstanding vested funds are sent back to the proposal
-        uint unclaimedAmount = vestedAmount(uint(block.timestamp), contributor)
-            - released(contributor);
+        //all unclaimed funds remain in the PaymentClient, where they will be accounted for in future payment orders.
+
+        //@todo how to handle the case no new orders arrive? we should have a way to withdraw remaining funds from the client...
 
         delete vestings[contributor];
-
-        if (unclaimedAmount > 0) {
-            // Cache token.
-            //IERC20 token_ = token();
-
-            //@todo: send the outstanding funds from the MilestoneManager back into proposal. Right now it just stays locked in the MilestoneManager, with nobody able to claim it. The funds should ideally return in the same way funds go back when a Milestone is cancelled.
-        }
 
         emit PaymentRemoved(contributor);
     }

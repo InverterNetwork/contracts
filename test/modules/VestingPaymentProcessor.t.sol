@@ -94,7 +94,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
     }
 
     // Sanity check
-/*     function testVestingCalculation(
+    /*     function testVestingCalculation(
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
@@ -121,12 +121,12 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
             assertEq(
                 amount,
-                paymentProcessor.vestedAmount(block.timestamp, recipient)
+                paymentProcessor.vestedAmount(recipient, block.timestamp)
             );
         }
     }
- */
-         function testUpdateFinishedPayments(
+    */
+    function testUpdateFinishedPayments(
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
@@ -148,7 +148,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint amount = uint(amounts[i]*2);
+            uint amount = uint(amounts[i]) * 2;
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
@@ -161,19 +161,19 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
         vm.warp(block.timestamp + 200);
 
-
         //check how much each address can claim:
         uint[] memory claims = new uint[](recipients.length);
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            claims[i] = paymentProcessor.vestedAmount(block.timestamp, recipient);
+            claims[i] =
+                paymentProcessor.vestedAmount(recipient, block.timestamp);
             assertEq(claims[i], amounts[i]);
         }
 
         //add a modified round of vesting (but don't process it yet):
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint newAmount = uint(amounts[i]*3);
+            uint newAmount = uint(amounts[i]) * 3;
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
@@ -184,12 +184,13 @@ contract VestingPaymentProcessorTest is ModuleTest {
         // Call processPayments again.
         paymentProcessor.processPayments(paymentClient);
 
-
         //we check everybody received what they were owed and can't claim for the new one
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
             assertEq(_token.balanceOf(recipient), claims[i]);
-            assertEq(paymentProcessor.vestedAmount(block.timestamp,recipient), 0);
+            assertEq(
+                paymentProcessor.vestedAmount(recipient, block.timestamp), 0
+            );
         }
 
         //at the end of the new period, everybody was only able to claim the new salary + what they earned before.
@@ -197,22 +198,22 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint amount = uint(amounts[i]*4);
+            uint amount = uint(amounts[i]) * 4;
 
             vm.prank(address(recipient));
             paymentProcessor.claim(paymentClient);
 
-            // Check that balances are correct and that noody can claim anything else 
+            // Check that balances are correct and that noody can claim anything else
             assertEq(_token.balanceOf(address(recipient)), amount);
             assertEq(paymentProcessor.releasable(address(recipient)), 0);
         }
 
+        //No funds remain in the PaymentClient
         assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
-    
 
     mapping(address => bool) recipientCache;
 

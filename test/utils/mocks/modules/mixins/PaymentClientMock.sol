@@ -60,13 +60,13 @@ contract PaymentClientMock is PaymentClient {
         internal
         override (PaymentClient)
     {
-        /*if (token.balanceOf(address(this)) >= amount) {
+        if (token.balanceOf(address(this)) >= amount) {
             return;
         } else {
             uint amtToMint = amount - token.balanceOf(address(this));
             token.mint(address(this), amtToMint);
-        }*/
-        token.mint(address(this), amount);
+        }
+
     }
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
