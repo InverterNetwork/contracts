@@ -169,7 +169,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         _removePayment(client, contributor);
     }
 
-    // @todo see issue 
+    // @todo see issue
 
     /// @notice Disable a payment of a contributor.
     /// @param contributor Contributor's address.
