@@ -161,12 +161,12 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     // API functions for authenticated users.
 
     /// @inheritdoc IModule
-    function pause() external override (IModule) onlyAuthorizedOrOwner {
+    function pause() external override(IModule) onlyAuthorizedOrOwner {
         _pause();
     }
 
     /// @inheritdoc IModule
-    function unpause() external override (IModule) onlyAuthorizedOrOwner {
+    function unpause() external override(IModule) onlyAuthorizedOrOwner {
         _unpause();
     }
 

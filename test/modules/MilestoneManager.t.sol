@@ -69,7 +69,7 @@ contract MilestoneManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testInit() public override (ModuleTest) {
+    function testInit() public override(ModuleTest) {
         // SENTINEL milestone does not exist.
         assertTrue(!milestoneManager.isExistingMilestoneId(_SENTINEL));
 
@@ -84,7 +84,7 @@ contract MilestoneManagerTest is ModuleTest {
         assertEq(milestones.length, 0);
     }
 
-    function testReinitFails() public override (ModuleTest) {
+    function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         milestoneManager.init(_proposal, _METADATA, bytes(""));
     }

@@ -40,11 +40,11 @@ contract VestingPaymentProcessorTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testInit() public override (ModuleTest) {
+    function testInit() public override(ModuleTest) {
         assertEq(address(paymentProcessor.token()), address(_token));
     }
 
-    function testReinitFails() public override (ModuleTest) {
+    function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
     }
