@@ -111,8 +111,8 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice Release the releasable tokens.
     ///         In OZ VestingWallet this method is named release().
     function claim(IPaymentClient client) external {
-        if (vestings[msg.sender]._enabled) {
-            _claim(client, msg.sender);
+        if (vestings[_msgSender()]._enabled) {
+            _claim(client, _msgSender());
         }
     }
 
@@ -127,8 +127,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint totalAmount;
         (orders, totalAmount) = client.collectPaymentOrders();
 
-        // Cache token.
-        //IERC20 token_ = token();
+        // @todo would we want to hardcode a check here that Balance(client) >= totalAmount ? in our case, collectPaymentOrders() does it already, but you maybe other clients won't...
 
         // Generate Vesting Payments for all orders
         address _recipient;
@@ -248,10 +247,10 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     function _removePayment(IPaymentClient client, address contributor)
         internal
     {
-        //we send the funds the contributor has a right to.
+        //we claim the earned funds for the contributor.
         _claim(client, contributor);
 
-        //all unclaimed funds remain in the PaymentClient, where they will be accounted for in future payment orders.
+        //all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
 
         //@todo how to handle the case no new orders arrive? we should have a way to withdraw remaining funds from the client...
 
@@ -281,7 +280,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             revert Module__PaymentManager__InvalidContributor();
         }
 
-        // @todo Nejc: Verify there's enough tokens in proposal for the payment.
         // @todo Nejc: before adding payment make sure contributor is wListed.
 
         vestings[_contributor] =
@@ -329,7 +327,8 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param addr Address to validate.
     /// @return True if address is valid.
     function validAddress(address addr) internal view returns (bool) {
-        if (addr == address(0) || addr == msg.sender || addr == address(this)) {
+        if (addr == address(0) || addr == _msgSender() || addr == address(this))
+        {
             return false;
         }
         return true;

@@ -74,14 +74,15 @@ contract VestingPaymentProcessorTest is ModuleTest {
             assertEq(paymentProcessor.releasable(address(recipient)), 0);
         }
 
+        // No funds left in the PaymentClient
         assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
-    // Sanity check
-    /*     function testVestingCalculation(
+    // Sanity Math Check
+    function testVestingCalculation(
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
@@ -89,30 +90,31 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assumeValidRecipients(recipients);
         assumeValidAmounts(amounts, recipients.length);
 
+        uint start = block.timestamp;
+        uint duration = 1 weeks;
+
         for (uint i = 0; i < recipients.length; i++) {
             address recipient = recipients[i];
             uint amount = amounts[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + 1000)
-            );
+            paymentClient.addPaymentOrder(recipient, amount, (start + duration));
         }
 
         paymentProcessor.processPayments(paymentClient);
-        vm.warp(block.timestamp + 500);
 
-        for (uint i = 0; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = amounts[i] / 2;
+        for (uint z = 0; z <= duration; z += 1 hours) {
+            //we check each hour
+            vm.warp(start + z);
 
-            assertEq(
-                amount,
-                paymentProcessor.vestedAmount(recipient, block.timestamp)
-            );
+            for (uint i = 0; i < recipients.length; i++) {
+                address recipient = recipients[i];
+                uint claimableAmt = amounts[i] * z / duration;
+
+                assertEq(claimableAmt, paymentProcessor.releasable(recipient));
+            }
         }
     }
-    */
 
     //This test creates a new set of payments in a client which finished all running payments. one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
     function testUpdateFinishedPayments(
@@ -134,59 +136,27 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint amount = uint(amounts[i]) * 2; //we did two rounds
+            uint amount = uint(amounts[i]) * 2; //we paid two rounds
 
             assertEq(_token.balanceOf(address(recipient)), amount);
             assertEq(paymentProcessor.releasable(address(recipient)), 0);
         }
 
-        // Invariant: Payment processor does not hold funds.
+        // No funds left in the PaymentClient
         assertEq(_token.balanceOf(address(paymentClient)), 0);
+
+        // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
-    //speedruns a round of vesting and claiming. Neither checks the inputs nor verifies results
-    function speedRunVestingAndClaim(
-        address[] memory recipients,
-        uint128[] memory amounts,
-        uint64[] memory durations
-    ) internal {
-        uint max_time = uint(durations[0]);
-
-        for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = uint(amounts[i]);
-            uint time = uint(durations[i]);
-
-            if (time > max_time) {
-                max_time = time;
-            }
-
-            // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + time)
-            );
-        }
-
-        // Call processPayments.
-        paymentProcessor.processPayments(paymentClient);
-
-        vm.warp(block.timestamp + max_time + 1);
-
-        for (uint i; i < recipients.length; i++) {
-            vm.prank(address(recipients[i]));
-            paymentProcessor.claim(paymentClient);
-        }
-    }
-
+    //we create a set of payments, but befor they finish, we supply a new set of orders.
+    //Intended behavior is:
+    //  - workers get all the funds they already had earned (but maybe not claimed)
+    //  - Their remaining payment gets cancelled and substituted by the new one
     function testUpdateRunningPayments(
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
-        //we create a set of payments
-        // before the period finishes, we change them and assign new amounts+release schedule
-        // workers get all the funds that had vested, and the new ones work as expected.
-
         vm.assume(recipients.length <= amounts.length);
         assumeValidRecipients(recipients);
         assumeValidAmounts(amounts, recipients.length);
@@ -263,9 +233,51 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
+    //--------------------------------------------------------------------------
+    // Helper functions
+
+    // Speedruns a round of vesting + claiming
+    // note Neither checks the inputs nor verifies results
+    function speedRunVestingAndClaim(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) internal {
+        uint max_time = uint(durations[0]);
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+            uint time = uint(durations[i]);
+
+            if (time > max_time) {
+                max_time = time;
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        paymentProcessor.processPayments(paymentClient);
+
+        vm.warp(block.timestamp + max_time + 1);
+
+        for (uint i; i < recipients.length; i++) {
+            vm.prank(address(recipients[i]));
+            paymentProcessor.claim(paymentClient);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Fuzzing Validation Helpers
+
     mapping(address => bool) recipientCache;
 
     function assumeValidRecipients(address[] memory addrs) public {
+        vm.assume(addrs.length != 0);
         for (uint i; i < addrs.length; i++) {
             assumeValidRecipient(addrs[i]);
 
@@ -297,19 +309,21 @@ contract VestingPaymentProcessorTest is ModuleTest {
         return invalids;
     }
 
-    //checks that all amounts up to a spefic point are valid. The limit exists to avoid rejecting too many inputs
+    // note By only checking the values we'll use, we avoid unnecessary rejections
     function assumeValidAmounts(uint128[] memory amounts, uint checkUpTo)
         public
     {
+        vm.assume(amounts.length != 0);
         for (uint i; i < checkUpTo; i++) {
             vm.assume(amounts[i] != 0);
         }
     }
 
-    //checks that all durations up to a spefic point are valid. The limit exists to avoid rejecting too many inputs
+    // note By only checking the values we'll use, we avoid unnecessary rejections
     function assumeValidDurations(uint64[] memory durations, uint checkUpTo)
         public
     {
+        vm.assume(durations.length != 0);
         for (uint i; i < checkUpTo; i++) {
             vm.assume(durations[i] != 0);
         }
