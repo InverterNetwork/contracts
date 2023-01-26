@@ -66,7 +66,6 @@ contract PaymentClientMock is PaymentClient {
             uint amtToMint = amount - token.balanceOf(address(this));
             token.mint(address(this), amtToMint);
         }
-
     }
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
