@@ -159,8 +159,8 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    /// @notice Deletes a contributors payment and refunds non-released tokens
-    ///         to proposal owner.
+    /// @notice Deletes a contributors payment and leaves non-released tokens
+    ///         in the PaymentClient.
     /// @param contributor Contributor's address.
     function removePayment(IPaymentClient client, address contributor)
         external
@@ -168,6 +168,8 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     {
         _removePayment(client, contributor);
     }
+
+    // @todo see issue 
 
     /// @notice Disable a payment of a contributor.
     /// @param contributor Contributor's address.
