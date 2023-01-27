@@ -198,6 +198,10 @@ interface IMilestoneManager is IPaymentClient {
     /// @return True if milestone with id `id` exists, false otherwise.
     function isExistingMilestoneId(uint id) external view returns (bool);
 
+    /// @notice Returns whether an address is a contributor in one specific milestone.
+    /// @return True if the address is a contributor, false otherwise.
+    function isContributor(uint id, address who) external view returns (bool);
+
     //----------------------------------
     // Milestone Mutating Functions
 

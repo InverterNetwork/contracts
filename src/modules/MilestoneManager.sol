@@ -103,21 +103,21 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint pctSum;
 
         for (uint i; i < contribs.length; ++i) {
-            address contributorAddr = contribs[i].address;
+            address contributorAddr = contribs[i].addr;
             uint contributorSalary = contribs[i].salary;
 
             // check the address is valid
             if (
                 contributorAddr == address(0)
                     || contributorAddr == address(this)
-                    || contributorAddr == proposal()
+                    || contributorAddr == address(proposal())
             ) {
                 revert Module__MilestoneManager__InvalidContributorAddress();
             }
 
             // check the address is unique
             for (uint j = i + 1; j < contribs.length; ++j) {
-                if (contribs[j].address == contributorAddr) {
+                if (contribs[j].addr == contributorAddr) {
                     revert Module__MilestoneManager__DuplicateContributorAddress(
                     );
                 }
@@ -308,6 +308,23 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     //--------------------------------------------------------------------------
+    // Internal Helper Functions
+
+    function hashContributors(Contributor[] memory contributors) internal pure returns (bytes32){
+        address[] memory addrCache = new address[](contributors.length);
+        uint[] memory salaryCache = new uint[](contributors.length);
+
+        for(uint i; i < contributors.length; ++i){
+            addrCache[i] = contributors[i].addr;
+            salaryCache[i]= contributors[i].salary;
+        }
+
+        return keccak256(abi.encodePacked(addrCache, salaryCache));
+
+    }
+
+
+    //--------------------------------------------------------------------------
     // Milestone API Functions
 
     /// @inheritdoc IMilestoneManager
@@ -385,7 +402,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         emit MilestoneRemoved(id);
     }
 
-    /// @todo do all the payment stuff
     /// @inheritdoc IMilestoneManager
     function startNextMilestone() external onlyAuthorizedOrOwner {
         if (!isNextMilestoneActivatable()) {
@@ -469,14 +485,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             changed = true;
         }
 
-        if (m.details.equals(details)) {
+        if (! m.details.equals(details)) {
             m.details = details;
             changed = true;
         }
 
         if (
-            keccak256(abi.encodePacked(m.contributors))
-                == keccak256(abi.encodePacked(contributors))
+            hashContributors(m.contributors)
+                != hashContributors(contributors)
         ) {
             m.contributors = contributors;
             changed = true;
