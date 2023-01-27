@@ -52,8 +52,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier onlyContributor() {
-        if (!__Module_proposal.isContributor(_msgSender())) {
+    modifier onlyContributor(uint id) {
+        if (!isContributor(id, _msgSender())) {
             revert Module__MilestoneManager__OnlyCallableByContributor();
         }
         _;
@@ -99,6 +99,46 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
+    modifier validContributors(Contributor[] calldata contribs) {
+        uint pctSum;
+
+        for (uint i; i < contribs.length; ++i) {
+            address contributorAddr = contribs[i].address;
+            uint contributorSalary = contribs[i].salary;
+
+            // check the address is valid
+            if (
+                contributorAddr == address(0)
+                    || contributorAddr == address(this)
+                    || contributorAddr == proposal()
+            ) {
+                revert Module__MilestoneManager__InvalidContributorAddress();
+            }
+
+            // check the address is unique
+            for (uint j = i + 1; j < contribs.length; ++j) {
+                if (contribs[j].address == contributorAddr) {
+                    revert Module__MilestoneManager__DuplicateContributorAddress(
+                    );
+                }
+            }
+
+            // check the salary (as budget percentage) is valid
+            if (contributorSalary == 0 || contributorSalary > SALARY_PRECISION)
+            {
+                revert Module__MilestoneManager__InvalidContributorSalary();
+            }
+
+            pctSum += contributorSalary;
+        }
+
+        //check salaries add up to 100_000_000
+        if (pctSum != SALARY_PRECISION) {
+            revert Module__MilestoneManager__InvalidSalarySum();
+        }
+        _;
+    }
+
     modifier onlyConsecutiveMilestones(uint prevId, uint id) {
         if (_milestones[prevId] != id) {
             revert Module__MilestoneManager__MilestonesNotConsecutive();
@@ -116,6 +156,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Marks the last element of the list.
     /// @dev Always links back to the _SENTINEL.
     uint internal _last;
+
+    /// @dev Marks the precision we will use for the salary percentages. Represents what counts as "100%".
+    /// @dev Value is 100_000_000 since it allows for 1$ precision in a 1.000.000$ budget.
+    uint internal SALARY_PRECISION = 100_000_000;
 
     //--------------------------------------------------------------------------
     // Storage
@@ -251,6 +295,18 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
     }
 
+    /// @inheritdoc IMilestoneManager
+    function isContributor(uint id, address who) public view returns (bool) {
+        Contributor[] memory contribs = getMilestoneInformation(id).contributors;
+
+        for (uint i; i<contribs.length; i++){
+            if(contribs[i].addr == who){
+                return true;
+            }
+        }
+        return false;
+    }
+
     //--------------------------------------------------------------------------
     // Milestone API Functions
 
@@ -258,6 +314,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function addMilestone(
         uint duration,
         uint budget,
+        Contributor[] calldata contributors,
         string memory title_,
         string memory details
     )
@@ -265,6 +322,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         onlyAuthorizedOrOwner
         validDuration(duration)
         validBudget(budget)
+        validContributors(contributors)
         validTitle(title_)
         validDetails(details)
         returns (uint)
@@ -282,6 +340,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneRegistry[id] = Milestone({
             duration: duration,
             budget: budget,
+            contributors: contributors,
             title: title_,
             details: details,
             startTimestamp: 0,
@@ -289,7 +348,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             completed: false
         });
 
-        emit MilestoneAdded(id, duration, budget, title_, details);
+        emit MilestoneAdded(id, duration, budget, contributors, title_, details);
 
         return id;
     }
@@ -326,6 +385,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         emit MilestoneRemoved(id);
     }
 
+    /// @todo do all the payment stuff
     /// @inheritdoc IMilestoneManager
     function startNextMilestone() external onlyAuthorizedOrOwner {
         if (!isNextMilestoneActivatable()) {
@@ -343,25 +403,29 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         m.startTimestamp = block.timestamp;
 
         // Fetch current contributors from proposal.
-        address[] memory contributors = __Module_proposal.listContributors();
-        uint contributorsLen = contributors.length;
+        //address[] memory contributors = __Module_proposal.listContributors();
+        //uint contributorsLen = contributors.length;
+        Contributor[] memory contribCache = m.contributors;
+
 
         // Fail if contributors list is empty.
-        if (contributorsLen == 0) {
+        if (contribCache.length == 0) {
             revert Module__MilestoneManager__NoContributors();
         }
 
         if (m.budget != 0) {
-            // Calculate the payout amount for each contributor.
-            // Note that currently each contributor receives the same amount.
-            uint contributorPayout = m.budget / contributorsLen;
+            // Create payment order for each contributor of the new  milestone.
+            for(uint i; i<contribCache.length; ++i){
+                // Calculate the payout amount.
+                uint contributorPayout = m.budget / contribCache[i].salary;
 
-            // Add milestone's payout for each contributor as new payment order.
-            // Note that the payout SHOULD be fulfilled before the end of the
-            // milestone's duration.
-            _addIdenticalPaymentOrders(
-                contributors, contributorPayout, m.duration
-            );
+                // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
+                _addPaymentOrder(
+                    contribCache[i].addr, contributorPayout, m.duration
+                );
+
+
+            }
         }
     }
 
@@ -370,6 +434,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint id,
         uint duration,
         uint budget,
+        Contributor[] calldata contributors,
         string memory details
     )
         external
@@ -377,6 +442,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         validId(id)
         validDuration(duration)
         validBudget(budget)
+        validContributors(contributors)
         validDetails(details)
     {
         Milestone storage m = _milestoneRegistry[id];
@@ -386,21 +452,45 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotUpdateable();
         }
 
-        if (
-            m.duration != duration || m.budget != budget
-                || m.details.equals(details)
-        ) {
+        // Not updateable if milestone is already completed.
+        if (m.completed) {
+            revert Module__MilestoneManager__MilestoneNotUpdateable();
+        }
+
+        bool changed;
+
+        if (m.duration != duration) {
             m.duration = duration;
+            changed = true;
+        }
+
+        if (m.budget != budget) {
             m.budget = budget;
+            changed = true;
+        }
+
+        if (m.details.equals(details)) {
             m.details = details;
-            emit MilestoneUpdated(id, duration, budget, details);
+            changed = true;
+        }
+
+        if (
+            keccak256(abi.encodePacked(m.contributors))
+                == keccak256(abi.encodePacked(contributors))
+        ) {
+            m.contributors = contributors;
+            changed = true;
+        }
+
+        if (changed) {
+            emit MilestoneUpdated(id, duration, budget, contributors, details);
         }
     }
 
     /// @inheritdoc IMilestoneManager
     function submitMilestone(uint id, bytes calldata submissionData)
         external
-        onlyContributor
+        onlyContributor(id)
         validId(id)
         validSubmissionData(submissionData)
     {
