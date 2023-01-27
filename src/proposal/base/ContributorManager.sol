@@ -19,7 +19,7 @@ import {IContributorManager} from "src/proposal/base/IContributorManager.sol";
  *
  * @dev A contract to manage a list of contributors.
  *
- *      It saves the assigned role, name, and salary of each contributor in a
+ *      It saves the assigned role and name of each contributor in a
  *      registry, and manages a list of contributors in the style of the
  *      Gnosis Safe's [OwnerManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/OwnerManager.sol).
  *
@@ -70,12 +70,13 @@ abstract contract ContributorManager is
         _;
     }
 
-    modifier validSalary(uint salary) {
+    // @todo perform this check on a milestone basis
+    /*modifier validSalary(uint salary) {
         if (salary == 0) {
             revert Proposal__ContributorManager__InvalidContributorSalary();
         }
         _;
-    }
+    }*/
 
     modifier isContributor_(address who) {
         if (!isContributor(who)) {
@@ -199,19 +200,13 @@ abstract contract ContributorManager is
     // onlyAuthorized Mutating Functions
 
     /// @inheritdoc IContributorManager
-    function addContributor(
-        address who,
-        string memory name,
-        string memory role,
-        uint salary
-    )
+    function addContributor(address who, string memory name, string memory role)
         external
         __ContributorManager_onlyAuthorized
         isNotContributor(who)
         validAddress(who)
         validName(name)
         validRole(role)
-        validSalary(salary)
     {
         // Add address to _contributors mapping.
         _contributors[who] = _contributors[_SENTINEL];
@@ -219,7 +214,7 @@ abstract contract ContributorManager is
         _contributorCounter++;
 
         // Write new contributor instance to registry.
-        _contributorRegistry[who] = Contributor(name, role, salary);
+        _contributorRegistry[who] = Contributor(name, role);
 
         emit ContributorAdded(who);
     }
@@ -235,20 +230,24 @@ abstract contract ContributorManager is
     }
 
     /// @inheritdoc IContributorManager
-    function updateContributor(address who, string memory role, uint salary)
+    function updateContributor(
+        address who,
+        string memory name,
+        string memory role
+    )
         external
         __ContributorManager_onlyAuthorized
         isContributor_(who)
         validRole(role)
-        validSalary(salary)
+        validName(name)
     {
         string memory oldRole = _contributorRegistry[who].role;
-        uint oldSalary = _contributorRegistry[who].salary;
+        string memory oldName = _contributorRegistry[who].name;
 
-        if (!oldRole.equals(role) || oldSalary != salary) {
-            emit ContributorUpdated(who, role, salary);
+        if (!oldRole.equals(role) || !oldName.equals(name)) {
+            emit ContributorUpdated(who, name, role);
             _contributorRegistry[who].role = role;
-            _contributorRegistry[who].salary = salary;
+            _contributorRegistry[who].name = name;
         }
     }
 

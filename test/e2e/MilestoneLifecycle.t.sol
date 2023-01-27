@@ -70,8 +70,8 @@ contract MilestoneLifecycle is E2eTest {
         // 2. The amount of funding to pay the contributors for the milestone
 
         // So lets add Alice and Bob as contributors to the proposal.
-        proposal.addContributor(alice, "Alice", "Smart Contract Engineer", 1);
-        proposal.addContributor(bob, "Bob", "Web Developer", 1);
+        proposal.addContributor(alice, "Alice", "Smart Contract Engineer");
+        proposal.addContributor(bob, "Bob", "Web Developer");
         // Note the last argument being the salary for the contributors.
         // However, the salary is not yet taken into in the Milestone module.
         // The milestone's budget is shared equally between all contributors.

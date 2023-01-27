@@ -33,8 +33,7 @@ contract ContributorManagerTest is Test {
     string constant NAME = "name";
     string constant ROLE = "role";
     string constant UPDATED_ROLE = "updated role";
-    uint constant SALARY = 1e18;
-    uint constant UPDATED_SALARY = 2e18;
+    string constant UPDATED_NAME = "updated name";
 
     // Constants copied from SuT.
     address private constant _SENTINEL = address(0x1);
@@ -42,7 +41,7 @@ contract ContributorManagerTest is Test {
     // Events copied from SuT.
     event ContributorAdded(address indexed who);
     event ContributorRemoved(address indexed who);
-    event ContributorUpdated(address indexed who, string role, uint salary);
+    event ContributorUpdated(address indexed who, string name, string role);
 
     function setUp() public {
         contributorManager = new ContributorManagerMock();
@@ -90,7 +89,7 @@ contract ContributorManagerTest is Test {
         vm.assume(randomWho < whos.length);
 
         for (uint i; i < whos.length; i++) {
-            contributorManager.addContributor(whos[i], NAME, ROLE, SALARY);
+            contributorManager.addContributor(whos[i], NAME, ROLE);
         }
 
         address prevContr;
@@ -121,7 +120,7 @@ contract ContributorManagerTest is Test {
             vm.expectEmit(true, true, true, true);
             emit ContributorAdded(whos[i]);
 
-            contributorManager.addContributor(whos[i], NAME, ROLE, SALARY);
+            contributorManager.addContributor(whos[i], NAME, ROLE);
 
             assertTrue(contributorManager.isContributor(whos[i]));
 
@@ -129,7 +128,6 @@ contract ContributorManagerTest is Test {
                 contributorManager.getContributorInformation(whos[i]);
             assertEq(c.name, NAME);
             assertEq(c.role, ROLE);
-            assertEq(c.salary, SALARY);
         }
 
         // Note that list is traversed.
@@ -153,20 +151,20 @@ contract ContributorManagerTest is Test {
                 .Proposal__ContributorManager__CallerNotAuthorized
                 .selector
         );
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
     }
 
     function testAddContributorFailsIfAlreadyContributor(address who) public {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
         vm.expectRevert(
             IContributorManager
                 .Proposal__ContributorManager__IsContributor
                 .selector
         );
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
     }
 
     function testAddContributorFailsForInvalidAddress() public {
@@ -178,7 +176,7 @@ contract ContributorManagerTest is Test {
                     .Proposal__ContributorManager__InvalidContributorAddress
                     .selector
             );
-            contributorManager.addContributor(invalids[i], NAME, ROLE, SALARY);
+            contributorManager.addContributor(invalids[i], NAME, ROLE);
         }
     }
 
@@ -193,7 +191,7 @@ contract ContributorManagerTest is Test {
                     .Proposal__ContributorManager__InvalidContributorName
                     .selector
             );
-            contributorManager.addContributor(who, invalids[i], ROLE, SALARY);
+            contributorManager.addContributor(who, invalids[i], ROLE);
         }
     }
 
@@ -208,22 +206,7 @@ contract ContributorManagerTest is Test {
                     .Proposal__ContributorManager__InvalidContributorRole
                     .selector
             );
-            contributorManager.addContributor(who, NAME, invalids[i], SALARY);
-        }
-    }
-
-    function testAddContributorFailsForInvalidSalary(address who) public {
-        types.assumeValidContributor(who);
-
-        uint[] memory invalids = types.createInvalidContributorSalaries();
-
-        for (uint i; i < invalids.length; i++) {
-            vm.expectRevert(
-                IContributorManager
-                    .Proposal__ContributorManager__InvalidContributorSalary
-                    .selector
-            );
-            contributorManager.addContributor(who, NAME, ROLE, invalids[i]);
+            contributorManager.addContributor(who, NAME, invalids[i]);
         }
     }
 
@@ -242,7 +225,7 @@ contract ContributorManagerTest is Test {
 
         // Add contributors.
         for (uint i; i < whos.length; i++) {
-            contributorManager.addContributor(whos[i], NAME, ROLE, SALARY);
+            contributorManager.addContributor(whos[i], NAME, ROLE);
         }
 
         // Remove contributors from the front until list is empty.
@@ -267,7 +250,7 @@ contract ContributorManagerTest is Test {
 
         // Add contributors again.
         for (uint i; i < whos.length; i++) {
-            contributorManager.addContributor(whos[i], NAME, ROLE, SALARY);
+            contributorManager.addContributor(whos[i], NAME, ROLE);
         }
 
         // Remove contributors from the back until list is empty.
@@ -302,7 +285,7 @@ contract ContributorManagerTest is Test {
     {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
         contributorManager.__ContributorManager_setIsAuthorized(
             address(this), false
@@ -332,7 +315,7 @@ contract ContributorManagerTest is Test {
     ) public {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
         vm.expectRevert(
             IContributorManager
@@ -359,7 +342,7 @@ contract ContributorManagerTest is Test {
                 .Proposal__ContributorManager__CallerNotAuthorized
                 .selector
         );
-        contributorManager.updateContributor(who, UPDATED_ROLE, SALARY);
+        contributorManager.updateContributor(who, NAME, UPDATED_ROLE);
     }
 
     function testUpdateContributorFailsIfNotContributor(address who) public {
@@ -370,18 +353,18 @@ contract ContributorManagerTest is Test {
                 .Proposal__ContributorManager__IsNotContributor
                 .selector
         );
-        contributorManager.updateContributor(who, UPDATED_ROLE, SALARY);
+        contributorManager.updateContributor(who, NAME, UPDATED_ROLE);
     }
 
     function testUpdateContributorsRole(address who) public {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
         vm.expectEmit(true, true, true, true);
-        emit ContributorUpdated(who, UPDATED_ROLE, SALARY);
+        emit ContributorUpdated(who, NAME, UPDATED_ROLE);
 
-        contributorManager.updateContributor(who, UPDATED_ROLE, SALARY);
+        contributorManager.updateContributor(who, NAME, UPDATED_ROLE);
 
         IContributorManager.Contributor memory c =
             contributorManager.getContributorInformation(who);
@@ -393,7 +376,7 @@ contract ContributorManagerTest is Test {
     {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
         string[] memory invalids = types.createInvalidContributorRoles();
 
@@ -403,41 +386,41 @@ contract ContributorManagerTest is Test {
                     .Proposal__ContributorManager__InvalidContributorRole
                     .selector
             );
-            contributorManager.updateContributor(who, invalids[i], SALARY);
+            contributorManager.updateContributor(who, NAME, invalids[i]);
         }
     }
 
-    function testUpdateContributorsSalary(address who) public {
+    function testUpdateContributorsName(address who) public {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
         vm.expectEmit(true, true, true, true);
-        emit ContributorUpdated(who, ROLE, UPDATED_SALARY);
+        emit ContributorUpdated(who, UPDATED_NAME, ROLE);
 
-        contributorManager.updateContributor(who, ROLE, UPDATED_SALARY);
+        contributorManager.updateContributor(who, UPDATED_NAME, ROLE);
 
         IContributorManager.Contributor memory c =
             contributorManager.getContributorInformation(who);
-        assertEq(c.salary, UPDATED_SALARY);
+        assertEq(c.name, UPDATED_NAME);
     }
 
-    function testUpdateContributorsSalaryFailsForInvalidSalary(address who)
+    function testUpdateContributorsNameFailsForInvalidName(address who)
         public
     {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
-        uint[] memory invalids = types.createInvalidContributorSalaries();
+        string[] memory invalids = types.createInvalidContributorNames();
 
         for (uint i; i < invalids.length; i++) {
             vm.expectRevert(
                 IContributorManager
-                    .Proposal__ContributorManager__InvalidContributorSalary
+                    .Proposal__ContributorManager__InvalidContributorName
                     .selector
             );
-            contributorManager.updateContributor(who, ROLE, invalids[i]);
+            contributorManager.updateContributor(who, invalids[i], ROLE);
         }
     }
 
@@ -447,7 +430,7 @@ contract ContributorManagerTest is Test {
     function testRevokeContributor(address who) public {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
         vm.prank(who);
         contributorManager.revokeContributor(_SENTINEL);
@@ -474,7 +457,7 @@ contract ContributorManagerTest is Test {
     ) public {
         types.assumeValidContributor(who);
 
-        contributorManager.addContributor(who, NAME, ROLE, SALARY);
+        contributorManager.addContributor(who, NAME, ROLE);
 
         vm.prank(who);
         vm.expectRevert(

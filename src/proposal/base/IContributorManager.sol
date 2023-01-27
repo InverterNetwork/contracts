@@ -12,8 +12,6 @@ interface IContributorManager {
         string name;
         /// @dev MUST not be empty.
         string role;
-        /// @dev MUST not be zero.
-        uint salary; // @todo mp, nuggan: What exactly is contributor's salary?
     }
 
     //--------------------------------------------------------------------------
@@ -28,8 +26,9 @@ interface IContributorManager {
     /// @notice Given contributor's role invalid.
     error Proposal__ContributorManager__InvalidContributorRole();
 
+    // @todo perform this check on a milestone basis
     /// @notice Given contributor's salary invalid.
-    error Proposal__ContributorManager__InvalidContributorSalary();
+    //error Proposal__ContributorManager__InvalidContributorSalary();
 
     /// @notice Given contributor's address invalid.
     error Proposal__ContributorManager__InvalidContributorAddress();
@@ -54,11 +53,11 @@ interface IContributorManager {
     /// @param who The contributor's address.
     event ContributorRemoved(address indexed who);
 
-    /// @notice Event emitted when contributor's role and/or salary updated.
+    /// @notice Event emitted when contributor's role and/or name are updated.
     /// @param who The contributor's address.
+    /// @param role The contributor's name.
     /// @param role The contributor's role.
-    /// @param salary The contributor's salary.
-    event ContributorUpdated(address indexed who, string role, uint salary);
+    event ContributorUpdated(address indexed who, string name, string role);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -69,13 +68,8 @@ interface IContributorManager {
     /// @param who The contributor's address to add as contributor.
     /// @param name The contributor's name.
     /// @param role The contributor's role.
-    /// @param salary The contributor's salary.
-    function addContributor(
-        address who,
-        string memory name,
-        string memory role,
-        uint salary
-    ) external;
+    function addContributor(address who, string memory name, string memory role)
+        external;
 
     /// @notice Removes `who` from being a contributor.
     /// @dev Only callable by authorized addresses.
@@ -89,14 +83,16 @@ interface IContributorManager {
     /// @param prevContrib The previous contributor in the contributor's list.
     function revokeContributor(address prevContrib) external;
 
-    /// @notice Updates `who` role and/or salary.
+    /// @notice Updates name or role.
     /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if `role` or `salary` invalid.
+    /// @dev Reverts if `role` or `name` invalid.
     /// @param who The contributor's address.
     /// @param role The contributor's new role.
-    /// @param salary The contributor's new salary.
-    function updateContributor(address who, string memory role, uint salary)
-        external;
+    function updateContributor(
+        address who,
+        string memory name,
+        string memory role
+    ) external;
 
     /// @notice Returns whether `who` is a contributor.
     function isContributor(address who) external view returns (bool);

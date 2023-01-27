@@ -141,7 +141,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         IProposal proposal_,
         Metadata memory metadata,
         bytes memory /*configdata*/
-    ) external override (Module) initializer {
+    ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
 
         // Set up empty list of milestones.
@@ -459,7 +459,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     function _ensureTokenBalance(uint amount)
         internal
-        override (PaymentClient)
+        override(PaymentClient)
     {
         uint balance = __Module_proposal.token().balanceOf(address(this));
 
@@ -484,7 +484,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override (PaymentClient)
+        override(PaymentClient)
     {
         IERC20 token = __Module_proposal.token();
         uint allowance = token.allowance(address(this), address(spender));
@@ -497,7 +497,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
         view
-        override (PaymentClient)
+        override(PaymentClient)
         returns (bool)
     {
         return __Module_proposal.paymentProcessor() == who;

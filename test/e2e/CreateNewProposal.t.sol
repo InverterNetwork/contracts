@@ -311,7 +311,7 @@ contract ProposalCreation is Test {
         uint salary = 1 ether;
 
         //Add Contributor -> who
-        proposal.addContributor(who, name, role, salary);
+        proposal.addContributor(who, name, role);
 
         //--------------------------------------------------------------------------------
         // Remove Contributor
