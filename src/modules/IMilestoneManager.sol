@@ -110,10 +110,10 @@ interface IMilestoneManager is IPaymentClient {
     error Module__MilestoneManager__DuplicateContributorAddress();
 
     /// @notice Given contributor salary invalid.
-    error Module__MilestoneManager__InvalidContributorSalary();
+    error Module__MilestoneManager__InvalidContributorSalary(uint salary);
 
     /// @notice Given contributor salary invalid.
-    error Module__MilestoneManager__InvalidSalarySum();
+    error Module__MilestoneManager__InvalidSalarySum(uint sum);
 
     //--------------------------------------------------------------------------
     // Events
@@ -250,6 +250,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
+        string memory title,
         string memory details
     ) external;
 
