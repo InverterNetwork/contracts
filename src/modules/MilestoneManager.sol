@@ -85,6 +85,33 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
+    modifier validPosition(uint id) {
+        if (_milestones[id] == 0) {
+            revert Module__MilestoneManager__InvalidPosition();
+        }
+        _;
+    }
+
+    /// @dev this does not check if id is SENTINEL. This has to be checked seperately via validId()
+    modifier validIntermediatePosition(
+        uint id,
+        uint prevId,
+        uint idToPositionAfter
+    ) {
+        if (
+            (id == idToPositionAfter) //Make sure it doesnt move after itself
+                || (idToPositionAfter == prevId) //Make sure it doesnt move before itself
+                || _milestoneRegistry[id].startTimestamp != 0 //Milestone hasnt started
+                || (
+                    _milestoneRegistry[_milestones[idToPositionAfter]]
+                        .startTimestamp != 0
+                ) //If the following milestone already started you cant move or add a new milestone here, because it could never be started
+        ) {
+            revert Module__MilestoneManager__InvalidIntermediatePosition();
+        }
+        _;
+    }
+
     modifier validSubmissionData(bytes calldata submissionData) {
         if (submissionData.length == 0) {
             revert Module__MilestoneManage__InvalidSubmissionData();
@@ -394,6 +421,41 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             m.budget = budget;
             m.details = details;
             emit MilestoneUpdated(id, duration, budget, details);
+        }
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
+        external
+        onlyAuthorizedOrOwner
+        validId(id)
+        validPosition(idToPositionAfter)
+        validPosition(prevId)
+        validIntermediatePosition(id, prevId, idToPositionAfter)
+    {
+        //Remove current milestone id from list
+        uint nextIdInLine = _milestones[id];
+        _milestones[prevId] = nextIdInLine;
+
+        //Re-Add Milestone in list:
+
+        //Get the milestone Id that should come after the milestone with idToPositionAfter
+        nextIdInLine = _milestones[idToPositionAfter];
+
+        // Add milestone's id inbetween the targeted milestone id (idToPositionAfter) and the originally following id (nextIdInLine)
+        _milestones[idToPositionAfter] = id;
+        _milestones[id] = nextIdInLine;
+
+        //If _last doesnt point towards Sentinel
+        if (_milestones[_last] != _SENTINEL) {
+            //either id moved to last position
+            if (_milestones[id] == _SENTINEL) {
+                _last = id;
+            }
+            //or id moved away from last position
+            else {
+                _last = prevId;
+            }
         }
     }
 
