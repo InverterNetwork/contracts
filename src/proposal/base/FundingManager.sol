@@ -62,7 +62,7 @@ abstract contract FundingManager is
     function _supplyTarget()
         internal
         view
-        override (ElasticReceiptTokenUpgradeable)
+        override(ElasticReceiptTokenUpgradeable)
         returns (uint)
     {
         return token().balanceOf(address(this));
