@@ -306,41 +306,41 @@ contract ListAuthorizerTest is Test {
     // =========================================================================
     // Test Helper Functions
 
-    function _validateAuthorizedList(address[] memory contribs)
+    function _validateAuthorizedList(address[] memory auths)
         internal
         returns (address[] memory)
     {
-        vm.assume(contribs.length != 0);
-        vm.assume(contribs.length < 20);
-        assumeValidContributors(contribs);
+        vm.assume(auths.length != 0);
+        vm.assume(auths.length < 20);
+        assumeValidAuths(auths);
 
-        return contribs;
+        return auths;
     }
     // Adapted from proposal/helper/TypeSanityHelper.sol
 
-    mapping(address => bool) contributorCache;
+    mapping(address => bool) authorizedCache;
 
-    function assumeValidContributors(address[] memory addrs) public {
+    function assumeValidAuths(address[] memory addrs) public {
         for (uint i; i < addrs.length; i++) {
-            assumeValidContributor(addrs[i]);
+            assumeValidAuth(addrs[i]);
 
-            // Assume contributor address unique.
-            vm.assume(!contributorCache[addrs[i]]);
+            // Assume authorized address unique.
+            vm.assume(!authorizedCache[addrs[i]]);
 
             // Add contributor address to cache.
-            contributorCache[addrs[i]] = true;
+            authorizedCache[addrs[i]] = true;
         }
     }
 
-    function assumeValidContributor(address a) public {
-        address[] memory invalids = createInvalidContributors();
+    function assumeValidAuth(address a) public {
+        address[] memory invalids = createInvalidAuthorized();
 
         for (uint i; i < invalids.length; i++) {
             vm.assume(a != invalids[i]);
         }
     }
 
-    function createInvalidContributors()
+    function createInvalidAuthorized()
         public
         view
         returns (address[] memory)
