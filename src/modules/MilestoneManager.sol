@@ -133,6 +133,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Uses _SENTINEL to indicate no current active milestone.
     uint private _activeMilestone;
 
+    /// @dev The current minimum time gap between the updating and staring of a milestone
+    /// @dev The default value will be 5 days. Can be updated by authorized addresses.
+    uint private _milestoneUpdateTimelock = 5 days;
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -224,6 +228,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         Milestone storage m = _milestoneRegistry[_activeMilestone];
 
+        if (block.timestamp - m.lastUpdatedTimestamp < _milestoneUpdateTimelock) {
+            return false;
+        }
+
         // Milestone is activatable if current milestone started and its
         // duration exceeded.
         return m.startTimestamp + m.duration < block.timestamp;
@@ -286,7 +294,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             details: details,
             startTimestamp: 0,
             submissionData: "",
-            completed: false
+            completed: false,
+            lastUpdatedTimestamp: block.timestamp
         });
 
         emit MilestoneAdded(id, duration, budget, title_, details);
@@ -393,6 +402,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             m.duration = duration;
             m.budget = budget;
             m.details = details;
+            m.lastUpdatedTimestamp = block.timestamp;
             emit MilestoneUpdated(id, duration, budget, details);
         }
     }
@@ -452,6 +462,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Declining a milestone removes the submitionData and therefore marks it as not submitted again.
         m.submissionData = "";
         emit MilestoneDeclined(id);
+    }
+
+    function updateMilestoneUpdateTimelock(uint _newTimelock) external onlyAuthorized() {
+        _milestoneUpdateTimelock = _newTimelock;
+        emit MilestoneUpdateTimelockUpdated(_milestoneUpdateTimelock);
     }
 
     //--------------------------------------------------------------------------
