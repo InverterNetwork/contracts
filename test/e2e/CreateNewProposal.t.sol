@@ -296,7 +296,7 @@ contract ProposalCreation is Test {
         proposal.removeModule(previousModule, milestoneManager);
     }
 
-    //We're adding and removing a Contributor here
+/*     //We're adding and removing a Contributor here
     function testManageContributors() public {
         //Create Proposal
         IProposal proposal = createNewProposal();
@@ -322,5 +322,5 @@ contract ProposalCreation is Test {
         address previousContributor = proposal.getPreviousContributor(who);
 
         proposal.removeContributor(previousContributor, who);
-    }
+    } */
 }

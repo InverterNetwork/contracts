@@ -77,7 +77,7 @@ contract TypeSanityHelper is Test {
     // Types for Contributor
     // Contract: base/ContributorManager.sol
 
-    address private constant _SENTINEL_CONTRIBUTOR = address(0x1);
+  /*   address private constant _SENTINEL_CONTRIBUTOR = address(0x1);
 
     mapping(address => bool) contributorCache;
 
@@ -149,5 +149,5 @@ contract TypeSanityHelper is Test {
         invalids[0] = 0;
 
         return invalids;
-    }
+    } */
 }

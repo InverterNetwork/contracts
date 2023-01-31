@@ -1446,7 +1446,7 @@ contract MilestoneManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Proposal Helper Functions
 
-    function _addContributors(address[] memory contribs) internal {
+/*     function _addContributors(address[] memory contribs) internal {
         // Note to stay reasonable.
         vm.assume(contribs.length != 0);
         vm.assume(contribs.length < 50);
@@ -1455,7 +1455,7 @@ contract MilestoneManagerTest is ModuleTest {
         for (uint i; i < contribs.length; i++) {
             _proposal.addContributor(contribs[i], "name", "role");
         }
-    }
+    } */
 
     function _generateEqualContributors(address[] memory contribs)
         internal
