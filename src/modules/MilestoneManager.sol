@@ -54,8 +54,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier onlyContributor(uint id) {
-        if (!isContributor(id, _msgSender())) {
+    modifier onlyContributorOf(uint milestoneId) {
+        if (!isContributor(milestoneId, _msgSender())) {
             revert Module__MilestoneManager__OnlyCallableByContributor();
         }
         _;
@@ -94,8 +94,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
-    modifier validId(uint id) {
-        if (!isExistingMilestoneId(id)) {
+    modifier validId(uint milestoneId) {
+        if (!isExistingMilestoneId(milestoneId)) {
             revert Module__MilestoneManager__InvalidMilestoneId();
         }
         _;
@@ -113,6 +113,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         for (uint i; i < contribs.length; ++i) {
             address contributorAddr = contribs[i].addr;
             uint contributorSalary = contribs[i].salary;
+            bytes32 contributorData = contribs[i].data;
 
             // check the address is valid
             if (
@@ -244,7 +245,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function getActiveMilestoneId() public view returns (uint id) {
+    function getActiveMilestoneId() public view returns (uint milestoneId) {
         if (!hasActiveMilestone()) {
             revert Module__MilestoneManager__NoActiveMilestone();
         }
@@ -310,8 +311,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function isContributor(uint id, address who) public view returns (bool) {
-        Contributor[] memory contribs = getMilestoneInformation(id).contributors;
+    function isContributor(uint milestoneId, address who) public view returns (bool) {
+        Contributor[] memory contribs = getMilestoneInformation(milestoneId).contributors;
 
         for (uint i; i < contribs.length; i++) {
             if (contribs[i].addr == who) {
@@ -331,13 +332,15 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     {
         address[] memory addrCache = new address[](contributors.length);
         uint[] memory salaryCache = new uint[](contributors.length);
+        bytes32[] memory dataCache = new bytes32[](contributors.length);
 
         for (uint i; i < contributors.length; ++i) {
             addrCache[i] = contributors[i].addr;
             salaryCache[i] = contributors[i].salary;
+            dataCache[i] = contributors[i].data;
         }
 
-        return keccak256(abi.encodePacked(addrCache, salaryCache));
+        return keccak256(abi.encodePacked(addrCache, salaryCache, dataCache));
     }
 
     //--------------------------------------------------------------------------
@@ -389,31 +392,31 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     {
         // Increase counter and cache result.
         // Note that ids therefore start at 1.
-        uint id = ++_milestoneCounter;
+        uint milestoneId = ++_milestoneCounter;
 
         // Add milestone's id to end of list.
-        _milestones[_last] = id;
-        _milestones[id] = _SENTINEL;
-        _last = id;
+        _milestones[_last] = milestoneId;
+        _milestones[milestoneId] = _SENTINEL;
+        _last = milestoneId;
 
         // Add milestone instance to registry.
         //_milestoneRegistry[id] = milestone;
 
-        _milestoneRegistry[id].duration = milestone.duration;
-        _milestoneRegistry[id].budget = milestone.budget;
+        _milestoneRegistry[milestoneId].duration = milestone.duration;
+        _milestoneRegistry[milestoneId].budget = milestone.budget;
 
         for (uint i; i < milestone.contributors.length; ++i) {
-            _milestoneRegistry[id].contributors.push(milestone.contributors[i]);
+            _milestoneRegistry[milestoneId].contributors.push(milestone.contributors[i]);
         }
 
-        _milestoneRegistry[id].title = milestone.title;
-        _milestoneRegistry[id].details = milestone.details;
-        _milestoneRegistry[id].startTimestamp = 0;
-        _milestoneRegistry[id].submissionData = "";
-        _milestoneRegistry[id].completed = false;
+        _milestoneRegistry[milestoneId].title = milestone.title;
+        _milestoneRegistry[milestoneId].details = milestone.details;
+        _milestoneRegistry[milestoneId].startTimestamp = 0;
+        _milestoneRegistry[milestoneId].submissionData = "";
+        _milestoneRegistry[milestoneId].completed = false;
 
         emit MilestoneAdded(
-            id,
+            milestoneId,
             milestone.duration,
             milestone.budget,
             milestone.contributors,
@@ -421,7 +424,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             milestone.details
             );
 
-        return id;
+        return milestoneId;
     }
 
     /// @inheritdoc IMilestoneManager
@@ -571,13 +574,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function submitMilestone(uint id, bytes calldata submissionData)
+    function submitMilestone(uint milestoneId, bytes calldata submissionData)
         external
-        onlyContributor(id)
-        validId(id)
+        onlyContributorOf(milestoneId)
+        validId(milestoneId)
         validSubmissionData(submissionData)
     {
-        Milestone storage m = _milestoneRegistry[id];
+        Milestone storage m = _milestoneRegistry[milestoneId];
 
         // Not submitable if milestone not started yet or already completed.
         if (m.startTimestamp == 0 || m.completed) {
@@ -586,17 +589,17 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         if (m.submissionData.length == 0) {
             m.submissionData = submissionData;
-            emit MilestoneSubmitted(id, submissionData);
+            emit MilestoneSubmitted(milestoneId, submissionData);
         }
     }
 
     /// @inheritdoc IMilestoneManager
-    function completeMilestone(uint id)
+    function completeMilestone(uint milestoneId)
         external
         onlyAuthorizedOrOwner
-        validId(id)
+        validId(milestoneId)
     {
-        Milestone storage m = _milestoneRegistry[id];
+        Milestone storage m = _milestoneRegistry[milestoneId];
 
         // Not confirmable if milestone not submitted yet.
         if (m.submissionData.length == 0) {
@@ -605,17 +608,17 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         if (!m.completed) {
             m.completed = true;
-            emit MilestoneCompleted(id);
+            emit MilestoneCompleted(milestoneId);
         }
     }
 
     /// @inheritdoc IMilestoneManager
-    function declineMilestone(uint id)
+    function declineMilestone(uint milestoneId)
         external
         onlyAuthorizedOrOwner
-        validId(id)
+        validId(milestoneId)
     {
-        Milestone storage m = _milestoneRegistry[id];
+        Milestone storage m = _milestoneRegistry[milestoneId];
 
         // Not declineable if milestone not submitted yet or already completed.
         if (m.submissionData.length == 0 || m.completed) {
@@ -624,7 +627,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         // Declining a milestone removes the submitionData and therefore marks it as not submitted again.
         m.submissionData = "";
-        emit MilestoneDeclined(id);
+        emit MilestoneDeclined(milestoneId);
     }
 
     //--------------------------------------------------------------------------

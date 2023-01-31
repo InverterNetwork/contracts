@@ -46,9 +46,12 @@ interface IMilestoneManager is IPaymentClient {
         address addr;
         /// @dev The contributor's salary, as a percentage of the Milestone's total budget.
         ///      MUST not be empty.
-        ///      MUST be a number between 1 and 100_000_000.
-        /// @dev This allows precision of up to 1$ in a 1.000.000$ budget.
+        ///      MUST be a number between 1 and SALARY_PRECISION.
+        /// @dev Default value for SALARY_PRECISION is 100_000_000 This allows precision of up to 1$ in a 1.000.000$ budget.
         uint salary;
+        /// @dev Additional data for the contributor.
+        ///      CAN be empty.
+        bytes32 data;
     }
 
     //--------------------------------------------------------------------------

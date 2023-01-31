@@ -38,9 +38,9 @@ contract MilestoneManagerTest is ModuleTest {
     bytes constant SUBMISSION_DATA = "SubmissionData";
 
     IMilestoneManager.Contributor ALICE =
-        IMilestoneManager.Contributor(address(0xA11CE), 50_000_000);
+        IMilestoneManager.Contributor(address(0xA11CE), 50_000_000, "AliceIdHash");
     IMilestoneManager.Contributor BOB =
-        IMilestoneManager.Contributor(address(0x606), 50_000_000);
+        IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
     IMilestoneManager.Contributor[] CONTRIBUTORS;
 
     // Constant copied from SuT
@@ -1472,7 +1472,7 @@ contract MilestoneManagerTest is ModuleTest {
         for (uint i; i < contribs.length; i++) {
             uint _salary = 100_000_000 / contribs.length;
             IMilestoneManager.Contributor memory _buf =
-                IMilestoneManager.Contributor(contribs[i], _salary);
+                IMilestoneManager.Contributor(contribs[i], _salary, "testData");
             contributors[i] = _buf;
         }
 

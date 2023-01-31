@@ -21,9 +21,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  */
 contract MilestoneLifecycle is E2eTest {
     IMilestoneManager.Contributor alice =
-        IMilestoneManager.Contributor(address(0xA11CE), 50_000_000);
+        IMilestoneManager.Contributor(address(0xA11CE), 50_000_000, "AliceIdHash");
     IMilestoneManager.Contributor bob =
-        IMilestoneManager.Contributor(address(0x606), 50_000_000);
+        IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
     IMilestoneManager.Contributor[] contributors;
 
     address funder1 = address(0xF1);
@@ -144,7 +144,7 @@ contract MilestoneLifecycle is E2eTest {
         // systems to check Bob's work.
         vm.prank(bob.addr);
         milestoneManager.submitMilestone({
-            id: 1,
+            milestoneId: 1,
             submissionData: bytes("https://bob.com/paper-for-milestone.pdf")
         });
 

@@ -140,7 +140,17 @@ contract Proposal is
     {
         return authorizer.isAuthorized(who);
     }
-
+    
+    /// @dev Addresses authorized via the {IAuthorizer} instance and the
+    ///      proposal's owner can manage contributors.
+    function __ContributorManager_isAuthorized(address who)
+        internal
+        view
+        override (ContributorManager)
+        returns (bool)
+    {
+        return authorizer.isAuthorized(who) || who == owner();
+    }
     //--------------------------------------------------------------------------
     // onlyAuthorized Functions
 
