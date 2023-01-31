@@ -228,7 +228,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         Milestone storage m = _milestoneRegistry[_activeMilestone];
 
-        if (block.timestamp - m.lastUpdatedTimestamp < _milestoneUpdateTimelock) {
+        if (block.timestamp - m.lastUpdatedTimestamp < _milestoneUpdateTimelock)
+        {
             return false;
         }
 
@@ -464,7 +465,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         emit MilestoneDeclined(id);
     }
 
-    function updateMilestoneUpdateTimelock(uint _newTimelock) external onlyAuthorized() {
+    function updateMilestoneUpdateTimelock(uint _newTimelock)
+        external
+        onlyAuthorized
+    {
         _milestoneUpdateTimelock = _newTimelock;
         emit MilestoneUpdateTimelockUpdated(_milestoneUpdateTimelock);
     }

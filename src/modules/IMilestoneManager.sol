@@ -242,5 +242,5 @@ interface IMilestoneManager is IPaymentClient {
     /// @dev Only callable by authorized addresses.
     /// @dev The `_milestoneUpdateTimelock` is the allowed time gap between updating a milestone and starting it
     /// @param _newTimelock The new intended value for `_milestoneUpdateTimelock`
-    function updateMilestoneUpdateTimelock (uint _newTimelock) external;
+    function updateMilestoneUpdateTimelock(uint _newTimelock) external;
 }
