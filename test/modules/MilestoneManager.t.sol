@@ -750,21 +750,21 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: moveMilestoneInList()
 
     function testMoveMilestoneInList(
-        uint milestones,
+        uint amountOfMilestones,
         uint moveId,
         uint moveToId
     ) public {
-        milestones = bound(milestones, 2, 30);
+        amountOfMilestones = bound(amountOfMilestones, 2, 30);
         vm.assume(moveId != moveToId);
 
-        vm.assume(moveId != 0 && moveId < milestones + 1);
+        vm.assume(moveId != 0 && moveId < amountOfMilestones + 1);
 
         //MoveToId can be SENTINEL
         if (moveToId != type(uint).max) {
-            vm.assume(moveToId != 0 && moveToId < milestones + 1);
+            vm.assume(moveToId != 0 && moveToId < amountOfMilestones + 1);
         }
 
-        for (uint i = 0; i < milestones; i++) {
+        for (uint i = 0; i < amountOfMilestones; i++) {
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         }
 
