@@ -340,11 +340,7 @@ contract ListAuthorizerTest is Test {
         }
     }
 
-    function createInvalidAuthorized()
-        public
-        view
-        returns (address[] memory)
-    {
+    function createInvalidAuthorized() public view returns (address[] memory) {
         address[] memory invalids = new address[](7);
 
         invalids[0] = address(0);

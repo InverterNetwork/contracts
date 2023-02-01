@@ -20,8 +20,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * E2e test demonstrating how to add, start, and complete a Milestone.
  */
 contract MilestoneLifecycle is E2eTest {
-    IMilestoneManager.Contributor alice =
-        IMilestoneManager.Contributor(address(0xA11CE), 50_000_000, "AliceIdHash");
+    IMilestoneManager.Contributor alice = IMilestoneManager.Contributor(
+        address(0xA11CE), 50_000_000, "AliceIdHash"
+    );
     IMilestoneManager.Contributor bob =
         IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
     IMilestoneManager.Contributor[] contributors;

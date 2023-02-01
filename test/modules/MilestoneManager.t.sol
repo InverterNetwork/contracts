@@ -37,8 +37,9 @@ contract MilestoneManagerTest is ModuleTest {
     string constant DETAILS = "Details";
     bytes constant SUBMISSION_DATA = "SubmissionData";
 
-    IMilestoneManager.Contributor ALICE =
-        IMilestoneManager.Contributor(address(0xA11CE), 50_000_000, "AliceIdHash");
+    IMilestoneManager.Contributor ALICE = IMilestoneManager.Contributor(
+        address(0xA11CE), 50_000_000, "AliceIdHash"
+    );
     IMilestoneManager.Contributor BOB =
         IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
     IMilestoneManager.Contributor[] CONTRIBUTORS;
@@ -593,6 +594,95 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     //----------------------------------
+    // Test Milestone Contributor math
+
+    function testPctMathWithEqualSalary(address[] memory contributors) public {
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
+
+        uint[] memory payouts = new uint[](contributors.length);
+
+        //we are not using them, but startNextMilestone pulls the tokens
+        _token.mint(address(_proposal), BUDGET);
+
+        // Make sure that we generated a valid set of contributor salaries and calculate payouts
+        uint precCount;
+        uint payoutCount;
+        for (uint i; i < contribs.length; ++i) {
+            precCount += contribs[i].salary;
+            uint bufPayout;
+            bufPayout = (
+                ((BUDGET * 1e18) / SALARY_PRECISION) * contribs[i].salary
+            ) / 1e18;
+            payouts[i] = bufPayout;
+            payoutCount += bufPayout;
+        }
+        assertEq(precCount, SALARY_PRECISION);
+
+        uint id = milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
+
+        milestoneManager.startNextMilestone();
+
+        //Make sure the values in the payment orders are the same
+        // Check that payment orders were added correctly.
+        IPaymentClient.PaymentOrder[] memory orders =
+            milestoneManager.paymentOrders();
+
+        for (uint i = 1; i < orders.length; i++) {
+            assertEq(orders[i].amount, payouts[i]);
+        }
+
+        // Check that we are indeed paying out the full budget
+        assertTrue(payoutCount == BUDGET);
+    }
+
+    function testPctMathWithDissimilarSalaries(address[] memory contributors)
+        public
+    {
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateDissimilarContributors(contributors);
+
+        uint[] memory payouts = new uint[](contributors.length);
+
+        //we are not using them, but startNextMilestone pulls the tokens
+        _token.mint(address(_proposal), BUDGET);
+
+        // Make sure that we generated a valid set of contributor salaries and calculate payouts
+        uint precCount;
+        uint payoutCount;
+        for (uint i; i < contribs.length; ++i) {
+            precCount += contribs[i].salary;
+            uint bufPayout;
+            bufPayout = (
+                ((BUDGET * 1e18) / SALARY_PRECISION) * contribs[i].salary
+            ) / 1e18;
+            payouts[i] = bufPayout;
+            payoutCount += bufPayout;
+        }
+        assertEq(precCount, SALARY_PRECISION);
+
+        uint id = milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
+
+        milestoneManager.startNextMilestone();
+
+        //Make sure the values in the payment orders are the same
+        // Check that payment orders were added correctly.
+        IPaymentClient.PaymentOrder[] memory orders =
+            milestoneManager.paymentOrders();
+
+        for (uint i = 1; i < orders.length; i++) {
+            assertEq(orders[i].amount, payouts[i]);
+        }
+
+        // Check that we are indeed paying out the full budget
+        assertTrue(payoutCount == BUDGET);
+    }
+
+    //----------------------------------
     // Test: startNextMilestone()
 
     function testStartNextMilestone(address[] memory contributors) public {
@@ -628,34 +718,32 @@ contract MilestoneManagerTest is ModuleTest {
 
         assertEq(orders.length, contributors.length);
 
-        uint payout = BUDGET / orders.length;
-        //uint firstPayout = payout + (BUDGET % orders.length);
-        payout -= (payout % 1e13);
+        //control how much we expect the payouts to be
+        uint[] memory payouts = new uint[](contribs.length);
+        for (uint i; i < contribs.length; ++i) {
+            uint bufPayout;
+            bufPayout = (BUDGET / SALARY_PRECISION) * contribs[i].salary;
+            payouts[i] = bufPayout;
+        }
 
-        // BIG @TODO . It's ignoring the first contrib because of the precision loss!!!
+        // control the total amount being paid out.
+        uint totalCount;
 
-        /*         //Hacky solution for now, generalize to account for precision loss
-        
-        firstPayout  -= (firstPayout % 1e13);
-
-        //first order gets the dust remain, see comment above
-        assertEq(orders[0].recipient, contributors[0]);
-        assertEq(orders[0].amount, firstPayout);
-        assertEq(orders[0].createdAt, block.timestamp);
-        assertEq(orders[0].dueTo, DURATION); */
-
-        for (uint i = 1; i < orders.length; i++) {
+        for (uint i; i < orders.length; ++i) {
             // Note that the contributors list is traversed.
+            totalCount += orders[i].amount;
             assertEq(orders[i].recipient, contributors[i]);
-            assertEq(orders[i].amount, payout);
+            assertEq(orders[i].amount, payouts[i]);
             assertEq(orders[i].createdAt, block.timestamp);
             assertEq(orders[i].dueTo, DURATION);
         }
 
+        // Check that we are indeed paying out the full budget
+        assertTrue(totalCount == BUDGET);
+
         // Check that milestoneManager's token balance is sufficient for the
         // payment orders.
-        uint totalPayout = payout * contributors.length;
-        assertTrue(_token.balanceOf(address(milestoneManager)) >= totalPayout);
+        assertTrue(_token.balanceOf(address(milestoneManager)) == totalCount);
     }
 
     function testStartNextMilestoneFailsIfCallerNotAuthorizedOrOwner(
@@ -1444,9 +1532,9 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
-    // Proposal Helper Functions
+    // Contributor Generation Helper Functions
 
-/*     function _addContributors(address[] memory contribs) internal {
+    /*     function _addContributors(address[] memory contribs) internal {
         // Note to stay reasonable.
         vm.assume(contribs.length != 0);
         vm.assume(contribs.length < 50);
@@ -1470,16 +1558,67 @@ contract MilestoneManagerTest is ModuleTest {
             new IMilestoneManager.Contributor[](contribs.length);
 
         for (uint i; i < contribs.length; i++) {
-            uint _salary = 100_000_000 / contribs.length;
+            uint _salary = SALARY_PRECISION / contribs.length;
             IMilestoneManager.Contributor memory _buf =
                 IMilestoneManager.Contributor(contribs[i], _salary, "testData");
             contributors[i] = _buf;
         }
 
         //get rid of rounding errors
-        contributors[0].salary += 100_000_000 % contribs.length;
+        contributors[0].salary += SALARY_PRECISION % contribs.length;
 
         return contributors;
+    }
+
+    IMilestoneManager.Contributor[] diffContributors;
+
+    function _generateDissimilarContributors(address[] memory contribs)
+        internal
+        returns (IMilestoneManager.Contributor[] memory)
+    {
+        // Note to stay reasonable.
+        vm.assume(contribs.length != 0);
+        vm.assume(contribs.length < 50);
+        assumeValidContributors(contribs);
+
+        //IMilestoneManager.Contributor[] memory contributors =
+        new IMilestoneManager.Contributor[](contribs.length);
+
+        //assign pseudoRandom with until limit
+        uint accumSalary;
+
+        for (uint i; i < contribs.length; i++) {
+            uint _salary = pseudoRandomSalary(contribs[i], SALARY_PRECISION);
+            if ((accumSalary + _salary) <= SALARY_PRECISION) {
+                accumSalary += _salary;
+            } else {
+                _salary = SALARY_PRECISION - accumSalary;
+                accumSalary += _salary;
+            }
+
+            IMilestoneManager.Contributor memory _buf =
+                IMilestoneManager.Contributor(contribs[i], _salary, "testData");
+            diffContributors.push(_buf);
+
+            if (accumSalary == SALARY_PRECISION) {
+                return diffContributors;
+            }
+        }
+
+        //if we arrived here, we didn't "fill out" the budget
+        diffContributors[0].salary += (SALARY_PRECISION - accumSalary);
+
+        return diffContributors;
+    }
+
+    function pseudoRandomSalary(address addr, uint maxValue)
+        public
+        pure
+        returns (uint)
+    {
+        bytes memory abiEncodeOutput = abi.encode(addr);
+        uint kHashOutput = uint(keccak256(abiEncodeOutput));
+        return kHashOutput % maxValue;
     }
 
     // =========================================================================

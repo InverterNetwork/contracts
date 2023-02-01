@@ -144,12 +144,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
 
         //check salaries add up to 100 000 000
-        /*         if (pctSum != SALARY_PRECISION) {
-            revert Module__MilestoneManager__InvalidSalarySum(pctSum);
-        } */
-        if (pctSum % 100 != 0) {
+        if (pctSum != SALARY_PRECISION) {
             revert Module__MilestoneManager__InvalidSalarySum(pctSum);
         }
+        //delete this when done
+        /*if (pctSum % 100 != 0) {
+            revert Module__MilestoneManager__InvalidSalarySum(pctSum);
+        }*/
         _;
     }
 
@@ -205,6 +206,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Set up empty list of milestones.
         _milestones[_SENTINEL] = _SENTINEL;
         _last = _SENTINEL;
+
+        //@todo maybe allow to specify this in configdata?
         SALARY_PRECISION = 100_000_000;
 
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
@@ -311,8 +314,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function isContributor(uint milestoneId, address who) public view returns (bool) {
-        Contributor[] memory contribs = getMilestoneInformation(milestoneId).contributors;
+    function isContributor(uint milestoneId, address who)
+        public
+        view
+        returns (bool)
+    {
+        Contributor[] memory contribs =
+            getMilestoneInformation(milestoneId).contributors;
 
         for (uint i; i < contribs.length; i++) {
             if (contribs[i].addr == who) {
@@ -406,7 +414,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneRegistry[milestoneId].budget = milestone.budget;
 
         for (uint i; i < milestone.contributors.length; ++i) {
-            _milestoneRegistry[milestoneId].contributors.push(milestone.contributors[i]);
+            _milestoneRegistry[milestoneId].contributors.push(
+                milestone.contributors[i]
+            );
         }
 
         _milestoneRegistry[milestoneId].title = milestone.title;
@@ -480,9 +490,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         if (m.budget != 0) {
             // Create payment order for each contributor of the new  milestone.
             for (uint i; i < contribCache.length; ++i) {
+                //console.log(contribCache[i].salary);
                 // Calculate the payout amount.
                 uint contributorPayout =
-                    m.budget / SALARY_PRECISION * contribCache[i].salary;
+                    ((m.budget / SALARY_PRECISION) * contribCache[i].salary);
 
                 // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
                 _addPaymentOrder(
