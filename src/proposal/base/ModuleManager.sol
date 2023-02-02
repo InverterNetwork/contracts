@@ -160,7 +160,7 @@ abstract contract ModuleManager is
     function isModule(address module)
         public
         view
-        override (IModuleManager)
+        override(IModuleManager)
         returns (bool)
     {
         return module != _SENTINEL && _modules[module] != address(0);
@@ -236,12 +236,7 @@ abstract contract ModuleManager is
         address to,
         bytes memory data,
         Types.Operation operation
-    )
-        public
-        override (IModuleManager)
-        onlyModule
-        returns (bool, bytes memory)
-    {
+    ) public override(IModuleManager) onlyModule returns (bool, bytes memory) {
         bool ok;
         bytes memory returnData;
 

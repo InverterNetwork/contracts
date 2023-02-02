@@ -58,14 +58,14 @@ contract PaymentClientMock is PaymentClient {
 
     function _ensureTokenBalance(uint amount)
         internal
-        override (PaymentClient)
+        override(PaymentClient)
     {
         token.mint(address(this), amount);
     }
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override (PaymentClient)
+        override(PaymentClient)
     {
         token.approve(address(spender), amount);
     }
@@ -73,7 +73,7 @@ contract PaymentClientMock is PaymentClient {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor)
         internal
         view
-        override (PaymentClient)
+        override(PaymentClient)
         returns (bool)
     {
         return authorized[msg.sender];

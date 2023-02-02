@@ -78,13 +78,13 @@ contract Proposal is
     IERC20 private _receiptToken;
 
     /// @inheritdoc IProposal
-    uint public override (IProposal) proposalId;
+    uint public override(IProposal) proposalId;
 
     /// @inheritdoc IProposal
-    IAuthorizer public override (IProposal) authorizer;
+    IAuthorizer public override(IProposal) authorizer;
 
     /// @inheritdoc IProposal
-    IPaymentProcessor public override (IProposal) paymentProcessor;
+    IPaymentProcessor public override(IProposal) paymentProcessor;
 
     //--------------------------------------------------------------------------
     // Initializer
@@ -101,7 +101,7 @@ contract Proposal is
         address[] calldata modules,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
-    ) external override (IProposal) initializer {
+    ) external override(IProposal) initializer {
         // Initialize upstream contracts.
         __Ownable_init();
         __ModuleManager_init(modules);
@@ -135,7 +135,7 @@ contract Proposal is
     function __ModuleManager_isAuthorized(address who)
         internal
         view
-        override (ModuleManager)
+        override(ModuleManager)
         returns (bool)
     {
         return authorizer.isAuthorized(who);
@@ -146,7 +146,7 @@ contract Proposal is
     function __ContributorManager_isAuthorized(address who)
         internal
         view
-        override (ContributorManager)
+        override(ContributorManager)
         returns (bool)
     {
         return authorizer.isAuthorized(who) || who == owner();
@@ -179,14 +179,14 @@ contract Proposal is
     function token()
         public
         view
-        override (FundingManager, IProposal)
+        override(FundingManager, IProposal)
         returns (IERC20)
     {
         return _token;
     }
 
     /// @inheritdoc IProposal
-    function receiptToken() public view override (IProposal) returns (IERC20) {
+    function receiptToken() public view override(IProposal) returns (IERC20) {
         return _receiptToken;
     }
 
@@ -198,7 +198,7 @@ contract Proposal is
     function owner()
         public
         view
-        override (OwnableUpgradeable, IProposal)
+        override(OwnableUpgradeable, IProposal)
         returns (address)
     {
         return super.owner();

@@ -69,7 +69,7 @@ contract MilestoneManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testInit() public override (ModuleTest) {
+    function testInit() public override(ModuleTest) {
         // SENTINEL milestone does not exist.
         assertTrue(!milestoneManager.isExistingMilestoneId(_SENTINEL));
 
@@ -84,7 +84,7 @@ contract MilestoneManagerTest is ModuleTest {
         assertEq(milestones.length, 0);
     }
 
-    function testReinitFails() public override (ModuleTest) {
+    function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         milestoneManager.init(_proposal, _METADATA, bytes(""));
     }
@@ -277,6 +277,35 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.startNextMilestone();
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        assertTrue(!milestoneManager.isNextMilestoneActivatable());
+    }
+
+    function testNextMilestoneNotActivatableIfUnderTimelock(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        milestoneManager.startNextMilestone();
+
+        uint secondID =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        vm.warp(block.timestamp + DURATION - 1 days);
+
+        //update milestone
+        milestoneManager.updateMilestone(
+            secondID, DURATION + 1, BUDGET + 1, DETAILS
+        );
+
+        // Current milestone is over, but next still under timelock
+        vm.warp(block.timestamp + 2 days);
+
         assertTrue(!milestoneManager.isNextMilestoneActivatable());
     }
 

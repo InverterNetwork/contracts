@@ -34,7 +34,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         IProposal proposal_,
         Metadata memory metadata,
         bytes memory /*configdata*/
-    ) external override (Module) initializer {
+    ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
     }
 
