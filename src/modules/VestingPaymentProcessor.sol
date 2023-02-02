@@ -35,7 +35,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint _released;
         uint _start;
         uint _duration;
-        bool _enabled;
     }
 
     // contributor => Payment
@@ -46,8 +45,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     event PaymentAdded(address contributor, uint salary, uint start, uint end);
     event PaymentRemoved(address contributor);
-    event PaymentPaused(address contributor);
-    event PaymentContinued(address contributor);
+
     event PaymentUpdated(address contributor, uint newSalary, uint newEndDate);
     event ERC20Released(address indexed token, uint amount);
 
@@ -90,7 +88,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     modifier validDuration(uint _start, uint _duration) {
-        if (_start + _duration <= _start || _duration == 0) {
+        if (_duration == 0) {
             revert Module__PaymentManager__InvalidDuration();
         }
         _;
@@ -111,9 +109,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice Release the releasable tokens.
     ///         In OZ VestingWallet this method is named release().
     function claim(IPaymentClient client) external {
-        if (vestings[_msgSender()]._enabled) {
-            _claim(client, _msgSender());
-        }
+        _claim(client, _msgSender());
     }
 
     /// @inheritdoc IPaymentProcessor
@@ -169,41 +165,8 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         _removePayment(client, contributor);
     }
 
-    // @todo see issue
-
-    /// @notice Disable a payment of a contributor.
-    /// @param contributor Contributor's address.
-    function pausePayment(address contributor)
-        external
-        onlyAuthorized // only proposal owner
-    {
-        if (vestings[contributor]._enabled) {
-            vestings[contributor]._enabled = false;
-            emit PaymentPaused(contributor);
-        }
-    }
-
-    /// @notice Continue contributors paused payment.
-    ///         Tokens from paused period will be immediately claimable.
-    /// @param contributor Contributor's address.
-    function continuePayment(address contributor)
-        external
-        onlyAuthorized // only proposal owner
-    {
-        if (!vestings[contributor]._enabled) {
-            vestings[contributor]._enabled = true;
-            emit PaymentContinued(contributor);
-        }
-    }
-
     //--------------------------------------------------------------------------
     // Public Functions
-
-    /// @notice Returns true if contributors vesting is enabled.
-    /// @param contributor Contributor's address.
-    function enabled(address contributor) public view returns (bool) {
-        return vestings[contributor]._enabled;
-    }
 
     /// @notice Getter for the start timestamp.
     /// @param contributor Contributor's address.
@@ -254,8 +217,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
         //all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
 
-        //@todo how to handle the case no new orders arrive? we should have a way to withdraw remaining funds from the client...
-
         delete vestings[contributor];
 
         emit PaymentRemoved(contributor);
@@ -282,10 +243,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             revert Module__PaymentManager__InvalidContributor();
         }
 
-        // @todo Nejc: before adding payment make sure contributor is wListed.
-
-        vestings[_contributor] =
-            VestingWallet(_salary, 0, _start, _duration, true);
+        vestings[_contributor] = VestingWallet(_salary, 0, _start, _duration);
 
         emit PaymentAdded(_contributor, _salary, _start, _duration);
     }
