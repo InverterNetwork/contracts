@@ -80,7 +80,7 @@ contract MetadataManagerTest is ModuleTest {
     // Test: Initialization
 
     //This function also tests all the getters
-    function testInit() public override (ModuleTest) {
+    function testInit() public override(ModuleTest) {
         //-----------------------
         // OWNER_METADATA
 
@@ -97,7 +97,7 @@ contract MetadataManagerTest is ModuleTest {
         assertMetadataManagerTeamMetadataEqualTo(TEAM_METADATA);
     }
 
-    function testReinitFails() public override (ModuleTest) {
+    function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         metadataManager.init(_proposal, _METADATA, bytes(""));
     }

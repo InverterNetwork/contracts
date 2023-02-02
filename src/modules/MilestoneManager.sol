@@ -135,7 +135,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     /// @dev The current minimum time gap between the updating and staring of a milestone
     /// @dev The default value will be 5 days. Can be updated by authorized addresses.
-    uint private _milestoneUpdateTimelock = 5 days;
+    uint private _milestoneUpdateTimelock;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -145,7 +145,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         IProposal proposal_,
         Metadata memory metadata,
         bytes memory /*configdata*/
-    ) external override (Module) initializer {
+    ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
 
         // Set up empty list of milestones.
@@ -155,6 +155,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
         // be interpreted as active.
         _activeMilestone = _SENTINEL;
+        _milestoneUpdateTimelock = 5 days;
     }
 
     //--------------------------------------------------------------------------
@@ -217,15 +218,18 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function isNextMilestoneActivatable() public view returns (bool) {
         // Return false if next milestone does not exist.
         uint next = _milestones[_activeMilestone]; // next => id
+
         if (!isExistingMilestoneId(next)) {
             return false;
         }
 
         Milestone storage nextMilestone = _milestoneRegistry[next];
 
+        uint updateTimestamp = nextMilestone.lastUpdatedTimestamp;
+
         if (
-            block.timestamp - nextMilestone.lastUpdatedTimestamp
-                < _milestoneUpdateTimelock
+            updateTimestamp != 0
+                && block.timestamp - updateTimestamp < _milestoneUpdateTimelock
         ) {
             return false;
         }
@@ -482,7 +486,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     function _ensureTokenBalance(uint amount)
         internal
-        override (PaymentClient)
+        override(PaymentClient)
     {
         uint balance = __Module_proposal.token().balanceOf(address(this));
 
@@ -507,7 +511,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override (PaymentClient)
+        override(PaymentClient)
     {
         IERC20 token = __Module_proposal.token();
         uint allowance = token.allowance(address(this), address(spender));
@@ -520,7 +524,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
         view
-        override (PaymentClient)
+        override(PaymentClient)
         returns (bool)
     {
         return __Module_proposal.paymentProcessor() == who;

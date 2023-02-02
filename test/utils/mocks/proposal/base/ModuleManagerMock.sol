@@ -33,7 +33,7 @@ contract ModuleManagerMock is ModuleManager {
     function __ModuleManager_isAuthorized(address who)
         internal
         view
-        override (ModuleManager)
+        override(ModuleManager)
         returns (bool)
     {
         return _authorized[who] || _allAuthorized;
