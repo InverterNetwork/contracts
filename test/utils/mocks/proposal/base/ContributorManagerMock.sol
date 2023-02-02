@@ -34,7 +34,7 @@ contract ContributorManagerMock is ContributorManager {
     function __ContributorManager_isAuthorized(address who)
         internal
         view
-        override (ContributorManager)
+        override(ContributorManager)
         returns (bool)
     {
         return _authorized[who] || _allAuthorized;

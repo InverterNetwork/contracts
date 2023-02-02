@@ -7,7 +7,7 @@ contract ModuleMock is Module {
     function init(IProposal proposal_, Metadata memory metadata, bytes memory)
         public
         virtual
-        override (Module)
+        override(Module)
         initializer
     {
         __Module_init(proposal_, metadata);

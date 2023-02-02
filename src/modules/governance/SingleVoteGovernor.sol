@@ -147,7 +147,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     function isAuthorized(address who)
         public
         view
-        override (IAuthorizer)
+        override(IAuthorizer)
         returns (bool)
     {
         // Note that only the governance itself is authorized.

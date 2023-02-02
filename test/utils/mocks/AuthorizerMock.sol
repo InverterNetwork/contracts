@@ -25,7 +25,7 @@ contract AuthorizerMock is IAuthorizer, Module {
         IProposal proposal_,
         Metadata memory metadata,
         bytes memory configdata
-    ) public override (Module) initializer {
+    ) public override(Module) initializer {
         __Module_init(proposal_, metadata);
 
         // Read first authorized address from configdata.
