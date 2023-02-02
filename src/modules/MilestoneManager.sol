@@ -22,8 +22,6 @@ import {LibString} from "src/common/LibString.sol";
 import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @title MilestoneManager
  *
@@ -104,7 +102,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     modifier validContributors(Contributor[] calldata contribs) {
         uint pctSum;
 
-        //techincally checked in addMilestone/updateMilestone now
         // Fail if contributors list is empty.
         if (contribs.length == 0) {
             revert Module__MilestoneManager__NoContributors();
@@ -135,22 +132,16 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             // check the salary (as budget percentage) is valid
             if (contributorSalary == 0 || contributorSalary > SALARY_PRECISION)
             {
-                revert Module__MilestoneManager__InvalidContributorSalary(
-                    contributorSalary
-                );
+                revert Module__MilestoneManager__InvalidContributorSalary();
             }
 
             pctSum += contributorSalary;
         }
 
-        //check salaries add up to 100 000 000
+        //check salary percentages add up to total
         if (pctSum != SALARY_PRECISION) {
-            revert Module__MilestoneManager__InvalidSalarySum(pctSum);
+            revert Module__MilestoneManager__InvalidSalarySum();
         }
-        //delete this when done
-        /*if (pctSum % 100 != 0) {
-            revert Module__MilestoneManager__InvalidSalarySum(pctSum);
-        }*/
         _;
     }
 
@@ -173,7 +164,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     uint internal _last;
 
     /// @dev Marks the precision we will use for the salary percentages. Represents what counts as "100%".
-    /// @dev Value is 100_000_000 since it allows for 1$ precision in a 1.000.000$ budget.
+    /// @dev Default value is 100_000_000 since it allows for 1$ precision in a 1.000.000$ budget.
     uint internal SALARY_PRECISION;
 
     //--------------------------------------------------------------------------
@@ -330,25 +321,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return false;
     }
 
-    //--------------------------------------------------------------------------
-    // Internal Helper Functions
-
-    function hashContributors(Contributor[] memory contributors)
-        internal
-        pure
-        returns (bytes32)
-    {
-        address[] memory addrCache = new address[](contributors.length);
-        uint[] memory salaryCache = new uint[](contributors.length);
-        bytes32[] memory dataCache = new bytes32[](contributors.length);
-
-        for (uint i; i < contributors.length; ++i) {
-            addrCache[i] = contributors[i].addr;
-            salaryCache[i] = contributors[i].salary;
-            dataCache[i] = contributors[i].data;
-        }
-
-        return keccak256(abi.encodePacked(addrCache, salaryCache, dataCache));
+    /// @notice Returns the precision of the salary percentages. Should be read as "100 + digits after comma", representing 100%
+    /// @return The salary precision
+    function getSalaryPrecision() public view returns (uint) {
+        return SALARY_PRECISION;
     }
 
     //--------------------------------------------------------------------------
@@ -371,70 +347,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         );
 
         return _addMilestoneInstance(_mlstn);
-    }
-
-    function _createMilestoneInstance(
-        uint duration,
-        uint budget,
-        Contributor[] calldata contributors,
-        string calldata title_,
-        string calldata details
-    ) internal pure returns (Milestone memory) {
-        Milestone memory _mlstn = Milestone({
-            duration: duration,
-            budget: budget,
-            contributors: contributors,
-            title: title_,
-            details: details,
-            startTimestamp: 0,
-            submissionData: "",
-            completed: false
-        });
-
-        return _mlstn;
-    }
-
-    function _addMilestoneInstance(Milestone memory milestone)
-        internal
-        returns (uint _id)
-    {
-        // Increase counter and cache result.
-        // Note that ids therefore start at 1.
-        uint milestoneId = ++_milestoneCounter;
-
-        // Add milestone's id to end of list.
-        _milestones[_last] = milestoneId;
-        _milestones[milestoneId] = _SENTINEL;
-        _last = milestoneId;
-
-        // Add milestone instance to registry.
-        //_milestoneRegistry[id] = milestone;
-
-        _milestoneRegistry[milestoneId].duration = milestone.duration;
-        _milestoneRegistry[milestoneId].budget = milestone.budget;
-
-        for (uint i; i < milestone.contributors.length; ++i) {
-            _milestoneRegistry[milestoneId].contributors.push(
-                milestone.contributors[i]
-            );
-        }
-
-        _milestoneRegistry[milestoneId].title = milestone.title;
-        _milestoneRegistry[milestoneId].details = milestone.details;
-        _milestoneRegistry[milestoneId].startTimestamp = 0;
-        _milestoneRegistry[milestoneId].submissionData = "";
-        _milestoneRegistry[milestoneId].completed = false;
-
-        emit MilestoneAdded(
-            milestoneId,
-            milestone.duration,
-            milestone.budget,
-            milestone.contributors,
-            milestone.title,
-            milestone.details
-            );
-
-        return milestoneId;
     }
 
     /// @inheritdoc IMilestoneManager
@@ -490,7 +402,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         if (m.budget != 0) {
             // Create payment order for each contributor of the new  milestone.
             for (uint i; i < contribCache.length; ++i) {
-                //console.log(contribCache[i].salary);
                 // Calculate the payout amount.
                 uint contributorPayout =
                     ((m.budget / SALARY_PRECISION) * contribCache[i].salary);
@@ -564,26 +475,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
     }
 
-    /// internal function to circumvent stackTooDeep errors
-    function _validateMilestoneDetails(
-        uint duration,
-        uint budget,
-        Contributor[] calldata contributors,
-        string memory title,
-        string memory details
-    )
-        internal
-        view
-        validDuration(duration)
-        validBudget(budget)
-        validContributors(contributors)
-        validTitle(title)
-        validDetails(details)
-        returns (bool)
-    {
-        return true;
-    }
-
     /// @inheritdoc IMilestoneManager
     function submitMilestone(uint milestoneId, bytes calldata submissionData)
         external
@@ -639,6 +530,135 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Declining a milestone removes the submitionData and therefore marks it as not submitted again.
         m.submissionData = "";
         emit MilestoneDeclined(milestoneId);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Function Implementations
+
+    /// @notice Creates a memory instance of the milestone we want to add
+    /// @dev sub-function created to circumvent stackTooDeep errors
+    /// @param duration The duration of the milestone.
+    /// @param budget The budget for the milestone.
+    /// @param contributors The contributor information for the milestone
+    /// @param title_ The milestone's title.
+    /// @param details The milestone's details.
+    /// @return The newly created milestone.
+    function _createMilestoneInstance(
+        uint duration,
+        uint budget,
+        Contributor[] calldata contributors,
+        string calldata title_,
+        string calldata details
+    ) internal pure returns (Milestone memory) {
+        Milestone memory _mlstn = Milestone({
+            duration: duration,
+            budget: budget,
+            contributors: contributors,
+            title: title_,
+            details: details,
+            startTimestamp: 0,
+            submissionData: "",
+            completed: false
+        });
+
+        return _mlstn;
+    }
+
+    /// @notice Adds a milestone instance to the list of current milestones
+    /// @dev sub-function created to circumvent stackTooDeep errors
+    /// @param milestone The milestone we want to add.
+    /// @return _id The newly added milestone's id.
+    function _addMilestoneInstance(Milestone memory milestone)
+        internal
+        returns (uint _id)
+    {
+        // Increase counter and cache result.
+        // Note that ids therefore start at 1.
+        uint milestoneId = ++_milestoneCounter;
+
+        // Add milestone's id to end of list.
+        _milestones[_last] = milestoneId;
+        _milestones[milestoneId] = _SENTINEL;
+        _last = milestoneId;
+
+        // Add milestone instance to registry.
+        _milestoneRegistry[milestoneId].duration = milestone.duration;
+        _milestoneRegistry[milestoneId].budget = milestone.budget;
+
+        for (uint i; i < milestone.contributors.length; ++i) {
+            _milestoneRegistry[milestoneId].contributors.push(
+                milestone.contributors[i]
+            );
+        }
+
+        _milestoneRegistry[milestoneId].title = milestone.title;
+        _milestoneRegistry[milestoneId].details = milestone.details;
+        _milestoneRegistry[milestoneId].startTimestamp = 0;
+        _milestoneRegistry[milestoneId].submissionData = "";
+        _milestoneRegistry[milestoneId].completed = false;
+
+        emit MilestoneAdded(
+            milestoneId,
+            milestone.duration,
+            milestone.budget,
+            milestone.contributors,
+            milestone.title,
+            milestone.details
+            );
+
+        return milestoneId;
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Helper Functions
+
+    /// @notice Internal validation function for all milestone details
+    /// @dev Only used as a vehicle for all modifiers, the function itself just returns true
+    /// @dev Reverts if an argument invalid.
+    /// @param duration The duration of the milestone.
+    /// @param budget The budget for the milestone.
+    /// @param contributors The contributor information for the milestone
+    /// @param title The milestone's title.
+    /// @param details The milestone's details.
+    /// @return true if all details are valid, revert if not.
+    function _validateMilestoneDetails(
+        uint duration,
+        uint budget,
+        Contributor[] calldata contributors,
+        string memory title,
+        string memory details
+    )
+        internal
+        view
+        validDuration(duration)
+        validBudget(budget)
+        validContributors(contributors)
+        validTitle(title)
+        validDetails(details)
+        returns (bool)
+    {
+        return true;
+    }
+
+    /// @notice Creates a hash of a given set of ontributors for easy comparison
+    /// @param contributors The set of contributors to hash.
+    /// @return The hashed contributor information.
+    function hashContributors(Contributor[] memory contributors)
+        internal
+        pure
+        returns (bytes32)
+    {
+        address[] memory addrCache = new address[](contributors.length);
+        uint[] memory salaryCache = new uint[](contributors.length);
+        bytes32[] memory dataCache = new bytes32[](contributors.length);
+
+        for (uint i; i < contributors.length; ++i) {
+            addrCache[i] = contributors[i].addr;
+            salaryCache[i] = contributors[i].salary;
+            dataCache[i] = contributors[i].data;
+        }
+
+        return keccak256(abi.encodePacked(addrCache, salaryCache, dataCache));
     }
 
     //--------------------------------------------------------------------------

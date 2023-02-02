@@ -113,10 +113,10 @@ interface IMilestoneManager is IPaymentClient {
     error Module__MilestoneManager__DuplicateContributorAddress();
 
     /// @notice Given contributor salary invalid.
-    error Module__MilestoneManager__InvalidContributorSalary(uint salary);
+    error Module__MilestoneManager__InvalidContributorSalary();
 
     /// @notice Given contributor salary invalid.
-    error Module__MilestoneManager__InvalidSalarySum(uint sum);
+    error Module__MilestoneManager__InvalidSalarySum();
 
     //--------------------------------------------------------------------------
     // Events
