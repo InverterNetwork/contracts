@@ -42,7 +42,7 @@ contract MilestoneManagerTest is ModuleTest {
     );
     IMilestoneManager.Contributor BOB =
         IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
-    IMilestoneManager.Contributor[] CONTRIBUTORS;
+    IMilestoneManager.Contributor[] DEFAULT_CONTRIBUTORS;
 
     // Constant copied from SuT
     uint private constant _SENTINEL = type(uint).max;
@@ -78,8 +78,8 @@ contract MilestoneManagerTest is ModuleTest {
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        CONTRIBUTORS.push(ALICE);
-        CONTRIBUTORS.push(BOB);
+        DEFAULT_CONTRIBUTORS.push(ALICE);
+        DEFAULT_CONTRIBUTORS.push(BOB);
     }
 
     //--------------------------------------------------------------------------
@@ -113,11 +113,18 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testGetMilesoneInformation() public {
         uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         _assertMilestone(
-            id, DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS, "", false
+            id,
+            DURATION,
+            BUDGET,
+            DEFAULT_CONTRIBUTORS,
+            TITLE,
+            DETAILS,
+            "",
+            false
         );
     }
 
@@ -139,7 +146,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         for (uint i; i < amount; i++) {
             milestoneManager.addMilestone(
-                DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
         }
 
@@ -165,7 +172,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         for (uint i; i < whos; i++) {
             milestoneManager.addMilestone(
-                DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
         }
 
@@ -185,17 +192,14 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: getActiveMilestoneId()
 
-    function testGetActiveMilestoneId(address[] memory contributors) public {
-        IMilestoneManager.Contributor[] memory contribs =
-            _generateEqualContributors(contributors);
-
+    function testGetActiveMilestoneId() public {
         // Mint tokens to proposal.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
         _token.mint(address(_proposal), BUDGET);
 
         uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         milestoneManager.startNextMilestone();
@@ -206,7 +210,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testGetActiveMilestoneIdFailsIfNoActiveMilestone() public {
         // Note to add a milestone to not receive an `InvalidMilestoneId` error.
         milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         vm.expectRevert(
@@ -220,17 +224,14 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: hasActiveMilestone()
 
-    function testHasActiveMilestone(address[] memory contributors) public {
-        IMilestoneManager.Contributor[] memory contribs =
-            _generateEqualContributors(contributors);
-
+    function testHasActiveMilestone() public {
         // Mint tokens to proposal.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
         _token.mint(address(_proposal), BUDGET);
 
         milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         milestoneManager.startNextMilestone();
@@ -240,7 +241,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testHasActiveMilestoneFalseIfNoActiveMilestoneYet() public {
         milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         assertTrue(!milestoneManager.hasActiveMilestone());
@@ -324,7 +325,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testNextMilestoneActivatableIfFirstMilestone() public {
         milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         assertTrue(milestoneManager.isNextMilestoneActivatable());
@@ -372,16 +373,23 @@ contract MilestoneManagerTest is ModuleTest {
         for (uint i; i < amount; i++) {
             vm.expectEmit(true, true, true, true);
             emit MilestoneAdded(
-                i + 1, DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+                i + 1, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
                 );
 
             id = milestoneManager.addMilestone(
-                DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
 
             assertEq(id, i + 1); // Note that id's start at 1.
             _assertMilestone(
-                id, DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS, "", false
+                id,
+                DURATION,
+                BUDGET,
+                DEFAULT_CONTRIBUTORS,
+                TITLE,
+                DETAILS,
+                "",
+                false
             );
         }
 
@@ -403,7 +411,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
     }
 
@@ -417,7 +425,7 @@ contract MilestoneManagerTest is ModuleTest {
                     .selector
             );
             milestoneManager.addMilestone(
-                invalids[i], BUDGET, CONTRIBUTORS, TITLE, DETAILS
+                invalids[i], BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
         }
     }
@@ -454,7 +462,11 @@ contract MilestoneManagerTest is ModuleTest {
                     .selector
             );
             milestoneManager.addMilestone(
-                DURATION, BUDGET, CONTRIBUTORS, invalidTitles[i], DETAILS
+                DURATION,
+                BUDGET,
+                DEFAULT_CONTRIBUTORS,
+                invalidTitles[i],
+                DETAILS
             );
         }
     }
@@ -469,7 +481,7 @@ contract MilestoneManagerTest is ModuleTest {
                     .selector
             );
             milestoneManager.addMilestone(
-                DURATION, BUDGET, CONTRIBUTORS, TITLE, invalidDetails[i]
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, invalidDetails[i]
             );
         }
     }
@@ -485,7 +497,7 @@ contract MilestoneManagerTest is ModuleTest {
         // Fill list with milestones.
         for (uint i; i < amount; i++) {
             milestoneManager.addMilestone(
-                DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
         }
 
@@ -504,7 +516,7 @@ contract MilestoneManagerTest is ModuleTest {
         // Fill list again with milestones.
         for (uint i; i < amount; i++) {
             milestoneManager.addMilestone(
-                DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
         }
 
@@ -557,7 +569,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.assume(notPrevId != _SENTINEL);
 
         uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         vm.expectRevert(
@@ -591,95 +603,6 @@ contract MilestoneManagerTest is ModuleTest {
                 .selector
         );
         milestoneManager.removeMilestone(_SENTINEL, id);
-    }
-
-    //----------------------------------
-    // Test Milestone Contributor math
-
-    function testPctMathWithEqualSalary(address[] memory contributors) public {
-        IMilestoneManager.Contributor[] memory contribs =
-            _generateEqualContributors(contributors);
-
-        uint[] memory payouts = new uint[](contributors.length);
-
-        //we are not using them, but startNextMilestone pulls the tokens
-        _token.mint(address(_proposal), BUDGET);
-
-        // Make sure that we generated a valid set of contributor salaries and calculate payouts
-        uint precCount;
-        uint payoutCount;
-        for (uint i; i < contribs.length; ++i) {
-            precCount += contribs[i].salary;
-            uint bufPayout;
-            bufPayout = (
-                ((BUDGET * 1e18) / SALARY_PRECISION) * contribs[i].salary
-            ) / 1e18;
-            payouts[i] = bufPayout;
-            payoutCount += bufPayout;
-        }
-        assertEq(precCount, SALARY_PRECISION);
-
-        uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, contribs, TITLE, DETAILS
-        );
-
-        milestoneManager.startNextMilestone();
-
-        //Make sure the values in the payment orders are the same
-        // Check that payment orders were added correctly.
-        IPaymentClient.PaymentOrder[] memory orders =
-            milestoneManager.paymentOrders();
-
-        for (uint i = 1; i < orders.length; i++) {
-            assertEq(orders[i].amount, payouts[i]);
-        }
-
-        // Check that we are indeed paying out the full budget
-        assertTrue(payoutCount == BUDGET);
-    }
-
-    function testPctMathWithDissimilarSalaries(address[] memory contributors)
-        public
-    {
-        IMilestoneManager.Contributor[] memory contribs =
-            _generateDissimilarContributors(contributors);
-
-        uint[] memory payouts = new uint[](contributors.length);
-
-        //we are not using them, but startNextMilestone pulls the tokens
-        _token.mint(address(_proposal), BUDGET);
-
-        // Make sure that we generated a valid set of contributor salaries and calculate payouts
-        uint precCount;
-        uint payoutCount;
-        for (uint i; i < contribs.length; ++i) {
-            precCount += contribs[i].salary;
-            uint bufPayout;
-            bufPayout = (
-                ((BUDGET * 1e18) / SALARY_PRECISION) * contribs[i].salary
-            ) / 1e18;
-            payouts[i] = bufPayout;
-            payoutCount += bufPayout;
-        }
-        assertEq(precCount, SALARY_PRECISION);
-
-        uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, contribs, TITLE, DETAILS
-        );
-
-        milestoneManager.startNextMilestone();
-
-        //Make sure the values in the payment orders are the same
-        // Check that payment orders were added correctly.
-        IPaymentClient.PaymentOrder[] memory orders =
-            milestoneManager.paymentOrders();
-
-        for (uint i = 1; i < orders.length; i++) {
-            assertEq(orders[i].amount, payouts[i]);
-        }
-
-        // Check that we are indeed paying out the full budget
-        assertTrue(payoutCount == BUDGET);
     }
 
     //----------------------------------
@@ -730,9 +653,8 @@ contract MilestoneManagerTest is ModuleTest {
         uint totalCount;
 
         for (uint i; i < orders.length; ++i) {
-            // Note that the contributors list is traversed.
             totalCount += orders[i].amount;
-            assertEq(orders[i].recipient, contributors[i]);
+            assertEq(orders[i].recipient, contribs[i].addr);
             assertEq(orders[i].amount, payouts[i]);
             assertEq(orders[i].createdAt, block.timestamp);
             assertEq(orders[i].dueTo, DURATION);
@@ -753,7 +675,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.assume(caller != _proposal.owner());
 
         milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         vm.prank(caller);
@@ -761,21 +683,6 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.startNextMilestone();
     }
 
-    //Not relevant anymore
-    /*     function testStartNextMilestoneFailsIfContributorsListEmpty() public {
-
-        IMilestoneManager.Contributor[] memory emptyContribs;
-
-        milestoneManager.addMilestone(
-            DURATION, BUDGET, emptyContribs, TITLE, DETAILS
-        );
-
-        vm.expectRevert(
-            IMilestoneManager.Module__MilestoneManager__NoContributors.selector
-        );
-        milestoneManager.startNextMilestone();
-    }
-    */
     function testAddMilestoneFailsIfContributorsListEmpty() public {
         IMilestoneManager.Contributor[] memory emptyContribs;
 
@@ -828,18 +735,27 @@ contract MilestoneManagerTest is ModuleTest {
         _assumeValidDetails(details);
 
         uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         vm.expectEmit(true, true, true, true);
-        emit MilestoneUpdated(id, duration, budget, CONTRIBUTORS, details);
+        emit MilestoneUpdated(
+            id, duration, budget, DEFAULT_CONTRIBUTORS, details
+            );
 
         milestoneManager.updateMilestone(
-            id, duration, budget, CONTRIBUTORS, TITLE, details
+            id, duration, budget, DEFAULT_CONTRIBUTORS, TITLE, details
         );
 
         _assertMilestone(
-            id, duration, budget, CONTRIBUTORS, TITLE, details, "", false
+            id,
+            duration,
+            budget,
+            DEFAULT_CONTRIBUTORS,
+            TITLE,
+            details,
+            "",
+            false
         );
     }
 
@@ -850,19 +766,19 @@ contract MilestoneManagerTest is ModuleTest {
         vm.assume(caller != _proposal.owner());
 
         uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.updateMilestone(
-            id, DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            id, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
     }
 
     function testUpdateMilestoneFailsForInvalidId() public {
         uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         vm.expectRevert(
@@ -871,13 +787,13 @@ contract MilestoneManagerTest is ModuleTest {
                 .selector
         );
         milestoneManager.updateMilestone(
-            id + 1, DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            id + 1, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
     }
 
     function testUpdateMilestoneFailsForInvalidDuration() public {
         uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         uint[] memory invalids = _createInvalidDurations();
@@ -889,7 +805,7 @@ contract MilestoneManagerTest is ModuleTest {
                     .selector
             );
             milestoneManager.updateMilestone(
-                id, invalids[i], BUDGET, CONTRIBUTORS, TITLE, DETAILS
+                id, invalids[i], BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
         }
     }
@@ -913,7 +829,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testUpdateMilestoneFailsForInvalidDetails() public {
         uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, CONTRIBUTORS, TITLE, DETAILS
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         string[] memory invalids = _createInvalidDetails();
@@ -925,7 +841,7 @@ contract MilestoneManagerTest is ModuleTest {
                     .selector
             );
             milestoneManager.updateMilestone(
-                id, DURATION, BUDGET, CONTRIBUTORS, TITLE, invalids[i]
+                id, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, invalids[i]
             );
         }
     }
@@ -1444,6 +1360,95 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.declineMilestone(id);
     }
 
+    //----------------------------------
+    // Test Milestone Contributor math
+
+    function testPctMathWithEqualSalary(address[] memory contributors) public {
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
+
+        uint[] memory payouts = new uint[](contributors.length);
+
+        //we are not using them, but startNextMilestone pulls the tokens
+        _token.mint(address(_proposal), BUDGET);
+
+        // Make sure that we generated a valid set of contributor salaries and calculate payouts
+        uint precCount;
+        uint payoutCount;
+        for (uint i; i < contribs.length; ++i) {
+            precCount += contribs[i].salary;
+            uint bufPayout;
+            bufPayout = (
+                ((BUDGET * 1e18) / SALARY_PRECISION) * contribs[i].salary
+            ) / 1e18;
+            payouts[i] = bufPayout;
+            payoutCount += bufPayout;
+        }
+        assertEq(precCount, SALARY_PRECISION);
+
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
+
+        milestoneManager.startNextMilestone();
+
+        //Make sure the values in the payment orders are the same
+        // Check that payment orders were added correctly.
+        IPaymentClient.PaymentOrder[] memory orders =
+            milestoneManager.paymentOrders();
+
+        for (uint i = 1; i < orders.length; i++) {
+            assertEq(orders[i].amount, payouts[i]);
+        }
+
+        // Check that we are indeed paying out the full budget
+        assertTrue(payoutCount == BUDGET);
+    }
+
+    function testPctMathWithDissimilarSalaries(address[] memory contributors)
+        public
+    {
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateDissimilarContributors(contributors);
+
+        uint[] memory payouts = new uint[](contributors.length);
+
+        //we are not using them, but startNextMilestone pulls the tokens
+        _token.mint(address(_proposal), BUDGET);
+
+        // Make sure that we generated a valid set of contributor salaries and calculate payouts
+        uint precCount;
+        uint payoutCount;
+        for (uint i; i < contribs.length; ++i) {
+            precCount += contribs[i].salary;
+            uint bufPayout;
+            bufPayout = (
+                ((BUDGET * 1e18) / SALARY_PRECISION) * contribs[i].salary
+            ) / 1e18;
+            payouts[i] = bufPayout;
+            payoutCount += bufPayout;
+        }
+        assertEq(precCount, SALARY_PRECISION);
+
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
+
+        milestoneManager.startNextMilestone();
+
+        //Make sure the values in the payment orders are the same
+        // Check that payment orders were added correctly.
+        IPaymentClient.PaymentOrder[] memory orders =
+            milestoneManager.paymentOrders();
+
+        for (uint i = 1; i < orders.length; i++) {
+            assertEq(orders[i].amount, payouts[i]);
+        }
+
+        // Check that we are indeed paying out the full budget
+        assertTrue(payoutCount == BUDGET);
+    }
+
     //--------------------------------------------------------------------------
     // Assert Helper Functions
 
@@ -1533,17 +1538,6 @@ contract MilestoneManagerTest is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Contributor Generation Helper Functions
-
-    /*     function _addContributors(address[] memory contribs) internal {
-        // Note to stay reasonable.
-        vm.assume(contribs.length != 0);
-        vm.assume(contribs.length < 50);
-        assumeValidContributors(contribs);
-
-        for (uint i; i < contribs.length; i++) {
-            _proposal.addContributor(contribs[i], "name", "role");
-        }
-    } */
 
     function _generateEqualContributors(address[] memory contribs)
         internal
