@@ -216,15 +216,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function isNextMilestoneActivatable() public view returns (bool) {
         // Return false if next milestone does not exist.
-        uint next = _milestones[_activeMilestone]; // next => id
+        uint next = _milestones[_activeMilestone];
         if (!isExistingMilestoneId(next)) {
             return false;
         }
 
-        Milestone storage nextMilestone = _milestoneRegistry[next];
-
         if (
-            block.timestamp - nextMilestone.lastUpdatedTimestamp
+            block.timestamp - _milestoneRegistry[next].lastUpdatedTimestamp
                 < _milestoneUpdateTimelock
         ) {
             return false;
@@ -235,7 +233,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             return true;
         }
 
-        Milestone storage m = _milestoneRegistry[_activeMilestone]; // _milestone
+        Milestone storage m = _milestoneRegistry[_activeMilestone];
 
         // Milestone is activatable if current milestone started and its
         // duration exceeded.
@@ -300,7 +298,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             startTimestamp: 0,
             submissionData: "",
             completed: false,
-            lastUpdatedTimestamp: 0
+            lastUpdatedTimestamp: block.timestamp
         });
 
         emit MilestoneAdded(id, duration, budget, title_, details);
