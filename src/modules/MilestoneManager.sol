@@ -134,7 +134,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     uint private _activeMilestone;
 
     /// @dev The current minimum time gap between the updating and staring of a milestone
-    /// @dev The default value will be 5 days. Can be updated by authorized addresses.
+    /// @dev The default value will be 3 days. Can be updated by authorized addresses.
     uint private _milestoneUpdateTimelock;
 
     //--------------------------------------------------------------------------
@@ -155,7 +155,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
         // be interpreted as active.
         _activeMilestone = _SENTINEL;
-        _milestoneUpdateTimelock = 5 days;
+        _milestoneUpdateTimelock = 3 days;
     }
 
     //--------------------------------------------------------------------------
@@ -261,6 +261,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                 return i != 0 ? milestoneIds[i - 1] : _SENTINEL;
             }
         }
+    }
+
+    function getMilestoneUpdateTimelock() public view returns (uint){
+        return _milestoneUpdateTimelock;
     }
 
     //--------------------------------------------------------------------------
