@@ -33,6 +33,7 @@ contract MilestoneManagerTest is ModuleTest {
     uint constant DURATION = 1 weeks;
     uint constant BUDGET = 1000 * 1e18;
     uint constant SALARY_PRECISION = 100_000_000;
+    uint constant MAX_CONTRIBUTORS = 50;
     string constant TITLE = "Title";
     string constant DETAILS = "Details";
     bytes constant SUBMISSION_DATA = "SubmissionData";
@@ -357,6 +358,20 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue(milestoneManager.isNextMilestoneActivatable());
     }
 
+    //----------------------------------
+    // Test: getSalaryPrecision()
+
+    function testGetSalaryPrecision() public returns (uint) {
+        assertEq(milestoneManager.getSalaryPrecision(), SALARY_PRECISION);
+    }
+
+    //----------------------------------
+    // Test: getSalaryPrecision()
+
+    function testGetMaximumContributors() public returns (uint) {
+        assertEq(milestoneManager.getMaximumContributors(), MAX_CONTRIBUTORS);
+    }
+
     //--------------------------------------------------------------------------
     // Tests: Milestone Management
 
@@ -484,6 +499,39 @@ contract MilestoneManagerTest is ModuleTest {
                 DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, invalidDetails[i]
             );
         }
+    }
+
+    //@todo test: addMilestone fails for no contribs
+    function testAddMilestoneFailsIfContributorsListEmpty() public {
+        IMilestoneManager.Contributor[] memory emptyContribs;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidContributorAmount
+                .selector
+        );
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, emptyContribs, TITLE, DETAILS
+        );
+    }
+
+    function testAddMilestoneFailsIfContributorsListTooBig() public {
+        IMilestoneManager.Contributor[] memory contribs =
+            new IMilestoneManager.Contributor[](MAX_CONTRIBUTORS + 1);
+
+        for (uint i; i < contribs.length; ++i) {
+            //It should revert even before we notice the contributor list is invalid
+            contribs[i] = ALICE;
+        }
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidContributorAmount
+                .selector
+        );
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
     }
 
     //----------------------------------
@@ -681,17 +729,6 @@ contract MilestoneManagerTest is ModuleTest {
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.startNextMilestone();
-    }
-
-    function testAddMilestoneFailsIfContributorsListEmpty() public {
-        IMilestoneManager.Contributor[] memory emptyContribs;
-
-        vm.expectRevert(
-            IMilestoneManager.Module__MilestoneManager__NoContributors.selector
-        );
-        milestoneManager.addMilestone(
-            DURATION, BUDGET, emptyContribs, TITLE, DETAILS
-        );
     }
 
     function testStartNextMilestoneFailsIfNextMilestoneNotActivatable()
@@ -1543,9 +1580,8 @@ contract MilestoneManagerTest is ModuleTest {
         internal
         returns (IMilestoneManager.Contributor[] memory)
     {
-        // Note to stay reasonable.
         vm.assume(contribs.length != 0);
-        vm.assume(contribs.length < 50);
+        vm.assume(contribs.length <= MAX_CONTRIBUTORS);
         assumeValidContributors(contribs);
 
         IMilestoneManager.Contributor[] memory contributors =
@@ -1570,9 +1606,8 @@ contract MilestoneManagerTest is ModuleTest {
         internal
         returns (IMilestoneManager.Contributor[] memory)
     {
-        // Note to stay reasonable.
         vm.assume(contribs.length != 0);
-        vm.assume(contribs.length < 50);
+        vm.assume(contribs.length <= MAX_CONTRIBUTORS);
         assumeValidContributors(contribs);
 
         //IMilestoneManager.Contributor[] memory contributors =

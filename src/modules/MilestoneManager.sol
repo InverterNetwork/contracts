@@ -100,14 +100,15 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     modifier validContributors(Contributor[] calldata contribs) {
+        uint contribLength = contribs.length;
         uint pctSum;
 
         // Fail if contributors list is empty.
-        if (contribs.length == 0) {
-            revert Module__MilestoneManager__NoContributors();
+        if (contribLength == 0 || contribLength > MAXIMUM_CONTRIBUTORS) {
+            revert Module__MilestoneManager__InvalidContributorAmount();
         }
 
-        for (uint i; i < contribs.length; ++i) {
+        for (uint i; i < contribLength; ++i) {
             address contributorAddr = contribs[i].addr;
             uint contributorSalary = contribs[i].salary;
             bytes32 contributorData = contribs[i].data;
@@ -122,7 +123,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             }
 
             // check the address is unique
-            for (uint j = i + 1; j < contribs.length; ++j) {
+            for (uint j = i + 1; j < contribLength; ++j) {
                 if (contribs[j].addr == contributorAddr) {
                     revert Module__MilestoneManager__DuplicateContributorAddress(
                     );
@@ -164,8 +165,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     uint internal _last;
 
     /// @dev Marks the precision we will use for the salary percentages. Represents what counts as "100%".
-    /// @dev Default value is 100_000_000 since it allows for 1$ precision in a 1.000.000$ budget.
-    uint internal SALARY_PRECISION;
+    /// @dev Value is 100_000_000 since it allows for 1$ precision in a 1.000.000$ budget.
+    uint internal constant SALARY_PRECISION = 100_000_000;
+
+    /// @dev Marks the maximum amount of contributors per milestone.
+    /// @dev Setting a reasonable limit prevents running into 'out of gas' issues with the generated payment order array
+    uint internal constant MAXIMUM_CONTRIBUTORS = 50;
 
     //--------------------------------------------------------------------------
     // Storage
@@ -197,9 +202,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Set up empty list of milestones.
         _milestones[_SENTINEL] = _SENTINEL;
         _last = _SENTINEL;
-
-        //@todo maybe allow to specify this in configdata?
-        SALARY_PRECISION = 100_000_000;
 
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
         // be interpreted as active.
@@ -321,10 +323,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         return false;
     }
 
-    /// @notice Returns the precision of the salary percentages. Should be read as "100 + digits after comma", representing 100%
-    /// @return The salary precision
-    function getSalaryPrecision() public view returns (uint) {
+    /// @inheritdoc IMilestoneManager
+    function getSalaryPrecision() public pure returns (uint) {
         return SALARY_PRECISION;
+    }
+
+    /// @inheritdoc IMilestoneManager
+    function getMaximumContributors() public pure returns (uint) {
+        return MAXIMUM_CONTRIBUTORS;
     }
 
     //--------------------------------------------------------------------------

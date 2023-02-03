@@ -103,8 +103,8 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice No active milestone currently existing.
     error Module__MilestoneManager__NoActiveMilestone();
 
-    /// @notice Milestone could not be started as there are no contributors.
-    error Module__MilestoneManager__NoContributors();
+    /// @notice Milestone has either too many or no contributors at all.
+    error Module__MilestoneManager__InvalidContributorAmount();
 
     /// @notice Given contributor address invalid.
     error Module__MilestoneManager__InvalidContributorAddress();
@@ -204,6 +204,14 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Returns whether an address is a contributor in one specific milestone.
     /// @return True if the address is a contributor, false otherwise.
     function isContributor(uint id, address who) external view returns (bool);
+
+    /// @notice Returns the precision of the salary percentages. Should be read as "100 + digits after comma", representing 100%
+    /// @return The salary precision
+    function getSalaryPrecision() external pure returns (uint);
+
+    /// @notice Returns the precision of the salary percentages. Should be read as "100 + digits after comma", representing 100%
+    /// @return The salary precision
+    function getMaximumContributors() external pure returns (uint);
 
     //----------------------------------
     // Milestone Mutating Functions
