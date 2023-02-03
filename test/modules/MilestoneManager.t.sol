@@ -494,7 +494,6 @@ contract MilestoneManagerTest is ModuleTest {
         }
     }
 
-    //@todo test: addMilestone fails for no contribs
     function testAddMilestoneFailsIfContributorsListEmpty() public {
         IMilestoneManager.Contributor[] memory emptyContribs;
 
