@@ -142,8 +142,8 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: listMilestoneIds()
 
     function testListMilestoneIds(uint amount) public {
-        // Note to stay reasonable.
-        vm.assume(amount < MAX_MILESTONES);
+
+        amount = bound(amount, 0,MAX_MILESTONES);
 
         for (uint i; i < amount; i++) {
             milestoneManager.addMilestone(
@@ -162,14 +162,9 @@ contract MilestoneManagerTest is ModuleTest {
     // Tests: getPreviousMilestone()
 
     function testGetPreviousMilestone(uint whos, uint randomWho) public {
-        vm.assume(whos > 0);
-        //Ids start at 1
-        vm.assume(randomWho > 0);
 
-        vm.assume(whos <= MAX_MILESTONES);
-
-        //Make sure one of the existing contributors gets picked
-        vm.assume(randomWho < whos);
+        whos = bound(whos, 1, MAX_MILESTONES);
+        randomWho = bound(randomWho, 1, whos);
 
         for (uint i; i < whos; i++) {
             milestoneManager.addMilestone(
@@ -361,14 +356,14 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: getSalaryPrecision()
 
-    function testGetSalaryPrecision() public returns (uint) {
+    function testGetSalaryPrecision() public {
         assertEq(milestoneManager.getSalaryPrecision(), SALARY_PRECISION);
     }
 
     //----------------------------------
     // Test: getSalaryPrecision()
 
-    function testGetMaximumContributors() public returns (uint) {
+    function testGetMaximumContributors() public {
         assertEq(milestoneManager.getMaximumContributors(), MAX_CONTRIBUTORS);
     }
 
@@ -538,9 +533,8 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: removeMilestone()
 
     function testRemoveMilestone(uint amount) public {
-        // Note to stay reasonable.
-        vm.assume(amount < MAX_MILESTONES);
-        vm.assume(amount != 0);
+        
+        amount = bound(amount, 1,MAX_MILESTONES);
 
         // Fill list with milestones.
         for (uint i; i < amount; i++) {
