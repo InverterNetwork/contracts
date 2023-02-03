@@ -922,6 +922,9 @@ contract MilestoneManagerTest is ModuleTest {
         );
         milestoneManager.moveMilestoneInList(id, prevId, prevId);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         //Cant move a milestone that already started
