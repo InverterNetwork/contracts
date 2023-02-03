@@ -160,6 +160,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Uses _SENTINEL to indicate no current active milestone.
     uint private _activeMilestone;
 
+    /// @dev The current minimum time gap between the updating and staring of a milestone
+    /// @dev The default value will be 3 days. Can be updated by authorized addresses.
+    uint private _milestoneUpdateTimelock;
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -178,6 +182,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
         // be interpreted as active.
         _activeMilestone = _SENTINEL;
+        _milestoneUpdateTimelock = 3 days;
     }
 
     //--------------------------------------------------------------------------
@@ -244,6 +249,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             return false;
         }
 
+        if (
+            block.timestamp - _milestoneRegistry[next].lastUpdatedTimestamp
+                < _milestoneUpdateTimelock
+        ) {
+            return false;
+        }
+
         // Return true if current active milestone does not exist.
         if (!isExistingMilestoneId(_activeMilestone)) {
             return true;
@@ -276,6 +288,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                 return i != 0 ? milestoneIds[i - 1] : _SENTINEL;
             }
         }
+    }
+
+    function getMilestoneUpdateTimelock() public view returns (uint) {
+        return _milestoneUpdateTimelock;
     }
 
     //--------------------------------------------------------------------------
@@ -313,7 +329,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             details: details,
             startTimestamp: 0,
             submissionData: "",
-            completed: false
+            completed: false,
+            lastUpdatedTimestamp: block.timestamp
         });
 
         emit MilestoneAdded(id, duration, budget, title_, details);
@@ -420,6 +437,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             m.duration = duration;
             m.budget = budget;
             m.details = details;
+            m.lastUpdatedTimestamp = block.timestamp;
             emit MilestoneUpdated(id, duration, budget, details);
         }
     }
@@ -514,6 +532,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Declining a milestone removes the submitionData and therefore marks it as not submitted again.
         m.submissionData = "";
         emit MilestoneDeclined(id);
+    }
+
+    function updateMilestoneUpdateTimelock(uint _newTimelock)
+        external
+        onlyAuthorized
+    {
+        _milestoneUpdateTimelock = _newTimelock;
+        emit MilestoneUpdateTimelockUpdated(_milestoneUpdateTimelock);
     }
 
     //--------------------------------------------------------------------------

@@ -37,6 +37,7 @@ contract MilestoneManagerTest is ModuleTest {
     string constant TITLE = "Title";
     string constant DETAILS = "Details";
     bytes constant SUBMISSION_DATA = "SubmissionData";
+    uint constant TIMELOCK = 3 days;
 
     // Constant copied from SuT
     uint private constant _SENTINEL = type(uint).max;
@@ -175,6 +176,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         assertEq(milestoneManager.getActiveMilestoneId(), id);
@@ -205,6 +209,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         assertTrue(milestoneManager.hasActiveMilestone());
@@ -229,6 +236,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         // Milestone must be submitted by a contributor.
@@ -251,6 +261,9 @@ contract MilestoneManagerTest is ModuleTest {
         _token.mint(address(_proposal), BUDGET);
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -276,14 +289,54 @@ contract MilestoneManagerTest is ModuleTest {
         _token.mint(address(_proposal), BUDGET);
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         assertTrue(!milestoneManager.isNextMilestoneActivatable());
     }
 
+    function testNextMilestoneNotActivatableIfUnderTimelock(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+
+        // Mint tokens to proposal.
+        // Note that these tokens are transfered to the milestone module
+        // when the payment orders are created.
+        _token.mint(address(_proposal), BUDGET);
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
+        milestoneManager.startNextMilestone();
+
+        uint secondID =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        vm.warp(block.timestamp + DURATION - 1 days);
+
+        //update milestone
+        milestoneManager.updateMilestone(
+            secondID, DURATION + 1, BUDGET + 1, DETAILS
+        );
+
+        // Current milestone is over, but next still under timelock
+        vm.warp(block.timestamp + 2 days);
+
+        assertTrue(!milestoneManager.isNextMilestoneActivatable());
+    }
+
     function testNextMilestoneActivatableIfFirstMilestone() public {
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         assertTrue(milestoneManager.isNextMilestoneActivatable());
     }
@@ -300,6 +353,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -519,6 +575,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         vm.expectRevert(
@@ -548,6 +607,9 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.addMilestone(
             DURATION + 1, BUDGET + 1, "Title2", "Details2"
         );
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -586,6 +648,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         milestoneManager.startNextMilestone();
@@ -593,6 +658,9 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testStartNextMilestoneFailsIfContributorsListEmpty() public {
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         vm.expectRevert(
             IMilestoneManager.Module__MilestoneManager__NoContributors.selector
@@ -618,6 +686,9 @@ contract MilestoneManagerTest is ModuleTest {
         _addContributors(contributors);
 
         milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         vm.expectRevert(
             IPaymentClient.Module__PaymentClient__TokenTransferFailed.selector
@@ -736,6 +807,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         vm.expectRevert(
@@ -848,6 +922,9 @@ contract MilestoneManagerTest is ModuleTest {
         );
         milestoneManager.moveMilestoneInList(id, prevId, prevId);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         //Cant move a milestone that already started
@@ -887,6 +964,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         // Milestone must be submitted by a contributor.
@@ -923,6 +1003,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -966,6 +1049,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         vm.expectRevert(
@@ -988,6 +1074,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -1013,6 +1102,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -1064,6 +1156,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         // Milestone must be submitted by a contributor.
@@ -1097,6 +1192,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         // Milestone must be submitted by a contributor.
@@ -1124,6 +1222,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         // Milestone must be submitted by a contributor.
@@ -1147,6 +1248,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -1175,6 +1279,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         // Note that the milestone does not get submitted.
@@ -1200,6 +1307,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -1231,6 +1341,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         // Milestone must be submitted by a contributor.
@@ -1254,6 +1367,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
@@ -1282,6 +1398,9 @@ contract MilestoneManagerTest is ModuleTest {
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         // Note that the milestone does not get submitted.
@@ -1306,6 +1425,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
