@@ -219,5 +219,17 @@ This function is used to decline a submitted milestone. Only callable by authori
 
 1. `uint id` -> The milestone's id.
 
+### 8. updateMilestoneUpdateTimelock
+
+`function updateMilestoneUpdateTimelock(uint _newTimelock) external onlyAuthorized()`
+
+This function is used to update the `_milestoneUpdateTimelock` which is set to `3 days` by default. The `_milestoneUpdateTimelock` is the allowed time gap between updating a milestone and starting it.
+
+This function can only be called by authorized addresses.
+
+#### Parameters
+
+1. `uint _newTimelock` -> The new value for `_milestoneUpdateTimelock`
+
 
 

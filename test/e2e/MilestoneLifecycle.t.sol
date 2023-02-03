@@ -108,7 +108,10 @@ contract MilestoneLifecycle is E2eTest {
         assertEq(token.balanceOf(address(proposal)), 1000e18 + initialDeposit);
         assertEq(proposal.totalSupply(), 1000e18 + initialDeposit);
 
-        // Now we start the first milestone.
+        // Now we ait for the timelock to pass and start the first milestone.
+        vm.warp(
+            block.timestamp + milestoneManager.getMilestoneUpdateTimelock() + 1
+        );
         milestoneManager.startNextMilestone();
 
         // Starting a milestone DOES NOT itself pay the contributors but

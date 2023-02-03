@@ -215,6 +215,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Uses _SENTINEL to indicate no current active milestone.
     uint private _activeMilestone;
 
+    /// @dev The current minimum time gap between the updating and staring of a milestone
+    /// @dev The default value will be 3 days. Can be updated by authorized addresses.
+    uint private _milestoneUpdateTimelock;
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -233,6 +237,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
         // be interpreted as active.
         _activeMilestone = _SENTINEL;
+        _milestoneUpdateTimelock = 3 days;
     }
 
     //--------------------------------------------------------------------------
@@ -299,6 +304,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             return false;
         }
 
+        if (
+            block.timestamp - _milestoneRegistry[next].lastUpdatedTimestamp
+                < _milestoneUpdateTimelock
+        ) {
+            return false;
+        }
+
         // Return true if current active milestone does not exist.
         if (!isExistingMilestoneId(_activeMilestone)) {
             return true;
@@ -358,6 +370,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function getMaximumContributors() public pure returns (uint) {
         return MAXIMUM_CONTRIBUTORS;
+    }
+    
+    function getMilestoneUpdateTimelock() public view returns (uint) {
+        return _milestoneUpdateTimelock;
     }
 
     //--------------------------------------------------------------------------
@@ -504,7 +520,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
 
         if (changed) {
+            m.lastUpdatedTimestamp = block.timestamp;
             emit MilestoneUpdated(id, duration, budget, contributors, details);
+
         }
     }
 
@@ -727,6 +745,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
 
         return keccak256(abi.encodePacked(addrCache, salaryCache, dataCache));
+    }
+
+    function updateMilestoneUpdateTimelock(uint _newTimelock)
+        external
+        onlyAuthorized
+    {
+        _milestoneUpdateTimelock = _newTimelock;
+        emit MilestoneUpdateTimelockUpdated(_milestoneUpdateTimelock);
     }
 
     //--------------------------------------------------------------------------

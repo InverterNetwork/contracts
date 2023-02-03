@@ -38,6 +38,9 @@ interface IMilestoneManager is IPaymentClient {
         /// @dev The milestone's details.
         ///      MUST not be empty.
         string details;
+        /// @dev The milestone's last updated timestamp
+        ///      To start a new milestone, it should not have been updated in the last 5 days
+        uint lastUpdatedTimestamp;
     }
 
     struct Contributor {
@@ -157,6 +160,9 @@ interface IMilestoneManager is IPaymentClient {
 
     /// @notice Event emitted when a milestone declined.
     event MilestoneDeclined(uint indexed id);
+
+    /// @notice Event emitted when a milestone updation timelock is updated.
+    event MilestoneUpdateTimelockUpdated(uint indexed newTimelock);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -303,4 +309,10 @@ interface IMilestoneManager is IPaymentClient {
     ///      already completed.
     /// @param id The milestone's id.
     function declineMilestone(uint id) external;
+
+    /// @notice Updates the `_milestoneUpdateTimelock` value
+    /// @dev Only callable by authorized addresses.
+    /// @dev The `_milestoneUpdateTimelock` is the allowed time gap between updating a milestone and starting it
+    /// @param _newTimelock The new intended value for `_milestoneUpdateTimelock`
+    function updateMilestoneUpdateTimelock(uint _newTimelock) external;
 }
