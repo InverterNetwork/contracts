@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import "forge-std/console.sol";
+
 import {
     ModuleTest,
     IModule,
@@ -901,6 +903,128 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     //----------------------------------
+    // Test: moveMilestoneInList()
+
+    function testMoveMilestoneInList(
+        uint amountOfMilestones,
+        uint moveId,
+        uint moveToId
+    ) public {
+        amountOfMilestones = bound(amountOfMilestones, 2, 30);
+        vm.assume(moveId != moveToId);
+
+        vm.assume(moveId != 0 && moveId < amountOfMilestones + 1);
+
+        //MoveToId can be SENTINEL
+        if (moveToId != type(uint).max) {
+            vm.assume(moveToId != 0 && moveToId < amountOfMilestones + 1);
+        }
+
+        for (uint i = 0; i < amountOfMilestones; i++) {
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        }
+
+        uint prevId = milestoneManager.getPreviousMilestoneId(moveId);
+        vm.assume(moveToId != prevId);
+
+        milestoneManager.moveMilestoneInList(moveId, prevId, moveToId);
+
+        assertTrue(_getPositionAfter(moveToId) == moveId);
+        assertTrue(_getPositionAfter(prevId) != moveId);
+
+        //Check if _last is set correctly
+
+        //New Milestone should have last position and therefor link to SENTINEL
+        assertTrue(
+            _getPositionAfter(
+                milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS)
+            ) == type(uint).max
+        );
+    }
+
+    function testMoveMilestoneForInvalidId() public {
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        uint prevId = milestoneManager.getPreviousMilestoneId(id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        ); //Move after Sentinel
+        milestoneManager.moveMilestoneInList(id + 1, prevId, type(uint).max);
+    }
+
+    function testMoveMilestoneForInvalidPosition() public {
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        uint prevId = milestoneManager.getPreviousMilestoneId(id);
+
+        vm.expectRevert(
+            IMilestoneManager.Module__MilestoneManager__InvalidPosition.selector
+        );
+        milestoneManager.moveMilestoneInList(id, prevId, 0);
+
+        vm.expectRevert(
+            IMilestoneManager.Module__MilestoneManager__InvalidPosition.selector
+        );
+        milestoneManager.moveMilestoneInList(id, 0, type(uint).max);
+    }
+
+    function testMoveMilestoneForInvalidIntermediatePosition(
+        address[] memory contributors
+    ) public {
+        _addContributors(contributors);
+        _token.mint(address(_proposal), BUDGET);
+
+        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        uint prevId = milestoneManager.getPreviousMilestoneId(id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidIntermediatePosition
+                .selector
+        );
+        milestoneManager.moveMilestoneInList(id, prevId, id);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidIntermediatePosition
+                .selector
+        );
+        milestoneManager.moveMilestoneInList(id, prevId, prevId);
+
+        milestoneManager.startNextMilestone();
+
+        //Cant move a milestone that already started
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidIntermediatePosition
+                .selector
+        );
+        milestoneManager.moveMilestoneInList(1, prevId, 2);
+
+        //Check Cant move before a milestone that has started at some point
+        //In this case id 1
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidIntermediatePosition
+                .selector
+        );
+        milestoneManager.moveMilestoneInList(id, prevId, type(uint).max);
+    }
+
+    //----------------------------------
     // Test: submitMilestone()
 
     function testSubmitMilestone(
@@ -1638,6 +1762,29 @@ contract MilestoneManagerTest is ModuleTest {
         bytes memory abiEncodeOutput = abi.encode(addr);
         uint kHashOutput = uint(keccak256(abiEncodeOutput));
         return kHashOutput % maxValue;
+    }
+
+    function _getPositionAfter(uint id) private view returns (uint) {
+        uint[] memory milestoneList = milestoneManager.listMilestoneIds();
+
+        //If SENTINEL return first position in list
+        if (id == type(uint).max) {
+            return milestoneList[0];
+        }
+
+        uint length = milestoneList.length;
+        for (uint i = 0; i < length; i++) {
+            if (id == milestoneList[i]) {
+                if (i == (length - 1)) {
+                    return type(uint).max;
+                } else {
+                    return milestoneList[i + 1];
+                }
+            }
+        }
+
+        //This means id was not found in line which should not happen
+        assert(false);
     }
 
     // =========================================================================

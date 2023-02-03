@@ -73,6 +73,12 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given details invalid.
     error Module__MilestoneManager__InvalidDetails();
 
+    /// @notice Given position invalid.
+    error Module__MilestoneManager__InvalidPosition();
+
+    /// @notice Given id is not a valid Intermediate Position in list.
+    error Module__MilestoneManager__InvalidIntermediatePosition();
+
     /// @notice Given milestone id invalid.
     error Module__MilestoneManager__InvalidMilestoneId();
 
@@ -264,6 +270,18 @@ interface IMilestoneManager is IPaymentClient {
         string memory title,
         string memory details
     ) external;
+
+    /// @notice Moves a Milestone in the milestone list
+    /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if milestone that should be moved already started.
+    /// @dev Reverts if the position following the idToPositionAfter milestone already started.
+    /// @dev Reverts if milestone that should be moved equals the milestone that should be positioned after.
+    /// @dev Reverts if milestone that should be positioned after equals the milestone that comes previous to the one that should be moved
+    /// @param id The id of the milestone that should be moved.
+    /// @param prevId The previous milestone's id in the milestone list (in relation to the milestone that should be moved).
+    /// @param idToPositionAfter The id of the milestone, that the selected milestone should be positioned after.
+    function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
+        external;
 
     /// @notice Submits a milestone.
     /// @dev Only callable by addresses holding the contributor role.
