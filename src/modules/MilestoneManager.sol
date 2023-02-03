@@ -371,7 +371,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function getMaximumContributors() public pure returns (uint) {
         return MAXIMUM_CONTRIBUTORS;
     }
-    
+
     function getMilestoneUpdateTimelock() public view returns (uint) {
         return _milestoneUpdateTimelock;
     }
@@ -522,7 +522,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         if (changed) {
             m.lastUpdatedTimestamp = block.timestamp;
             emit MilestoneUpdated(id, duration, budget, contributors, details);
-
         }
     }
 
@@ -635,7 +634,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         Contributor[] calldata contributors,
         string calldata title_,
         string calldata details
-    ) internal pure returns (Milestone memory) {
+    ) internal view returns (Milestone memory) {
         Milestone memory _mlstn = Milestone({
             duration: duration,
             budget: budget,
@@ -644,7 +643,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             details: details,
             startTimestamp: 0,
             submissionData: "",
-            completed: false
+            completed: false,
+            lastUpdatedTimestamp: block.timestamp
         });
 
         return _mlstn;

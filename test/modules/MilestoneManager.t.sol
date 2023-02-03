@@ -339,28 +339,32 @@ contract MilestoneManagerTest is ModuleTest {
     function testNextMilestoneNotActivatableIfUnderTimelock(
         address[] memory contributors
     ) public {
-        _addContributors(contributors);
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
 
         // Mint tokens to proposal.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
         _token.mint(address(_proposal), BUDGET);
 
-        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
 
         // We wait for the timelock to pass
         vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
-        uint secondID =
-            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        uint secondID = milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
 
         vm.warp(block.timestamp + DURATION - 1 days);
 
         //update milestone
         milestoneManager.updateMilestone(
-            secondID, DURATION + 1, BUDGET + 1, DETAILS
+            secondID, DURATION + 1, BUDGET + 1, contribs, TITLE, DETAILS
         );
 
         // Current milestone is over, but next still under timelock
@@ -1675,6 +1679,9 @@ contract MilestoneManagerTest is ModuleTest {
             DURATION, BUDGET, contribs, TITLE, DETAILS
         );
 
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
         milestoneManager.startNextMilestone();
 
         //Make sure the values in the payment orders are the same
@@ -1718,6 +1725,9 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.addMilestone(
             DURATION, BUDGET, contribs, TITLE, DETAILS
         );
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
