@@ -263,7 +263,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
     }
 
-    function getMilestoneUpdateTimelock() public view returns (uint){
+    function getMilestoneUpdateTimelock() public view returns (uint) {
         return _milestoneUpdateTimelock;
     }
 
