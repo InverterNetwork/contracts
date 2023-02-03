@@ -142,8 +142,7 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: listMilestoneIds()
 
     function testListMilestoneIds(uint amount) public {
-
-        amount = bound(amount, 0,MAX_MILESTONES);
+        amount = bound(amount, 0, MAX_MILESTONES);
 
         for (uint i; i < amount; i++) {
             milestoneManager.addMilestone(
@@ -162,7 +161,6 @@ contract MilestoneManagerTest is ModuleTest {
     // Tests: getPreviousMilestone()
 
     function testGetPreviousMilestone(uint whos, uint randomWho) public {
-
         whos = bound(whos, 1, MAX_MILESTONES);
         randomWho = bound(randomWho, 1, whos);
 
@@ -533,8 +531,7 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: removeMilestone()
 
     function testRemoveMilestone(uint amount) public {
-        
-        amount = bound(amount, 1,MAX_MILESTONES);
+        amount = bound(amount, 1, MAX_MILESTONES);
 
         // Fill list with milestones.
         for (uint i; i < amount; i++) {
@@ -1664,7 +1661,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
     }
 
-    function assumeValidContributor(address a) public {
+    function assumeValidContributor(address a) public view {
         address[] memory invalids = createInvalidContributors();
 
         for (uint i; i < invalids.length; i++) {
