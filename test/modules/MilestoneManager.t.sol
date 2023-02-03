@@ -921,7 +921,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
 
         for (uint i = 0; i < amountOfMilestones; i++) {
-            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+            milestoneManager.addMilestone(DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
         }
 
         uint prevId = milestoneManager.getPreviousMilestoneId(moveId);
@@ -937,16 +937,16 @@ contract MilestoneManagerTest is ModuleTest {
         //New Milestone should have last position and therefor link to SENTINEL
         assertTrue(
             _getPositionAfter(
-                milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS)
+                milestoneManager.addMilestone(DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS)
             ) == type(uint).max
         );
     }
 
     function testMoveMilestoneForInvalidId() public {
-        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        milestoneManager.addMilestone(DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
 
         uint id =
-            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+            milestoneManager.addMilestone(DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
 
         uint prevId = milestoneManager.getPreviousMilestoneId(id);
 
@@ -959,10 +959,10 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     function testMoveMilestoneForInvalidPosition() public {
-        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        milestoneManager.addMilestone(DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
 
         uint id =
-            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+            milestoneManager.addMilestone(DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
 
         uint prevId = milestoneManager.getPreviousMilestoneId(id);
 
@@ -980,13 +980,15 @@ contract MilestoneManagerTest is ModuleTest {
     function testMoveMilestoneForInvalidIntermediatePosition(
         address[] memory contributors
     ) public {
-        _addContributors(contributors);
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
+
         _token.mint(address(_proposal), BUDGET);
 
-        milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+        milestoneManager.addMilestone(DURATION, BUDGET, contribs, TITLE, DETAILS);
 
         uint id =
-            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+            milestoneManager.addMilestone(DURATION, BUDGET, contribs, TITLE, DETAILS);
 
         uint prevId = milestoneManager.getPreviousMilestoneId(id);
 
