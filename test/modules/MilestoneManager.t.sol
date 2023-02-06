@@ -65,6 +65,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint duration,
         uint budget,
         IMilestoneManager.Contributor[] contributors,
+        string title,
         string details
     );
     event MilestoneRemoved(uint indexed id);
@@ -588,6 +589,61 @@ contract MilestoneManagerTest is ModuleTest {
         );
     }
 
+    function testAddMilestoneFailsForDuplicateContributors() public {
+        IMilestoneManager.Contributor[] memory contribs =
+            new IMilestoneManager.Contributor[](3);
+
+        contribs[0] = ALICE;
+        contribs[1] = BOB;
+        contribs[2] = ALICE;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__DuplicateContributorAddress
+                .selector
+        );
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
+    }
+
+    function testAddMilestoneFailsForInvalidContributorAddresses() public {
+        IMilestoneManager.Contributor[] memory contribs =
+            new IMilestoneManager.Contributor[](3);
+
+        contribs[0] = ALICE;
+        contribs[1] = BOB;
+        contribs[2] = ALICE;
+        contribs[2].addr = address(_proposal);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidContributorAddress
+                .selector
+        );
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
+    }
+
+    function testAddMilestoneFailsForInvalidSalarySum() public {
+        IMilestoneManager.Contributor[] memory contribs =
+            new IMilestoneManager.Contributor[](2);
+
+        contribs[0] = ALICE;
+        contribs[1] = BOB;
+        contribs[1].salary = 51_000_000;
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidSalarySum
+                .selector
+        );
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
+    }
+
     //----------------------------------
     // Test: removeMilestone()
 
@@ -829,34 +885,86 @@ contract MilestoneManagerTest is ModuleTest {
     function testUpdateMilestone(
         uint duration,
         uint budget,
-        string memory details
+        string memory title,
+        string memory details,
+        address[] memory contributors
     ) public {
         _assumeValidDuration(duration);
         _assumeValidBudgets(budget);
         _assumeValidDetails(details);
+        _assumeValidDetails(title); // since we are only checking for empty string
+
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
 
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
         );
 
         vm.expectEmit(true, true, true, true);
-        emit MilestoneUpdated(
-            id, duration, budget, DEFAULT_CONTRIBUTORS, details
-            );
+        emit MilestoneUpdated(id, duration, budget, contribs, title, details);
 
         milestoneManager.updateMilestone(
-            id, duration, budget, DEFAULT_CONTRIBUTORS, TITLE, details
+            id, duration, budget, contribs, title, details
         );
 
         _assertMilestone(
-            id,
-            duration,
-            budget,
-            DEFAULT_CONTRIBUTORS,
-            TITLE,
-            details,
-            "",
-            false
+            id, duration, budget, contribs, title, details, "", false
+        );
+    }
+
+    function testUpdateMilestoneOneByOne(
+        uint duration,
+        uint budget,
+        string memory title,
+        string memory details,
+        address[] memory contributors
+    ) public {
+        _assumeValidDuration(duration);
+        _assumeValidBudgets(budget);
+        _assumeValidDetails(details);
+        _assumeValidDetails(title); // since we are only checking for empty string
+
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
+
+        uint id = milestoneManager.addMilestone(
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(id, duration, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
+
+        milestoneManager.updateMilestone(id, duration, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(id, duration, budget, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
+
+        milestoneManager.updateMilestone(id, duration, budget, DEFAULT_CONTRIBUTORS, TITLE, DETAILS);
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(id, duration, budget, contribs, TITLE, DETAILS);
+
+        milestoneManager.updateMilestone(id, duration, budget, contribs, TITLE, DETAILS);
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(id, duration, budget, contribs, title, DETAILS);
+
+        milestoneManager.updateMilestone(
+            id, duration, budget, contribs, title, DETAILS
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(id, duration, budget, contribs, title, details);
+
+        milestoneManager.updateMilestone(
+            id, duration, budget, contribs, title, details
+        );
+
+        // check everything ended up ok
+
+        _assertMilestone(
+            id, duration, budget, contribs, title, details, "", false
         );
     }
 

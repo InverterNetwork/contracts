@@ -146,6 +146,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] contributors,
+        string title,
         string details
     );
 

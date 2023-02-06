@@ -521,7 +521,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         if (changed) {
             m.lastUpdatedTimestamp = block.timestamp;
-            emit MilestoneUpdated(id, duration, budget, contributors, details);
+            emit MilestoneUpdated(
+                id, duration, budget, contributors, title, details
+                );
         }
     }
 
