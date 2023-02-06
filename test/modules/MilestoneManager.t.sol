@@ -624,6 +624,28 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.addMilestone(
             DURATION, BUDGET, contribs, TITLE, DETAILS
         );
+
+        contribs[2].addr = address(0);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidContributorAddress
+                .selector
+        );
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
+
+        contribs[2].addr = address(milestoneManager);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidContributorAddress
+                .selector
+        );
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, contribs, TITLE, DETAILS
+        );
     }
 
     function testAddMilestoneFailsForInvalidSalarySum() public {
