@@ -44,14 +44,14 @@ contract PaymentClientTest is Test {
 
         // Sum of all token amounts should not overflow.
         uint sum;
-        for (uint i; i < orderAmount; i++) {
+        for (uint i; i < orderAmount; ++i) {
             unchecked {
                 sum += amount;
             }
             vm.assume(sum > amount);
         }
 
-        for (uint i; i < orderAmount; i++) {
+        for (uint i; i < orderAmount; ++i) {
             paymentClient.addPaymentOrder(recipient, amount, dueTo);
         }
 
@@ -59,7 +59,7 @@ contract PaymentClientTest is Test {
             paymentClient.paymentOrders();
 
         assertEq(orders.length, orderAmount);
-        for (uint i; i < orderAmount; i++) {
+        for (uint i; i < orderAmount; ++i) {
             assertEq(orders[i].recipient, recipient);
             assertEq(orders[i].amount, amount);
             assertEq(orders[i].dueTo, dueTo);
@@ -73,7 +73,7 @@ contract PaymentClientTest is Test {
         uint amount = 1e18;
         uint dueTo = block.timestamp;
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
             );
@@ -86,7 +86,7 @@ contract PaymentClientTest is Test {
         uint[] memory invalids = _createInvalidAmounts();
         uint dueTo = block.timestamp;
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IPaymentClient.Module__PaymentClient__InvalidAmount.selector
             );
@@ -99,7 +99,7 @@ contract PaymentClientTest is Test {
         uint amount = 1e18;
         uint[] memory invalids = _createInvalidDueTos();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IPaymentClient.Module__PaymentClient__InvalidDueTo.selector
             );
@@ -130,7 +130,7 @@ contract PaymentClientTest is Test {
             paymentClient.paymentOrders();
 
         assertEq(orders.length, 3);
-        for (uint i; i < 3; i++) {
+        for (uint i; i < 3; ++i) {
             assertEq(orders[i].recipient, recipients[i]);
             assertEq(orders[i].amount, amounts[i]);
             assertEq(orders[i].dueTo, dueTos[i]);
@@ -168,7 +168,7 @@ contract PaymentClientTest is Test {
             paymentClient.paymentOrders();
 
         assertEq(orders.length, 3);
-        for (uint i; i < 3; i++) {
+        for (uint i; i < 3; ++i) {
             assertEq(orders[i].recipient, recipients[i]);
             assertEq(orders[i].amount, amount);
             assertEq(orders[i].dueTo, dueTo);
@@ -182,7 +182,7 @@ contract PaymentClientTest is Test {
         uint amount = 1e18;
         uint dueTo = block.timestamp;
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
             );
@@ -196,7 +196,7 @@ contract PaymentClientTest is Test {
         uint[] memory invalids = _createInvalidAmounts();
         uint dueTo = block.timestamp;
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IPaymentClient.Module__PaymentClient__InvalidAmount.selector
             );
@@ -212,7 +212,7 @@ contract PaymentClientTest is Test {
         uint amount = 1e18;
         uint[] memory invalids = _createInvalidDueTos();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IPaymentClient.Module__PaymentClient__InvalidDueTo.selector
             );
@@ -240,14 +240,14 @@ contract PaymentClientTest is Test {
 
         // Sum of all token amounts should not overflow.
         uint sum;
-        for (uint i; i < orderAmount; i++) {
+        for (uint i; i < orderAmount; ++i) {
             unchecked {
                 sum += amount;
             }
             vm.assume(sum > amount);
         }
 
-        for (uint i; i < orderAmount; i++) {
+        for (uint i; i < orderAmount; ++i) {
             paymentClient.addPaymentOrder(recipient, amount, dueTo);
         }
 
@@ -257,7 +257,7 @@ contract PaymentClientTest is Test {
 
         // Check that orders are correct.
         assertEq(orders.length, orderAmount);
-        for (uint i; i < orderAmount; i++) {
+        for (uint i; i < orderAmount; ++i) {
             assertEq(orders[i].recipient, recipient);
             assertEq(orders[i].amount, amount);
             assertEq(orders[i].dueTo, dueTo);
@@ -295,21 +295,21 @@ contract PaymentClientTest is Test {
 
     function _assumeValidRecipient(address recipient) internal {
         address[] memory invalids = _createInvalidRecipients();
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.assume(recipient != invalids[i]);
         }
     }
 
     function _assumeValidAmount(uint amount) internal {
         uint[] memory invalids = _createInvalidAmounts();
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.assume(amount != invalids[i]);
         }
     }
 
     function _assumeValidDueTo(uint dueTo) internal {
         uint[] memory invalids = _createInvalidDueTos();
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.assume(dueTo != invalids[i]);
         }
     }

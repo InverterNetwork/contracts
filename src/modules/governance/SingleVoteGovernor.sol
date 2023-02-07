@@ -110,7 +110,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
         // Write voters to storage.
         address voter;
-        for (uint i; i < votersLen; i++) {
+        for (uint i; i < votersLen; ++i) {
             voter = voters[i];
 
             if (

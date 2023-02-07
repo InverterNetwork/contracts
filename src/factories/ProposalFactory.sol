@@ -97,7 +97,7 @@ contract ProposalFactory is IProposalFactory {
         // Deploy and cache optional modules.
         uint modulesLen = moduleConfigs.length;
         address[] memory modules = new address[](modulesLen);
-        for (uint i; i < modulesLen; i++) {
+        for (uint i; i < modulesLen; ++i) {
             modules[i] = IModuleFactory(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
                 IProposal(clone),

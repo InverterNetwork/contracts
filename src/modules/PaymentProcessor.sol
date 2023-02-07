@@ -59,7 +59,8 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         // Transfer tokens from {IPaymentClient} to order recipients.
         address recipient;
         uint amount;
-        for (uint i; i < orders.length; i++) {
+        uint len = orders.length;
+        for (uint i; i < len; ++i) {
             recipient = orders[i].recipient;
             amount = orders[i].amount;
 

@@ -125,7 +125,7 @@ contract MetadataManager is IMetadataManager, Module {
         delete _teamMetadata;
 
         uint len = teamMetadata_.length;
-        for (uint i; i < len; i++) {
+        for (uint i; i < len; ++i) {
             _teamMetadata.push(teamMetadata_[i]);
         }
 

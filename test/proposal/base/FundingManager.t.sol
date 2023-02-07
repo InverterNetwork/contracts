@@ -111,7 +111,7 @@ contract FundingManagerTest is Test {
         vm.assume(input.users.length < 1000);
 
         // Each user is unique and valid recipient.
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             vm.assume(!_usersCache[input.users[i]]);
             _usersCache[input.users[i]] = true;
 
@@ -124,24 +124,24 @@ contract FundingManagerTest is Test {
         // Note that the length of users is used. deposits[users.length:] will
         // not be used and is just accepted to have less fuzzer rejections.
         uint max = MAX_SUPPLY / input.users.length;
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             vm.assume(input.deposits[i] != 0);
             vm.assume(input.deposits[i] < max);
         }
 
         // Mint deposit amount of underliers to users.
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             underlier.mint(input.users[i], input.deposits[i]);
         }
 
         // Each user gives infinite allowance to fundingManager.
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             vm.prank(input.users[i]);
             underlier.approve(address(fundingManager), type(uint).max);
         }
 
         // Half the users deposit their underliers.
-        for (uint i; i < input.users.length / 2; i++) {
+        for (uint i; i < input.users.length / 2; ++i) {
             vm.prank(input.users[i]);
             fundingManager.deposit(input.deposits[i]);
 
@@ -157,7 +157,7 @@ contract FundingManagerTest is Test {
         // The users who funded tokens, lost half their receipt tokens.
         // Note to rebase because balanceOf is not a token-state mutating function.
         fundingManager.rebase();
-        for (uint i; i < input.users.length / 2; i++) {
+        for (uint i; i < input.users.length / 2; ++i) {
             // Note that we can be off-by-one due to rounding.
             assertApproxEqAbs(
                 fundingManager.balanceOf(input.users[i]),
@@ -167,7 +167,7 @@ contract FundingManagerTest is Test {
         }
 
         // The other half of the users deposit their underliers.
-        for (uint i = input.users.length / 2; i < input.users.length; i++) {
+        for (uint i = input.users.length / 2; i < input.users.length; ++i) {
             vm.prank(input.users[i]);
             fundingManager.depositFor(input.users[i], input.deposits[i]);
 
@@ -187,7 +187,7 @@ contract FundingManagerTest is Test {
         vm.assume(input.users.length < 1000);
 
         // Each user is unique and valid recipient.
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             vm.assume(!_usersCache[input.users[i]]);
             _usersCache[input.users[i]] = true;
 
@@ -200,7 +200,7 @@ contract FundingManagerTest is Test {
         // Note that the length of users is used. deposits[users.length:] will
         // not be used and is just accepted to have less fuzzer rejections.
         uint max = MAX_SUPPLY / input.users.length;
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             vm.assume(input.deposits[i] != 0);
             vm.assume(input.deposits[i] < max);
         }
@@ -219,13 +219,13 @@ contract FundingManagerTest is Test {
         assertEq(fundingManager.balanceOf(address(this)), 1);
 
         // Mint deposit amount of underliers to users.
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             underlier.mint(input.users[i], input.deposits[i]);
             remainingFunds[i] = input.deposits[i];
         }
 
         // Each user gives infinite allowance to fundingManager.
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             vm.prank(input.users[i]);
             underlier.approve(address(fundingManager), type(uint).max);
         }
@@ -233,7 +233,7 @@ contract FundingManagerTest is Test {
         // ---- STEP ONE: FIRST MILESTONE
 
         // Half the users deposit their underliers.
-        for (uint i; i < input.users.length / 2; i++) {
+        for (uint i; i < input.users.length / 2; ++i) {
             vm.prank(input.users[i]);
             fundingManager.deposit(input.deposits[i]);
 
@@ -249,7 +249,7 @@ contract FundingManagerTest is Test {
         // The users who funded tokens, lost half their receipt tokens.
         // Note to rebase because balanceOf is not a token-state mutating function.
         fundingManager.rebase();
-        for (uint i; i < input.users.length / 2; i++) {
+        for (uint i; i < input.users.length / 2; ++i) {
             // Note that we can be off-by-one due to rounding.
             assertApproxEqAbs(
                 fundingManager.balanceOf(input.users[i]),
@@ -263,7 +263,7 @@ contract FundingManagerTest is Test {
         // ---- STEP TWO: SECOND MILESTONE
 
         // The other half of the users deposit their underliers.
-        for (uint i = input.users.length / 2; i < input.users.length; i++) {
+        for (uint i = input.users.length / 2; i < input.users.length; ++i) {
             vm.prank(input.users[i]);
             fundingManager.depositFor(input.users[i], input.deposits[i]);
 
@@ -279,7 +279,7 @@ contract FundingManagerTest is Test {
         // Everybody who deposited lost half their corresponding receipt tokens.
         // Note to rebase because balanceOf is not a token-state mutating function.
         fundingManager.rebase();
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             // Note that we can be off-by-one due to rounding.
             assertApproxEqAbs(
                 fundingManager.balanceOf(input.users[i]),
@@ -294,7 +294,7 @@ contract FundingManagerTest is Test {
         // ---- STEP THREE: WIND DOWN PROPOSAL
 
         // The proposal is deemed completed, so everybody withdraws
-        for (uint i; i < input.users.length; i++) {
+        for (uint i; i < input.users.length; ++i) {
             uint balance = fundingManager.balanceOf(input.users[i]);
             if (balance != 0) {
                 vm.prank(input.users[i]);
@@ -308,7 +308,7 @@ contract FundingManagerTest is Test {
         // ---- STEP FOUR: RE-START PROPOSAL
 
         // Some time passes, and now half the users deposit their underliers again to continue funding (if they had any funds left).
-        for (uint i; i < input.users.length / 2; i++) {
+        for (uint i; i < input.users.length / 2; ++i) {
             if (remainingFunds[i] != 0) {
                 vm.prank(input.users[i]);
                 fundingManager.deposit(remainingFunds[i]);

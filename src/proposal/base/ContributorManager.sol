@@ -162,7 +162,7 @@ abstract contract ContributorManager is
         address[] memory result = new address[](_contributorCounter);
 
         // Populate result array.
-        uint index = 0;
+        uint index;
         address elem = _contributors[_SENTINEL];
         while (elem != _SENTINEL) {
             result[index] = elem;
@@ -189,7 +189,7 @@ abstract contract ContributorManager is
 
         uint len = contributors.length;
 
-        for (uint i; i < len; i++) {
+        for (uint i; i < len; ++i) {
             if (contributors[i] == contributor) {
                 return i != 0 ? contributors[i - 1] : _SENTINEL;
             }
