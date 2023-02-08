@@ -34,28 +34,72 @@ interface ISingleVoteGovernor is IAuthorizer {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice The action would leave an empty voter list.
     error Module__SingleVoteGovernor__EmptyVoters();
+
+    /// @notice The supplied voter address is invalid.
     error Module__SingleVoteGovernor__InvalidVoterAddress();
+
+    /// @notice The quorum cannot exceed the amount of voters
     error Module__SingleVoteGovernor__UnreachableQuorum();
+
+    /// @notice The supplied voting duration is invalid.
     error Module__SingleVoteGovernor__InvalidVotingDuration();
+
+    /// @notice The function can only be called by a voter.
     error Module__SingleVoteGovernor__CallerNotVoter();
+
+    /// @notice The address is already a voter.
     error Module__SingleVoteGovernor__IsAlreadyVoter();
+
+    /// @notice The value given as vote is invalid.
     error Module__SingleVoteGovernor__InvalidSupport();
+
+    /// @notice The supplied ID is referencing a motion that doesn't exist.
     error Module__SingleVoteGovernor__InvalidMotionId();
+
+    /// @notice A user cannot vote twice.
     error Module__SingleVoteGovernor__AttemptedDoubleVote();
+
+    /// @notice A motion cannot be executed if the voting duration hasn't passed.
     error Module__SingleVoteGovernor__MotionInVotingPhase();
+
+    /// @notice A motion cannot be voted on if the duration has been exceeded.
     error Module__SingleVoteGovernor__MotionVotingPhaseClosed();
+
+    /// @notice A motion cannot be executed twice.
     error Module__SingleVoteGovernor__MotionAlreadyExecuted();
+
+    /// @notice A motion cannot be executed if it didn't reach quorum.
     error Module__SingleVoteGovernor__QuorumNotReached();
 
     //--------------------------------------------------------------------------
     // Events
 
+    /// @notice Event emitted when a new voter address gets added.
+    /// @param who The added address.
     event VoterAdded(address indexed who);
+
+    /// @notice Event emitted when a voter address gets removed.
+    /// @param who The removed address.
     event VoterRemoved(address indexed who);
+
+    /// @notice Event emitted when the required quorum changes.
+    /// @param oldQuorum The old quorum.
+    /// @param newQuorum The new quorum.
     event QuorumUpdated(uint oldQuorum, uint newQuorum);
+
+    /// @notice Event emitted when the voting duration changes.
+    /// @param oldVotingDuration The old voting duration.
+    /// @param newVotingDuration The new voting duration.
     event VoteDurationUpdated(uint oldVotingDuration, uint newVotingDuration);
+
+    /// @notice Event emitted when a motion is created
+    /// @param motionId The motion ID.
     event MotionCreated(uint indexed motionId);
+
+    /// @notice Event emitted when a motion is executed.
+    /// @param motionId The motion ID.
     event MotionExecuted(uint indexed motionId);
 
     //--------------------------------------------------------------------------

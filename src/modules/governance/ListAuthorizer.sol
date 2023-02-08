@@ -30,14 +30,25 @@ import {IProposal, IAuthorizer} from "src/proposal/IProposal.sol";
 contract ListAuthorizer is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // Errors
+
+    /// @notice Authorization cannot be transferred to an already authorized address.
     error Module__ListAuthorizer__AddressAlreadyAuthorized();
+
+    /// @notice The list of authorized address cannot be empty.
     error Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
+
+    /// @notice The supplied list of initial authorized addresses is invalid.
     error Module__ListAuthorizer__invalidInitialAuthorizers();
 
     //--------------------------------------------------------------------------
     // Events
 
+    /// @notice Event emitted when a new address gets authorized.
+    /// @param added The newly authorized address.
     event AddedAuthorizedAddress(address added);
+
+    /// @notice Event emitted when an address gets removed from the authorized list.
+    /// @param removed The removed address.
     event RemovedAuthorizedAddress(address removed);
 
     //--------------------------------------------------------------------------
