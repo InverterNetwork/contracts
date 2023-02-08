@@ -1,9 +1,10 @@
 # Proposal.sol
+
 File: [Proposal.sol](../../src/proposal/Proposal.sol)
 
 ## Things to know
 
-1. **Subject to change, based on the usage of the FundingVault:** A proposal is composed of a funding mechanism ([FundingManager.sol](../../src/proposal/base/FundingManager.sol)), a set of contributors ([ContributorManager.sol](../../src/proposal/base/ContributorManager.sol)), and a set of modules ([ModuleManager.sol](../../src/proposal/base/ModuleManager.sol)).
+1. **Subject to change, based on the usage of the FundingVault:** A proposal is composed of a funding mechanism ([FundingManager.sol](../../src/proposal/base/FundingManager.sol)) and a set of modules ([ModuleManager.sol](../../src/proposal/base/ModuleManager.sol)).
 2. Each proposal has a unique id.
 3. The token being accepted for funding is non-changeable and set during initialization.
 4. Authorizations are done via an IAuthorizer instance. This is also static and cannot be changed, once set.
@@ -49,7 +50,7 @@ Returns the owner of the Proposal.
 1. `uint proposalId_` -> An unsigned integer that will be used as the ID of the proposal being created
 2. `address owner_` -> Address of the owner of the proposal
 3. `IERC20 token_` -> `IERC20` instance of the token which will be used for funding
-4. `address[] modules` -> Array of addresses of modules which will be used in the proposal being created 
+4. `address[] modules` -> Array of addresses of modules which will be used in the proposal being created
 5. `IAuthorizer authorizer_` -> `IAuthorizer` instance of the authorizer module which will be used for access control in the Proposal being created
 6. `IPaymentProcessor paymentProcessor_` -> `IPaymentProcessor` instance of the payment processor module which will be used to handle all aspects of payments in the proposal being created.
 
