@@ -148,7 +148,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testListMilestoneIds(uint amount) public {
         amount = bound(amount, 0, MAX_MILESTONES);
 
-        for (uint i; i < amount; i++) {
+        for (uint i; i < amount; ++i) {
             milestoneManager.addMilestone(
                 DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
@@ -156,7 +156,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint[] memory ids = milestoneManager.listMilestoneIds();
 
-        for (uint i; i < amount; i++) {
+        for (uint i; i < amount; ++i) {
             assertEq(ids[i], i + 1); // Note that id's start at one.
         }
     }
@@ -168,7 +168,7 @@ contract MilestoneManagerTest is ModuleTest {
         whos = bound(whos, 1, MAX_MILESTONES);
         randomWho = bound(randomWho, 1, whos);
 
-        for (uint i; i < whos; i++) {
+        for (uint i; i < whos; ++i) {
             milestoneManager.addMilestone(
                 DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
@@ -441,7 +441,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint id;
 
         // Add each milestone.
-        for (uint i; i < amount; i++) {
+        for (uint i; i < amount; ++i) {
             vm.expectEmit(true, true, true, true);
             emit MilestoneAdded(
                 i + 1, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
@@ -468,7 +468,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint[] memory ids = milestoneManager.listMilestoneIds();
 
         assertEq(ids.length, amount);
-        for (uint i; i < amount; i++) {
+        for (uint i; i < amount; ++i) {
             assertEq(ids[i], i + 1); // Note that id's start at 1.
         }
     }
@@ -489,7 +489,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testAddMilestoneFailsForInvalidDuration() public {
         uint[] memory invalids = _createInvalidDurations();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IMilestoneManager
                     .Module__MilestoneManager__InvalidDuration
@@ -511,7 +511,7 @@ contract MilestoneManagerTest is ModuleTest {
     //
     //    vm.startPrank(address(_proposal));
     //
-    //    for (uint i; i < invalids.length; i++) {
+    //    for (uint i; i < invalids.length; ++i) {
     //        vm.expectRevert(
     //            IMilestoneManager
     //                .Module__MilestoneManager__InvalidBudget
@@ -526,7 +526,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testAddMilestoneFailsForInvalidTitle() public {
         string[] memory invalidTitles = _createInvalidTitles();
 
-        for (uint i; i < invalidTitles.length; i++) {
+        for (uint i; i < invalidTitles.length; ++i) {
             vm.expectRevert(
                 IMilestoneManager
                     .Module__MilestoneManager__InvalidTitle
@@ -545,7 +545,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testAddMilestoneFailsForInvalidDetails() public {
         string[] memory invalidDetails = _createInvalidDetails();
 
-        for (uint i; i < invalidDetails.length; i++) {
+        for (uint i; i < invalidDetails.length; ++i) {
             vm.expectRevert(
                 IMilestoneManager
                     .Module__MilestoneManager__InvalidDetails
@@ -673,7 +673,7 @@ contract MilestoneManagerTest is ModuleTest {
         amount = bound(amount, 1, MAX_MILESTONES);
 
         // Fill list with milestones.
-        for (uint i; i < amount; i++) {
+        for (uint i; i < amount; ++i) {
             milestoneManager.addMilestone(
                 DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
@@ -681,7 +681,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Remove milestones from the front, i.e. lowest milestone id, until
         // list is empty.
-        for (uint i; i < amount; i++) {
+        for (uint i; i < amount; ++i) {
             uint id = i + 1; // Note that id's start at 1.
 
             vm.expectEmit(true, true, true, true);
@@ -692,7 +692,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
 
         // Fill list again with milestones.
-        for (uint i; i < amount; i++) {
+        for (uint i; i < amount; ++i) {
             milestoneManager.addMilestone(
                 DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
@@ -700,7 +700,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         // Remove milestones from the back, i.e. highest milestone id, until
         // list is empty.
-        for (uint i; i < amount; i++) {
+        for (uint i; i < amount; ++i) {
             // Note that id's start at 1.
             uint prevId = amount - i - 1;
             uint id = amount - i;
@@ -1039,7 +1039,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint[] memory invalids = _createInvalidDurations();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IMilestoneManager
                     .Module__MilestoneManager__InvalidDuration
@@ -1062,7 +1062,7 @@ contract MilestoneManagerTest is ModuleTest {
     //
     //    uint[] memory invalids = _createInvalidBudgets();
     //
-    //    for (uint i; i < invalids.length; i++) {
+    //    for (uint i; i < invalids.length; ++i) {
     //        vm.expectRevert(IMilestoneManager.Module__MilestoneManager__InvalidBudgets.selector);
     //        milestoneManager.updateMilestone(id, DURATION, invalids[i], DETAILS);
     //    }
@@ -1075,7 +1075,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         string[] memory invalids = _createInvalidDetails();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IMilestoneManager
                     .Module__MilestoneManager__InvalidDetails
@@ -1135,7 +1135,7 @@ contract MilestoneManagerTest is ModuleTest {
             vm.assume(moveToId != 0 && moveToId < amountOfMilestones + 1);
         }
 
-        for (uint i = 0; i < amountOfMilestones; i++) {
+        for (uint i = 0; i < amountOfMilestones; ++i) {
             milestoneManager.addMilestone(
                 DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, DETAILS
             );
@@ -1829,7 +1829,7 @@ contract MilestoneManagerTest is ModuleTest {
         IPaymentClient.PaymentOrder[] memory orders =
             milestoneManager.paymentOrders();
 
-        for (uint i = 1; i < orders.length; i++) {
+        for (uint i = 1; i < orders.length; ++i) {
             assertEq(orders[i].amount, payouts[i]);
         }
 
@@ -1876,7 +1876,7 @@ contract MilestoneManagerTest is ModuleTest {
         IPaymentClient.PaymentOrder[] memory orders =
             milestoneManager.paymentOrders();
 
-        for (uint i = 1; i < orders.length; i++) {
+        for (uint i = 1; i < orders.length; ++i) {
             assertEq(orders[i].amount, payouts[i]);
         }
 
@@ -1905,7 +1905,7 @@ contract MilestoneManagerTest is ModuleTest {
         assertEq(m.budget, budget);
 
         assertEq(m.contributors.length, contributors.length);
-        for (uint i; i < m.contributors.length; i++) {
+        for (uint i; i < m.contributors.length; ++i) {
             assertEq(m.contributors[i].addr, contributors[i].addr);
             assertEq(m.contributors[i].salary, contributors[i].salary);
         }
@@ -1985,7 +1985,7 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contributors =
             new IMilestoneManager.Contributor[](contribs.length);
 
-        for (uint i; i < contribs.length; i++) {
+        for (uint i; i < contribs.length; ++i) {
             uint _salary = SALARY_PRECISION / contribs.length;
             IMilestoneManager.Contributor memory _buf =
                 IMilestoneManager.Contributor(contribs[i], _salary, "testData");
@@ -2014,7 +2014,7 @@ contract MilestoneManagerTest is ModuleTest {
         //assign pseudoRandom with until limit
         uint accumSalary;
 
-        for (uint i; i < contribs.length; i++) {
+        for (uint i; i < contribs.length; ++i) {
             uint _salary = pseudoRandomSalary(contribs[i], SALARY_PRECISION);
             if ((accumSalary + _salary) <= SALARY_PRECISION) {
                 accumSalary += _salary;
@@ -2057,7 +2057,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
 
         uint length = milestoneList.length;
-        for (uint i = 0; i < length; i++) {
+        for (uint i = 0; i < length; ++i) {
             if (id == milestoneList[i]) {
                 if (i == (length - 1)) {
                     return type(uint).max;
@@ -2080,7 +2080,7 @@ contract MilestoneManagerTest is ModuleTest {
     mapping(address => bool) contributorCache;
 
     function assumeValidContributors(address[] memory addrs) public {
-        for (uint i; i < addrs.length; i++) {
+        for (uint i; i < addrs.length; ++i) {
             assumeValidContributor(addrs[i]);
 
             // Assume contributor address unique.
@@ -2094,7 +2094,7 @@ contract MilestoneManagerTest is ModuleTest {
     function assumeValidContributor(address a) public view {
         address[] memory invalids = createInvalidContributors();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.assume(a != invalids[i]);
         }
     }

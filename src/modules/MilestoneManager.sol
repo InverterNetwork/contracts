@@ -261,7 +261,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint[] memory result = new uint256[](_milestoneCounter);
 
         // Populate result array.
-        uint index = 0;
+        uint index;
         uint elem = _milestones[_SENTINEL];
         while (elem != _SENTINEL) {
             result[index] = elem;
@@ -338,7 +338,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint[] memory milestoneIds = listMilestoneIds();
 
         uint len = milestoneIds.length;
-        for (uint i; i < len; i++) {
+        for (uint i; i < len; ++i) {
             if (milestoneIds[i] == id) {
                 return i != 0 ? milestoneIds[i - 1] : _SENTINEL;
             }
@@ -354,7 +354,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         Contributor[] memory contribs =
             getMilestoneInformation(milestoneId).contributors;
 
-        for (uint i; i < contribs.length; i++) {
+        uint len = contribs.length;
+        for (uint i; i < len; ++i) {
             if (contribs[i].addr == who) {
                 return true;
             }
@@ -450,7 +451,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         if (m.budget != 0) {
             // Create payment order for each contributor of the new  milestone.
-            for (uint i; i < contribCache.length; ++i) {
+            uint len = contribCache.length;
+            for (uint i; i < len; ++i) {
                 // Calculate the payout amount.
                 uint contributorPayout =
                     ((m.budget / SALARY_PRECISION) * contribCache[i].salary);
@@ -513,7 +515,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         if (hashContributors(m.contributors) != hashContributors(contributors))
         {
             delete m.contributors;
-            for (uint i; i < contributors.length; ++i) {
+            uint len = contributors.length;
+            for (uint i; i < len; ++i) {
                 m.contributors.push(contributors[i]);
             }
             changed = true;
@@ -673,7 +676,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneRegistry[milestoneId].duration = milestone.duration;
         _milestoneRegistry[milestoneId].budget = milestone.budget;
 
-        for (uint i; i < milestone.contributors.length; ++i) {
+        uint len = milestone.contributors.length;
+        for (uint i; i < len; ++i) {
             _milestoneRegistry[milestoneId].contributors.push(
                 milestone.contributors[i]
             );
@@ -736,11 +740,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         pure
         returns (bytes32)
     {
-        address[] memory addrCache = new address[](contributors.length);
-        uint[] memory salaryCache = new uint[](contributors.length);
-        bytes32[] memory dataCache = new bytes32[](contributors.length);
+        uint len = contributors.length;
 
-        for (uint i; i < contributors.length; ++i) {
+        address[] memory addrCache = new address[](len);
+        uint[] memory salaryCache = new uint[](len);
+        bytes32[] memory dataCache = new bytes32[](len);
+
+        for (uint i; i < len; ++i) {
             addrCache[i] = contributors[i].addr;
             salaryCache[i] = contributors[i].salary;
             dataCache[i] = contributors[i].data;

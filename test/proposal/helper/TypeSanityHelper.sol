@@ -14,7 +14,7 @@ contract TypeSanityHelper is Test {
     // Helpers
 
     function assumeElemNotInSet(address[] memory set, address elem) public {
-        for (uint i; i < set.length; i++) {
+        for (uint i; i < set.length; ++i) {
             vm.assume(elem != set[i]);
         }
     }
@@ -36,7 +36,7 @@ contract TypeSanityHelper is Test {
     mapping(address => bool) moduleCache;
 
     function assumeValidModules(address[] memory modules) public {
-        for (uint i; i < modules.length; i++) {
+        for (uint i; i < modules.length; ++i) {
             assumeValidModule(modules[i]);
 
             // Assume module unique.
@@ -50,7 +50,7 @@ contract TypeSanityHelper is Test {
     function assumeValidModule(address module) public {
         address[] memory invalids = createInvalidModules();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.assume(module != invalids[i]);
         }
     }
@@ -82,7 +82,7 @@ contract TypeSanityHelper is Test {
     mapping(address => bool) contributorCache;
 
     function assumeValidContributors(address[] memory addrs) public {
-        for (uint i; i < addrs.length; i++) {
+        for (uint i; i < addrs.length; ++i) {
             assumeValidContributor(addrs[i]);
 
             // Assume contributor address unique.
@@ -96,7 +96,7 @@ contract TypeSanityHelper is Test {
     function assumeValidContributor(address a) public {
         address[] memory invalids = createInvalidContributors();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.assume(a != invalids[i]);
         }
     }

@@ -127,7 +127,7 @@ contract SingleVoteGovernorTest is Test {
     }
 
     function batchAddAuthorized(address[] memory users) public {
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             // We add a new address through governance.
             bytes memory _encodedAction =
                 abi.encodeWithSignature("addVoter(address)", users[i]);
@@ -170,7 +170,7 @@ contract SingleVoteGovernorTest is Test {
         }
         uint _voteID = createVote(_voters[0], _target, _action);
 
-        for (uint i; i < _voters.length; i++) {
+        for (uint i; i < _voters.length; ++i) {
             voteInFavor(_voters[i], _voteID);
         }
 
@@ -190,7 +190,7 @@ contract SingleVoteGovernorTest is Test {
         }
         uint _voteID = createVote(_voters[0], _target, _action);
 
-        for (uint i = 1; i < _authorizer.quorum(); i++) {
+        for (uint i = 1; i < _authorizer.quorum(); ++i) {
             if (i < _voters.length) {
                 voteInFavor(_voters[(i - 1)], _voteID);
             }
@@ -239,7 +239,7 @@ contract SingleVoteGovernorTest is Test {
         _bufMotion.executionResult = _excRes;
         _bufMotion.executionReturnData = _excData;
 
-        for (uint i; i < currentVoters.length; i++) {
+        for (uint i; i < currentVoters.length; ++i) {
             _bufMotion.receipts[currentVoters[i]] =
                 _authorizer.getReceipt(voteId, currentVoters[i]);
         }
@@ -263,7 +263,7 @@ contract SingleVoteGovernorTest is Test {
 
         //Since the authorizer we are working with is not the default one,
         // we must manually control that the fuzzer doesn't feed us its address
-        for (uint i; i < testVoters.length; i++) {
+        for (uint i; i < testVoters.length; ++i) {
             vm.assume(testVoters[i] != address(testAuthorizer));
         }
 
@@ -275,7 +275,7 @@ contract SingleVoteGovernorTest is Test {
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
 
-        for (uint i; i < testVoters.length; i++) {
+        for (uint i; i < testVoters.length; ++i) {
             assertEq(testAuthorizer.isVoter(testVoters[i]), true);
         }
         assertEq(testAuthorizer.isVoter(address(this)), false);
@@ -300,7 +300,7 @@ contract SingleVoteGovernorTest is Test {
 
         //Since the authorizer we are working with is not the default one,
         // we must manually control that the fuzzer doesn't feed us its address
-        for (uint i; i < testVoters.length; i++) {
+        for (uint i; i < testVoters.length; ++i) {
             vm.assume(testVoters[i] != address(testAuthorizer));
         }
 
@@ -417,7 +417,7 @@ contract SingleVoteGovernorTest is Test {
     function testCreateVote() public {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
 
-        for (uint i; i < initialVoters.length; i++) {
+        for (uint i; i < initialVoters.length; ++i) {
             uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
             ISingleVoteGovernor.Motion storage _motion =
@@ -444,7 +444,7 @@ contract SingleVoteGovernorTest is Test {
 
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_authorizer.isVoter(users[i]), false);
             vm.expectRevert(
                 ISingleVoteGovernor
@@ -460,7 +460,7 @@ contract SingleVoteGovernorTest is Test {
         _validateUserList(users);
         batchAddAuthorized(users);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
             vm.prank(users[i]); //authorized, but not Module
             _authorizer.addVoter(users[i]);
@@ -471,7 +471,7 @@ contract SingleVoteGovernorTest is Test {
         _validateUserList(users);
         batchAddAuthorized(users);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
             vm.prank(users[i]); //authorized, but not Module
             _authorizer.removeVoter(users[i]);
@@ -486,7 +486,7 @@ contract SingleVoteGovernorTest is Test {
 
         batchAddAuthorized(users);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_authorizer.isVoter(users[i]), true);
 
             //prank as that address, create a vote and vote on it
@@ -518,7 +518,7 @@ contract SingleVoteGovernorTest is Test {
 
         uint startTime = block.timestamp;
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             vm.warp(startTime + i);
             voteInFavor(users[i], _voteID);
         }
@@ -535,7 +535,7 @@ contract SingleVoteGovernorTest is Test {
         assertEq(_motion.receipts[BOB].hasVoted, true);
         assertEq(_motion.receipts[BOB].support, 0);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_motion.receipts[users[i]].hasVoted, true);
             assertEq(_motion.receipts[users[i]].support, 0);
         }
@@ -551,7 +551,7 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
             vm.expectRevert(
                 ISingleVoteGovernor
@@ -578,7 +578,7 @@ contract SingleVoteGovernorTest is Test {
 
         uint startTime = block.timestamp;
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             vm.warp(startTime + i);
             voteAgainst(users[i], _voteID);
         }
@@ -595,7 +595,7 @@ contract SingleVoteGovernorTest is Test {
         assertEq(_motion.receipts[BOB].hasVoted, true);
         assertEq(_motion.receipts[BOB].support, 1);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_motion.receipts[users[i]].hasVoted, true);
             assertEq(_motion.receipts[users[i]].support, 1);
         }
@@ -610,7 +610,7 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
             vm.expectRevert(
                 ISingleVoteGovernor
@@ -637,7 +637,7 @@ contract SingleVoteGovernorTest is Test {
 
         uint startTime = block.timestamp;
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             vm.warp(startTime + i);
             voteAbstain(users[i], _voteID);
         }
@@ -655,7 +655,7 @@ contract SingleVoteGovernorTest is Test {
         assertEq(_r.hasVoted, true);
         assertEq(_r.support, 2);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             _r = _authorizer.getReceipt(_voteID, users[i]);
             assertEq(_r.hasVoted, true);
             assertEq(_r.support, 2);
@@ -669,7 +669,7 @@ contract SingleVoteGovernorTest is Test {
         assertEq(_motion.receipts[BOB].hasVoted, true);
         assertEq(_motion.receipts[BOB].support, 2);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_motion.receipts[users[i]].hasVoted, true);
             assertEq(_motion.receipts[users[i]].support, 2);
         }
@@ -684,7 +684,7 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
             vm.expectRevert(
                 ISingleVoteGovernor
@@ -701,7 +701,7 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        for (uint i; i < nums.length; i++) {
+        for (uint i; i < nums.length; ++i) {
             vm.assume(nums[i] < 100_000_000_000);
             vm.warp(block.timestamp + DEFAULT_DURATION + 1 + nums[i]);
 
@@ -738,7 +738,7 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        for (uint i; i < wrongIDs.length; i++) {
+        for (uint i; i < wrongIDs.length; ++i) {
             vm.assume(wrongIDs[i] > _voteID);
             uint wrongID = wrongIDs[i];
 
@@ -794,7 +794,7 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             //vote once
             voteAgainst(users[i], _voteID);
 
@@ -936,19 +936,19 @@ contract SingleVoteGovernorTest is Test {
         _validateUserList(users);
 
         vm.startPrank(address(_authorizer));
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             _authorizer.addVoter(users[i]);
         }
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_authorizer.isVoter(users[i]), true);
         }
         //test idempotence. We do the same again and verify that nothing fails and everything stays the same.
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             _authorizer.addVoter(users[i]);
         }
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_authorizer.isVoter(users[i]), true);
         }
 
@@ -960,19 +960,19 @@ contract SingleVoteGovernorTest is Test {
         batchAddAuthorized(users);
 
         vm.startPrank(address(_authorizer));
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             _authorizer.removeVoter(users[i]);
         }
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_authorizer.isVoter(users[i]), false);
         }
         //test idempotence. We do the same again and verify that nothing fails and everything stays the same.
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             _authorizer.removeVoter(users[i]);
         }
 
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             assertEq(_authorizer.isVoter(users[i]), false);
         }
 
@@ -988,14 +988,14 @@ contract SingleVoteGovernorTest is Test {
         address[] memory _from = new address[](middle);
         address[] memory _to = new address[](middle);
 
-        for (uint i = 0; i < middle; i++) {
+        for (uint i = 0; i < middle; ++i) {
             _from[i] = users[i];
             _to[i] = users[users.length - (1 + i)];
         }
 
         batchAddAuthorized(_from);
 
-        for (uint i; i < _from.length; i++) {
+        for (uint i; i < _from.length; ++i) {
             // first, test a normal successful authorization transfer
             vm.prank(_from[i]);
             _authorizer.transferVotingRights(_to[i]);
@@ -1013,7 +1013,7 @@ contract SingleVoteGovernorTest is Test {
 
         batchAddAuthorized(users);
 
-        for (uint i; i < users.length - 1; i++) {
+        for (uint i; i < users.length - 1; ++i) {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     ISingleVoteGovernor
@@ -1103,7 +1103,7 @@ contract SingleVoteGovernorTest is Test {
         batchAddAuthorized(users);
 
         uint _newQ = 1;
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
             vm.prank(users[i]); //authorized, but not Proposal
             _authorizer.setQuorum(_newQ);
@@ -1190,7 +1190,7 @@ contract SingleVoteGovernorTest is Test {
         batchAddAuthorized(users);
 
         uint _newDuration = 5 days;
-        for (uint i; i < users.length; i++) {
+        for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
             vm.prank(users[i]); //authorized, but not Proposal
             _authorizer.setVotingDuration(_newDuration);
@@ -1215,7 +1215,7 @@ contract SingleVoteGovernorTest is Test {
     mapping(address => bool) userCache;
 
     function assumeValidUsers(address[] memory addrs) public {
-        for (uint i; i < addrs.length; i++) {
+        for (uint i; i < addrs.length; ++i) {
             assumeValidUser(addrs[i]);
 
             // Assume contributor address unique.
@@ -1229,7 +1229,7 @@ contract SingleVoteGovernorTest is Test {
     function assumeValidUser(address a) public {
         address[] memory invalids = createInvalidUsers();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.assume(a != invalids[i]);
         }
     }

@@ -16,6 +16,9 @@ interface IPaymentClient {
         uint dueTo;
     }
 
+    //--------------------------------------------------------------------------
+    // Errors
+
     /// @notice Function is only callable by authorized address.
     error Module__PaymentClient__CallerNotAuthorized();
 
@@ -34,7 +37,16 @@ interface IPaymentClient {
     /// @notice Given arrays' length mismatch.
     error Module__PaymentClient__ArrayLengthMismatch();
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Added a payment order.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
     event PaymentAdded(address indexed recipient, uint amount);
+
+    //--------------------------------------------------------------------------
+    // Functions
 
     /// @notice Returns the list of outstanding payment orders.
     function paymentOrders() external view returns (PaymentOrder[] memory);

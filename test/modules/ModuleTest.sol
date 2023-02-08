@@ -113,13 +113,13 @@ abstract contract ModuleTest is Test {
     // assumeElemNotInSet functions for different types:
 
     function _assumeElemNotInSet(address[] memory set, address elem) internal {
-        for (uint i; i < set.length; i++) {
+        for (uint i; i < set.length; ++i) {
             vm.assume(elem != set[i]);
         }
     }
 
     function _assumeElemNotInSet(uint[] memory set, uint elem) internal {
-        for (uint i; i < set.length; i++) {
+        for (uint i; i < set.length; ++i) {
             vm.assume(elem != set[i]);
         }
     }
@@ -127,7 +127,7 @@ abstract contract ModuleTest is Test {
     function _assumeElemNotInSet(string[] memory set, string memory elem)
         internal
     {
-        for (uint i; i < set.length; i++) {
+        for (uint i; i < set.length; ++i) {
             vm.assume(!elem.equals(set[i]));
         }
     }

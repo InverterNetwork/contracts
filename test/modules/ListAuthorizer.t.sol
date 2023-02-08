@@ -101,7 +101,7 @@ contract ListAuthorizerTest is Test {
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
 
-        for (uint i; i < initialAuth.length; i++) {
+        for (uint i; i < initialAuth.length; ++i) {
             assertEq(testAuthorizer.isAuthorized(initialAuth[i]), true);
         }
         assertEq(testAuthorizer.isAuthorized(address(this)), false);
@@ -166,12 +166,12 @@ contract ListAuthorizerTest is Test {
         _validateAuthorizedList(newAuthorized);
 
         vm.startPrank(address(ALBA));
-        for (uint i; i < newAuthorized.length; i++) {
+        for (uint i; i < newAuthorized.length; ++i) {
             _authorizer.addToAuthorized(newAuthorized[i]);
         }
         vm.stopPrank();
 
-        for (uint i; i < newAuthorized.length; i++) {
+        for (uint i; i < newAuthorized.length; ++i) {
             assertEq(_authorizer.isAuthorized(newAuthorized[i]), true);
         }
         assertEq(
@@ -204,18 +204,18 @@ contract ListAuthorizerTest is Test {
         _validateAuthorizedList(newAuthorized);
 
         vm.startPrank(address(ALBA));
-        for (uint i; i < newAuthorized.length; i++) {
+        for (uint i; i < newAuthorized.length; ++i) {
             _authorizer.addToAuthorized(newAuthorized[i]);
         }
         vm.stopPrank();
 
         vm.startPrank(address(ALBA));
-        for (uint i; i < newAuthorized.length; i++) {
+        for (uint i; i < newAuthorized.length; ++i) {
             _authorizer.removeFromAuthorized(newAuthorized[i]);
         }
         vm.stopPrank();
 
-        for (uint i; i < newAuthorized.length; i++) {
+        for (uint i; i < newAuthorized.length; ++i) {
             assertEq(_authorizer.isAuthorized(newAuthorized[i]), false);
         }
 
@@ -229,7 +229,7 @@ contract ListAuthorizerTest is Test {
         uint amountAuth = _authorizer.getAmountAuthorized();
 
         //transfers authorization to the next one on the list
-        for (uint i; i < authList.length; i++) {
+        for (uint i; i < authList.length; ++i) {
             if (i % 2 == 0) {
                 vm.prank(ALBA);
                 _authorizer.addToAuthorized(authList[i]);
@@ -254,13 +254,13 @@ contract ListAuthorizerTest is Test {
     ) public {
         _validateAuthorizedList(authList);
 
-        for (uint i; i < authList.length; i++) {
+        for (uint i; i < authList.length; ++i) {
             vm.prank(ALBA);
             _authorizer.addToAuthorized(authList[i]);
         }
         uint amountAuth = _authorizer.getAmountAuthorized();
 
-        for (uint i = 1; i < authList.length; i++) {
+        for (uint i = 1; i < authList.length; ++i) {
             vm.prank(authList[i]);
             vm.expectRevert(
                 abi.encodeWithSelector(
@@ -272,7 +272,7 @@ contract ListAuthorizerTest is Test {
             _authorizer.transferAuthorization(authList[i - 1]);
         }
 
-        for (uint i = 1; i < authList.length; i++) {
+        for (uint i = 1; i < authList.length; ++i) {
             assertEq(_authorizer.isAuthorized(authList[i]), true);
         }
         assertEq(_authorizer.getAmountAuthorized(), amountAuth);
@@ -281,7 +281,7 @@ contract ListAuthorizerTest is Test {
     function testUnauthorizedCallsFail(address[] memory nonAuthUsers) public {
         _validateAuthorizedList(nonAuthUsers);
 
-        for (uint i; i < nonAuthUsers.length; i++) {
+        for (uint i; i < nonAuthUsers.length; ++i) {
             //test if a non authorized address, fails authorization
             address ATTACKER = nonAuthUsers[i];
             assertEq(_authorizer.isAuthorized(ATTACKER), false);
@@ -321,7 +321,7 @@ contract ListAuthorizerTest is Test {
     mapping(address => bool) authorizedCache;
 
     function assumeValidAuths(address[] memory addrs) public {
-        for (uint i; i < addrs.length; i++) {
+        for (uint i; i < addrs.length; ++i) {
             assumeValidAuth(addrs[i]);
 
             // Assume authorized address unique.
@@ -335,7 +335,7 @@ contract ListAuthorizerTest is Test {
     function assumeValidAuth(address a) public {
         address[] memory invalids = createInvalidAuthorized();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.assume(a != invalids[i]);
         }
     }

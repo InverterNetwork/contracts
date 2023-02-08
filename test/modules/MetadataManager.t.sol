@@ -140,7 +140,7 @@ contract MetadataManagerTest is ModuleTest {
 
         //asserted Length is equal
         uint len = proposalMetadata_.externalMedias.length;
-        for (uint i = 0; i < len; i++) {
+        for (uint i = 0; i < len; ++i) {
             assertEq(
                 proposalMetadata_.externalMedias[i],
                 metadataManager.getProposalMetadata().externalMedias[i]
@@ -154,7 +154,7 @@ contract MetadataManagerTest is ModuleTest {
 
         //asserted Length is equal
         len = proposalMetadata_.categories.length;
-        for (uint i = 0; i < len; i++) {
+        for (uint i = 0; i < len; ++i) {
             assertEq(
                 proposalMetadata_.categories[i],
                 metadataManager.getProposalMetadata().categories[i]
@@ -169,7 +169,7 @@ contract MetadataManagerTest is ModuleTest {
 
         //asserted Length is equal
         uint len = teamMetadata_.length;
-        for (uint i = 0; i < len; i++) {
+        for (uint i = 0; i < len; ++i) {
             assertMemberMetadataEqual(
                 metadataManager.getTeamMetadata()[i], teamMetadata_[i]
             );
