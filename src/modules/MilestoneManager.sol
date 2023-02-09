@@ -71,19 +71,19 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
+    /* 
     modifier validTitle(string memory title_) {
         if (title_.isEmpty()) {
             revert Module__MilestoneManager__InvalidTitle();
         }
         _;
     }
-
-    modifier validDetails(string memory details) {
+    modifier validDetails(bytes memory details) {
         if (details.isEmpty()) {
             revert Module__MilestoneManager__InvalidDetails();
         }
         _;
-    }
+    } */
 
     modifier validPosition(uint id) {
         if (_milestones[id] == 0) {
@@ -385,16 +385,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        string calldata title_,
-        string calldata details
+        bytes32 details
     ) external onlyAuthorizedOrOwner returns (uint) {
-        _validateMilestoneDetails(
-            duration, budget, contributors, title_, details
-        );
+        _validateMilestoneDetails(duration, budget, contributors, details);
 
-        Milestone memory _mlstn = _createMilestoneInstance(
-            duration, budget, contributors, title_, details
-        );
+        Milestone memory _mlstn =
+            _createMilestoneInstance(duration, budget, contributors, details);
 
         return _addMilestoneInstance(_mlstn);
     }
@@ -471,12 +467,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        string memory title,
-        string memory details
+        bytes32 details
     ) external onlyAuthorizedOrOwner validId(id) {
-        _validateMilestoneDetails(
-            duration, budget, contributors, title, details
-        );
+        _validateMilestoneDetails(duration, budget, contributors, details);
 
         Milestone storage m = _milestoneRegistry[id];
 
@@ -502,12 +495,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             changed = true;
         }
 
-        if (!m.title.equals(title)) {
-            m.title = title;
-            changed = true;
-        }
-
-        if (!m.details.equals(details)) {
+        if (m.details != details) {
             m.details = details;
             changed = true;
         }
@@ -524,9 +512,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         if (changed) {
             m.lastUpdatedTimestamp = block.timestamp;
-            emit MilestoneUpdated(
-                id, duration, budget, contributors, title, details
-                );
+            emit MilestoneUpdated(id, duration, budget, contributors, details);
         }
     }
 
@@ -630,21 +616,18 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @param duration The duration of the milestone.
     /// @param budget The budget for the milestone.
     /// @param contributors The contributor information for the milestone
-    /// @param title_ The milestone's title.
     /// @param details The milestone's details.
     /// @return The newly created milestone.
     function _createMilestoneInstance(
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        string calldata title_,
-        string calldata details
+        bytes32 details
     ) internal view returns (Milestone memory) {
         Milestone memory _mlstn = Milestone({
             duration: duration,
             budget: budget,
             contributors: contributors,
-            title: title_,
             details: details,
             startTimestamp: 0,
             submissionData: "",
@@ -683,7 +666,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             );
         }
 
-        _milestoneRegistry[milestoneId].title = milestone.title;
         _milestoneRegistry[milestoneId].details = milestone.details;
         _milestoneRegistry[milestoneId].startTimestamp = 0;
         _milestoneRegistry[milestoneId].submissionData = "";
@@ -694,7 +676,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             milestone.duration,
             milestone.budget,
             milestone.contributors,
-            milestone.title,
             milestone.details
             );
 
@@ -710,23 +691,19 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @param duration The duration of the milestone.
     /// @param budget The budget for the milestone.
     /// @param contributors The contributor information for the milestone
-    /// @param title The milestone's title.
     /// @param details The milestone's details.
     /// @return true if all details are valid, revert if not.
     function _validateMilestoneDetails(
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        string memory title,
-        string memory details
+        bytes32 details
     )
         internal
         view
         validDuration(duration)
         validBudget(budget)
         validContributors(contributors)
-        validTitle(title)
-        validDetails(details)
         returns (bool)
     {
         return true;

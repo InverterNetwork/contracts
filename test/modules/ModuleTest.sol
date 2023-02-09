@@ -131,4 +131,10 @@ abstract contract ModuleTest is Test {
             vm.assume(!elem.equals(set[i]));
         }
     }
+
+    function _assumeElemNotInSet(bytes32[] memory set, bytes32 elem) internal {
+        for (uint i; i < set.length; ++i) {
+            vm.assume(elem != set[i]);
+        }
+    }
 }
