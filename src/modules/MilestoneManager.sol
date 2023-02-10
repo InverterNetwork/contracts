@@ -494,8 +494,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             m.budget = budget;
             changed = true;
         }
-        
-        if (keccak256(abi.encodePacked(m.details)) != keccak256(abi.encodePacked(details))) {
+
+        if (
+            keccak256(abi.encodePacked(m.details))
+                != keccak256(abi.encodePacked(details))
+        ) {
             m.details = details;
             changed = true;
         }

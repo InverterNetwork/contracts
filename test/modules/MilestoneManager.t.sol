@@ -880,17 +880,13 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        
-
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
         );
 
-
-
         // update duration
 
-                vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, true, true, true);
         emit MilestoneUpdated(
             id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
             );
@@ -898,7 +894,6 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.updateMilestone(
             id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
         );
-
 
         // update budget
 
@@ -911,8 +906,6 @@ contract MilestoneManagerTest is ModuleTest {
             id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
         );
 
-
-
         // update contributors
 
         vm.expectEmit(true, true, true, true);
@@ -921,7 +914,6 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.updateMilestone(
             id, duration, budget, contribs, DETAILS
         );
-
 
         // update details
 
@@ -1009,7 +1001,7 @@ contract MilestoneManagerTest is ModuleTest {
     // If this changes:
     // 1. Adjust `createInvalidDetails()` function
     // 2. Add error type to IMilestoneManager
-    // 3. Uncomment this test 
+    // 3. Uncomment this test
     // function testUpdateMilestoneFailsForInvalidDetails() public {
     //     uint id = milestoneManager.addMilestone(
     //         DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1028,7 +1020,7 @@ contract MilestoneManagerTest is ModuleTest {
     //         );
     //     }
     // }
-    
+
     function testUpdateMilestoneFailsIfMilestoneAlreadyStarted(
         address[] memory contributors
     ) public {
@@ -1827,7 +1819,10 @@ contract MilestoneManagerTest is ModuleTest {
             assertEq(m.contributors[i].salary, contributors[i].salary);
         }
 
-        assertTrue(keccak256(abi.encodePacked(m.details)) == keccak256(abi.encodePacked(details)));
+        assertTrue(
+            keccak256(abi.encodePacked(m.details))
+                == keccak256(abi.encodePacked(details))
+        );
 
         assertEq(keccak256(m.submissionData), keccak256(submissionData));
         assertEq(m.completed, completed);

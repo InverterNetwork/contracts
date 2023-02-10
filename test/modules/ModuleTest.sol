@@ -132,9 +132,14 @@ abstract contract ModuleTest is Test {
         }
     }
 
-    function _assumeElemNotInSet(bytes[] memory set, bytes memory elem) internal {
+    function _assumeElemNotInSet(bytes[] memory set, bytes memory elem)
+        internal
+    {
         for (uint i; i < set.length; ++i) {
-            vm.assume(keccak256(abi.encodePacked(elem)) != keccak256(abi.encodePacked(set[i])));
+            vm.assume(
+                keccak256(abi.encodePacked(elem))
+                    != keccak256(abi.encodePacked(set[i]))
+            );
         }
     }
 }
