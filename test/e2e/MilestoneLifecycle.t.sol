@@ -56,13 +56,13 @@ contract MilestoneLifecycle is E2eTest {
             1 weeks,
             1000e18,
             contributors,
-            bytes32(bytes("Here could be a more detailed description"))
+            bytes("Here could be a more detailed description")
         );
         milestoneManager.addMilestone(
             2 weeks,
             5000e18,
             contributors,
-            bytes32(bytes("The second milestone, right after the first one"))
+            bytes("The second milestone, right after the first one")
         );
 
         // IMPORTANT

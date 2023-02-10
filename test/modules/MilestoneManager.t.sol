@@ -36,7 +36,7 @@ contract MilestoneManagerTest is ModuleTest {
     uint constant BUDGET = 1000 * 1e18;
     uint constant SALARY_PRECISION = 100_000_000;
     uint constant MAX_CONTRIBUTORS = 50;
-    bytes32 constant DETAILS = "Details";
+    bytes constant DETAILS = "Details";
     bytes constant SUBMISSION_DATA = "SubmissionData";
     uint constant TIMELOCK = 3 days;
 
@@ -56,14 +56,14 @@ contract MilestoneManagerTest is ModuleTest {
         uint duration,
         uint budget,
         IMilestoneManager.Contributor[] contributors,
-        bytes32 details
+        bytes details
     );
     event MilestoneUpdated(
         uint indexed id,
         uint duration,
         uint budget,
         IMilestoneManager.Contributor[] contributors,
-        bytes32 details
+        bytes details
     );
     event MilestoneRemoved(uint indexed id);
     event MilestoneSubmitted(uint indexed id, bytes indexed submissionData);
@@ -843,7 +843,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testUpdateMilestone(
         uint duration,
         uint budget,
-        bytes32 details,
+        bytes memory details,
         address[] memory contributors
     ) public {
         _assumeValidDuration(duration);
@@ -870,7 +870,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testUpdateMilestoneOneByOne(
         uint duration,
         uint budget,
-        bytes32 details,
+        bytes memory details,
         address[] memory contributors
     ) public {
         _assumeValidDuration(duration);
@@ -1811,7 +1811,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint duration,
         uint budget,
         IMilestoneManager.Contributor[] memory contributors,
-        bytes32 details,
+        bytes memory details,
         bytes memory submissionData,
         bool completed
     ) internal {
@@ -1827,7 +1827,7 @@ contract MilestoneManagerTest is ModuleTest {
             assertEq(m.contributors[i].salary, contributors[i].salary);
         }
 
-        assertTrue(m.details == details);
+        assertTrue(keccak256(abi.encodePacked(m.details)) == keccak256(abi.encodePacked(details)));
 
         assertEq(keccak256(m.submissionData), keccak256(submissionData));
         assertEq(m.completed, completed);
@@ -1844,7 +1844,7 @@ contract MilestoneManagerTest is ModuleTest {
         _assumeElemNotInSet(_createInvalidBudgets(), budget);
     }
 
-    function _assumeValidDetails(bytes32 details) internal {
+    function _assumeValidDetails(bytes memory details) internal {
         _assumeElemNotInSet(_createInvalidDetails(), details);
     }
 
@@ -1871,8 +1871,8 @@ contract MilestoneManagerTest is ModuleTest {
 
     /// Note that there are currently no invalid details.
     /// @dev Returns an element of each category of invalid details.
-    function _createInvalidDetails() internal pure returns (bytes32[] memory) {
-        bytes32[] memory invalidDetails = new bytes32[](1);
+    function _createInvalidDetails() internal pure returns (bytes[] memory) {
+        bytes[] memory invalidDetails = new bytes[](1);
 
         //invalidDetails[0] = ""; // Empty string
 

@@ -78,7 +78,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
         _;
     }
-    modifier validDetails(bytes memory details) {
+    modifier validDetails(bytes calldata details) {
         if (details.isEmpty()) {
             revert Module__MilestoneManager__InvalidDetails();
         }
@@ -385,7 +385,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        bytes32 details
+        bytes calldata details
     ) external onlyAuthorizedOrOwner returns (uint) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
@@ -467,7 +467,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        bytes32 details
+        bytes calldata details
     ) external onlyAuthorizedOrOwner validId(id) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
@@ -494,8 +494,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             m.budget = budget;
             changed = true;
         }
-
-        if (m.details != details) {
+        
+        if (keccak256(abi.encodePacked(m.details)) != keccak256(abi.encodePacked(details))) {
             m.details = details;
             changed = true;
         }
@@ -622,7 +622,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        bytes32 details
+        bytes calldata details
     ) internal view returns (Milestone memory) {
         Milestone memory _mlstn = Milestone({
             duration: duration,
@@ -697,7 +697,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        bytes32 details
+        bytes calldata details
     )
         internal
         view

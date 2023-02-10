@@ -22,7 +22,7 @@ interface IMilestoneManager is IPaymentClient {
         Contributor[] contributors;
         /// @dev Arbitrary data to store milestone details if necessary.
         ///      CAN be empty.
-        bytes32 details;
+        bytes details;
         /// @dev The timestamp the milestone started.
         uint startTimestamp;
         /// @dev Represents the data that is accompanied when a milestone is submitted.
@@ -130,7 +130,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] contributors,
-        bytes32 details
+        bytes details
     );
 
     /// @notice Event emitted when a milestone got updated.
@@ -139,7 +139,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] contributors,
-        bytes32 details
+        bytes details
     );
 
     /// @notice Event emitted when a milestone is removed.
@@ -233,7 +233,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        bytes32 details
+        bytes calldata details
     ) external returns (uint);
 
     /// @notice Removes a milestone.
@@ -264,7 +264,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        bytes32 details
+        bytes calldata details
     ) external;
 
     /// @notice Moves a Milestone in the milestone list
