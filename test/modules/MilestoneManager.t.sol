@@ -492,39 +492,24 @@ contract MilestoneManagerTest is ModuleTest {
     //    }
     //}
 
-    /*     function testAddMilestoneFailsForInvalidTitle() public {
-        string[] memory invalidTitles = _createInvalidTitles();
-
-        for (uint i; i < invalidTitles.length; ++i) {
-            vm.expectRevert(
-                IMilestoneManager
-                    .Module__MilestoneManager__InvalidTitle
-                    .selector
-            );
-            milestoneManager.addMilestone(
-                DURATION,
-                BUDGET,
-                DEFAULT_CONTRIBUTORS,
-                invalidTitles[i],
-                DETAILS
-            );
-        }
-    } */
-    /* 
-    function testAddMilestoneFailsForInvalidDetails() public {
-        string[] memory invalidDetails = _createInvalidDetails();
-
-        for (uint i; i < invalidDetails.length; ++i) {
-            vm.expectRevert(
-                IMilestoneManager
-                    .Module__MilestoneManager__InvalidDetails
-                    .selector
-            );
-            milestoneManager.addMilestone(
-                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, invalidDetails[i]
-            );
-        }
-    } */
+    // Note that there are currently no invalid details defined.
+    // If this changes:
+    // 1. Adjust `createInvalidDetails()` function
+    // 2. Add error type to IMilestoneManager
+    // 3. Uncomment this test
+    // function testAddMilestoneFailsForInvalidDetails() public {
+    //     string[] memory invalidDetails = _createInvalidDetails();
+    //     for (uint i; i < invalidDetails.length; ++i) {
+    //         vm.expectRevert(
+    //             IMilestoneManager
+    //                 .Module__MilestoneManager__InvalidDetails
+    //                 .selector
+    //         );
+    //         milestoneManager.addMilestone(
+    //          DURATION, BUDGET, DEFAULT_CONTRIBUTORS, TITLE, invalidDetails[i]
+    //         );
+    //     }
+    // }
 
     function testAddMilestoneFailsIfContributorsListEmpty() public {
         IMilestoneManager.Contributor[] memory emptyContribs;
@@ -1010,35 +995,40 @@ contract MilestoneManagerTest is ModuleTest {
     // 3. Uncomment this test
     //function testUpdateMilestoneFailsForInvalidBudget() public {
     //    uint id =
-    //        milestoneManager.addMilestone(DURATION, BUDGET, DETAILS);
+    //        milestoneManager.addMilestone(DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS);
     //
     //    uint[] memory invalids = _createInvalidBudgets();
     //
     //    for (uint i; i < invalids.length; ++i) {
     //        vm.expectRevert(IMilestoneManager.Module__MilestoneManager__InvalidBudgets.selector);
-    //        milestoneManager.updateMilestone(id, DURATION, invalids[i], DETAILS);
+    //        milestoneManager.updateMilestone(id, DURATION, invalids[i], DEFAULT_CONTRIBUTORS, DETAILS);
     //    }
     //}
-    /* 
-    function testUpdateMilestoneFailsForInvalidDetails() public {
-        uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-        );
 
-        bytes32[] memory invalids = _createInvalidDetails();
+    // Note that there are currently no invalid details defined.
+    // If this changes:
+    // 1. Adjust `createInvalidDetails()` function
+    // 2. Add error type to IMilestoneManager
+    // 3. Uncomment this test 
+    // function testUpdateMilestoneFailsForInvalidDetails() public {
+    //     uint id = milestoneManager.addMilestone(
+    //         DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+    //     );
 
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IMilestoneManager
-                    .Module__MilestoneManager__InvalidDetails
-                    .selector
-            );
-            milestoneManager.updateMilestone(
-                id, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, invalids[i]
-            );
-        }
-    }
-    */
+    //     bytes32[] memory invalids = _createInvalidDetails();
+
+    //     for (uint i; i < invalids.length; ++i) {
+    //         vm.expectRevert(
+    //             IMilestoneManager
+    //                 .Module__MilestoneManager__InvalidDetails
+    //                 .selector
+    //         );
+    //         milestoneManager.updateMilestone(
+    //             id, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, invalids[i]
+    //         );
+    //     }
+    // }
+    
     function testUpdateMilestoneFailsIfMilestoneAlreadyStarted(
         address[] memory contributors
     ) public {
@@ -1879,15 +1869,7 @@ contract MilestoneManagerTest is ModuleTest {
         return invalids;
     }
 
-    /*  /// @dev Returns an element of each category of invalid titles.
-    function _createInvalidTitles() internal pure returns (string[] memory) {
-        string[] memory invalidTitles = new string[](1);
-
-        invalidTitles[0] = ""; // Empty string
-
-        return invalidTitles;
-    }
-    */
+    /// Note that there are currently no invalid details.
     /// @dev Returns an element of each category of invalid details.
     function _createInvalidDetails() internal pure returns (bytes32[] memory) {
         bytes32[] memory invalidDetails = new bytes32[](1);
