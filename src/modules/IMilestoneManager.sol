@@ -20,6 +20,9 @@ interface IMilestoneManager is IPaymentClient {
         ///      MUST not be empty
         ///      All contributors.salary MUST add up to 100_000_000 (100%)
         Contributor[] contributors;
+        /// @dev Arbitrary data to store milestone details if necessary.
+        ///      CAN be empty.
+        bytes details;
         /// @dev The timestamp the milestone started.
         uint startTimestamp;
         /// @dev Represents the data that is accompanied when a milestone is submitted.
@@ -32,12 +35,6 @@ interface IMilestoneManager is IPaymentClient {
         ///      A milestone is completed if it got confirmed and started more
         ///      than duration seconds ago.
         bool completed;
-        /// @dev The milestone's title.
-        ///      MUST not be empty.
-        string title;
-        /// @dev The milestone's details.
-        ///      MUST not be empty.
-        string details;
         /// @dev The milestone's last updated timestamp
         ///      To start a new milestone, it should not have been updated in the last 5 days
         uint lastUpdatedTimestamp;
@@ -69,9 +66,6 @@ interface IMilestoneManager is IPaymentClient {
     // @audit-info If needed, add error for invalid budget here.
     /// @notice Given budget invalid.
     //error Module__MilestoneManager__InvalidBudget();
-
-    /// @notice Given title invalid.
-    error Module__MilestoneManager__InvalidTitle();
 
     /// @notice Given details invalid.
     error Module__MilestoneManager__InvalidDetails();
@@ -136,8 +130,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] contributors,
-        string title,
-        string details
+        bytes details
     );
 
     /// @notice Event emitted when a milestone got updated.
@@ -146,8 +139,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] contributors,
-        string title,
-        string details
+        bytes details
     );
 
     /// @notice Event emitted when a milestone is removed.
@@ -235,15 +227,13 @@ interface IMilestoneManager is IPaymentClient {
     /// @param duration The duration of the milestone.
     /// @param budget The budget for the milestone.
     /// @param contributors The contributor information for the milestone
-    /// @param title The milestone's title.
     /// @param details The milestone's details.
     /// @return The newly added milestone's id.
     function addMilestone(
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        string memory title,
-        string memory details
+        bytes calldata details
     ) external returns (uint);
 
     /// @notice Removes a milestone.
@@ -274,8 +264,7 @@ interface IMilestoneManager is IPaymentClient {
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
-        string memory title,
-        string memory details
+        bytes calldata details
     ) external;
 
     /// @notice Moves a Milestone in the milestone list
