@@ -895,49 +895,57 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
+        
+
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
         );
 
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneAdded(id, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS);
+
 
         // update duration
+
+                vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(
+            id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+            );
+
         milestoneManager.updateMilestone(
             id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
         );
 
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneUpdated(
-            id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-            );
 
         // update budget
 
-        milestoneManager.updateMilestone(
-            id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
         vm.expectEmit(true, true, true, true);
         emit MilestoneUpdated(
             id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
             );
 
-        // update contributors
         milestoneManager.updateMilestone(
-            id, duration, budget, contribs, DETAILS
+            id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
         );
+
+
+
+        // update contributors
 
         vm.expectEmit(true, true, true, true);
         emit MilestoneUpdated(id, duration, budget, contribs, DETAILS);
 
-        // update details
         milestoneManager.updateMilestone(
-            id, duration, budget, contribs, details
+            id, duration, budget, contribs, DETAILS
         );
+
+
+        // update details
 
         vm.expectEmit(true, true, true, true);
         emit MilestoneUpdated(id, duration, budget, contribs, details);
+
+        milestoneManager.updateMilestone(
+            id, duration, budget, contribs, details
+        );
 
         // check everything ended up ok
 
