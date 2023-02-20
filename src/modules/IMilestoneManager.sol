@@ -113,6 +113,9 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Event emitted when a milestone is removed.
     event MilestoneRemoved(uint indexed id);
 
+    /// @notice Event emitted when a milestone is started.
+    event MilestoneStarted(uint indexed id);
+
     /// @notice Event emitted when a milestone is submitted.
     event MilestoneSubmitted(uint indexed id, bytes submissionData);
 

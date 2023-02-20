@@ -398,9 +398,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             );
         }
 
-        //TODO we should call the paymentProcessor to collect the orders
-        //this way we don't have to leave processPayments open, but can restrict it to only be called at the beginning of a milestone (which would allow us to safely cancel running orders when processing)
-        //proposal().paymentProcessor().processPayments(IPaymentClient(address(this)));
+        //TODO: test payments are cancelled.
+        __Module_proposal.paymentProcessor()
+            .processPayments(IPaymentClient(address(this)));
+
+        emit MilestoneStarted(_last);
     }
 
     /// @inheritdoc IMilestoneManager
