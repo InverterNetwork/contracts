@@ -191,10 +191,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Always links back to the _SENTINEL.
     uint internal _last;
 
-    /// @dev Marks the precision we will use for the salary percentages. Represents what counts as "100%".
-    /// @dev Value is 100_000_000 since it allows for 1$ precision in a 1.000.000$ budget.
-    uint internal constant SALARY_PRECISION = 100_000_000;
-
     /// @dev Marks the maximum amount of contributors per milestone.
     /// @dev Setting a reasonable limit prevents running into 'out of gas' issues with the generated payment order array
     uint internal constant MAXIMUM_CONTRIBUTORS = 50;
@@ -219,6 +215,17 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev The default value will be 3 days. Can be updated by authorized addresses.
     uint private _milestoneUpdateTimelock;
 
+    /// @dev Marks the precision we will use for the salary percentages. Represents what counts as "100%".
+    /// @dev Value is 100_000_000 since it allows for 1$ precision in a 1.000.000$ budget.
+    uint internal SALARY_PRECISION;
+
+    /// @dev Defines what part of the Budget gets taken as fee at the start of a Milestone.
+    /// @dev defined as a value relative to the SALARY_PRECISION
+    uint internal FEE_PCT;
+
+    /// @dev Treasury address to send the fees to.
+    address private FEE_TREASURY;
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -226,7 +233,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function init(
         IProposal proposal_,
         Metadata memory metadata,
-        bytes memory /*configdata*/
+        bytes memory configdata
     ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
 
@@ -238,6 +245,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // be interpreted as active.
         _activeMilestone = _SENTINEL;
         _milestoneUpdateTimelock = 3 days;
+
+        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY) = abi.decode(configdata, (uint, uint, address));
+
+        require(FEE_PCT <= SALARY_PRECISION, "Fee cannot exceed 100%");
+
+
     }
 
     //--------------------------------------------------------------------------
@@ -364,8 +377,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function getSalaryPrecision() public pure returns (uint) {
+    function getSalaryPrecision() public view returns (uint) {
         return SALARY_PRECISION;
+    }
+
+    function getFeePct() public view returns (uint) {
+        return FEE_PCT;
     }
 
     /// @inheritdoc IMilestoneManager
@@ -446,6 +463,16 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         IMilestoneManager.Contributor[] memory contribCache = m.contributors;
 
         if (m.budget != 0) {
+
+            //substract the fee from the budget and send it to treasury
+            uint feePayout =
+                    ((m.budget / SALARY_PRECISION) * FEE_PCT);
+            
+            m.budget -= feePayout;
+
+            _ensureTokenBalance(feePayout);
+            proposal().token().safeTransfer(FEE_TREASURY, feePayout);
+
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
             for (uint i; i < len; ++i) {
@@ -609,6 +636,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // Declining a milestone removes the submitionData and therefore marks it as not submitted again.
         m.submissionData = "";
         emit MilestoneDeclined(milestoneId);
+    }
+
+    function changeTreasuryAddress(address to) external {
+        require(_msgSender() == FEE_TREASURY, "Not authorized");
+        FEE_TREASURY = to;
     }
 
     //--------------------------------------------------------------------------
