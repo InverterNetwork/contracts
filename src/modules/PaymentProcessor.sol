@@ -47,7 +47,9 @@ contract PaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external {
+    function processPayments(IPaymentClient client)
+        external
+    {
         // Collect outstanding orders and their total token amount.
         IPaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
@@ -65,5 +67,13 @@ contract PaymentProcessor is Module, IPaymentProcessor {
 
             token_.safeTransferFrom(address(client), recipient, amount);
         }
+    }
+
+    function cancelRunningPayments(IPaymentClient client)
+        external
+        onlyAuthorizedOrOwner
+    {
+        //Since we pay out on processing, this function does nothing
+        return;
     }
 }

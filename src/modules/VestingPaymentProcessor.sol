@@ -147,6 +147,13 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
+    function cancelRunningPayments(IPaymentClient client)
+        external
+        onlyAuthorizedOrOwner
+    {
+        _cancelRunningOrders(client);
+    }
+
     function _cancelRunningOrders(IPaymentClient client) internal {
         IPaymentClient.PaymentOrder[] memory orders;
         orders = client.paymentOrders();

@@ -11,6 +11,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Types} from "src/common/Types.sol";
 import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
 import {
+    IPaymentClient,
     PaymentClient,
     IPaymentProcessor
 } from "src/modules/mixins/PaymentClient.sol";
@@ -363,6 +364,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                 contributors, contributorPayout, m.duration
             );
         }
+
+        //TODO we should call the paymentProcessor to collect the orders
+        //this way we don't have to leave processPayments open, but can restrict it to only be called at the beginning of a milestone (which would allow us to safely cancel running orders when processing)
+        //proposal().paymentProcessor().processPayments(IPaymentClient(address(this)));
     }
 
     /// @inheritdoc IMilestoneManager
