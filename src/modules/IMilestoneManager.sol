@@ -121,6 +121,12 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given contributor salary invalid.
     error Module__MilestoneManager__InvalidSalarySum();
 
+    /// @notice The fee exceeds 100%
+    error Module__MilestoneManager__FeeOverHundredPercent();
+
+    /// @notice The function can only be called by the treasury
+    error Module__MilestoneManager__OnlyCallableByTreasury();
+
     //--------------------------------------------------------------------------
     // Events
 

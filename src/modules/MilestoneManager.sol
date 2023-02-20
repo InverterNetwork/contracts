@@ -246,11 +246,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _activeMilestone = _SENTINEL;
         _milestoneUpdateTimelock = 3 days;
 
-        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY) = abi.decode(configdata, (uint, uint, address));
+        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY) =
+            abi.decode(configdata, (uint, uint, address));
 
-        require(FEE_PCT <= SALARY_PRECISION, "Fee cannot exceed 100%");
-
-
+        if (FEE_PCT >= SALARY_PRECISION) {
+            revert Module__MilestoneManager__FeeOverHundredPercent();
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -463,11 +464,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         IMilestoneManager.Contributor[] memory contribCache = m.contributors;
 
         if (m.budget != 0) {
-
             //substract the fee from the budget and send it to treasury
-            uint feePayout =
-                    ((m.budget / SALARY_PRECISION) * FEE_PCT);
-            
+            uint feePayout = ((m.budget / SALARY_PRECISION) * FEE_PCT);
+
             m.budget -= feePayout;
 
             _ensureTokenBalance(feePayout);
@@ -639,7 +638,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     function changeTreasuryAddress(address to) external {
-        require(_msgSender() == FEE_TREASURY, "Not authorized");
+        if (_msgSender() != FEE_TREASURY) {
+            revert Module__MilestoneManager__OnlyCallableByTreasury();
+        }
         FEE_TREASURY = to;
     }
 
