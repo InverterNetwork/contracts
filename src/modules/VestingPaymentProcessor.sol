@@ -70,6 +70,9 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice invalid contributor address
     error Module__PaymentManager__InvalidContributor();
 
+    /// @notice insufficient tokens in the client to do payments
+    error Module__PaymentManager__InsufficientTokenBalanceInClient();
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -124,6 +127,10 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         (orders, totalAmount) = client.collectPaymentOrders();
 
         // @todo would we want to hardcode a check here that Balance(client) >= totalAmount ? in our case, collectPaymentOrders() does it already, but you maybe other clients won't...
+
+        if (token().balanceOf(address(client)) < totalAmount) {
+            revert Module__PaymentManager__InsufficientTokenBalanceInClient();
+        }
 
         // Generate Vesting Payments for all orders
         address _recipient;
