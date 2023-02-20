@@ -65,6 +65,9 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given milestone not removable.
     error Module__MilestoneManager__MilestoneNotRemovable();
 
+    // @notice Given milestone not active.
+    error Module__MilestoneManager__MilestoneNotActive();
+
     /// @notice Given milestone not submitable.
     error Module__MilestoneManager__MilestoneNotSubmitable();
 
@@ -102,6 +105,10 @@ interface IMilestoneManager is IPaymentClient {
     event MilestoneUpdated(
         uint indexed id, uint duration, uint budget, string details
     );
+
+    /// @notice Event emitted when a milestone is stopped.
+    // @param refundedAmount amount transfered back to proposal, due stoppage
+    event MilestoneStopped(uint indexed);
 
     /// @notice Event emitted when a milestone is removed.
     event MilestoneRemoved(uint indexed id);
@@ -181,6 +188,14 @@ interface IMilestoneManager is IPaymentClient {
         string memory title,
         string memory details
     ) external returns (uint);
+
+    /// @notice Stops a milestone.
+    /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if id invalid, milestone not currently active or milestone ids
+    ///      not consecutive in list.
+    /// @param prevId The previous milestone's id in the milestone list.
+    /// @param id The milestone's id to remove.
+    function stopMilestone(uint prevId, uint id) external;
 
     /// @notice Removes a milestone.
     /// @dev Only callable by authorized addresses.

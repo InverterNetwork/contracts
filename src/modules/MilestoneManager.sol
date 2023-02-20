@@ -296,6 +296,37 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
+    function stopMilestone(uint prevId, uint id)
+        external
+        onlyAuthorizedOrOwner
+        validId(id)
+        onlyConsecutiveMilestones(prevId, id)
+    {
+        Milestone storage m = _milestoneRegistry[id];
+
+        // Only stoppable if milestone currently active.
+        // revert if not started yet or finished already
+        if (
+            m.startTimestamp == 0
+            || block.timestamp > m.startTimestamp + m.duration) {
+            revert Module__MilestoneManager__MilestoneNotActive();
+        }
+
+        // Remove milestone's id from list and decrease counter.
+        _milestones[prevId] = _milestones[id];
+        delete _milestones[id];
+        _milestoneCounter--;
+
+        // In case last element was removed, update _last to its previous
+        // element.
+        if (id == _last) {
+            _last = prevId;
+        }
+
+        emit MilestoneStopped(id);
+    }
+
+    /// @inheritdoc IMilestoneManager
     function removeMilestone(uint prevId, uint id)
         external
         onlyAuthorizedOrOwner
@@ -323,6 +354,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         if (id == _last) {
             _last = prevId;
         }
+
+        __Module_proposal.paymentProcessor().cancelRunningPayments(IPaymentClient(address(this)));
 
         emit MilestoneRemoved(id);
     }
