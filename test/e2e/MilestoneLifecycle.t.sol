@@ -20,6 +20,12 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * E2e test demonstrating how to add, start, and complete a Milestone.
  */
 contract MilestoneLifecycle is E2eTest {
+    // Before we can start a milestone, two things need to be present:
+    // 1. A non-empty list of contributors for it
+    // 2. The percentage of milestone funding to pay the contributors for the milestone.
+
+    // So lets add Alice and Bob as contributors to the proposal.
+    // Note the salary is specified in relation to the SALARY_PRECISION variable in the MilestoneManager.
     IMilestoneManager.Contributor alice = IMilestoneManager.Contributor(
         address(0xA11CE), 50_000_000, "AliceIdHash"
     );
@@ -75,14 +81,6 @@ contract MilestoneLifecycle is E2eTest {
         token.approve(address(proposal), initialDeposit);
         proposal.deposit(initialDeposit);
 
-        // Before we can start a milestone, two things need to be present:
-        // 1. A non-empty list of contributors in the proposal
-        // 2. The amount of funding to pay the contributors for the milestone
-
-        // So lets add Alice and Bob as contributors to the proposal.
-        //proposal.addContributor(alice, "Alice", "Smart Contract Engineer");
-        //proposal.addContributor(bob, "Bob", "Web Developer");
-        // Note the last argument being the salary for the contributors.
         // However, the salary is not yet taken into in the Milestone module.
         // The milestone's budget is shared equally between all contributors.
 

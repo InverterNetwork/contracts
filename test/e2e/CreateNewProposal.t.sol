@@ -300,32 +300,4 @@ contract ProposalCreation is Test {
 
         proposal.removeModule(previousModule, milestoneManager);
     }
-
-    /*     //We're adding and removing a Contributor here
-    function testManageContributors() public {
-        //Create Proposal
-        IProposal proposal = createNewProposal();
-
-        //--------------------------------------------------------------------------------
-        // Add Contributor
-
-        //Set example Contributor
-        address who = address(0xA);
-        string memory name = "John Doe";
-        string memory role = "Role";
-        uint salary = 1 ether;
-
-        //Add Contributor -> who
-        proposal.addContributor(who, name, role);
-
-        //--------------------------------------------------------------------------------
-        // Remove Contributor
-
-        //Remove Contributor -> who
-
-        //Note: This function is ideally called via the frontend, see the documentation of the getPreviousModule Function
-        address previousContributor = proposal.getPreviousContributor(who);
-
-        proposal.removeContributor(previousContributor, who);
-    } */
 }
