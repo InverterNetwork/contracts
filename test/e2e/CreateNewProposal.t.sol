@@ -277,7 +277,12 @@ contract ProposalCreation is Test {
         //Note: This bytes array is used for transmitting data in a generalized way
         //      to the modules during they initilization via the modulefactory
         //      Some Modules might need additional Deployment/Configuration data
-        bytes memory milestoneManagerConfigdata = bytes("");
+        uint SALARY_PRECISION = 100_000_000;
+        uint FEE_PERCENTAGE = 1_000_000; //1%
+        address FEE_TREASURY = makeAddr("treasury");
+
+        bytes memory milestoneManagerConfigdata =
+            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY);
 
         //Create the module via the moduleFactory
         address milestoneManager = moduleFactory.createModule(

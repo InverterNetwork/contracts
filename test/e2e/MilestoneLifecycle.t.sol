@@ -130,8 +130,10 @@ contract MilestoneLifecycle is E2eTest {
             IPaymentClient(address(milestoneManager))
         );
 
-        assertEq(token.balanceOf(alice.addr), 1000e18 / 2);
-        assertEq(token.balanceOf(bob.addr), 1000e18 / 2);
+        // since we take 1% fee, the expected balance is 990e18/2
+
+        assertEq(token.balanceOf(alice.addr), 990e18 / 2);
+        assertEq(token.balanceOf(bob.addr), 990e18 / 2);
 
         // Lets wait some time now for Alice and Bob to submit their work for
         // the milestone.

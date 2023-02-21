@@ -121,6 +121,12 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given contributor salary invalid.
     error Module__MilestoneManager__InvalidSalarySum();
 
+    /// @notice The fee exceeds 100%
+    error Module__MilestoneManager__FeeOverHundredPercent();
+
+    /// @notice The function can only be called by the treasury
+    error Module__MilestoneManager__OnlyCallableByTreasury();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -212,10 +218,14 @@ interface IMilestoneManager is IPaymentClient {
 
     /// @notice Returns the precision of the salary percentages. Should be read as "100 + digits after comma", representing 100%
     /// @return The salary precision
-    function getSalaryPrecision() external pure returns (uint);
+    function getSalaryPrecision() external view returns (uint);
 
-    /// @notice Returns the precision of the salary percentages. Should be read as "100 + digits after comma", representing 100%
-    /// @return The salary precision
+    /// @notice Returns what part of the Budget gets taken as fee at the start of a Milestone.
+    /// @return The fee, relative to the SALARY_PRECISION
+    function getFeePct() external view returns (uint);
+
+    /// @notice Returns the maximum number of allowed contributors
+    /// @return The maximum contributors
     function getMaximumContributors() external pure returns (uint);
 
     //----------------------------------

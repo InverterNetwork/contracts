@@ -35,6 +35,8 @@ contract MilestoneManagerTest is ModuleTest {
     uint constant DURATION = 1 weeks;
     uint constant BUDGET = 1000 * 1e18;
     uint constant SALARY_PRECISION = 100_000_000;
+    uint constant FEE_PERCENTAGE = 1_000_000; //1%
+    address FEE_TREASURY = makeAddr("treasury");
     uint constant MAX_CONTRIBUTORS = 50;
     bytes constant DETAILS = "Details";
     bytes constant SUBMISSION_DATA = "SubmissionData";
@@ -76,7 +78,10 @@ contract MilestoneManagerTest is ModuleTest {
 
         _setUpProposal(milestoneManager);
 
-        milestoneManager.init(_proposal, _METADATA, bytes(""));
+        bytes memory configdata =
+            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY);
+
+        milestoneManager.init(_proposal, _METADATA, configdata);
 
         _authorizer.setIsAuthorized(address(this), true);
 
@@ -763,11 +768,14 @@ contract MilestoneManagerTest is ModuleTest {
 
         assertEq(orders.length, contributors.length);
 
+        uint feePayout = ((BUDGET / SALARY_PRECISION) * FEE_PERCENTAGE);
+
         //control how much we expect the payouts to be
         uint[] memory payouts = new uint[](contribs.length);
         for (uint i; i < contribs.length; ++i) {
             uint bufPayout;
-            bufPayout = (BUDGET / SALARY_PRECISION) * contribs[i].salary;
+            bufPayout =
+                ((BUDGET - feePayout) / SALARY_PRECISION) * contribs[i].salary;
             payouts[i] = bufPayout;
         }
 
@@ -782,12 +790,14 @@ contract MilestoneManagerTest is ModuleTest {
             assertEq(orders[i].dueTo, DURATION);
         }
 
-        // Check that we are indeed paying out the full budget
-        assertTrue(totalCount == BUDGET);
+        uint paidToTreasury = _token.balanceOf(FEE_TREASURY);
 
         // Check that milestoneManager's token balance is sufficient for the
         // payment orders.
         assertTrue(_token.balanceOf(address(milestoneManager)) == totalCount);
+
+        // Check that we are indeed paying out the full budget
+        assertTrue((totalCount + paidToTreasury) == BUDGET);
     }
 
     function testStartNextMilestoneFailsIfCallerNotAuthorizedOrOwner(
@@ -1715,6 +1725,8 @@ contract MilestoneManagerTest is ModuleTest {
         //we are not using them, but startNextMilestone pulls the tokens
         _token.mint(address(_proposal), BUDGET);
 
+        uint feePayout = ((BUDGET / SALARY_PRECISION) * FEE_PERCENTAGE);
+
         // Make sure that we generated a valid set of contributor salaries and calculate payouts
         uint precCount;
         uint payoutCount;
@@ -1722,7 +1734,8 @@ contract MilestoneManagerTest is ModuleTest {
             precCount += contribs[i].salary;
             uint bufPayout;
             bufPayout = (
-                ((BUDGET * 1e18) / SALARY_PRECISION) * contribs[i].salary
+                (((BUDGET - feePayout) * 1e18) / SALARY_PRECISION)
+                    * contribs[i].salary
             ) / 1e18;
             payouts[i] = bufPayout;
             payoutCount += bufPayout;
@@ -1746,7 +1759,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
 
         // Check that we are indeed paying out the full budget
-        assertTrue(payoutCount == BUDGET);
+        assertTrue((payoutCount + feePayout) == BUDGET);
     }
 
     function testPctMathWithDissimilarSalaries(address[] memory contributors)
@@ -1760,6 +1773,8 @@ contract MilestoneManagerTest is ModuleTest {
         //we are not using them, but startNextMilestone pulls the tokens
         _token.mint(address(_proposal), BUDGET);
 
+        uint feePayout = ((BUDGET / SALARY_PRECISION) * FEE_PERCENTAGE);
+
         // Make sure that we generated a valid set of contributor salaries and calculate payouts
         uint precCount;
         uint payoutCount;
@@ -1767,7 +1782,8 @@ contract MilestoneManagerTest is ModuleTest {
             precCount += contribs[i].salary;
             uint bufPayout;
             bufPayout = (
-                ((BUDGET * 1e18) / SALARY_PRECISION) * contribs[i].salary
+                (((BUDGET - feePayout) * 1e18) / SALARY_PRECISION)
+                    * contribs[i].salary
             ) / 1e18;
             payouts[i] = bufPayout;
             payoutCount += bufPayout;
@@ -1791,7 +1807,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
 
         // Check that we are indeed paying out the full budget
-        assertTrue(payoutCount == BUDGET);
+        assertTrue((payoutCount + feePayout) == BUDGET);
     }
 
     //--------------------------------------------------------------------------
