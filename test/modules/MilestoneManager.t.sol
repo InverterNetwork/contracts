@@ -1867,9 +1867,9 @@ contract MilestoneManagerTest is ModuleTest {
     /// Note that there are currently no invalid details.
     /// @dev Returns an element of each category of invalid details.
     function _createInvalidDetails() internal pure returns (bytes[] memory) {
-        bytes[] memory invalidDetails = new bytes[](1);
+        bytes[] memory invalidDetails = new bytes[](0);
 
-        //invalidDetails[0] = ""; // Empty string
+        // Note that there are currently no invalid details defined.
 
         return invalidDetails;
     }

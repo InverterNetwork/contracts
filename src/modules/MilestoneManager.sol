@@ -71,20 +71,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
-    /* 
-    modifier validTitle(string memory title_) {
-        if (title_.isEmpty()) {
-            revert Module__MilestoneManager__InvalidTitle();
-        }
-        _;
-    }
-    modifier validDetails(bytes calldata details) {
-        if (details.isEmpty()) {
-            revert Module__MilestoneManager__InvalidDetails();
-        }
-        _;
-    } */
-
     modifier validPosition(uint id) {
         if (_milestones[id] == 0) {
             revert Module__MilestoneManager__InvalidPosition();
@@ -128,7 +114,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     modifier validContributors(Contributor[] calldata contribs) {
         uint contribLength = contribs.length;
-        uint pctSum;
+        uint salaryPctSum;
 
         // Fail if contributors list is empty.
         if (contribLength == 0 || contribLength > MAXIMUM_CONTRIBUTORS) {
@@ -163,11 +149,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                 revert Module__MilestoneManager__InvalidContributorSalary();
             }
 
-            pctSum += contributorSalary;
+            salaryPctSum += contributorSalary;
         }
 
         //check salary percentages add up to total
-        if (pctSum != SALARY_PRECISION) {
+        if (salaryPctSum != SALARY_PRECISION) {
             revert Module__MilestoneManager__InvalidSalarySum();
         }
         _;
@@ -695,7 +681,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @param budget The budget for the milestone.
     /// @param contributors The contributor information for the milestone
     /// @param details The milestone's details.
-    /// @return true if all details are valid, revert if not.
     function _validateMilestoneDetails(
         uint duration,
         uint budget,
@@ -707,10 +692,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         validDuration(duration)
         validBudget(budget)
         validContributors(contributors)
-        returns (bool)
-    {
-        return true;
-    }
+    {}
 
     /// @notice Creates a hash of a given set of ontributors for easy comparison
     /// @param contributors The set of contributors to hash.
