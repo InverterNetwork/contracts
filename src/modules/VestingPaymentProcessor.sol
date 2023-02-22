@@ -158,13 +158,15 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         IPaymentClient.PaymentOrder[] memory orders;
         orders = client.paymentOrders();
 
-        address _recipient;
-        for (uint i; i < orders.length; i++) {
-            _recipient = orders[i].recipient;
+        if(orders.length > 0) {
+            address _recipient;
+            for (uint i; i < orders.length; i++) {
+                _recipient = orders[i].recipient;
 
-            //check if running payment order exists. If it does, remove it
-            if (start(_recipient) != 0) {
-                _removePayment(client, _recipient);
+                //check if running payment order exists. If it does, remove it
+                if (start(_recipient) != 0) {
+                    _removePayment(client, _recipient);
+                }
             }
         }
     }
