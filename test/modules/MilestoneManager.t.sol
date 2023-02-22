@@ -485,12 +485,12 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testStopMilestoneFailsIfMilestoneNotActive(
         address[] memory contributors
-    ) public {
+    )
+        public
+    {
 
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, TITLE, DETAILS);
-
-
 
         vm.expectRevert(
             IMilestoneManager
