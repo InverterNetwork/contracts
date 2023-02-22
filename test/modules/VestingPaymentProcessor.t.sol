@@ -19,7 +19,6 @@ import {PaymentClientMock} from
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-
 contract VestingPaymentProcessorTest is ModuleTest {
     // SuT
     VestingPaymentProcessor paymentProcessor;
@@ -80,6 +79,36 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+    }
+
+    function testProcessPaymentsDoesNotOVerwriteIfThereAreNoNewOrders(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        speedRunVestingAndClaim(recipients, amounts, durations);
+
+        //We run process payments again, but since there are no new orders, nothing should happen.
+        paymentProcessor.processPayments(paymentClient);
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+
+            // Check that the vesting is still in state
+            assertEq(
+                paymentProcessor.vestedAmount(
+                    address(recipient), block.timestamp
+                ),
+                amount
+            );
+        }
     }
 
     // Sanity Math Check
@@ -195,7 +224,6 @@ contract VestingPaymentProcessorTest is ModuleTest {
         // measure recipients balances before attempting second claim.
         uint[] memory balancesBefore = new uint256[](recipients.length);
         for (uint i; i < recipients.length; i++) {
-
             vm.prank(recipients[i]);
             paymentProcessor.claim(paymentClient);
 

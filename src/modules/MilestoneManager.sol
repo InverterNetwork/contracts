@@ -308,7 +308,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         // revert if not started yet or finished already
         if (
             m.startTimestamp == 0
-            || block.timestamp > m.startTimestamp + m.duration) {
+                || block.timestamp > m.startTimestamp + m.duration
+        ) {
             revert Module__MilestoneManager__MilestoneNotActive();
         }
 
@@ -355,7 +356,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             _last = prevId;
         }
 
-        __Module_proposal.paymentProcessor().cancelRunningPayments(IPaymentClient(address(this)));
+        __Module_proposal.paymentProcessor().cancelRunningPayments(
+            IPaymentClient(address(this))
+        );
 
         emit MilestoneRemoved(id);
     }
@@ -399,8 +402,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
 
         //TODO: test payments are cancelled.
-        __Module_proposal.paymentProcessor()
-            .processPayments(IPaymentClient(address(this)));
+        __Module_proposal.paymentProcessor().processPayments(
+            IPaymentClient(address(this))
+        );
 
         emit MilestoneStarted(_last);
     }

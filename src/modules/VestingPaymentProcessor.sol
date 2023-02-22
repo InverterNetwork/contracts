@@ -117,33 +117,35 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @inheritdoc IPaymentProcessor
     function processPayments(IPaymentClient client) external {
-        // First, we remove all payments that would be overwritten
-        // Doing it at the start ensures that collectPaymentOrders will always start from a blank slate concerning balances/allowances.
-        _cancelRunningOrders(client);
+        //We check if there are any new paymentOrders, without processing them
+        if (client.paymentOrders().length > 0) {
+            // If there are, we remove all payments that would be overwritten
+            // Doing it at the start ensures that collectPaymentOrders will always start from a blank slate concerning balances/allowances.
+            _cancelRunningOrders(client);
 
-        // Collect outstanding orders and their total token amount.
-        IPaymentClient.PaymentOrder[] memory orders;
-        uint totalAmount;
-        (orders, totalAmount) = client.collectPaymentOrders();
+            // Collect outstanding orders and their total token amount.
+            IPaymentClient.PaymentOrder[] memory orders;
+            uint totalAmount;
+            (orders, totalAmount) = client.collectPaymentOrders();
 
-        // @todo would we want to hardcode a check here that Balance(client) >= totalAmount ? in our case, collectPaymentOrders() does it already, but you maybe other clients won't...
+            if (token().balanceOf(address(client)) < totalAmount) {
+                revert Module__PaymentManager__InsufficientTokenBalanceInClient(
+                );
+            }
 
-        if (token().balanceOf(address(client)) < totalAmount) {
-            revert Module__PaymentManager__InsufficientTokenBalanceInClient();
-        }
+            // Generate Vesting Payments for all orders
+            address _recipient;
+            uint _amount;
+            uint _start;
+            uint _duration;
+            for (uint i; i < orders.length; i++) {
+                _recipient = orders[i].recipient;
+                _amount = orders[i].amount;
+                _start = orders[i].createdAt;
+                _duration = (orders[i].dueTo - _start);
 
-        // Generate Vesting Payments for all orders
-        address _recipient;
-        uint _amount;
-        uint _start;
-        uint _duration;
-        for (uint i; i < orders.length; i++) {
-            _recipient = orders[i].recipient;
-            _amount = orders[i].amount;
-            _start = orders[i].createdAt;
-            _duration = (orders[i].dueTo - _start);
-
-            _addPayment(_recipient, _amount, _start, _duration);
+                _addPayment(_recipient, _amount, _start, _duration);
+            }
         }
     }
 
@@ -158,15 +160,13 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         IPaymentClient.PaymentOrder[] memory orders;
         orders = client.paymentOrders();
 
-        if(orders.length > 0) {
-            address _recipient;
-            for (uint i; i < orders.length; i++) {
-                _recipient = orders[i].recipient;
+        address _recipient;
+        for (uint i; i < orders.length; i++) {
+            _recipient = orders[i].recipient;
 
-                //check if running payment order exists. If it does, remove it
-                if (start(_recipient) != 0) {
-                    _removePayment(client, _recipient);
-                }
+            //check if running payment order exists. If it does, remove it
+            if (start(_recipient) != 0) {
+                _removePayment(client, _recipient);
             }
         }
     }

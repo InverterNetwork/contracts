@@ -22,7 +22,6 @@ import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-
 contract MilestoneManagerTest is ModuleTest {
     using LibString for string;
 
@@ -426,15 +425,12 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.stopMilestone(_SENTINEL, id);
         assertEq(milestoneManager.listMilestoneIds().length, id);
-
     }
 
     function testStopMilestoneFailsIfCallerNotAuthorizedOrOwner(
         address[] memory contributors,
         address caller
-    )
-        public
-    {
+    ) public {
         testStartNextMilestone(contributors);
 
         uint id = 1; // Note that id's start at 1.
@@ -466,9 +462,7 @@ contract MilestoneManagerTest is ModuleTest {
     function testStopMilestoneFailsIfNotConsecutiveMilestonesGiven(
         address[] memory contributors,
         uint notPrevId
-    )
-        public
-    {
+    ) public {
         vm.assume(notPrevId != _SENTINEL);
 
         testStartNextMilestone(contributors);
@@ -485,12 +479,9 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testStopMilestoneFailsIfMilestoneNotActive(
         address[] memory contributors
-    )
-        public
-    {
-
-        uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, TITLE, DETAILS);
+    ) public {
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
 
         vm.expectRevert(
             IMilestoneManager
