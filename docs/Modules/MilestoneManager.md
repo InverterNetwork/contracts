@@ -1,21 +1,22 @@
 # MilestoneManager.sol
+File: [MilestoneManager.sol](../../src/modules/MilestoneManager.sol)
 
 ## Things to know
 
 1. This is a module to manage milestones for a proposal.
 2. A milestone can exists in 4 different states:
-    - added:
+    - `added`:
           The milestone got added to the contract.
-    - active:
+    - `active`:
           When a milestone is started, it initiates payment orders to pay
           the proposal's contributors.
           A milestone is active, until either its duration is over or it's
           marked as completed.
-    - submitted:
+    - `submitted`:
           A proposal contributor marks a milestone as submitted by
           submitting non-empty data that can be interpreted and evaluated
           by off-chain systems.
-    - completed:
+    - `completed`:
           After a milestone was submitted, it can be marked as completed.
           This marks the end of the milestone.
 
@@ -63,7 +64,7 @@ This function returns the milestone instance with id `id`. Function reverts in c
 
 #### Parameters
 
-uint id -> The id of the milestone to return.
+`uint id` -> The id of the milestone to return.
 
 #### Return Data
 
@@ -128,7 +129,7 @@ This function should ideally be called from the front-end or from any off-chain 
 
 #### Parameters
 
-1. uint id -> The id of which the previous element in the list should be found.
+1. `uint id` -> The id of which the previous element in the list should be found.
 
 #### Return Data
 
@@ -144,10 +145,10 @@ This function adds a new milestone and is only callable by authorized addresses.
 
 #### Parameters
 
-1. uint duration -> duration The duration of the milestone.
-2. uint budget -> budget The budget for the milestone.
-3. string title -> title The milestone's title.
-4. string details -> details The milestone's details.
+1. `uint duration` -> duration The duration of the milestone.
+2. `uint budget` -> budget The budget for the milestone.
+3. `string title` -> title The milestone's title.
+4. `string details` -> details The milestone's details.
 
 #### Return Data
 
@@ -161,8 +162,8 @@ This function removes a milestone. Only callable by authorized addresses and rev
 
 #### Parameters
 
-uint prevId -> The previous milestone's id in the milestone list
-uint id -> The milestone's id to remove.
+`uint prevId` -> The previous milestone's id in the milestone list
+`uint id` -> The milestone's id to remove.
 
 ### 3. startNextMilestone
 
@@ -180,10 +181,10 @@ This function updates a milestone's informations. Only callable by authorized ad
 
 #### Parameters
 
-1. uint id -> The milestone's id.
-2. uint duration -> The duration of the milestone.
-3. uint budget -> The budget for the milestone.
-4. string details -> The milestone's details.
+1. `uint id` -> The milestone's id.
+2. `uint duration` -> The duration of the milestone.
+3. `uint budget` -> The budget for the milestone.
+4. `string details` -> The milestone's details.
 
 ### 5. submitMilestone
 
@@ -193,8 +194,8 @@ This function submits a milestone. Only callable by addresses holding the contri
 
 #### Parameters
 
-1. uint id -> The milestone's id.
-2. bytes submissionData -> Represents the data that is accompanied when a milestone is submitted. A Milestone is interpreted as being submitted when the submissionData bytes array is not empty. Note that only accounts holding the {CONTRIBUTOR_ROLE()} can set submittedData and therefore submit milestones.
+1. `uint id` -> The milestone's id.
+2. `bytes submissionData` -> Represents the data that is accompanied when a milestone is submitted. A Milestone is interpreted as being submitted when the submissionData bytes array is not empty. Note that only accounts holding the `{CONTRIBUTOR_ROLE()}` can set submittedData and therefore submit milestones.
 
 ### 6. completeMilestone
 
@@ -204,7 +205,7 @@ This function helps complete a milestone. Only callable by authorized addresses.
 
 #### Parameters
 
-1. uint id -> The milestone's id.
+1. `uint id` -> The milestone's id.
 
 ### 7. declineMilestone
 
@@ -216,7 +217,19 @@ This function is used to decline a submitted milestone. Only callable by authori
 
 #### Parameters
 
-1. uint id -> The milestone's id.
+1. `uint id` -> The milestone's id.
+
+### 8. updateMilestoneUpdateTimelock
+
+`function updateMilestoneUpdateTimelock(uint _newTimelock) external onlyAuthorized()`
+
+This function is used to update the `_milestoneUpdateTimelock` which is set to `3 days` by default. The `_milestoneUpdateTimelock` is the allowed time gap between updating a milestone and starting it.
+
+This function can only be called by authorized addresses.
+
+#### Parameters
+
+1. `uint _newTimelock` -> The new value for `_milestoneUpdateTimelock`
 
 
 

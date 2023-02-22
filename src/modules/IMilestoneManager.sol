@@ -34,6 +34,9 @@ interface IMilestoneManager is IPaymentClient {
         /// @dev The milestone's details.
         ///      MUST not be empty.
         string details;
+        /// @dev The milestone's last updated timestamp
+        ///      To start a new milestone, it should not have been updated in the last 5 days
+        uint lastUpdatedTimestamp;
     }
 
     //--------------------------------------------------------------------------
@@ -52,6 +55,12 @@ interface IMilestoneManager is IPaymentClient {
 
     /// @notice Given details invalid.
     error Module__MilestoneManager__InvalidDetails();
+
+    /// @notice Given position invalid.
+    error Module__MilestoneManager__InvalidPosition();
+
+    /// @notice Given id is not a valid Intermediate Position in list.
+    error Module__MilestoneManager__InvalidIntermediatePosition();
 
     /// @notice Given milestone id invalid.
     error Module__MilestoneManager__InvalidMilestoneId();
@@ -124,6 +133,9 @@ interface IMilestoneManager is IPaymentClient {
 
     /// @notice Event emitted when a milestone declined.
     event MilestoneDeclined(uint indexed id);
+
+    /// @notice Event emitted when a milestone updation timelock is updated.
+    event MilestoneUpdateTimelockUpdated(uint indexed newTimelock);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -229,6 +241,18 @@ interface IMilestoneManager is IPaymentClient {
         string memory details
     ) external;
 
+    /// @notice Moves a Milestone in the milestone list
+    /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if milestone that should be moved already started.
+    /// @dev Reverts if the position following the idToPositionAfter milestone already started.
+    /// @dev Reverts if milestone that should be moved equals the milestone that should be positioned after.
+    /// @dev Reverts if milestone that should be positioned after equals the milestone that comes previous to the one that should be moved
+    /// @param id The id of the milestone that should be moved.
+    /// @param prevId The previous milestone's id in the milestone list (in relation to the milestone that should be moved).
+    /// @param idToPositionAfter The id of the milestone, that the selected milestone should be positioned after.
+    function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
+        external;
+
     /// @notice Submits a milestone.
     /// @dev Only callable by addresses holding the contributor role.
     /// @dev Reverts if id invalid, milestone not yet started, or milestone
@@ -249,4 +273,10 @@ interface IMilestoneManager is IPaymentClient {
     ///      already completed.
     /// @param id The milestone's id.
     function declineMilestone(uint id) external;
+
+    /// @notice Updates the `_milestoneUpdateTimelock` value
+    /// @dev Only callable by authorized addresses.
+    /// @dev The `_milestoneUpdateTimelock` is the allowed time gap between updating a milestone and starting it
+    /// @param _newTimelock The new intended value for `_milestoneUpdateTimelock`
+    function updateMilestoneUpdateTimelock(uint _newTimelock) external;
 }

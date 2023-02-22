@@ -1,4 +1,5 @@
 # SingleVoteGovernance.sol
+File: [SingleVoteGovernance.sol](../../src/modules/governance/SingleVoteGovernor.sol)
 
 ## Things to know
 
@@ -12,7 +13,7 @@
 
 ### 1. onlySelf
 
-This modifier ensures that the `msg.sender` is the same as the `SingleVoteGovernor` contract (address this).
+This modifier ensures that the `msg.sender` is the same as the `SingleVoteGovernor` contract (`address(this)`).
 
 ### 2. onlyVoter
 
@@ -28,11 +29,11 @@ This function checks whether the address `who` is authorized or not.
 
 #### Parameter(s)
 
-1. address who -> The address whose authorization you want to check.
+1. `address who` -> The address whose authorization you want to check.
 
 #### Return Data
 
-1. bool -> True if address `who` is authorized(), false otherwise.
+1. `bool` -> True if address `who` is `authorized()`, false otherwise.
 
 > NOTE: The governance contract (`SingleVoteGovernance.sol`) itself is only authorized.
 
@@ -69,8 +70,8 @@ struct Motion {
 
 #### Parameter(s)
 
-1. uint \_ID -> The identifying number of the `Motion` for which you want to see the `Receipt`.
-2. address voter -> Given the `_ID` of the `Motion`, the address of the voter for which you want to see the `Receipt`.
+1. `uint \_ID` -> The identifying number of the `Motion` for which you want to see the `Receipt`.
+2. `address voter` -> Given the `_ID` of the `Motion`, the address of the voter for which you want to see the `Receipt`.
 
 #### Return Data
 
@@ -82,7 +83,7 @@ struct Motion {
 
 #### Return Data
 
-1. uint -> The maximum duration for voting, which is currently hardcoded to `2 weeks`.
+1. `uint` -> The maximum duration for voting, which is currently hardcoded to `2 weeks`.
 
 ### 4. MIN_VOTING_DURATION
 
@@ -90,7 +91,7 @@ struct Motion {
 
 #### Return Data
 
-1. uint -> The minimum duration for voting, which is currently hardcoded to `1 days`.
+1. `uint` -> The minimum duration for voting, which is currently hardcoded to `1 days`.
 
 ## Write Function(s)
 
@@ -102,9 +103,9 @@ This function initializes the module and then sets the `quorum`, list of voters 
 
 #### Parameters
 
-1. IProposal proposal -> The module's proposal instance.
-2. Metadata metadata -> The module's metadata.
-3. bytes configData -> Encrypted data which contains list of voters, the required quorum, and the voting duration.
+1. `IProposal proposal` -> The module's proposal instance.
+2. `Metadata metadata` -> The module's metadata.
+3. `bytes configData` -> Encrypted data which contains list of voters, the required quorum, and the voting duration.
 
 ### 2. setQuorum
 
@@ -114,7 +115,7 @@ This function can only be called by the `SingleVoteGovernance` contract and it s
 
 #### Parameter(s)
 
-1. uint newQuorum -> The new value of the `quorum`.
+1. `uint newQuorum` -> The new value of the `quorum`.
 
 > NOTE: 0 is a valid quorum value
 
@@ -126,7 +127,7 @@ This function can only be called by the `SingleVoteGovernance` contract and it s
 
 #### Parameter(s)
 
-1. uint newVoteDuration -> The new `voteDuration`.
+1. `uint newVoteDuration` -> The new `voteDuration`.
 
 > NOTE: The `newVoteDuration` must be between the `MIN_VOTING_DURATION` and `MAX_VOTING_DURATION`.
 
@@ -138,7 +139,7 @@ This function is used to add address `who` as a voter in case they are not alrea
 
 #### Parameter(s)
 
-1. address who -> The address of the voter to add to the voting list.
+1. `address who` -> The address of the voter to add to the voting list.
 
 ### 5. removeVoter
 
@@ -148,7 +149,7 @@ Callable only by the `SingleVoteGovernance` contract and used to remove the addr
 
 #### Parameter(s)
 
-1. address who -> The address of the voter to remove from the voting list.
+1. `address who` -> The address of the voter to remove from the voting list.
 
 ### 6. transferVotingRights
 
@@ -158,7 +159,7 @@ This function can only be called by a valid voter and used to transfer the votin
 
 #### Parameter(s)
 
-1. address to -> The address to whom you want to transfer your voting rights to.
+1. `address to` -> The address to whom you want to transfer your voting rights to.
 
 > NOTE: You cannot transfer your voting rights to `address(0)`
 
@@ -170,26 +171,26 @@ This function is used to create a new `Motion` with the given `target` address a
 
 #### Parameter(s)
 
-1. address target -> The target address for creating the new `Motion`.
-2. bytes action -> The action bytes for creating the new `Motion`.
+1. `address target` -> The target address for creating the new `Motion`.
+2. `bytes action` -> The action bytes for creating the new `Motion`.
 
 #### Return Data
 
-1. uint -> ID of the new `Motion` that was created.
+1. `uint` -> ID of the new `Motion` that was created.
 
 ### 8. castVote
 
 `function castVote(uint motionId, uint8 support) external;`
 
 This function is used to cast vote (support) to a `Motion` with ID `motionId`. The function revert if `support` is invalid. Otherwise,
-0 == for
-1 == against
-2 == abstain
+`0 == for`
+`1 == against`
+`2 == abstain`
 
 #### Parameter(s)
 
-1. uint motionId -> The ID of the `Motion` where you want to cast vote
-2. uint8 support -> Vote in support, against or abstain.
+1. `uint motionId` -> The ID of the `Motion` where you want to cast vote
+2. `uint8 support` -> Vote in support, against or abstain.
 
 ### 9. executeMotion
 
@@ -199,4 +200,4 @@ This function is used to execute the `Motion` with id of `motionId`. This functi
 
 #### Parameter(s)
 
-1. uint motionId -> The ID of the `Motion` to execute
+1. `uint motionId` -> The ID of the `Motion` to execute
