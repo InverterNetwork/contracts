@@ -501,13 +501,13 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.stopMilestone(_SENTINEL, id);
     }
 
-    function testStopMilestoneFailsForInvalidId(address[] memory contributors)
+    function testStopMilestoneFailsForInvalidId(address[] memory contributors, uint invalidId)
         public
     {
-        testStartNextMilestone(contributors);
+        //IDs start at 1, and testStartNextMilestone() will generate 2 milestones
+        vm.assume(invalidId > 2);
 
-        /// @todo Nejc: test doesent fail if invalidId = 2
-        uint invalidId = 5;
+        testStartNextMilestone(contributors);
 
         vm.expectRevert(
             IMilestoneManager

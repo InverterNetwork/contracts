@@ -445,7 +445,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             );
         }
 
-        //TODO: test payments are cancelled.
         __Module_proposal.paymentProcessor().processPayments(
             IPaymentClient(address(this))
         );
