@@ -639,9 +639,10 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.stopMilestone(_SENTINEL, id);
     }
 
-    function testStopMilestoneFailsForInvalidId(address[] memory contributors, uint invalidId)
-        public
-    {
+    function testStopMilestoneFailsForInvalidId(
+        address[] memory contributors,
+        uint invalidId
+    ) public {
         //IDs start at 1, and testStartNextMilestone() will generate 2 milestones
         vm.assume(invalidId > 2);
 
@@ -673,11 +674,10 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.stopMilestone(notPrevId, id);
     }
 
-    function testStopMilestoneFailsIfMilestoneNotActive(
-        address[] memory contributors
-    ) public {
-        uint id =
-            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+    function testStopMilestoneFailsIfMilestoneNotActive() public {
+        uint id = milestoneManager.addMilestone(
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+        );
 
         vm.expectRevert(
             IMilestoneManager
