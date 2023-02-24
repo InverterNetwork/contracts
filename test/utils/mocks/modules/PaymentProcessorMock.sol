@@ -12,6 +12,8 @@ contract PaymentProcessorMock is IPaymentProcessor {
 
     function processPayments(IPaymentClient client) external {}
 
+    function cancelRunningPayments(IPaymentClient client) external {}
+
     function token() external pure returns (IERC20) {
         return IERC20(address(0));
     }

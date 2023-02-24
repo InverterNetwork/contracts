@@ -12,7 +12,7 @@ import {
 import {Types} from "src/common/Types.sol";
 
 // Mocks
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";

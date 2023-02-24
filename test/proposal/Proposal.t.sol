@@ -20,7 +20,7 @@ import {
 } from "src/proposal/IProposal.sol";
 
 // Mocks
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

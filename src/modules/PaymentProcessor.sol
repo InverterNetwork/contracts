@@ -67,4 +67,12 @@ contract PaymentProcessor is Module, IPaymentProcessor {
             token_.safeTransferFrom(address(client), recipient, amount);
         }
     }
+
+    function cancelRunningPayments(IPaymentClient client)
+        external
+        onlyAuthorizedOrOwner
+    {
+        //Since we pay out on processing, this function does nothing
+        return;
+    }
 }

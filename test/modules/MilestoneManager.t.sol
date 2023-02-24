@@ -612,6 +612,82 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     //----------------------------------
+    // Test: stopMilestone()
+
+    function testStopMilestone(address[] memory contributors) public {
+        testStartNextMilestone(contributors);
+
+        uint id = 1; // Note that id's start at 1.
+
+        milestoneManager.stopMilestone(_SENTINEL, id);
+        assertEq(milestoneManager.listMilestoneIds().length, id);
+    }
+
+    function testStopMilestoneFailsIfCallerNotAuthorizedOrOwner(
+        address[] memory contributors,
+        address caller
+    ) public {
+        testStartNextMilestone(contributors);
+
+        uint id = 1; // Note that id's start at 1.
+
+        _authorizer.setIsAuthorized(caller, false);
+        vm.assume(caller != _proposal.owner());
+
+        vm.prank(caller);
+        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        milestoneManager.stopMilestone(_SENTINEL, id);
+    }
+
+    function testStopMilestoneFailsForInvalidId(address[] memory contributors, uint invalidId)
+        public
+    {
+        //IDs start at 1, and testStartNextMilestone() will generate 2 milestones
+        vm.assume(invalidId > 2);
+
+        testStartNextMilestone(contributors);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__InvalidMilestoneId
+                .selector
+        );
+        milestoneManager.stopMilestone(_SENTINEL, invalidId);
+    }
+
+    function testStopMilestoneFailsIfNotConsecutiveMilestonesGiven(
+        address[] memory contributors,
+        uint notPrevId
+    ) public {
+        vm.assume(notPrevId != _SENTINEL);
+
+        testStartNextMilestone(contributors);
+
+        uint id = 1; // Note that id's start at 1.
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestonesNotConsecutive
+                .selector
+        );
+        milestoneManager.stopMilestone(notPrevId, id);
+    }
+
+    function testStopMilestoneFailsIfMilestoneNotActive(
+        address[] memory contributors
+    ) public {
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, TITLE, DETAILS);
+
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotActive
+                .selector
+        );
+        milestoneManager.stopMilestone(_SENTINEL, id);
+    }
+
+    //----------------------------------
     // Test: removeMilestone()
 
     function testRemoveMilestone(uint amount) public {

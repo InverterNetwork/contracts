@@ -192,6 +192,11 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
             IPaymentProcessor(_msgSender()), _outstandingTokenAmount
         );
 
+        //Ensure that the Client will have sufficient funds.
+        // Note that function is implemented in downstream contract.
+        // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
+        _ensureTokenBalance(_outstandingTokenAmount);
+
         // Create a copy of all orders to return.
         uint ordersLength = _orders.length;
         PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);

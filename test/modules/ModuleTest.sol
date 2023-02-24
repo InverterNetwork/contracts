@@ -16,8 +16,7 @@ import {IModule, IProposal} from "src/modules/base/IModule.sol";
 import {LibString} from "src/common/LibString.sol";
 
 // Mocks
-// @todo Authorizer should be moved to utils/mocks/modules/ ?
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
