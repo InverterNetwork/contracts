@@ -18,7 +18,7 @@ import {IModule} from "src/modules/base/IModule.sol";
 import {PaymentProcessor} from "src/modules/PaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/MilestoneManager.sol";
 
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
 // Beacon
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
