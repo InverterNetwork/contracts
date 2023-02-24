@@ -58,7 +58,10 @@ contract E2eTest is Test {
         "MilestoneManager"
     );
     IProposalFactory.ModuleConfig milestoneManagerFactoryConfig =
-        IProposalFactory.ModuleConfig(milestoneManagerMetadata, bytes(""));
+    IProposalFactory.ModuleConfig(
+        milestoneManagerMetadata,
+        abi.encode(100_000_000, 1_000_000, makeAddr("treasury"))
+    );
 
     AuthorizerMock authorizerImpl;
     Beacon authorizerBeacon;

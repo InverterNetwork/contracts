@@ -30,14 +30,25 @@ import {IProposal, IAuthorizer} from "src/proposal/IProposal.sol";
 contract ListAuthorizer is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // Errors
+
+    /// @notice Authorization cannot be transferred to an already authorized address.
     error Module__ListAuthorizer__AddressAlreadyAuthorized();
+
+    /// @notice The list of authorized address cannot be empty.
     error Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
+
+    /// @notice The supplied list of initial authorized addresses is invalid.
     error Module__ListAuthorizer__invalidInitialAuthorizers();
 
     //--------------------------------------------------------------------------
     // Events
 
+    /// @notice Event emitted when a new address gets authorized.
+    /// @param added The newly authorized address.
     event AddedAuthorizedAddress(address added);
+
+    /// @notice Event emitted when an address gets removed from the authorized list.
+    /// @param removed The removed address.
     event RemovedAuthorizedAddress(address removed);
 
     //--------------------------------------------------------------------------
@@ -76,11 +87,13 @@ contract ListAuthorizer is IAuthorizer, Module {
     ) internal onlyInitializing {
         __Module_init(proposal, metadata);
 
-        if (initialAuthorizers.length == 0) {
+        uint intialAuthLength = initialAuthorizers.length;
+
+        if (intialAuthLength == 0) {
             revert Module__ListAuthorizer__invalidInitialAuthorizers();
         }
 
-        for (uint i = 0; i < initialAuthorizers.length; i++) {
+        for (uint i; i < intialAuthLength; ++i) {
             address current = initialAuthorizers[i];
 
             if (current == address(0)) {

@@ -277,7 +277,12 @@ contract ProposalCreation is Test {
         //Note: This bytes array is used for transmitting data in a generalized way
         //      to the modules during they initilization via the modulefactory
         //      Some Modules might need additional Deployment/Configuration data
-        bytes memory milestoneManagerConfigdata = bytes("");
+        uint SALARY_PRECISION = 100_000_000;
+        uint FEE_PERCENTAGE = 1_000_000; //1%
+        address FEE_TREASURY = makeAddr("treasury");
+
+        bytes memory milestoneManagerConfigdata =
+            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY);
 
         //Create the module via the moduleFactory
         address milestoneManager = moduleFactory.createModule(
@@ -294,33 +299,5 @@ contract ProposalCreation is Test {
         address previousModule = proposal.getPreviousModule(milestoneManager);
 
         proposal.removeModule(previousModule, milestoneManager);
-    }
-
-    //We're adding and removing a Contributor here
-    function testManageContributors() public {
-        //Create Proposal
-        IProposal proposal = createNewProposal();
-
-        //--------------------------------------------------------------------------------
-        // Add Contributor
-
-        //Set example Contributor
-        address who = address(0xA);
-        string memory name = "John Doe";
-        string memory role = "Role";
-        uint salary = 1 ether;
-
-        //Add Contributor -> who
-        proposal.addContributor(who, name, role, salary);
-
-        //--------------------------------------------------------------------------------
-        // Remove Contributor
-
-        //Remove Contributor -> who
-
-        //Note: This function is ideally called via the frontend, see the documentation of the getPreviousModule Function
-        address previousContributor = proposal.getPreviousContributor(who);
-
-        proposal.removeContributor(previousContributor, who);
     }
 }
