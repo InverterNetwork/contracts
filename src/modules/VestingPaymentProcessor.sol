@@ -43,11 +43,24 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Events
 
-    event PaymentAdded(address contributor, uint salary, uint start, uint end);
-    event PaymentRemoved(address contributor);
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param end Timestamp at which the full amount should be claimable.
+    event VestingPaymentAdded(
+        address indexed recipient, uint amount, uint start, uint end
+    );
 
-    event PaymentUpdated(address contributor, uint newSalary, uint newEndDate);
-    event ERC20Released(address indexed token, uint amount);
+    /// @notice Emitted when the vesting to an address is removed.
+    /// @param recipient The address that will stop receiving payment.
+    event VestingPaymentRemoved(address indexed recipient);
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param newSalary The new amount of tokens the payment consists of.
+    /// @param newEndDate New timestamp at which the full amount should be claimable.
+    event PaymentUpdated(address recipient, uint newSalary, uint newEndDate);
 
     //--------------------------------------------------------------------------
     // Errors
@@ -145,6 +158,10 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
                 _duration = (orders[i].dueTo - _start);
 
                 _addPayment(_recipient, _amount, _start, _duration);
+
+                emit PaymentOrderProcessed(
+                    _recipient, _amount, _start, _duration
+                );
             }
         }
     }
@@ -235,7 +252,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
         delete vestings[contributor];
 
-        emit PaymentRemoved(contributor);
+        emit VestingPaymentRemoved(contributor);
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
@@ -261,7 +278,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
         vestings[_contributor] = VestingWallet(_salary, 0, _start, _duration);
 
-        emit PaymentAdded(_contributor, _salary, _start, _duration);
+        emit VestingPaymentAdded(_contributor, _salary, _start, _duration);
     }
 
     function _claim(IPaymentClient client, address beneficiary) internal {
@@ -271,9 +288,9 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         // Cache token.
         IERC20 token_ = token();
 
-        emit ERC20Released(address(token_), amount);
-
         token_.safeTransferFrom(address(client), beneficiary, amount);
+
+        emit ERC20Released(beneficiary, address(token_), amount);
     }
 
     /// @notice Virtual implementation of the vesting formula.
