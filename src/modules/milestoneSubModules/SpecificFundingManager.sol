@@ -134,7 +134,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         validAmount(addAmount)
         allowanceHighEnough(addAmount)
         firstSpecificFunding(milestoneId)
-        fundingNotCollected(milestoneId) //@note necessary?
+        fundingNotCollected(milestoneId)
         returns (uint)
     {
         address funder = _msgSender();
@@ -143,7 +143,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
         milestoneIdFundingAmounts[milestoneId][funder] = addAmount;
 
-        __Module_proposal.token().transferFrom(funder, address(this), addAmount); //@note This is correct right?
+        __Module_proposal.token().transferFrom(funder, address(this), addAmount);
 
         emit SpecificMilestoneFunded(milestoneId, addAmount, funder);
 
@@ -171,11 +171,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
                 funder, address(this), addAmount
             );
 
-            emit SpecificMilestoneFundingAdded(
-                milestoneId,
-                newAmount, //@note maybe can optimize this via reference?
-                funder
-                );
+            emit SpecificMilestoneFundingAdded(milestoneId, newAmount, funder);
 
             return newAmount;
         }
@@ -200,12 +196,10 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
             uint newAmount = milestoneIdFundingAmounts[milestoneId][funder];
 
-            __Module_proposal.token().transfer(funder, withdrawAmount); //@note this should be correct right?
+            __Module_proposal.token().transfer(funder, withdrawAmount);
 
             emit SpecificMilestoneFundingWithdrawn(
-                milestoneId,
-                newAmount, //@note maybe can optimize this via reference?
-                funder
+                milestoneId, newAmount, funder
                 );
 
             return newAmount;
@@ -243,7 +237,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         external
         onlyMilestoneManagerAccess
         validAmount(amountNeeded)
-        fundingNotCollected(milestoneId) //@note Is this modifier necessary? @0xNuggan
+        fundingNotCollected(milestoneId)
         returns (uint)
     {
         milestoneIdToFundingAddresses[milestoneId].fundingCollected = true;
@@ -255,7 +249,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
         //If we dont have any funders stop the collecting
         if (length == 0) {
-            emit FundingCollected(milestoneId, 0);
+            emit FundingCollected(milestoneId, 0, funders);
             return 0;
         }
 
@@ -265,7 +259,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         if (fundingAmount > amountNeeded) {
             for (uint i = 0; i < length; i++) {
                 //This sets the amount each funder has left after the funding is collected based on the percentage share they had of the fundingAmount
-                milestoneIdFundingAmounts[milestoneId][funders[i]] = //@note Is this right?
+                milestoneIdFundingAmounts[milestoneId][funders[i]] = //@note Decimal optimization?
                 milestoneIdFundingAmounts[milestoneId][funders[i]]
                     * amountNeeded / fundingAmount;
             }
@@ -274,18 +268,19 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
             __Module_proposal.token().transfer(milestoneManager, amountNeeded);
 
-            emit FundingCollected(milestoneId, amountNeeded);
+            emit FundingCollected(milestoneId, amountNeeded, funders);
             return amountNeeded;
         } else {
             //Take all if fundingAmount is not higher than the amount needed
             for (uint i = 0; i < length; i++) {
                 milestoneIdFundingAmounts[milestoneId][funders[i]] = 0;
             }
-            milestoneIdToFundingAddresses[milestoneId].fundingAmount = 0; //@note should this remove funders from funder array?
+            milestoneIdToFundingAddresses[milestoneId].fundingAmount = 0;
+            delete milestoneIdToFundingAddresses[milestoneId].funders;
 
-            __Module_proposal.token().transfer(milestoneManager, fundingAmount); //@note probably not the correct deposit address @0xNuggan
+            __Module_proposal.token().transfer(milestoneManager, fundingAmount);
 
-            emit FundingCollected(milestoneId, fundingAmount);
+            emit FundingCollected(milestoneId, fundingAmount, funders);
             return fundingAmount;
         }
     }
@@ -295,7 +290,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
     function removeFunder(uint milestoneId, address funder) private {
         address[] storage funders =
-            milestoneIdToFundingAddresses[milestoneId].funders;
+            milestoneIdToFundingAddresses[milestoneId].funders; //@note storage?
 
         uint funderIndex = type(uint).max;
 
@@ -307,7 +302,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
             }
         }
 
-        assert(funderIndex != type(uint).max); //@note removeFounder Should never be used if address is not found in funder array -> Should this line be removed @0xNuggan?
+        // assert(funderIndex != type(uint).max); //@note removeFounder Should never be used if address is not found in funder array -> Test internally
 
         //Unordered removal
 

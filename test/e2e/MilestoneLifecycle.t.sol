@@ -19,7 +19,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 /**
  * E2e test demonstrating how to add, start, and complete a Milestone.
  */
-contract MilestoneLifecycle is E2eTest {
+contract MilestoneLifecycle is
+    E2eTest //@todo @0xNuggan add SpecificFundingModule System integration test here
+{
     // Before we can start a milestone, two things need to be present:
     // 1. A non-empty list of contributors for it
     // 2. The percentage of milestone funding to pay the contributors for the milestone.

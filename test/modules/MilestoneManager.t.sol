@@ -19,7 +19,11 @@ import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract MilestoneManagerTest is ModuleTest {
+contract MilestoneManagerTest is
+    ModuleTest //@todo @0xNuggan add SpecificFundingModule System integration test here
+{
+    using LibString for string;
+
     // SuT
     MilestoneManager milestoneManager;
 

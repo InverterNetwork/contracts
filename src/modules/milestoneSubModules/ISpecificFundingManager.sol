@@ -65,7 +65,7 @@ interface ISpecificFundingManager {
     );
 
     /// @notice Event emitted when specific Milestone Funding is collected by milestone
-    event FundingCollected(uint milestoneId, uint amount);
+    event FundingCollected(uint milestoneId, uint amount, address[] funders);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -91,7 +91,6 @@ interface ISpecificFundingManager {
     //----------------------------------
     // Mutating Functions
 
-    //Returns funding amount @todo
     function fundSpecificMilestone(uint milestoneId, uint addAmount)
         external
         returns (uint);
