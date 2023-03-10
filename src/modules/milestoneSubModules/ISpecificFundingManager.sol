@@ -6,8 +6,11 @@ interface ISpecificFundingManager {
     // Types
 
     struct SpecificMilestoneFunding {
+        /// @dev The amount of funding for this specific Milestone
         uint fundingAmount;
+        /// @dev array of addresses that deposited tokens for this specific milestone
         address[] funders;
+        /// @dev Wether Funding was collected by the milestoneModule
         bool fundingCollected;
     }
 
@@ -43,29 +46,31 @@ interface ISpecificFundingManager {
 
     /// @notice Event emitted when specific Milestone gets funded
     event SpecificMilestoneFunded(
-        uint milestoneId, uint amount, address funder
+        uint indexed milestoneId, uint indexed amount, address indexed funder
     );
 
     /// @notice Event emitted when specific Milestone Funding gets added upon
-    /// @notice amount is the new amount of the funding
+    /// @param amount is the new amount of the funding
     event SpecificMilestoneFundingAdded(
-        uint milestoneId, uint amount, address funder
+        uint indexed milestoneId, uint indexed amount, address indexed funder
     );
 
     /// @notice Event emitted when specific Milestone Funding Amount gets withdrawn
-    /// @notice amount is the new amount of the funding
+    /// @param amount is the new amount of the funding
     event SpecificMilestoneFundingWithdrawn(
-        uint milestoneId, uint amount, address funder
+        uint indexed milestoneId, uint indexed amount, address indexed funder
     );
 
     /// @notice Event emitted when specific Milestone Funding gets fully removed
-    /// @notice amount is the new amount of the funding
     event SpecificMilestoneFundingRemoved(
-        uint milestoneId, uint amount, address funder
+        uint indexed milestoneId, address indexed funder
     );
 
     /// @notice Event emitted when specific Milestone Funding is collected by milestone
-    event FundingCollected(uint milestoneId, uint amount, address[] funders);
+    /// @param amount Amount Collected from this module
+    event FundingCollected(
+        uint indexed milestoneId, uint indexed amount, address[] funders
+    );
 
     //--------------------------------------------------------------------------
     // Functions
@@ -73,24 +78,38 @@ interface ISpecificFundingManager {
     //----------------------------------
     // View Functions
 
+    /// @notice Returns the amount of tokens all funders deposited for a milestone with id 'milestoneId'.
+    /// @param milestoneId : The id of the milestone that the funders deposited to
+    /// @return amount : amount of tokens the funders deposited
     function getFunderAmountForMilestoneId(uint milestoneId)
         external
         view
-        returns (uint);
+        returns (uint amount);
 
+    /// @notice Returns the funder addresses that deposited for a milestone with id 'milestoneId'.
+    /// @param milestoneId : The id of the milestone that the funder deposited to
+    /// @return funders : The funder addresses that deposited tokens a specified milestone
     function getFunderAddressesForMilestoneId(uint milestoneId)
         external
         view
-        returns (address[] memory);
+        returns (address[] memory funders);
 
+    /// @notice Returns the amount of tokens a funder address deposited for a milestone with id 'milestoneId'.
+    /// @param milestoneId : The id of the milestone that the funder deposited to
+    /// @param funder : The address of a funder
+    /// @return amount : amount of tokens the funder deposited
     function getFundingAmountForMilestoneIdAndAddress(
         uint milestoneId,
         address funder
-    ) external view returns (uint);
+    ) external view returns (uint amount);
 
     //----------------------------------
     // Mutating Functions
 
+    /// @notice Fund a specified amount of tokens to the milestone with id 'id'.
+    /// @param milestoneId : The id of the milestone that the funder wants to deposit to
+    /// @param addAmount : amount of tokens the funder wants to deposit
+    /// @return amount of tokens currently deposited
     function fundSpecificMilestone(uint milestoneId, uint addAmount)
         external
         returns (uint);
@@ -98,8 +117,11 @@ interface ISpecificFundingManager {
     function addToSpecificMilestoneFunding(uint milestoneId, uint addAmount)
         external
         returns (uint);
-
-    function withdrawFromSpecificMilestoneFunding(
+    /// @notice Withdraw a specified amount of tokens previously deposited from the milestone with id 'id'.
+    /// @param milestoneId : The id of the milestone that the funder wants to withdraw from
+    /// @param withdrawAmount : amount of tokens the funder wants to withdraw
+    /// @return amount of tokens still deposited
+    function withdrawSpecificMilestoneFunding(
         uint milestoneId,
         uint withdrawAmount
     ) external returns (uint);
@@ -111,6 +133,10 @@ interface ISpecificFundingManager {
     //----------------------------------
     // Collect funding Functions
 
+    /// @notice Collect a specified amount of tokens to be sent to the connected milestoneModule
+    /// @param milestoneId : The id of the milestone for which th funds are collected
+    /// @param amountNeeded : The amount of tokens that are needed to fund the milestone
+    /// @return amount of tokens that were collected
     function collectFunding(uint milestoneId, uint amountNeeded)
         external
         returns (uint);

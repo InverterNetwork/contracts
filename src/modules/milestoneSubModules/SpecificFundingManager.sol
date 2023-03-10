@@ -103,6 +103,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     //----------------------------------
     // View Functions
 
+    /// @inheritdoc ISpecificFundingManager
     function getFunderAmountForMilestoneId(uint milestoneId)
         external
         view
@@ -111,6 +112,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         return milestoneIdToFundingAddresses[milestoneId].fundingAmount;
     }
 
+    /// @inheritdoc ISpecificFundingManager
     function getFunderAddressesForMilestoneId(uint milestoneId)
         external
         view
@@ -119,6 +121,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         return milestoneIdToFundingAddresses[milestoneId].funders;
     }
 
+    /// @inheritdoc ISpecificFundingManager
     function getFundingAmountForMilestoneIdAndAddress(
         uint milestoneId,
         address funder
@@ -129,6 +132,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     //----------------------------------
     // Mutating Functions
 
+    /// @inheritdoc ISpecificFundingManager
     function fundSpecificMilestone(uint milestoneId, uint addAmount)
         public
         validAmount(addAmount)
@@ -177,7 +181,8 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         }
     }
 
-    function withdrawFromSpecificMilestoneFunding(
+    /// @inheritdoc ISpecificFundingManager
+    function withdrawSpecificMilestoneFunding(
         uint milestoneId,
         uint withdrawAmount
     )
@@ -223,16 +228,13 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
         __Module_proposal.token().transfer(funder, withdrawAmount);
 
-        emit SpecificMilestoneFundingRemoved(
-            milestoneId, withdrawAmount, funder
-            );
-
-        return withdrawAmount;
+        emit SpecificMilestoneFundingRemoved(milestoneId, funder);
     }
 
     //----------------------------------
     // Collect funding Functions
 
+    /// @inheritdoc ISpecificFundingManager
     function collectFunding(uint milestoneId, uint amountNeeded)
         external
         onlyMilestoneManagerAccess
