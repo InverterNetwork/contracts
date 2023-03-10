@@ -37,22 +37,10 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     }
 
     modifier validWithdrawAmount(uint amount, uint milestoneId) {
-        if (milestoneIdFundingAmounts[milestoneId][_msgSender()] < amount) {
+        uint fundingAmount =
+            milestoneIdFundingAmounts[milestoneId][_msgSender()];
+        if (fundingAmount < amount && fundingAmount != 0) {
             revert Module__ISpecificFundingManager__InvalidWithdrawAmount();
-        }
-        _;
-    }
-
-    modifier firstSpecificFunding(uint milestoneId) {
-        if (milestoneIdFundingAmounts[milestoneId][_msgSender()] != 0) {
-            revert Module__ISpecificFundingManager__NotFirstFunding();
-        }
-        _;
-    }
-
-    modifier fullWithdrawPossible(uint milestoneId) {
-        if (milestoneIdFundingAmounts[milestoneId][_msgSender()] == 0) {
-            revert Module__ISpecificFundingManager__FullWithdrawNotPossible();
         }
         _;
     }
@@ -134,27 +122,6 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
     /// @inheritdoc ISpecificFundingManager
     function fundSpecificMilestone(uint milestoneId, uint addAmount)
-        public
-        validAmount(addAmount)
-        allowanceHighEnough(addAmount)
-        firstSpecificFunding(milestoneId)
-        fundingNotCollected(milestoneId)
-        returns (uint)
-    {
-        address funder = _msgSender();
-        milestoneIdToFundingAddresses[milestoneId].funders.push(funder); //@note Not checking for duplicates/ might wanna test this
-        milestoneIdToFundingAddresses[milestoneId].fundingAmount += addAmount;
-
-        milestoneIdFundingAmounts[milestoneId][funder] = addAmount;
-
-        __Module_proposal.token().transferFrom(funder, address(this), addAmount);
-
-        emit SpecificMilestoneFunded(milestoneId, addAmount, funder);
-
-        return addAmount;
-    }
-
-    function addToSpecificMilestoneFunding(uint milestoneId, uint addAmount)
         external
         validAmount(addAmount)
         allowanceHighEnough(addAmount)
@@ -163,7 +130,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     {
         address funder = _msgSender();
         if (milestoneIdFundingAmounts[milestoneId][funder] == 0) {
-            return fundSpecificMilestone(milestoneId, addAmount);
+            return initialFundSpecificMilestone(milestoneId, addAmount);
         } else {
             milestoneIdFundingAmounts[milestoneId][funder] += addAmount;
             milestoneIdToFundingAddresses[milestoneId].fundingAmount +=
@@ -193,7 +160,8 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     {
         address funder = _msgSender();
         if (milestoneIdFundingAmounts[milestoneId][funder] == withdrawAmount) {
-            return withdrawAllSpecificMilestoneFunding(milestoneId);
+            withdrawAllSpecificMilestoneFunding(milestoneId);
+            return 0;
         } else {
             milestoneIdFundingAmounts[milestoneId][funder] -= withdrawAmount;
             milestoneIdToFundingAddresses[milestoneId].fundingAmount -=
@@ -211,11 +179,24 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         }
     }
 
-    function withdrawAllSpecificMilestoneFunding(uint milestoneId)
-        public
-        fullWithdrawPossible(milestoneId)
+    function initialFundSpecificMilestone(uint milestoneId, uint addAmount)
+        private
         returns (uint)
     {
+        address funder = _msgSender();
+        milestoneIdToFundingAddresses[milestoneId].funders.push(funder); //@note Not checking for duplicates/ might wanna test this
+        milestoneIdToFundingAddresses[milestoneId].fundingAmount += addAmount;
+
+        milestoneIdFundingAmounts[milestoneId][funder] = addAmount;
+
+        __Module_proposal.token().transferFrom(funder, address(this), addAmount);
+
+        emit SpecificMilestoneFunded(milestoneId, addAmount, funder);
+
+        return addAmount;
+    }
+
+    function withdrawAllSpecificMilestoneFunding(uint milestoneId) private {
         address funder = _msgSender();
 
         uint withdrawAmount = milestoneIdFundingAmounts[milestoneId][funder];

@@ -29,12 +29,6 @@ interface ISpecificFundingManager {
     /// @notice Given withdraw Amount is higher than funding amount.
     error Module__ISpecificFundingManager__InvalidWithdrawAmount();
 
-    /// @notice Can only use this function sender address has no funding deposited for this milestone
-    error Module__ISpecificFundingManager__NotFirstFunding();
-
-    /// @notice Cant withdraw because funding amount is zero.
-    error Module__ISpecificFundingManager__FullWithdrawNotPossible();
-
     /// @notice The allowance for this token transferal is not high enough
     error Module__ISpecificFundingManager__AllowanceNotHighEnough();
 
@@ -114,9 +108,6 @@ interface ISpecificFundingManager {
         external
         returns (uint);
 
-    function addToSpecificMilestoneFunding(uint milestoneId, uint addAmount)
-        external
-        returns (uint);
     /// @notice Withdraw a specified amount of tokens previously deposited from the milestone with id 'id'.
     /// @param milestoneId : The id of the milestone that the funder wants to withdraw from
     /// @param withdrawAmount : amount of tokens the funder wants to withdraw
@@ -125,10 +116,6 @@ interface ISpecificFundingManager {
         uint milestoneId,
         uint withdrawAmount
     ) external returns (uint);
-
-    function withdrawAllSpecificMilestoneFunding(uint milestoneId)
-        external
-        returns (uint);
 
     //----------------------------------
     // Collect funding Functions
