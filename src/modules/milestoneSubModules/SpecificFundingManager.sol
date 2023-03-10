@@ -69,7 +69,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
     modifier fundingNotCollected(uint milestoneId) {
         if (!milestoneIdToFundingAddresses[milestoneId].fundingCollected) {
-            revert Module__ISpecificFundingManager__FullWithdrawNotPossible();
+            revert Module__ISpecificFundingManager__FundingAlreadyCollected();
         }
         _;
     }
@@ -134,6 +134,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         validAmount(addAmount)
         allowanceHighEnough(addAmount)
         firstSpecificFunding(milestoneId)
+        fundingNotCollected(milestoneId) //@note necessary?
         returns (uint)
     {
         address funder = _msgSender();
@@ -153,6 +154,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         external
         validAmount(addAmount)
         allowanceHighEnough(addAmount)
+        fundingNotCollected(milestoneId)
         returns (uint)
     {
         address funder = _msgSender();
