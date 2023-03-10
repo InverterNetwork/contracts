@@ -130,6 +130,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     {
         address funder = _msgSender();
         milestoneIdToFundingAddresses[milestoneId].funders.push(funder); //@note Not checking for duplicates/ might wanna test this
+        milestoneIdToFundingAddresses[milestoneId].fundingAmount += addAmount;
 
         milestoneIdFundingAmounts[milestoneId][funder] = addAmount;
 
@@ -151,6 +152,8 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
             return fundSpecificMilestone(milestoneId, addAmount);
         } else {
             milestoneIdFundingAmounts[milestoneId][funder] += addAmount;
+            milestoneIdToFundingAddresses[milestoneId].fundingAmount +=
+                addAmount;
 
             uint newAmount = milestoneIdFundingAmounts[milestoneId][funder];
 
@@ -181,7 +184,9 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         if (milestoneIdFundingAmounts[milestoneId][funder] == withdrawAmount) {
             return withdrawAllSpecificMilestoneFunding(milestoneId);
         } else {
-            milestoneIdFundingAmounts[milestoneId][funder] += withdrawAmount;
+            milestoneIdFundingAmounts[milestoneId][funder] -= withdrawAmount;
+            milestoneIdToFundingAddresses[milestoneId].fundingAmount -=
+                addAmount;
 
             uint newAmount = milestoneIdFundingAmounts[milestoneId][funder];
 
@@ -205,7 +210,11 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         address funder = _msgSender();
 
         uint withdrawAmount = milestoneIdFundingAmounts[milestoneId][funder];
+
         milestoneIdFundingAmounts[milestoneId][funder] = 0;
+        milestoneIdToFundingAddresses[milestoneId].fundingAmount -=
+            withdrawAmount;
+
         removeFunder(milestoneId, funder);
 
         __Module_proposal.token().transfer(funder, withdrawAmount);
@@ -260,7 +269,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
                 milestoneIdFundingAmounts[milestoneId][funders[i]] = 0;
             }
 
-            __Module_proposal.token().transfer(milestoneManager, fundingAmount);
+            __Module_proposal.token().transfer(milestoneManager, fundingAmount); //@note probably not the correct deposit address @0xNuggan
 
             emit FundingCollected(milestoneId, fundingAmount);
             return fundingAmount;
