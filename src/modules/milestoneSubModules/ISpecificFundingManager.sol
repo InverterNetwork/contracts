@@ -26,6 +26,9 @@ interface ISpecificFundingManager {
     /// @notice Given withdraw Amount is higher than funding amount.
     error Module__ISpecificFundingManager__InvalidWithdrawAmount();
 
+    /// @notice Can only use this function sender address has no funding deposited for this milestone
+    error Module__ISpecificFundingManager__NotFirstFunding();
+
     /// @notice Cant withdraw because funding amount is zero.
     error Module__ISpecificFundingManager__FullWithdrawNotPossible();
 
