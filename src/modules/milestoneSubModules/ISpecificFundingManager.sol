@@ -106,7 +106,8 @@ interface ISpecificFundingManager {
     ) external returns (uint);
 
     function withdrawAllSpecificMilestoneFunding(uint milestoneId)
-        externalreturns(uint);
+        external
+        returns (uint);
 
     //----------------------------------
     // Collect funding Functions

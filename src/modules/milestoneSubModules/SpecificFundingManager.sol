@@ -196,7 +196,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         } else {
             milestoneIdFundingAmounts[milestoneId][funder] -= withdrawAmount;
             milestoneIdToFundingAddresses[milestoneId].fundingAmount -=
-                addAmount;
+                withdrawAmount;
 
             uint newAmount = milestoneIdFundingAmounts[milestoneId][funder];
 
@@ -267,7 +267,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
                 //This sets the amount each funder has left after the funding is collected based on the percentage share they had of the fundingAmount
                 milestoneIdFundingAmounts[milestoneId][funders[i]] = //@note Is this right?
                 milestoneIdFundingAmounts[milestoneId][funders[i]]
-                    * amountNeeded / fundingamount;
+                    * amountNeeded / fundingAmount;
             }
             milestoneIdToFundingAddresses[milestoneId].fundingAmount -=
                 amountNeeded;
