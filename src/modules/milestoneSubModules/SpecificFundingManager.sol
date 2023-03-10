@@ -262,10 +262,13 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
         if (fundingAmount > amountNeeded) {
             for (uint i = 0; i < length; i++) {
-                //@todo set funder amounts to the actual amount left as discussed in chat
-                //
-                //-> milestoneIdFundingAmounts[milestoneId][funders[i]] = actual Amount;
+                //This sets the amount each funder has left after the funding is collected based on the percentage share they had of the fundingAmount
+                milestoneIdFundingAmounts[milestoneId][funders[i]] = //@note Is this right?
+                milestoneIdFundingAmounts[milestoneId][funders[i]]
+                    * amountNeeded / fundingamount;
             }
+            milestoneIdToFundingAddresses[milestoneId].fundingAmount -=
+                amountNeeded;
 
             __Module_proposal.token().transfer(milestoneManager, amountNeeded);
 
@@ -276,6 +279,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
             for (uint i = 0; i < length; i++) {
                 milestoneIdFundingAmounts[milestoneId][funders[i]] = 0;
             }
+            milestoneIdToFundingAddresses[milestoneId].fundingAmount = 0; //@note should this remove funders from funder array?
 
             __Module_proposal.token().transfer(milestoneManager, fundingAmount); //@note probably not the correct deposit address @0xNuggan
 
