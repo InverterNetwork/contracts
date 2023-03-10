@@ -449,12 +449,15 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             _ensureTokenBalance(feePayout);
             proposal().token().safeTransfer(FEE_TREASURY, feePayout);
 
+            //@note this should collect the funds and transfer them to this module. Probably not the correct position?
+            //uint remainingNeededAmount = m.budget- specificFundingManager.collectFunding(_activeMilestone, m.budget);
+
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
             if (contribCache.length == 1) {
                 // Calculate the payout amount.
                 uint contributorPayout =
-                    (m.budget / SALARY_PRECISION) * contribCache[0].salary;
+                    ((m.budget / SALARY_PRECISION) * contribCache[i].salary); //@note why not multiply first then divide?
 
                 // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
                 _addPaymentOrder(
