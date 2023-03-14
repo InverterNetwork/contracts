@@ -34,7 +34,7 @@ contract MetadataManager is IMetadataManager, Module {
         IProposal proposal_,
         Metadata memory metadata,
         bytes memory configdata
-    ) external override (Module) initializer {
+    ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
 
         (
@@ -125,7 +125,7 @@ contract MetadataManager is IMetadataManager, Module {
         delete _teamMetadata;
 
         uint len = teamMetadata_.length;
-        for (uint i; i < len; i++) {
+        for (uint i; i < len; ++i) {
             _teamMetadata.push(teamMetadata_[i]);
         }
 

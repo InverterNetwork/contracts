@@ -12,7 +12,7 @@ import {
 import {Types} from "src/common/Types.sol";
 
 // Mocks
-import {AuthorizerMock} from "test/utils/mocks/AuthorizerMock.sol";
+import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -67,7 +67,7 @@ contract ModuleManagerTest is Test {
         assertEq(modulesAdded.length, modules.length);
 
         // Each module should be added.
-        for (uint i; i < modules.length; i++) {
+        for (uint i; i < modules.length; ++i) {
             assertTrue(moduleManager.isModule(modules[i]));
         }
     }
@@ -90,7 +90,7 @@ contract ModuleManagerTest is Test {
 
         address[] memory modules = new address[](1);
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             modules[0] = invalids[i];
 
             vm.expectRevert(
@@ -130,7 +130,7 @@ contract ModuleManagerTest is Test {
         //Make sure one of the existing contributors gets picked
         vm.assume(randomWho < whos.length);
 
-        for (uint i; i < whos.length; i++) {
+        for (uint i; i < whos.length; ++i) {
             moduleManager.addModule(whos[i]);
         }
 
@@ -245,7 +245,7 @@ contract ModuleManagerTest is Test {
         vm.assume(whos.length <= MAX_MODULES);
         types.assumeValidModules(whos);
 
-        for (uint i; i < whos.length; i++) {
+        for (uint i; i < whos.length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit ModuleAdded(whos[i]);
 
@@ -258,7 +258,7 @@ contract ModuleManagerTest is Test {
         address[] memory modules = moduleManager.listModules();
 
         assertEq(modules.length, whos.length);
-        for (uint i; i < whos.length; i++) {
+        for (uint i; i < whos.length; ++i) {
             assertEq(modules[i], whos[whos.length - i - 1]);
         }
     }
@@ -288,7 +288,7 @@ contract ModuleManagerTest is Test {
     function testAddModuleFailsForInvalidAddress() public {
         address[] memory invalids = types.createInvalidModules();
 
-        for (uint i; i < invalids.length; i++) {
+        for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IModuleManager
                     .Proposal__ModuleManager__InvalidModuleAddress
@@ -312,12 +312,12 @@ contract ModuleManagerTest is Test {
         address prevModule;
 
         // Add modules.
-        for (uint i; i < whos.length; i++) {
+        for (uint i; i < whos.length; ++i) {
             moduleManager.addModule(whos[i]);
         }
 
         // Remove modules from the front until list is empty.
-        for (uint i; i < whos.length; i++) {
+        for (uint i; i < whos.length; ++i) {
             module = whos[whos.length - i - 1];
 
             vm.expectEmit(true, true, true, true);
@@ -330,14 +330,14 @@ contract ModuleManagerTest is Test {
         assertEq(moduleManager.listModules().length, 0);
 
         // Add modules again.
-        for (uint i; i < whos.length; i++) {
+        for (uint i; i < whos.length; ++i) {
             moduleManager.addModule(whos[i]);
         }
 
         // Remove modules from the back until list is empty.
         // Note that removing the last module requires the sentinel as
         // prevModule.
-        for (uint i; i < whos.length - 1; i++) {
+        for (uint i; i < whos.length - 1; ++i) {
             module = whos[i];
             prevModule = whos[i + 1];
 

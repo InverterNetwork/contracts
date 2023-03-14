@@ -31,7 +31,7 @@ contract FundingManagerMock is FundingManager {
         __FundingManager_init(proposalId_, token_);
     }
 
-    function token() public view override (FundingManager) returns (IERC20) {
+    function token() public view override(FundingManager) returns (IERC20) {
         return _token;
     }
 }

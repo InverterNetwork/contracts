@@ -110,7 +110,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
         // Write voters to storage.
         address voter;
-        for (uint i; i < votersLen; i++) {
+        for (uint i; i < votersLen; ++i) {
             voter = voters[i];
 
             if (
@@ -147,7 +147,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     function isAuthorized(address who)
         public
         view
-        override (IAuthorizer)
+        override(IAuthorizer)
         returns (bool)
     {
         // Note that only the governance itself is authorized.

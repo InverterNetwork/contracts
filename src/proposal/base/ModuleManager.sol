@@ -112,7 +112,8 @@ abstract contract ModuleManager is
         _modules[_SENTINEL] = _SENTINEL;
 
         address module;
-        for (uint i; i < modules.length; i++) {
+        uint len = modules.length;
+        for (uint i; i < len; ++i) {
             module = modules[i];
 
             // Ensure module address is valid and module not already added.
@@ -160,7 +161,7 @@ abstract contract ModuleManager is
     function isModule(address module)
         public
         view
-        override (IModuleManager)
+        override(IModuleManager)
         returns (bool)
     {
         return module != _SENTINEL && _modules[module] != address(0);
@@ -171,7 +172,7 @@ abstract contract ModuleManager is
         address[] memory result = new address[](_moduleCounter);
 
         // Populate result array.
-        uint index = 0;
+        uint index;
         address elem = _modules[_SENTINEL];
         while (elem != _SENTINEL) {
             result[index] = elem;
@@ -198,7 +199,7 @@ abstract contract ModuleManager is
 
         uint len = modules.length;
 
-        for (uint i; i < len; i++) {
+        for (uint i; i < len; ++i) {
             if (modules[i] == module) {
                 return i != 0 ? modules[i - 1] : _SENTINEL;
             }
@@ -236,12 +237,7 @@ abstract contract ModuleManager is
         address to,
         bytes memory data,
         Types.Operation operation
-    )
-        public
-        override (IModuleManager)
-        onlyModule
-        returns (bool, bytes memory)
-    {
+    ) public override(IModuleManager) onlyModule returns (bool, bytes memory) {
         bool ok;
         bytes memory returnData;
 

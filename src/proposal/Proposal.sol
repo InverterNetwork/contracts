@@ -13,7 +13,6 @@ import {IERC20MetadataUpgradeable} from
 // Internal Dependencies
 import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
-import {ContributorManager} from "src/proposal/base/ContributorManager.sol";
 import {FundingManager} from "src/proposal/base/FundingManager.sol";
 
 // Internal Interfaces
@@ -29,9 +28,7 @@ import {
  * @dev A new funding primitive to enable multiple actors within a decentralized
  *      network to collaborate on proposals.
  *
- *      A proposal is composed of a [funding mechanism](./base/FundingVault),
- *      a set of [contributors](./base/ContributorManager), and a set of
- *      [modules](./base/ModuleManager).
+ *      A proposal is composed of a [funding mechanism](./base/FundingVault) *      and a set of [modules](./base/ModuleManager).
  *
  *      The token being accepted for funding is non-changeable and set during
  *      initialization. Authorization is performed via calling a non-changeable
@@ -46,7 +43,6 @@ contract Proposal is
     IProposal,
     OwnableUpgradeable,
     ModuleManager,
-    ContributorManager,
     FundingManager
 {
     //--------------------------------------------------------------------------
@@ -78,13 +74,13 @@ contract Proposal is
     IERC20 private _receiptToken;
 
     /// @inheritdoc IProposal
-    uint public override (IProposal) proposalId;
+    uint public override(IProposal) proposalId;
 
     /// @inheritdoc IProposal
-    IAuthorizer public override (IProposal) authorizer;
+    IAuthorizer public override(IProposal) authorizer;
 
     /// @inheritdoc IProposal
-    IPaymentProcessor public override (IProposal) paymentProcessor;
+    IPaymentProcessor public override(IProposal) paymentProcessor;
 
     //--------------------------------------------------------------------------
     // Initializer
@@ -101,11 +97,10 @@ contract Proposal is
         address[] calldata modules,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
-    ) external override (IProposal) initializer {
+    ) external override(IProposal) initializer {
         // Initialize upstream contracts.
         __Ownable_init();
         __ModuleManager_init(modules);
-        __ContributorManager_init();
         IERC20 receiptToken_ = __FundingManager_init(proposalId_, token_);
 
         // Set storage variables.
@@ -135,21 +130,10 @@ contract Proposal is
     function __ModuleManager_isAuthorized(address who)
         internal
         view
-        override (ModuleManager)
+        override(ModuleManager)
         returns (bool)
     {
         return authorizer.isAuthorized(who);
-    }
-
-    /// @dev Addresses authorized via the {IAuthorizer} instance and the
-    ///      proposal's owner can manage contributors.
-    function __ContributorManager_isAuthorized(address who)
-        internal
-        view
-        override (ContributorManager)
-        returns (bool)
-    {
-        return authorizer.isAuthorized(who) || who == owner();
     }
 
     //--------------------------------------------------------------------------
@@ -179,14 +163,14 @@ contract Proposal is
     function token()
         public
         view
-        override (FundingManager, IProposal)
+        override(FundingManager, IProposal)
         returns (IERC20)
     {
         return _token;
     }
 
     /// @inheritdoc IProposal
-    function receiptToken() public view override (IProposal) returns (IERC20) {
+    function receiptToken() public view override(IProposal) returns (IERC20) {
         return _receiptToken;
     }
 
@@ -198,7 +182,7 @@ contract Proposal is
     function owner()
         public
         view
-        override (OwnableUpgradeable, IProposal)
+        override(OwnableUpgradeable, IProposal)
         returns (address)
     {
         return super.owner();

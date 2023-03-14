@@ -113,7 +113,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         }
 
         uint totalTokenAmount;
-        for (uint i; i < orderAmount; i++) {
+        for (uint i; i < orderAmount; ++i) {
             _ensureValidRecipient(recipients[i]);
             _ensureValidAmount(amounts[i]);
             _ensureValidDueTo(dueTos[i]);
@@ -151,7 +151,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     ) internal virtual validAmount(amount) validDueTo(dueTo) {
         uint orderAmount = recipients.length;
 
-        for (uint i; i < orderAmount; i++) {
+        for (uint i; i < orderAmount; ++i) {
             _ensureValidRecipient(recipients[i]);
 
             // Add new order to list of oustanding orders.
@@ -192,9 +192,15 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
             IPaymentProcessor(_msgSender()), _outstandingTokenAmount
         );
 
+        //Ensure that the Client will have sufficient funds.
+        // Note that function is implemented in downstream contract.
+        // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
+        _ensureTokenBalance(_outstandingTokenAmount);
+
         // Create a copy of all orders to return.
-        PaymentOrder[] memory copy = new PaymentOrder[](_orders.length);
-        for (uint i; i < _orders.length; i++) {
+        uint ordersLength = _orders.length;
+        PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);
+        for (uint i; i < ordersLength; ++i) {
             copy[i] = _orders[i];
         }
 

@@ -72,7 +72,7 @@ contract ProposalFactoryTest is Test {
         // Note to stay reasonable
         vm.assume(proposalsCreated < 50);
 
-        for (uint i = 0; i < proposalsCreated; i++) {
+        for (uint i = 0; i < proposalsCreated; ++i) {
             _deployProposal();
         }
         if (getId > proposalsCreated) {
@@ -97,7 +97,7 @@ contract ProposalFactoryTest is Test {
         new IProposalFactory.ModuleConfig[](
                 modulesLen
             );
-        for (uint i; i < modulesLen; i++) {
+        for (uint i; i < modulesLen; ++i) {
             moduleConfigs[i] = moduleConfig;
         }
 
@@ -134,7 +134,7 @@ contract ProposalFactoryTest is Test {
         // Note to stay reasonable
         vm.assume(proposalAmount < 50);
 
-        for (uint i = 1; i < proposalAmount; i++) {
+        for (uint i = 1; i < proposalAmount; ++i) {
             address proposal = _deployProposal();
             assertEq(proposal, factory.getProposalByID(i));
         }

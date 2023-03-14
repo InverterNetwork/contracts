@@ -6,7 +6,10 @@ import {E2eTest} from "test/e2e/E2eTest.sol";
 import {IProposalFactory} from "src/factories/ProposalFactory.sol";
 import {IProposal} from "src/proposal/Proposal.sol";
 
-import {MilestoneManager} from "src/modules/MilestoneManager.sol";
+import {
+    MilestoneManager,
+    IMilestoneManager
+} from "src/modules/MilestoneManager.sol";
 import {PaymentProcessor} from "src/modules/PaymentProcessor.sol";
 import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 
@@ -17,8 +20,18 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * E2e test demonstrating how to add, start, and complete a Milestone.
  */
 contract MilestoneLifecycle is E2eTest {
-    address alice = address(0xA11CE);
-    address bob = address(0x606);
+    // Before we can start a milestone, two things need to be present:
+    // 1. A non-empty list of contributors for it
+    // 2. The percentage of milestone funding to pay the contributors for the milestone.
+
+    // So lets add Alice and Bob as contributors to the proposal.
+    // Note the salary is specified in relation to the SALARY_PRECISION variable in the MilestoneManager.
+    IMilestoneManager.Contributor alice = IMilestoneManager.Contributor(
+        address(0xA11CE), 50_000_000, "AliceIdHash"
+    );
+    IMilestoneManager.Contributor bob =
+        IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
+    IMilestoneManager.Contributor[] contributors;
 
     address funder1 = address(0xF1);
     address funder2 = address(0xF2);
@@ -42,17 +55,20 @@ contract MilestoneLifecycle is E2eTest {
         MilestoneManager milestoneManager =
             MilestoneManager(0xa78f6C9322C3f1b396720945B6C3035A4a1B3d70);
 
+        contributors.push(alice);
+        contributors.push(bob);
+
         milestoneManager.addMilestone(
             1 weeks,
             1000e18,
-            "My first Milestone",
-            "Here could be a more detailed description"
+            contributors,
+            bytes("Here could be a more detailed description")
         );
         milestoneManager.addMilestone(
             2 weeks,
             5000e18,
-            "Second Milestone",
-            "The second milestone, right after the first one"
+            contributors,
+            bytes("The second milestone, right after the first one")
         );
 
         // IMPORTANT
@@ -65,19 +81,12 @@ contract MilestoneLifecycle is E2eTest {
         token.approve(address(proposal), initialDeposit);
         proposal.deposit(initialDeposit);
 
-        // Before we can start a milestone, two things need to be present:
-        // 1. A non-empty list of contributors in the proposal
-        // 2. The amount of funding to pay the contributors for the milestone
-
-        // So lets add Alice and Bob as contributors to the proposal.
-        proposal.addContributor(alice, "Alice", "Smart Contract Engineer", 1);
-        proposal.addContributor(bob, "Bob", "Web Developer", 1);
-        // Note the last argument being the salary for the contributors.
         // However, the salary is not yet taken into in the Milestone module.
         // The milestone's budget is shared equally between all contributors.
 
-        assertTrue(proposal.isContributor(alice));
-        assertTrue(proposal.isContributor(bob));
+        //@todo rewrite comments. We check the milestone ID, too, maybe we should save it on creation for cleanliness
+        assertTrue(milestoneManager.isContributor(1, alice.addr));
+        assertTrue(milestoneManager.isContributor(1, bob.addr));
 
         // Seeing this great working on the proposal, funder1 decides to fund
         // the proposal with 1k of tokens.
@@ -95,7 +104,10 @@ contract MilestoneLifecycle is E2eTest {
         assertEq(token.balanceOf(address(proposal)), 1000e18 + initialDeposit);
         assertEq(proposal.totalSupply(), 1000e18 + initialDeposit);
 
-        // Now we start the first milestone.
+        // Now we ait for the timelock to pass and start the first milestone.
+        vm.warp(
+            block.timestamp + milestoneManager.getMilestoneUpdateTimelock() + 1
+        );
         milestoneManager.startNextMilestone();
 
         // Starting a milestone DOES NOT itself pay the contributors but
@@ -113,13 +125,15 @@ contract MilestoneLifecycle is E2eTest {
         // The PaymentProcessor's `processPayments()` function is publicly
         // callable. This ensures the contributors can call the function too,
         // guaranteeing their payment.
-        vm.prank(alice);
+        vm.prank(alice.addr);
         paymentProcessor.processPayments(
             IPaymentClient(address(milestoneManager))
         );
 
-        assertEq(token.balanceOf(alice), 1000e18 / 2);
-        assertEq(token.balanceOf(bob), 1000e18 / 2);
+        // since we take 1% fee, the expected balance is 990e18/2
+
+        assertEq(token.balanceOf(alice.addr), 990e18 / 2);
+        assertEq(token.balanceOf(bob.addr), 990e18 / 2);
 
         // Lets wait some time now for Alice and Bob to submit their work for
         // the milestone.
@@ -130,9 +144,9 @@ contract MilestoneLifecycle is E2eTest {
         // it's) the first milestone, and additional data.
         // The submission data can not be empty, and is intended for off-chain
         // systems to check Bob's work.
-        vm.prank(bob);
+        vm.prank(bob.addr);
         milestoneManager.submitMilestone({
-            id: 1,
+            milestoneId: 1,
             submissionData: bytes("https://bob.com/paper-for-milestone.pdf")
         });
 
