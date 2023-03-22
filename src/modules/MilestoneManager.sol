@@ -729,7 +729,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneRegistry[milestoneId].lastUpdatedTimestamp = block.timestamp;
 
         emit MilestoneAdded(
-            milestoneId, duration, budget, contributors, details
+            milestoneId,
+            milestone.duration,
+            milestone.budget,
+            milestone.contributors,
+            milestone.details
         );
 
         return milestoneId;
