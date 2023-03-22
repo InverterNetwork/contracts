@@ -742,7 +742,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             milestone.budget,
             milestone.contributors,
             milestone.details
-            );
+        );
 
         return milestoneId;
     }
