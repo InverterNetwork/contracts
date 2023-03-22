@@ -2,7 +2,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {ListAuthorizer} from "../src/modules/governance/ListAuthorizer.sol";
+import {ListAuthorizer} from "../../../src/modules/governance/ListAuthorizer.sol";
 
  /**
   * @title ListAuthorizer Deployment Script
