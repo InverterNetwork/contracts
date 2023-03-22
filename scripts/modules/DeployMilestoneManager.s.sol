@@ -2,7 +2,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {MilestoneManager} from "../src/modules/MilestoneManager.sol";
+import {MilestoneManager} from "../../src/modules/MilestoneManager.sol";
 
  /**
   * @title MilestoneManager Deployment Script
