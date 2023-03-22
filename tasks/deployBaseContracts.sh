@@ -43,7 +43,7 @@ forge script scripts/modules/DeployMilestoneManager.s.sol:DeployMilestoneManager
     --broadcast
 
 # - PaymentManager
-forge script scripts/DeployPaymentManager.s.sol \
+forge script scripts/modules/DeployPaymentProcessor.s.sol:DeployPaymentProcessor \
     --fork-url $RPC_URL \
     --sender $WALLET_DEPLOYER \
     --private-key $WALLET_DEPLOYER_PK \
