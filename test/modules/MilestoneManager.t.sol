@@ -614,7 +614,7 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: stopMilestone()
 
-    function testStopMilestoneNow(address[] memory contributors) public {
+    function testStopMilestone(address[] memory contributors) public {
         testStartNextMilestone(contributors);
 
         uint id = 1; // Note that id's start at 1.
@@ -983,6 +983,69 @@ contract MilestoneManagerTest is ModuleTest {
 
         _assertMilestone(id, DURATION, BUDGET, contribs, DETAILS, "", false);
     }
+
+    function testUpdateMilestoneOneByOne(
+        uint duration,
+        uint budget,
+        bytes memory details,
+        address[] memory contributors
+    ) public {
+        _assumeValidDuration(duration);
+        _assumeValidBudgets(budget);
+        _assumeValidDetails(details);
+
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
+
+        uint id = milestoneManager.addMilestone(
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+        );
+
+        // update duration
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(
+            id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+            );
+
+        milestoneManager.updateMilestone(
+            id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+        );
+
+        // update budget
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(
+            id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
+            );
+
+        milestoneManager.updateMilestone(
+            id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
+        );
+
+        // update contributors
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(id, duration, budget, contribs, DETAILS);
+
+        milestoneManager.updateMilestone(
+            id, duration, budget, contribs, DETAILS
+        );
+
+        // update details
+
+        vm.expectEmit(true, true, true, true);
+        emit MilestoneUpdated(id, duration, budget, contribs, details);
+
+        milestoneManager.updateMilestone(
+            id, duration, budget, contribs, details
+        );
+
+        // check everything ended up ok
+
+        _assertMilestone(id, duration, budget, contribs, details, "", false);
+    }
+
 
     function testUpdateMilestoneFailsIfCallerNotAuthorizedOrOwner(
         address caller
