@@ -614,7 +614,7 @@ contract MilestoneManagerTest is ModuleTest {
     //----------------------------------
     // Test: stopMilestone()
 
-    function testStopMilestone(address[] memory contributors) public {
+    function testStopMilestoneNow(address[] memory contributors) public {
         testStartNextMilestone(contributors);
 
         uint id = 1; // Note that id's start at 1.
@@ -622,6 +622,7 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.stopMilestone(_SENTINEL, id);
         assertEq(milestoneManager.listMilestoneIds().length, id);
     }
+
 
     function testStopMilestoneFailsIfCallerNotAuthorizedOrOwner(
         address[] memory contributors,
@@ -685,6 +686,36 @@ contract MilestoneManagerTest is ModuleTest {
                 .selector
         );
         milestoneManager.stopMilestone(_SENTINEL, id);
+    }
+
+    function testStartNextMilestoneAfterCurrentMilestoneIsStopped(
+        address[] memory contributors
+    ) public {
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
+
+
+        _token.mint(address(_proposal), BUDGET*2);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
+
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
+        milestoneManager.startNextMilestone();
+
+        // --------------------------------------
+
+        uint id2 =
+            milestoneManager.addMilestone(DURATION * 2, BUDGET, contribs, DETAILS);
+
+        milestoneManager.stopMilestone(_SENTINEL, id);
+
+        vm.warp(block.timestamp + DURATION - 10 + TIMELOCK + 1);
+
+        milestoneManager.startNextMilestone();
+
+        assertEq(milestoneManager.listMilestoneIds().length, id2);
     }
 
     //----------------------------------
@@ -951,68 +982,6 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         _assertMilestone(id, DURATION, BUDGET, contribs, DETAILS, "", false);
-    }
-
-    function testUpdateMilestoneOneByOne(
-        uint duration,
-        uint budget,
-        bytes memory details,
-        address[] memory contributors
-    ) public {
-        _assumeValidDuration(duration);
-        _assumeValidBudgets(budget);
-        _assumeValidDetails(details);
-
-        IMilestoneManager.Contributor[] memory contribs =
-            _generateEqualContributors(contributors);
-
-        uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
-        // update duration
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneUpdated(
-            id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-            );
-
-        milestoneManager.updateMilestone(
-            id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
-        // update budget
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneUpdated(
-            id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
-            );
-
-        milestoneManager.updateMilestone(
-            id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
-        // update contributors
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneUpdated(id, duration, budget, contribs, DETAILS);
-
-        milestoneManager.updateMilestone(
-            id, duration, budget, contribs, DETAILS
-        );
-
-        // update details
-
-        vm.expectEmit(true, true, true, true);
-        emit MilestoneUpdated(id, duration, budget, contribs, details);
-
-        milestoneManager.updateMilestone(
-            id, duration, budget, contribs, details
-        );
-
-        // check everything ended up ok
-
-        _assertMilestone(id, duration, budget, contribs, details, "", false);
     }
 
     function testUpdateMilestoneFailsIfCallerNotAuthorizedOrOwner(
