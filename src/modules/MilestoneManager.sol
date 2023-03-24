@@ -497,9 +497,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                     ((m.budget / SALARY_PRECISION) * contribCache[i].salary);
 
                 // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
-                _addPaymentOrder(
-                    contribCache[i].addr, contributorPayout, m.duration
-                );
+                _addPaymentOrder(contribCache[i].addr, contributorPayout,
+                    block.timestamp + m.duration);
             }
         }
 
