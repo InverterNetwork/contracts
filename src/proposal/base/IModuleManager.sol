@@ -25,6 +25,9 @@ interface IModuleManager {
     /// @notice The supplied modules are not consecutive.
     error Proposal__ModuleManager__ModulesNotConsecutive();
 
+    /// @notice The Manager has reached the maximum amount of modules.
+    error Proposal__ModuleManager__ModuleAmountOverLimits();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -105,7 +108,7 @@ interface IModuleManager {
         returns (address previousModule);
 
     /// @notice Returns the number of modules.
-    function modulesSize() external view returns (uint);
+    function modulesSize() external view returns (uint8);
 
     /// @notice Grants role `role` to account `account` in caller's access
     ///         control context.
