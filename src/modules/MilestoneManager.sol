@@ -459,10 +459,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             _last = prevId;
         }
 
-        __Module_proposal.paymentProcessor().cancelRunningPayments(
-            IPaymentClient(address(this))
-        );
-
         emit MilestoneRemoved(id);
     }
 
