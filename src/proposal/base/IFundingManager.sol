@@ -9,7 +9,7 @@ interface IFundingManager is IRebasingERC20 {
     // Errors
 
     /// @notice Function is only callable by authorized address.
-    error Proposal__FundingManager__CannotMintToSelf();
+    error Proposal__FundingManager__CannotSelfDeposit();
 
     //--------------------------------------------------------------------------
     // Functions
