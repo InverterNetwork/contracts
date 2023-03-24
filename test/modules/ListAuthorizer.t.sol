@@ -261,7 +261,7 @@ contract ListAuthorizerTest is Test {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     ListAuthorizer
-                        .Module__ListAuthorizer__AddressAlreadyAuthorized
+                        .Module__ListAuthorizer__InvalidAuthorizationTransfer
                         .selector
                 )
             );
