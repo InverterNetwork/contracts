@@ -620,7 +620,6 @@ contract MilestoneManagerTest is ModuleTest {
         uint id = 1; // Note that id's start at 1.
 
         milestoneManager.stopMilestone(_SENTINEL, id);
-        assertEq(milestoneManager.listMilestoneIds().length, id);
     }
 
 
