@@ -5,6 +5,15 @@ import {IRebasingERC20} from
     "@elastic-receipt-token/interfaces/_external/IRebasingERC20.sol";
 
 interface IFundingManager is IRebasingERC20 {
+    //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Function is only callable by authorized address.
+    error Proposal__FundingManager__CannotMintToSelf();
+
+    //--------------------------------------------------------------------------
+    // Functions
+
     function deposit(uint amount) external;
     function depositFor(address to, uint amount) external;
 

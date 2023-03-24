@@ -91,6 +91,10 @@ abstract contract FundingManager is
     // Internal Mutating Functions
 
     function _deposit(address from, address to, uint amount) internal {
+        if (from == address(this)) {
+            revert Proposal__FundingManager__CannotMintToSelf();
+        }
+
         _mint(to, amount);
 
         token().safeTransferFrom(from, address(this), amount);
