@@ -893,7 +893,7 @@ contract MilestoneManagerTest is ModuleTest {
             assertEq(orders[i].recipient, contribs[i].addr);
             assertEq(orders[i].amount, payouts[i]);
             assertEq(orders[i].createdAt, block.timestamp);
-            assertEq(orders[i].dueTo, DURATION);
+            assertEq(orders[i].dueTo, DURATION + block.timestamp);
         }
 
         uint paidToTreasury = _token.balanceOf(FEE_TREASURY);
