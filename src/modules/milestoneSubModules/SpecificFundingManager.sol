@@ -36,18 +36,20 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         _;
     }
 
-    modifier validWithdrawAmount(uint amount, uint milestoneId) {
-        uint fundingAmount =
-            milestoneIdFundingAmounts[milestoneId][_msgSender()];
-        if (fundingAmount < amount && fundingAmount != 0) {
+    modifier validWithdrawAmount(uint withdrawAmount, uint milestoneId) {
+        if (
+            milestoneIdFundingAmounts[milestoneId][_msgSender()]
+                < withdrawAmount
+        ) {
             revert Module__ISpecificFundingManager__InvalidWithdrawAmount();
         }
         _;
     }
 
     modifier allowanceHighEnough(uint spendingAmount) {
-        IERC20 token = __Module_proposal.token();
-        uint allowance = token.allowance(address(this), address(_msgSender()));
+        uint allowance = __Module_proposal.token().allowance(
+            address(_msgSender()), address(this)
+        );
 
         if (allowance < spendingAmount) {
             revert Module__ISpecificFundingManager__AllowanceNotHighEnough();
@@ -56,7 +58,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     }
 
     modifier fundingNotCollected(uint milestoneId) {
-        if (!milestoneIdToFundingAddresses[milestoneId].fundingCollected) {
+        if (milestoneIdToFundingAddresses[milestoneId].fundingCollected) {
             revert Module__ISpecificFundingManager__FundingAlreadyCollected();
         }
         _;
@@ -65,7 +67,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     //--------------------------------------------------------------------------
     // Storage
 
-    address milestoneManager;
+    address public milestoneManager;
 
     mapping(uint => SpecificMilestoneFunding) private
         milestoneIdToFundingAddresses;
@@ -123,9 +125,9 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     /// @inheritdoc ISpecificFundingManager
     function fundSpecificMilestone(uint milestoneId, uint addAmount)
         external
-        validAmount(addAmount)
-        allowanceHighEnough(addAmount)
         fundingNotCollected(milestoneId)
+        allowanceHighEnough(addAmount)
+        validAmount(addAmount)
         returns (uint)
     {
         address funder = _msgSender();
@@ -154,8 +156,8 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         uint withdrawAmount
     )
         external
-        validAmount(withdrawAmount)
         validWithdrawAmount(withdrawAmount, milestoneId)
+        validAmount(withdrawAmount)
         returns (uint)
     {
         address funder = _msgSender();
@@ -272,14 +274,14 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     // Helper Functions
 
     function removeFunder(uint milestoneId, address funder) private {
-        address[] storage funders =
-            milestoneIdToFundingAddresses[milestoneId].funders; //@note storage?
+        address[] memory fundersSearchArray =
+            milestoneIdToFundingAddresses[milestoneId].funders;
 
         uint funderIndex = type(uint).max;
 
-        uint length = funders.length;
+        uint length = fundersSearchArray.length;
         for (uint i; i < length; i++) {
-            if (funders[i] == funder) {
+            if (fundersSearchArray[i] == funder) {
                 funderIndex = i;
                 break;
             }
@@ -288,7 +290,8 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         // assert(funderIndex != type(uint).max); //@note removeFounder Should never be used if address is not found in funder array -> Test internally
 
         //Unordered removal
-
+        address[] storage funders =
+            milestoneIdToFundingAddresses[milestoneId].funders;
         // Move the last element into the place to delete
         funders[funderIndex] = funders[length - 1];
         // Remove the last element
