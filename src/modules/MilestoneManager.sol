@@ -580,6 +580,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         validPosition(idToPositionAfter)
         validPosition(prevId)
         validIntermediatePosition(id, prevId, idToPositionAfter)
+        onlyConsecutiveMilestones(prevId, id)
     {
         //Remove current milestone id from list
         uint nextIdInLine = _milestones[id];
