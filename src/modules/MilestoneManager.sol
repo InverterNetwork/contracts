@@ -734,6 +734,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneRegistry[milestoneId].startTimestamp = 0;
         _milestoneRegistry[milestoneId].submissionData = "";
         _milestoneRegistry[milestoneId].completed = false;
+        _milestoneRegistry[milestoneId].lastUpdatedTimestamp = block.timestamp;
 
         emit MilestoneAdded(
             milestoneId,
