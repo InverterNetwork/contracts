@@ -244,7 +244,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         if (fundingAmount > amountNeeded) {
             for (uint i = 0; i < length; i++) {
                 //This sets the amount each funder has left after the funding is collected based on the percentage share they had of the fundingAmount
-                milestoneIdFundingAmounts[milestoneId][funders[i]] = //@note Decimal optimization?
+                milestoneIdFundingAmounts[milestoneId][funders[i]] -= //@note Decimal optimization?
                 milestoneIdFundingAmounts[milestoneId][funders[i]]
                     * amountNeeded / fundingAmount;
             }

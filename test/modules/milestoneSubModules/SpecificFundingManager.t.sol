@@ -485,55 +485,165 @@ contract SpecificFundingManagerTest is ModuleTest {
     //----------------------------------
     // Test: Collect Funding Functions
 
-    function testCollectFunding(uint id, uint amountFunded, uint amountNeeded)
+    function testCollectFundingNotingFunded(uint id, uint amountNeeded)
         public
     {
-        amountFunded = bound(amountFunded, 0, 2 ** 128); //Reasonable high number for testing
         amountNeeded = bound(amountNeeded, 1, 2 ** 128);
-        uint presumedReturnAmount;
 
-        if (amountFunded != 0) {
-            fundSpecificMilestone(id, Alice, amountFunded);
+        address[] memory funders =
+            specificFundingManager.getFunderAddressesForMilestoneId(id);
+
+        vm.expectEmit(true, true, true, false);
+        emit FundingCollected(id, 0, funders);
+
+        vm.prank(milestoneModule);
+        assertTrue(specificFundingManager.collectFunding(id, amountNeeded) == 0);
+
+        //Check if token balances updated accordingly
+
+        uint tokenBalanceOfFundingManager =
+            token.balanceOf(address(specificFundingManager));
+        uint tokenBalanceOfMilestoneModule =
+            token.balanceOf(address(milestoneModule));
+        uint remainginFundingAmountOfAlice = specificFundingManager
+            .getFundingAmountForMilestoneIdAndAddress(id, Alice);
+        uint remainginFundingAmountOfBob = specificFundingManager
+            .getFundingAmountForMilestoneIdAndAddress(id, Bob);
+
+        //Noting Funded
+
+        assertTrue(tokenBalanceOfFundingManager == 0);
+        assertTrue(tokenBalanceOfMilestoneModule == 0);
+    }
+
+    function testCollectFundingLessFundedThanNeeded(
+        uint id,
+        uint amountFundedByAlice,
+        uint amountFundedByBob,
+        uint amountNeeded
+    ) public {
+        amountFundedByAlice = bound(amountFundedByAlice, 0, 2 ** 64); //Reasonable high number for testing
+        amountFundedByBob = bound(amountFundedByBob, 0, 2 ** 64);
+
+        uint amountFunded = amountFundedByAlice + amountFundedByBob;
+        amountNeeded = bound(amountNeeded, amountFunded + 1, 2 ** 128);
+
+        if (amountFundedByAlice != 0) {
+            fundSpecificMilestone(id, Alice, amountFundedByAlice);
+        }
+        if (amountFundedByBob != 0) {
+            fundSpecificMilestone(id, Bob, amountFundedByBob);
         }
 
         address[] memory funders =
             specificFundingManager.getFunderAddressesForMilestoneId(id);
 
-        if (amountFunded == 0) {
-            vm.expectEmit(true, true, true, false);
-            emit FundingCollected(id, 0, funders);
-            presumedReturnAmount = 0;
-        } else if (amountFunded > amountNeeded) {
-            vm.expectEmit(true, true, true, false);
-            emit FundingCollected(id, amountNeeded, funders);
-            presumedReturnAmount = amountNeeded;
-        } else {
-            vm.expectEmit(true, true, true, false);
-            emit FundingCollected(id, amountFunded, funders);
-            presumedReturnAmount = amountFunded;
-        }
+        vm.expectEmit(true, true, true, false);
+        emit FundingCollected(id, amountFunded, funders);
+
         vm.prank(milestoneModule);
         assertTrue(
             specificFundingManager.collectFunding(id, amountNeeded)
-                == presumedReturnAmount
+                == amountFunded
         );
 
         //Check if token balances updated accordingly
-        if (amountFunded == 0) {
-            assertTrue(token.balanceOf(address(specificFundingManager)) == 0);
-            assertTrue(token.balanceOf(address(milestoneModule)) == 0);
-        } else if (amountFunded > amountNeeded) {
+
+        uint tokenBalanceOfFundingManager =
+            token.balanceOf(address(specificFundingManager));
+        uint tokenBalanceOfMilestoneModule =
+            token.balanceOf(address(milestoneModule));
+        uint remainginFundingAmountOfAlice = specificFundingManager
+            .getFundingAmountForMilestoneIdAndAddress(id, Alice);
+        uint remainginFundingAmountOfBob = specificFundingManager
+            .getFundingAmountForMilestoneIdAndAddress(id, Bob);
+
+        assertTrue(tokenBalanceOfFundingManager == 0);
+        assertTrue(tokenBalanceOfMilestoneModule == amountFunded);
+
+        assertTrue(remainginFundingAmountOfAlice == 0);
+        assertTrue(remainginFundingAmountOfBob == 0);
+    }
+
+    function testCollectFundingMoreFundedThanNeeded(
+        uint id,
+        uint amountFundedByAlice,
+        uint amountFundedByBob,
+        uint amountNeeded
+    ) public {
+        amountFundedByAlice = bound(amountFundedByAlice, 0, 2 ** 128);
+        amountFundedByBob = bound(amountFundedByBob, 0, 2 ** 128);
+        amountNeeded = bound(amountNeeded, 1, 2 ** 127); //Reasonable high number for testing
+
+        uint amountFunded = amountFundedByAlice + amountFundedByBob;
+
+        //This should make sure, that the amountFunded is always higher than the amountNeeded without disregarding small numbers
+        if (amountFunded < amountNeeded) {
+            uint difference = amountNeeded - amountFunded;
+            amountFundedByAlice = bound(
+                amountFundedByAlice,
+                amountFundedByAlice + difference + 1,
+                2 ** 128
+            );
+            amountFunded = amountFundedByAlice + amountFundedByBob;
+        }
+
+        if (amountFundedByAlice != 0) {
+            fundSpecificMilestone(id, Alice, amountFundedByAlice);
+        }
+        if (amountFundedByBob != 0) {
+            fundSpecificMilestone(id, Bob, amountFundedByBob);
+        }
+
+        address[] memory funders =
+            specificFundingManager.getFunderAddressesForMilestoneId(id);
+
+        vm.expectEmit(true, true, true, false);
+        emit FundingCollected(id, amountNeeded, funders);
+        vm.prank(milestoneModule);
+        assertTrue(
+            specificFundingManager.collectFunding(id, amountNeeded)
+                == amountNeeded
+        );
+
+        //Check if token balances updated accordingly
+
+        uint tokenBalanceOfFundingManager =
+            token.balanceOf(address(specificFundingManager));
+        uint tokenBalanceOfMilestoneModule =
+            token.balanceOf(address(milestoneModule));
+        uint remainginFundingAmountOfAlice = specificFundingManager
+            .getFundingAmountForMilestoneIdAndAddress(id, Alice);
+        uint remainginFundingAmountOfBob = specificFundingManager
+            .getFundingAmountForMilestoneIdAndAddress(id, Bob);
+
+        assertTrue(tokenBalanceOfFundingManager == amountFunded - amountNeeded);
+        assertTrue(tokenBalanceOfMilestoneModule == amountNeeded);
+
+        //If Alice is the sole funder
+        if (amountFundedByAlice == amountFunded) {
             assertTrue(
-                token.balanceOf(address(specificFundingManager))
-                    == amountFunded - amountNeeded
+                remainginFundingAmountOfAlice == amountFunded - amountNeeded
+            );
+        }
+        //If Bob is the sole funder
+        else if (amountFundedByBob == amountFunded) {
+            assertTrue(
+                remainginFundingAmountOfBob == amountFunded - amountNeeded
+            );
+        }
+        //Both funded
+        else {
+            console.log("Here");
+            assertTrue(
+                remainginFundingAmountOfAlice
+                    == amountFundedByAlice
+                        - amountFundedByAlice * amountNeeded / amountFunded
             );
             assertTrue(
-                token.balanceOf(address(milestoneModule)) == amountNeeded
-            );
-        } else {
-            assertTrue(token.balanceOf(address(specificFundingManager)) == 0);
-            assertTrue(
-                token.balanceOf(address(milestoneModule)) == amountFunded
+                remainginFundingAmountOfBob
+                    == amountFundedByBob
+                        - amountFundedByBob * amountNeeded / amountFunded
             );
         }
     }
