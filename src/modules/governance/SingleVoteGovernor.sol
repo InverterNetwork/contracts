@@ -10,7 +10,6 @@ import {
     IAuthorizer
 } from "src/modules/governance/ISingleVoteGovernor.sol";
 
-
 contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -330,7 +329,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         if (motion_.executedAt != 0) {
             revert Module__SingleVoteGovernor__MotionAlreadyExecuted();
         }
-        
+
         // Updating executedAt here to prevent reentrancy
         motion_.executedAt = block.timestamp;
 
@@ -338,7 +337,6 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         bool result;
         bytes memory returnData;
         (result, returnData) = motion_.target.call(motion_.action);
-
 
         // Save execution's result.
         motion_.executionResult = result;

@@ -894,7 +894,7 @@ contract SingleVoteGovernorTest is Test {
         _authorizer.executeMotion(_voteID);
 
         //we wait and try again in the last block of voting time
-        vm.warp(block.timestamp + _authorizer.voteDuration() );
+        vm.warp(block.timestamp + _authorizer.voteDuration());
 
         vm.expectRevert(
             abi.encodePacked(
@@ -904,9 +904,6 @@ contract SingleVoteGovernorTest is Test {
             )
         );
         _authorizer.executeMotion(_voteID);
-
-
-
     }
 
     // Fail to execute an already executed vote
@@ -1001,7 +998,7 @@ contract SingleVoteGovernorTest is Test {
         vm.startPrank(address(_authorizer));
         _authorizer.removeVoter(COBIE);
 
-        //this call would leave a 1 person list with a threshold of 2 
+        //this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
             ISingleVoteGovernor
                 .Module__SingleVoteGovernor__UnreachableThreshold
