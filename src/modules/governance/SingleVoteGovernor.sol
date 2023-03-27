@@ -10,6 +10,7 @@ import {
     IAuthorizer
 } from "src/modules/governance/ISingleVoteGovernor.sol";
 
+
 contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -63,7 +64,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     uint public voterCount;
 
     /// @inheritdoc ISingleVoteGovernor
-    uint public quorum;
+    uint public threshold;
 
     /// @inheritdoc ISingleVoteGovernor
     uint public voteDuration;
@@ -79,12 +80,12 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     ) external override initializer {
         __Module_init(proposal_, metadata);
 
-        // Decode configdata to list of voters, the required quorum, and the
+        // Decode configdata to list of voters, the required threshold, and the
         // voting duration.
         address[] memory voters;
-        uint quorum_;
+        uint threshold_;
         uint voteDuration_;
-        (voters, quorum_, voteDuration_) =
+        (voters, threshold_, voteDuration_) =
             abi.decode(configdata, (address[], uint, uint));
 
         uint votersLen = voters.length;
@@ -94,10 +95,10 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             revert Module__SingleVoteGovernor__EmptyVoters();
         }
 
-        // Revert if quorum higher than number of voters, i.e. quorum being
+        // Revert if threshold higher than number of voters, i.e. threshold being
         // unreachable.
-        if (quorum_ > votersLen) {
-            revert Module__SingleVoteGovernor__UnreachableQuorum();
+        if (threshold_ > votersLen) {
+            revert Module__SingleVoteGovernor__UnreachableThreshold();
         }
 
         // Revert if votingDuration outside of bounds.
@@ -131,9 +132,9 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         // Write count of voters to storage.
         voterCount = votersLen;
 
-        // Write quorum to storage.
-        quorum = quorum_;
-        emit QuorumUpdated(0, quorum_);
+        // Write threshold to storage.
+        threshold = threshold_;
+        emit ThresholdUpdated(0, threshold_);
 
         // Write voteDuration to storage.
         voteDuration = voteDuration_;
@@ -170,17 +171,17 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
     // Configuration Functions
 
-    function setQuorum(uint newQuorum) external onlySelf {
-        // Revert is newQuorum higher than number of voters.
-        if (newQuorum > voterCount) {
-            revert Module__SingleVoteGovernor__UnreachableQuorum();
+    function setThreshold(uint newThreshold) external onlySelf {
+        // Revert if newThreshold higher than number of voters.
+        if (newThreshold > voterCount) {
+            revert Module__SingleVoteGovernor__UnreachableThreshold();
         }
 
-        // Note that a quorum of zero is valid because a proposal can only be
+        // Note that a threshold of zero is valid because a proposal can only be
         // created by a voter anyway.
 
-        emit QuorumUpdated(quorum, newQuorum);
-        quorum = newQuorum;
+        emit ThresholdUpdated(threshold, newThreshold);
+        threshold = newThreshold;
     }
 
     function setVotingDuration(uint newVoteDuration) external onlySelf {
@@ -215,9 +216,9 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             revert Module__SingleVoteGovernor__EmptyVoters();
         }
 
-        //Revert if removal would leave quorum unreachable
-        if (voterCount <= quorum) {
-            revert Module__SingleVoteGovernor__UnreachableQuorum();
+        //Revert if removal would leave threshold unreachable
+        if (voterCount <= threshold) {
+            revert Module__SingleVoteGovernor__UnreachableThreshold();
         }
 
         if (isVoter[who]) {
@@ -227,23 +228,6 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             }
             emit VoterRemoved(who);
         }
-    }
-
-    function transferVotingRights(address to)
-        external
-        onlyVoter
-        isValidVoterAddress(to)
-    {
-        // Revert if `to` is already voter.
-        if (isVoter[to]) {
-            revert Module__SingleVoteGovernor__IsAlreadyVoter();
-        }
-
-        delete isVoter[msg.sender];
-        emit VoterRemoved(msg.sender);
-
-        isVoter[to] = true;
-        emit VoterAdded(to);
     }
 
     //--------------------------------------------------------------------------
@@ -267,7 +251,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
         motion_.startTimestamp = block.timestamp;
         motion_.endTimestamp = block.timestamp + voteDuration;
-        motion_.requiredQuorum = quorum;
+        motion_.requiredThreshold = threshold;
 
         emit MotionCreated(motionId);
 
@@ -333,27 +317,30 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         }
 
         // Revert if voting duration not exceeded.
-        if (block.timestamp < motion_.endTimestamp) {
+        if (block.timestamp <= motion_.endTimestamp) {
             revert Module__SingleVoteGovernor__MotionInVotingPhase();
         }
 
-        //Revert if necessary quorum was not reached
-        if (motion_.forVotes < motion_.requiredQuorum) {
-            revert Module__SingleVoteGovernor__QuorumNotReached();
+        //Revert if necessary threshold was not reached
+        if (motion_.forVotes < motion_.requiredThreshold) {
+            revert Module__SingleVoteGovernor__ThresholdNotReached();
         }
 
         // Revert if motion already executed.
         if (motion_.executedAt != 0) {
             revert Module__SingleVoteGovernor__MotionAlreadyExecuted();
         }
+        
+        // Updating executedAt here to prevent reentrancy
+        motion_.executedAt = block.timestamp;
 
         // Execute `action` on `target`.
         bool result;
         bytes memory returnData;
         (result, returnData) = motion_.target.call(motion_.action);
 
+
         // Save execution's result.
-        motion_.executedAt = block.timestamp;
         motion_.executionResult = result;
         motion_.executionReturnData = returnData;
 

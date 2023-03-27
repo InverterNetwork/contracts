@@ -85,13 +85,13 @@ contract SingleVoteGovernorTest is Test {
         initialVoters[1] = BOB;
         initialVoters[2] = COBIE;
 
-        uint _startingQuorum = DEFAULT_QUORUM;
+        uint _startingThreshold = DEFAULT_QUORUM;
         uint _startingDuration = DEFAULT_DURATION;
 
         _authorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(initialVoters, _startingQuorum, _startingDuration)
+            abi.encode(initialVoters, _startingThreshold, _startingDuration)
         );
 
         assertEq(address(_authorizer.proposal()), address(_proposal));
@@ -131,7 +131,7 @@ contract SingleVoteGovernorTest is Test {
             // We add a new address through governance.
             bytes memory _encodedAction =
                 abi.encodeWithSignature("addVoter(address)", users[i]);
-            //for ease, we are assuming this is happening before any quorum changes
+            //for ease, we are assuming this is happening before any threshold changes
             uint _voteID = speedrunSuccessfulVote(
                 address(_authorizer), _encodedAction, initialVoters
             );
@@ -190,7 +190,7 @@ contract SingleVoteGovernorTest is Test {
         }
         uint _voteID = createVote(_voters[0], _target, _action);
 
-        for (uint i = 1; i < _authorizer.quorum(); ++i) {
+        for (uint i = 1; i < _authorizer.threshold(); ++i) {
             if (i < _voters.length) {
                 voteInFavor(_voters[(i - 1)], _voteID);
             }
@@ -204,7 +204,7 @@ contract SingleVoteGovernorTest is Test {
 
     function getMockValidVote() public view returns (address, bytes memory) {
         address _moduleAddress = address(_authorizer);
-        bytes memory _msg = abi.encodeWithSignature("setQuorum(uint)", 1);
+        bytes memory _msg = abi.encodeWithSignature("setThreshold(uint)", 1);
 
         return (_moduleAddress, _msg);
     }
@@ -218,7 +218,7 @@ contract SingleVoteGovernorTest is Test {
             bytes memory _act,
             uint _start,
             uint _end,
-            uint _quorum,
+            uint _threshold,
             uint _for,
             uint _against,
             uint _abstain,
@@ -231,7 +231,7 @@ contract SingleVoteGovernorTest is Test {
         _bufMotion.action = _act;
         _bufMotion.startTimestamp = _start;
         _bufMotion.endTimestamp = _end;
-        _bufMotion.requiredQuorum = _quorum;
+        _bufMotion.requiredThreshold = _threshold;
         _bufMotion.forVotes = _for;
         _bufMotion.againstVotes = _against;
         _bufMotion.abstainVotes = _abstain;
@@ -428,7 +428,7 @@ contract SingleVoteGovernorTest is Test {
             assertEq(_motion.action, _msg);
             assertEq(_motion.startTimestamp, block.timestamp);
             assertEq(_motion.endTimestamp, (block.timestamp + DEFAULT_DURATION));
-            assertEq(_motion.requiredQuorum, DEFAULT_QUORUM);
+            assertEq(_motion.requiredThreshold, DEFAULT_QUORUM);
             assertEq(_motion.forVotes, 0);
             assertEq(_motion.againstVotes, 0);
             assertEq(_motion.abstainVotes, 0);
@@ -868,7 +868,7 @@ contract SingleVoteGovernorTest is Test {
         //No prank address needed
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__QuorumNotReached
+                .Module__SingleVoteGovernor__ThresholdNotReached
                 .selector
         );
         _authorizer.executeMotion(_voteID);
@@ -880,7 +880,7 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        //First, we reach quorum
+        //First, we reach the threshold
         voteInFavor(ALBA, _voteID);
         voteInFavor(BOB, _voteID);
 
@@ -892,6 +892,21 @@ contract SingleVoteGovernorTest is Test {
             )
         );
         _authorizer.executeMotion(_voteID);
+
+        //we wait and try again in the last block of voting time
+        vm.warp(block.timestamp + _authorizer.voteDuration() );
+
+        vm.expectRevert(
+            abi.encodePacked(
+                ISingleVoteGovernor
+                    .Module__SingleVoteGovernor__MotionInVotingPhase
+                    .selector
+            )
+        );
+        _authorizer.executeMotion(_voteID);
+
+
+
     }
 
     // Fail to execute an already executed vote
@@ -979,67 +994,17 @@ contract SingleVoteGovernorTest is Test {
         vm.stopPrank();
     }
 
-    function testVotingTransfer(address[] memory users) public {
-        vm.assume(users.length > 4);
-        _validateUserList(users);
-
-        uint middle = users.length / 2;
-
-        address[] memory _from = new address[](middle);
-        address[] memory _to = new address[](middle);
-
-        for (uint i = 0; i < middle; ++i) {
-            _from[i] = users[i];
-            _to[i] = users[users.length - (1 + i)];
-        }
-
-        batchAddAuthorized(_from);
-
-        for (uint i; i < _from.length; ++i) {
-            // first, test a normal successful authorization transfer
-            vm.prank(_from[i]);
-            _authorizer.transferVotingRights(_to[i]);
-
-            assertEq(_authorizer.isVoter(_from[i]), false);
-            assertEq(_authorizer.isVoter(_to[i]), true);
-        }
-    }
-
-    function testVotingTransferToAuthorizedFails(address[] memory users)
-        public
-    {
-        vm.assume(users.length > 2);
-        _validateUserList(users);
-
-        batchAddAuthorized(users);
-
-        for (uint i; i < users.length - 1; ++i) {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    ISingleVoteGovernor
-                        .Module__SingleVoteGovernor__IsAlreadyVoter
-                        .selector
-                )
-            );
-            vm.prank(users[i]);
-            _authorizer.transferVotingRights(users[i + 1]);
-
-            assertEq(_authorizer.isVoter(users[i]), true);
-            assertEq(_authorizer.isVoter(users[i]), true);
-        }
-    }
-
-    // Fail to remove Authorized addresses until quorum is unreachble
+    // Fail to remove Authorized addresses until threshold is unreachble
     function testRemoveTooManyVoters() public {
         assertEq(address(_proposal), address(_authorizer.proposal()));
 
         vm.startPrank(address(_authorizer));
         _authorizer.removeVoter(COBIE);
 
-        //this call would leave a 1 person list with 2 quorum
+        //this call would leave a 1 person list with a threshold of 2 
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__UnreachableQuorum
+                .Module__SingleVoteGovernor__UnreachableThreshold
                 .selector
         );
         _authorizer.removeVoter(BOB);
@@ -1052,12 +1017,12 @@ contract SingleVoteGovernorTest is Test {
         assertEq(address(_proposal), address(_authorizer.proposal()));
 
         vm.startPrank(address(_authorizer));
-        _authorizer.setQuorum(0);
+        _authorizer.setThreshold(0);
 
         _authorizer.removeVoter(COBIE);
         _authorizer.removeVoter(BOB);
 
-        //this call would leave a 1 person list with 2 quorum
+        //this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
             ISingleVoteGovernor.Module__SingleVoteGovernor__EmptyVoters.selector
         );
@@ -1069,36 +1034,36 @@ contract SingleVoteGovernorTest is Test {
     //--------------------------------------------------------------------------
     // TEST: QUORUM
 
-    // Get correct quorum
-    function testGetQuorum() public {
-        assertEq(_authorizer.quorum(), DEFAULT_QUORUM);
+    // Get correct threshold
+    function testGetThreshold() public {
+        assertEq(_authorizer.threshold(), DEFAULT_QUORUM);
     }
 
-    // Set a new quorum
-    function testMotionSetQuorum() public {
+    // Set a new threshold
+    function testMotionSetThreshold() public {
         uint _newQ = 1;
 
         vm.prank(address(_authorizer));
-        _authorizer.setQuorum(_newQ);
+        _authorizer.setThreshold(_newQ);
 
-        assertEq(_authorizer.quorum(), _newQ);
+        assertEq(_authorizer.threshold(), _newQ);
     }
 
-    // Fail to set a quorum that's too damn high
-    function testSetUnreachableQuorum(uint _newQ) public {
+    // Fail to set a threshold that's too damn high
+    function testSetUnreachableThreshold(uint _newQ) public {
         vm.assume(_newQ > _authorizer.voterCount());
 
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__UnreachableQuorum
+                .Module__SingleVoteGovernor__UnreachableThreshold
                 .selector
         );
         vm.prank(address(_authorizer));
-        _authorizer.setQuorum(_newQ);
+        _authorizer.setThreshold(_newQ);
     }
 
-    // Fail to change quorum when not the module itself
-    function testUnauthorizedQuorumChange(address[] memory users) public {
+    // Fail to change threshold when not the module itself
+    function testUnauthorizedThresholdChange(address[] memory users) public {
         _validateUserList(users);
         batchAddAuthorized(users);
 
@@ -1106,17 +1071,17 @@ contract SingleVoteGovernorTest is Test {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
             vm.prank(users[i]); //authorized, but not Proposal
-            _authorizer.setQuorum(_newQ);
+            _authorizer.setThreshold(_newQ);
         }
     }
 
-    //Change the quorum by going through governance
-    function testGovernanceQuorumChange() public {
-        uint _newQuorum = 1;
+    //Change the threshold by going through governance
+    function testGovernanceThresholdChange() public {
+        uint _newThreshold = 1;
 
         // 1) Create and approve a vote
         bytes memory _encodedAction =
-            abi.encodeWithSignature("setQuorum(uint256)", _newQuorum);
+            abi.encodeWithSignature("setThreshold(uint256)", _newThreshold);
         uint _voteID = speedrunSuccessfulVote(
             address(_authorizer), _encodedAction, initialVoters
         );
@@ -1125,7 +1090,7 @@ contract SingleVoteGovernorTest is Test {
         _authorizer.executeMotion(_voteID);
 
         // 3) The proposal state has changed
-        assertEq(_authorizer.quorum(), _newQuorum);
+        assertEq(_authorizer.threshold(), _newThreshold);
     }
 
     //--------------------------------------------------------------------------
