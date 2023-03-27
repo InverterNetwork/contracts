@@ -215,14 +215,14 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     }
 
     //----------------------------------
-    // Collect funding Functions
+    // Collect Funding Functions
 
     /// @inheritdoc ISpecificFundingManager
     function collectFunding(uint milestoneId, uint amountNeeded)
         external
         onlyMilestoneManagerAccess
-        validAmount(amountNeeded)
         fundingNotCollected(milestoneId)
+        validAmount(amountNeeded)
         returns (uint)
     {
         milestoneIdToFundingAddresses[milestoneId].fundingCollected = true;

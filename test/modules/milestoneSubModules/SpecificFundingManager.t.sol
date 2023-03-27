@@ -482,6 +482,42 @@ contract SpecificFundingManagerTest is ModuleTest {
         specificFundingManager.withdrawSpecificMilestoneFunding(id, 2);
     }
 
+    //----------------------------------
+    // Test: Collect Funding Functions
+
+    function testCollectFundingModifier(uint id) public {
+        //Modifier positions
+        //onlyMilestoneManagerAccess
+        vm.expectRevert(
+            ISpecificFundingManager
+                .Module__ISpecificFundingManager__OnlyMilestoneManagerAccess
+                .selector
+        );
+        specificFundingManager.collectFunding(id, 1);
+
+        //validAmount
+        vm.expectRevert(
+            ISpecificFundingManager
+                .Module__ISpecificFundingManager__InvalidAmount
+                .selector
+        );
+        vm.prank(milestoneModule);
+        specificFundingManager.collectFunding(id, 0);
+
+        //fundingNotCollected
+        vm.prank(milestoneModule);
+        specificFundingManager.collectFunding(0, 1);
+
+        vm.expectRevert(
+            ISpecificFundingManager
+                .Module__ISpecificFundingManager__FundingAlreadyCollected
+                .selector
+        );
+
+        vm.prank(milestoneModule);
+        specificFundingManager.collectFunding(0, 1);
+    }
+
     //--------------------------------------------------------------------------
     // Helper - Functions
 
