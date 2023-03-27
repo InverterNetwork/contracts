@@ -15,14 +15,14 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     // Modifiers
 
     modifier onlySelf() {
-        if (msg.sender != address(this)) {
+        if (_msgSender() != address(this)) {
             revert Module__CallerNotAuthorized();
         }
         _;
     }
 
     modifier onlyVoter() {
-        if (!isVoter[msg.sender]) {
+        if (!isVoter[_msgSender()]) {
             revert Module__SingleVoteGovernor__CallerNotVoter();
         }
         _;
@@ -239,8 +239,8 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             revert Module__SingleVoteGovernor__IsAlreadyVoter();
         }
 
-        delete isVoter[msg.sender];
-        emit VoterRemoved(msg.sender);
+        delete isVoter[_msgSender()];
+        emit VoterRemoved(_msgSender());
 
         isVoter[to] = true;
         emit VoterAdded(to);
@@ -302,7 +302,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         }
 
         // Revert if caller attempts to double vote.
-        if (motion_.receipts[msg.sender].hasVoted) {
+        if (motion_.receipts[_msgSender()].hasVoted) {
             revert Module__SingleVoteGovernor__AttemptedDoubleVote();
         }
 
@@ -320,7 +320,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             }
         }
 
-        motion_.receipts[msg.sender] = Receipt(true, support);
+        motion_.receipts[_msgSender()] = Receipt(true, support);
     }
 
     function executeMotion(uint motionId) external {

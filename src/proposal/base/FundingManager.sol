@@ -2,9 +2,12 @@
 pragma solidity ^0.8.13;
 
 // External Dependencies
+
 import {ElasticReceiptTokenUpgradeable} from
     "@elastic-receipt-token/ElasticReceiptTokenUpgradeable.sol";
+
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -21,8 +24,9 @@ import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
 
 abstract contract FundingManager is
     IFundingManager,
-    ElasticReceiptTokenUpgradeable,
-    Initializable
+    Initializable,
+    ContextUpgradeable,
+    ElasticReceiptTokenUpgradeable
 {
     using Strings for uint;
     using SafeERC20 for IERC20;
@@ -72,19 +76,19 @@ abstract contract FundingManager is
     // Public Mutating Functions
 
     function deposit(uint amount) external {
-        _deposit(msg.sender, msg.sender, amount);
+        _deposit(_msgSender(), _msgSender(), amount);
     }
 
     function depositFor(address to, uint amount) external {
-        _deposit(msg.sender, to, amount);
+        _deposit(_msgSender(), to, amount);
     }
 
     function withdraw(uint amount) external {
-        _withdraw(msg.sender, msg.sender, amount);
+        _withdraw(_msgSender(), _msgSender(), amount);
     }
 
     function withdrawTo(address to, uint amount) external {
-        _withdraw(msg.sender, to, amount);
+        _withdraw(_msgSender(), to, amount);
     }
 
     //--------------------------------------------------------------------------
