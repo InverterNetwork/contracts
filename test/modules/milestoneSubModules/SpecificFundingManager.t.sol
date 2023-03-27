@@ -485,6 +485,59 @@ contract SpecificFundingManagerTest is ModuleTest {
     //----------------------------------
     // Test: Collect Funding Functions
 
+    function testCollectFunding(uint id, uint amountFunded, uint amountNeeded)
+        public
+    {
+        amountFunded = bound(amountFunded, 0, 2 ** 128); //Reasonable high number for testing
+        amountNeeded = bound(amountNeeded, 1, 2 ** 128);
+        uint presumedReturnAmount;
+
+        if (amountFunded != 0) {
+            fundSpecificMilestone(id, Alice, amountFunded);
+        }
+
+        address[] memory funders =
+            specificFundingManager.getFunderAddressesForMilestoneId(id);
+
+        if (amountFunded == 0) {
+            vm.expectEmit(true, true, true, false);
+            emit FundingCollected(id, 0, funders);
+            presumedReturnAmount = 0;
+        } else if (amountFunded > amountNeeded) {
+            vm.expectEmit(true, true, true, false);
+            emit FundingCollected(id, amountNeeded, funders);
+            presumedReturnAmount = amountNeeded;
+        } else {
+            vm.expectEmit(true, true, true, false);
+            emit FundingCollected(id, amountFunded, funders);
+            presumedReturnAmount = amountFunded;
+        }
+        vm.prank(milestoneModule);
+        assertTrue(
+            specificFundingManager.collectFunding(id, amountNeeded)
+                == presumedReturnAmount
+        );
+
+        //Check if token balances updated accordingly
+        if (amountFunded == 0) {
+            assertTrue(token.balanceOf(address(specificFundingManager)) == 0);
+            assertTrue(token.balanceOf(address(milestoneModule)) == 0);
+        } else if (amountFunded > amountNeeded) {
+            assertTrue(
+                token.balanceOf(address(specificFundingManager))
+                    == amountFunded - amountNeeded
+            );
+            assertTrue(
+                token.balanceOf(address(milestoneModule)) == amountNeeded
+            );
+        } else {
+            assertTrue(token.balanceOf(address(specificFundingManager)) == 0);
+            assertTrue(
+                token.balanceOf(address(milestoneModule)) == amountFunded
+            );
+        }
+    }
+
     function testCollectFundingModifier(uint id) public {
         //Modifier positions
         //onlyMilestoneManagerAccess
@@ -534,6 +587,7 @@ contract SpecificFundingManagerTest is ModuleTest {
 
     function fundersContainAddress(address adr, address[] memory funders)
         private
+        pure
         returns (bool)
     {
         uint length = funders.length;
