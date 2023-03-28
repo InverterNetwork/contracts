@@ -622,7 +622,6 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.stopMilestone(_SENTINEL, id);
     }
 
-
     function testStopMilestoneFailsIfCallerNotAuthorizedOrOwner(
         address[] memory contributors,
         address caller
@@ -693,8 +692,7 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-
-        _token.mint(address(_proposal), BUDGET*2);
+        _token.mint(address(_proposal), BUDGET * 2);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -705,8 +703,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         // --------------------------------------
 
-        uint id2 =
-            milestoneManager.addMilestone(DURATION * 2, BUDGET, contribs, DETAILS);
+        uint id2 = milestoneManager.addMilestone(
+            DURATION * 2, BUDGET, contribs, DETAILS
+        );
 
         milestoneManager.stopMilestone(_SENTINEL, id);
 
@@ -1044,7 +1043,6 @@ contract MilestoneManagerTest is ModuleTest {
 
         _assertMilestone(id, duration, budget, contribs, details, "", false);
     }
-
 
     function testUpdateMilestoneFailsIfCallerNotAuthorizedOrOwner(
         address caller

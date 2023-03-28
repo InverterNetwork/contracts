@@ -496,24 +496,27 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
-            if(contribCache.length == 1) {
+            if (contribCache.length == 1) {
                 // Calculate the payout amount.
                 uint contributorPayout =
                     (m.budget / SALARY_PRECISION) * contribCache[0].salary;
 
                 // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
-                _addPaymentOrder(contribCache[0].addr, contributorPayout,
-                    block.timestamp + m.duration);
+                _addPaymentOrder(
+                    contribCache[0].addr,
+                    contributorPayout,
+                    block.timestamp + m.duration
+                );
             }
-            if(contribCache.length > 1) {
+            if (contribCache.length > 1) {
                 // memory arrays used as parameters to _addPaymentOrders
                 address[] memory recipients = new address[](len);
                 uint[] memory amounts = new uint[](len);
                 uint[] memory dueTos = new uint[](len);
                 for (uint i; i < len; i++) {
                     // Calculate the contributor payout and add it to contributorPayouts array
-                    uint256 contributorPayout = (m.budget / SALARY_PRECISION)
-                        * contribCache[i].salary;
+                    uint contributorPayout =
+                        (m.budget / SALARY_PRECISION) * contribCache[i].salary;
                     amounts[i] = contributorPayout;
 
                     // Save contributor addresses and dueTos
