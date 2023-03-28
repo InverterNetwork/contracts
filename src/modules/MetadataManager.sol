@@ -91,7 +91,7 @@ contract MetadataManager is IMetadataManager, Module {
             ownerMetadata_.name,
             ownerMetadata_.account,
             ownerMetadata_.twitterHandle
-            );
+        );
     }
 
     function setProposalMetadata(ProposalMetadata calldata proposalMetadata_)
@@ -111,7 +111,7 @@ contract MetadataManager is IMetadataManager, Module {
             proposalMetadata_.descriptionLong,
             proposalMetadata_.externalMedias,
             proposalMetadata_.categories
-            );
+        );
     }
 
     function setTeamMetadata(MemberMetadata[] calldata teamMetadata_)
