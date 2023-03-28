@@ -513,7 +513,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                 address[] memory recipients = new address[](len);
                 uint[] memory amounts = new uint[](len);
                 uint[] memory dueTos = new uint[](len);
-                for (uint i; i < len; i++) {
+                for (uint i; i < len; ++i) {
                     // Calculate the contributor payout and add it to contributorPayouts array
                     uint contributorPayout =
                         (m.budget / SALARY_PRECISION) * contribCache[i].salary;
