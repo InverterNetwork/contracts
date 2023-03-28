@@ -31,8 +31,6 @@ contract TypeSanityHelper is Test {
     // Types for Module
     // Contract: base/ModuleManager.sol
 
-    address private constant _SENTINEL_MODULE = address(0x1);
-
     mapping(address => bool) moduleCache;
 
     function assumeValidModules(address[] memory modules) public {
@@ -56,11 +54,10 @@ contract TypeSanityHelper is Test {
     }
 
     function createInvalidModules() public view returns (address[] memory) {
-        address[] memory invalids = new address[](3);
+        address[] memory invalids = new address[](2);
 
         invalids[0] = address(0);
-        invalids[1] = _SENTINEL_MODULE;
-        invalids[2] = _self;
+        invalids[1] = _self;
 
         return invalids;
     }

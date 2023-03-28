@@ -31,9 +31,6 @@ contract ModuleManagerTest is Test {
     uint constant MAX_MODULES = 20;
     address[] EMPTY_LIST = new address[](0);
 
-    // Constants copied from SuT.
-    address private constant _SENTINEL = address(0x1);
-
     // Events copied from SuT.
     event ModuleAdded(address indexed module);
     event ModuleRemoved(address indexed module);
@@ -281,8 +278,6 @@ contract ModuleManagerTest is Test {
 
         // The current module to remove.
         address module;
-        // The module's prevModule in the list.
-        address prevModule;
 
         // Add modules.
         for (uint i; i < whos.length; ++i) {

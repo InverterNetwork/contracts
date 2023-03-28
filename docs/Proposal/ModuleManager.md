@@ -1,4 +1,5 @@
 # ModuleManager.sol
+
 File: [ModuleManager.sol](../../src/proposal/base/ModuleManager.sol)
 
 ## Things to know
@@ -9,29 +10,25 @@ File: [ModuleManager.sol](../../src/proposal/base/ModuleManager.sol)
 
 ## Modifier(s)
 
-### 1. __ModuleManager_onlyAuthorized
+### 1. \_\_ModuleManager_onlyAuthorized
 
 Modifier to ensure that `msg.sender` is authorized to mutate module manager's state.
 
 ### 2. onlyModule
 
-Modifier to ensure that the `msg.sender` is a valid module. The `msg.sender` is in the `_modules` list and is neither `address(0)` nor the `_SENTINEL` address (used to denote the beginning or end of the list)
+Modifier to ensure that the `msg.sender` is a valid module. The `msg.sender` is in the `_modules` list
 
 ### 3. validModule(address module)
 
-Modifier to ensure that the address `module` is a valid module. This is same as isModule_ check plus also checking if address `module` is not same as the address(ModuleManager).
+Modifier to ensure that the address `module` is a valid module. This is same as isModule\_ check plus also checking if address `module` is not same as the address(ModuleManager).
 
-### 4. isModule_(address module)
+### 4. isModule\_(address module)
 
-Modifier to ensure that the address `module` is a valid module. The `module` address is in the `_modules` list and is neither `address(0)` nor the `_SENTINEL` address(used to denote the beginning or end of the list).
+Modifier to ensure that the address `module` is a valid module. The `module` address is in the `_modules` list
 
 ### 5. isNotModule(address module)
 
 Modifier to ensure that the address `module` is not a valid module.
-
-### 6. onlyConsecutiveModules(address prevModule, address module)
-
-Modifier to ensure that the `prevModule` and `module` addresses are consecutive in the modules' list.
 
 ## View Function(s)
 
@@ -85,13 +82,6 @@ Returns the number of modules.
 
 `uint` -> the number of modules.
 
-### 5. getPreviousModule
-
-`function getPreviousModule(address module) external view returns (address previousModule);`
-
-This function fetches the `id` of the previous Module in the list and reverts if the `id` is invalid.
-This function should ideally be called from the front-end or from any off-chain source since running this on-chain would result in a lot of gas consumption owing to O(n) runtime.
-
 #### Parameter(s)
 
 1. `address module` -> The address of which the previous element in the list should be found.
@@ -114,13 +104,12 @@ Adds address `module` as module. This function is only callable by authorized ad
 
 ### 2. removeModule
 
-`function removeModule(address prevModule, address module) external;`
+`function removeModule(address module) external;`
 
 Removes address `module` as module. This function is only callable by authorized address and fails if address not added as module.
 
 #### Parameter(s)
 
-1. `address prevModule` -> The module previous to the address `module` in the list of modules
 2. `address module` -> The module address to remove.
 
 ### 3. executeTxFromModule
@@ -149,7 +138,7 @@ Grants role `role` to account `account` in caller's access control context. This
 #### Parameter(s)
 
 1. `bytes32 role` -> The access control role.
-2. `address account` ->  The account to revoke role for.
+2. `address account` -> The account to revoke role for.
 
 ### 5. revokeRole
 
@@ -160,7 +149,7 @@ Revokes role `role` from account `account` in caller's access control context. T
 #### Parameter(s)
 
 1. `bytes32 role` -> The access control role.
-2. `address account` ->  The account to revoke role for.
+2. `address account` -> The account to revoke role for.
 
 ### 6. renounceRole
 

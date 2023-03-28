@@ -67,12 +67,6 @@ abstract contract ModuleManager is
     }
 
     //--------------------------------------------------------------------------
-    // Constants
-
-    /// @dev Marks the beginning and end of the _modules list.
-    address private constant _SENTINEL = address(0x1);
-
-    //--------------------------------------------------------------------------
     // Storage
 
     /// @dev List of modules.
@@ -281,10 +275,7 @@ abstract contract ModuleManager is
     }
 
     function _ensureValidModule(address module) private view {
-        if (
-            module == address(0) || module == _SENTINEL
-                || module == address(this)
-        ) {
+        if (module == address(0) || module == address(this)) {
             revert Proposal__ModuleManager__InvalidModuleAddress();
         }
     }
