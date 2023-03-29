@@ -6,11 +6,10 @@ import {IModule} from "src/modules/base/IModule.sol";
 import {Proposal} from "../../src/proposal/Proposal.sol";
 import {PaymentProcessor} from "../../src/modules/PaymentProcessor.sol";
 import {MilestoneManager} from "../../src/modules/MilestoneManager.sol";
+import {ListAuthorizer} from "../../src/modules/governance/ListAuthorizer.sol";
 
 import {ModuleFactory} from "../../src/factories/ModuleFactory.sol";
 import {ProposalFactory, IProposalFactory} from "src/factories/ProposalFactory.sol";
-
-import {AuthorizerMock} from "../../test/utils/mocks/modules/AuthorizerMock.sol";
 
 import {Beacon, IBeacon} from "../../src/factories/beacon/Beacon.sol";
 
@@ -26,7 +25,7 @@ contract DeployMilestoneManagerContract is Script {
     ModuleFactory moduleFactory;
     ProposalFactory proposalFactory;
 
-    AuthorizerMock authorizer;
+    ListAuthorizer authorizer;
 
     Beacon paymentProcessorBeacon;
     Beacon milestoneManagerBeacon;
@@ -52,7 +51,7 @@ contract DeployMilestoneManagerContract is Script {
             proposal = new Proposal();
             paymentProcessor = new PaymentProcessor();
             milestoneManager = new MilestoneManager();
-            authorizer = new AuthorizerMock();
+            authorizer = new ListAuthorizer();
             moduleFactory = new ModuleFactory();
             proposalFactory = new ProposalFactory(address(proposal), address(moduleFactory));
         }
@@ -98,7 +97,7 @@ contract DeployMilestoneManagerContract is Script {
         console2.log("Payment Processor Contract Deployed at: ", address(paymentProcessor));
         console2.log("Milestone Manager Contract Deployed at: ", address(milestoneManager));
         console2.log("Payment Processor Beacon Deployed at: ", address(paymentProcessorBeacon));
-        console2.log("Payment Processor Beacon Deployed at: ", address(milestoneManagerBeacon));
-        console2.log("Payment Processor Beacon Deployed at: ", address(authorizerBeacon));
+        console2.log("Milestone Manager Beacon Deployed at: ", address(milestoneManagerBeacon));
+        console2.log("List Authorizer Beacon Deployed at: ", address(authorizerBeacon));
     }
 }
