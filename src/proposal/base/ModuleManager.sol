@@ -74,7 +74,7 @@ abstract contract ModuleManager is
     }
 
     modifier moduleLimitNotExceeded() {
-        if (_moduleCounter == MAX_MODULE_AMOUNT) {
+        if (_moduleCounter >= MAX_MODULE_AMOUNT) {
             revert Proposal__ModuleManager__ModuleAmountOverLimits();
         }
         _;
