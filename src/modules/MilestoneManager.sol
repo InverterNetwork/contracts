@@ -418,7 +418,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotActive();
         }
 
-        // Update _milestones list
+        // Update _milestones list and _activeMilestone
         _milestones[prevId] = _milestones[id];
         _activeMilestone = _SENTINEL;
 
