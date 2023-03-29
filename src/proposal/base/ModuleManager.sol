@@ -92,11 +92,11 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev List of modules.
-    mapping(address => address) private _modules;
-
     /// @dev Counter for number of modules in the _modules list.
     uint8 private _moduleCounter;
+
+    /// @dev List of modules.
+    mapping(address => address) private _modules;
 
     /// @dev Mapping of modules and access control roles to accounts and
     ///      whether they holds that role.
