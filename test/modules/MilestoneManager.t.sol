@@ -703,17 +703,18 @@ contract MilestoneManagerTest is ModuleTest {
 
         // --------------------------------------
 
+        milestoneManager.stopMilestone(_SENTINEL, id);
+
         uint id2 = milestoneManager.addMilestone(
             DURATION * 2, BUDGET, contribs, DETAILS
         );
-
-        milestoneManager.stopMilestone(_SENTINEL, id);
 
         vm.warp(block.timestamp + DURATION - 10 + TIMELOCK + 1);
 
         milestoneManager.startNextMilestone();
 
         assertEq(milestoneManager.listMilestoneIds().length, id2);
+        assertEq(milestoneManager.getActiveMilestoneId(), id2);
     }
 
     //----------------------------------
