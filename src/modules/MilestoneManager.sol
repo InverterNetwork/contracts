@@ -18,6 +18,8 @@ import {
 // Internal Interfaces
 import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
+import {ISpecificFundingManager} from
+    "src/modules/milestoneSubModules/ISpecificFundingManager.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
@@ -148,6 +150,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
+    modifier validAddress(address adr) {
+        if (adr == address(0) || adr == address(this)) {
+            revert Module__MilestoneManager__InvalidAddress();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
@@ -194,6 +203,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Treasury address to send the fees to.
     address private FEE_TREASURY;
 
+    ISpecificFundingManager private specificFundingManager;
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -213,12 +224,16 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _activeMilestone = _SENTINEL;
         _milestoneUpdateTimelock = 3 days;
 
-        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY) =
-            abi.decode(configdata, (uint, uint, address));
+        address specificFundingManagerAddress;
+
+        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY, specificFundingManagerAddress)
+        = abi.decode(configdata, (uint, uint, address, address));
 
         if (FEE_PCT >= SALARY_PRECISION) {
             revert Module__MilestoneManager__FeeOverHundredPercent();
         }
+
+        setSpecificFunderManagerAddress(specificFundingManagerAddress);
     }
 
     //--------------------------------------------------------------------------
@@ -449,8 +464,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             _ensureTokenBalance(feePayout);
             proposal().token().safeTransfer(FEE_TREASURY, feePayout);
 
-            //@note this should collect the funds and transfer them to this module. Probably not the correct position?
-            //uint remainingNeededAmount = m.budget- specificFundingManager.collectFunding(_activeMilestone, m.budget);
+            specificFundingManager.collectFunding(_activeMilestone, m.budget);
 
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
@@ -759,5 +773,18 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         returns (bool)
     {
         return __Module_proposal.paymentProcessor() == who;
+    }
+
+    //--------------------------------------------------------------------------
+    // Proposal Callback Functions
+
+    /// @dev WantProposalContext-callback function to transfer `amount` of
+    ///      tokens from proposal to `receiver`.
+    /// @dev For more info, see src/modules/base/Module.sol.
+    function __Proposal_transferERC20(address receiver, uint amount)
+        external
+        wantProposalContext
+    {
+        __Proposal__token.safeTransfer(receiver, amount);
     }
 }

@@ -130,6 +130,9 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice The function can only be called by the treasury
     error Module__MilestoneManager__OnlyCallableByTreasury();
 
+    /// @notice Given address invalid.
+    error Module__MilestoneManager__InvalidAddress();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -333,4 +336,9 @@ interface IMilestoneManager is IPaymentClient {
     /// @dev The `_milestoneUpdateTimelock` is the allowed time gap between updating a milestone and starting it
     /// @param _newTimelock The new intended value for `_milestoneUpdateTimelock`
     function updateMilestoneUpdateTimelock(uint _newTimelock) external;
+
+    /// @notice Sets the specificFunderManager Address
+    /// @dev Reverts if address is 0 or the milestonemodule address
+    /// @param adr The new intended address for the connected specificFunderManager
+    function setSpecificFunderManagerAddress(address adr) external;
 }
