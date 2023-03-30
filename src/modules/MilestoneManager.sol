@@ -301,26 +301,26 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function isNextMilestoneActivatable() public view returns (bool) {
         // Return false if next milestone does not exist.
         uint next = _milestones[_activeMilestone];
-        // if (!isExistingMilestoneId(next)) {
-        //     return false;
-        // }
-        //
-        // if (
-        //     block.timestamp - _milestoneRegistry[next].lastUpdatedTimestamp
-        //         < _milestoneUpdateTimelock
-        // ) {
-        //     return false;
-        // }
-        //
-        // // Return false if Milestone has already been started
-        // if (_milestoneRegistry[next].startTimestamp != 0) {
-        //     return false;
-        // }
-        //
-        // // Return true if current active milestone does not exist.
-        // if (!isExistingMilestoneId(_activeMilestone)) {
-        //     return true;
-        // }
+        if (!isExistingMilestoneId(next)) {
+            return false;
+        }
+
+        if (
+            block.timestamp - _milestoneRegistry[next].lastUpdatedTimestamp
+                < _milestoneUpdateTimelock
+        ) {
+            return false;
+        }
+
+        // Return false if Milestone has already been started
+        if (_milestoneRegistry[next].startTimestamp != 0) {
+            return false;
+        }
+
+        // Return true if current active milestone does not exist.
+        if (!isExistingMilestoneId(_activeMilestone)) {
+            return true;
+        }
 
         Milestone storage m = _milestoneRegistry[_activeMilestone];
 
