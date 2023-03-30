@@ -717,6 +717,67 @@ contract MilestoneManagerTest is ModuleTest {
         assertEq(milestoneManager.getActiveMilestoneId(), id2);
     }
 
+    function testStartAndStopRandomMilestone(
+        uint numOfMilestones,
+        uint milestoneToStop
+    )
+        public
+    {
+        //Note: This test makes the following assumptions:
+        // - Milestone IDs are consecutive uints starting at 1
+        // - DURATION is bigger than TIMELOCK
+
+        numOfMilestones = bound(numOfMilestones, 3, MAX_MILESTONES);
+        milestoneToStop = bound(milestoneToStop, 2, numOfMilestones - 1); //numOfMilestones is zero-counting, milestoneToStop isn't. Also, we want to avoid stopping the last Milestone, since then startNextMilestone would revert anyway
+
+        _token.mint(address(_proposal), BUDGET * numOfMilestones ** 2);
+
+        //Create the first Milestone,pass the timelock and start it
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+        );
+        vm.warp(block.timestamp + TIMELOCK + 1);
+        milestoneManager.startNextMilestone();
+
+        //we loop through the first batch of Milestones, adding a new one each time
+        for (uint i = 1; i < milestoneToStop; ++i) {
+            milestoneManager.addMilestone(
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+            );
+            vm.warp(block.timestamp + DURATION + 1);
+            milestoneManager.startNextMilestone();
+        }
+
+        //now we stop the  running milestone
+        if (milestoneToStop == 1) {
+            //prev is the sentinel
+            milestoneManager.stopMilestone(type(uint).max, milestoneToStop);
+        } else {
+            milestoneManager.stopMilestone(milestoneToStop - 1, milestoneToStop);
+        }
+
+        //we add a new one and wait for the timelock to start it
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+        );
+        vm.warp(block.timestamp + TIMELOCK + 1);
+        milestoneManager.startNextMilestone();
+
+        //we can loop through the rest
+        for (uint i = milestoneToStop; i < numOfMilestones; ++i) {
+            milestoneManager.addMilestone(
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+            );
+            vm.warp(block.timestamp + DURATION + 1);
+            milestoneManager.startNextMilestone();
+        }
+
+        // check for correctness in end state
+        assertEq(
+            milestoneManager.listMilestoneIds().length, numOfMilestones + 1
+        );
+    }
+
     //----------------------------------
     // Test: removeMilestone()
 
