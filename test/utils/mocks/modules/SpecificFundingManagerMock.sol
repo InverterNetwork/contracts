@@ -3,26 +3,16 @@ pragma solidity ^0.8.13;
 
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
-
 import {ISpecificFundingManager} from
     "src/modules/milestoneSubModules/ISpecificFundingManager.sol";
 
-contract SpecificFundingManagerMock is ISpecificFundingManager, Module {
+contract SpecificFundingManagerMock is ISpecificFundingManager {
     ERC20Mock token;
 
     //--------------------------------------------------------------------------
     // Mock Functions
 
-    function init(
-        IProposal proposal_,
-        Metadata memory metadata,
-        bytes memory configdata
-    ) public override(Module) initializer {
-        __Module_init(proposal_, metadata);
-
-        // Read first authorized address from configdata.
-        address tokenAddress = abi.decode(configdata, (address));
+    function init(address tokenAddress) public {
         require(
             tokenAddress != address(0), "Zero address cant not be token Address"
         );
