@@ -11,6 +11,11 @@ import {
     IMilestoneManager
 } from "src/modules/MilestoneManager.sol";
 import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
+import {
+    SpecificFundingManager,
+    ISpecificFundingManager
+} from "src/modules/milestoneSubModules/SpecificFundingManager.sol";
+import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
 import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 
 // Mocks
@@ -55,7 +60,19 @@ contract MilestoneLifecycle is
         // copied the module's (deterministic in this test) address from the
         // logs.
         MilestoneManager milestoneManager =
-            MilestoneManager(0xa78f6C9322C3f1b396720945B6C3035A4a1B3d70);
+            MilestoneManager(0x6F67DD53F065131901fC8B45f183aD4977F75161);
+
+        SpecificFundingManager specificFundingManager =
+            SpecificFundingManager(0x06c5A9c5b19E69ba3D0A3F7e6d8273156B6fa0e5);
+
+        //Befor we can start using the milestoneManager Module we have to inject some dependencies
+
+        milestoneManager.setSpecificFunderManagerAddress(
+            address(specificFundingManager)
+        );
+        specificFundingManager.setMilestoneManagerAddress(
+            address(milestoneManager)
+        );
 
         contributors.push(alice);
         contributors.push(bob);
@@ -116,7 +133,21 @@ contract MilestoneLifecycle is
         // creates set set of payment orders inside the module and calls
         // the SimplePaymentProcessor module to process them. Note however, that the
         // orders are guaranteed to be payable, i.e. the tokens are already
-        // fetched from the proposal on creation of the order.
+        // fetched from the proposal.
+        assertEq(token.balanceOf(address(proposal)), initialDeposit);
+
+        // The address of the proposal's PaymentProcessor can be read from the
+        // logs during the proposal's creation.
+        PaymentProcessor paymentProcessor =
+            PaymentProcessor(0x9914ff9347266f1949C557B717936436402fc636);
+
+        // The PaymentProcessor's `processPayments()` function is publicly
+        // callable. This ensures the contributors can call the function too,
+        // guaranteeing their payment.
+        vm.prank(alice.addr);
+        paymentProcessor.processPayments(
+            IPaymentClient(address(milestoneManager))
+        );
 
         // since we take 1% fee, the expected balance is 990e18/2
 

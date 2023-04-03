@@ -17,6 +17,8 @@ import {Proposal, IProposal} from "src/proposal/Proposal.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/MilestoneManager.sol";
+import {SpecificFundingManager} from
+    "src/modules/milestoneSubModules/SpecificFundingManager.sol";
 
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
@@ -60,12 +62,26 @@ contract E2eTest is Test {
     IProposalFactory.ModuleConfig milestoneManagerFactoryConfig =
     IProposalFactory.ModuleConfig(
         milestoneManagerMetadata,
-        abi.encode(100_000_000, 1_000_000, makeAddr("treasury"))
+        abi.encode(100_000_000, 1_000_000, makeAddr("treasury")) //Has to be set live to get proper address
+    );
+
+    SpecificFundingManager specificFundingManagerImpl;
+    Beacon specificFundingManagerBeacon;
+    address specificFundingManagerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata specificFundingManagerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/specific-funding-manager",
+        "SpecificFundingManager"
+    );
+    IProposalFactory.ModuleConfig specificFundingManagerFactoryConfig =
+    IProposalFactory.ModuleConfig(
+        specificFundingManagerMetadata, abi.encode("")
     );
 
     AuthorizerMock authorizerImpl;
     Beacon authorizerBeacon;
-    address authorizerBeaconOwner = address(0x3BEAC0);
+    address authorizerBeaconOwner = address(0x4BEAC0);
     IModule.Metadata authorizerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/authorizer", "Authorizer"
     );
@@ -80,6 +96,7 @@ contract E2eTest is Test {
         // Deploy module implementations.
         paymentProcessorImpl = new SimplePaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
+        specificFundingManagerImpl = new SpecificFundingManager();
         authorizerImpl = new AuthorizerMock();
 
         // Deploy module beacons.
@@ -87,6 +104,8 @@ contract E2eTest is Test {
         paymentProcessorBeacon = new Beacon();
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon = new Beacon();
+        vm.prank(specificFundingManagerBeaconOwner);
+        specificFundingManagerBeacon = new Beacon();
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon = new Beacon();
 
@@ -95,6 +114,10 @@ contract E2eTest is Test {
         paymentProcessorBeacon.upgradeTo(address(paymentProcessorImpl));
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
+        vm.prank(specificFundingManagerBeaconOwner);
+        specificFundingManagerBeacon.upgradeTo(
+            address(specificFundingManagerImpl)
+        );
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon.upgradeTo(address(authorizerImpl));
 
@@ -111,6 +134,10 @@ contract E2eTest is Test {
             milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
         );
         moduleFactory.registerMetadata(
+            specificFundingManagerMetadata,
+            IBeacon(specificFundingManagerBeacon)
+        );
+        moduleFactory.registerMetadata(
             authorizerMetadata, IBeacon(authorizerBeacon)
         );
     }
@@ -119,8 +146,9 @@ contract E2eTest is Test {
         IProposalFactory.ProposalConfig memory config
     ) internal returns (IProposal) {
         IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](1);
+            new IProposalFactory.ModuleConfig[](2);
         optionalModules[0] = milestoneManagerFactoryConfig;
+        optionalModules[1] = specificFundingManagerFactoryConfig;
 
         return proposalFactory.createProposal(
             config,
