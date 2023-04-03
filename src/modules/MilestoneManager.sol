@@ -425,7 +425,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         // Update _milestones list and _activeMilestone
         _milestones[prevId] = _milestones[id];
-        _activeMilestone = _SENTINEL;
+        _activeMilestone = prevId;
 
         // In case last element was removed, update _last to its previous
         // element.
