@@ -80,4 +80,6 @@ contract SpecificFundingManagerMock is ISpecificFundingManager {
             return funding;
         }
     }
+
+    function setMilestoneManagerAddress(address adr) external {}
 }

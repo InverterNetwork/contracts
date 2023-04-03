@@ -35,6 +35,9 @@ interface ISpecificFundingManager {
     /// @notice Funding was already collected.
     error Module__ISpecificFundingManager__FundingAlreadyCollected();
 
+    /// @notice Given address is invalid.
+    error Module__ISpecificFundingManager__InvalidAddress();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -64,6 +67,11 @@ interface ISpecificFundingManager {
     /// @param amount Amount Collected from this module
     event FundingCollected(
         uint indexed milestoneId, uint indexed amount, address[] funders
+    );
+
+    /// @notice Event emitted when the MilestoneManager Address is updated.
+    event MilestoneManagerAddressUpdated(
+        address indexed milestoneManagerAddress
     );
 
     //--------------------------------------------------------------------------
@@ -127,4 +135,12 @@ interface ISpecificFundingManager {
     function collectFunding(uint milestoneId, uint amountNeeded)
         external
         returns (uint);
+
+    //----------------------------------
+    // Setter Functions
+
+    /// @notice Sets the milestoneManager Address
+    /// @dev Reverts if address is 0 or the specificFundingManager address
+    /// @param adr The new intended address for the connected milestoneManager
+    function setMilestoneManagerAddress(address adr) external;
 }

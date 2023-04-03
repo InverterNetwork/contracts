@@ -64,6 +64,13 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         _;
     }
 
+    modifier validAddress(address adr) {
+        if (adr == address(0) || adr == address(this)) {
+            revert Module__ISpecificFundingManager__InvalidAddress();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -84,7 +91,6 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
         bytes memory configdata
     ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
-        milestoneManager = abi.decode(configdata, (address));
     }
 
     //--------------------------------------------------------------------------
@@ -175,7 +181,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
             emit SpecificMilestoneFundingWithdrawn(
                 milestoneId, newAmount, funder
-                );
+            );
 
             return newAmount;
         }
@@ -268,6 +274,18 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
             emit FundingCollected(milestoneId, fundingAmount, funders);
             return fundingAmount;
         }
+    }
+
+    //----------------------------------
+    // Setter Functions
+
+    function setMilestoneManagerAddress(address adr)
+        public
+        onlyAuthorizedOrOwner //@note is this correct?
+        validAddress(adr)
+    {
+        milestoneManager = adr;
+        emit MilestoneManagerAddressUpdated(adr);
     }
 
     //----------------------------------

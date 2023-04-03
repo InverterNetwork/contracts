@@ -203,7 +203,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @dev Treasury address to send the fees to.
     address private FEE_TREASURY;
 
-    ISpecificFundingManager private specificFundingManager;
+    address public specificFundingManagerAddress;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -224,16 +224,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _activeMilestone = _SENTINEL;
         _milestoneUpdateTimelock = 3 days;
 
-        address specificFundingManagerAddress;
-
-        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY, specificFundingManagerAddress)
-        = abi.decode(configdata, (uint, uint, address, address));
+        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY) =
+            abi.decode(configdata, (uint, uint, address));
 
         if (FEE_PCT >= SALARY_PRECISION) {
             revert Module__MilestoneManager__FeeOverHundredPercent();
         }
-
-        setSpecificFunderManagerAddress(specificFundingManagerAddress);
     }
 
     //--------------------------------------------------------------------------
@@ -464,7 +460,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             _ensureTokenBalance(feePayout);
             proposal().token().safeTransfer(FEE_TREASURY, feePayout);
 
-            specificFundingManager.collectFunding(_activeMilestone, m.budget);
+            ISpecificFundingManager(specificFundingManagerAddress)
+                .collectFunding(_activeMilestone, m.budget);
 
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
@@ -773,6 +770,18 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         returns (bool)
     {
         return __Module_proposal.paymentProcessor() == who;
+    }
+
+    //--------------------------------------------------------------------------
+    // Setter Functions
+
+    function setSpecificFunderManagerAddress(address adr)
+        public
+        onlyAuthorizedOrOwner //@note is this correct?
+        validAddress(adr)
+    {
+        specificFundingManagerAddress = adr;
+        emit SpecificFundingManagerAddressUpdated(adr);
     }
 
     //--------------------------------------------------------------------------

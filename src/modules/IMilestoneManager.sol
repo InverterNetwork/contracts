@@ -176,6 +176,11 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Event emitted when a milestone updation timelock is updated.
     event MilestoneUpdateTimelockUpdated(uint indexed newTimelock);
 
+    /// @notice Event emitted when the SpecificFundingManager Address is updated.
+    event SpecificFundingManagerAddressUpdated(
+        address indexed specificFundingManagerAddress
+    );
+
     //--------------------------------------------------------------------------
     // Functions
 
@@ -336,6 +341,9 @@ interface IMilestoneManager is IPaymentClient {
     /// @dev The `_milestoneUpdateTimelock` is the allowed time gap between updating a milestone and starting it
     /// @param _newTimelock The new intended value for `_milestoneUpdateTimelock`
     function updateMilestoneUpdateTimelock(uint _newTimelock) external;
+
+    //----------------------------------
+    // Setter Functions
 
     /// @notice Sets the specificFunderManager Address
     /// @dev Reverts if address is 0 or the milestonemodule address
