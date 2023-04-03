@@ -28,7 +28,7 @@ import {
 contract SpecificFundingManagerTest is ModuleTest {
     using LibString for string;
 
-    address milestoneModule = address(0xBeef);
+    address milestoneManager = address(0xBeef);
 
     address Alice = address(0xA11CE);
     address Bob = address(0x606);
@@ -47,9 +47,9 @@ contract SpecificFundingManagerTest is ModuleTest {
         _setUpProposal(specificFundingManager);
 
         //Init Module
-        specificFundingManager.init(
-            _proposal, _METADATA, abi.encode(milestoneModule)
-        );
+        specificFundingManager.init(_proposal, _METADATA, abi.encode(""));
+
+        specificFundingManager.setMilestoneManagerAddress(milestoneManager);
 
         token = ERC20Mock(address(_proposal.token()));
     }
@@ -82,7 +82,9 @@ contract SpecificFundingManagerTest is ModuleTest {
 
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {
-        assertTrue(milestoneModule == specificFundingManager.milestoneManager());
+        assertTrue(
+            milestoneManager == specificFundingManager.milestoneManager()
+        );
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -161,7 +163,7 @@ contract SpecificFundingManagerTest is ModuleTest {
 
     function testOnlyMilestoneManagerAccess(address adr) public {
         //@note is this enough?
-        vm.assume(adr != milestoneModule);
+        vm.assume(adr != milestoneManager);
         vm.expectRevert(
             ISpecificFundingManager
                 .Module__ISpecificFundingManager__OnlyMilestoneManagerAccess
@@ -218,7 +220,7 @@ contract SpecificFundingManagerTest is ModuleTest {
     function testFundingNotCollected() public {
         //@note is this enough?
 
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         specificFundingManager.collectFunding(0, 1);
 
         vm.expectRevert(
@@ -227,7 +229,7 @@ contract SpecificFundingManagerTest is ModuleTest {
                 .selector
         );
 
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         specificFundingManager.collectFunding(0, 1);
     }
 
@@ -351,7 +353,7 @@ contract SpecificFundingManagerTest is ModuleTest {
         specificFundingManager.fundSpecificMilestone(id, 1);
 
         //fundingNotCollected
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         specificFundingManager.collectFunding(id, 1);
 
         vm.expectRevert(
@@ -383,7 +385,7 @@ contract SpecificFundingManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, false);
         emit SpecificMilestoneFundingWithdrawn(
             id, amount - firstWithdrawal, funder
-            );
+        );
 
         //Actually call function
         vm.prank(funder);
@@ -496,7 +498,7 @@ contract SpecificFundingManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, false);
         emit FundingCollected(id, 0, funders);
 
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         assertTrue(specificFundingManager.collectFunding(id, amountNeeded) == 0);
 
         //Check if token balances updated accordingly
@@ -504,7 +506,7 @@ contract SpecificFundingManagerTest is ModuleTest {
         uint tokenBalanceOfFundingManager =
             token.balanceOf(address(specificFundingManager));
         uint tokenBalanceOfMilestoneModule =
-            token.balanceOf(address(milestoneModule));
+            token.balanceOf(address(milestoneManager));
         uint remainginFundingAmountOfAlice = specificFundingManager
             .getFundingAmountForMilestoneIdAndAddress(id, Alice);
         uint remainginFundingAmountOfBob = specificFundingManager
@@ -541,7 +543,7 @@ contract SpecificFundingManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, false);
         emit FundingCollected(id, amountFunded, funders);
 
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         assertTrue(
             specificFundingManager.collectFunding(id, amountNeeded)
                 == amountFunded
@@ -552,7 +554,7 @@ contract SpecificFundingManagerTest is ModuleTest {
         uint tokenBalanceOfFundingManager =
             token.balanceOf(address(specificFundingManager));
         uint tokenBalanceOfMilestoneModule =
-            token.balanceOf(address(milestoneModule));
+            token.balanceOf(address(milestoneManager));
         uint remainginFundingAmountOfAlice = specificFundingManager
             .getFundingAmountForMilestoneIdAndAddress(id, Alice);
         uint remainginFundingAmountOfBob = specificFundingManager
@@ -600,7 +602,7 @@ contract SpecificFundingManagerTest is ModuleTest {
 
         vm.expectEmit(true, true, true, false);
         emit FundingCollected(id, amountNeeded, funders);
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         assertTrue(
             specificFundingManager.collectFunding(id, amountNeeded)
                 == amountNeeded
@@ -611,7 +613,7 @@ contract SpecificFundingManagerTest is ModuleTest {
         uint tokenBalanceOfFundingManager =
             token.balanceOf(address(specificFundingManager));
         uint tokenBalanceOfMilestoneModule =
-            token.balanceOf(address(milestoneModule));
+            token.balanceOf(address(milestoneManager));
         uint remainginFundingAmountOfAlice = specificFundingManager
             .getFundingAmountForMilestoneIdAndAddress(id, Alice);
         uint remainginFundingAmountOfBob = specificFundingManager
@@ -664,11 +666,11 @@ contract SpecificFundingManagerTest is ModuleTest {
                 .Module__ISpecificFundingManager__InvalidAmount
                 .selector
         );
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         specificFundingManager.collectFunding(id, 0);
 
         //fundingNotCollected
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         specificFundingManager.collectFunding(0, 1);
 
         vm.expectRevert(
@@ -677,7 +679,7 @@ contract SpecificFundingManagerTest is ModuleTest {
                 .selector
         );
 
-        vm.prank(milestoneModule);
+        vm.prank(milestoneManager);
         specificFundingManager.collectFunding(0, 1);
     }
 
