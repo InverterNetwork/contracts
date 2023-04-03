@@ -15,17 +15,20 @@ import {
 } from "src/modules/MilestoneManager.sol";
 
 import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
+import {SpecificFundingManagerMock} from
+    "test/utils/mocks/modules/SpecificFundingManagerMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract MilestoneManagerTest is
-    ModuleTest //@todo @0xNuggan add SpecificFundingModule System integration test here
-{
+contract MilestoneManagerTest is ModuleTest {
     using LibString for string;
 
     // SuT
     MilestoneManager milestoneManager;
+
+    // Mock
+    SpecificFundingManagerMock specificFundingManager;
 
     // Constants
     uint constant MAX_MILESTONES = 20;
@@ -68,6 +71,9 @@ contract MilestoneManagerTest is
     event MilestoneSubmitted(uint indexed id, bytes indexed submissionData);
     event MilestoneConfirmed(uint indexed id);
     event MilestoneDeclined(uint indexed id);
+    event SpecificFundingManagerAddressUpdated(
+        address indexed specificFundingManagerAddress
+    );
 
     function setUp() public {
         address impl = address(new MilestoneManager());
@@ -84,6 +90,15 @@ contract MilestoneManagerTest is
 
         DEFAULT_CONTRIBUTORS.push(ALICE);
         DEFAULT_CONTRIBUTORS.push(BOB);
+
+        specificFundingManager = new SpecificFundingManagerMock();
+        specificFundingManager.init(
+            address(milestoneManager.proposal().token())
+        );
+
+        milestoneManager.setSpecificFunderManagerAddress(
+            address(specificFundingManager)
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -1877,6 +1892,25 @@ contract MilestoneManagerTest is
 
         // Check that we are indeed paying out the full budget
         assertTrue((payoutCount + feePayout) == BUDGET);
+    }
+
+    function testSetSpecificFunderManagerAddress(address adr) public {
+        if (adr == address(0) || adr == address(milestoneManager)) {
+            vm.expectRevert(
+                IMilestoneManager
+                    .Module__MilestoneManager__InvalidAddress
+                    .selector
+            );
+
+            milestoneManager.setSpecificFunderManagerAddress(adr);
+        } else {
+            vm.expectEmit(true, true, true, true);
+            emit SpecificFundingManagerAddressUpdated(adr);
+
+            milestoneManager.setSpecificFunderManagerAddress(adr);
+
+            assertTrue(milestoneManager.specificFundingManagerAddress() == adr);
+        }
     }
 
     //--------------------------------------------------------------------------
