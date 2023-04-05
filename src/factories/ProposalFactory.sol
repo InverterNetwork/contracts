@@ -65,6 +65,8 @@ contract ProposalFactory is IProposalFactory {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
+    event Checkpoint(string cp);
+
     /// @inheritdoc IProposalFactory
     function createProposal(
         ProposalConfig memory proposalConfig,
@@ -74,8 +76,12 @@ contract ProposalFactory is IProposalFactory {
     ) external returns (IProposal) {
         address clone = Clones.clone(target);
 
+        emit Checkpoint("1");
+
         //Map proposal clone
         _proposals[++_proposalIdCounter] = clone;
+
+        emit Checkpoint("2");
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
@@ -84,12 +90,16 @@ contract ProposalFactory is IProposalFactory {
             authorizerConfig.configdata
         );
 
+        emit Checkpoint("3");
+
         // Deploy and cache {IPaymentProcessor} module.
         address paymentProcessor = IModuleFactory(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
             IProposal(clone),
             paymentProcessorConfig.configdata
         );
+
+        emit Checkpoint("4");
 
         // Deploy and cache optional modules.
         uint modulesLen = moduleConfigs.length;
@@ -102,6 +112,8 @@ contract ProposalFactory is IProposalFactory {
             );
         }
 
+        emit Checkpoint("5");
+
         // Initialize proposal.
         IProposal(clone).init(
             _proposalIdCounter,
@@ -111,6 +123,8 @@ contract ProposalFactory is IProposalFactory {
             IAuthorizer(authorizer),
             IPaymentProcessor(paymentProcessor)
         );
+
+        emit Checkpoint("6");
 
         return IProposal(clone);
     }
