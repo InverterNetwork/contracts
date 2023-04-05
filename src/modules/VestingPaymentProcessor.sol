@@ -9,7 +9,6 @@ import {
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -25,7 +24,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
  */
 
 contract VestingPaymentProcessor is Module, IPaymentProcessor {
-    using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
     // Storage
