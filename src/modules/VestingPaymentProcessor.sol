@@ -39,6 +39,8 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     // contributor => Payment
     mapping(address => VestingWallet) private vestings;
+    // contributor => unclaimableAmount
+    mapping(address => uint) private unclaimableAmounts;
 
     //--------------------------------------------------------------------------
     // Events
@@ -218,6 +220,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             - released(contributor);
     }
 
+    /// @notice Getter for the amount of tokens that could not be claimed.
+    function unclaimable(address contributor) public view returns (uint) {
+        return unclaimableAmounts[contributor];
+    }
+
     function token() public view returns (IERC20) {
         return this.proposal().token();
     }
@@ -268,12 +275,22 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint amount = releasable(beneficiary);
         vestings[beneficiary]._released += amount;
 
+        //if beneficiary has unclaimable tokens from before, add it to releasable amount
+        if(unclaimableAmounts[beneficiary] > 0){
+            amount += unclaimable(beneficiary);
+            delete unclaimableAmounts[beneficiary];
+        }
+
         // Cache token.
         IERC20 token_ = token();
-
-        emit ERC20Released(address(token_), amount);
-
-        token_.safeTransferFrom(address(client), beneficiary, amount);
+        //we claim the earned funds for the contributor.
+        try token_.transferFrom(address(client), beneficiary, amount)
+        {
+            emit ERC20Released(address(token_), amount);
+        //if transfer failed, save it to unclaimableAmounts
+        } catch {
+            unclaimableAmounts[beneficiary] += amount;
+        }
     }
 
     /// @notice Virtual implementation of the vesting formula.
