@@ -141,8 +141,8 @@ contract FundingManagerTest is Test {
         uint userAmount,
         uint[] calldata depositAmounts
     ) public {
-        userAmount = bound(userAmount, 1, 1000);
-        vm.assume(depositAmounts.length >= userAmount);
+        userAmount = bound(userAmount, 1, 999);
+        vm.assume(userAmount <= depositAmounts.length);
 
         UserDeposits memory input =
             generateValidUserDeposits(userAmount, depositAmounts);
@@ -221,8 +221,8 @@ contract FundingManagerTest is Test {
         uint userAmount,
         uint[] calldata depositAmounts
     ) public {
-        userAmount = bound(userAmount, 1, 1000);
-        vm.assume(depositAmounts.length >= userAmount);
+        userAmount = bound(userAmount, 1, 999);
+        vm.assume(userAmount <= depositAmounts.length);
 
         UserDeposits memory input =
             generateValidUserDeposits(userAmount, depositAmounts);
