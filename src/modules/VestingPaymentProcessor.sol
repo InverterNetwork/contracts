@@ -279,14 +279,12 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             delete unclaimableAmounts[beneficiary];
         }
 
-        // Cache token.
-        IERC20 token_ = token();
         //we claim the earned funds for the contributor.
-        try token_.transferFrom(address(client), beneficiary, amount)
-        {
+        (bool success, bytes memory data) = address(token()).call(abi.encodeWithSignature("transferFrom(address,address,uint256)", address(client), beneficiary, amount));
+        if (success) {
             emit ERC20Released(address(token_), amount);
-        //if transfer failed, save it to unclaimableAmounts
-        } catch {
+        // if transfer fails, move amount to unclaimableAmounts.
+        } else {
             unclaimableAmounts[beneficiary] += amount;
         }
     }
