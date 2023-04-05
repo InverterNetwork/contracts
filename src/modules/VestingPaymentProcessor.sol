@@ -282,7 +282,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         //we claim the earned funds for the contributor.
         (bool success, bytes memory data) = address(token()).call(abi.encodeWithSignature("transferFrom(address,address,uint256)", address(client), beneficiary, amount));
         if (success) {
-            emit ERC20Released(address(token_), amount);
+            emit ERC20Released(address(token()), amount);
         // if transfer fails, move amount to unclaimableAmounts.
         } else {
             unclaimableAmounts[beneficiary] += amount;
