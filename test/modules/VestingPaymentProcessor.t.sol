@@ -331,6 +331,44 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
+    function testBlockedAddressCantClaim() public {
+        address recipient = address(0xBABE);
+        blockAddress(recipient);
+
+        uint amount = 10 ether;
+        uint duration = 10 days;
+
+        paymentClient.addPaymentOrder(
+            recipient, amount, (block.timestamp + duration)
+        );
+
+        // Call processPayments.
+        paymentProcessor.processPayments(paymentClient);
+
+        vm.warp(block.timestamp + duration + 1);
+
+        vm.prank(recipient);
+        paymentProcessor.claim(paymentClient);
+
+        // after failed claim attempt receiver should have 0 token,
+        // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
+        assertEq(_token.balanceOf(address(recipient)), 0);
+        assertEq(paymentProcessor.releasable(address(recipient)), 0);
+        assertEq(paymentProcessor.unclaimable(recipient), amount);
+
+        unblockAddress(recipient);
+
+        vm.prank(recipient);
+        paymentProcessor.claim(paymentClient);
+
+        // after successful claim attempt receiver should receive full amount,
+        // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
+        assertEq(_token.balanceOf(address(recipient)), amount);
+        assertEq(paymentProcessor.releasable(address(recipient)), 0);
+        assertEq(paymentProcessor.unclaimable(recipient), 0);
+
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
@@ -367,6 +405,18 @@ contract VestingPaymentProcessorTest is ModuleTest {
             vm.prank(address(recipients[i]));
             paymentProcessor.claim(paymentClient);
         }
+    }
+
+    function blockAddress(address blockedAddress) internal {
+        _token.blockAddress(blockedAddress);
+        bool blocked = _token.isBlockedAddress(blockedAddress);
+        assertTrue(blocked);
+    }
+
+    function unblockAddress(address blockedAddress) internal {
+        _token.unblockAddress(blockedAddress);
+        bool blocked = _token.isBlockedAddress(blockedAddress);
+        assertFalse(blocked);
     }
 
     //--------------------------------------------------------------------------
