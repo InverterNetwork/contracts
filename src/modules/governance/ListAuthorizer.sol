@@ -32,7 +32,7 @@ contract ListAuthorizer is IAuthorizer, Module {
     // Errors
 
     /// @notice Authorization cannot be transferred to an already authorized address.
-    error Module__ListAuthorizer__AddressAlreadyAuthorized();
+    error Module__ListAuthorizer__InvalidAuthorizationTransfer();
 
     /// @notice The list of authorized address cannot be empty.
     error Module__ListAuthorizer__AuthorizerListCannotBeEmpty();
@@ -162,15 +162,16 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @notice Transfers authorization from the calling address to a new one.
     /// @param _to The address to transfer the authorization to
     function transferAuthorization(address _to) public virtual onlyAuthorized {
-        //In this particular case, I think the method shouldn't be idempotent to avoid confusion.
-        if (isAuthorized(_to)) {
-            revert Module__ListAuthorizer__AddressAlreadyAuthorized();
+        //In this particular case the method shouldn't be idempotent to avoid confusion.
+        //The extra msgSender check is for the case in which the ListAuthorizer is not the Proposal's main authorizer. In such a case, this module would still be governed by that other authorizer, but we cannot rely on onlyAuthorized == isAuthorized(_msgSender) == true
+        if (isAuthorized(_msgSender()) && !isAuthorized(_to)) {
+            authorized[_to] = true;
+            authorized[_msgSender()] = false;
+
+            emit AddedAuthorizedAddress(_to);
+            emit RemovedAuthorizedAddress(_msgSender());
+        } else {
+            revert Module__ListAuthorizer__InvalidAuthorizationTransfer();
         }
-
-        authorized[_to] = true;
-        authorized[_msgSender()] = false;
-
-        emit AddedAuthorizedAddress(_to);
-        emit RemovedAuthorizedAddress(_msgSender());
     }
 }
