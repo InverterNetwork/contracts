@@ -92,7 +92,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         // Add new order to list of oustanding orders.
         _orders.push(PaymentOrder(recipient, amount, block.timestamp, dueTo));
 
-        emit PaymentAdded(recipient, amount);
+        emit PaymentOrderAdded(recipient, amount);
     }
 
     /// @dev Adds a set of new {PaymentOrder}s to the list of outstanding
@@ -128,7 +128,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
                 )
             );
 
-            emit PaymentAdded(recipients[i], amounts[i]);
+            emit PaymentOrderAdded(recipients[i], amounts[i]);
         }
 
         // Add total orders' amount to current outstanding amount.
@@ -159,7 +159,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
                 PaymentOrder(recipients[i], amount, block.timestamp, dueTo)
             );
 
-            emit PaymentAdded(recipients[i], amount);
+            emit PaymentOrderAdded(recipients[i], amount);
         }
 
         // Add total orders' amount to current outstanding amount.

@@ -10,6 +10,23 @@ interface IFundingManager is IRebasingERC20 {
 
     /// @notice Function is only callable by authorized address.
     error Proposal__FundingManager__CannotSelfDeposit();
+    // Events
+
+    /// @notice Event emitted when a deposit takes place.
+    /// @param from The address depositing tokens.
+    /// @param to The address that will receive the receipt tokens.
+    /// @param amount The amount of tokens deposited.
+    event Deposit(
+        address indexed from, address indexed to, uint indexed amount
+    );
+
+    /// @notice Event emitted when a withdrawal takes place.
+    /// @param from The address supplying the receipt tokens.
+    /// @param to The address that will receive the underlying tokens.
+    /// @param amount The amount of underlying tokens withdrawn.
+    event Withdrawal(
+        address indexed from, address indexed to, uint indexed amount
+    );
 
     //--------------------------------------------------------------------------
     // Functions
