@@ -938,12 +938,8 @@ contract MilestoneManagerTest is ModuleTest {
     ) public {
         //Reasonable high number for testing
         //Why 100_000_000_0: Needs to be more than salaryprecision and the according feePayout
-        budget = bound(budget, contributors.length * 1_000_000_000, 2 ** 128);
+        budget = bound(budget, contributors.length * 10_000_000_000, 2 ** 128);
         funding = bound(funding, 0, 2 ** 128); //Reasonable high number for testing
-
-        console.log("budget: ", budget);
-        console.log("funding: ", funding);
-        
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
@@ -977,27 +973,17 @@ contract MilestoneManagerTest is ModuleTest {
         // payment orders.
         assertTrue(
             _token.balanceOf(address(milestoneManager))
-                == (budget - paidToTreasury) / SALARY_PRECISION * SALARY_PRECISION//Payout is tied to salary precision //@note Is this correct?
+                == (budget - paidToTreasury) //Payout is tied to salary precision
         );
 
-        console.log("paidToTreasury: ", paidToTreasury);
-        console.log("_proposal: ", _token.balanceOf(address(_proposal)));
-        console.log(
-            "milestoneManager: ", _token.balanceOf(address(milestoneManager))
-        );
-        console.log(
-            "budget - paidToTreasury: ",
-            (budget - paidToTreasury) / SALARY_PRECISION * SALARY_PRECISION
-        );
-
-        //If Funding is0
+        //If Funding is 0
         if (funding == 0) {
             assertTrue(_token.balanceOf(address(_proposal)) == 0);
         }
         //If funding higher than budget needed
         else if (budget <= funding) {
             assertTrue(
-                _token.balanceOf(address(_proposal)) == budget - paidToTreasury
+                _token.balanceOf(address(_proposal)) == budget
             );
         }
         //budget needed higher than funding

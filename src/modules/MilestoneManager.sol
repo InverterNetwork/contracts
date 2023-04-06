@@ -445,30 +445,30 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         // Receive pointer to next milestone instance.
         Milestone storage m = _milestoneRegistry[next];
-
+        uint budget=m.budget;
         // Mark milestone as started, i.e. set its startTimestamp.
         m.startTimestamp = block.timestamp;
 
         IMilestoneManager.Contributor[] memory contribCache = m.contributors;
 
-        if (m.budget != 0) {
+        if (budget != 0) {
+            ISpecificFundingManager(specificFundingManagerAddress)
+                .collectFunding(_activeMilestone, budget);
+
+            _ensureTokenBalance(budget);
             //substract the fee from the budget and send it to treasury
-            uint feePayout = ((m.budget / SALARY_PRECISION) * FEE_PCT);
+            uint feePayout = ((budget / SALARY_PRECISION) * FEE_PCT);
+            budget -= feePayout;
 
-            m.budget -= feePayout;
-
-            _ensureTokenBalance(feePayout);
             proposal().token().safeTransfer(FEE_TREASURY, feePayout);
 
-            ISpecificFundingManager(specificFundingManagerAddress)
-                .collectFunding(_activeMilestone, m.budget);
-
+            
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
             if (contribCache.length == 1) {
                 // Calculate the payout amount.
                 uint contributorPayout =
-                    ((m.budget / SALARY_PRECISION) * contribCache[i].salary); //@note why not multiply first then divide?
+                    ((budget / SALARY_PRECISION) * contribCache[i].salary); //@note why not multiply first then divide?
                 // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
                 _addPaymentOrder(
                     contribCache[0].addr,
