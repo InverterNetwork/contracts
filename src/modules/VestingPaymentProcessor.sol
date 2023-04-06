@@ -278,8 +278,10 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             delete unclaimableAmounts[beneficiary];
         }
 
+        // we claim the earned funds for the contributor.
         try token().transferFrom(address(client), beneficiary, amount) {
             emit ERC20Released(address(token()), amount);
+        // if transfer fails, move amount to unclaimableAmounts.
         } catch {
             unclaimableAmounts[beneficiary] += amount;
         }
