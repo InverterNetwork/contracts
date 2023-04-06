@@ -28,7 +28,7 @@ contract ModuleManagerTest is Test {
     TypeSanityHelper types;
 
     // Constants
-    uint constant MAX_MODULES = 20;
+    uint MAX_MODULES = 128;
     address[] EMPTY_LIST = new address[](0);
 
     // Constants copied from SuT.
@@ -115,6 +115,20 @@ contract ModuleManagerTest is Test {
         moduleManager.init(modules);
     }
 
+    function testInitFailsForTooManyModules(address[] memory modules) public {
+        vm.assume(modules.length > MAX_MODULES);
+
+        //we don't need to check for validity since it should revert before
+
+        moduleManager = new ModuleManagerMock();
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__ModuleAmountOverLimits
+                .selector
+        );
+        moduleManager.init(modules);
+    }
+
     //--------------------------------------------------------------------------
     // Tests: Public View Functions
 
@@ -124,7 +138,6 @@ contract ModuleManagerTest is Test {
     function testGetPreviousModule(address[] memory whos, uint randomWho)
         public
     {
-        vm.assume(whos.length <= MAX_MODULES);
         types.assumeValidModules(whos);
 
         //Make sure one of the existing contributors gets picked
@@ -296,6 +309,27 @@ contract ModuleManagerTest is Test {
             );
             moduleManager.addModule(invalids[i]);
         }
+    }
+
+    function testAddModuleFailsIfLimitReached(address[] calldata whos) public {
+        vm.assume(whos.length > MAX_MODULES);
+        types.assumeValidModules(whos[:MAX_MODULES]);
+
+        for (uint i; i < MAX_MODULES; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit ModuleAdded(whos[i]);
+
+            moduleManager.addModule(whos[i]);
+
+            assertTrue(moduleManager.isModule(whos[i]));
+        }
+
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__ModuleAmountOverLimits
+                .selector
+        );
+        moduleManager.addModule(whos[MAX_MODULES]);
     }
 
     //----------------------------------
