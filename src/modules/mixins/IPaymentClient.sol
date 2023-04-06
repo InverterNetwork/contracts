@@ -43,7 +43,7 @@ interface IPaymentClient {
     /// @notice Added a payment order.
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
-    event PaymentAdded(address indexed recipient, uint amount);
+    event PaymentOrderAdded(address indexed recipient, uint amount);
 
     //--------------------------------------------------------------------------
     // Functions

@@ -95,14 +95,23 @@ abstract contract FundingManager is
     // Internal Mutating Functions
 
     function _deposit(address from, address to, uint amount) internal {
+        //Depositing from itself with its own balance would mint tokens without increasing underlying balance.
+        if (from == address(this)) {
+            revert Proposal__FundingManager__CannotSelfDeposit();
+        }
+
         _mint(to, amount);
 
         token().safeTransferFrom(from, address(this), amount);
+
+        emit Deposit(from, to, amount);
     }
 
     function _withdraw(address from, address to, uint amount) internal {
         amount = _burn(from, amount);
 
         token().safeTransfer(to, amount);
+
+        emit Withdrawal(from, to, amount);
     }
 }
