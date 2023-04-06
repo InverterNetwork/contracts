@@ -290,7 +290,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
         token_.safeTransferFrom(address(client), beneficiary, amount);
 
-        emit ERC20Released(beneficiary, address(token_), amount);
+        emit TokensReleased(beneficiary, address(token_), amount);
     }
 
     /// @notice Virtual implementation of the vesting formula.

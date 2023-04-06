@@ -66,7 +66,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
 
             token_.safeTransferFrom(address(client), recipient, amount);
 
-            emit ERC20Released(recipient, address(token_), amount);
+            emit TokensReleased(recipient, address(token_), amount);
 
             emit PaymentOrderProcessed(
                 recipient, amount, orders[i].createdAt, orders[i].dueTo
