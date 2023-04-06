@@ -426,7 +426,7 @@ contract MilestoneManagerTest is ModuleTest {
             vm.expectEmit(true, true, true, true);
             emit MilestoneAdded(
                 i + 1, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-                );
+            );
 
             id = milestoneManager.addMilestone(
                 DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -975,7 +975,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true);
         emit MilestoneUpdated(
             id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-            );
+        );
 
         milestoneManager.updateMilestone(
             id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -986,7 +986,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true);
         emit MilestoneUpdated(
             id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
-            );
+        );
 
         milestoneManager.updateMilestone(
             id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
