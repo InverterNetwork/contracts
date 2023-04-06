@@ -24,7 +24,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
  */
 
 contract VestingPaymentProcessor is Module, IPaymentProcessor {
-
     //--------------------------------------------------------------------------
     // Storage
 
@@ -274,11 +273,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         vestings[beneficiary]._released += amount;
 
         //if beneficiary has unclaimable tokens from before, add it to releasable amount
-        if(unclaimableAmounts[beneficiary] > 0){
+        if (unclaimableAmounts[beneficiary] > 0) {
             amount += unclaimable(beneficiary);
             delete unclaimableAmounts[beneficiary];
         }
-        
+
         try token().transferFrom(address(client), beneficiary, amount) {
             emit ERC20Released(address(token()), amount);
         } catch {
