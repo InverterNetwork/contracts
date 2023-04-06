@@ -94,11 +94,15 @@ abstract contract FundingManager is
         _mint(to, amount);
 
         token().safeTransferFrom(from, address(this), amount);
+
+        emit Deposit(from, to, amount);
     }
 
     function _withdraw(address from, address to, uint amount) internal {
         amount = _burn(from, amount);
 
         token().safeTransfer(to, amount);
+
+        emit Withdrawal(from, to, amount);
     }
 }
