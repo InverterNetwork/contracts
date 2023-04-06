@@ -6,6 +6,10 @@ import {IRebasingERC20} from
 
 interface IFundingManager is IRebasingERC20 {
     //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Function is only callable by authorized address.
+    error Proposal__FundingManager__CannotSelfDeposit();
     // Events
 
     /// @notice Event emitted when a deposit takes place.
