@@ -114,7 +114,7 @@ contract FundingManagerTest is Test {
         uint[] memory depositAmounts
     ) public returns (UserDeposits memory) {
         // We cap the amount each user will deposit so we dont exceed the total supply.
-        uint maxDeposit = ((MAX_SUPPLY) / amountOfDepositors);
+        uint maxDeposit = (MAX_SUPPLY / amountOfDepositors);
         for (uint i = 0; i < amountOfDepositors; i++) {
             //we generate a "random" address
             address addr = address(uint160(i + 1));
