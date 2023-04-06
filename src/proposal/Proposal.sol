@@ -3,15 +3,11 @@ pragma solidity ^0.8.13;
 
 // External Dependencies
 import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
-import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 // Internal Dependencies
-import {Types} from "src/common/Types.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 import {FundingManager} from "src/proposal/base/FundingManager.sol";
 
