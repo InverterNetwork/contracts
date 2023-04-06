@@ -469,7 +469,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                 // Calculate the payout amount.
                 uint contributorPayout =
                     ((m.budget / SALARY_PRECISION) * contribCache[i].salary); //@note why not multiply first then divide?
-
                 // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
                 _addPaymentOrder(
                     contribCache[0].addr,

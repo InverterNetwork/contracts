@@ -931,6 +931,81 @@ contract MilestoneManagerTest is ModuleTest {
         assertTrue((totalCount + paidToTreasury) == BUDGET);
     }
 
+    function testStartNextMilestoneFundingCorrectDistribution(
+        address[] memory contributors,
+        uint budget,
+        uint funding
+    ) public {
+        //Reasonable high number for testing
+        //Why 100_000_000_0: Needs to be more than salaryprecision and the according feePayout
+        budget = bound(budget, contributors.length * 1_000_000_000, 2 ** 128);
+        funding = bound(funding, 0, 2 ** 128); //Reasonable high number for testing
+
+        console.log("budget: ", budget);
+        console.log("funding: ", funding);
+        
+
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
+
+        if (funding != 0) {
+            specificFundingManager.setFunding(funding);
+        }
+
+        // Mint tokens to proposal.
+        _token.mint(address(_proposal), budget);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, budget, contribs, DETAILS);
+
+        // Add a second milestone to make sure the correct one, i.e. first
+        // added, is started.
+        milestoneManager.addMilestone(
+            DURATION + 1, BUDGET + 1, contribs, "Details2"
+        );
+
+        // We wait for the timelock to pass
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
+        milestoneManager.startNextMilestone();
+
+        uint paidToTreasury = _token.balanceOf(FEE_TREASURY);
+
+        
+
+        // Check that milestoneManager's token balance is sufficient for the
+        // payment orders.
+        assertTrue(
+            _token.balanceOf(address(milestoneManager))
+                == (budget - paidToTreasury) / SALARY_PRECISION * SALARY_PRECISION//Payout is tied to salary precision //@note Is this correct?
+        );
+
+        console.log("paidToTreasury: ", paidToTreasury);
+        console.log("_proposal: ", _token.balanceOf(address(_proposal)));
+        console.log(
+            "milestoneManager: ", _token.balanceOf(address(milestoneManager))
+        );
+        console.log(
+            "budget - paidToTreasury: ",
+            (budget - paidToTreasury) / SALARY_PRECISION * SALARY_PRECISION
+        );
+
+        //If Funding is0
+        if (funding == 0) {
+            assertTrue(_token.balanceOf(address(_proposal)) == 0);
+        }
+        //If funding higher than budget needed
+        else if (budget <= funding) {
+            assertTrue(
+                _token.balanceOf(address(_proposal)) == budget - paidToTreasury
+            );
+        }
+        //budget needed higher than funding
+        else {
+            assertTrue(_token.balanceOf(address(_proposal)) == funding);
+        }
+    }
+
     function testStartNextMilestoneFailsIfCallerNotAuthorizedOrOwner(
         address caller
     ) public {

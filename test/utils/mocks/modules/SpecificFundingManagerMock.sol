@@ -72,7 +72,9 @@ contract SpecificFundingManagerMock is ISpecificFundingManager {
     function collectFunding(uint, uint amountNeeded) external returns (uint) {
         uint funding = token.balanceOf(address(this));
 
-        if (funding > amountNeeded) {
+        if (funding == 0) {
+            return 0;
+        } else if (funding > amountNeeded) {
             token.transfer(msg.sender, amountNeeded);
             return amountNeeded;
         } else {
