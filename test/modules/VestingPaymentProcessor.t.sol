@@ -331,12 +331,12 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
-    function testBlockedAddressCantClaim() public {
+    function testBlockedAddressCanClaimLater() public {
         address recipient = address(0xBABE);
-        blockAddress(recipient);
-
         uint amount = 10 ether;
         uint duration = 10 days;
+
+        blockAddress(recipient);
 
         paymentClient.addPaymentOrder(
             recipient, amount, (block.timestamp + duration)
@@ -353,20 +353,18 @@ contract VestingPaymentProcessorTest is ModuleTest {
         // after failed claim attempt receiver should have 0 token,
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
-        assertEq(paymentProcessor.releasable(address(recipient)), 0);
-        assertEq(paymentProcessor.unclaimable(recipient), amount);
+        assertEq(paymentProcessor.unclaimable(recipient), amount/4);
 
         unblockAddress(recipient);
+        vm.warp(block.timestamp + duration/4);
 
         vm.prank(recipient);
         paymentProcessor.claim(paymentClient);
 
         // after successful claim attempt receiver should receive full amount,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
-        assertEq(_token.balanceOf(address(recipient)), amount);
-        assertEq(paymentProcessor.releasable(address(recipient)), 0);
+        assertEq(_token.balanceOf(address(recipient)), amount/2);
         assertEq(paymentProcessor.unclaimable(recipient), 0);
-
     }
 
     //--------------------------------------------------------------------------
