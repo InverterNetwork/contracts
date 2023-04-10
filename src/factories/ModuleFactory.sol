@@ -5,9 +5,6 @@ pragma solidity ^0.8.13;
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
-// External Libraries
-import {Clones} from "@oz/proxy/Clones.sol";
-
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
