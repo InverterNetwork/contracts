@@ -283,11 +283,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         return unclaimableAmounts[client][contributor];
     }
 
-    /// @notice Getter for the amount of tokens that could not be claimed.
-    function unclaimable(address contributor) public view returns (uint) {
-        return unclaimableAmounts[contributor];
-    }
-
     function token() public view returns (IERC20) {
         return this.proposal().token();
     }
