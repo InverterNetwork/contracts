@@ -312,6 +312,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             return false;
         }
 
+        // Return false if Milestone has already been started
+        if (_milestoneRegistry[next].startTimestamp != 0) {
+            return false;
+        }
+
         // Return true if current active milestone does not exist.
         if (!isExistingMilestoneId(_activeMilestone)) {
             return true;
@@ -418,16 +423,20 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotActive();
         }
 
-        // Remove milestone's id from list and decrease counter.
+        // Update _milestones list and _activeMilestone
         _milestones[prevId] = _milestones[id];
-        delete _milestones[id];
-        _milestoneCounter--;
+        _activeMilestone = prevId;
 
         // In case last element was removed, update _last to its previous
         // element.
         if (id == _last) {
             _last = prevId;
         }
+
+        // stop all currently running payments
+        __Module_proposal.paymentProcessor().cancelRunningPayments(
+            IPaymentClient(address(this))
+        );
 
         emit MilestoneStopped(id);
     }
@@ -461,10 +470,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             _last = prevId;
         }
 
-        __Module_proposal.paymentProcessor().cancelRunningPayments(
-            IPaymentClient(address(this))
-        );
-
         emit MilestoneRemoved(id);
     }
 
@@ -497,15 +502,35 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
-            for (uint i; i < len; ++i) {
+            if (contribCache.length == 1) {
                 // Calculate the payout amount.
                 uint contributorPayout =
-                    ((m.budget / SALARY_PRECISION) * contribCache[i].salary);
+                    (m.budget / SALARY_PRECISION) * contribCache[0].salary;
 
                 // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
                 _addPaymentOrder(
-                    contribCache[i].addr, contributorPayout, m.duration
+                    contribCache[0].addr,
+                    contributorPayout,
+                    block.timestamp + m.duration
                 );
+            }
+            if (contribCache.length > 1) {
+                // memory arrays used as parameters to _addPaymentOrders
+                address[] memory recipients = new address[](len);
+                uint[] memory amounts = new uint[](len);
+                uint[] memory dueTos = new uint[](len);
+                for (uint i; i < len; ++i) {
+                    // Calculate the contributor payout and add it to contributorPayouts array
+                    uint contributorPayout =
+                        (m.budget / SALARY_PRECISION) * contribCache[i].salary;
+                    amounts[i] = contributorPayout;
+
+                    // Save contributor addresses and dueTos
+                    recipients[i] = contribCache[i].addr;
+                    dueTos[i] = block.timestamp + m.duration;
+                }
+
+                _addPaymentOrders(recipients, amounts, dueTos);
             }
         }
 
@@ -582,6 +607,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         validPosition(idToPositionAfter)
         validPosition(prevId)
         validIntermediatePosition(id, prevId, idToPositionAfter)
+        onlyConsecutiveMilestones(prevId, id)
     {
         //Remove current milestone id from list
         uint nextIdInLine = _milestones[id];
@@ -735,6 +761,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneRegistry[milestoneId].startTimestamp = 0;
         _milestoneRegistry[milestoneId].submissionData = "";
         _milestoneRegistry[milestoneId].completed = false;
+        _milestoneRegistry[milestoneId].lastUpdatedTimestamp = block.timestamp;
 
         emit MilestoneAdded(
             milestoneId,
