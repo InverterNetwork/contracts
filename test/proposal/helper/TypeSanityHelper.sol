@@ -32,10 +32,12 @@ contract TypeSanityHelper is Test {
     // Contract: base/ModuleManager.sol
 
     address private constant _SENTINEL_MODULE = address(0x1);
+    uint8 private constant MAX_MODULES = 128;
 
     mapping(address => bool) moduleCache;
 
     function assumeValidModules(address[] memory modules) public {
+        vm.assume(modules.length <= MAX_MODULES);
         for (uint i; i < modules.length; ++i) {
             assumeValidModule(modules[i]);
 

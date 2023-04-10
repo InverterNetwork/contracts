@@ -73,20 +73,30 @@ abstract contract ModuleManager is
         _;
     }
 
+    modifier moduleLimitNotExceeded() {
+        if (_moduleCounter >= MAX_MODULE_AMOUNT) {
+            revert Proposal__ModuleManager__ModuleAmountOverLimits();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
     /// @dev Marks the beginning and end of the _modules list.
     address private constant _SENTINEL = address(0x1);
 
+    /// @dev Marks the maximum amount of Modules a Proposal can have to avoid out-of-gas risk.
+    uint8 private constant MAX_MODULE_AMOUNT = 128;
+
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Counter for number of modules in the _modules list.
+    uint8 private _moduleCounter;
+
     /// @dev List of modules.
     mapping(address => address) private _modules;
-
-    /// @dev Counter for number of modules in the _modules list.
-    uint private _moduleCounter;
 
     /// @dev Mapping of modules and access control roles to accounts and
     ///      whether they holds that role.
@@ -113,6 +123,12 @@ abstract contract ModuleManager is
 
         address module;
         uint len = modules.length;
+
+        //Check that the initial list of Modules doesn't exceed the max amount
+        if (len > MAX_MODULE_AMOUNT) {
+            revert Proposal__ModuleManager__ModuleAmountOverLimits();
+        }
+
         for (uint i; i < len; ++i) {
             module = modules[i];
 
@@ -184,7 +200,7 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function modulesSize() external view returns (uint) {
+    function modulesSize() external view returns (uint8) {
         return _moduleCounter;
     }
 
@@ -215,6 +231,7 @@ abstract contract ModuleManager is
         __ModuleManager_onlyAuthorized
         isNotModule(module)
         validModule(module)
+        moduleLimitNotExceeded
     {
         _commitAddModule(module);
     }
