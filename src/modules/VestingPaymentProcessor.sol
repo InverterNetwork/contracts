@@ -9,7 +9,6 @@ import {
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -25,8 +24,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
  */
 
 contract VestingPaymentProcessor is Module, IPaymentProcessor {
-    using SafeERC20 for IERC20;
-
     //--------------------------------------------------------------------------
     // Storage
 
@@ -39,6 +36,8 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     // contributor => Payment
     mapping(address => VestingWallet) private vestings;
+    // contributor => unclaimableAmount
+    mapping(address => uint) private unclaimableAmounts;
 
     //--------------------------------------------------------------------------
     // Events
@@ -235,6 +234,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             - released(contributor);
     }
 
+    /// @notice Getter for the amount of tokens that could not be claimed.
+    function unclaimable(address contributor) public view returns (uint) {
+        return unclaimableAmounts[contributor];
+    }
+
     function token() public view returns (IERC20) {
         return this.proposal().token();
     }
@@ -285,12 +289,19 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint amount = releasable(beneficiary);
         vestings[beneficiary]._released += amount;
 
-        // Cache token.
-        IERC20 token_ = token();
+        //if beneficiary has unclaimable tokens from before, add it to releasable amount
+        if (unclaimableAmounts[beneficiary] > 0) {
+            amount += unclaimable(beneficiary);
+            delete unclaimableAmounts[beneficiary];
+        }
 
-        token_.safeTransferFrom(address(client), beneficiary, amount);
-
-        emit TokensReleased(beneficiary, address(token_), amount);
+        // we claim the earned funds for the contributor.
+        try token().transferFrom(address(client), beneficiary, amount) {
+            emit TokensReleased(beneficiary, address(token()), amount);
+            // if transfer fails, move amount to unclaimableAmounts.
+        } catch {
+            unclaimableAmounts[beneficiary] += amount;
+        }
     }
 
     /// @notice Virtual implementation of the vesting formula.

@@ -331,6 +331,50 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
+    // Recipient address is blacklisted on the ERC contract.
+    // Tries to claim tokens after 25% duration but ERC contract reverts.
+    // Recipient address is whitelisted in the ERC contract.
+    // Successfuly to claims tokens again after 50% duration.
+    function testBlockedAddressCanClaimLater() public {
+        address recipient = address(0xBABE);
+        uint amount = 10 ether;
+        uint duration = 10 days;
+
+        // recipient is blacklisted.
+        blockAddress(recipient);
+
+        // Add payment order to client and call processPayments.
+        paymentClient.addPaymentOrder(
+            recipient, amount, (block.timestamp + duration)
+        );
+        paymentProcessor.processPayments(paymentClient);
+
+        // FF 25% and claim.
+        vm.warp(block.timestamp + duration / 4);
+        vm.prank(recipient);
+        paymentProcessor.claim(paymentClient);
+
+        // after failed claim attempt receiver should receive 0 token,
+        // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
+        assertEq(_token.balanceOf(address(recipient)), 0);
+        assertEq(paymentProcessor.releasable(recipient), 0);
+        assertEq(paymentProcessor.unclaimable(recipient), amount / 4);
+
+        // recipient is whitelisted.
+        unblockAddress(recipient);
+
+        // FF 25% and claim.
+        vm.warp(block.timestamp + duration / 4);
+        vm.prank(recipient);
+        paymentProcessor.claim(paymentClient);
+
+        // after successful claim attempt receiver should 50% total,
+        // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
+        assertEq(_token.balanceOf(address(recipient)), amount / 2);
+        assertEq(paymentProcessor.releasable(recipient), 0);
+        assertEq(paymentProcessor.unclaimable(recipient), 0);
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
@@ -367,6 +411,18 @@ contract VestingPaymentProcessorTest is ModuleTest {
             vm.prank(address(recipients[i]));
             paymentProcessor.claim(paymentClient);
         }
+    }
+
+    function blockAddress(address blockedAddress) internal {
+        _token.blockAddress(blockedAddress);
+        bool blocked = _token.isBlockedAddress(blockedAddress);
+        assertTrue(blocked);
+    }
+
+    function unblockAddress(address blockedAddress) internal {
+        _token.unblockAddress(blockedAddress);
+        bool blocked = _token.isBlockedAddress(blockedAddress);
+        assertFalse(blocked);
     }
 
     //--------------------------------------------------------------------------
