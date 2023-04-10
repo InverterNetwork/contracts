@@ -298,7 +298,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         // we claim the earned funds for the contributor.
         try token().transferFrom(address(client), beneficiary, amount) {
             emit TokensReleased(beneficiary, address(token()), amount);
-        // if transfer fails, move amount to unclaimableAmounts.
+            // if transfer fails, move amount to unclaimableAmounts.
         } catch {
             unclaimableAmounts[beneficiary] += amount;
         }

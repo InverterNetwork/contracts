@@ -26,22 +26,22 @@ contract ERC20Mock is ERC20 {
         blockedAddresses[user] = false;
     }
 
-    function isBlockedAddress(address user) public returns(bool) {
+    function isBlockedAddress(address user) public returns (bool) {
         return blockedAddresses[user];
     }
 
-    function transfer(address to, uint256 amount) public override returns (bool) {
+    function transfer(address to, uint amount) public override returns (bool) {
         require(!isBlockedAddress(to), "address blocked");
         address owner = _msgSender();
         _transfer(owner, to, amount);
         return true;
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
+    function transferFrom(address from, address to, uint amount)
+        public
+        override
+        returns (bool)
+    {
         require(!isBlockedAddress(to), "address blocked");
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
