@@ -32,6 +32,11 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
         _setUpProposal(paymentProcessor);
 
+        _authorizer.setIsAuthorized(address(this), true);
+
+        _authorizer.setIsAuthorized(address(paymentClient), true);
+        _proposal.addModule(address(paymentClient));
+
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
 
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
@@ -95,6 +100,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         speedRunVestingAndClaim(recipients, amounts, durations);
 
         //We run process payments again, but since there are no new orders, nothing should happen.
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
         for (uint i; i < recipients.length; i++) {
@@ -131,6 +137,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
             paymentClient.addPaymentOrder(recipient, amount, (start + duration));
         }
 
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
         for (uint z = 0; z <= duration; z += 1 hours) {
@@ -213,12 +220,14 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assertTrue(_token.balanceOf(address(paymentClient)) == total_amount);
 
         // Call processPayments.
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
         // FF to half the max_duration
         vm.warp(max_duration / 2);
 
         // calling cancelRunningPayments also calls claim() so no need to repeat?
+        vm.prank(address(paymentClient));
         paymentProcessor.cancelRunningPayments(paymentClient);
 
         // measure recipients balances before attempting second claim.
@@ -273,6 +282,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
         vm.warp(block.timestamp + 2 weeks);
@@ -298,6 +308,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments again.
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
         //we check everybody received what they were owed and can't claim for the new one
@@ -347,6 +358,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         paymentClient.addPaymentOrder(
             recipient, amount, (block.timestamp + duration)
         );
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
         // FF 25% and claim.
@@ -403,6 +415,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
         vm.warp(block.timestamp + max_time + 1);

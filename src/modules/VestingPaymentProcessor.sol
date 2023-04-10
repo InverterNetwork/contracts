@@ -39,6 +39,9 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     // contributor => unclaimableAmount
     mapping(address => uint) private unclaimableAmounts;
 
+    /// @notice list of addresses with open payment Orders
+    address[] activePayments;
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -72,6 +75,9 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice insufficient tokens in the client to do payments
     error Module__PaymentManager__InsufficientTokenBalanceInClient();
 
+    /// @notice invalid caller
+    error Module__PaymentManager__OnlyCallableByModule();
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -96,6 +102,13 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         _;
     }
 
+    modifier onlyModule() {
+        if (!proposal().isModule(_msgSender())) {
+            revert Module__PaymentManager__OnlyCallableByModule();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // External Functions
 
@@ -115,7 +128,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external {
+    function processPayments(IPaymentClient client) external onlyModule {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // If there are, we remove all payments that would be overwritten
@@ -150,23 +163,22 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     function cancelRunningPayments(IPaymentClient client)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorized
     {
         _cancelRunningOrders(client);
     }
 
     function _cancelRunningOrders(IPaymentClient client) internal {
-        IPaymentClient.PaymentOrder[] memory orders;
-        orders = client.paymentOrders();
+        //IPaymentClient.PaymentOrder[] memory orders;
+        //orders = client.paymentOrders();
+        address[] memory _activePayments = activePayments;
 
         address _recipient;
-        for (uint i; i < orders.length; i++) {
-            _recipient = orders[i].recipient;
+        for (uint i; i < _activePayments.length; ++i) {
+            _recipient = _activePayments[i];
 
-            //check if running payment order exists. If it does, remove it
-            if (start(_recipient) != 0) {
-                _removePayment(client, _recipient);
-            }
+            _removePayment(client, _recipient);
+
         }
     }
 
@@ -229,17 +241,47 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Internal Functions
 
+    function findAddressInActivePayments(address contributor)
+        internal
+        view
+        returns (uint)
+    {
+        address[] memory contribSearchArray = activePayments;
+
+        uint contribIndex = type(uint).max;
+
+        uint length = activePayments.length;
+        for (uint i; i < length; i++) {
+            if (contribSearchArray[i] == contributor) {
+                return contribIndex;
+            }
+        }
+        return contribIndex;
+    }
+
     function _removePayment(IPaymentClient client, address contributor)
         internal
     {
         //we claim the earned funds for the contributor.
         _claim(client, contributor);
 
-        //all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
+        //we remove the payment from the activePayments array
+        uint contribIndex = findAddressInActivePayments(contributor);
 
-        delete vestings[contributor];
+        if(contribIndex != type(uint).max) {
+            // Move the last element into the place to delete
+            activePayments[contribIndex] = activePayments[activePayments.length - 1];
+            // Remove the last element
+            activePayments.pop();
 
-        emit PaymentRemoved(contributor);
+            delete vestings[contributor];
+
+            emit PaymentRemoved(contributor);
+        }
+
+
+        /// Note that all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
+
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
@@ -264,6 +306,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         }
 
         vestings[_contributor] = VestingWallet(_salary, 0, _start, _duration);
+
+        uint contribIndex = findAddressInActivePayments(_contributor);
+        if(contribIndex == type(uint).max) {
+            activePayments.push(_contributor);
+        }
 
         emit PaymentAdded(_contributor, _salary, _start, _duration);
     }
