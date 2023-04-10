@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-// External Dependencies
-import {Context} from "@oz/utils/Context.sol";
-
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 

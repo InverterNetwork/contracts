@@ -81,6 +81,6 @@ contract PaymentClientMock is PaymentClient {
         override(PaymentClient)
         returns (bool)
     {
-        return authorized[msg.sender];
+        return authorized[_msgSender()];
     }
 }
