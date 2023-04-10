@@ -229,9 +229,9 @@ abstract contract ModuleManager is
     function addModule(address module)
         public
         __ModuleManager_onlyAuthorized
+        moduleLimitNotExceeded
         isNotModule(module)
         validModule(module)
-        moduleLimitNotExceeded
     {
         _commitAddModule(module);
     }

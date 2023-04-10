@@ -76,7 +76,12 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
             // Check correct balances.
             assertEq(_token.balanceOf(address(recipient)), amount);
-            assertEq(paymentProcessor.releasable(address(paymentClient), address(recipient)), 0);
+            assertEq(
+                paymentProcessor.releasable(
+                    address(paymentClient), address(recipient)
+                ),
+                0
+            );
         }
 
         // No funds left in the PaymentClient
@@ -109,8 +114,8 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
             // Check that the vesting is still in state
             assertEq(
-                paymentProcessor.vestedAmount(address(paymentClient), 
-                    address(recipient), block.timestamp
+                paymentProcessor.vestedAmount(
+                    address(paymentClient), address(recipient), block.timestamp
                 ),
                 amount
             );
@@ -148,7 +153,12 @@ contract VestingPaymentProcessorTest is ModuleTest {
                 address recipient = recipients[i];
                 uint claimableAmt = amounts[i] * z / duration;
 
-                assertEq(claimableAmt, paymentProcessor.releasable(address(paymentClient), recipient));
+                assertEq(
+                    claimableAmt,
+                    paymentProcessor.releasable(
+                        address(paymentClient), recipient
+                    )
+                );
             }
         }
     }
@@ -176,7 +186,12 @@ contract VestingPaymentProcessorTest is ModuleTest {
             uint amount = uint(amounts[i]) * 2; //we paid two rounds
 
             assertEq(_token.balanceOf(address(recipient)), amount);
-            assertEq(paymentProcessor.releasable(address(paymentClient), address(recipient)), 0);
+            assertEq(
+                paymentProcessor.releasable(
+                    address(paymentClient), address(recipient)
+                ),
+                0
+            );
         }
 
         // No funds left in the PaymentClient
@@ -252,7 +267,10 @@ contract VestingPaymentProcessorTest is ModuleTest {
             uint balanceAfter = _token.balanceOf(recipient);
 
             assertEq(balancesBefore[i], balanceAfter);
-            assertEq(paymentProcessor.releasable(address(paymentClient), recipient), 0);
+            assertEq(
+                paymentProcessor.releasable(address(paymentClient), recipient),
+                0
+            );
         }
     }
 
@@ -291,8 +309,9 @@ contract VestingPaymentProcessorTest is ModuleTest {
         uint[] memory claims = new uint[](recipients.length);
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            claims[i] =
-                paymentProcessor.vestedAmount(address(paymentClient), recipient, block.timestamp);
+            claims[i] = paymentProcessor.vestedAmount(
+                address(paymentClient), recipient, block.timestamp
+            );
             assertEq(claims[i], amounts[i]);
         }
 
@@ -316,7 +335,10 @@ contract VestingPaymentProcessorTest is ModuleTest {
             address recipient = recipients[i];
             assertEq(_token.balanceOf(recipient), claims[i]);
             assertEq(
-                paymentProcessor.vestedAmount(address(paymentClient), recipient, block.timestamp), 0
+                paymentProcessor.vestedAmount(
+                    address(paymentClient), recipient, block.timestamp
+                ),
+                0
             );
         }
 
@@ -332,7 +354,12 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
             // Check that balances are correct and that noody can claim anything else
             assertEq(_token.balanceOf(address(recipient)), amount);
-            assertEq(paymentProcessor.releasable(address(paymentClient), address(recipient)), 0);
+            assertEq(
+                paymentProcessor.releasable(
+                    address(paymentClient), address(recipient)
+                ),
+                0
+            );
         }
 
         //No funds remain in the PaymentClient
@@ -369,8 +396,13 @@ contract VestingPaymentProcessorTest is ModuleTest {
         // after failed claim attempt receiver should receive 0 token,
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
-        assertEq(paymentProcessor.releasable(address(paymentClient), recipient), 0);
-        assertEq(paymentProcessor.unclaimable(address(paymentClient), recipient), amount / 4);
+        assertEq(
+            paymentProcessor.releasable(address(paymentClient), recipient), 0
+        );
+        assertEq(
+            paymentProcessor.unclaimable(address(paymentClient), recipient),
+            amount / 4
+        );
 
         // recipient is whitelisted.
         unblockAddress(recipient);
@@ -383,8 +415,12 @@ contract VestingPaymentProcessorTest is ModuleTest {
         // after successful claim attempt receiver should 50% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 2);
-        assertEq(paymentProcessor.releasable(address(paymentClient), recipient), 0);
-        assertEq(paymentProcessor.unclaimable(address(paymentClient), recipient), 0);
+        assertEq(
+            paymentProcessor.releasable(address(paymentClient), recipient), 0
+        );
+        assertEq(
+            paymentProcessor.unclaimable(address(paymentClient), recipient), 0
+        );
     }
 
     //--------------------------------------------------------------------------
