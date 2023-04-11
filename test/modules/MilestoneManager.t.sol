@@ -967,8 +967,6 @@ contract MilestoneManagerTest is ModuleTest {
 
         uint paidToTreasury = _token.balanceOf(FEE_TREASURY);
 
-        
-
         // Check that milestoneManager's token balance is sufficient for the
         // payment orders.
         assertTrue(
@@ -982,9 +980,7 @@ contract MilestoneManagerTest is ModuleTest {
         }
         //If funding higher than budget needed
         else if (budget <= funding) {
-            assertTrue(
-                _token.balanceOf(address(_proposal)) == budget
-            );
+            assertTrue(_token.balanceOf(address(_proposal)) == budget);
         }
         //budget needed higher than funding
         else {

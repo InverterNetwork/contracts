@@ -257,7 +257,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
             milestoneIdToFundingAddresses[milestoneId].fundingAmount -=
                 amountNeeded;
 
-            __Module_proposal.token().transfer(milestoneManager, amountNeeded);//@todo use safetransfer
+            __Module_proposal.token().transfer(milestoneManager, amountNeeded); //@todo use safetransfer
 
             emit FundingCollected(milestoneId, amountNeeded, funders);
             return amountNeeded;

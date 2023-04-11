@@ -445,7 +445,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         // Receive pointer to next milestone instance.
         Milestone storage m = _milestoneRegistry[next];
-        uint budget=m.budget;
+        uint budget = m.budget;
         // Mark milestone as started, i.e. set its startTimestamp.
         m.startTimestamp = block.timestamp;
 
@@ -462,7 +462,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
             proposal().token().safeTransfer(FEE_TREASURY, feePayout);
 
-            
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
             if (contribCache.length == 1) {
