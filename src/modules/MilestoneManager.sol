@@ -456,6 +456,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                 .collectFunding(_activeMilestone, budget);
 
             _ensureTokenBalance(budget);
+
             //substract the fee from the budget and send it to treasury
             uint feePayout = ((budget / SALARY_PRECISION) * FEE_PCT);
             budget -= feePayout;
@@ -467,7 +468,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             if (contribCache.length == 1) {
                 // Calculate the payout amount.
                 uint contributorPayout =
-                    ((budget / SALARY_PRECISION) * contribCache[i].salary); //@note why not multiply first then divide?
+                    ((budget / SALARY_PRECISION) * contribCache[0].salary);
                 // Note that the payout SHOULD be fulfilled before the end of the milestone's duration.
                 _addPaymentOrder(
                     contribCache[0].addr,
@@ -483,7 +484,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                 for (uint i; i < len; ++i) {
                     // Calculate the contributor payout and add it to contributorPayouts array
                     uint contributorPayout =
-                        (m.budget / SALARY_PRECISION) * contribCache[i].salary;
+                        (budget / SALARY_PRECISION) * contribCache[i].salary;
                     amounts[i] = contributorPayout;
 
                     // Save contributor addresses and dueTos
