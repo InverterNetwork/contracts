@@ -66,15 +66,8 @@ abstract contract ModuleManager is
         _;
     }
 
-    modifier onlyConsecutiveModules(address prevModule, address module) {
-        if (_modules[prevModule] != module) {
-            revert Proposal__ModuleManager__ModulesNotConsecutive();
-        }
-        _;
-    }
-
     modifier moduleLimitNotExceeded() {
-        if (_moduleCounter >= MAX_MODULE_AMOUNT) {
+        if (uint8(_modules.length) >= MAX_MODULE_AMOUNT) {
             revert Proposal__ModuleManager__ModuleAmountOverLimits();
         }
         _;
@@ -92,11 +85,10 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Counter for number of modules in the _modules list.
-    uint8 private _moduleCounter;
-
     /// @dev List of modules.
-    mapping(address => address) private _modules;
+    address[] private _modules;
+
+    mapping(address => bool) _isModule;
 
     /// @dev Mapping of modules and access control roles to accounts and
     ///      whether they holds that role.
@@ -117,9 +109,6 @@ abstract contract ModuleManager is
         onlyInitializing
     {
         __Context_init();
-
-        // Set up sentinel to signal empty list of modules.
-        _modules[_SENTINEL] = _SENTINEL;
 
         address module;
         uint len = modules.length;
@@ -175,46 +164,17 @@ abstract contract ModuleManager is
         override(IModuleManager)
         returns (bool)
     {
-        return module != _SENTINEL && _modules[module] != address(0);
+        return _isModule[module];
     }
 
     /// @inheritdoc IModuleManager
     function listModules() public view returns (address[] memory) {
-        address[] memory result = new address[](_moduleCounter);
-
-        // Populate result array.
-        uint index;
-        address elem = _modules[_SENTINEL];
-        while (elem != _SENTINEL) {
-            result[index] = elem;
-            elem = _modules[elem];
-            index++;
-        }
-
-        return result;
+        return _modules;
     }
 
     /// @inheritdoc IModuleManager
     function modulesSize() external view returns (uint8) {
-        return _moduleCounter;
-    }
-
-    /// @inheritdoc IModuleManager
-    function getPreviousModule(address module)
-        external
-        view
-        validModule(module)
-        returns (address previousModule)
-    {
-        address[] memory modules = listModules();
-
-        uint len = modules.length;
-
-        for (uint i; i < len; ++i) {
-            if (modules[i] == module) {
-                return i != 0 ? modules[i - 1] : _SENTINEL;
-            }
-        }
+        return uint8(_modules.length);
     }
 
     //--------------------------------------------------------------------------
@@ -232,13 +192,12 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function removeModule(address prevModule, address module)
+    function removeModule(address module)
         public
         __ModuleManager_onlyAuthorized
         isModule_(module)
-        onlyConsecutiveModules(prevModule, module)
     {
-        _commitRemoveModule(prevModule, module);
+        _commitRemoveModule(module);
     }
 
     //--------------------------------------------------------------------------
@@ -301,25 +260,38 @@ abstract contract ModuleManager is
     /// @dev Expects `module` to not be enabled module.
     function _commitAddModule(address module) private {
         // Add address to _modules list.
-        _modules[module] = _modules[_SENTINEL];
-        _modules[_SENTINEL] = module;
-        _moduleCounter++;
-
+        _modules.push(module);
+        _isModule[module] = true;
         emit ModuleAdded(module);
     }
 
     /// @dev Expects address arguments to be consecutive in the modules list.
     /// @dev Expects address `module` to be enabled module.
-    function _commitRemoveModule(address prevModule, address module) private {
-        // Remove module address from list and decrease counter.
-        _modules[prevModule] = _modules[module];
-        delete _modules[module];
-        _moduleCounter--;
-
+    function _commitRemoveModule(address module) private {
         // Note that we cannot delete the module's roles configuration.
         // This means that in case a module is disabled and then re-enabled,
         // its roles configuration is the same as before.
         // Note that this could potentially lead to security issues!
+
+        //Unordered removal
+        address[] memory modulesSearchArray = _modules;
+
+        uint moduleIndex = type(uint).max;
+
+        uint length = modulesSearchArray.length;
+        for (uint i; i < length; i++) {
+            if (modulesSearchArray[i] == module) {
+                moduleIndex = i;
+                break;
+            }
+        }
+
+        // Move the last element into the place to delete
+        _modules[moduleIndex] = _modules[length - 1];
+        // Remove the last element
+        _modules.pop();
+
+        _isModule[module] = false;
 
         emit ModuleRemoved(module);
     }

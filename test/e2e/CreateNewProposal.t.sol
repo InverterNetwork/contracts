@@ -294,10 +294,6 @@ contract ProposalCreation is Test {
 
         //--------------------------------------------------------------------------------
         // Removing Module
-
-        //Note: This function is ideally called via the frontend, see the documentation of the getPreviousModule Function
-        address previousModule = proposal.getPreviousModule(milestoneManager);
-
-        proposal.removeModule(previousModule, milestoneManager);
+        proposal.removeModule(milestoneManager);
     }
 }
