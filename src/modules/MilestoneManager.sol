@@ -560,11 +560,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotUpdateable();
         }
 
-        // Not updateable if milestone is already completed.
-        if (m.completed) {
-            revert Module__MilestoneManager__MilestoneNotUpdateable();
-        }
-
         bool changed;
 
         if (m.duration != duration) {
