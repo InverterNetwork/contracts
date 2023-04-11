@@ -31,6 +31,8 @@ abstract contract FundingManager is
     using Strings for uint;
     using SafeERC20 for IERC20;
 
+    uint internal constant DEPOSIT_CAP = 100_000_000e18;
+
     function __FundingManager_init(uint proposalId_, IERC20 token_)
         internal
         onlyInitializing
@@ -98,6 +100,10 @@ abstract contract FundingManager is
         //Depositing from itself with its own balance would mint tokens without increasing underlying balance.
         if (from == address(this)) {
             revert Proposal__FundingManager__CannotSelfDeposit();
+        }
+
+        if ((amount + token().balanceOf(address(this))) > DEPOSIT_CAP) {
+            revert Proposal__FundingManager__DepositCapReached();
         }
 
         _mint(to, amount);

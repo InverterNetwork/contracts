@@ -10,6 +10,11 @@ interface IFundingManager is IRebasingERC20 {
 
     /// @notice Function is only callable by authorized address.
     error Proposal__FundingManager__CannotSelfDeposit();
+
+    /// @notice There is a cap on deposits.
+    error Proposal__FundingManager__DepositCapReached();
+
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a deposit takes place.
