@@ -248,12 +248,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function getMilestoneInformation(uint id)
         public
         view
+        validId(id)
         returns (Milestone memory)
     {
-        if (!isExistingMilestoneId(id)) {
-            revert Module__MilestoneManager__InvalidMilestoneId();
-        }
-
         return _milestoneRegistry[id];
     }
 
@@ -274,7 +271,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function getActiveMilestoneId() public view returns (uint milestoneId) {
+    function getActiveMilestoneId() external view returns (uint milestoneId) {
         if (!hasActiveMilestone()) {
             revert Module__MilestoneManager__NoActiveMilestone();
         }
@@ -288,7 +285,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             return false;
         }
 
-        Milestone storage m = _milestoneRegistry[_activeMilestone];
+        Milestone memory m = _milestoneRegistry[_activeMilestone];
 
         // Milestone active if not completed and already started but duration
         // not yet over.
@@ -322,7 +319,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             return true;
         }
 
-        Milestone storage m = _milestoneRegistry[_activeMilestone];
+        Milestone memory m = _milestoneRegistry[_activeMilestone];
 
         // Milestone is activatable if current milestone started and its
         // duration exceeded.

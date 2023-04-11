@@ -280,7 +280,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         Motion storage motion_ = motions[motionId];
 
         // Revert if voting duration exceeded
-        if (block.timestamp >=  motion_.endTimestamp) {
+        if (block.timestamp >  motion_.endTimestamp) {
             revert Module__SingleVoteGovernor__MotionVotingPhaseClosed();
         }
 
