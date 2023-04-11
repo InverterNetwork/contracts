@@ -144,7 +144,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     // IAuthorizer Functions
 
     /// @inheritdoc IAuthorizer
-    function isAuthorized(address who)
+    function isAuthorized(address who, bytes32 role)
         public
         view
         override(IAuthorizer)

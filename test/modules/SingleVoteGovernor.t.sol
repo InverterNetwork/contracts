@@ -97,7 +97,7 @@ contract SingleVoteGovernorTest is Test {
         assertEq(address(_authorizer.proposal()), address(_proposal));
         assertEq(_proposal.isModule(address(_authorizer)), true);
 
-        assertEq(_authorizer.isAuthorized(address(_authorizer)), true);
+        assertEq(_authorizer.isAuthorized(address(_authorizer), bytes32("placeholder role")), true);
         assertEq(_authorizer.isVoter(ALBA), true);
         assertEq(_authorizer.isVoter(BOB), true);
         assertEq(_authorizer.isVoter(COBIE), true);
@@ -107,8 +107,8 @@ contract SingleVoteGovernorTest is Test {
         currentVoters.push(COBIE);
 
         // The deployer may be owner, but not authorized by default
-        assertEq(_authorizer.isAuthorized(address(this)), false);
-        assertEq(_authorizer.isAuthorized(address(_proposal)), false);
+        assertEq(_authorizer.isAuthorized(address(this), bytes32("placeholder role")), false);
+        assertEq(_authorizer.isAuthorized(address(_proposal), bytes32("placeholder role")), false);
         assertEq(_authorizer.isVoter(address(this)), false);
         assertEq(_authorizer.isVoter(address(_proposal)), false);
 
@@ -334,7 +334,7 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
-        assertEq(_authorizer.isAuthorized(address(_authorizer)), true);
+        assertEq(_authorizer.isAuthorized(address(_authorizer), bytes32("placeholder role")), true);
         assertEq(_authorizer.isVoter(ALBA), true);
         assertEq(_authorizer.isVoter(BOB), true);
         assertEq(_authorizer.isVoter(COBIE), true);

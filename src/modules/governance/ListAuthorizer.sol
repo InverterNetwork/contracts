@@ -117,7 +117,7 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @notice Returns whether an address is authorized to facilitate
     ///         the current transaction.
     /// @param  _who  The address on which to perform the check.
-    function isAuthorized(address _who)
+    function isAuthorized(address _who, bytes32 role)
         public
         view
         virtual
@@ -135,7 +135,7 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @notice Adds a new address to the list of authorized addresses.
     /// @param _who The address to add to the list of authorized addresses.
     function addToAuthorized(address _who) public virtual onlyAuthorized {
-        if (!isAuthorized(_who)) {
+        if (!isAuthorized(_who, bytes32("placeholder role"))) {
             authorized[_who] = true;
             amountAuthorized++;
 
@@ -151,7 +151,7 @@ contract ListAuthorizer is IAuthorizer, Module {
         onlyAuthorized
         notLastAuthorizer
     {
-        if (isAuthorized(_who)) {
+        if (isAuthorized(_who, bytes32("placeholder role"))) {
             authorized[_who] = false;
             amountAuthorized--;
 
@@ -164,7 +164,7 @@ contract ListAuthorizer is IAuthorizer, Module {
     function transferAuthorization(address _to) public virtual onlyAuthorized {
         //In this particular case the method shouldn't be idempotent to avoid confusion.
         //The extra msgSender check is for the case in which the ListAuthorizer is not the Proposal's main authorizer. In such a case, this module would still be governed by that other authorizer, but we cannot rely on onlyAuthorized == isAuthorized(_msgSender) == true
-        if (isAuthorized(_msgSender()) && !isAuthorized(_to)) {
+        if (isAuthorized(_msgSender(), bytes32("placeholder role")) && !isAuthorized(_to, bytes32("placeholder role"))) {
             authorized[_to] = true;
             authorized[_msgSender()] = false;
 
