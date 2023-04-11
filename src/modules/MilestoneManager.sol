@@ -125,7 +125,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         for (uint i; i < contribLength; ++i) {
             address contributorAddr = contribs[i].addr;
             uint contributorSalary = contribs[i].salary;
-            bytes32 contributorData = contribs[i].data;
 
             // check the address is valid
             if (

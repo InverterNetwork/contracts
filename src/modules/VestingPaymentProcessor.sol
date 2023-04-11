@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // Internal Dependencies
 import {
@@ -316,14 +316,16 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         returns (uint)
     {
         uint totalAllocation = vestings[contributor]._salary;
+        uint startContributor = start(contributor);
+        uint durationContributor = duration(contributor);
 
-        if (timestamp < start(contributor)) {
+        if (timestamp < startContributor) {
             return 0;
-        } else if (timestamp > start(contributor) + duration(contributor)) {
+        } else if (timestamp > startContributor + durationContributor) {
             return totalAllocation;
         } else {
-            return (totalAllocation * (timestamp - start(contributor)))
-                / duration(contributor);
+            return (totalAllocation * (timestamp - startContributor))
+                / durationContributor;
         }
     }
 
