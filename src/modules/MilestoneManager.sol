@@ -125,6 +125,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         for (uint i; i < contribLength; ++i) {
             address contributorAddr = contribs[i].addr;
             uint contributorSalary = contribs[i].salary;
+            bytes32 contributorData = contribs[i].data;
 
             // check the address is valid
             if (
@@ -322,9 +323,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         // Milestone is activatable if current milestone started and its
         // duration exceeded.
-        return (
-            (m.startTimestamp + m.duration < block.timestamp) || m.completed
-        );
+        return m.startTimestamp + m.duration < block.timestamp;
     }
 
     /// @inheritdoc IMilestoneManager
