@@ -100,7 +100,7 @@ contract ListAuthorizer is IAuthorizer, Module {
                 revert Module__ListAuthorizer__invalidInitialAuthorizers();
             }
 
-            if (authorized[initialAuthorizers[i]] == true) {
+            if (authorized[current] == true) {
                 //duplicate
                 revert Module__ListAuthorizer__invalidInitialAuthorizers();
             }
