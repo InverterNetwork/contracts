@@ -40,7 +40,7 @@ contract OneScriptToRuleThemAll is Script {
     IProposalFactory.ModuleConfig milestoneManagerFactoryConfig = IProposalFactory.ModuleConfig(milestoneManagerMetadata, abi.encode(100_000_000, 1_000_000, makeAddr("treasury")));
     
     IModule.Metadata authorizerMetadata = IModule.Metadata(1, 1, "https://github.com/inverter/authorizer", "Authorizer");
-    IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory.ModuleConfig(authorizerMetadata, abi.encode(address(this)));
+    IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory.ModuleConfig(authorizerMetadata, abi.encode(address(0xBEEF)));
 
     uint256 deployerPrivateKey = vm.envUint("ANVIL_PRIVATE_KEY");
     uint256 paymentProcessorBeaconOwnerPrivateKey = vm.envUint("PPBO_PRIVATE_KEY");
