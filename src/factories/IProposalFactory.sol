@@ -57,4 +57,7 @@ interface IProposalFactory {
     /// @notice Returns the {IProposal} address that corresponds to the given id.
     /// @param id The requested proposal's id.
     function getProposalByID(uint id) external view returns (address);
+
+    /// @notice Returns the counter of the current proposal id
+    function getProposalIDCounter() external view returns(uint256);
 }
