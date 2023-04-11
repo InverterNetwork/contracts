@@ -144,7 +144,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     // IAuthorizer Functions
 
     /// @inheritdoc IAuthorizer
-    function isAuthorized(address who, bytes32 role)
+    function isAuthorized(address who)
         public
         view
         override(IAuthorizer)
@@ -280,7 +280,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         Motion storage motion_ = motions[motionId];
 
         // Revert if voting duration exceeded
-        if (block.timestamp >  motion_.endTimestamp) {
+        if (block.timestamp > motion_.endTimestamp) {
             revert Module__SingleVoteGovernor__MotionVotingPhaseClosed();
         }
 

@@ -63,7 +63,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     ///         authorized via Proposal.
     modifier onlyAuthorized() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
-        if (!authorizer.isAuthorized(_msgSender(), bytes32("placeholder role"))) {
+        if (!authorizer.isAuthorized(_msgSender())) {
             revert Module__CallerNotAuthorized();
         }
         _;
@@ -74,7 +74,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     modifier onlyAuthorizedOrOwner() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (
-            !authorizer.isAuthorized(_msgSender(), bytes32("placeholder role"))
+            !authorizer.isAuthorized(_msgSender())
                 && __Module_proposal.owner() != _msgSender()
         ) {
             revert Module__CallerNotAuthorized();

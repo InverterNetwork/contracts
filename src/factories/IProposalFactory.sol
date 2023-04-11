@@ -59,5 +59,5 @@ interface IProposalFactory {
     function getProposalByID(uint id) external view returns (address);
 
     /// @notice Returns the counter of the current proposal id
-    function getProposalIDCounter() external view returns(uint256);
+    function getProposalIDCounter() external view returns (uint);
 }

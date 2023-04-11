@@ -249,7 +249,12 @@ abstract contract ModuleManager is
         address to,
         bytes memory data,
         Types.Operation operation
-    ) external override(IModuleManager) onlyModule returns (bool, bytes memory) {
+    )
+        external
+        override(IModuleManager)
+        onlyModule
+        returns (bool, bytes memory)
+    {
         bool ok;
         bytes memory returnData;
 

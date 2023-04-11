@@ -47,7 +47,7 @@ contract Proposal is
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
     modifier onlyAuthorized() {
-        if (!authorizer.isAuthorized(_msgSender(), bytes32("placeholder role"))) {
+        if (!authorizer.isAuthorized(_msgSender())) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -56,7 +56,7 @@ contract Proposal is
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address or owner.
     modifier onlyAuthorizedOrOwner() {
-        if (!authorizer.isAuthorized(_msgSender(), bytes32("placeholder role")) && _msgSender() != owner()) {
+        if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != owner()) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -129,7 +129,7 @@ contract Proposal is
         override(ModuleManager)
         returns (bool)
     {
-        return authorizer.isAuthorized(who, bytes32("placeholder role"));
+        return authorizer.isAuthorized(who);
     }
 
     //--------------------------------------------------------------------------

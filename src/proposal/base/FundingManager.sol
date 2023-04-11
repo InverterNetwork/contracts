@@ -70,11 +70,11 @@ abstract contract FundingManager is
         returns (uint)
     {
         uint tokenBalance = token().balanceOf(address(this));
-        
+
         // if(tokenBalance == 0 || tokenBalance > MAX_SUPPLY) {
         //     revert Proposal__FundingManaget__TokenBalanceOutOfRange();
         // }
-        
+
         return tokenBalance;
     }
 

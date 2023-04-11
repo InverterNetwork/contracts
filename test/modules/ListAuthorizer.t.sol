@@ -75,8 +75,8 @@ contract ListAuthorizerTest is Test {
         _authorizer.addToAuthorized(ALBA);
         _authorizer.removeFromAuthorized(address(this));
 
-        assertEq(_authorizer.isAuthorized(ALBA, bytes32("placeholder role")), true);
-        assertEq(_authorizer.isAuthorized(address(this), bytes32("placeholder role")), false);
+        assertEq(_authorizer.isAuthorized(ALBA), true);
+        assertEq(_authorizer.isAuthorized(address(this)), false);
         assertEq(_authorizer.getAmountAuthorized(), 1);
     }
 
@@ -98,9 +98,9 @@ contract ListAuthorizerTest is Test {
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
 
         for (uint i; i < initialAuth.length; ++i) {
-            assertEq(testAuthorizer.isAuthorized(initialAuth[i], bytes32("placeholder role")), true);
+            assertEq(testAuthorizer.isAuthorized(initialAuth[i]), true);
         }
-        assertEq(testAuthorizer.isAuthorized(address(this), bytes32("placeholder role")), false);
+        assertEq(testAuthorizer.isAuthorized(address(this)), false);
         assertEq(testAuthorizer.getAmountAuthorized(), initialAuth.length);
     }
 
@@ -115,9 +115,9 @@ contract ListAuthorizerTest is Test {
         _authorizer.init(
             IProposal(newProposal), _METADATA, abi.encode(initialAuth)
         );
-        assertEq(_authorizer.isAuthorized(address(this), bytes32("placeholder role")), false);
+        assertEq(_authorizer.isAuthorized(address(this)), false);
         assertEq(address(_authorizer.proposal()), address(_proposal));
-        assertEq(_authorizer.isAuthorized(ALBA, bytes32("placeholder role")), true);
+        assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(_authorizer.getAmountAuthorized(), 1);
     }
 
@@ -168,7 +168,7 @@ contract ListAuthorizerTest is Test {
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(_authorizer.isAuthorized(newAuthorized[i], bytes32("placeholder role")), true);
+            assertEq(_authorizer.isAuthorized(newAuthorized[i]), true);
         }
         assertEq(
             _authorizer.getAmountAuthorized(),
@@ -190,7 +190,7 @@ contract ListAuthorizerTest is Test {
         vm.prank(address(ALBA));
         _authorizer.removeFromAuthorized(ALBA);
 
-        assertEq(_authorizer.isAuthorized(ALBA, bytes32("placeholder role")), true);
+        assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(_authorizer.getAmountAuthorized(), amountAuth);
     }
 
@@ -212,10 +212,10 @@ contract ListAuthorizerTest is Test {
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(_authorizer.isAuthorized(newAuthorized[i], bytes32("placeholder role")), false);
+            assertEq(_authorizer.isAuthorized(newAuthorized[i]), false);
         }
 
-        assertEq(_authorizer.isAuthorized(ALBA, bytes32("placeholder role")), true);
+        assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(_authorizer.getAmountAuthorized(), amountAuth);
     }
 
@@ -236,8 +236,8 @@ contract ListAuthorizerTest is Test {
         }
 
         for (uint i = 1; i < authList.length; i += 2) {
-            assertEq(_authorizer.isAuthorized(authList[i - 1], bytes32("placeholder role")), false);
-            assertEq(_authorizer.isAuthorized(authList[i], bytes32("placeholder role")), true);
+            assertEq(_authorizer.isAuthorized(authList[i - 1]), false);
+            assertEq(_authorizer.isAuthorized(authList[i]), true);
         }
         assertEq(
             _authorizer.getAmountAuthorized(),
@@ -269,7 +269,7 @@ contract ListAuthorizerTest is Test {
         }
 
         for (uint i = 1; i < authList.length; ++i) {
-            assertEq(_authorizer.isAuthorized(authList[i], bytes32("placeholder role")), true);
+            assertEq(_authorizer.isAuthorized(authList[i]), true);
         }
         assertEq(_authorizer.getAmountAuthorized(), amountAuth);
     }
@@ -280,7 +280,7 @@ contract ListAuthorizerTest is Test {
         for (uint i; i < nonAuthUsers.length; ++i) {
             //test if a non authorized address, fails authorization
             address ATTACKER = nonAuthUsers[i];
-            assertEq(_authorizer.isAuthorized(ATTACKER, bytes32("placeholder role")), false);
+            assertEq(_authorizer.isAuthorized(ATTACKER), false);
 
             //add without authorization fails
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
