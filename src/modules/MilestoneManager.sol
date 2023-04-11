@@ -326,7 +326,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         // Milestone is activatable if current milestone started and its
         // duration exceeded.
-        return m.startTimestamp + m.duration < block.timestamp;
+        return (
+            (m.startTimestamp + m.duration < block.timestamp) || m.completed
+        );
     }
 
     /// @inheritdoc IMilestoneManager
