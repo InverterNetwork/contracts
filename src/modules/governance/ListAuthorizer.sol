@@ -70,8 +70,6 @@ contract ListAuthorizer is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // Initialization
 
-    event Debugger_LA(string cp);
-
     function init(
         IProposal proposal_,
         Metadata memory metadata,
@@ -79,7 +77,6 @@ contract ListAuthorizer is IAuthorizer, Module {
     ) external virtual override initializer {
         address[] memory initialAuthorizers =
             abi.decode(configdata, (address[]));
-        emit Debugger_LA("1");
         __ListAuthorizer_init(proposal_, metadata, initialAuthorizers);
     }
 
@@ -88,15 +85,14 @@ contract ListAuthorizer is IAuthorizer, Module {
         Metadata memory metadata,
         address[] memory initialAuthorizers
     ) internal onlyInitializing {
-        emit Debugger_LA("2");
         __Module_init(proposal, metadata);
-        emit Debugger_LA("3");
+
         uint intialAuthLength = initialAuthorizers.length;
-        emit Debugger_LA("4");
+
         if (intialAuthLength == 0) {
             revert Module__ListAuthorizer__invalidInitialAuthorizers();
         }
-        emit Debugger_LA("5");
+
         for (uint i; i < intialAuthLength; ++i) {
             address current = initialAuthorizers[i];
 
