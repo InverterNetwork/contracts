@@ -34,10 +34,13 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint _duration;
     }
 
-    // contributor => Payment
-    mapping(address => VestingWallet) private vestings;
-    // contributor => unclaimableAmount
-    mapping(address => uint) private unclaimableAmounts;
+    // paymentClient => contributor => Payment
+    mapping(address => mapping(address => VestingWallet)) private vestings;
+    // paymentClient => contributor => unclaimableAmount
+    mapping(address => mapping(address => uint)) private unclaimableAmounts;
+
+    /// @notice list of addresses with open payment Orders per paymentClient
+    mapping(address => address[]) private activePayments;
 
     //--------------------------------------------------------------------------
     // Events
@@ -46,20 +49,31 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param end Timestamp at which the full amount should be claimable.
+    /// @param duration Timestamp at which the full amount should be claimable.
     event VestingPaymentAdded(
-        address indexed recipient, uint amount, uint start, uint end
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint start,
+        uint duration
     );
 
     /// @notice Emitted when the vesting to an address is removed.
     /// @param recipient The address that will stop receiving payment.
-    event VestingPaymentRemoved(address indexed recipient);
+    event VestingPaymentRemoved(
+        address indexed paymentClient, address indexed recipient
+    );
 
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param newSalary The new amount of tokens the payment consists of.
-    /// @param newEndDate New timestamp at which the full amount should be claimable.
-    event PaymentUpdated(address recipient, uint newSalary, uint newEndDate);
+    /// @param newEndDuration New timestamp at which the full amount should be claimable.
+    event PaymentUpdated(
+        address indexed paymentClient,
+        address recipient,
+        uint newSalary,
+        uint newEndDuration
+    );
 
     //--------------------------------------------------------------------------
     // Errors
@@ -85,6 +99,9 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice insufficient tokens in the client to do payments
     error Module__PaymentManager__InsufficientTokenBalanceInClient();
 
+    /// @notice invalid caller
+    error Module__PaymentManager__OnlyCallableByModule();
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -109,6 +126,13 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         _;
     }
 
+    modifier onlyModule() {
+        if (!proposal().isModule(_msgSender())) {
+            revert Module__PaymentManager__OnlyCallableByModule();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // External Functions
 
@@ -124,11 +148,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice Release the releasable tokens.
     ///         In OZ VestingWallet this method is named release().
     function claim(IPaymentClient client) external {
-        _claim(client, _msgSender());
+        _claim(address(client), _msgSender());
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external {
+    function processPayments(IPaymentClient client) external onlyModule {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // If there are, we remove all payments that would be overwritten
@@ -156,10 +180,12 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
                 _start = orders[i].createdAt;
                 _duration = (orders[i].dueTo - _start);
 
-                _addPayment(_recipient, _amount, _start, _duration);
+                _addPayment(
+                    address(client), _recipient, _amount, _start, _duration
+                );
 
                 emit PaymentOrderProcessed(
-                    _recipient, _amount, _start, _duration
+                    address(client), _recipient, _amount, _start, _duration
                 );
             }
         }
@@ -167,23 +193,21 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     function cancelRunningPayments(IPaymentClient client)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorized
     {
         _cancelRunningOrders(client);
     }
 
     function _cancelRunningOrders(IPaymentClient client) internal {
-        IPaymentClient.PaymentOrder[] memory orders;
-        orders = client.paymentOrders();
+        //IPaymentClient.PaymentOrder[] memory orders;
+        //orders = client.paymentOrders();
+        address[] memory _activePayments = activePayments[address(client)];
 
         address _recipient;
-        for (uint i; i < orders.length; i++) {
-            _recipient = orders[i].recipient;
+        for (uint i; i < _activePayments.length; ++i) {
+            _recipient = _activePayments[i];
 
-            //check if running payment order exists. If it does, remove it
-            if (start(_recipient) != 0) {
-                _removePayment(client, _recipient);
-            }
+            _removePayment(address(client), _recipient);
         }
     }
 
@@ -194,7 +218,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         external
         onlyAuthorized
     {
-        _removePayment(client, contributor);
+        _removePayment(address(client), contributor);
     }
 
     //--------------------------------------------------------------------------
@@ -202,41 +226,61 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Getter for the start timestamp.
     /// @param contributor Contributor's address.
-    function start(address contributor) public view returns (uint) {
-        return vestings[contributor]._start;
-    }
-
-    /// @notice Getter for the vesting duration.
-    /// @param contributor Contributor's address.
-    function duration(address contributor) public view returns (uint) {
-        return vestings[contributor]._duration;
-    }
-
-    /// @notice Getter for the amount of eth already released
-    /// @param contributor Contributor's address.
-    function released(address contributor) public view returns (uint) {
-        return vestings[contributor]._released;
-    }
-
-    /// @notice Calculates the amount of tokens that has already vested.
-    /// @param contributor Contributor's address.
-    function vestedAmount(address contributor, uint timestamp)
+    function start(address client, address contributor)
         public
         view
         returns (uint)
     {
-        return _vestingSchedule(contributor, timestamp);
+        return vestings[client][contributor]._start;
+    }
+
+    /// @notice Getter for the vesting duration.
+    /// @param contributor Contributor's address.
+    function duration(address client, address contributor)
+        public
+        view
+        returns (uint)
+    {
+        return vestings[client][contributor]._duration;
+    }
+
+    /// @notice Getter for the amount of eth already released
+    /// @param contributor Contributor's address.
+    function released(address client, address contributor)
+        public
+        view
+        returns (uint)
+    {
+        return vestings[client][contributor]._released;
+    }
+
+    /// @notice Calculates the amount of tokens that has already vested.
+    /// @param contributor Contributor's address.
+    function vestedAmount(address client, address contributor, uint timestamp)
+        public
+        view
+        returns (uint)
+    {
+        return _vestingSchedule(client, contributor, timestamp);
     }
 
     /// @notice Getter for the amount of releasable tokens.
-    function releasable(address contributor) public view returns (uint) {
-        return vestedAmount(contributor, uint(block.timestamp))
-            - released(contributor);
+    function releasable(address client, address contributor)
+        public
+        view
+        returns (uint)
+    {
+        return vestedAmount(client, contributor, uint(block.timestamp))
+            - released(client, contributor);
     }
 
     /// @notice Getter for the amount of tokens that could not be claimed.
-    function unclaimable(address contributor) public view returns (uint) {
-        return unclaimableAmounts[contributor];
+    function unclaimable(address client, address contributor)
+        public
+        view
+        returns (uint)
+    {
+        return unclaimableAmounts[client][contributor];
     }
 
     function token() public view returns (IERC20) {
@@ -246,17 +290,42 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function _removePayment(IPaymentClient client, address contributor)
+    function findAddressInActivePayments(address client, address contributor)
         internal
+        view
+        returns (uint)
     {
+        address[] memory contribSearchArray = activePayments[client];
+
+        uint length = activePayments[client].length;
+        for (uint i; i < length; i++) {
+            if (contribSearchArray[i] == contributor) {
+                return i;
+            }
+        }
+        return type(uint).max;
+    }
+
+    function _removePayment(address client, address contributor) internal {
         //we claim the earned funds for the contributor.
         _claim(client, contributor);
 
-        //all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
+        //we remove the payment from the activePayments array
+        uint contribIndex = findAddressInActivePayments(client, contributor);
 
-        delete vestings[contributor];
+        if (contribIndex != type(uint).max) {
+            // Move the last element into the place to delete
+            activePayments[client][contribIndex] =
+                activePayments[client][activePayments[client].length - 1];
+            // Remove the last element
+            activePayments[client].pop();
 
-        emit VestingPaymentRemoved(contributor);
+            delete vestings[client][contributor];
+
+            emit VestingPaymentRemoved(client, contributor);
+        }
+
+        /// Note that all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
@@ -266,6 +335,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param _start Start vesting timestamp.
     /// @param _duration Vesting duration timestamp.
     function _addPayment(
+        address client,
         address _contributor,
         uint _salary,
         uint _start,
@@ -280,27 +350,35 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             revert Module__PaymentManager__InvalidContributor();
         }
 
-        vestings[_contributor] = VestingWallet(_salary, 0, _start, _duration);
+        vestings[client][_contributor] =
+            VestingWallet(_salary, 0, _start, _duration);
 
-        emit VestingPaymentAdded(_contributor, _salary, _start, _duration);
+        uint contribIndex = findAddressInActivePayments(client, _contributor);
+        if (contribIndex == type(uint).max) {
+            activePayments[client].push(_contributor);
+        }
+
+        emit VestingPaymentAdded(
+            client, _contributor, _salary, _start, _duration
+        );
     }
 
-    function _claim(IPaymentClient client, address beneficiary) internal {
-        uint amount = releasable(beneficiary);
-        vestings[beneficiary]._released += amount;
+    function _claim(address client, address beneficiary) internal {
+        uint amount = releasable(client, beneficiary);
+        vestings[client][beneficiary]._released += amount;
 
         //if beneficiary has unclaimable tokens from before, add it to releasable amount
-        if (unclaimableAmounts[beneficiary] > 0) {
-            amount += unclaimable(beneficiary);
-            delete unclaimableAmounts[beneficiary];
+        if (unclaimableAmounts[client][beneficiary] > 0) {
+            amount += unclaimable(client, beneficiary);
+            delete unclaimableAmounts[client][beneficiary];
         }
 
         // we claim the earned funds for the contributor.
-        try token().transferFrom(address(client), beneficiary, amount) {
+        try token().transferFrom(client, beneficiary, amount) {
             emit TokensReleased(beneficiary, address(token()), amount);
             // if transfer fails, move amount to unclaimableAmounts.
         } catch {
-            unclaimableAmounts[beneficiary] += amount;
+            unclaimableAmounts[client][beneficiary] += amount;
         }
     }
 
@@ -309,15 +387,14 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     ///         for an asset given its total historical allocation.
     /// @param contributor The contributor to check on.
     /// @param timestamp Current block.timestamp
-    function _vestingSchedule(address contributor, uint timestamp)
-        internal
-        view
-        virtual
-        returns (uint)
-    {
-        uint totalAllocation = vestings[contributor]._salary;
-        uint startContributor = start(contributor);
-        uint durationContributor = duration(contributor);
+    function _vestingSchedule(
+        address client,
+        address contributor,
+        uint timestamp
+    ) internal view virtual returns (uint) {
+        uint totalAllocation = vestings[client][contributor]._salary;
+        uint startContributor = start(client, contributor);
+        uint durationContributor = duration(client, contributor);
 
         if (timestamp < startContributor) {
             return 0;
