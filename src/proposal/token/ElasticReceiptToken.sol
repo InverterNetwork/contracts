@@ -211,7 +211,7 @@ abstract contract ElasticReceiptToken is IRebasingERC20 {
     /// @inheritdoc IERC20
     function transfer(address to, uint tokens)
         public
-        override (IERC20)
+        override(IERC20)
         validRecipient(to)
         validAmount(tokens)
         onAfterRebase
@@ -227,7 +227,7 @@ abstract contract ElasticReceiptToken is IRebasingERC20 {
     /// @inheritdoc IERC20
     function transferFrom(address from, address to, uint tokens)
         public
-        override (IERC20)
+        override(IERC20)
         validRecipient(from)
         validRecipient(to)
         validAmount(tokens)
@@ -245,7 +245,7 @@ abstract contract ElasticReceiptToken is IRebasingERC20 {
     /// @inheritdoc IRebasingERC20
     function transferAll(address to)
         public
-        override (IRebasingERC20)
+        override(IRebasingERC20)
         validRecipient(to)
         onAfterRebase
         returns (bool)
@@ -261,7 +261,7 @@ abstract contract ElasticReceiptToken is IRebasingERC20 {
     /// @inheritdoc IRebasingERC20
     function transferAllFrom(address from, address to)
         public
-        override (IRebasingERC20)
+        override(IRebasingERC20)
         validRecipient(from)
         validRecipient(to)
         onAfterRebase
@@ -288,7 +288,7 @@ abstract contract ElasticReceiptToken is IRebasingERC20 {
     /// @inheritdoc IERC20
     function approve(address spender, uint tokens)
         public
-        override (IERC20)
+        override(IERC20)
         validRecipient(spender)
         returns (bool)
     {
@@ -311,7 +311,7 @@ abstract contract ElasticReceiptToken is IRebasingERC20 {
 
         emit Approval(
             msg.sender, spender, _tokenAllowances[msg.sender][spender]
-            );
+        );
         return true;
     }
 
@@ -332,7 +332,7 @@ abstract contract ElasticReceiptToken is IRebasingERC20 {
 
         emit Approval(
             msg.sender, spender, _tokenAllowances[msg.sender][spender]
-            );
+        );
         return true;
     }
 
@@ -340,7 +340,7 @@ abstract contract ElasticReceiptToken is IRebasingERC20 {
     // Public IRebasingERC20 Mutating Functions
 
     /// @inheritdoc IRebasingERC20
-    function rebase() public override (IRebasingERC20) onAfterRebase {
+    function rebase() public override(IRebasingERC20) onAfterRebase {
         // NO-OP because modifier executes rebase.
         return;
     }
