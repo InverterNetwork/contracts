@@ -172,7 +172,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
                 recipients[i],
                 amounts[i],
                 block.timestamp,
-                duration-block.timestamp
+                duration - block.timestamp
             );
         }
 
@@ -219,7 +219,6 @@ contract VestingPaymentProcessorTest is ModuleTest {
             );
         }
     }
-
 
     // Sanity Math Check
     function testVestingCalculation(

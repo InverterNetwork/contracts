@@ -14,7 +14,6 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
-
 /**
  * @title Payment processor module implementation #2: Linear vesting curve.
  *
@@ -75,7 +74,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint newSalary,
         uint newEndDuration
     );
-
 
     //--------------------------------------------------------------------------
     // Errors
@@ -299,7 +297,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     {
         address[] memory contribSearchArray = activePayments[client];
 
-
         uint length = activePayments[client].length;
         for (uint i; i < length; i++) {
             if (contribSearchArray[i] == contributor) {
@@ -359,7 +356,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint contribIndex = findAddressInActivePayments(client, _contributor);
         if (contribIndex == type(uint).max) {
             activePayments[client].push(_contributor);
-
         }
 
         emit VestingPaymentAdded(
