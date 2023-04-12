@@ -26,6 +26,18 @@ contract VestingPaymentProcessorTest is ModuleTest {
     // Mocks
     PaymentClientMock paymentClient = new PaymentClientMock(_token);
 
+    event VestingPaymentAdded(
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint start,
+        uint duration
+    );
+
+    event VestingPaymentRemoved(
+        address indexed paymentClient, address indexed recipient
+    );
+
     function setUp() public {
         address impl = address(new VestingPaymentProcessor());
         paymentProcessor = VestingPaymentProcessor(Clones.clone(impl));
@@ -121,6 +133,93 @@ contract VestingPaymentProcessorTest is ModuleTest {
             );
         }
     }
+
+    // test fails when not module calls
+    function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)
+        public
+    {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+
+        vm.prank(nonModule);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                VestingPaymentProcessor
+                    .Module__PaymentManager__OnlyCallableByModule
+                    .selector
+            )
+        );
+        paymentProcessor.processPayments(paymentClient);
+    }
+
+    // test all running orders get cancelled indeed
+
+    function testAllCreatedOrdersGetCancelled(
+        address[] memory recipients,
+        uint128[] memory amounts
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+
+        uint duration = 4 weeks;
+
+        for (uint i = 0; i < recipients.length; ++i) {
+            paymentClient.addPaymentOrder(recipients[i], amounts[i], duration);
+            vm.expectEmit(true, true, true, true);
+            emit VestingPaymentAdded(
+                address(paymentClient),
+                recipients[i],
+                amounts[i],
+                block.timestamp,
+                duration-block.timestamp
+            );
+        }
+
+        // Call processPayments and expect emits
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // FF to half the max_duration
+        vm.warp(block.timestamp + 2 weeks);
+
+        //we expect cancellation events for each payment
+        for (uint i = 0; i < recipients.length; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit VestingPaymentRemoved(address(paymentClient), recipients[i]);
+        }
+
+        // calling cancelRunningPayments
+        vm.prank(address(paymentClient));
+        paymentProcessor.cancelRunningPayments(paymentClient);
+
+        // make sure the payments have been reset
+
+        for (uint i; i < recipients.length; ++i) {
+            address recipient = recipients[i];
+
+            assertEq(
+                paymentProcessor.start(address(paymentClient), recipient), 0
+            );
+            assertEq(
+                paymentProcessor.duration(address(paymentClient), recipient), 0
+            );
+            assertEq(
+                paymentProcessor.released(address(paymentClient), recipient), 0
+            );
+            assertEq(
+                paymentProcessor.vestedAmount(
+                    address(paymentClient), recipient, block.timestamp
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.releasable(address(paymentClient), recipient),
+                0
+            );
+        }
+    }
+
 
     // Sanity Math Check
     function testVestingCalculation(
@@ -528,7 +627,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
     {
         vm.assume(durations.length != 0);
         for (uint i; i < checkUpTo; i++) {
-            vm.assume(durations[i] != 0);
+            vm.assume(durations[i] > 1);
         }
     }
 }

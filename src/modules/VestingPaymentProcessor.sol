@@ -14,6 +14,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
+
 /**
  * @title Payment processor module implementation #2: Linear vesting curve.
  *
@@ -49,13 +50,13 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param end Timestamp at which the full amount should be claimable.
+    /// @param duration Timestamp at which the full amount should be claimable.
     event VestingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint start,
-        uint end
+        uint duration
     );
 
     /// @notice Emitted when the vesting to an address is removed.
@@ -67,13 +68,14 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param newSalary The new amount of tokens the payment consists of.
-    /// @param newEndDate New timestamp at which the full amount should be claimable.
+    /// @param newEndDuration New timestamp at which the full amount should be claimable.
     event PaymentUpdated(
         address indexed paymentClient,
         address recipient,
         uint newSalary,
-        uint newEndDate
+        uint newEndDuration
     );
+
 
     //--------------------------------------------------------------------------
     // Errors
@@ -297,15 +299,14 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     {
         address[] memory contribSearchArray = activePayments[client];
 
-        uint contribIndex = type(uint).max;
 
         uint length = activePayments[client].length;
         for (uint i; i < length; i++) {
             if (contribSearchArray[i] == contributor) {
-                return contribIndex;
+                return i;
             }
         }
-        return contribIndex;
+        return type(uint).max;
     }
 
     function _removePayment(address client, address contributor) internal {
@@ -358,6 +359,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint contribIndex = findAddressInActivePayments(client, _contributor);
         if (contribIndex == type(uint).max) {
             activePayments[client].push(_contributor);
+
         }
 
         emit VestingPaymentAdded(
