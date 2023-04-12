@@ -39,7 +39,7 @@ abstract contract FundingManager is
         string memory _id = proposalId_.toString();
         string memory _name =
             string(abi.encodePacked("Inverter Funding Token - Proposal #", _id));
-        string memory _symbol = string(abi.encodePacked("eIFT-", _id));
+        string memory _symbol = string(abi.encodePacked("IFT-", _id));
         // Initial upstream contracts.
         __ElasticReceiptToken_init(
             _name,
