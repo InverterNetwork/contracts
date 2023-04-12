@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 // External Dependencies
 
 import {ElasticReceiptTokenUpgradeable} from
-    "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
-import {ElasticTokenWrapper} from "src/proposal/token/ElasticTokenWrapper.sol";
+    "@elastic-receipt-token/ElasticReceiptTokenUpgradeable.sol";
+
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
@@ -18,6 +18,8 @@ import {IERC20MetadataUpgradeable} from
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
 
+import {ElasticTokenWrapper} from "src/proposal/token/ElasticTokenWrapper.sol";
+
 import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
 
 abstract contract FundingManager is
@@ -28,6 +30,8 @@ abstract contract FundingManager is
 {
     using Strings for uint;
     using SafeERC20 for IERC20;
+
+    uint internal constant DEPOSIT_CAP = 100_000_000e18;
 
     function __FundingManager_init(uint proposalId_, IERC20 token_)
         internal
@@ -102,6 +106,10 @@ abstract contract FundingManager is
         //Depositing from itself with its own balance would mint tokens without increasing underlying balance.
         if (from == address(this)) {
             revert Proposal__FundingManager__CannotSelfDeposit();
+        }
+
+        if ((amount + token().balanceOf(address(this))) > DEPOSIT_CAP) {
+            revert Proposal__FundingManager__DepositCapReached();
         }
 
         _mint(to, amount);
