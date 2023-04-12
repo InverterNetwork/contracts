@@ -10,9 +10,10 @@ interface IFundingManager is IRebasingERC20 {
     /// @notice Function is only callable by authorized address.
     error Proposal__FundingManager__CannotSelfDeposit();
 
-    /// @notice The supply target of the ElasticReceiptTokens is outside of range
-    error Proposal__FundingManaget__TokenBalanceOutOfRange();
+    /// @notice There is a cap on deposits.
+    error Proposal__FundingManager__DepositCapReached();
 
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a deposit takes place.

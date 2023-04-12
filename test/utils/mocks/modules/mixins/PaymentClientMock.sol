@@ -37,6 +37,25 @@ contract PaymentClientMock is PaymentClient {
         _addPaymentOrder(recipient, amount, dueTo);
     }
 
+    // add a payment order without checking the arguments
+    function addPaymentOrderUnchecked(
+        address recipient,
+        uint amount,
+        uint dueTo
+    ) external {
+        // Add order's token amount to current outstanding amount.
+        _outstandingTokenAmount += amount;
+
+        // Add new order to list of oustanding orders.
+        _orders.push(PaymentOrder(recipient, amount, block.timestamp, dueTo));
+
+        // Ensure our token balance is sufficient.
+        // Note that function is implemented in downstream contract.
+        _ensureTokenBalance(_outstandingTokenAmount);
+
+        emit PaymentOrderAdded(recipient, amount);
+    }
+
     function addPaymentOrders(
         address[] memory recipients,
         uint[] memory amounts,

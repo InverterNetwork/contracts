@@ -67,34 +67,20 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param newSalary The new amount of tokens the payment consists of.
-    /// @param newEndDuration New timestamp at which the full amount should be claimable.
-    event PaymentUpdated(
-        address indexed paymentClient,
-        address recipient,
-        uint newSalary,
-        uint newEndDuration
+    /// @param newDuration Number of blocks over which the amount will vest.
+    event PaymentUpdated(address recipient, uint newSalary, uint newDuration);
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param duration Number of blocks over which the amount will vest
+    event InvalidVestingOrderDiscarded(
+        address indexed recipient, uint amount, uint start, uint duration
     );
 
     //--------------------------------------------------------------------------
     // Errors
-
-    /// @notice salary cannot be 0.
-    error Module__PaymentManager__InvalidSalary();
-
-    /// @notice should start in future, cant be more than 10e18.
-    error Module__PaymentManager__InvalidStart();
-
-    /// @notice duration cant overflow, cant be 0.
-    error Module__PaymentManager__InvalidDuration();
-
-    /// @notice invalid token address
-    error Module__PaymentManager__InvalidToken();
-
-    /// @notice invalid proposal address
-    error Module__PaymentManager__InvalidProposal();
-
-    /// @notice invalid contributor address
-    error Module__PaymentManager__InvalidContributor();
 
     /// @notice insufficient tokens in the client to do payments
     error Module__PaymentManager__InsufficientTokenBalanceInClient();
@@ -104,27 +90,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     //--------------------------------------------------------------------------
     // Modifiers
-
-    modifier validSalary(uint _salary) {
-        if (_salary == 0) {
-            revert Module__PaymentManager__InvalidSalary();
-        }
-        _;
-    }
-
-    modifier validStart(uint _start) {
-        if (_start < block.timestamp || _start >= type(uint).max) {
-            revert Module__PaymentManager__InvalidStart();
-        }
-        _;
-    }
-
-    modifier validDuration(uint _start, uint _duration) {
-        if (_duration == 0) {
-            revert Module__PaymentManager__InvalidDuration();
-        }
-        _;
-    }
 
     modifier onlyModule() {
         if (!proposal().isModule(_msgSender())) {
@@ -340,27 +305,28 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint _salary,
         uint _start,
         uint _duration
-    )
-        internal
-        validSalary(_salary)
-        validStart(_start)
-        validDuration(_start, _duration)
-    {
-        if (!validAddress(_contributor)) {
-            revert Module__PaymentManager__InvalidContributor();
+    ) internal {
+        if (
+            !validAddress(_contributor) || !validSalary(_salary)
+                || !validStart(_start) || !validDuration(_start, _duration)
+        ) {
+            emit InvalidVestingOrderDiscarded(
+                _contributor, _salary, _start, _duration
+            );
+        } else {
+            vestings[client][_contributor] =
+                VestingWallet(_salary, 0, _start, _duration);
+
+            uint contribIndex =
+                findAddressInActivePayments(client, _contributor);
+            if (contribIndex == type(uint).max) {
+                activePayments[client].push(_contributor);
+            }
+
+            emit VestingPaymentAdded(
+                client, _contributor, _salary, _start, _duration
+            );
         }
-
-        vestings[client][_contributor] =
-            VestingWallet(_salary, 0, _start, _duration);
-
-        uint contribIndex = findAddressInActivePayments(client, _contributor);
-        if (contribIndex == type(uint).max) {
-            activePayments[client].push(_contributor);
-        }
-
-        emit VestingPaymentAdded(
-            client, _contributor, _salary, _start, _duration
-        );
     }
 
     function _claim(address client, address beneficiary) internal {
@@ -410,8 +376,35 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param addr Address to validate.
     /// @return True if address is valid.
     function validAddress(address addr) internal view returns (bool) {
-        if (addr == address(0) || addr == _msgSender() || addr == address(this))
-        {
+        if (
+            addr == address(0) || addr == _msgSender() || addr == address(this)
+                || addr == address(proposal())
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    function validSalary(uint _salary) internal view returns (bool) {
+        if (_salary == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    function validStart(uint _start) internal view returns (bool) {
+        if (_start < block.timestamp || _start >= type(uint).max) {
+            return false;
+        }
+        return true;
+    }
+
+    function validDuration(uint _start, uint _duration)
+        internal
+        view
+        returns (bool)
+    {
+        if (_duration == 0) {
             return false;
         }
         return true;
