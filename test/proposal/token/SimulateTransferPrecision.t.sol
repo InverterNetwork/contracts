@@ -37,7 +37,7 @@ contract SimulateTransferPrecision is ElasticReceiptTokenTest {
             emit log_string("No simulation ran.");
             emit log_string(
                 "For more information see SimulateTransferPrecision.t.sol"
-                );
+            );
             return;
         }
 

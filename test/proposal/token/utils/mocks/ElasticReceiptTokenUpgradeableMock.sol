@@ -26,7 +26,7 @@ contract ElasticReceiptTokenUpgradeableMock is
     function _supplyTarget()
         internal
         view
-        override (ElasticReceiptTokenUpgradeable)
+        override(ElasticReceiptTokenUpgradeable)
         returns (uint)
     {
         return ERC20(underlier).balanceOf(address(this));

@@ -19,13 +19,12 @@ import "./IERC20Metadata.sol";
  * @author Buttonwood Foundation
  */
 interface IRebasingERC20 is IERC20Metadata {
-
     /// @notice Returns the fixed balance of the specified address.
     /// @param who The address to query.
-    function scaledBalanceOf(address who) external view returns (uint256);
+    function scaledBalanceOf(address who) external view returns (uint);
 
     /// @notice Returns the total fixed supply.
-    function scaledTotalSupply() external view returns (uint256);
+    function scaledTotalSupply() external view returns (uint);
 
     /// @notice Transfer all of the sender's balance to a specified address.
     /// @param to The address to transfer to.
@@ -35,7 +34,9 @@ interface IRebasingERC20 is IERC20Metadata {
     /// @notice Transfer all balance tokens from one address to another.
     /// @param from The address to send tokens from.
     /// @param to The address to transfer to.
-    function transferAllFrom(address from, address to) external returns (bool);
+    function transferAllFrom(address from, address to)
+        external
+        returns (bool);
 
     /// @notice Triggers the next rebase, if applicable.
     function rebase() external;
@@ -43,6 +44,5 @@ interface IRebasingERC20 is IERC20Metadata {
     /// @notice Event emitted when the balance scalar is updated.
     /// @param epoch The number of rebases since inception.
     /// @param newScalar The new scalar.
-    event Rebase(uint256 indexed epoch, uint256 newScalar);
-
+    event Rebase(uint indexed epoch, uint newScalar);
 }
