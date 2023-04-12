@@ -12,9 +12,6 @@ import {Proposal} from "src/proposal/Proposal.sol";
 // Internal Interfaces
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
-// Internal Libraries
-import {LibString} from "src/common/LibString.sol";
-
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -25,8 +22,6 @@ import {PaymentProcessorMock} from
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
-    using LibString for string;
-
     Proposal _proposal;
 
     // Mocks
@@ -127,7 +122,7 @@ abstract contract ModuleTest is Test {
         internal
     {
         for (uint i; i < set.length; ++i) {
-            vm.assume(!elem.equals(set[i]));
+            vm.assume(keccak256(bytes(elem)) != keccak256(bytes(set[i])));
         }
     }
 
