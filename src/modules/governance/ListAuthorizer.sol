@@ -40,6 +40,9 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @notice The supplied list of initial authorized addresses is invalid.
     error Module__ListAuthorizer__invalidInitialAuthorizers();
 
+    /// @notice The supplied authorized address is invalid
+    error Module__ListAuthorizer__InvalidAuthorizers();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -100,7 +103,7 @@ contract ListAuthorizer is IAuthorizer, Module {
                 revert Module__ListAuthorizer__invalidInitialAuthorizers();
             }
 
-            if (authorized[initialAuthorizers[i]] == true) {
+            if (authorized[current] == true) {
                 //duplicate
                 revert Module__ListAuthorizer__invalidInitialAuthorizers();
             }
@@ -135,6 +138,9 @@ contract ListAuthorizer is IAuthorizer, Module {
     /// @notice Adds a new address to the list of authorized addresses.
     /// @param _who The address to add to the list of authorized addresses.
     function addToAuthorized(address _who) public virtual onlyAuthorized {
+        if (_who == address(0)) {
+            revert Module__ListAuthorizer__InvalidAuthorizers();
+        }
         if (!isAuthorized(_who)) {
             authorized[_who] = true;
             amountAuthorized++;

@@ -121,12 +121,7 @@ abstract contract ModuleManager is
         for (uint i; i < len; ++i) {
             module = modules[i];
 
-            // Ensure module address is valid and module not already added.
-            _ensureValidModule(module);
-            _ensureNotModule(module);
-
-            // Commit adding the module.
-            _commitAddModule(module);
+            __ModuleManager_addModule(module);
         }
     }
 
@@ -189,9 +184,9 @@ abstract contract ModuleManager is
     function addModule(address module)
         public
         __ModuleManager_onlyAuthorized
+        moduleLimitNotExceeded
         isNotModule(module)
         validModule(module)
-        moduleLimitNotExceeded
     {
         _commitAddModule(module);
     }
@@ -213,7 +208,12 @@ abstract contract ModuleManager is
         address to,
         bytes memory data,
         Types.Operation operation
-    ) public override(IModuleManager) onlyModule returns (bool, bytes memory) {
+    )
+        external
+        override(IModuleManager)
+        onlyModule
+        returns (bool, bytes memory)
+    {
         bool ok;
         bytes memory returnData;
 
@@ -227,7 +227,7 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function grantRole(bytes32 role, address account) public onlyModule {
+    function grantRole(bytes32 role, address account) external onlyModule {
         if (!hasRole(_msgSender(), role, account)) {
             _moduleRoles[_msgSender()][role][account] = true;
             emit ModuleRoleGranted(_msgSender(), role, account);
@@ -235,7 +235,7 @@ abstract contract ModuleManager is
     }
 
     /// @inheritdoc IModuleManager
-    function revokeRole(bytes32 role, address account) public onlyModule {
+    function revokeRole(bytes32 role, address account) external onlyModule {
         if (hasRole(_msgSender(), role, account)) {
             _moduleRoles[_msgSender()][role][account] = false;
             emit ModuleRoleRevoked(_msgSender(), role, account);
@@ -246,7 +246,7 @@ abstract contract ModuleManager is
     // Public Mutating Functions
 
     /// @inheritdoc IModuleManager
-    function renounceRole(address module, bytes32 role) public {
+    function renounceRole(address module, bytes32 role) external {
         if (hasRole(module, role, _msgSender())) {
             _moduleRoles[module][role][_msgSender()] = false;
             emit ModuleRoleRevoked(module, role, _msgSender());

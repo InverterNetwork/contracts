@@ -152,7 +152,7 @@ interface IMilestoneManager is IPaymentClient {
     );
 
     /// @notice Event emitted when a milestone is stopped.
-    // @param refundedAmount amount transfered back to proposal, due stoppage
+    // @param id id of the milestone that is stopped.
     event MilestoneStopped(uint indexed id);
 
     /// @notice Event emitted when a milestone is removed.
