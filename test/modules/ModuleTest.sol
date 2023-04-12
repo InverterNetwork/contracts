@@ -102,7 +102,7 @@ abstract contract ModuleTest is Test {
     // Helpers
 
     function _assumeNonEmptyString(string memory a) internal {
-        vm.assume(!a.isEmpty());
+        vm.assume(bytes(a).length != 0);
     }
 
     function _assumeTimestampNotInPast(uint a) internal {

@@ -28,7 +28,7 @@ contract ModuleManagerTest is Test {
     TypeSanityHelper types;
 
     // Constants
-    uint constant MAX_MODULES = 20;
+    uint MAX_MODULES = 128;
     address[] EMPTY_LIST = new address[](0);
 
     // Constants copied from SuT.
@@ -115,35 +115,22 @@ contract ModuleManagerTest is Test {
         moduleManager.init(modules);
     }
 
+    function testInitFailsForTooManyModules(address[] memory modules) public {
+        vm.assume(modules.length > MAX_MODULES);
+
+        //we don't need to check for validity since it should revert before
+
+        moduleManager = new ModuleManagerMock();
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__ModuleAmountOverLimits
+                .selector
+        );
+        moduleManager.init(modules);
+    }
+
     //--------------------------------------------------------------------------
     // Tests: Public View Functions
-
-    //----------------------------------
-    // Tests: getPreviousContributor()
-
-    function testGetPreviousModule(address[] memory whos, uint randomWho)
-        public
-    {
-        vm.assume(whos.length <= MAX_MODULES);
-        types.assumeValidModules(whos);
-
-        //Make sure one of the existing contributors gets picked
-        vm.assume(randomWho < whos.length);
-
-        for (uint i; i < whos.length; ++i) {
-            moduleManager.addModule(whos[i]);
-        }
-
-        address prevModules;
-
-        if (randomWho == whos.length - 1) {
-            prevModules = _SENTINEL;
-        } else {
-            prevModules = whos[randomWho + 1];
-        }
-
-        assertEq(moduleManager.getPreviousModule(whos[randomWho]), prevModules);
-    }
 
     //--------------------------------------------------------------------------
     // Tests: Transaction Execution
@@ -259,7 +246,7 @@ contract ModuleManagerTest is Test {
 
         assertEq(modules.length, whos.length);
         for (uint i; i < whos.length; ++i) {
-            assertEq(modules[i], whos[whos.length - i - 1]);
+            assertEq(modules[i], whos[i]);
         }
     }
 
@@ -298,6 +285,27 @@ contract ModuleManagerTest is Test {
         }
     }
 
+    function testAddModuleFailsIfLimitReached(address[] calldata whos) public {
+        vm.assume(whos.length > MAX_MODULES);
+        types.assumeValidModules(whos[:MAX_MODULES]);
+
+        for (uint i; i < MAX_MODULES; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit ModuleAdded(whos[i]);
+
+            moduleManager.addModule(whos[i]);
+
+            assertTrue(moduleManager.isModule(whos[i]));
+        }
+
+        vm.expectRevert(
+            IModuleManager
+                .Proposal__ModuleManager__ModuleAmountOverLimits
+                .selector
+        );
+        moduleManager.addModule(whos[MAX_MODULES]);
+    }
+
     //----------------------------------
     // Tests: removeModules()
 
@@ -323,7 +331,7 @@ contract ModuleManagerTest is Test {
             vm.expectEmit(true, true, true, true);
             emit ModuleRemoved(module);
 
-            moduleManager.removeModule(_SENTINEL, module);
+            moduleManager.removeModule(module);
 
             assertTrue(!moduleManager.isModule(module));
         }
@@ -335,21 +343,17 @@ contract ModuleManagerTest is Test {
         }
 
         // Remove modules from the back until list is empty.
-        // Note that removing the last module requires the sentinel as
-        // prevModule.
-        for (uint i; i < whos.length - 1; ++i) {
+
+        for (uint i; i < whos.length; ++i) {
             module = whos[i];
-            prevModule = whos[i + 1];
 
             vm.expectEmit(true, true, true, true);
             emit ModuleRemoved(module);
 
-            moduleManager.removeModule(prevModule, module);
+            moduleManager.removeModule(module);
 
             assertTrue(!moduleManager.isModule(module));
         }
-        // Remove last module.
-        moduleManager.removeModule(_SENTINEL, whos[whos.length - 1]);
 
         assertEq(moduleManager.listModules().length, 0);
     }
@@ -364,7 +368,7 @@ contract ModuleManagerTest is Test {
         vm.expectRevert(
             IModuleManager.Proposal__ModuleManager__CallerNotAuthorized.selector
         );
-        moduleManager.removeModule(_SENTINEL, who);
+        moduleManager.removeModule(who);
     }
 
     function testRemoveModuleFailsIfNotModule(address who) public {
@@ -373,22 +377,7 @@ contract ModuleManagerTest is Test {
         vm.expectRevert(
             IModuleManager.Proposal__ModuleManager__IsNotModule.selector
         );
-        moduleManager.removeModule(_SENTINEL, who);
-    }
-
-    function testRemoveModuleFailsIfNotConsecutiveModulesGiven(address who)
-        public
-    {
-        types.assumeValidModule(who);
-
-        moduleManager.addModule(who);
-
-        vm.expectRevert(
-            IModuleManager
-                .Proposal__ModuleManager__ModulesNotConsecutive
-                .selector
-        );
-        moduleManager.removeModule(address(0xCAFE), who);
+        moduleManager.removeModule(who);
     }
 
     //--------------------------------------------------------------------------
@@ -530,7 +519,7 @@ contract ModuleManagerTest is Test {
 
         // Remove module.
         moduleManager.__ModuleManager_setIsAuthorized(address(this), true);
-        moduleManager.removeModule(_SENTINEL, module);
+        moduleManager.removeModule(module);
 
         assertTrue(!moduleManager.hasRole(module, role, account));
     }

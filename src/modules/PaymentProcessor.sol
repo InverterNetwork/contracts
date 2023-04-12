@@ -65,6 +65,12 @@ contract PaymentProcessor is Module, IPaymentProcessor {
             amount = orders[i].amount;
 
             token_.safeTransferFrom(address(client), recipient, amount);
+
+            emit TokensReleased(recipient, address(token_), amount);
+
+            emit PaymentOrderProcessed(
+                recipient, amount, orders[i].createdAt, orders[i].dueTo
+            );
         }
     }
 

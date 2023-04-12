@@ -25,6 +25,9 @@ interface IModuleManager {
     /// @notice The supplied modules are not consecutive.
     error Proposal__ModuleManager__ModulesNotConsecutive();
 
+    /// @notice The Manager has reached the maximum amount of modules.
+    error Proposal__ModuleManager__ModuleAmountOverLimits();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -81,7 +84,7 @@ interface IModuleManager {
     /// @dev Only callable by authorized address.
     /// @dev Fails if address not added as module.
     /// @param module The module address to remove.
-    function removeModule(address prevModule, address module) external;
+    function removeModule(address module) external;
 
     /// @notice Returns whether the address `module` is added as module.
     /// @param module The module to check.
@@ -92,20 +95,8 @@ interface IModuleManager {
     /// @return List of all modules.
     function listModules() external view returns (address[] memory);
 
-    /// @notice Fetches the id of the previous Module in the list
-    /// @dev Reverts if module is invalid
-    /// @dev This should ideally be only used in a frontend context
-    ///      because iterating through the list and finding the previous element
-    ///      causes an O(n) runtime of the given list and should ideally be outsourced off-chain.
-    /// @param module the address of which the previous element in the list should be found.
-    /// @return previousModule The address of the previous module.
-    function getPreviousModule(address module)
-        external
-        view
-        returns (address previousModule);
-
     /// @notice Returns the number of modules.
-    function modulesSize() external view returns (uint);
+    function modulesSize() external view returns (uint8);
 
     /// @notice Grants role `role` to account `account` in caller's access
     ///         control context.

@@ -14,7 +14,7 @@ interface ISingleVoteGovernor is IAuthorizer {
         // Governance data.
         uint startTimestamp;
         uint endTimestamp;
-        uint requiredQuorum;
+        uint requiredThreshold;
         // Voting result.
         uint forVotes;
         uint againstVotes;
@@ -40,8 +40,8 @@ interface ISingleVoteGovernor is IAuthorizer {
     /// @notice The supplied voter address is invalid.
     error Module__SingleVoteGovernor__InvalidVoterAddress();
 
-    /// @notice The quorum cannot exceed the amount of voters
-    error Module__SingleVoteGovernor__UnreachableQuorum();
+    /// @notice The threshold cannot exceed the amount of voters
+    error Module__SingleVoteGovernor__UnreachableThreshold();
 
     /// @notice The supplied voting duration is invalid.
     error Module__SingleVoteGovernor__InvalidVotingDuration();
@@ -70,8 +70,8 @@ interface ISingleVoteGovernor is IAuthorizer {
     /// @notice A motion cannot be executed twice.
     error Module__SingleVoteGovernor__MotionAlreadyExecuted();
 
-    /// @notice A motion cannot be executed if it didn't reach quorum.
-    error Module__SingleVoteGovernor__QuorumNotReached();
+    /// @notice A motion cannot be executed if it didn't reach the threshold.
+    error Module__SingleVoteGovernor__ThresholdNotReached();
 
     //--------------------------------------------------------------------------
     // Events
@@ -84,10 +84,10 @@ interface ISingleVoteGovernor is IAuthorizer {
     /// @param who The removed address.
     event VoterRemoved(address indexed who);
 
-    /// @notice Event emitted when the required quorum changes.
-    /// @param oldQuorum The old quorum.
-    /// @param newQuorum The new quorum.
-    event QuorumUpdated(uint oldQuorum, uint newQuorum);
+    /// @notice Event emitted when the required threshold changes.
+    /// @param oldThreshold The old threshold.
+    /// @param newThreshold The new threshold.
+    event ThresholdUpdated(uint oldThreshold, uint newThreshold);
 
     /// @notice Event emitted when the voting duration changes.
     /// @param oldVotingDuration The old voting duration.
@@ -130,10 +130,10 @@ interface ISingleVoteGovernor is IAuthorizer {
     function motionCount() external view returns (uint);
     function voterCount() external view returns (uint);
 
-    function quorum() external view returns (uint);
+    function threshold() external view returns (uint);
     function voteDuration() external view returns (uint);
 
-    function setQuorum(uint newQuorum) external;
+    function setThreshold(uint newThreshold) external;
     function setVotingDuration(uint newVoteDuration) external;
 
     function createMotion(address target, bytes calldata action)

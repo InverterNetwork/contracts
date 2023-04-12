@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // Internal Dependencies
 import {
@@ -9,7 +9,6 @@ import {
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -25,8 +24,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
  */
 
 contract VestingPaymentProcessor is Module, IPaymentProcessor {
-    using SafeERC20 for IERC20;
-
     //--------------------------------------------------------------------------
     // Storage
 
@@ -39,15 +36,30 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     // contributor => Payment
     mapping(address => VestingWallet) private vestings;
+    // contributor => unclaimableAmount
+    mapping(address => uint) private unclaimableAmounts;
 
     //--------------------------------------------------------------------------
     // Events
 
-    event PaymentAdded(address contributor, uint salary, uint start, uint end);
-    event PaymentRemoved(address contributor);
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param end Timestamp at which the full amount should be claimable.
+    event VestingPaymentAdded(
+        address indexed recipient, uint amount, uint start, uint end
+    );
 
-    event PaymentUpdated(address contributor, uint newSalary, uint newEndDate);
-    event ERC20Released(address indexed token, uint amount);
+    /// @notice Emitted when the vesting to an address is removed.
+    /// @param recipient The address that will stop receiving payment.
+    event VestingPaymentRemoved(address indexed recipient);
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param newSalary The new amount of tokens the payment consists of.
+    /// @param newEndDate New timestamp at which the full amount should be claimable.
+    event PaymentUpdated(address recipient, uint newSalary, uint newEndDate);
 
     //--------------------------------------------------------------------------
     // Errors
@@ -145,6 +157,10 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
                 _duration = (orders[i].dueTo - _start);
 
                 _addPayment(_recipient, _amount, _start, _duration);
+
+                emit PaymentOrderProcessed(
+                    _recipient, _amount, _start, _duration
+                );
             }
         }
     }
@@ -218,6 +234,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             - released(contributor);
     }
 
+    /// @notice Getter for the amount of tokens that could not be claimed.
+    function unclaimable(address contributor) public view returns (uint) {
+        return unclaimableAmounts[contributor];
+    }
+
     function token() public view returns (IERC20) {
         return this.proposal().token();
     }
@@ -235,7 +256,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
         delete vestings[contributor];
 
-        emit PaymentRemoved(contributor);
+        emit VestingPaymentRemoved(contributor);
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
@@ -261,19 +282,26 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
         vestings[_contributor] = VestingWallet(_salary, 0, _start, _duration);
 
-        emit PaymentAdded(_contributor, _salary, _start, _duration);
+        emit VestingPaymentAdded(_contributor, _salary, _start, _duration);
     }
 
     function _claim(IPaymentClient client, address beneficiary) internal {
         uint amount = releasable(beneficiary);
         vestings[beneficiary]._released += amount;
 
-        // Cache token.
-        IERC20 token_ = token();
+        //if beneficiary has unclaimable tokens from before, add it to releasable amount
+        if (unclaimableAmounts[beneficiary] > 0) {
+            amount += unclaimable(beneficiary);
+            delete unclaimableAmounts[beneficiary];
+        }
 
-        emit ERC20Released(address(token_), amount);
-
-        token_.safeTransferFrom(address(client), beneficiary, amount);
+        // we claim the earned funds for the contributor.
+        try token().transferFrom(address(client), beneficiary, amount) {
+            emit TokensReleased(beneficiary, address(token()), amount);
+            // if transfer fails, move amount to unclaimableAmounts.
+        } catch {
+            unclaimableAmounts[beneficiary] += amount;
+        }
     }
 
     /// @notice Virtual implementation of the vesting formula.
@@ -288,14 +316,16 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         returns (uint)
     {
         uint totalAllocation = vestings[contributor]._salary;
+        uint startContributor = start(contributor);
+        uint durationContributor = duration(contributor);
 
-        if (timestamp < start(contributor)) {
+        if (timestamp < startContributor) {
             return 0;
-        } else if (timestamp > start(contributor) + duration(contributor)) {
+        } else if (timestamp > startContributor + durationContributor) {
             return totalAllocation;
         } else {
-            return (totalAllocation * (timestamp - start(contributor)))
-                / duration(contributor);
+            return (totalAllocation * (timestamp - startContributor))
+                / durationContributor;
         }
     }
 
