@@ -29,6 +29,16 @@ import {IProposal} from "src/proposal/IProposal.sol";
 contract PaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
 
+    /// @notice invalid caller
+    error Module__PaymentManager__OnlyCallableByModule();
+
+    modifier onlyModule() {
+        if (!proposal().isModule(_msgSender())) {
+            revert Module__PaymentManager__OnlyCallableByModule();
+        }
+        _;
+    }
+
     /// @inheritdoc Module
     function init(
         IProposal proposal_,
@@ -47,7 +57,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external {
+    function processPayments(IPaymentClient client) external onlyModule {
         // Collect outstanding orders and their total token amount.
         IPaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
@@ -65,6 +75,16 @@ contract PaymentProcessor is Module, IPaymentProcessor {
             amount = orders[i].amount;
 
             token_.safeTransferFrom(address(client), recipient, amount);
+
+            emit TokensReleased(recipient, address(token_), amount);
+
+            emit PaymentOrderProcessed(
+                address(client),
+                recipient,
+                amount,
+                orders[i].createdAt,
+                orders[i].dueTo
+            );
         }
     }
 

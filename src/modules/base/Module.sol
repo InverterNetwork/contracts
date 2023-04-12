@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 // External Dependencies
-import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {
     PausableUpgradeable,
     ContextUpgradeable

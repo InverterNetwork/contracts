@@ -22,14 +22,16 @@ contract FundingManagerTest is Test {
     // Mocks
     ERC20Mock underlier;
 
-    // Constants copied from SuT.
-    uint internal constant MAX_SUPPLY = 1_000_000_000e18;
+    /// The deposit cap of underlying tokens. We keep it one factor below the MAX_SUPPLY of the rebasing token.
+    /// Note that this sets the deposit limit for the fundign manager.
+    uint internal constant DEPOSIT_CAP = 100_000_000e18;
 
     // Other constants.
     uint8 private constant DECIMALS = 18;
     uint private constant PROPOSAL_ID = 1;
 
     function setUp() public {
+        vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
         underlier = new ERC20Mock("Mock", "MOCK");
 
         fundingManager = new FundingManagerMock();
@@ -68,7 +70,7 @@ contract FundingManagerTest is Test {
 
     function testDeposit(address user, uint amount) public {
         vm.assume(user != address(0) && user != address(fundingManager));
-        vm.assume(amount > 1 && amount <= MAX_SUPPLY);
+        vm.assume(amount > 1 && amount <= DEPOSIT_CAP);
 
         // Mint tokens to depositor.
         underlier.mint(user, amount);
@@ -98,36 +100,61 @@ contract FundingManagerTest is Test {
         assertEq(fundingManager.balanceOf(user), amount - expenses);
     }
 
-    mapping(address => bool) _usersCache;
+    function testSelfDepositFails() public {
+        // User deposits tokens.
+        vm.prank(address(fundingManager));
+        vm.expectRevert(
+            IFundingManager.Proposal__FundingManager__CannotSelfDeposit.selector
+        );
+        fundingManager.deposit(1);
+    }
 
     struct UserDeposits {
         address[] users;
         uint[] deposits;
     }
 
-    function testDepositWithdraw(UserDeposits memory input) public {
-        vm.assume(input.users.length <= input.deposits.length);
-        vm.assume(input.users.length > 1);
-        vm.assume(input.users.length < 1000);
+    mapping(address => bool) _usersCache;
 
-        // Each user is unique and valid recipient.
-        for (uint i; i < input.users.length; ++i) {
-            vm.assume(!_usersCache[input.users[i]]);
-            _usersCache[input.users[i]] = true;
+    UserDeposits userDeposits;
 
-            vm.assume(input.users[i] != address(0));
-            vm.assume(input.users[i] != address(fundingManager));
-            vm.assume(input.users[i] != address(this));
+    function generateValidUserDeposits(
+        uint amountOfDepositors,
+        uint[] memory depositAmounts
+    ) public returns (UserDeposits memory) {
+        // We cap the amount each user will deposit so we dont exceed the total supply.
+        uint maxDeposit = (DEPOSIT_CAP / amountOfDepositors);
+        for (uint i = 0; i < amountOfDepositors; i++) {
+            //we generate a "random" address
+            address addr = address(uint160(i + 1));
+            if (
+                addr != address(0) && addr != address(fundingManager)
+                    && !_usersCache[addr] && addr != address(this)
+            ) {
+                //This should be enough for the case we generated a duplicate address
+                addr = address(uint160(block.timestamp - i));
+            }
+
+            // Store the address and mark it as used.
+            userDeposits.users.push(addr);
+            _usersCache[addr] = true;
+
+            //This is to avoid the fuzzer to generate a deposit amount that is too big
+            depositAmounts[i] = bound(depositAmounts[i], 1, maxDeposit - 1);
+            userDeposits.deposits.push(depositAmounts[i]);
         }
+        return userDeposits;
+    }
 
-        // Sum of all deposits does not exceed MAX_SUPPLY.
-        // Note that the length of users is used. deposits[users.length:] will
-        // not be used and is just accepted to have less fuzzer rejections.
-        uint max = MAX_SUPPLY / input.users.length;
-        for (uint i; i < input.users.length; ++i) {
-            vm.assume(input.deposits[i] != 0);
-            vm.assume(input.deposits[i] < max);
-        }
+    function testDepositAndSpendFunds(
+        uint userAmount,
+        uint[] calldata depositAmounts
+    ) public {
+        userAmount = bound(userAmount, 2, 999);
+        vm.assume(userAmount <= depositAmounts.length);
+
+        UserDeposits memory input =
+            generateValidUserDeposits(userAmount, depositAmounts);
 
         // Mint deposit amount of underliers to users.
         for (uint i; i < input.users.length; ++i) {
@@ -141,20 +168,28 @@ contract FundingManagerTest is Test {
         }
 
         // Half the users deposit their underliers.
-        for (uint i; i < input.users.length / 2; ++i) {
+        uint undelierDeposited = 0; // keeps track of amount deposited so we can use it later
+        for (uint i; i < (input.users.length / 2); ++i) {
             vm.prank(input.users[i]);
             fundingManager.deposit(input.deposits[i]);
 
             assertEq(
                 fundingManager.balanceOf(input.users[i]), input.deposits[i]
             );
+            assertEq(underlier.balanceOf(input.users[i]), 0);
+
+            assertEq(
+                underlier.balanceOf(address(fundingManager)),
+                undelierDeposited + input.deposits[i]
+            );
+            undelierDeposited += input.deposits[i];
         }
 
-        // The fundingManager spends an amount of underliers.
-        uint expenses = fundingManager.totalSupply() / 2;
+        // A big amount of underlier tokens leave the manager, f.ex at Milestone start.
+        uint expenses = undelierDeposited / 2;
         underlier.burn(address(fundingManager), expenses);
 
-        // The users who funded tokens, lost half their receipt tokens.
+        // Confirm that the users who funded tokens, lost half their receipt tokens.
         // Note to rebase because balanceOf is not a token-state mutating function.
         fundingManager.rebase();
         for (uint i; i < input.users.length / 2; ++i) {
@@ -177,33 +212,15 @@ contract FundingManagerTest is Test {
         }
     }
 
-    function testDepositWithdrawUntilEmptyAndRedeposit(
-        UserDeposits memory input
+    function testDepositSpendUntilEmptyRedepositAndWindDown(
+        uint userAmount,
+        uint[] calldata depositAmounts
     ) public {
-        // ----------- VALIDATION ---------
+        userAmount = bound(userAmount, 1, 999);
+        vm.assume(userAmount <= depositAmounts.length);
 
-        vm.assume(input.users.length <= input.deposits.length);
-        vm.assume(input.users.length > 1);
-        vm.assume(input.users.length < 1000);
-
-        // Each user is unique and valid recipient.
-        for (uint i; i < input.users.length; ++i) {
-            vm.assume(!_usersCache[input.users[i]]);
-            _usersCache[input.users[i]] = true;
-
-            vm.assume(input.users[i] != address(0));
-            vm.assume(input.users[i] != address(fundingManager));
-            vm.assume(input.users[i] != address(this));
-        }
-
-        // Sum of all deposits does not exceed MAX_SUPPLY.
-        // Note that the length of users is used. deposits[users.length:] will
-        // not be used and is just accepted to have less fuzzer rejections.
-        uint max = MAX_SUPPLY / input.users.length;
-        for (uint i; i < input.users.length; ++i) {
-            vm.assume(input.deposits[i] != 0);
-            vm.assume(input.deposits[i] < max);
-        }
+        UserDeposits memory input =
+            generateValidUserDeposits(userAmount, depositAmounts);
 
         // ----------- SETUP ---------
 
@@ -298,7 +315,12 @@ contract FundingManagerTest is Test {
             uint balance = fundingManager.balanceOf(input.users[i]);
             if (balance != 0) {
                 vm.prank(input.users[i]);
-                fundingManager.withdraw(balance);
+                //to test both withdraw and withdrawTo
+                if (i % 2 == 0) {
+                    fundingManager.withdraw(balance);
+                } else {
+                    fundingManager.withdrawTo(input.users[i], balance);
+                }
             }
         }
 

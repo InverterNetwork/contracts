@@ -85,14 +85,14 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         // Add order's token amount to current outstanding amount.
         _outstandingTokenAmount += amount;
 
+        // Add new order to list of oustanding orders.
+        _orders.push(PaymentOrder(recipient, amount, block.timestamp, dueTo));
+
         // Ensure our token balance is sufficient.
         // Note that function is implemented in downstream contract.
         _ensureTokenBalance(_outstandingTokenAmount);
 
-        // Add new order to list of oustanding orders.
-        _orders.push(PaymentOrder(recipient, amount, block.timestamp, dueTo));
-
-        emit PaymentAdded(recipient, amount);
+        emit PaymentOrderAdded(recipient, amount);
     }
 
     /// @dev Adds a set of new {PaymentOrder}s to the list of outstanding
@@ -128,7 +128,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
                 )
             );
 
-            emit PaymentAdded(recipients[i], amounts[i]);
+            emit PaymentOrderAdded(recipients[i], amounts[i]);
         }
 
         // Add total orders' amount to current outstanding amount.
@@ -159,7 +159,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
                 PaymentOrder(recipients[i], amount, block.timestamp, dueTo)
             );
 
-            emit PaymentAdded(recipients[i], amount);
+            emit PaymentOrderAdded(recipients[i], amount);
         }
 
         // Add total orders' amount to current outstanding amount.
@@ -192,11 +192,6 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
             IPaymentProcessor(_msgSender()), _outstandingTokenAmount
         );
 
-        //Ensure that the Client will have sufficient funds.
-        // Note that function is implemented in downstream contract.
-        // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
-        _ensureTokenBalance(_outstandingTokenAmount);
-
         // Create a copy of all orders to return.
         uint ordersLength = _orders.length;
         PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);
@@ -212,6 +207,11 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
 
         // Set outstanding token amount to zero.
         _outstandingTokenAmount = 0;
+
+        //Ensure that the Client will have sufficient funds.
+        // Note that function is implemented in downstream contract.
+        // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
+        _ensureTokenBalance(outstandingTokenAmountCache);
 
         // Return copy of orders and orders' total token amount to payment
         // processor.

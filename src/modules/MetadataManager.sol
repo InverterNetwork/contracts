@@ -1,24 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
 // Internal Dependencies
-import {Types} from "src/common/Types.sol";
-import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
-
-// Internal Libraries
-import {LibString} from "src/common/LibString.sol";
+import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
-
 import {IMetadataManager} from "src/modules/IMetadataManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
 contract MetadataManager is IMetadataManager, Module {
-    using LibString for string;
-
     //--------------------------------------------------------------------------
     // Storage
 
@@ -91,7 +81,7 @@ contract MetadataManager is IMetadataManager, Module {
             ownerMetadata_.name,
             ownerMetadata_.account,
             ownerMetadata_.twitterHandle
-            );
+        );
     }
 
     function setProposalMetadata(ProposalMetadata calldata proposalMetadata_)
@@ -111,7 +101,7 @@ contract MetadataManager is IMetadataManager, Module {
             proposalMetadata_.descriptionLong,
             proposalMetadata_.externalMedias,
             proposalMetadata_.categories
-            );
+        );
     }
 
     function setTeamMetadata(MemberMetadata[] calldata teamMetadata_)

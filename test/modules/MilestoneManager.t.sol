@@ -426,7 +426,7 @@ contract MilestoneManagerTest is ModuleTest {
             vm.expectEmit(true, true, true, true);
             emit MilestoneAdded(
                 i + 1, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-                );
+            );
 
             id = milestoneManager.addMilestone(
                 DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -620,7 +620,6 @@ contract MilestoneManagerTest is ModuleTest {
         uint id = 1; // Note that id's start at 1.
 
         milestoneManager.stopMilestone(_SENTINEL, id);
-        assertEq(milestoneManager.listMilestoneIds().length, id);
     }
 
     function testStopMilestoneFailsIfCallerNotAuthorizedOrOwner(
@@ -687,6 +686,95 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.stopMilestone(_SENTINEL, id);
     }
 
+    function testStartNextMilestoneAfterCurrentMilestoneIsStopped(
+        address[] memory contributors
+    ) public {
+        IMilestoneManager.Contributor[] memory contribs =
+            _generateEqualContributors(contributors);
+
+        _token.mint(address(_proposal), BUDGET * 2);
+
+        uint id =
+            milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
+
+        vm.warp(block.timestamp + TIMELOCK + 1);
+
+        milestoneManager.startNextMilestone();
+
+        // --------------------------------------
+
+        milestoneManager.stopMilestone(_SENTINEL, id);
+
+        uint id2 = milestoneManager.addMilestone(
+            DURATION * 2, BUDGET, contribs, DETAILS
+        );
+
+        vm.warp(block.timestamp + DURATION - 10 + TIMELOCK + 1);
+
+        milestoneManager.startNextMilestone();
+
+        assertEq(milestoneManager.listMilestoneIds().length, id2);
+        assertEq(milestoneManager.getActiveMilestoneId(), id2);
+    }
+
+    function testStartAndStopRandomMilestone(
+        uint numOfMilestones,
+        uint milestoneToStop
+    ) public {
+        //Note: This test makes the following assumptions:
+        // - Milestone IDs are consecutive uints starting at 1
+        // - DURATION is bigger than TIMELOCK
+        numOfMilestones = bound(numOfMilestones, 3, MAX_MILESTONES);
+        milestoneToStop = bound(milestoneToStop, 2, numOfMilestones - 1); //numOfMilestones is zero-counting, milestoneToStop isn't. Also, we want to avoid stopping the last Milestone, since then startNextMilestone would revert anyway
+        _token.mint(address(_proposal), BUDGET * numOfMilestones ** 2);
+        //Create the first Milestone,pass the timelock and start it
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+        );
+        vm.warp(block.timestamp + TIMELOCK + 1);
+        milestoneManager.startNextMilestone();
+        //we loop through the first batch of Milestones, adding a new one each time
+        for (uint i = 1; i < milestoneToStop; ++i) {
+            milestoneManager.addMilestone(
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+            );
+            vm.warp(block.timestamp + DURATION + 1);
+            milestoneManager.startNextMilestone();
+        }
+        //now we stop the  running milestone
+        if (milestoneToStop == 1) {
+            //prev is the sentinel
+            milestoneManager.stopMilestone(type(uint).max, milestoneToStop);
+        } else {
+            milestoneManager.stopMilestone(milestoneToStop - 1, milestoneToStop);
+        }
+
+        //we expect revert since there is no next milestone
+        vm.expectRevert(
+            IMilestoneManager
+                .Module__MilestoneManager__MilestoneNotActivateable
+                .selector
+        );
+        milestoneManager.startNextMilestone();
+
+        //we add a new one and wait for the timelock to start it
+        milestoneManager.addMilestone(
+            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+        );
+        vm.warp(block.timestamp + TIMELOCK + 1);
+        milestoneManager.startNextMilestone();
+        //we can loop through the rest starting with the next one
+        for (uint i = (milestoneToStop + 1); i < numOfMilestones; ++i) {
+            milestoneManager.addMilestone(
+                DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
+            );
+            vm.warp(block.timestamp + DURATION + 1);
+            milestoneManager.startNextMilestone();
+        }
+        // check for correctness in end state
+        assertEq(milestoneManager.listMilestoneIds().length, numOfMilestones);
+        assertEq(milestoneManager.getActiveMilestoneId(), numOfMilestones);
+    }
     //----------------------------------
     // Test: removeMilestone()
 
@@ -863,7 +951,7 @@ contract MilestoneManagerTest is ModuleTest {
             assertEq(orders[i].recipient, contribs[i].addr);
             assertEq(orders[i].amount, payouts[i]);
             assertEq(orders[i].createdAt, block.timestamp);
-            assertEq(orders[i].dueTo, DURATION);
+            assertEq(orders[i].dueTo, DURATION + block.timestamp);
         }
 
         uint paidToTreasury = _token.balanceOf(FEE_TREASURY);
@@ -963,6 +1051,14 @@ contract MilestoneManagerTest is ModuleTest {
         _assumeValidBudgets(budget);
         _assumeValidDetails(details);
 
+        //since we want to trigger an update, we need to also make sure that the generated values aren't the default
+        vm.assume(duration != DURATION);
+        vm.assume(budget != BUDGET);
+        vm.assume(
+            keccak256(abi.encodePacked(details))
+                != keccak256(abi.encodePacked(DETAILS))
+        );
+
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
@@ -975,7 +1071,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true);
         emit MilestoneUpdated(
             id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-            );
+        );
 
         milestoneManager.updateMilestone(
             id, duration, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -986,7 +1082,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true);
         emit MilestoneUpdated(
             id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS
-            );
+        );
 
         milestoneManager.updateMilestone(
             id, duration, budget, DEFAULT_CONTRIBUTORS, DETAILS

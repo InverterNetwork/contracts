@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 // Internal Dependencies
 import {
@@ -9,7 +9,6 @@ import {
 import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -25,8 +24,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
  */
 
 contract VestingPaymentProcessor is Module, IPaymentProcessor {
-    using SafeERC20 for IERC20;
-
     //--------------------------------------------------------------------------
     // Storage
 
@@ -37,62 +34,66 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         uint _duration;
     }
 
-    // contributor => Payment
-    mapping(address => VestingWallet) private vestings;
+    // paymentClient => contributor => Payment
+    mapping(address => mapping(address => VestingWallet)) private vestings;
+    // paymentClient => contributor => unclaimableAmount
+    mapping(address => mapping(address => uint)) private unclaimableAmounts;
+
+    /// @notice list of addresses with open payment Orders per paymentClient
+    mapping(address => address[]) private activePayments;
 
     //--------------------------------------------------------------------------
     // Events
 
-    event PaymentAdded(address contributor, uint salary, uint start, uint end);
-    event PaymentRemoved(address contributor);
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param duration Timestamp at which the full amount should be claimable.
+    event VestingPaymentAdded(
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint start,
+        uint duration
+    );
 
-    event PaymentUpdated(address contributor, uint newSalary, uint newEndDate);
-    event ERC20Released(address indexed token, uint amount);
+    /// @notice Emitted when the vesting to an address is removed.
+    /// @param recipient The address that will stop receiving payment.
+    event VestingPaymentRemoved(
+        address indexed paymentClient, address indexed recipient
+    );
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param newSalary The new amount of tokens the payment consists of.
+    /// @param newDuration Number of blocks over which the amount will vest.
+    event PaymentUpdated(address recipient, uint newSalary, uint newDuration);
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param duration Number of blocks over which the amount will vest
+    event InvalidVestingOrderDiscarded(
+        address indexed recipient, uint amount, uint start, uint duration
+    );
 
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice salary cannot be 0.
-    error Module__PaymentManager__InvalidSalary();
-
-    /// @notice should start in future, cant be more than 10e18.
-    error Module__PaymentManager__InvalidStart();
-
-    /// @notice duration cant overflow, cant be 0.
-    error Module__PaymentManager__InvalidDuration();
-
-    /// @notice invalid token address
-    error Module__PaymentManager__InvalidToken();
-
-    /// @notice invalid proposal address
-    error Module__PaymentManager__InvalidProposal();
-
-    /// @notice invalid contributor address
-    error Module__PaymentManager__InvalidContributor();
-
     /// @notice insufficient tokens in the client to do payments
     error Module__PaymentManager__InsufficientTokenBalanceInClient();
+
+    /// @notice invalid caller
+    error Module__PaymentManager__OnlyCallableByModule();
 
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier validSalary(uint _salary) {
-        if (_salary == 0) {
-            revert Module__PaymentManager__InvalidSalary();
-        }
-        _;
-    }
-
-    modifier validStart(uint _start) {
-        if (_start < block.timestamp || _start >= type(uint).max) {
-            revert Module__PaymentManager__InvalidStart();
-        }
-        _;
-    }
-
-    modifier validDuration(uint _start, uint _duration) {
-        if (_duration == 0) {
-            revert Module__PaymentManager__InvalidDuration();
+    modifier onlyModule() {
+        if (!proposal().isModule(_msgSender())) {
+            revert Module__PaymentManager__OnlyCallableByModule();
         }
         _;
     }
@@ -112,11 +113,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice Release the releasable tokens.
     ///         In OZ VestingWallet this method is named release().
     function claim(IPaymentClient client) external {
-        _claim(client, _msgSender());
+        _claim(address(client), _msgSender());
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external {
+    function processPayments(IPaymentClient client) external onlyModule {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // If there are, we remove all payments that would be overwritten
@@ -144,30 +145,34 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
                 _start = orders[i].createdAt;
                 _duration = (orders[i].dueTo - _start);
 
-                _addPayment(_recipient, _amount, _start, _duration);
+                _addPayment(
+                    address(client), _recipient, _amount, _start, _duration
+                );
+
+                emit PaymentOrderProcessed(
+                    address(client), _recipient, _amount, _start, _duration
+                );
             }
         }
     }
 
     function cancelRunningPayments(IPaymentClient client)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorized
     {
         _cancelRunningOrders(client);
     }
 
     function _cancelRunningOrders(IPaymentClient client) internal {
-        IPaymentClient.PaymentOrder[] memory orders;
-        orders = client.paymentOrders();
+        //IPaymentClient.PaymentOrder[] memory orders;
+        //orders = client.paymentOrders();
+        address[] memory _activePayments = activePayments[address(client)];
 
         address _recipient;
-        for (uint i; i < orders.length; i++) {
-            _recipient = orders[i].recipient;
+        for (uint i; i < _activePayments.length; ++i) {
+            _recipient = _activePayments[i];
 
-            //check if running payment order exists. If it does, remove it
-            if (start(_recipient) != 0) {
-                _removePayment(client, _recipient);
-            }
+            _removePayment(address(client), _recipient);
         }
     }
 
@@ -178,7 +183,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         external
         onlyAuthorized
     {
-        _removePayment(client, contributor);
+        _removePayment(address(client), contributor);
     }
 
     //--------------------------------------------------------------------------
@@ -186,36 +191,61 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Getter for the start timestamp.
     /// @param contributor Contributor's address.
-    function start(address contributor) public view returns (uint) {
-        return vestings[contributor]._start;
-    }
-
-    /// @notice Getter for the vesting duration.
-    /// @param contributor Contributor's address.
-    function duration(address contributor) public view returns (uint) {
-        return vestings[contributor]._duration;
-    }
-
-    /// @notice Getter for the amount of eth already released
-    /// @param contributor Contributor's address.
-    function released(address contributor) public view returns (uint) {
-        return vestings[contributor]._released;
-    }
-
-    /// @notice Calculates the amount of tokens that has already vested.
-    /// @param contributor Contributor's address.
-    function vestedAmount(address contributor, uint timestamp)
+    function start(address client, address contributor)
         public
         view
         returns (uint)
     {
-        return _vestingSchedule(contributor, timestamp);
+        return vestings[client][contributor]._start;
+    }
+
+    /// @notice Getter for the vesting duration.
+    /// @param contributor Contributor's address.
+    function duration(address client, address contributor)
+        public
+        view
+        returns (uint)
+    {
+        return vestings[client][contributor]._duration;
+    }
+
+    /// @notice Getter for the amount of eth already released
+    /// @param contributor Contributor's address.
+    function released(address client, address contributor)
+        public
+        view
+        returns (uint)
+    {
+        return vestings[client][contributor]._released;
+    }
+
+    /// @notice Calculates the amount of tokens that has already vested.
+    /// @param contributor Contributor's address.
+    function vestedAmount(address client, address contributor, uint timestamp)
+        public
+        view
+        returns (uint)
+    {
+        return _vestingSchedule(client, contributor, timestamp);
     }
 
     /// @notice Getter for the amount of releasable tokens.
-    function releasable(address contributor) public view returns (uint) {
-        return vestedAmount(contributor, uint(block.timestamp))
-            - released(contributor);
+    function releasable(address client, address contributor)
+        public
+        view
+        returns (uint)
+    {
+        return vestedAmount(client, contributor, uint(block.timestamp))
+            - released(client, contributor);
+    }
+
+    /// @notice Getter for the amount of tokens that could not be claimed.
+    function unclaimable(address client, address contributor)
+        public
+        view
+        returns (uint)
+    {
+        return unclaimableAmounts[client][contributor];
     }
 
     function token() public view returns (IERC20) {
@@ -225,17 +255,42 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function _removePayment(IPaymentClient client, address contributor)
+    function findAddressInActivePayments(address client, address contributor)
         internal
+        view
+        returns (uint)
     {
+        address[] memory contribSearchArray = activePayments[client];
+
+        uint length = activePayments[client].length;
+        for (uint i; i < length; i++) {
+            if (contribSearchArray[i] == contributor) {
+                return i;
+            }
+        }
+        return type(uint).max;
+    }
+
+    function _removePayment(address client, address contributor) internal {
         //we claim the earned funds for the contributor.
         _claim(client, contributor);
 
-        //all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
+        //we remove the payment from the activePayments array
+        uint contribIndex = findAddressInActivePayments(client, contributor);
 
-        delete vestings[contributor];
+        if (contribIndex != type(uint).max) {
+            // Move the last element into the place to delete
+            activePayments[client][contribIndex] =
+                activePayments[client][activePayments[client].length - 1];
+            // Remove the last element
+            activePayments[client].pop();
 
-        emit PaymentRemoved(contributor);
+            delete vestings[client][contributor];
+
+            emit VestingPaymentRemoved(client, contributor);
+        }
+
+        /// Note that all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
@@ -245,35 +300,52 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param _start Start vesting timestamp.
     /// @param _duration Vesting duration timestamp.
     function _addPayment(
+        address client,
         address _contributor,
         uint _salary,
         uint _start,
         uint _duration
-    )
-        internal
-        validSalary(_salary)
-        validStart(_start)
-        validDuration(_start, _duration)
-    {
-        if (!validAddress(_contributor)) {
-            revert Module__PaymentManager__InvalidContributor();
+    ) internal {
+        if (
+            !validAddress(_contributor) || !validSalary(_salary)
+                || !validStart(_start) || !validDuration(_start, _duration)
+        ) {
+            emit InvalidVestingOrderDiscarded(
+                _contributor, _salary, _start, _duration
+            );
+        } else {
+            vestings[client][_contributor] =
+                VestingWallet(_salary, 0, _start, _duration);
+
+            uint contribIndex =
+                findAddressInActivePayments(client, _contributor);
+            if (contribIndex == type(uint).max) {
+                activePayments[client].push(_contributor);
+            }
+
+            emit VestingPaymentAdded(
+                client, _contributor, _salary, _start, _duration
+            );
         }
-
-        vestings[_contributor] = VestingWallet(_salary, 0, _start, _duration);
-
-        emit PaymentAdded(_contributor, _salary, _start, _duration);
     }
 
-    function _claim(IPaymentClient client, address beneficiary) internal {
-        uint amount = releasable(beneficiary);
-        vestings[beneficiary]._released += amount;
+    function _claim(address client, address beneficiary) internal {
+        uint amount = releasable(client, beneficiary);
+        vestings[client][beneficiary]._released += amount;
 
-        // Cache token.
-        IERC20 token_ = token();
+        //if beneficiary has unclaimable tokens from before, add it to releasable amount
+        if (unclaimableAmounts[client][beneficiary] > 0) {
+            amount += unclaimable(client, beneficiary);
+            delete unclaimableAmounts[client][beneficiary];
+        }
 
-        emit ERC20Released(address(token_), amount);
-
-        token_.safeTransferFrom(address(client), beneficiary, amount);
+        // we claim the earned funds for the contributor.
+        try token().transferFrom(client, beneficiary, amount) {
+            emit TokensReleased(beneficiary, address(token()), amount);
+            // if transfer fails, move amount to unclaimableAmounts.
+        } catch {
+            unclaimableAmounts[client][beneficiary] += amount;
+        }
     }
 
     /// @notice Virtual implementation of the vesting formula.
@@ -281,21 +353,22 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     ///         for an asset given its total historical allocation.
     /// @param contributor The contributor to check on.
     /// @param timestamp Current block.timestamp
-    function _vestingSchedule(address contributor, uint timestamp)
-        internal
-        view
-        virtual
-        returns (uint)
-    {
-        uint totalAllocation = vestings[contributor]._salary;
+    function _vestingSchedule(
+        address client,
+        address contributor,
+        uint timestamp
+    ) internal view virtual returns (uint) {
+        uint totalAllocation = vestings[client][contributor]._salary;
+        uint startContributor = start(client, contributor);
+        uint durationContributor = duration(client, contributor);
 
-        if (timestamp < start(contributor)) {
+        if (timestamp < startContributor) {
             return 0;
-        } else if (timestamp > start(contributor) + duration(contributor)) {
+        } else if (timestamp > startContributor + durationContributor) {
             return totalAllocation;
         } else {
-            return (totalAllocation * (timestamp - start(contributor)))
-                / duration(contributor);
+            return (totalAllocation * (timestamp - startContributor))
+                / durationContributor;
         }
     }
 
@@ -303,8 +376,35 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param addr Address to validate.
     /// @return True if address is valid.
     function validAddress(address addr) internal view returns (bool) {
-        if (addr == address(0) || addr == _msgSender() || addr == address(this))
-        {
+        if (
+            addr == address(0) || addr == _msgSender() || addr == address(this)
+                || addr == address(proposal())
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    function validSalary(uint _salary) internal view returns (bool) {
+        if (_salary == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    function validStart(uint _start) internal view returns (bool) {
+        if (_start < block.timestamp || _start >= type(uint).max) {
+            return false;
+        }
+        return true;
+    }
+
+    function validDuration(uint _start, uint _duration)
+        internal
+        view
+        returns (bool)
+    {
+        if (_duration == 0) {
             return false;
         }
         return true;
