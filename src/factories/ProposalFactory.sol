@@ -124,4 +124,8 @@ contract ProposalFactory is IProposalFactory {
     {
         return _proposals[id];
     }
+
+    function getProposalIDCounter() external view returns (uint) {
+        return _proposalIdCounter;
+    }
 }
