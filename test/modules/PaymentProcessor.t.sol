@@ -78,7 +78,7 @@ contract PaymentProcessorTest is ModuleTest {
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
-        function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)
+    function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)
         public
     {
         vm.assume(nonModule != address(paymentProcessor));

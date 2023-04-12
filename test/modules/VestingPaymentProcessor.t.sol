@@ -28,8 +28,8 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
     event InvalidVestingOrderDiscarded(
         address indexed recipient, uint amount, uint start, uint duration
-    )
-    
+    );
+
     event VestingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,

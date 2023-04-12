@@ -29,7 +29,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
 contract PaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
 
-
     /// @notice invalid caller
     error Module__PaymentManager__OnlyCallableByModule();
 

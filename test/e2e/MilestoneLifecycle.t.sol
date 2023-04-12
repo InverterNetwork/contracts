@@ -110,25 +110,11 @@ contract MilestoneLifecycle is E2eTest {
         );
         milestoneManager.startNextMilestone();
 
-        // Starting a milestone DOES NOT itself pay the contributors but
-        // creates set set of payment orders inside the module that can be
-        // processed by a PaymentProcessor module. Note however, that the
+        // The MilestoneManager DOES NOT pay the contributors itself, but
+        // creates set set of payment orders inside the module and calls
+        // the PaymentProcessor module to process them. Note however, that the
         // orders are guaranteed to be payable, i.e. the tokens are already
-        // fetched from the proposal.
-        assertEq(token.balanceOf(address(proposal)), initialDeposit);
-
-        // The address of the proposal's PaymentProcessor can be read from the
-        // logs during the proposal's creation.
-        PaymentProcessor paymentProcessor =
-            PaymentProcessor(0xf5Ba21691a8bC011B7b430854B41d5be0B78b938);
-
-        // The PaymentProcessor's `processPayments()` function is publicly
-        // callable. This ensures the contributors can call the function too,
-        // guaranteeing their payment.
-        vm.prank(alice.addr);
-        paymentProcessor.processPayments(
-            IPaymentClient(address(milestoneManager))
-        );
+        // fetched from the proposal on creation of the order.
 
         // since we take 1% fee, the expected balance is 990e18/2
 

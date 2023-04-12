@@ -88,6 +88,15 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice invalid caller
     error Module__PaymentManager__OnlyCallableByModule();
 
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier onlyModule() {
+        if (!proposal().isModule(_msgSender())) {
+            revert Module__PaymentManager__OnlyCallableByModule();
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // External Functions
@@ -305,17 +314,18 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
                 _contributor, _salary, _start, _duration
             );
         } else {
-        vestings[client][_contributor] =
-            VestingWallet(_salary, 0, _start, _duration);
+            vestings[client][_contributor] =
+                VestingWallet(_salary, 0, _start, _duration);
 
-        uint contribIndex = findAddressInActivePayments(client, _contributor);
-        if (contribIndex == type(uint).max) {
-            activePayments[client].push(_contributor);
-        }
+            uint contribIndex =
+                findAddressInActivePayments(client, _contributor);
+            if (contribIndex == type(uint).max) {
+                activePayments[client].push(_contributor);
+            }
 
-        emit VestingPaymentAdded(
-            client, _contributor, _salary, _start, _duration
-        );
+            emit VestingPaymentAdded(
+                client, _contributor, _salary, _start, _duration
+            );
         }
     }
 
