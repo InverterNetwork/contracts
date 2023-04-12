@@ -32,6 +32,11 @@ contract PaymentProcessorTest is ModuleTest {
 
         _setUpProposal(paymentProcessor);
 
+        _authorizer.setIsAuthorized(address(this), true);
+
+        _authorizer.setIsAuthorized(address(paymentClient), true);
+        _proposal.addModule(address(paymentClient));
+
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
 
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
@@ -62,6 +67,7 @@ contract PaymentProcessorTest is ModuleTest {
         paymentClient.addPaymentOrder(recipient, amount, block.timestamp);
 
         // Call processPayments.
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
         // Check correct balances.
@@ -70,5 +76,23 @@ contract PaymentProcessorTest is ModuleTest {
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+    }
+
+        function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)
+        public
+    {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_authorizer));
+
+        vm.prank(nonModule);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                PaymentProcessor
+                    .Module__PaymentManager__OnlyCallableByModule
+                    .selector
+            )
+        );
+        paymentProcessor.processPayments(paymentClient);
     }
 }
