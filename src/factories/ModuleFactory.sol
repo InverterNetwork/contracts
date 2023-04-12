@@ -72,8 +72,6 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    event yo(uint);
-
     /// @inheritdoc IModuleFactory
     function createModule(
         IModule.Metadata memory metadata,
@@ -86,13 +84,9 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         IBeacon beacon;
         (beacon, /*id*/ ) = getBeaconAndId(metadata);
 
-        emit yo(1);
-
         if (address(beacon) == address(0)) {
             revert ModuleFactory__UnregisteredMetadata();
         }
-
-        emit yo(2);
 
         // Note that a beacon's implementation address can not be the zero
         // address when the beacon is registered. The beacon must have been
@@ -106,19 +100,11 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         // a module does not use a different beacon implementation.
         assert(beacon.implementation() != address(0));
 
-        emit yo(3);
-
         address implementation = address(new BeaconProxy(beacon));
-
-        emit yo(4);
 
         IModule(implementation).init(proposal, metadata, configdata);
 
-        emit yo(5);
-
         emit ModuleCreated(address(proposal), implementation, metadata.title);
-
-        emit yo(6);
 
         return implementation;
     }
