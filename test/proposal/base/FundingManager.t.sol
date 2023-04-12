@@ -100,6 +100,15 @@ contract FundingManagerTest is Test {
         assertEq(fundingManager.balanceOf(user), amount - expenses);
     }
 
+    function testSelfDepositFails() public {
+        // User deposits tokens.
+        vm.prank(address(fundingManager));
+        vm.expectRevert(
+            IFundingManager.Proposal__FundingManager__CannotSelfDeposit.selector
+        );
+        fundingManager.deposit(1);
+    }
+
     struct UserDeposits {
         address[] users;
         uint[] deposits;
@@ -306,7 +315,12 @@ contract FundingManagerTest is Test {
             uint balance = fundingManager.balanceOf(input.users[i]);
             if (balance != 0) {
                 vm.prank(input.users[i]);
-                fundingManager.withdraw(balance);
+                //to test both withdraw and withdrawTo
+                if (i % 2 == 0) {
+                    fundingManager.withdraw(balance);
+                } else {
+                    fundingManager.withdrawTo(input.users[i], balance);
+                }
             }
         }
 
