@@ -1051,6 +1051,14 @@ contract MilestoneManagerTest is ModuleTest {
         _assumeValidBudgets(budget);
         _assumeValidDetails(details);
 
+        //since we want to trigger an update, we need to also make sure that the generated values aren't the default
+        vm.assume(duration != DURATION);
+        vm.assume(budget != BUDGET);
+        vm.assume(
+            keccak256(abi.encodePacked(details))
+                != keccak256(abi.encodePacked(DETAILS))
+        );
+
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 

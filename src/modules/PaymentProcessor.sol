@@ -80,7 +80,11 @@ contract PaymentProcessor is Module, IPaymentProcessor {
             emit TokensReleased(recipient, address(token_), amount);
 
             emit PaymentOrderProcessed(
-                recipient, amount, orders[i].createdAt, orders[i].dueTo
+                address(client),
+                recipient,
+                amount,
+                orders[i].createdAt,
+                orders[i].dueTo
             );
         }
     }
