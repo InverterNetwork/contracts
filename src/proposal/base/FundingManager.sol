@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 // External Dependencies
 
 import {ElasticReceiptTokenUpgradeable} from
-    "@elastic-receipt-token/ElasticReceiptTokenUpgradeable.sol";
-
+    "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
+import {ElasticTokenWrapper} from "src/proposal/token/ElasticTokenWrapper.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
@@ -17,8 +17,6 @@ import {IERC20MetadataUpgradeable} from
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
-
-import {ElasticTokenWrapper} from "src/proposal/token/ElasticTokenWrapper.sol";
 
 import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
 
