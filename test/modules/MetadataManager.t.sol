@@ -95,6 +95,29 @@ contract MetadataManagerTest is ModuleTest {
         metadataManager.init(_proposal, _METADATA, bytes(""));
     }
 
+    function testGetter() public {
+        //-----------------------
+        // OWNER_METADATA
+
+        assertMetadataManagerOwnerMetadataEqualTo(
+            metadataManager.getOwnerMetadata()
+        );
+
+        //-----------------------
+        // PROPOSAL_METADATA
+
+        assertMetadataManagerProposalMetadataEqualTo(
+            metadataManager.getProposalMetadata()
+        );
+
+        //-----------------------
+        // TEAM_METADATA
+
+        assertMetadataManagerTeamMetadataEqualTo(
+            metadataManager.getTeamMetadata()
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Helper - Functions
 
