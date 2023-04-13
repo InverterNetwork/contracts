@@ -4,8 +4,7 @@ pragma solidity ^0.8.13;
 // External Dependencies
 
 import {ElasticReceiptTokenUpgradeable} from
-    "@elastic-receipt-token/ElasticReceiptTokenUpgradeable.sol";
-
+    "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
@@ -17,8 +16,6 @@ import {IERC20MetadataUpgradeable} from
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
-
-import {ElasticTokenWrapper} from "src/proposal/token/ElasticTokenWrapper.sol";
 
 import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
 
@@ -38,27 +35,18 @@ abstract contract FundingManager is
         onlyInitializing
         returns (IERC20)
     {
-        string memory id = proposalId_.toString();
-
+        string memory _id = proposalId_.toString();
+        string memory _name =
+            string(abi.encodePacked("Inverter Funding Token - Proposal #", _id));
+        string memory _symbol = string(abi.encodePacked("IFT-", _id));
         // Initial upstream contracts.
         __ElasticReceiptToken_init(
-            string(
-                abi.encodePacked(
-                    "elastic Inverter Funding Token - Proposal #", id
-                )
-            ),
-            string(abi.encodePacked("eIFT-", id)),
+            _name,
+            _symbol,
             IERC20MetadataUpgradeable(address(token_)).decimals()
         );
 
-        // Deploy and store fixed-supply wrapper token.
-        return IERC20(
-            new ElasticTokenWrapper(
-            IERC20(address(this)),
-            string(abi.encodePacked("Inverter Funding Token - Proposal #", id)),
-            string(abi.encodePacked("IFT-", id))
-            )
-        );
+        return IERC20(address(this));
     }
 
     /// @dev Implemented in Proposal.

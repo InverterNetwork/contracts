@@ -6,12 +6,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import "forge-std/console.sol";
 
-import {
-    ModuleTest,
-    IModule,
-    IProposal,
-    LibString
-} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {
@@ -25,8 +20,6 @@ import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract MilestoneManagerTest is ModuleTest {
-    using LibString for string;
-
     // SuT
     MilestoneManager milestoneManager;
 
