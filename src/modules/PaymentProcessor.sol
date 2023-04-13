@@ -88,8 +88,9 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    function cancelRunningPayments(IPaymentClient client)
+    function cancelRunningPayments(IPaymentClient)
         external
+        view
         onlyAuthorizedOrOwner
     {
         //Since we pay out on processing, this function does nothing

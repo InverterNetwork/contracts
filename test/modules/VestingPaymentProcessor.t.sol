@@ -642,7 +642,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         }
     }
 
-    function assumeValidRecipient(address a) public {
+    function assumeValidRecipient(address a) public view {
         address[] memory invalids = createInvalidRecipients();
 
         for (uint i; i < invalids.length; i++) {
@@ -665,6 +665,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
     // note By only checking the values we'll use, we avoid unnecessary rejections
     function assumeValidAmounts(uint128[] memory amounts, uint checkUpTo)
         public
+        pure
     {
         vm.assume(amounts.length != 0);
         for (uint i; i < checkUpTo; i++) {
@@ -675,6 +676,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
     // note By only checking the values we'll use, we avoid unnecessary rejections
     function assumeValidDurations(uint64[] memory durations, uint checkUpTo)
         public
+        pure
     {
         vm.assume(durations.length != 0);
         for (uint i; i < checkUpTo; i++) {

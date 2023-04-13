@@ -385,7 +385,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         return true;
     }
 
-    function validSalary(uint _salary) internal view returns (bool) {
+    function validSalary(uint _salary) internal pure returns (bool) {
         if (_salary == 0) {
             return false;
         }
@@ -399,11 +399,10 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         return true;
     }
 
-    function validDuration(uint _start, uint _duration)
-        internal
-        view
-        returns (bool)
-    {
+    function validDuration(
+        uint _start, //@SchneiderNejc _start is never used here
+        uint _duration
+    ) internal pure returns (bool) {
         if (_duration == 0) {
             return false;
         }
