@@ -196,7 +196,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                VestingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )

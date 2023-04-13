@@ -85,9 +85,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice insufficient tokens in the client to do payments
     error Module__PaymentManager__InsufficientTokenBalanceInClient();
 
-    /// @notice invalid caller
-    error Module__PaymentManager__OnlyCallableByModule();
-
     //--------------------------------------------------------------------------
     // Modifiers
 
