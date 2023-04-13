@@ -4,8 +4,8 @@ pragma solidity ^0.8.13;
 // External Dependencies
 
 import {ElasticReceiptTokenUpgradeable} from
-    "@elastic-receipt-token/ElasticReceiptTokenUpgradeable.sol";
-
+    "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
+import {ElasticTokenWrapper} from "src/proposal/token/ElasticTokenWrapper.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
