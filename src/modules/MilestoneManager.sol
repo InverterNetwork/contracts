@@ -829,13 +829,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             // Trigger delegatecall-callback from proposal to transfer tokens
             // to address(this).
             bool ok;
-            (ok, /*returnData*/ ) = _triggerProposalCallback(
+            (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
+                address(__Module_proposal.token()),
                 abi.encodeWithSignature(
-                    "__Proposal_transferERC20(address,uint256)",
-                    address(this),
-                    amount - balance
+                    "transfer(address,uint256)", address(this), amount - balance
                 ),
-                Types.Operation.DelegateCall
+                Types.Operation.Call
             );
 
             if (!ok) {
