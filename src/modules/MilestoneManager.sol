@@ -16,9 +16,6 @@ import {
     IPaymentProcessor
 } from "src/modules/mixins/PaymentClient.sol";
 
-// Internal Libraries
-import {LibString} from "src/common/LibString.sol";
-
 // Internal Interfaces
 import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
@@ -47,7 +44,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
  * @author byterocket
  */
 contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
-    using LibString for string;
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------

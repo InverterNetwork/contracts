@@ -43,11 +43,8 @@ contract FundingManagerTest is Test {
 
     function testInit() public {
         assertEq(fundingManager.decimals(), DECIMALS);
-        assertEq(
-            fundingManager.name(),
-            "elastic Inverter Funding Token - Proposal #1"
-        );
-        assertEq(fundingManager.symbol(), "eIFT-1");
+        assertEq(fundingManager.name(), "Inverter Funding Token - Proposal #1");
+        assertEq(fundingManager.symbol(), "IFT-1");
 
         assertEq(fundingManager.totalSupply(), 0);
         assertEq(fundingManager.scaledTotalSupply(), 0);
