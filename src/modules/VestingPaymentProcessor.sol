@@ -308,7 +308,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     ) internal {
         if (
             !validAddress(_contributor) || !validSalary(_salary)
-                || !validStart(_start) || !validDuration(_start, _duration)
+                || !validStart(_start) || !validDuration(_duration)
         ) {
             emit InvalidVestingOrderDiscarded(
                 _contributor, _salary, _start, _duration
@@ -399,10 +399,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         return true;
     }
 
-    function validDuration(
-        uint _start, //@SchneiderNejc _start is never used here
-        uint _duration
-    ) internal pure returns (bool) {
+    function validDuration(uint _duration) internal pure returns (bool) {
         if (_duration == 0) {
             return false;
         }
