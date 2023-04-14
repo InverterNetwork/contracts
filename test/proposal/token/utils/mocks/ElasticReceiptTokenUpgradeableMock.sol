@@ -3,7 +3,10 @@ pragma solidity ^0.8.10;
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-import "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
+import {
+    ElasticReceiptTokenUpgradeable,
+    ElasticReceiptTokenBase
+} from "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
 
 contract ElasticReceiptTokenUpgradeableMock is
     ElasticReceiptTokenUpgradeable
@@ -26,7 +29,7 @@ contract ElasticReceiptTokenUpgradeableMock is
     function _supplyTarget()
         internal
         view
-        override(ElasticReceiptTokenUpgradeable)
+        override(ElasticReceiptTokenBase)
         returns (uint)
     {
         return ERC20(underlier).balanceOf(address(this));
