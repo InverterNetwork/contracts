@@ -573,6 +573,61 @@ contract VestingPaymentProcessorTest is ModuleTest {
         );
     }
 
+    //testBlockedAddressCanClaimLater verifies our contract corectly handles revertion. Here we test the token retunrning false:
+    // 1. Token address is broken and only returns false on failure
+    // 2. Tries to claim tokens after 25% duration but ERC contract reverts.
+    // 3. Token address is fixed works normally.
+    // 4. Successfuly to claims tokens again after 50% duration.
+    function testFalseReturningTokenTransfers() public {
+        address recipient = address(0xBABE);
+        uint amount = 10 ether;
+        uint duration = 10 days;
+
+        // Add payment order to client and call processPayments.
+        paymentClient.addPaymentOrder(
+            recipient, amount, (block.timestamp + duration)
+        );
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // transfers will fail by returning false now
+        _token.toggleReturnFalse();
+
+        // FF 25% and claim.
+        vm.warp(block.timestamp + duration / 4);
+        vm.prank(recipient);
+        paymentProcessor.claim(paymentClient);
+
+        // after failed claim attempt receiver should receive 0 token,
+        // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
+        assertEq(_token.balanceOf(address(recipient)), 0);
+        assertEq(
+            paymentProcessor.releasable(address(paymentClient), recipient), 0
+        );
+        assertEq(
+            paymentProcessor.unclaimable(address(paymentClient), recipient),
+            amount / 4
+        );
+
+        // transfers will work normally again
+        _token.toggleReturnFalse();
+
+        // FF 25% and claim.
+        vm.warp(block.timestamp + duration / 4);
+        vm.prank(recipient);
+        paymentProcessor.claim(paymentClient);
+
+        // after successful claim attempt receiver should 50% total,
+        // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
+        assertEq(_token.balanceOf(address(recipient)), amount / 2);
+        assertEq(
+            paymentProcessor.releasable(address(paymentClient), recipient), 0
+        );
+        assertEq(
+            paymentProcessor.unclaimable(address(paymentClient), recipient), 0
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
