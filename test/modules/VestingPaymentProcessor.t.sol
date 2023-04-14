@@ -519,10 +519,11 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
-    // Recipient address is blacklisted on the ERC contract.
-    // Tries to claim tokens after 25% duration but ERC contract reverts.
-    // Recipient address is whitelisted in the ERC contract.
-    // Successfuly to claims tokens again after 50% duration.
+    // Verifies our contract corectly handles ERC20 revertion.
+    // 1. Recipient address is blacklisted on the ERC contract.
+    // 2. Tries to claim tokens after 25% duration but ERC contract reverts.
+    // 3. Recipient address is whitelisted in the ERC contract.
+    // 4. Successfuly to claims tokens again after 50% duration.
     function testBlockedAddressCanClaimLater() public {
         address recipient = address(0xBABE);
         uint amount = 10 ether;
@@ -573,7 +574,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         );
     }
 
-    //testBlockedAddressCanClaimLater verifies our contract corectly handles revertion. Here we test the token retunrning false:
+    // Verifies our contract corectly handles ERC20 retunrning false:
     // 1. Token address is broken and only returns false on failure
     // 2. Tries to claim tokens after 25% duration but ERC contract reverts.
     // 3. Token address is fixed works normally.
