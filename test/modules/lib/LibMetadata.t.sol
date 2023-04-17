@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-import "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -41,6 +41,7 @@ contract LibMetadataTest is Test {
     function testMetadataInvalidIfURLEmpty(uint majorVersion, uint minorVersion)
         public
     {
+        vm.assume(majorVersion != 0 || minorVersion != 0);
         IModule.Metadata memory data =
             IModule.Metadata(majorVersion, minorVersion, "", "title");
 
@@ -51,15 +52,24 @@ contract LibMetadataTest is Test {
         uint majorVersion,
         uint minorVersion
     ) public {
+        vm.assume(majorVersion != 0 || minorVersion != 0);
+
         IModule.Metadata memory data =
             IModule.Metadata(majorVersion, minorVersion, "url", "");
 
         assertTrue(!LibMetadata.isValid(data));
     }
 
-    function testMetadataInvalidIfVersionOnlyZero() public {
-        IModule.Metadata memory data = IModule.Metadata(0, 0, "url", "title");
-
-        assertTrue(!LibMetadata.isValid(data));
+    function testMetadataInvalidIfVersionOnlyZero(
+        uint majorVersion,
+        uint minorVersion
+    ) public {
+        IModule.Metadata memory data =
+            IModule.Metadata(majorVersion, minorVersion, "url", "title");
+        if (majorVersion == 0 && minorVersion == 0) {
+            assertFalse(LibMetadata.isValid(data));
+        } else {
+            assertTrue(LibMetadata.isValid(data));
+        }
     }
 }
