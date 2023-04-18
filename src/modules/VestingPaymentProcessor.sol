@@ -352,7 +352,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         if (success && (data.length == 0 || abi.decode(data, (bool)))) {
             emit TokensReleased(beneficiary, _token, amount);
         } else {
-            // if transfer fails, store amount to unsentAmounts.
+            // if transfer fails, store amount to unclaimableAmounts.
             unclaimableAmounts[client][beneficiary] += amount;
         }
     }
