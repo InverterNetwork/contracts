@@ -188,6 +188,10 @@ contract VestingPaymentProcessorTest is ModuleTest {
     {
         vm.assume(nonModule != address(paymentProcessor));
         vm.assume(nonModule != address(paymentClient));
+        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
+        // if deployed address is same as nonModule, this test will fail.
+        vm.assume(nonModule != address(_paymentProcessor));
+        vm.assume(nonModule != address(_authorizer));
 
         vm.prank(nonModule);
         vm.expectRevert(

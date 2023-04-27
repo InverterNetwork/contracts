@@ -7,12 +7,7 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {
-    ModuleTest,
-    IModule,
-    IProposal,
-    LibString
-} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -23,8 +18,6 @@ import {
 } from "src/modules/MetadataManager.sol";
 
 contract MetadataManagerTest is ModuleTest {
-    using LibString for string;
-
     // SuT
     MetadataManager metadataManager;
 

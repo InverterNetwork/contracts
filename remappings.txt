@@ -1,3 +1,2 @@
 @oz-up/=lib/openzeppelin-contracts-upgradeable/contracts/
 @oz/=lib/openzeppelin-contracts/contracts/
-@elastic-receipt-token/=lib/elastic-receipt-token/src/
