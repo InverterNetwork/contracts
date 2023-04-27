@@ -10,9 +10,6 @@ import {IProposal} from "../../src/proposal/Proposal.sol";
 import {ERC20Mock} from "../../test/utils/mocks/ERC20Mock.sol";
 
 contract EscobarOrders is Script, OneScriptToRuleThemAll {
-    
-    address proposalOwner = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
-
     /*
         // Before we can start a milestone, two things need to be present:
         // 1. A non-empty list of contributors for it
@@ -34,6 +31,7 @@ contract EscobarOrders is Script, OneScriptToRuleThemAll {
 
     address funder1 = address(0xF1);
     address funder2 = address(0xF2);
+    address proposalOwner = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
     
     uint256 proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
 
