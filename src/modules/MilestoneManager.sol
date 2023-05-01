@@ -389,7 +389,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    ) external onlyAuthorizedOrOwner returns (uint) {
+    ) external onlyAuthorizedOrManager returns (uint) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
         Milestone memory _mlstn =
@@ -401,7 +401,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function stopMilestone(uint prevId, uint id)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(id)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -437,7 +437,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function removeMilestone(uint prevId, uint id)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(id)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -467,7 +467,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function startNextMilestone() external onlyAuthorizedOrOwner {
+    function startNextMilestone() external onlyAuthorizedOrManager {
         if (!isNextMilestoneActivatable()) {
             revert Module__MilestoneManager__MilestoneNotActivateable();
         }
@@ -541,7 +541,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    ) external onlyAuthorizedOrOwner validId(id) {
+    ) external onlyAuthorizedOrManager validId(id) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
         Milestone storage m = _milestoneRegistry[id];
@@ -590,7 +590,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(id)
         validPosition(idToPositionAfter)
         validPosition(prevId)
@@ -646,7 +646,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function completeMilestone(uint milestoneId)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(milestoneId)
     {
         Milestone storage m = _milestoneRegistry[milestoneId];
@@ -665,7 +665,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function declineMilestone(uint milestoneId)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(milestoneId)
     {
         Milestone storage m = _milestoneRegistry[milestoneId];

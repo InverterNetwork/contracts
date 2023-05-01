@@ -152,7 +152,7 @@ contract ModuleTest is Test {
     }
 
     function testPauseIsAuthenticated(address caller) public {
-        vm.assume(caller != proposal.owner());
+        vm.assume(caller != proposal.manager());
         authorizer.setAllAuthorized(false);
 
         vm.prank(caller);
@@ -161,7 +161,7 @@ contract ModuleTest is Test {
     }
 
     function testUnpauseIsAuthenticated(address caller) public {
-        vm.assume(caller != proposal.owner());
+        vm.assume(caller != proposal.manager());
         authorizer.setAllAuthorized(false);
 
         vm.prank(caller);

@@ -70,7 +70,7 @@ contract MetadataManager is IMetadataManager, Module {
 
     function setOwnerMetadata(OwnerMetadata calldata ownerMetadata_)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
     {
         _setOwnerMetadata(ownerMetadata_);
     }
@@ -86,7 +86,7 @@ contract MetadataManager is IMetadataManager, Module {
 
     function setProposalMetadata(ProposalMetadata calldata proposalMetadata_)
         public
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
     {
         _setProposalMetadata(proposalMetadata_);
     }
@@ -106,7 +106,7 @@ contract MetadataManager is IMetadataManager, Module {
 
     function setTeamMetadata(MemberMetadata[] calldata teamMetadata_)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
     {
         _setTeamMetadata(teamMetadata_);
     }
