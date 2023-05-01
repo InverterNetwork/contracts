@@ -51,7 +51,7 @@ contract ProposalFactoryTest is Test {
     IProposalFactory.ModuleConfig paymentProcessorConfig = IProposalFactory
         .ModuleConfig(
         IModule.Metadata(
-            1, 1, "https://paymentprocessor.com", "PaymentProcessor"
+            1, 1, "https://paymentprocessor.com", "SimplePaymentProcessor"
         ),
         bytes("data")
     );

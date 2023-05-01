@@ -12,8 +12,8 @@ import {
 
 import {
     IPaymentProcessor,
-    PaymentProcessor
-} from "src/modules/PaymentProcessor.sol";
+    SimplePaymentProcessor
+} from "src/modules/SimplePaymentProcessor.sol";
 
 import {
     IMilestoneManager,
@@ -85,7 +85,7 @@ contract ProposalCreation is Test {
     // This function sets up all necessary components needed for the creation of a proposal.
     // Components are:
     // -Authorizer: A Module that declares who can access the main functionalities of the proposal
-    // -PaymentProcessor: A Module that enables Token distribution
+    // -SimplePaymentProcessor: A Module that enables Token distribution
     // -MilestoneManager: A Module that enables Declaration of Milestones and upon fullfillment, uses the Payment Processor for salary distributions
     // -MetadataManager: A Module contains metadata for the proposal
     // -Beacons: A Proxy Contract structure that enables to update all proxy contracts at the same time (EIP-1967)
@@ -98,7 +98,7 @@ contract ProposalCreation is Test {
 
         //Create Module Templates
         authorizerTemplate = new ListAuthorizer();
-        paymentProcessorTemplate = new PaymentProcessor();
+        paymentProcessorTemplate = new SimplePaymentProcessor();
         milestoneManagerTemplate = new MilestoneManager();
         metadataManagerTemplate = new MetadataManager();
 
@@ -125,7 +125,7 @@ contract ProposalCreation is Test {
             1,
             1,
             "https://github.com/inverter/payment-processor",
-            "PaymentProcessor"
+            "SimplePaymentProcessor"
         );
         milestoneManagerMetadata = IModule.Metadata(
             1,
@@ -206,7 +206,7 @@ contract ProposalCreation is Test {
     // -authorizerFactoryConfig: Contains initially Authorized Addresses, that can use onlyAuthorized functions in the proposal
     //                           Notice that we have to decrypt the initialAuthorizedAddresses into a bytes format for correct
     //                           creation of the module in the ModuleFactory
-    // -paymentProcessorFactoryConfig: Just signals the Factory, that we want to integrate the PaymentProcessor here
+    // -paymentProcessorFactoryConfig: Just signals the Factory, that we want to integrate the SimplePaymentProcessor here
     // -optionalModules: This array contains further moduleConfigs in the same styling like before to signal
     //                   the proposalFactory that we want to integrate the defined modules.
     function createNewProposal() public returns (IProposal) {
@@ -230,13 +230,13 @@ contract ProposalCreation is Test {
             authorizerMetadata, abi.encode(initialAuthorizedAddresses)
         );
 
-        //Create ModuleConfig for PaymentProcessor
+        //Create ModuleConfig for SimplePaymentProcessor
         IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
             IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
 
         //Create optionalModule array
 
-        //Technically Authorizer and PaymentProcessor are the only necessary Modules, but we'll inlcude the metadata manager as an example
+        //Technically Authorizer and SimplePaymentProcessor are the only necessary Modules, but we'll inlcude the metadata manager as an example
 
         //Note: Its possible to submit a zero size array too
         IProposalFactory.ModuleConfig[] memory optionalModules =

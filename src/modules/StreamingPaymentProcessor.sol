@@ -23,7 +23,7 @@ import {IProposal} from "src/proposal/IProposal.sol";
  * @author byterocket
  */
 
-contract VestingPaymentProcessor is Module, IPaymentProcessor {
+contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 

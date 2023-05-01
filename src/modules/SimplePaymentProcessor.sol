@@ -18,15 +18,15 @@ import {Module} from "src/modules/base/Module.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
 /**
- * @title PaymentProcessor
+ * @title SimplePaymentProcessor
  *
- * @dev The PaymentProcessor is a module to process payment orders from other
+ * @dev The SimplePaymentProcessor is a module to process payment orders from other
  *      modules. In order to process a module's payment orders, the module must
  *      implement the {IPaymentClient} interface.
  *
  * @author byterocket
  */
-contract PaymentProcessor is Module, IPaymentProcessor {
+contract SimplePaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
 
     /// @notice invalid caller

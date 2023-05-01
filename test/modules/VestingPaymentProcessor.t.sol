@@ -8,9 +8,9 @@ import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {
-    VestingPaymentProcessor,
+    StreamingPaymentProcessor,
     IPaymentProcessor
-} from "src/modules/VestingPaymentProcessor.sol";
+} from "src/modules/StreamingPaymentProcessor.sol";
 
 // Mocks
 import {PaymentClientMock} from
@@ -21,7 +21,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract VestingPaymentProcessorTest is ModuleTest {
     // SuT
-    VestingPaymentProcessor paymentProcessor;
+    StreamingPaymentProcessor paymentProcessor;
 
     // Mocks
     PaymentClientMock paymentClient = new PaymentClientMock(_token);
@@ -43,8 +43,8 @@ contract VestingPaymentProcessorTest is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new VestingPaymentProcessor());
-        paymentProcessor = VestingPaymentProcessor(Clones.clone(impl));
+        address impl = address(new StreamingPaymentProcessor());
+        paymentProcessor = StreamingPaymentProcessor(Clones.clone(impl));
 
         _setUpProposal(paymentProcessor);
 
@@ -196,7 +196,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                VestingPaymentProcessor
+                StreamingPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
