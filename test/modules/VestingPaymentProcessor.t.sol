@@ -203,9 +203,9 @@ contract VestingPaymentProcessorTest is ModuleTest {
         paymentProcessor.processPayments(paymentClient);
     }
 
-    function testProcessPaymentsFailsWhenCalledOnOtherClient(
-        address nonModule
-    ) public {
+    function testProcessPaymentsFailsWhenCalledOnOtherClient(address nonModule)
+        public
+    {
         vm.assume(nonModule != address(paymentProcessor));
         vm.assume(nonModule != address(paymentClient));
         vm.assume(nonModule != address(_authorizer));
@@ -467,9 +467,9 @@ contract VestingPaymentProcessorTest is ModuleTest {
         paymentProcessor.cancelRunningPayments(paymentClient);
     }
 
-    function testCancelPaymentsFailsWhenCalledOnOtherClient(
-        address nonModule
-    ) public {
+    function testCancelPaymentsFailsWhenCalledOnOtherClient(address nonModule)
+        public
+    {
         vm.assume(nonModule != address(paymentProcessor));
         vm.assume(nonModule != address(paymentClient));
         vm.assume(nonModule != address(_authorizer));
