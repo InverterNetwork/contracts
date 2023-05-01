@@ -34,7 +34,6 @@ contract PaymentProcessorTest is ModuleTest {
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        _authorizer.setIsAuthorized(address(paymentClient), true);
         _proposal.addModule(address(paymentClient));
 
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
@@ -91,11 +90,78 @@ contract PaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                PaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
         );
         paymentProcessor.processPayments(paymentClient);
+    }
+
+    function testProcessPaymentsFailsWhenCalledOnOtherClient(
+        address nonModule
+    ) public {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_authorizer));
+        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
+        // if deployed address is same as nonModule, this test will fail.
+        vm.assume(nonModule != address(_paymentProcessor));
+
+        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+
+        vm.prank(address(paymentClient));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPaymentProcessor
+                    .Module__PaymentManager__CannotCallOnOtherClientsOrders
+                    .selector
+            )
+        );
+        paymentProcessor.processPayments(otherPaymentClient);
+    }
+
+    function testCancelPaymentsFailsWhenCalledByNonModule(address nonModule)
+        public
+    {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_authorizer));
+        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
+        // if deployed address is same as nonModule, this test will fail.
+        vm.assume(nonModule != address(_paymentProcessor));
+
+        vm.prank(nonModule);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPaymentProcessor
+                    .Module__PaymentManager__OnlyCallableByModule
+                    .selector
+            )
+        );
+        paymentProcessor.cancelRunningPayments(paymentClient);
+    }
+
+    function testCancelPaymentsFailsWhenCalledOnOtherClient(
+        address nonModule
+    ) public {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_authorizer));
+        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
+        // if deployed address is same as nonModule, this test will fail.
+        vm.assume(nonModule != address(_paymentProcessor));
+
+        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+
+        vm.prank(address(paymentClient));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPaymentProcessor
+                    .Module__PaymentManager__CannotCallOnOtherClientsOrders
+                    .selector
+            )
+        );
+        paymentProcessor.cancelRunningPayments(otherPaymentClient);
     }
 }

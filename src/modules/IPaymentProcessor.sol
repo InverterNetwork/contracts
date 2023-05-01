@@ -7,6 +7,15 @@ import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 
 interface IPaymentProcessor {
     //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice invalid caller
+    error Module__PaymentManager__OnlyCallableByModule();
+
+    /// @notice a client can only execute on its own orders
+    error Module__PaymentManager__CannotCallOnOtherClientsOrders();
+
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Emitted when a payment gets processed for execution.
