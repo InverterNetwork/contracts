@@ -99,7 +99,9 @@ contract PaymentProcessorTest is ModuleTest {
         paymentProcessor.processPayments(paymentClient);
     }
 
-    function testCancelRunningPayments(address nonAuthorized) public {
+    function testCancelRunningPaymentsFailsWhenCalledByNonAuthorized(
+        address nonAuthorized
+    ) public {
         vm.assume(nonAuthorized != address(this));
         vm.assume(nonAuthorized != address(paymentProcessor));
 
