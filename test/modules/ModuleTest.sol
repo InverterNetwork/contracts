@@ -96,23 +96,26 @@ abstract contract ModuleTest is Test {
     //--------------------------------------------------------------------------------
     // Helpers
 
-    function _assumeNonEmptyString(string memory a) internal {
+    function _assumeNonEmptyString(string memory a) internal pure {
         vm.assume(bytes(a).length != 0);
     }
 
-    function _assumeTimestampNotInPast(uint a) internal {
+    function _assumeTimestampNotInPast(uint a) internal view {
         vm.assume(a >= block.timestamp);
     }
 
     // assumeElemNotInSet functions for different types:
 
-    function _assumeElemNotInSet(address[] memory set, address elem) internal {
+    function _assumeElemNotInSet(address[] memory set, address elem)
+        internal
+        pure
+    {
         for (uint i; i < set.length; ++i) {
             vm.assume(elem != set[i]);
         }
     }
 
-    function _assumeElemNotInSet(uint[] memory set, uint elem) internal {
+    function _assumeElemNotInSet(uint[] memory set, uint elem) internal pure {
         for (uint i; i < set.length; ++i) {
             vm.assume(elem != set[i]);
         }
@@ -120,6 +123,7 @@ abstract contract ModuleTest is Test {
 
     function _assumeElemNotInSet(string[] memory set, string memory elem)
         internal
+        pure
     {
         for (uint i; i < set.length; ++i) {
             vm.assume(keccak256(bytes(elem)) != keccak256(bytes(set[i])));
@@ -128,6 +132,7 @@ abstract contract ModuleTest is Test {
 
     function _assumeElemNotInSet(bytes[] memory set, bytes memory elem)
         internal
+        pure
     {
         for (uint i; i < set.length; ++i) {
             vm.assume(

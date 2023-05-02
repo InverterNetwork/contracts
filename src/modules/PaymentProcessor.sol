@@ -29,9 +29,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
 contract PaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
 
-    /// @notice invalid caller
-    error Module__PaymentManager__OnlyCallableByModule();
-
     modifier onlyModule() {
         if (!proposal().isModule(_msgSender())) {
             revert Module__PaymentManager__OnlyCallableByModule();
@@ -88,8 +85,9 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    function cancelRunningPayments(IPaymentClient client)
+    function cancelRunningPayments(IPaymentClient)
         external
+        view
         onlyAuthorizedOrOwner
     {
         //Since we pay out on processing, this function does nothing

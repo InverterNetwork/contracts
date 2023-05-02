@@ -328,7 +328,7 @@ contract ListAuthorizerTest is Test {
         }
     }
 
-    function assumeValidAuth(address a) public {
+    function assumeValidAuth(address a) public view {
         address[] memory invalids = createInvalidAuthorized();
 
         for (uint i; i < invalids.length; ++i) {

@@ -1188,7 +1188,7 @@ contract SingleVoteGovernorTest is Test {
         }
     }
 
-    function assumeValidUser(address a) public {
+    function assumeValidUser(address a) public view {
         address[] memory invalids = createInvalidUsers();
 
         for (uint i; i < invalids.length; ++i) {

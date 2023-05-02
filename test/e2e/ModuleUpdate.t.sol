@@ -102,11 +102,14 @@ contract ModuleUpdateTest is Test {
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
-    function _assumeValidMetadata(IModule.Metadata memory metadata) public {
+    function _assumeValidMetadata(IModule.Metadata memory metadata)
+        public
+        pure
+    {
         vm.assume(LibMetadata.isValid(metadata));
     }
 
-    function _assumeValidProposal(address proposal) internal {
+    function _assumeValidProposal(address proposal) internal pure {
         vm.assume(proposal != address(0));
     }
 }

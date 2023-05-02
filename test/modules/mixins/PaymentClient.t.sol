@@ -293,21 +293,21 @@ contract PaymentClientTest is Test {
     //--------------------------------------------------------------------------
     // Assume Helper Functions
 
-    function _assumeValidRecipient(address recipient) internal {
+    function _assumeValidRecipient(address recipient) internal view {
         address[] memory invalids = _createInvalidRecipients();
         for (uint i; i < invalids.length; ++i) {
             vm.assume(recipient != invalids[i]);
         }
     }
 
-    function _assumeValidAmount(uint amount) internal {
+    function _assumeValidAmount(uint amount) internal pure {
         uint[] memory invalids = _createInvalidAmounts();
         for (uint i; i < invalids.length; ++i) {
             vm.assume(amount != invalids[i]);
         }
     }
 
-    function _assumeValidDueTo(uint dueTo) internal {
+    function _assumeValidDueTo(uint dueTo) internal view {
         uint[] memory invalids = _createInvalidDueTos();
         for (uint i; i < invalids.length; ++i) {
             vm.assume(dueTo != invalids[i]);

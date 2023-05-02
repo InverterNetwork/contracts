@@ -316,8 +316,6 @@ contract ModuleManagerTest is Test {
 
         // The current module to remove.
         address module;
-        // The module's prevModule in the list.
-        address prevModule;
 
         // Add modules.
         for (uint i; i < whos.length; ++i) {

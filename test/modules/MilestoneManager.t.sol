@@ -2012,15 +2012,15 @@ contract MilestoneManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Assume Helper Functions
 
-    function _assumeValidDuration(uint duration) internal {
+    function _assumeValidDuration(uint duration) internal pure {
         _assumeElemNotInSet(_createInvalidDurations(), duration);
     }
 
-    function _assumeValidBudgets(uint budget) internal {
+    function _assumeValidBudgets(uint budget) internal pure {
         _assumeElemNotInSet(_createInvalidBudgets(), budget);
     }
 
-    function _assumeValidDetails(bytes memory details) internal {
+    function _assumeValidDetails(bytes memory details) internal pure {
         _assumeElemNotInSet(_createInvalidDetails(), details);
     }
 
@@ -2132,7 +2132,7 @@ contract MilestoneManagerTest is ModuleTest {
         return kHashOutput % maxValue;
     }
 
-    function _getPositionAfter(uint id) private view returns (uint) {
+    function _getPositionAfter(uint id) private view returns (uint position) {
         uint[] memory milestoneList = milestoneManager.listMilestoneIds();
 
         //If SENTINEL return first position in list
