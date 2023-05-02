@@ -156,24 +156,12 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
+    /// @inheritdoc IPaymentProcessor
     function cancelRunningPayments(IPaymentClient client)
         external
         onlyAuthorized
     {
         _cancelRunningOrders(client);
-    }
-
-    function _cancelRunningOrders(IPaymentClient client) internal {
-        //IPaymentClient.PaymentOrder[] memory orders;
-        //orders = client.paymentOrders();
-        address[] memory _activePayments = activePayments[address(client)];
-
-        address _recipient;
-        for (uint i; i < _activePayments.length; ++i) {
-            _recipient = _activePayments[i];
-
-            _removePayment(address(client), _recipient);
-        }
     }
 
     /// @notice Deletes a contributors payment and leaves non-released tokens
@@ -269,6 +257,19 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
             }
         }
         return type(uint).max;
+    }
+
+    function _cancelRunningOrders(IPaymentClient client) internal {
+        //IPaymentClient.PaymentOrder[] memory orders;
+        //orders = client.paymentOrders();
+        address[] memory _activePayments = activePayments[address(client)];
+
+        address _recipient;
+        for (uint i; i < _activePayments.length; ++i) {
+            _recipient = _activePayments[i];
+
+            _removePayment(address(client), _recipient);
+        }
     }
 
     function _removePayment(address client, address contributor) internal {
