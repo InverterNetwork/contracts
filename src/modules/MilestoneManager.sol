@@ -84,11 +84,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         if (
             (id == idToPositionAfter) //Make sure it doesnt move after itself
                 || (idToPositionAfter == prevId) //Make sure it doesnt move before itself
-                || _milestoneRegistry[id].startTimestamp != 0 //Milestone hasnt started
+                || _milestoneRegistry[id].startTimestamp != 0 //Milestone hasnt started//@todo has to be put into other modifier
                 || (
                     _milestoneRegistry[_milestones[idToPositionAfter]]
                         .startTimestamp != 0
-                ) //If the following milestone already started you cant move or add a new milestone here, because it could never be started
+                ) //If the following milestone already started you cant move or add a new milestone here, because it could never be started//@todo has to be put into other modifier
         ) {
             revert Module__MilestoneManager__InvalidIntermediatePosition();
         }
@@ -180,6 +180,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     //--------------------------------------------------------------------------
     // Storage
+
+    /// @dev Value for what the next id will be.
+    uint private _nextId;
 
     /// @dev Registry mapping milestone ids to Milestone structs.
     mapping(uint => Milestone) private _milestoneRegistry;
@@ -596,8 +599,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         external
         onlyAuthorizedOrOwner
         validId(id)
-        validPosition(idToPositionAfter)
         validPosition(prevId)
+        validPosition(idToPositionAfter)
         validIntermediatePosition(id, prevId, idToPositionAfter)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -729,9 +732,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         internal
         returns (uint _id)
     {
+        // Note ids start at 1.
+        uint milestoneId = ++_nextId;
+
         // Increase counter and cache result.
-        // Note that ids therefore start at 1.
-        uint milestoneId = ++_milestoneCounter;
+        ++_milestoneCounter;
 
         // Add milestone's id to end of list.
         _milestones[_last] = milestoneId;
