@@ -87,6 +87,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     function cancelRunningPayments(IPaymentClient)
         external
+        view
         onlyAuthorizedOrManager
     {
         //Since we pay out on processing, this function does nothing
