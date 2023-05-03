@@ -101,7 +101,7 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    function cancelRunningPayments(IPaymentClient)
+    function cancelRunningPayments(IPaymentClient client)
         external
         onlyModule
         validClient(client)
