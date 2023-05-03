@@ -85,9 +85,6 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice insufficient tokens in the client to do payments
     error Module__PaymentManager__InsufficientTokenBalanceInClient();
 
-    /// @notice invalid caller
-    error Module__PaymentManager__OnlyCallableByModule();
-
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -308,7 +305,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     ) internal {
         if (
             !validAddress(_contributor) || !validSalary(_salary)
-                || !validStart(_start) || !validDuration(_start, _duration)
+                || !validStart(_start) || !validDuration(_duration)
         ) {
             emit InvalidVestingOrderDiscarded(
                 _contributor, _salary, _start, _duration
@@ -340,10 +337,19 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         }
 
         // we claim the earned funds for the contributor.
-        try token().transferFrom(client, beneficiary, amount) {
-            emit TokensReleased(beneficiary, address(token()), amount);
-            // if transfer fails, move amount to unclaimableAmounts.
-        } catch {
+        address _token = address(token());
+        (bool success, bytes memory data) = address(_token).call(
+            abi.encodeWithSelector(
+                IERC20(_token).transferFrom.selector,
+                client,
+                beneficiary,
+                amount
+            )
+        );
+        if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+            emit TokensReleased(beneficiary, _token, amount);
+        } else {
+            // if transfer fails, store amount to unclaimableAmounts.
             unclaimableAmounts[client][beneficiary] += amount;
         }
     }
@@ -385,7 +391,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         return true;
     }
 
-    function validSalary(uint _salary) internal view returns (bool) {
+    function validSalary(uint _salary) internal pure returns (bool) {
         if (_salary == 0) {
             return false;
         }
@@ -399,11 +405,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         return true;
     }
 
-    function validDuration(uint _start, uint _duration)
-        internal
-        view
-        returns (bool)
-    {
+    function validDuration(uint _duration) internal pure returns (bool) {
         if (_duration == 0) {
             return false;
         }

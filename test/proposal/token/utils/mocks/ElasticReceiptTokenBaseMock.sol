@@ -3,12 +3,10 @@ pragma solidity ^0.8.13;
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-import {
-    ElasticReceiptToken,
-    ElasticReceiptTokenBase
-} from "src/proposal/token/ElasticReceiptToken.sol";
+import {ElasticReceiptTokenBase} from
+    "src/proposal/token/ElasticReceiptTokenBase.sol";
 
-contract ElasticReceiptTokenMock is ElasticReceiptToken {
+contract ElasticReceiptTokenBaseMock is ElasticReceiptTokenBase {
     // The token's underlier.
     // Is of type ERC20.
     address public underlier;
@@ -18,7 +16,12 @@ contract ElasticReceiptTokenMock is ElasticReceiptToken {
         string memory name_,
         string memory symbol_,
         uint8 decimals_
-    ) ElasticReceiptToken(name_, symbol_, decimals_) {
+    ) {
+        name = name_;
+        symbol = symbol_;
+        decimals = decimals_;
+
+        _accountBits[address(0)] = TOTAL_BITS;
         underlier = underlier_;
     }
 

@@ -74,25 +74,70 @@ contract MetadataManagerTest is ModuleTest {
 
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {
+        OWNER_METADATA = IMetadataManager.OwnerMetadata(
+            "newName", address(0x606), "newTwitterHandle"
+        );
+
+        PROPOSAL_METADATA = IMetadataManager.ProposalMetadata(
+            "newTitle",
+            "newDescriptionShort",
+            "newDescriptionLong",
+            new string[](0),
+            new string[](0)
+        );
+
+        PROPOSAL_METADATA.externalMedias.push("newExternalMedia");
+
+        PROPOSAL_METADATA.categories.push("newCategory1");
+
+        TEAM_METADATA.push(
+            IMetadataManager.MemberMetadata(
+                "newName", address(0x606), "newSomething"
+            )
+        );
+
         //-----------------------
         // OWNER_METADATA
-
+        metadataManager.setOwnerMetadata(OWNER_METADATA);
         assertMetadataManagerOwnerMetadataEqualTo(OWNER_METADATA);
 
         //-----------------------
         // PROPOSAL_METADATA
-
+        metadataManager.setProposalMetadata(PROPOSAL_METADATA);
         assertMetadataManagerProposalMetadataEqualTo(PROPOSAL_METADATA);
 
         //-----------------------
         // TEAM_METADATA
-
+        metadataManager.setTeamMetadata(TEAM_METADATA);
         assertMetadataManagerTeamMetadataEqualTo(TEAM_METADATA);
     }
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         metadataManager.init(_proposal, _METADATA, bytes(""));
+    }
+
+    function testSetter() public {
+        //-----------------------
+        // OWNER_METADATA
+
+        assertMetadataManagerOwnerMetadataEqualTo(
+            metadataManager.getOwnerMetadata()
+        );
+
+        //-----------------------
+        // PROPOSAL_METADATA
+
+        assertMetadataManagerProposalMetadataEqualTo(
+            metadataManager.getProposalMetadata()
+        );
+
+        //-----------------------
+        // TEAM_METADATA
+
+        assertMetadataManagerTeamMetadataEqualTo(
+            metadataManager.getTeamMetadata()
+        );
     }
 
     //--------------------------------------------------------------------------
