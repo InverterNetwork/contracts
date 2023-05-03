@@ -91,11 +91,24 @@ contract PaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                SimplePaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
         );
         paymentProcessor.processPayments(paymentClient);
+    }
+
+    function testCancelRunningPaymentsFailsWhenCalledByNonAuthorized(
+        address nonAuthorized
+    ) public {
+        vm.assume(nonAuthorized != address(this));
+        vm.assume(nonAuthorized != address(paymentProcessor));
+
+        vm.prank(nonAuthorized);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
+        );
+        paymentProcessor.cancelRunningPayments(paymentClient);
     }
 }

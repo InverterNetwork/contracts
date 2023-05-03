@@ -54,71 +54,71 @@ contract Rebase is ElasticReceiptTokenTest {
             }
 
             // Check total supply.
-            assertEq(ert.totalSupply(), totalSupply);
+            assertEq(ertb.totalSupply(), totalSupply);
 
             // Check that a user balance did not change due to a mint by
             // another user.
             for (uint j; j < balances.length; j++) {
-                assertEq(ert.balanceOf(toAddress(j)), balances[j]);
+                assertEq(ertb.balanceOf(toAddress(j)), balances[j]);
             }
 
             // Change the underlier's supply and execute rebase.
-            underlier.burn(address(ert), underlier.balanceOf(address(ert)));
-            underlier.mint(address(ert), testCase.newSupplyTarget);
-            ert.rebase();
+            underlier.burn(address(ertb), underlier.balanceOf(address(ertb)));
+            underlier.mint(address(ertb), testCase.newSupplyTarget);
+            ertb.rebase();
 
             // Check that the user balances rebased into the "right direction",
             // i.e. expanded on expansion, contracted on contraction and did not
             // change during equilibrium rebase.
             for (uint j; j < balances.length; j++) {
                 if (testCase.newSupplyTarget > totalSupply) {
-                    assertTrue(ert.balanceOf(toAddress(j)) > balances[j]);
+                    assertTrue(ertb.balanceOf(toAddress(j)) > balances[j]);
                 } else if (testCase.newSupplyTarget < totalSupply) {
-                    assertTrue(ert.balanceOf(toAddress(j)) < balances[j]);
+                    assertTrue(ertb.balanceOf(toAddress(j)) < balances[j]);
                 } else {
-                    assertEq(ert.balanceOf(toAddress(j)), balances[j]);
+                    assertEq(ertb.balanceOf(toAddress(j)), balances[j]);
                 }
             }
 
             // Execute second rebase to bring the supply back to initial.
-            underlier.burn(address(ert), underlier.balanceOf(address(ert)));
-            underlier.mint(address(ert), totalSupply);
-            ert.rebase();
+            underlier.burn(address(ertb), underlier.balanceOf(address(ertb)));
+            underlier.mint(address(ertb), totalSupply);
+            ertb.rebase();
 
             // Check that user balances did not change compared to initial.
             for (uint j; j < balances.length; j++) {
-                assertEq(ert.balanceOf(toAddress(j)), balances[j]);
+                assertEq(ertb.balanceOf(toAddress(j)), balances[j]);
             }
         }
     }
 
     function testNoRebaseIfZeroSupplyTarget() public {
-        underlier.mint(address(ert), 10e18);
-        ert.rebase();
+        underlier.mint(address(ertb), 10e18);
+        ertb.rebase();
 
-        uint supplyBefore = ert.totalSupply();
+        uint supplyBefore = ertb.totalSupply();
         assertEq(supplyBefore, 10e18);
 
-        underlier.burn(address(ert), 10e18);
-        ert.rebase();
+        underlier.burn(address(ertb), 10e18);
+        ertb.rebase();
 
-        uint supplyAfter = ert.totalSupply();
+        uint supplyAfter = ertb.totalSupply();
 
         // Did not adjust the supply.
         assertEq(supplyAfter, supplyBefore);
     }
 
     function testNoRebaseIfMaxSupplyTarget() public {
-        underlier.mint(address(ert), 10e18);
-        ert.rebase();
+        underlier.mint(address(ertb), 10e18);
+        ertb.rebase();
 
-        uint supplyBefore = ert.totalSupply();
+        uint supplyBefore = ertb.totalSupply();
         assertEq(supplyBefore, 10e18);
 
-        underlier.mint(address(ert), MAX_SUPPLY - 10e18 + 1);
-        ert.rebase();
+        underlier.mint(address(ertb), MAX_SUPPLY - 10e18 + 1);
+        ertb.rebase();
 
-        uint supplyAfter = ert.totalSupply();
+        uint supplyAfter = ertb.totalSupply();
 
         // Did not adjust the supply.
         assertEq(supplyAfter, supplyBefore);
@@ -132,12 +132,12 @@ contract Rebase is ElasticReceiptTokenTest {
 
         vm.startPrank(user);
         {
-            underlier.approve(address(ert), balance);
-            ert.mint(balance);
+            underlier.approve(address(ertb), balance);
+            ertb.mint(balance);
         }
         vm.stopPrank();
 
-        ert.rebase();
+        ertb.rebase();
     }
 
     function toAddress(uint a) public pure returns (address) {
