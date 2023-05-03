@@ -128,6 +128,9 @@ contract ProposalFactoryTest is Test {
         );
         // Only check that proposal's id is correct.
         assertEq(proposal.proposalId(), 2);
+
+        //check that proposalFactory idCounter is correct.
+        assertEq(factory.getProposalIDCounter(), 2);
     }
 
     function testProposalMapping(uint proposalAmount) public {

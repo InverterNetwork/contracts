@@ -5,6 +5,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 contract ERC20Mock is ERC20 {
     mapping(address => bool) blockedAddresses;
+    bool returnFalse;
 
     constructor(string memory _name, string memory _symbol)
         ERC20(_name, _symbol)
@@ -26,11 +27,18 @@ contract ERC20Mock is ERC20 {
         blockedAddresses[user] = false;
     }
 
+    function toggleReturnFalse() public {
+        returnFalse = !returnFalse;
+    }
+
     function isBlockedAddress(address user) public returns (bool) {
         return blockedAddresses[user];
     }
 
     function transfer(address to, uint amount) public override returns (bool) {
+        if (returnFalse) {
+            return false;
+        }
         require(!isBlockedAddress(to), "address blocked");
         address owner = _msgSender();
         _transfer(owner, to, amount);
@@ -42,6 +50,9 @@ contract ERC20Mock is ERC20 {
         override
         returns (bool)
     {
+        if (returnFalse) {
+            return false;
+        }
         require(!isBlockedAddress(to), "address blocked");
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);

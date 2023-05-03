@@ -8,9 +8,9 @@ import "./Test.t.sol";
  */
 contract Deployment is ElasticReceiptTokenTest {
     function testInvariants() public {
-        assertEq(ert.totalSupply(), 0);
-        assertEq(ert.scaledBalanceOf(address(0)), TOTAL_BITS);
-        assertEq(ert.scaledTotalSupply(), 0);
+        assertEq(ertb.totalSupply(), 0);
+        assertEq(ertb.scaledBalanceOf(address(0)), TOTAL_BITS);
+        assertEq(ertb.scaledTotalSupply(), 0);
     }
 
     function testContructor() public {

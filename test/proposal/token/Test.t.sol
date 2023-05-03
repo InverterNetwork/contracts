@@ -3,12 +3,15 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-import "src/proposal/token/ElasticReceiptToken.sol";
+import {ElasticReceiptTokenBaseMock} from
+    "./utils/mocks/ElasticReceiptTokenBaseMock.sol";
 
 import {ElasticReceiptTokenMock} from
     "./utils/mocks/ElasticReceiptTokenMock.sol";
+
 import {ElasticReceiptTokenUpgradeableMock} from
     "./utils/mocks/ElasticReceiptTokenUpgradeableMock.sol";
+
 import {ERC20Mock} from "./utils/mocks/ERC20Mock.sol";
 
 /**
@@ -19,6 +22,7 @@ import {ERC20Mock} from "./utils/mocks/ERC20Mock.sol";
  */
 abstract contract ElasticReceiptTokenTest is Test {
     // SuT
+    ElasticReceiptTokenBaseMock ertb;
     ElasticReceiptTokenMock ert;
     ElasticReceiptTokenUpgradeableMock ertUpgradeable;
 
@@ -39,6 +43,13 @@ abstract contract ElasticReceiptTokenTest is Test {
     function setUp() public {
         underlier = new ERC20Mock("Test ERC20", "TEST");
 
+        ertb = new ElasticReceiptTokenBaseMock(
+            address(underlier),
+            NAME,
+            SYMBOL,
+            uint8(DECIMALS)
+        );
+
         ert = new ElasticReceiptTokenMock(
             address(underlier),
             NAME,
@@ -57,7 +68,7 @@ abstract contract ElasticReceiptTokenTest is Test {
 
     modifier assumeTestAddress(address who) {
         vm.assume(who != address(0));
-        vm.assume(who != address(ert));
+        vm.assume(who != address(ertb));
         _;
     }
 
@@ -66,8 +77,8 @@ abstract contract ElasticReceiptTokenTest is Test {
 
         vm.startPrank(user);
         {
-            underlier.approve(address(ert), type(uint).max);
-            ert.mint(erts);
+            underlier.approve(address(ertb), type(uint).max);
+            ertb.mint(erts);
         }
         vm.stopPrank();
     }

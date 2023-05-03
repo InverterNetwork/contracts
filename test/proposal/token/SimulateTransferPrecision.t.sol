@@ -8,9 +8,9 @@ import "./Test.t.sol";
  *
  *      Tests the following invariant:
  *
- *      If address A transfers x erts to address B, A's resulting external
- *      balance decreased by precisely x erts and B's external balance
- *      increased by precisely x erts.
+ *      If address A transfers x ertbs to address B, A's resulting external
+ *      balance decreased by precisely x ertbs and B's external balance
+ *      increased by precisely x ertbs.
  *
  *      To run the simulation, adjust the following two constants:
  *
@@ -57,17 +57,17 @@ contract SimulateTransferPrecision is ElasticReceiptTokenTest {
 
         // Users give infinite approval of mock tokens to downstream contract.
         vm.prank(u1);
-        underlier.approve(address(ert), type(uint).max);
+        underlier.approve(address(ertb), type(uint).max);
         vm.prank(u2);
-        underlier.approve(address(ert), type(uint).max);
+        underlier.approve(address(ertb), type(uint).max);
 
-        // Users give infinite approval of erts to this contract.
+        // Users give infinite approval of ertbs to this contract.
         vm.prank(u1);
-        ert.approve(address(this), type(uint).max);
+        ertb.approve(address(this), type(uint).max);
         vm.prank(u2);
-        ert.approve(address(this), type(uint).max);
+        ertb.approve(address(this), type(uint).max);
 
-        // User 1 receives currentSupply of erts.
+        // User 1 receives currentSupply of ertbs.
         mintToUser(u1, currentSupply);
 
         uint iteration;
@@ -97,29 +97,29 @@ contract SimulateTransferPrecision is ElasticReceiptTokenTest {
             // Mint/Burn nextSupplyChange of underlier tokens to downstream
             // contract to simulate expansion/contraction and execute rebase.
             if (SIMULATE_EXPANSION) {
-                underlier.mint(address(ert), nextSupplyChange);
+                underlier.mint(address(ertb), nextSupplyChange);
             } else {
-                underlier.burn(address(ert), nextSupplyChange);
+                underlier.burn(address(ertb), nextSupplyChange);
             }
-            ert.rebase();
+            ertb.rebase();
 
-            // Cache balance, send 1e-9 ert back and forth,
+            // Cache balance, send 1e-9 ertb back and forth,
             // and check if balance is same afterwards.
-            uint balanceU1 = ert.balanceOf(u1);
-            uint balanceU2 = ert.balanceOf(u2);
-            ert.transferFrom(u1, u2, 1);
-            ert.transferFrom(u2, u1, 1);
-            assertEq(balanceU1, ert.balanceOf(u1));
-            assertEq(balanceU2, ert.balanceOf(u2));
+            uint balanceU1 = ertb.balanceOf(u1);
+            uint balanceU2 = ertb.balanceOf(u2);
+            ertb.transferFrom(u1, u2, 1);
+            ertb.transferFrom(u2, u1, 1);
+            assertEq(balanceU1, ertb.balanceOf(u1));
+            assertEq(balanceU2, ertb.balanceOf(u2));
 
-            // Cache balance, send whole ert balance back and forth,
+            // Cache balance, send whole ertb balance back and forth,
             // and check if balance is same afterwards.
-            balanceU1 = ert.balanceOf(u1);
-            balanceU2 = ert.balanceOf(u2);
-            ert.transferFrom(u1, u2, ert.balanceOf(u1));
-            ert.transferFrom(u2, u1, ert.balanceOf(u2));
-            assertEq(balanceU1, ert.balanceOf(u1));
-            assertEq(balanceU2, ert.balanceOf(u2));
+            balanceU1 = ertb.balanceOf(u1);
+            balanceU2 = ertb.balanceOf(u2);
+            ertb.transferFrom(u1, u2, ertb.balanceOf(u1));
+            ertb.transferFrom(u2, u1, ertb.balanceOf(u2));
+            assertEq(balanceU1, ertb.balanceOf(u1));
+            assertEq(balanceU2, ertb.balanceOf(u2));
         }
     }
 }

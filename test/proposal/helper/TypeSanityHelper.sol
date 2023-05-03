@@ -13,7 +13,10 @@ contract TypeSanityHelper is Test {
     //--------------------------------------------------------------------------------
     // Helpers
 
-    function assumeElemNotInSet(address[] memory set, address elem) public {
+    function assumeElemNotInSet(address[] memory set, address elem)
+        public
+        pure
+    {
         for (uint i; i < set.length; ++i) {
             vm.assume(elem != set[i]);
         }
@@ -23,7 +26,7 @@ contract TypeSanityHelper is Test {
     // Types for Proposal
     // Contract: Proposal.sol
 
-    function assumeValidProposalId(uint id) public {
+    function assumeValidProposalId(uint id) public pure {
         vm.assume(id != 0);
     }
 
@@ -49,7 +52,7 @@ contract TypeSanityHelper is Test {
         }
     }
 
-    function assumeValidModule(address module) public {
+    function assumeValidModule(address module) public view {
         address[] memory invalids = createInvalidModules();
 
         for (uint i; i < invalids.length; ++i) {

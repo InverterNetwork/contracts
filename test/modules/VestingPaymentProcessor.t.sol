@@ -585,10 +585,11 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
-    // Recipient address is blacklisted on the ERC contract.
-    // Tries to claim tokens after 25% duration but ERC contract reverts.
-    // Recipient address is whitelisted in the ERC contract.
-    // Successfuly to claims tokens again after 50% duration.
+    // Verifies our contract corectly handles ERC20 revertion.
+    // 1. Recipient address is blacklisted on the ERC contract.
+    // 2. Tries to claim tokens after 25% duration but ERC contract reverts.
+    // 3. Recipient address is whitelisted in the ERC contract.
+    // 4. Successfuly to claims tokens again after 50% duration.
     function testBlockedAddressCanClaimLater() public {
         address recipient = address(0xBABE);
         uint amount = 10 ether;
@@ -622,6 +623,61 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
         // recipient is whitelisted.
         unblockAddress(recipient);
+
+        // FF 25% and claim.
+        vm.warp(block.timestamp + duration / 4);
+        vm.prank(recipient);
+        paymentProcessor.claim(paymentClient);
+
+        // after successful claim attempt receiver should 50% total,
+        // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
+        assertEq(_token.balanceOf(address(recipient)), amount / 2);
+        assertEq(
+            paymentProcessor.releasable(address(paymentClient), recipient), 0
+        );
+        assertEq(
+            paymentProcessor.unclaimable(address(paymentClient), recipient), 0
+        );
+    }
+
+    // Verifies our contract corectly handles ERC20 retunrning false:
+    // 1. Token address is broken and only returns false on failure
+    // 2. Tries to claim tokens after 25% duration but ERC contract reverts.
+    // 3. Token address is fixed works normally.
+    // 4. Successfuly to claims tokens again after 50% duration.
+    function testFalseReturningTokenTransfers() public {
+        address recipient = address(0xBABE);
+        uint amount = 10 ether;
+        uint duration = 10 days;
+
+        // Add payment order to client and call processPayments.
+        paymentClient.addPaymentOrder(
+            recipient, amount, (block.timestamp + duration)
+        );
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // transfers will fail by returning false now
+        _token.toggleReturnFalse();
+
+        // FF 25% and claim.
+        vm.warp(block.timestamp + duration / 4);
+        vm.prank(recipient);
+        paymentProcessor.claim(paymentClient);
+
+        // after failed claim attempt receiver should receive 0 token,
+        // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
+        assertEq(_token.balanceOf(address(recipient)), 0);
+        assertEq(
+            paymentProcessor.releasable(address(paymentClient), recipient), 0
+        );
+        assertEq(
+            paymentProcessor.unclaimable(address(paymentClient), recipient),
+            amount / 4
+        );
+
+        // transfers will work normally again
+        _token.toggleReturnFalse();
 
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
@@ -708,7 +764,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         }
     }
 
-    function assumeValidRecipient(address a) public {
+    function assumeValidRecipient(address a) public view {
         address[] memory invalids = createInvalidRecipients();
 
         for (uint i; i < invalids.length; i++) {
@@ -731,6 +787,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
     // note By only checking the values we'll use, we avoid unnecessary rejections
     function assumeValidAmounts(uint128[] memory amounts, uint checkUpTo)
         public
+        pure
     {
         vm.assume(amounts.length != 0);
         for (uint i; i < checkUpTo; i++) {
@@ -741,6 +798,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
     // note By only checking the values we'll use, we avoid unnecessary rejections
     function assumeValidDurations(uint64[] memory durations, uint checkUpTo)
         public
+        pure
     {
         vm.assume(durations.length != 0);
         for (uint i; i < checkUpTo; i++) {

@@ -3,8 +3,10 @@ pragma solidity ^0.8.13;
 
 // External Dependencies
 
-import {ElasticReceiptTokenUpgradeable} from
-    "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
+import {
+    ElasticReceiptTokenUpgradeable,
+    ElasticReceiptTokenBase
+} from "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
@@ -56,7 +58,7 @@ abstract contract FundingManager is
     function _supplyTarget()
         internal
         view
-        override(ElasticReceiptTokenUpgradeable)
+        override(ElasticReceiptTokenBase)
         returns (uint)
     {
         uint tokenBalance = token().balanceOf(address(this));

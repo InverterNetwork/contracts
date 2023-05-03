@@ -13,7 +13,7 @@ import {
 contract FundingManagerMock is FundingManager {
     IERC20 internal _token;
 
-    function init(IERC20 token_, uint proposalId_, uint8 decimals_)
+    function init(IERC20 token_, uint proposalId_, uint8)
         external
         initializer
     {
@@ -23,7 +23,7 @@ contract FundingManagerMock is FundingManager {
     }
 
     // Note that the `initializer` modifier is missing.
-    function initNoInitializer(IERC20 token_, uint proposalId_, uint8 decimals_)
+    function initNoInitializer(IERC20 token_, uint proposalId_, uint8)
         external
     {
         _token = token_;
