@@ -416,9 +416,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotActive();
         }
 
-        // Update _milestones list and _activeMilestone
-        _milestones[prevId] = _milestones[id];
+        //Move ActiveId To Previous Id
         _activeMilestone = prevId;
+
+        // Remove Current id from _milestones list
+        _milestones[prevId] = _milestones[id];
+        delete _milestones[id];
+        _milestoneCounter--;
 
         // In case last element was removed, update _last to its previous
         // element.
