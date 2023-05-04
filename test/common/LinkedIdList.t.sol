@@ -25,18 +25,74 @@ contract LinkedIdListTest is Test {
     }
 
     //--------------------------------------------------------------------------------
+    // View Functions
+
+    function testListIds(uint[] calldata seed) public {
+        vm.assume(seed.length < 1000); //Reasonable size
+
+        uint[] memory ids = createIds(seed);
+        uint length = ids.length;
+        for (uint i; i < length; i++) {
+            list.addId(ids[i]);
+        }
+
+        uint[] memory compareList = list.listIds();
+
+        assertEq(compareList.length, length);
+
+        for (uint i; i < length; i++) {
+            assertEq(compareList[i], ids[i]);
+        }
+    }
+
+    function testIsExistingId(uint[] calldata seed, uint randomId) public {
+        vm.assume(seed.length < 1000); //Reasonable size
+
+        uint[] memory ids = createIds(seed);
+        uint length = ids.length;
+        for (uint i; i < length; i++) {
+            list.addId(ids[i]);
+        }
+
+        bool expectedValue; //False
+
+        if (containsId(ids, randomId)) {
+            expectedValue = true;
+        }
+        assertEq(list.isExistingId(randomId), expectedValue);
+    }
+
+    function testGetPreviousId(uint[] calldata seed) public {
+        vm.assume(seed.length < 1000); //Reasonable size
+
+        uint[] memory ids = createIds(seed);
+        uint length = ids.length;
+        for (uint i; i < length; i++) {
+            list.addId(ids[i]);
+        }
+
+        uint prevId;
+        for (uint i; i < length; i++) {
+            if (i == 0) prevId = _SENTINEL;
+            else prevId = ids[i - 1];
+            assertEq(list.getPreviousId(ids[i]), prevId);
+        }
+    }
+
+    //--------------------------------------------------------------------------------
     // Mutating Functions
 
     function testAddId(uint[] calldata seed) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length > 0); //Reasonable size
+        vm.assume(seed.length < 1000);
 
-        uint[] memory Ids = createIds(seed);
+        uint[] memory ids = createIds(seed);
 
         uint previousId = _SENTINEL;
 
-        uint length = Ids.length;
+        uint length = ids.length;
         for (uint i; i < length; i++) {
-            uint id = Ids[i];
+            uint id = ids[i];
             id = bound(id, 1, _SENTINEL - 1);
 
             list.addId(id);
@@ -44,14 +100,23 @@ contract LinkedIdListTest is Test {
             assertEq(list.list[id], _SENTINEL);
             assertEq(list.list[previousId], id);
             assertEq(list.size, i + 1);
+            assertEq(list.last, id);
             previousId = id;
         }
+
+        //Check for validNewId
+
+        vm.expectRevert(
+            LinkedIdList.Library__LinkedIdList__InvalidNewId.selector
+        );
+
+        list.addId(ids[0]);
     }
 
     //--------------------------------------------------------------------------------
     // Helper Functions
 
-    //Create Ids that are not the same but still randomised
+    //Create ids that are not the same but still randomised
     function createIds(uint[] calldata seed)
         internal
         view
@@ -59,13 +124,27 @@ contract LinkedIdListTest is Test {
     {
         uint length = seed.length;
 
-        uint[] memory Ids = new uint[](length);
+        uint[] memory ids = new uint[](length);
 
         uint value;
         for (uint i; i < length; i++) {
             value += bound(seed[i], 1, 100);
-            Ids[i] = value;
+            ids[i] = value;
         }
-        return Ids;
+        return ids;
+    }
+
+    function containsId(uint[] memory array, uint id)
+        internal
+        pure
+        returns (bool)
+    {
+        uint length = array.length;
+        for (uint i; i < length; i++) {
+            if (array[i] == id) {
+                return true;
+            }
+        }
+        return false;
     }
 }
