@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-
 interface IModuleManager {
     //--------------------------------------------------------------------------
     // Errors
@@ -65,10 +64,9 @@ interface IModuleManager {
     /// @param data The call data.
     /// @return Whether the call succeeded.
     /// @return The return data of the call.
-    function executeTxFromModule(
-        address to,
-        bytes memory data
-    ) external returns (bool, bytes memory);
+    function executeTxFromModule(address to, bytes memory data)
+        external
+        returns (bool, bytes memory);
 
     /// @notice Adds address `module` as module.
     /// @dev Only callable by authorized address.

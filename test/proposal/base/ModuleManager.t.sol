@@ -9,7 +9,6 @@ import {
     IModuleManager
 } from "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
 
-
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
@@ -140,9 +139,7 @@ contract ModuleManagerTest is Test {
                 .Proposal__ModuleManager__OnlyCallableByModule
                 .selector
         );
-        moduleManager.executeTxFromModule(
-            address(this), bytes("")
-        );
+        moduleManager.executeTxFromModule(address(this), bytes(""));
     }
 
     function testExecuteTxFromModuleViaCall() public {
@@ -170,15 +167,13 @@ contract ModuleManagerTest is Test {
 
         vm.prank(module);
         (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this),
-            abi.encodeWithSignature("fails()")
+            address(this), abi.encodeWithSignature("fails()")
         );
 
         assertTrue(!ok_);
     }
 
-
-/*
+    /*
     function testExecuteTxFromModuleViaDelegateCall() public {
         address module = address(0xCAFE);
         moduleManager.addModule(module);
@@ -214,7 +209,7 @@ contract ModuleManagerTest is Test {
 
         assertTrue(!ok_);
     }
-*/
+    */
     function ok() public pure returns (bool) {
         return true;
     }
