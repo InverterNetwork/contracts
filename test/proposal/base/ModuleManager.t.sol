@@ -173,43 +173,7 @@ contract ModuleManagerTest is Test {
         assertTrue(!ok_);
     }
 
-    /*
-    function testExecuteTxFromModuleViaDelegateCall() public {
-        address module = address(0xCAFE);
-        moduleManager.addModule(module);
-
-        bool ok_;
-        bytes memory returnData;
-
-        vm.prank(module);
-        (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this),
-            abi.encodeWithSignature("ok()"),
-            Types.Operation.DelegateCall
-        );
-
-        assertTrue(ok_);
-        assertTrue(abi.decode(returnData, (bool)));
-    }
-
-
-    function testExecuteTxFromModuleViaDelegateCallFails() public {
-        address module = address(0xCAFE);
-        moduleManager.addModule(module);
-
-        bool ok_;
-        bytes memory returnData;
-
-        vm.prank(module);
-        (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this),
-            abi.encodeWithSignature("fails()"),
-            Types.Operation.DelegateCall
-        );
-
-        assertTrue(!ok_);
-    }
-    */
+  
     function ok() public pure returns (bool) {
         return true;
     }
