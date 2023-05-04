@@ -8,7 +8,6 @@ import {
 } from "@oz-up/security/PausableUpgradeable.sol";
 
 // Internal Dependencies
-import {Types} from "src/common/Types.sol";
 import {ProposalStorage} from "src/generated/ProposalStorage.gen.sol";
 
 // Internal Libraries
@@ -24,7 +23,7 @@ import {IAuthorizer} from "src/modules/IAuthorizer.sol";
  * @dev The base contract for modules.
  *
  *      This contract provides a framework for triggering and receiving proposal
- *      callbacks (via `call` or `delegatecall`) and a modifier to authenticate
+ *      callbacks (via `call`) and a modifier to authenticate
  *      callers via the module's proposal.
  *
  *      Each module is identified via a unique identifier based on its major
@@ -202,17 +201,16 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @dev Internal function to trigger a callback from the proposal.
     /// @param data The call data for the proposal to call.
-    /// @param op Whether the callback should be a `call` or `delegatecall`.
     /// @return Whether the callback succeeded.
     /// @return The return data of the callback.
-    function _triggerProposalCallback(bytes memory data, Types.Operation op)
+    function _triggerProposalCallback(bytes memory data)
         internal
         returns (bool, bytes memory)
     {
         bool ok;
         bytes memory returnData;
         (ok, returnData) =
-            __Module_proposal.executeTxFromModule(address(this), data, op);
+            __Module_proposal.executeTxFromModule(address(this), data);
 
         // Note that there is no check whether the proposal callback succeeded.
         // This responsibility is delegated to the caller, i.e. downstream

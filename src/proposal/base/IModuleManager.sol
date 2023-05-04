@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-import {Types} from "src/common/Types.sol";
 
 interface IModuleManager {
     //--------------------------------------------------------------------------
@@ -61,17 +60,14 @@ interface IModuleManager {
     // Functions
 
     /// @notice Executes a call to `to` with call data `data` either via call
-    ///         or delegatecall.
     /// @dev Only callable by enabled modules.
     /// @param to The address to call.
     /// @param data The call data.
-    /// @param operation The operation type. Either call or delegatecall.
     /// @return Whether the call succeeded.
     /// @return The return data of the call.
     function executeTxFromModule(
         address to,
-        bytes memory data,
-        Types.Operation operation
+        bytes memory data
     ) external returns (bool, bytes memory);
 
     /// @notice Adds address `module` as module.

@@ -5,7 +5,6 @@ pragma solidity ^0.8.13;
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // Internal Dependencies
-import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Interfaces

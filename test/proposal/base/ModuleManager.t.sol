@@ -9,7 +9,6 @@ import {
     IModuleManager
 } from "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
 
-import {Types} from "src/common/Types.sol";
 
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -142,7 +141,7 @@ contract ModuleManagerTest is Test {
                 .selector
         );
         moduleManager.executeTxFromModule(
-            address(this), bytes(""), Types.Operation.Call
+            address(this), bytes("")
         );
     }
 
@@ -155,13 +154,31 @@ contract ModuleManagerTest is Test {
 
         vm.prank(module);
         (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this), abi.encodeWithSignature("ok()"), Types.Operation.Call
+            address(this), abi.encodeWithSignature("ok()")
         );
 
         assertTrue(ok_);
         assertTrue(abi.decode(returnData, (bool)));
     }
 
+    function testExecuteTxFromModuleViaCallFails() public {
+        address module = address(0xCAFE);
+        moduleManager.addModule(module);
+
+        bool ok_;
+        bytes memory returnData;
+
+        vm.prank(module);
+        (ok_, returnData) = moduleManager.executeTxFromModule(
+            address(this),
+            abi.encodeWithSignature("fails()")
+        );
+
+        assertTrue(!ok_);
+    }
+
+
+/*
     function testExecuteTxFromModuleViaDelegateCall() public {
         address module = address(0xCAFE);
         moduleManager.addModule(module);
@@ -180,22 +197,6 @@ contract ModuleManagerTest is Test {
         assertTrue(abi.decode(returnData, (bool)));
     }
 
-    function testExecuteTxFromModuleViaCallFails() public {
-        address module = address(0xCAFE);
-        moduleManager.addModule(module);
-
-        bool ok_;
-        bytes memory returnData;
-
-        vm.prank(module);
-        (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this),
-            abi.encodeWithSignature("fails()"),
-            Types.Operation.Call
-        );
-
-        assertTrue(!ok_);
-    }
 
     function testExecuteTxFromModuleViaDelegateCallFails() public {
         address module = address(0xCAFE);
@@ -213,7 +214,7 @@ contract ModuleManagerTest is Test {
 
         assertTrue(!ok_);
     }
-
+*/
     function ok() public pure returns (bool) {
         return true;
     }

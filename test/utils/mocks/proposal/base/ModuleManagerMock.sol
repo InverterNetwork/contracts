@@ -4,8 +4,7 @@ pragma solidity ^0.8.13;
 // Internal Dependencies
 import {
     ModuleManager,
-    IModuleManager,
-    Types
+    IModuleManager
 } from "src/proposal/base/ModuleManager.sol";
 
 contract ModuleManagerMock is ModuleManager {
