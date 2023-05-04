@@ -173,7 +173,6 @@ contract ModuleManagerTest is Test {
         assertTrue(!ok_);
     }
 
-  
     function ok() public pure returns (bool) {
         return true;
     }
