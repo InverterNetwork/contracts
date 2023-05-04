@@ -6,7 +6,6 @@ import {
     IPaymentProcessor,
     IPaymentClient
 } from "src/modules/IPaymentProcessor.sol";
-import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
