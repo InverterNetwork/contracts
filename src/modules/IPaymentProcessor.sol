@@ -12,6 +12,9 @@ interface IPaymentProcessor {
     /// @notice invalid caller
     error Module__PaymentManager__OnlyCallableByModule();
 
+    /// @notice a client can only execute on its own orders
+    error Module__PaymentManager__CannotCallOnOtherClientsOrders();
+
     //--------------------------------------------------------------------------
     // Events
 
