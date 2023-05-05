@@ -5,9 +5,6 @@ pragma solidity ^0.8.13;
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
-// Internal Dependencies
-import {Types} from "src/common/Types.sol";
-
 // Interfaces
 import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
 
@@ -204,11 +201,7 @@ abstract contract ModuleManager is
     // onlyModule Functions
 
     /// @inheritdoc IModuleManager
-    function executeTxFromModule(
-        address to,
-        bytes memory data,
-        Types.Operation operation
-    )
+    function executeTxFromModule(address to, bytes memory data)
         external
         override(IModuleManager)
         onlyModule
@@ -217,11 +210,7 @@ abstract contract ModuleManager is
         bool ok;
         bytes memory returnData;
 
-        if (operation == Types.Operation.Call) {
-            (ok, returnData) = to.call(data);
-        } else {
-            (ok, returnData) = to.delegatecall(data);
-        }
+        (ok, returnData) = to.call(data);
 
         return (ok, returnData);
     }

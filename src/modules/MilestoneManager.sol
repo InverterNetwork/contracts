@@ -8,7 +8,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Internal Dependencies
-import {Types} from "src/common/Types.sol";
 import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
 import {
     IPaymentClient,
@@ -121,7 +120,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         for (uint i; i < contribLength; ++i) {
             address contributorAddr = contribs[i].addr;
             uint contributorSalary = contribs[i].salary;
-            bytes32 contributorData = contribs[i].data;
 
             // check the address is valid
             if (
@@ -835,15 +833,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint balance = __Module_proposal.token().balanceOf(address(this));
 
         if (balance < amount) {
-            // Trigger delegatecall-callback from proposal to transfer tokens
+            // Trigger callback from proposal to transfer tokens
             // to address(this).
             bool ok;
             (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
                 address(__Module_proposal.token()),
                 abi.encodeWithSignature(
                     "transfer(address,uint256)", address(this), amount - balance
-                ),
-                Types.Operation.Call
+                )
             );
 
             if (!ok) {

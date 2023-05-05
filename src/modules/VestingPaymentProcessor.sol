@@ -6,7 +6,6 @@ import {
     IPaymentProcessor,
     IPaymentClient
 } from "src/modules/IPaymentProcessor.sol";
-import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
@@ -88,9 +87,18 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @notice checks that the caller is an active module
     modifier onlyModule() {
         if (!proposal().isModule(_msgSender())) {
             revert Module__PaymentManager__OnlyCallableByModule();
+        }
+        _;
+    }
+
+    /// @notice checks that the client is calling for itself
+    modifier validClient(IPaymentClient client) {
+        if (_msgSender() != address(client)) {
+            revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
         }
         _;
     }
@@ -114,7 +122,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external onlyModule {
+    function processPayments(IPaymentClient client)
+        external
+        onlyModule
+        validClient(client)
+    {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // If there are, we remove all payments that would be overwritten
@@ -155,7 +167,8 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     function cancelRunningPayments(IPaymentClient client)
         external
-        onlyAuthorized
+        onlyModule
+        validClient(client)
     {
         _cancelRunningOrders(client);
     }
