@@ -83,11 +83,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         if (
             (id == idToPositionAfter) //Make sure it doesnt move after itself
                 || (idToPositionAfter == prevId) //Make sure it doesnt move before itself
-                || _milestoneRegistry[id].startTimestamp != 0 //Milestone hasnt started//@todo has to be put into other modifier
+                || _milestoneRegistry[id].startTimestamp != 0 //Milestone hasnt started
                 || (
                     _milestoneRegistry[_milestones[idToPositionAfter]]
                         .startTimestamp != 0
-                ) //If the following milestone already started you cant move or add a new milestone here, because it could never be started//@todo has to be put into other modifier
+                ) //If the following milestone already started you cant move or add a new milestone here, because it could never be started
         ) {
             revert Module__MilestoneManager__InvalidIntermediatePosition();
         }
