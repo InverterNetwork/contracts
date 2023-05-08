@@ -179,6 +179,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Value for what the next id will be.
+    uint private _nextId;
+
     /// @dev Registry mapping milestone ids to Milestone structs.
     mapping(uint => Milestone) private _milestoneRegistry;
 
@@ -414,9 +417,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotActive();
         }
 
-        // Update _milestones list and _activeMilestone
-        _milestones[prevId] = _milestones[id];
+        //Move ActiveId To Previous Id
         _activeMilestone = prevId;
+
+        // Remove Current id from _milestones list
+        _milestones[prevId] = _milestones[id];
+        delete _milestones[id];
+        _milestoneCounter--;
 
         // In case last element was removed, update _last to its previous
         // element.
@@ -590,8 +597,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         external
         onlyAuthorizedOrManager
         validId(id)
-        validPosition(idToPositionAfter)
         validPosition(prevId)
+        validPosition(idToPositionAfter)
         validIntermediatePosition(id, prevId, idToPositionAfter)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -723,9 +730,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         internal
         returns (uint _id)
     {
+        // Note ids start at 1.
+        uint milestoneId = ++_nextId;
+
         // Increase counter and cache result.
-        // Note that ids therefore start at 1.
-        uint milestoneId = ++_milestoneCounter;
+        ++_milestoneCounter;
 
         // Add milestone's id to end of list.
         _milestones[_last] = milestoneId;
