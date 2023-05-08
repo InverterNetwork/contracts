@@ -706,7 +706,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.startNextMilestone();
 
-        assertEq(milestoneManager.listMilestoneIds().length, id2);
+        assertEq(milestoneManager.listMilestoneIds().length, 1);
         assertEq(milestoneManager.getActiveMilestoneId(), id2);
     }
 
@@ -764,8 +764,15 @@ contract MilestoneManagerTest is ModuleTest {
             vm.warp(block.timestamp + DURATION + 1);
             milestoneManager.startNextMilestone();
         }
+
         // check for correctness in end state
-        assertEq(milestoneManager.listMilestoneIds().length, numOfMilestones);
+
+        //The amount of milestones in the list should be number of created milestones minus 1 because we removed one
+        assertEq(
+            milestoneManager.listMilestoneIds().length, numOfMilestones - 1
+        );
+
+        //ActiveMilestoneId should be the number of created milestones
         assertEq(milestoneManager.getActiveMilestoneId(), numOfMilestones);
     }
     //----------------------------------
@@ -803,13 +810,13 @@ contract MilestoneManagerTest is ModuleTest {
         // Remove milestones from the back, i.e. highest milestone id, until
         // list is empty.
         for (uint i; i < amount; ++i) {
-            // Note that id's start at 1.
-            uint prevId = amount - i - 1;
-            uint id = amount - i;
+            // Note that id's start at amount, because they have been created before.
+            uint prevId = 2 * amount - i - 1;
+            uint id = 2 * amount - i;
 
             // Note that removing the last milestone requires the sentinel as
             // prevId.
-            if (prevId == 0) {
+            if (prevId == amount) {
                 prevId = _SENTINEL;
             }
 
