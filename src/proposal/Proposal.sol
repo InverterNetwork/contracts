@@ -54,7 +54,7 @@ contract Proposal is
     }
 
     /// @notice Modifier to guarantee function is only callable by authorized
-    ///         address or owner.
+    ///         address or manager.
     modifier onlyAuthorizedOrManager() {
         if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != manager())
         {

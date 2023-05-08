@@ -69,7 +69,7 @@ contract ProposalCreation is Test {
     IModule.Metadata metadataManagerMetadata;
 
     //Proposal Metadata
-    IMetadataManager.OwnerMetadata ownerMetadata;
+    IMetadataManager.ManagerMetadata ownerMetadata;
     IMetadataManager.ProposalMetadata proposalMetadata;
     IMetadataManager.MemberMetadata[] teamMetadata;
 
@@ -161,7 +161,7 @@ contract ProposalCreation is Test {
         //==========================================
         //Set up Proposal Metadata
 
-        ownerMetadata = IMetadataManager.OwnerMetadata(
+        ownerMetadata = IMetadataManager.ManagerMetadata(
             "Name", address(0xBEEF), "TwitterHandle"
         );
 

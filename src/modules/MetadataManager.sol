@@ -12,7 +12,7 @@ contract MetadataManager is IMetadataManager, Module {
     //--------------------------------------------------------------------------
     // Storage
 
-    OwnerMetadata private _ownerMetadata;
+    ManagerMetadata private _managerMetadata;
     ProposalMetadata private _proposalMetadata;
     MemberMetadata[] private _teamMetadata;
 
@@ -28,14 +28,14 @@ contract MetadataManager is IMetadataManager, Module {
         __Module_init(proposal_, metadata);
 
         (
-            OwnerMetadata memory ownerMetadata_,
+            ManagerMetadata memory managerMetadata_,
             ProposalMetadata memory proposalMetadata_,
             MemberMetadata[] memory teamMetadata_
         ) = abi.decode(
-            configdata, (OwnerMetadata, ProposalMetadata, MemberMetadata[])
+            configdata, (ManagerMetadata, ProposalMetadata, MemberMetadata[])
         );
 
-        _setOwnerMetadata(ownerMetadata_);
+        _setManagerMetadata(managerMetadata_);
 
         _setProposalMetadata(proposalMetadata_);
 
@@ -45,8 +45,12 @@ contract MetadataManager is IMetadataManager, Module {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    function getOwnerMetadata() external view returns (OwnerMetadata memory) {
-        return _ownerMetadata;
+    function getManagerMetadata()
+        external
+        view
+        returns (ManagerMetadata memory)
+    {
+        return _managerMetadata;
     }
 
     function getProposalMetadata()
@@ -68,19 +72,21 @@ contract MetadataManager is IMetadataManager, Module {
     //--------------------------------------------------------------------------
     // Setter Functions
 
-    function setOwnerMetadata(OwnerMetadata calldata ownerMetadata_)
+    function setManagerMetadata(ManagerMetadata calldata managerMetadata_)
         external
         onlyAuthorizedOrManager
     {
-        _setOwnerMetadata(ownerMetadata_);
+        _setManagerMetadata(managerMetadata_);
     }
 
-    function _setOwnerMetadata(OwnerMetadata memory ownerMetadata_) private {
-        _ownerMetadata = ownerMetadata_;
-        emit OwnerMetadataUpdated(
-            ownerMetadata_.name,
-            ownerMetadata_.account,
-            ownerMetadata_.twitterHandle
+    function _setManagerMetadata(ManagerMetadata memory managerMetadata_)
+        private
+    {
+        _managerMetadata = managerMetadata_;
+        emit ManagerMetadataUpdated(
+            managerMetadata_.name,
+            managerMetadata_.account,
+            managerMetadata_.twitterHandle
         );
     }
 

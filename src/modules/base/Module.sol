@@ -69,7 +69,7 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     }
 
     /// @notice Modifier to guarantee function is only callable by either
-    ///         addresses authorized via Proposal or the Proposal's owner.
+    ///         addresses authorized via Proposal or the Proposal's manager.
     modifier onlyAuthorizedOrManager() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (
