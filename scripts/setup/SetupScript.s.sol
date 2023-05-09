@@ -13,7 +13,7 @@ import {ERC20Mock} from "../../test/utils/mocks/ERC20Mock.sol";
 
 contract SetupScript is Test, Script, DeploymentScript {
     // using stdJson for string;
-    
+
     /*
         // Before we can start a milestone, two things need to be present:
         // 1. A non-empty list of contributors for it
@@ -27,9 +27,8 @@ contract SetupScript is Test, Script, DeploymentScript {
         address(0xA11CE), 50_000_000, "AliceIdHash"
     );
 
-    IMilestoneManager.Contributor bob = IMilestoneManager.Contributor(
-        address(0x606), 50_000_000, "BobIdHash"
-    );
+    IMilestoneManager.Contributor bob =
+        IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
 
     IMilestoneManager.Contributor[] contributors;
 
@@ -37,7 +36,7 @@ contract SetupScript is Test, Script, DeploymentScript {
     address funder2 = address(0xF2);
 
     address proposalOwner = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
-    uint256 proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    uint proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
 
     function run() public override {
         ERC20Mock token;
@@ -51,23 +50,21 @@ contract SetupScript is Test, Script, DeploymentScript {
         }
         vm.stopBroadcast();
 
-        {
-            // First, we create a new proposal.
-            IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory.ProposalConfig({
-                owner: proposalOwner, 
-                token: token
-            });
+        // First, we create a new proposal.
+        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
+            .ProposalConfig({owner: proposalOwner, token: token});
 
-            IProposalFactory.ModuleConfig[] memory optionalModules = new IProposalFactory.ModuleConfig[](1);
-            optionalModules[0] = milestoneManagerFactoryConfig;
+        IProposalFactory.ModuleConfig[] memory optionalModules =
+            new IProposalFactory.ModuleConfig[](1);
+        optionalModules[0] = milestoneManagerFactoryConfig;
 
         vm.startPrank(proposalOwner);
         test_proposal = proposalFactory.createProposal(
-                                            proposalConfig,
-                                            authorizerFactoryConfig,
-                                            paymentProcessorFactoryConfig,
-                                            optionalModules
-                                        );
+            proposalConfig,
+            authorizerFactoryConfig,
+            paymentProcessorFactoryConfig,
+            optionalModules
+        );
         vm.stopPrank();
 
         console2.log("Proposal Contract", address(test_proposal));
@@ -75,16 +72,18 @@ contract SetupScript is Test, Script, DeploymentScript {
 
         address proposalToken = address(IProposal(test_proposal).token());
         assertEq(proposalToken, address(token));
-        
-        // Now since ModuleManager is an abstract contract, inherited by ModuleManager and it has a function called `listModules` that returns a list of 
+
+        // Now since ModuleManager is an abstract contract, inherited by ModuleManager and it has a function called `listModules` that returns a list of
         // active modules, let's use that to get the address of the Milestone Manager.
 
-        address[] memory moduleAddresses = IProposal(test_proposal).listModules();
-        uint256 lenModules = moduleAddresses.length;
+        address[] memory moduleAddresses =
+            IProposal(test_proposal).listModules();
+        uint lenModules = moduleAddresses.length;
         address proposalCreatedMilestoneManagerAddress;
 
-        for(uint i; i < lenModules; ) {
-            try MilestoneManager(moduleAddresses[i]).hasActiveMilestone() returns(bool) {
+        for (uint i; i < lenModules;) {
+            try MilestoneManager(moduleAddresses[i]).hasActiveMilestone()
+            returns (bool) {
                 proposalCreatedMilestoneManagerAddress = moduleAddresses[i];
                 break;
             } catch {
@@ -94,12 +93,24 @@ contract SetupScript is Test, Script, DeploymentScript {
             }
         }
 
-        MilestoneManager proposalCreatedMilestoneManager = MilestoneManager(proposalCreatedMilestoneManagerAddress);
+        MilestoneManager proposalCreatedMilestoneManager =
+            MilestoneManager(proposalCreatedMilestoneManagerAddress);
 
-        assertTrue(!proposalCreatedMilestoneManager.hasActiveMilestone(), "Milestone manager wrong address inputted");
-        assertTrue(!proposalCreatedMilestoneManager.isExistingMilestoneId(type(uint256).max), "Milestone manager wrong address inputted");
-        assertEq(proposalCreatedMilestoneManager.getMaximumContributors(), 50, "Milestone manager wrong address inputted");
-
+        assertTrue(
+            !proposalCreatedMilestoneManager.hasActiveMilestone(),
+            "Milestone manager wrong address inputted"
+        );
+        assertTrue(
+            !proposalCreatedMilestoneManager.isExistingMilestoneId(
+                type(uint).max
+            ),
+            "Milestone manager wrong address inputted"
+        );
+        assertEq(
+            proposalCreatedMilestoneManager.getMaximumContributors(),
+            50,
+            "Milestone manager wrong address inputted"
+        );
 
         /*
             string memory json = vm.readFile("broadcast/SetupScript.s.sol/31337/run-latest.json");
@@ -149,7 +160,7 @@ contract SetupScript is Test, Script, DeploymentScript {
 
         // Let's confirm whether the milestone was added or not.
         // milestoneId 1 should exist and 0 shouldn't, since IDs start from 1.
-        assertTrue(!(proposalCreatedMilestoneManager.isExistingMilestoneId(0)));        
+        assertTrue(!(proposalCreatedMilestoneManager.isExistingMilestoneId(0)));
         assertTrue(proposalCreatedMilestoneManager.isExistingMilestoneId(1));
 
         assertTrue(proposalCreatedMilestoneManager.isContributor(1, alice.addr));
@@ -166,5 +177,4 @@ contract SetupScript is Test, Script, DeploymentScript {
         }
         vm.stopPrank();
     }
-
 }
