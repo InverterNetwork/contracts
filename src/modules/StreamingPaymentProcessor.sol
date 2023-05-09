@@ -26,7 +26,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 
-    struct VestingWallet {
+    struct StreamingWallet {
         uint _salary;
         uint _released;
         uint _start;
@@ -34,7 +34,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     // paymentClient => contributor => Payment
-    mapping(address => mapping(address => VestingWallet)) private vestings;
+    mapping(address => mapping(address => StreamingWallet)) private vestings;
     // paymentClient => contributor => unclaimableAmount
     mapping(address => mapping(address => uint)) private unclaimableAmounts;
 
@@ -49,7 +49,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param duration Timestamp at which the full amount should be claimable.
-    event VestingPaymentAdded(
+    event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
@@ -59,7 +59,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Emitted when the vesting to an address is removed.
     /// @param recipient The address that will stop receiving payment.
-    event VestingPaymentRemoved(
+    event StreamingPaymentRemoved(
         address indexed paymentClient, address indexed recipient
     );
 
@@ -74,7 +74,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param duration Number of blocks over which the amount will vest
-    event InvalidVestingOrderDiscarded(
+    event InvalidStreamingOrderDiscarded(
         address indexed recipient, uint amount, uint start, uint duration
     );
 
@@ -143,7 +143,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
                 );
             }
 
-            // Generate Vesting Payments for all orders
+            // Generate Streaming Payments for all orders
             address _recipient;
             uint _amount;
             uint _start;
@@ -298,7 +298,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
 
             delete vestings[client][contributor];
 
-            emit VestingPaymentRemoved(client, contributor);
+            emit StreamingPaymentRemoved(client, contributor);
         }
 
         /// Note that all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
@@ -309,7 +309,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param _contributor Contributor's address.
     /// @param _salary Salary contributor will receive per epoch.
     /// @param _start Start vesting timestamp.
-    /// @param _duration Vesting duration timestamp.
+    /// @param _duration Streaming duration timestamp.
     function _addPayment(
         address client,
         address _contributor,
@@ -321,12 +321,12 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
             !validAddress(_contributor) || !validSalary(_salary)
                 || !validStart(_start) || !validDuration(_duration)
         ) {
-            emit InvalidVestingOrderDiscarded(
+            emit InvalidStreamingOrderDiscarded(
                 _contributor, _salary, _start, _duration
             );
         } else {
             vestings[client][_contributor] =
-                VestingWallet(_salary, 0, _start, _duration);
+                StreamingWallet(_salary, 0, _start, _duration);
 
             uint contribIndex =
                 findAddressInActivePayments(client, _contributor);
@@ -334,7 +334,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
                 activePayments[client].push(_contributor);
             }
 
-            emit VestingPaymentAdded(
+            emit StreamingPaymentAdded(
                 client, _contributor, _salary, _start, _duration
             );
         }

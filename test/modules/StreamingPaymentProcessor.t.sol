@@ -19,18 +19,18 @@ import {PaymentClientMock} from
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract VestingPaymentProcessorTest is ModuleTest {
+contract StreamingPaymentProcessorTest is ModuleTest {
     // SuT
     StreamingPaymentProcessor paymentProcessor;
 
     // Mocks
     PaymentClientMock paymentClient = new PaymentClientMock(_token);
 
-    event InvalidVestingOrderDiscarded(
+    event InvalidStreamingOrderDiscarded(
         address indexed recipient, uint amount, uint start, uint duration
     );
 
-    event VestingPaymentAdded(
+    event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
@@ -38,7 +38,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         uint duration
     );
 
-    event VestingPaymentRemoved(
+    event StreamingPaymentRemoved(
         address indexed paymentClient, address indexed recipient
     );
 
@@ -83,7 +83,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assumeValidAmounts(amounts, recipients.length);
         assumeValidDurations(durations, recipients.length);
 
-        speedRunVestingAndClaim(recipients, amounts, durations);
+        speedRunStreamingAndClaim(recipients, amounts, durations);
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
@@ -120,7 +120,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
                 recipients[i], 100, (block.timestamp + 100)
             );
             vm.expectEmit(true, true, true, true);
-            emit InvalidVestingOrderDiscarded(
+            emit InvalidStreamingOrderDiscarded(
                 recipients[i], 100, block.timestamp, 100
             );
         }
@@ -133,7 +133,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
             address(0xB0B), 100, (block.timestamp + invalidDur)
         );
         vm.expectEmit(true, true, true, true);
-        emit InvalidVestingOrderDiscarded(
+        emit InvalidStreamingOrderDiscarded(
             address(0xB0B), 100, block.timestamp, invalidDur
         );
         paymentProcessor.processPayments(paymentClient);
@@ -142,7 +142,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
             address(0xB0B), invalidAmt, (block.timestamp + 100)
         );
         vm.expectEmit(true, true, true, true);
-        emit InvalidVestingOrderDiscarded(
+        emit InvalidStreamingOrderDiscarded(
             address(0xB0B), invalidAmt, block.timestamp, 100
         );
         paymentProcessor.processPayments(paymentClient);
@@ -161,7 +161,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assumeValidAmounts(amounts, recipients.length);
         assumeValidDurations(durations, recipients.length);
 
-        speedRunVestingAndClaim(recipients, amounts, durations);
+        speedRunStreamingAndClaim(recipients, amounts, durations);
 
         //We run process payments again, but since there are no new orders, nothing should happen.
         vm.prank(address(paymentClient));
@@ -241,7 +241,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         for (uint i = 0; i < recipients.length; ++i) {
             paymentClient.addPaymentOrder(recipients[i], amounts[i], duration);
             vm.expectEmit(true, true, true, true);
-            emit VestingPaymentAdded(
+            emit StreamingPaymentAdded(
                 address(paymentClient),
                 recipients[i],
                 amounts[i],
@@ -260,7 +260,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
         //we expect cancellation events for each payment
         for (uint i = 0; i < recipients.length; ++i) {
             vm.expectEmit(true, true, true, true);
-            emit VestingPaymentRemoved(address(paymentClient), recipients[i]);
+            emit StreamingPaymentRemoved(address(paymentClient), recipients[i]);
         }
 
         // calling cancelRunningPayments
@@ -295,7 +295,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
     }
 
     // Sanity Math Check
-    function testVestingCalculation(
+    function testStreamingCalculation(
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
@@ -347,11 +347,11 @@ contract VestingPaymentProcessorTest is ModuleTest {
         assumeValidAmounts(amounts, recipients.length);
         assumeValidDurations(durations, recipients.length);
 
-        speedRunVestingAndClaim(recipients, amounts, durations);
+        speedRunStreamingAndClaim(recipients, amounts, durations);
 
         vm.warp(block.timestamp + 52 weeks);
 
-        speedRunVestingAndClaim(recipients, amounts, durations);
+        speedRunStreamingAndClaim(recipients, amounts, durations);
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
@@ -700,7 +700,7 @@ contract VestingPaymentProcessorTest is ModuleTest {
 
     // Speedruns a round of vesting + claiming
     // note Neither checks the inputs nor verifies results
-    function speedRunVestingAndClaim(
+    function speedRunStreamingAndClaim(
         address[] memory recipients,
         uint128[] memory amounts,
         uint64[] memory durations
