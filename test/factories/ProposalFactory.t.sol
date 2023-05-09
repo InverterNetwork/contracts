@@ -51,7 +51,7 @@ contract ProposalFactoryTest is Test {
     IProposalFactory.ModuleConfig paymentProcessorConfig = IProposalFactory
         .ModuleConfig(
         IModule.Metadata(
-            1, 1, "https://paymentprocessor.com", "PaymentProcessor"
+            1, 1, "https://paymentprocessor.com", "SimplePaymentProcessor"
         ),
         bytes("data")
     );
@@ -117,7 +117,7 @@ contract ProposalFactoryTest is Test {
 
         // Check that other proposal's dependencies correctly initialized.
         // Ownable:
-        assertEq(proposal.owner(), address(proposalConfig.owner));
+        assertEq(proposal.manager(), address(proposalConfig.owner));
 
         // Deploy Proposal with id=2
         proposal = factory.createProposal(

@@ -10,7 +10,7 @@ import {
     MilestoneManager,
     IMilestoneManager
 } from "src/modules/MilestoneManager.sol";
-import {PaymentProcessor} from "src/modules/PaymentProcessor.sol";
+import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
 import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 
 // Mocks
@@ -112,7 +112,7 @@ contract MilestoneLifecycle is E2eTest {
 
         // The MilestoneManager DOES NOT pay the contributors itself, but
         // creates set set of payment orders inside the module and calls
-        // the PaymentProcessor module to process them. Note however, that the
+        // the SimplePaymentProcessor module to process them. Note however, that the
         // orders are guaranteed to be payable, i.e. the tokens are already
         // fetched from the proposal on creation of the order.
 

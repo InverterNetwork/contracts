@@ -66,12 +66,12 @@ abstract contract Module is IModule, PausableUpgradeable {
     }
 
     /// @notice Modifier to guarantee function is only callable by either
-    ///         addresses authorized via Proposal or the Proposal's owner.
-    modifier onlyAuthorizedOrOwner() {
+    ///         addresses authorized via Proposal or the Proposal's manager.
+    modifier onlyAuthorizedOrManager() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (
             !authorizer.isAuthorized(_msgSender())
-                && __Module_proposal.owner() != _msgSender()
+                && __Module_proposal.manager() != _msgSender()
         ) {
             revert Module__CallerNotAuthorized();
         }
@@ -133,12 +133,12 @@ abstract contract Module is IModule, PausableUpgradeable {
     // API functions for authenticated users.
 
     /// @inheritdoc IModule
-    function pause() external override(IModule) onlyAuthorizedOrOwner {
+    function pause() external override(IModule) onlyAuthorizedOrManager {
         _pause();
     }
 
     /// @inheritdoc IModule
-    function unpause() external override(IModule) onlyAuthorizedOrOwner {
+    function unpause() external override(IModule) onlyAuthorizedOrManager {
         _unpause();
     }
 

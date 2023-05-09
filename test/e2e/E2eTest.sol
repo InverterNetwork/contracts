@@ -15,7 +15,7 @@ import {Proposal, IProposal} from "src/proposal/Proposal.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
-import {PaymentProcessor} from "src/modules/PaymentProcessor.sol";
+import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/MilestoneManager.sol";
 
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -36,14 +36,14 @@ contract E2eTest is Test {
 
     //-- Module implementations, beacons, config for factory, and metadata.
 
-    PaymentProcessor paymentProcessorImpl;
+    SimplePaymentProcessor paymentProcessorImpl;
     Beacon paymentProcessorBeacon;
     address paymentProcessorBeaconOwner = address(0x1BEAC0);
     IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/payment-processor",
-        "PaymentProcessor"
+        "SimplePaymentProcessor"
     );
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
         IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
@@ -78,7 +78,7 @@ contract E2eTest is Test {
         proposalImpl = new Proposal();
 
         // Deploy module implementations.
-        paymentProcessorImpl = new PaymentProcessor();
+        paymentProcessorImpl = new SimplePaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
         authorizerImpl = new AuthorizerMock();
 

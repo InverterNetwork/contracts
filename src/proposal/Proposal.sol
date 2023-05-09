@@ -54,9 +54,10 @@ contract Proposal is
     }
 
     /// @notice Modifier to guarantee function is only callable by authorized
-    ///         address or owner.
-    modifier onlyAuthorizedOrOwner() {
-        if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != owner()) {
+    ///         address or manager.
+    modifier onlyAuthorizedOrManager() {
+        if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != manager())
+        {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -182,5 +183,9 @@ contract Proposal is
         returns (address)
     {
         return super.owner();
+    }
+
+    function manager() public view returns (address) {
+        return owner();
     }
 }

@@ -22,13 +22,13 @@ contract MetadataManagerTest is ModuleTest {
     MetadataManager metadataManager;
 
     // Constants
-    IMetadataManager.OwnerMetadata OWNER_METADATA;
+    IMetadataManager.ManagerMetadata MANAGER_METADATA;
     IMetadataManager.ProposalMetadata PROPOSAL_METADATA;
     IMetadataManager.MemberMetadata[] TEAM_METADATA;
 
     function setUp() public {
         //Set up Preset Metadata
-        OWNER_METADATA = IMetadataManager.OwnerMetadata(
+        MANAGER_METADATA = IMetadataManager.ManagerMetadata(
             "Name", address(0xBEEF), "TwitterHandle"
         );
 
@@ -65,7 +65,7 @@ contract MetadataManagerTest is ModuleTest {
         metadataManager.init(
             _proposal,
             _METADATA,
-            abi.encode(OWNER_METADATA, PROPOSAL_METADATA, TEAM_METADATA)
+            abi.encode(MANAGER_METADATA, PROPOSAL_METADATA, TEAM_METADATA)
         );
     }
 
@@ -74,7 +74,7 @@ contract MetadataManagerTest is ModuleTest {
 
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {
-        OWNER_METADATA = IMetadataManager.OwnerMetadata(
+        MANAGER_METADATA = IMetadataManager.ManagerMetadata(
             "newName", address(0x606), "newTwitterHandle"
         );
 
@@ -97,9 +97,9 @@ contract MetadataManagerTest is ModuleTest {
         );
 
         //-----------------------
-        // OWNER_METADATA
-        metadataManager.setOwnerMetadata(OWNER_METADATA);
-        assertMetadataManagerOwnerMetadataEqualTo(OWNER_METADATA);
+        // MANAGER_METADATA
+        metadataManager.setManagerMetadata(MANAGER_METADATA);
+        assertMetadataManagerManagerMetadataEqualTo(MANAGER_METADATA);
 
         //-----------------------
         // PROPOSAL_METADATA
@@ -119,10 +119,10 @@ contract MetadataManagerTest is ModuleTest {
 
     function testSetter() public {
         //-----------------------
-        // OWNER_METADATA
+        // MANAGER_METADATA
 
-        assertMetadataManagerOwnerMetadataEqualTo(
-            metadataManager.getOwnerMetadata()
+        assertMetadataManagerManagerMetadataEqualTo(
+            metadataManager.getManagerMetadata()
         );
 
         //-----------------------
@@ -143,15 +143,15 @@ contract MetadataManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Helper - Functions
 
-    function assertMetadataManagerOwnerMetadataEqualTo(
-        IMetadataManager.OwnerMetadata memory ownerMetadata_
+    function assertMetadataManagerManagerMetadataEqualTo(
+        IMetadataManager.ManagerMetadata memory ownerMetadata_
     ) private {
-        assertEq(metadataManager.getOwnerMetadata().name, ownerMetadata_.name);
+        assertEq(metadataManager.getManagerMetadata().name, ownerMetadata_.name);
         assertEq(
-            metadataManager.getOwnerMetadata().account, ownerMetadata_.account
+            metadataManager.getManagerMetadata().account, ownerMetadata_.account
         );
         assertEq(
-            metadataManager.getOwnerMetadata().twitterHandle,
+            metadataManager.getManagerMetadata().twitterHandle,
             ownerMetadata_.twitterHandle
         );
     }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {E2eTest} from "test/e2e/E2eTest.sol";
 
 import {IModule} from "src/modules/base/IModule.sol";
-import {PaymentProcessor} from "src/modules/PaymentProcessor.sol";
+import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
 
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 
@@ -14,8 +14,8 @@ import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 contract RegisterModuleAtFactory is E2eTest {
     function test_e2e_RegisterModuleAtModuleFactory() public {
         // First deploy a new Module implementation.
-        // We will use the PaymentProcessor module as example.
-        PaymentProcessor module = new PaymentProcessor();
+        // We will use the SimplePaymentProcessor module as example.
+        SimplePaymentProcessor module = new SimplePaymentProcessor();
 
         // We also need to defined the module's metadata.
         IModule.Metadata memory metadata = IModule.Metadata(
