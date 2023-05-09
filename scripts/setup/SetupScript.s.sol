@@ -2,13 +2,15 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
+import "forge-std/Test.sol";
+
 import "../deployment/DeploymentScript.s.sol";
 
 import {IMilestoneManager} from "../../src/modules/MilestoneManager.sol";
 import {IProposal} from "../../src/proposal/Proposal.sol";
 import {ERC20Mock} from "../../test/utils/mocks/ERC20Mock.sol";
 
-contract SetupScript is Script, DeploymentScript {
+contract SetupScript is Test, Script, DeploymentScript {
     /*
         // Before we can start a milestone, two things need to be present:
         // 1. A non-empty list of contributors for it
@@ -46,27 +48,42 @@ contract SetupScript is Script, DeploymentScript {
         }
         vm.stopBroadcast();
 
-        {
-            // First, we create a new proposal.
-            IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory.ProposalConfig({
-                owner: proposalOwner, 
-                token: token
-            });
+        // First, we create a new proposal.
+        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory.ProposalConfig({
+            owner: proposalOwner, 
+            token: token
+        });
 
-            IProposalFactory.ModuleConfig[] memory optionalModules = new IProposalFactory.ModuleConfig[](1);
-            optionalModules[0] = milestoneManagerFactoryConfig;
+        IProposalFactory.ModuleConfig[] memory optionalModules = new IProposalFactory.ModuleConfig[](1);
+        optionalModules[0] = milestoneManagerFactoryConfig;
 
-            test_proposal = proposalFactory.createProposal(
-                                                proposalConfig,
-                                                authorizerFactoryConfig,
-                                                paymentProcessorFactoryConfig,
-                                                optionalModules
-                                            );
-        }
+        vm.startPrank(proposalOwner);
+        test_proposal = proposalFactory.createProposal(
+                                            proposalConfig,
+                                            authorizerFactoryConfig,
+                                            paymentProcessorFactoryConfig,
+                                            optionalModules
+                                        );
+        vm.stopPrank();
+        
+        MilestoneManager proposalCreatedMilestoneManager = MilestoneManager(0x8198f5d8F8CfFE8f9C413d98a0A55aEB8ab9FbB7);
 
+        assertTrue(!(proposalCreatedMilestoneManager.isNextMilestoneActivatable()), "Milestone manager wrong address inputted");
+
+        contributors.push(alice);
+        contributors.push(bob);
+
+        // vm.startPrank(proposalOwner);
+        // proposalCreatedMilestoneManager.addMilestone(
+        //     1 weeks,
+        //     1000e18,
+        //     contributors,
+        //     bytes("Here could be a more detailed description")
+        // );
+        // vm.stopPrank();
 
         console2.log("ERC20 token address: ", address(token));
-        console2.log("Test Proposal Address: ", address(test_proposal));
+        console2.log("Test Proposal address", address(test_proposal));
     }
 
 }
