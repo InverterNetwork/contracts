@@ -7,9 +7,6 @@ import {
     ContextUpgradeable
 } from "@oz-up/security/PausableUpgradeable.sol";
 
-// Internal Dependencies
-import {ProposalStorage} from "src/generated/ProposalStorage.gen.sol";
-
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -35,7 +32,7 @@ import {IAuthorizer} from "src/modules/IAuthorizer.sol";
  *
  * @author byterocket
  */
-abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
+abstract contract Module is IModule, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Storage
     //
@@ -88,29 +85,6 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     modifier onlyProposal() {
         if (_msgSender() != address(__Module_proposal)) {
             revert Module__OnlyCallableByProposal();
-        }
-        _;
-    }
-
-    /// @notice Modifier to guarantee that the function is not executed in the
-    ///         module's context.
-    /// @dev As long as wantProposalContext-protected functions only access the
-    ///      proposal storage variables (`__Proposal_`) inherited from
-    ///      {ProposalStorage}, the module's own state is never mutated.
-    /// @dev Note that it's therefore safe to not authenticate the caller in
-    ///      these functions. A function only accessing the proposal storage
-    ///      variables, as recommended, can not alter it's own module's storage.
-    /// @dev Note to use function prefix `__Proposal_`.
-    modifier wantProposalContext() {
-        // If we are in the proposal's context, the following storage access
-        // returns the zero address. That is because the module's storage
-        // starts after the proposal's storage due to inheriting from
-        // {ProposalStorage}.
-        // If we are in the module's context, the following storage access can
-        // not return the zero address. That is because the `__Module_proposal`
-        // variable is set during initialization and never mutated again.
-        if (address(__Module_proposal) != address(0)) {
-            revert Module__WantProposalContext();
         }
         _;
     }
