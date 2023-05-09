@@ -869,17 +869,4 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     {
         return __Module_proposal.paymentProcessor() == who;
     }
-
-    //--------------------------------------------------------------------------
-    // Proposal Callback Functions
-
-    /// @dev WantProposalContext-callback function to transfer `amount` of
-    ///      tokens from proposal to `receiver`.
-    /// @dev For more info, see src/modules/base/Module.sol.
-    function __Proposal_transferERC20(address receiver, uint amount)
-        external
-        wantProposalContext
-    {
-        __Proposal__token.safeTransfer(receiver, amount);
-    }
 }

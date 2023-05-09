@@ -21,9 +21,6 @@ interface IModule {
     /// @notice Function is only callable by the proposal.
     error Module__OnlyCallableByProposal();
 
-    /// @notice Function is not callable inside the module's context.
-    error Module__WantProposalContext();
-
     /// @notice Given proposal address invalid.
     error Module__InvalidProposalAddress();
 
