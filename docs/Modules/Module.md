@@ -17,15 +17,7 @@ File: [Module.sol](../../src/modules/base/Module.sol)
 Modifier to guarantee function is only callable by addresses authorized via Proposal.
 `onlyAuthorized` functions SHOULD only be used to trigger callbacks from the proposal via the `_triggerProposalCallback()` function.
 
-### 2. wantProposalContext
-
-Modifier to guarantee that the function is not executed in the module's context.
-As long as wantProposalContext-protected functions only access the proposal storage variables (`__Proposal_`) inherited from
-`{ProposalStorage}`, the module's own state is never mutated.
-It's therefore safe to not authenticate the caller in these functions. A function only accessing the proposal storage variables, as recommended, can not alter it's own module's storage.
-Advised to use function prefix `__Proposal_`.
-
-### 3. onlyProposal
+### 2. onlyProposal
 
 Modifier to guarantee function is only callable by the proposal. `onlyProposal` functions MUST only access the module's storage, i.e. `__Module_` variables. Advised to use function prefix `__Module_`
 
@@ -140,9 +132,6 @@ A module can trigger a callback from its proposal via the internal
 The callback is executed via `call` in the module's context.
 
 ### Callbacks executed in the Module's Context
-
-Proposal callbacks executed in the module's context **MUST NOT** access
-`__Proposal_` variables inherited from the `ProposalStorage` contract.
 
 Per convention, the function name **SHOULD** be prefixed with `__Module_`.
 
