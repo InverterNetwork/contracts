@@ -36,6 +36,8 @@ contract SetupScript is Script, DeploymentScript {
 
     function run() public override {
         ERC20Mock token;
+        IProposal test_proposal;
+
         DeploymentScript.run();
 
         vm.startBroadcast(deployerPrivateKey);
@@ -44,22 +46,25 @@ contract SetupScript is Script, DeploymentScript {
         }
         vm.stopBroadcast();
 
-        // First, we create a new proposal.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory.ProposalConfig({
-            owner: proposalOwner, 
-            token: token
-        });
+        {
+            // First, we create a new proposal.
+            IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory.ProposalConfig({
+                owner: proposalOwner, 
+                token: token
+            });
 
-        IProposalFactory.ModuleConfig[] memory optionalModules = new IProposalFactory.ModuleConfig[](1);
-        optionalModules[0] = milestoneManagerFactoryConfig;
+            IProposalFactory.ModuleConfig[] memory optionalModules = new IProposalFactory.ModuleConfig[](1);
+            optionalModules[0] = milestoneManagerFactoryConfig;
 
-        IProposal test_proposal = proposalFactory.createProposal(
-                                                        proposalConfig,
-                                                        authorizerFactoryConfig,
-                                                        paymentProcessorFactoryConfig,
-                                                        optionalModules
-                                                    );
-        
+            test_proposal = proposalFactory.createProposal(
+                                                proposalConfig,
+                                                authorizerFactoryConfig,
+                                                paymentProcessorFactoryConfig,
+                                                optionalModules
+                                            );
+        }
+
+
         console2.log("ERC20 token address: ", address(token));
         console2.log("Test Proposal Address: ", address(test_proposal));
     }
