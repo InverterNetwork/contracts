@@ -29,6 +29,25 @@ import {IProposal} from "src/proposal/IProposal.sol";
 contract PaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
 
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    /// @notice checks that the caller is an active module
+    modifier onlyModule() {
+        if (!proposal().isModule(_msgSender())) {
+            revert Module__PaymentManager__OnlyCallableByModule();
+        }
+        _;
+    }
+
+    /// @notice checks that the client is calling for itself
+    modifier validClient(IPaymentClient client) {
+        if (_msgSender() != address(client)) {
+            revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
+        }
+        _;
+    }
+
     /// @inheritdoc Module
     function init(
         IProposal proposal_,
@@ -47,7 +66,11 @@ contract PaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external {
+    function processPayments(IPaymentClient client)
+        external
+        onlyModule
+        validClient(client)
+    {
         // Collect outstanding orders and their total token amount.
         IPaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
@@ -69,14 +92,19 @@ contract PaymentProcessor is Module, IPaymentProcessor {
             emit TokensReleased(recipient, address(token_), amount);
 
             emit PaymentOrderProcessed(
-                recipient, amount, orders[i].createdAt, orders[i].dueTo
+                address(client),
+                recipient,
+                amount,
+                orders[i].createdAt,
+                orders[i].dueTo
             );
         }
     }
 
     function cancelRunningPayments(IPaymentClient client)
         external
-        onlyAuthorizedOrOwner
+        onlyModule
+        validClient(client)
     {
         //Since we pay out on processing, this function does nothing
         return;

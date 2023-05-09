@@ -22,9 +22,9 @@ contract FundingManagerTest is Test {
     // Mocks
     ERC20Mock underlier;
 
-    /// The maximum supply of underlying tokens. We keep it one factor below the MAX_SUPPLY of the rebasing token.
+    /// The deposit cap of underlying tokens. We keep it one factor below the MAX_SUPPLY of the rebasing token.
     /// Note that this sets the deposit limit for the fundign manager.
-    uint internal constant MAX_SUPPLY = 100_000_000e18;
+    uint internal constant DEPOSIT_CAP = 100_000_000e18;
 
     // Other constants.
     uint8 private constant DECIMALS = 18;
@@ -43,11 +43,8 @@ contract FundingManagerTest is Test {
 
     function testInit() public {
         assertEq(fundingManager.decimals(), DECIMALS);
-        assertEq(
-            fundingManager.name(),
-            "elastic Inverter Funding Token - Proposal #1"
-        );
-        assertEq(fundingManager.symbol(), "eIFT-1");
+        assertEq(fundingManager.name(), "Inverter Funding Token - Proposal #1");
+        assertEq(fundingManager.symbol(), "IFT-1");
 
         assertEq(fundingManager.totalSupply(), 0);
         assertEq(fundingManager.scaledTotalSupply(), 0);
@@ -70,7 +67,7 @@ contract FundingManagerTest is Test {
 
     function testDeposit(address user, uint amount) public {
         vm.assume(user != address(0) && user != address(fundingManager));
-        vm.assume(amount > 1 && amount <= MAX_SUPPLY);
+        vm.assume(amount > 1 && amount <= DEPOSIT_CAP);
 
         // Mint tokens to depositor.
         underlier.mint(user, amount);
@@ -100,6 +97,15 @@ contract FundingManagerTest is Test {
         assertEq(fundingManager.balanceOf(user), amount - expenses);
     }
 
+    function testSelfDepositFails() public {
+        // User deposits tokens.
+        vm.prank(address(fundingManager));
+        vm.expectRevert(
+            IFundingManager.Proposal__FundingManager__CannotSelfDeposit.selector
+        );
+        fundingManager.deposit(1);
+    }
+
     struct UserDeposits {
         address[] users;
         uint[] deposits;
@@ -114,7 +120,7 @@ contract FundingManagerTest is Test {
         uint[] memory depositAmounts
     ) public returns (UserDeposits memory) {
         // We cap the amount each user will deposit so we dont exceed the total supply.
-        uint maxDeposit = (MAX_SUPPLY / amountOfDepositors);
+        uint maxDeposit = (DEPOSIT_CAP / amountOfDepositors);
         for (uint i = 0; i < amountOfDepositors; i++) {
             //we generate a "random" address
             address addr = address(uint160(i + 1));
@@ -306,7 +312,12 @@ contract FundingManagerTest is Test {
             uint balance = fundingManager.balanceOf(input.users[i]);
             if (balance != 0) {
                 vm.prank(input.users[i]);
-                fundingManager.withdraw(balance);
+                //to test both withdraw and withdrawTo
+                if (i % 2 == 0) {
+                    fundingManager.withdraw(balance);
+                } else {
+                    fundingManager.withdrawTo(input.users[i], balance);
+                }
             }
         }
 

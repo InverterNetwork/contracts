@@ -9,8 +9,6 @@ import {
     IModuleManager
 } from "test/utils/mocks/proposal/base/ModuleManagerMock.sol";
 
-import {Types} from "src/common/Types.sol";
-
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
@@ -141,9 +139,7 @@ contract ModuleManagerTest is Test {
                 .Proposal__ModuleManager__OnlyCallableByModule
                 .selector
         );
-        moduleManager.executeTxFromModule(
-            address(this), bytes(""), Types.Operation.Call
-        );
+        moduleManager.executeTxFromModule(address(this), bytes(""));
     }
 
     function testExecuteTxFromModuleViaCall() public {
@@ -155,25 +151,7 @@ contract ModuleManagerTest is Test {
 
         vm.prank(module);
         (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this), abi.encodeWithSignature("ok()"), Types.Operation.Call
-        );
-
-        assertTrue(ok_);
-        assertTrue(abi.decode(returnData, (bool)));
-    }
-
-    function testExecuteTxFromModuleViaDelegateCall() public {
-        address module = address(0xCAFE);
-        moduleManager.addModule(module);
-
-        bool ok_;
-        bytes memory returnData;
-
-        vm.prank(module);
-        (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this),
-            abi.encodeWithSignature("ok()"),
-            Types.Operation.DelegateCall
+            address(this), abi.encodeWithSignature("ok()")
         );
 
         assertTrue(ok_);
@@ -189,26 +167,7 @@ contract ModuleManagerTest is Test {
 
         vm.prank(module);
         (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this),
-            abi.encodeWithSignature("fails()"),
-            Types.Operation.Call
-        );
-
-        assertTrue(!ok_);
-    }
-
-    function testExecuteTxFromModuleViaDelegateCallFails() public {
-        address module = address(0xCAFE);
-        moduleManager.addModule(module);
-
-        bool ok_;
-        bytes memory returnData;
-
-        vm.prank(module);
-        (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this),
-            abi.encodeWithSignature("fails()"),
-            Types.Operation.DelegateCall
+            address(this), abi.encodeWithSignature("fails()")
         );
 
         assertTrue(!ok_);
@@ -316,8 +275,6 @@ contract ModuleManagerTest is Test {
 
         // The current module to remove.
         address module;
-        // The module's prevModule in the list.
-        address prevModule;
 
         // Add modules.
         for (uint i; i < whos.length; ++i) {

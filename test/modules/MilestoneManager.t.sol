@@ -6,12 +6,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import "forge-std/console.sol";
 
-import {
-    ModuleTest,
-    IModule,
-    IProposal,
-    LibString
-} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {
@@ -25,8 +20,6 @@ import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract MilestoneManagerTest is ModuleTest {
-    using LibString for string;
-
     // SuT
     MilestoneManager milestoneManager;
 
@@ -713,7 +706,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.startNextMilestone();
 
-        assertEq(milestoneManager.listMilestoneIds().length, id2);
+        assertEq(milestoneManager.listMilestoneIds().length, 1);
         assertEq(milestoneManager.getActiveMilestoneId(), id2);
     }
 
@@ -771,8 +764,15 @@ contract MilestoneManagerTest is ModuleTest {
             vm.warp(block.timestamp + DURATION + 1);
             milestoneManager.startNextMilestone();
         }
+
         // check for correctness in end state
-        assertEq(milestoneManager.listMilestoneIds().length, numOfMilestones);
+
+        //The amount of milestones in the list should be number of created milestones minus 1 because we removed one
+        assertEq(
+            milestoneManager.listMilestoneIds().length, numOfMilestones - 1
+        );
+
+        //ActiveMilestoneId should be the number of created milestones
         assertEq(milestoneManager.getActiveMilestoneId(), numOfMilestones);
     }
     //----------------------------------
@@ -810,13 +810,13 @@ contract MilestoneManagerTest is ModuleTest {
         // Remove milestones from the back, i.e. highest milestone id, until
         // list is empty.
         for (uint i; i < amount; ++i) {
-            // Note that id's start at 1.
-            uint prevId = amount - i - 1;
-            uint id = amount - i;
+            // Note that id's start at amount, because they have been created before.
+            uint prevId = 2 * amount - i - 1;
+            uint id = 2 * amount - i;
 
             // Note that removing the last milestone requires the sentinel as
             // prevId.
-            if (prevId == 0) {
+            if (prevId == amount) {
                 prevId = _SENTINEL;
             }
 
@@ -1050,6 +1050,14 @@ contract MilestoneManagerTest is ModuleTest {
         _assumeValidDuration(duration);
         _assumeValidBudgets(budget);
         _assumeValidDetails(details);
+
+        //since we want to trigger an update, we need to also make sure that the generated values aren't the default
+        vm.assume(duration != DURATION);
+        vm.assume(budget != BUDGET);
+        vm.assume(
+            keccak256(abi.encodePacked(details))
+                != keccak256(abi.encodePacked(DETAILS))
+        );
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
@@ -2011,15 +2019,15 @@ contract MilestoneManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Assume Helper Functions
 
-    function _assumeValidDuration(uint duration) internal {
+    function _assumeValidDuration(uint duration) internal pure {
         _assumeElemNotInSet(_createInvalidDurations(), duration);
     }
 
-    function _assumeValidBudgets(uint budget) internal {
+    function _assumeValidBudgets(uint budget) internal pure {
         _assumeElemNotInSet(_createInvalidBudgets(), budget);
     }
 
-    function _assumeValidDetails(bytes memory details) internal {
+    function _assumeValidDetails(bytes memory details) internal pure {
         _assumeElemNotInSet(_createInvalidDetails(), details);
     }
 
@@ -2131,7 +2139,7 @@ contract MilestoneManagerTest is ModuleTest {
         return kHashOutput % maxValue;
     }
 
-    function _getPositionAfter(uint id) private view returns (uint) {
+    function _getPositionAfter(uint id) private view returns (uint position) {
         uint[] memory milestoneList = milestoneManager.listMilestoneIds();
 
         //If SENTINEL return first position in list

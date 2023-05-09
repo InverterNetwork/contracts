@@ -114,15 +114,14 @@ Removes address `module` as module. This function is only callable by authorized
 
 ### 3. executeTxFromModule
 
-`function executeTxFromModule(address to, bytes memory data, Types.Operation operation) external returns (bool, bytes memory);`
+`function executeTxFromModule(address to, bytes memory data) external returns (bool, bytes memory);`
 
-Executes a call to `to` with call data `data` either via call or delegatecall. This function is only callable by enabled modules.
+Executes a call to `to` with call data `data` either via call. This function is only callable by enabled modules.
 
 #### Parameter(s)
 
 1. `address to` -> The address where we need to make a call.
 2. `bytes data` -> The call data to be sent with the call.
-3. `Types.Operation operation` -> The operation type. Either call or delegatecall.
 
 #### Return Data
 
