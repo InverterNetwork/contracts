@@ -13,7 +13,7 @@ import {ProposalFactory, IProposalFactory} from "src/factories/ProposalFactory.s
 
 import {Beacon, IBeacon} from "../../src/factories/beacon/Beacon.sol";
 
-contract OneScriptToRuleThemAll is Script {
+contract DeploymentScript is Script {
     address deployer = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     address paymentProcessorBeaconOwner = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
     address milestoneManagerBeaconOwner = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
@@ -21,7 +21,7 @@ contract OneScriptToRuleThemAll is Script {
 
     address[] authorizerAddresses=[address(0xBEEF)];
 
-    address oneScriptToRuleThemAll = address(this);
+    address deploymentScript = address(this);
     
     Proposal proposal;
     PaymentProcessor paymentProcessor;
