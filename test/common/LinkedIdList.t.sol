@@ -120,10 +120,6 @@ contract LinkedIdListTest is Test {
             vm.expectRevert(
                 LinkedIdList.Library__LinkedIdList__InvalidPosition.selector
             );
-        } else if (!containsId(ids, prevId) && prevId != _SENTINEL) {
-            vm.expectRevert(
-                LinkedIdList.Library__LinkedIdList__InvalidPosition.selector
-            );
         }
         //Check if it is a valid intermediate position
         else if (
@@ -192,6 +188,24 @@ contract LinkedIdListTest is Test {
         }
     }
 
+    function testGetPreviousIdModifier() public {
+        //Check validPosition is in place
+        vm.expectRevert(
+            LinkedIdList.Library__LinkedIdList__InvalidPosition.selector
+        );
+
+        list.getPreviousId(0);
+    }
+
+    function testGetNextIdModifier() public {
+        //Check validPosition is in place
+        vm.expectRevert(
+            LinkedIdList.Library__LinkedIdList__InvalidPosition.selector
+        );
+
+        list.getNextId(0);
+    }
+
     //--------------------------------------------------------------------------------
     // Mutating Functions
 
@@ -223,6 +237,17 @@ contract LinkedIdListTest is Test {
         );
 
         list.addId(ids[0]);
+    }
+
+    function testAddIdModifier() public {
+        list.addId(0);
+
+        //Check validNewId is in place
+        vm.expectRevert(
+            LinkedIdList.Library__LinkedIdList__InvalidNewId.selector
+        );
+
+        list.addId(0);
     }
 
     function testRemoveId(uint[] calldata seed) public {
@@ -278,6 +303,22 @@ contract LinkedIdListTest is Test {
         assertEq(list.listIds().length, 0);
     }
 
+    function testRemoveIdModifier() public {
+        list.addId(0);
+
+        //Check validId is in place
+        vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
+
+        list.removeId(0, 1);
+
+        //Check onlyConsecutiveIds is in place
+        vm.expectRevert(
+            LinkedIdList.Library__LinkedIdList__IdNotConsecutive.selector
+        );
+
+        list.removeId(0, 0);
+    }
+
     function testMoveId(uint[] calldata seed, uint idToMoveToIndex) public {
         vm.assume(seed.length > 2); //Reasonable size
         vm.assume(seed.length < 20);
@@ -310,6 +351,38 @@ contract LinkedIdListTest is Test {
         if (idToMoveToIndex == seed.length - 1) {
             assertTrue(list.getNextId(randomId) == _SENTINEL);
         }
+    }
+
+    function testMoveIdInListModifier() public {
+        //Check validId is in place for id
+        vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
+
+        list.moveIdInList(0, 0, 0);
+
+        list.addId(0);
+        list.addId(1);
+
+        //Check validPosition is in place for idToPositionAfter
+        vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
+
+        list.moveIdInList(0, 0, 2);
+
+        //Check intermediatePosition is in place
+        vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
+
+        list.moveIdInList(0, 1, 0);
+
+        //Check intermediatePosition is in place
+        vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
+
+        list.moveIdInList(0, 1, 1);
+
+        //Check onlyConsecutiveIds is in place
+        vm.expectRevert(
+            LinkedIdList.Library__LinkedIdList__IdNotConsecutive.selector
+        );
+
+        list.moveIdInList(0, 0, 1);
     }
 
     //--------------------------------------------------------------------------------

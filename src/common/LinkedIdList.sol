@@ -69,6 +69,7 @@ library LinkedIdList {
         _;
     }
 
+    /// @dev prevId is checked by consecutiveId to be valid
     modifier validMoveParameter(
         List storage self,
         uint id,
@@ -79,8 +80,8 @@ library LinkedIdList {
         if (!isExistingId(self, id)) {
             revert Library__LinkedIdList__InvalidId();
         }
-        //Check that prevId and idToPositionAfter are in the list
-        if (self.list[idToPositionAfter] == 0 || self.list[prevId] == 0) {
+        //Check that idToPositionAfter is in the list
+        if (self.list[idToPositionAfter] == 0) {
             revert Library__LinkedIdList__InvalidPosition();
         }
         //Check if it is a valid intermediate position
@@ -155,6 +156,7 @@ library LinkedIdList {
         return self.list[id] != 0 && id != _SENTINEL; //@todo  This doesnt really check for Sentinel does it?
     }
 
+    ///@dev id and prevId can be _SENTINEL
     function getPreviousId(List storage self, uint id)
         internal
         view
@@ -174,6 +176,7 @@ library LinkedIdList {
         }
     }
 
+    ///@dev id and nextId can be _SENTINEL
     function getNextId(List storage self, uint id)
         internal
         view
