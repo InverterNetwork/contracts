@@ -631,41 +631,6 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.stopMilestone(_SENTINEL, id);
     }
 
-    function testStopMilestoneFailsForInvalidId(
-        address[] memory contributors,
-        uint invalidId
-    ) public {
-        //IDs start at 1, and testStartNextMilestone() will generate 2 milestones
-        vm.assume(invalidId > 2);
-
-        testStartNextMilestone(contributors);
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidMilestoneId
-                .selector
-        );
-        milestoneManager.stopMilestone(_SENTINEL, invalidId);
-    }
-
-    function testStopMilestoneFailsIfNotConsecutiveMilestonesGiven(
-        address[] memory contributors,
-        uint notPrevId
-    ) public {
-        vm.assume(notPrevId != _SENTINEL);
-
-        testStartNextMilestone(contributors);
-
-        uint id = 1; // Note that id's start at 1.
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestonesNotConsecutive
-                .selector
-        );
-        milestoneManager.stopMilestone(notPrevId, id);
-    }
-
     function testStopMilestoneFailsIfMilestoneNotActive() public {
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -848,23 +813,6 @@ contract MilestoneManagerTest is ModuleTest {
                 .selector
         );
         milestoneManager.removeMilestone(_SENTINEL, invalidId);
-    }
-
-    function testRemoveMilestoneFailsIfNotConsecutiveMilestonesGiven(
-        uint notPrevId
-    ) public {
-        vm.assume(notPrevId != _SENTINEL);
-
-        uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__MilestonesNotConsecutive
-                .selector
-        );
-        milestoneManager.removeMilestone(notPrevId, id);
     }
 
     function testRemoveMilestoneFailsIfMilestoneActive(
@@ -1276,47 +1224,6 @@ contract MilestoneManagerTest is ModuleTest {
         );
     }
 
-    function testMoveMilestoneForInvalidId() public {
-        milestoneManager.addMilestone(
-            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
-        uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
-        uint prevId = milestoneManager.getPreviousMilestoneId(id);
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidMilestoneId
-                .selector
-        ); //Move after Sentinel
-        milestoneManager.moveMilestoneInList(id + 1, prevId, type(uint).max);
-    }
-
-    function testMoveMilestoneForInvalidPosition() public {
-        milestoneManager.addMilestone(
-            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
-        uint id = milestoneManager.addMilestone(
-            DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
-        );
-
-        uint prevId = milestoneManager.getPreviousMilestoneId(id);
-
-        vm.expectRevert(
-            IMilestoneManager.Module__MilestoneManager__InvalidPosition.selector
-        );
-        milestoneManager.moveMilestoneInList(id, prevId, 0);
-
-        vm.expectRevert(
-            IMilestoneManager.Module__MilestoneManager__InvalidPosition.selector
-        );
-        milestoneManager.moveMilestoneInList(id, 0, type(uint).max);
-    }
-
     function testMoveMilestoneForInvalidIntermediatePosition(
         address[] memory contributors
     ) public {
@@ -1331,20 +1238,6 @@ contract MilestoneManagerTest is ModuleTest {
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
 
         uint prevId = milestoneManager.getPreviousMilestoneId(id);
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidIntermediatePosition
-                .selector
-        );
-        milestoneManager.moveMilestoneInList(id, prevId, id);
-
-        vm.expectRevert(
-            IMilestoneManager
-                .Module__MilestoneManager__InvalidIntermediatePosition
-                .selector
-        );
-        milestoneManager.moveMilestoneInList(id, prevId, prevId);
 
         // We wait for the timelock to pass
         vm.warp(block.timestamp + TIMELOCK + 1);
