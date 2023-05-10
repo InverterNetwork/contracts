@@ -546,7 +546,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validIntermediateMilestonePosition(id, idToPositionAfter)
     {
         _milestoneList.moveIdInList(id, prevId, idToPositionAfter);
