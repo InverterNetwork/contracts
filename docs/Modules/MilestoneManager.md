@@ -1,24 +1,25 @@
 # MilestoneManager.sol
+
 File: [MilestoneManager.sol](../../src/modules/MilestoneManager.sol)
 
 ## Things to know
 
 1. This is a module to manage milestones for a proposal.
 2. A milestone can exists in 4 different states:
-    - `added`:
-          The milestone got added to the contract.
-    - `active`:
-          When a milestone is started, it initiates payment orders to pay
-          the proposal's contributors.
-          A milestone is active, until either its duration is over or it's
-          marked as completed.
-    - `submitted`:
-          A proposal contributor marks a milestone as submitted by
-          submitting non-empty data that can be interpreted and evaluated
-          by off-chain systems.
-    - `completed`:
-          After a milestone was submitted, it can be marked as completed.
-          This marks the end of the milestone.
+   - `added`:
+     The milestone got added to the contract.
+   - `active`:
+     When a milestone is started, it initiates payment orders to pay
+     the proposal's contributors.
+     A milestone is active, until either its duration is over or it's
+     marked as completed.
+   - `submitted`:
+     A proposal contributor marks a milestone as submitted by
+     submitting non-empty data that can be interpreted and evaluated
+     by off-chain systems.
+   - `completed`:
+     After a milestone was submitted, it can be marked as completed.
+     This marks the end of the milestone.
 
 ## Modifier(s)
 
@@ -34,7 +35,7 @@ Modifier to ensure that the duration is non-zero.
 
 This is a skeleton modifier and does not implement any checks. Added for ease of implementation for future contraints regarding the budget field.
 
-### 4. validTitle(string memory title_)
+### 4. validTitle(string memory title\_)
 
 Modifier to ensure that the `title_` string is non-empty.
 
@@ -177,7 +178,7 @@ The function starts the next milestones and creates the payment orders to pay co
 
 This function updates a milestone's informations. Only callable by authorized addresses and reverts if an argument invalid or milestone already started.
 
-> NOTE: The owner can also update the milestone.
+> NOTE: The manager can also update the milestone.
 
 #### Parameters
 
@@ -190,7 +191,7 @@ This function updates a milestone's informations. Only callable by authorized ad
 
 `function submitMilestone(uint id, bytes calldata submissionData) external;`
 
-This function submits a milestone. Only callable by addresses holding the contributor role and everts if id invalid, milestone not yet started, or milestone is already completed. 
+This function submits a milestone. Only callable by addresses holding the contributor role and everts if id invalid, milestone not yet started, or milestone is already completed.
 
 #### Parameters
 
@@ -230,6 +231,3 @@ This function can only be called by authorized addresses.
 #### Parameters
 
 1. `uint _newTimelock` -> The new value for `_milestoneUpdateTimelock`
-
-
-

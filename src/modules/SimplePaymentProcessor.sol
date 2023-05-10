@@ -18,20 +18,32 @@ import {Module} from "src/modules/base/Module.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
 /**
- * @title PaymentProcessor
+ * @title SimplePaymentProcessor
  *
- * @dev The PaymentProcessor is a module to process payment orders from other
+ * @dev The SimplePaymentProcessor is a module to process payment orders from other
  *      modules. In order to process a module's payment orders, the module must
  *      implement the {IPaymentClient} interface.
  *
  * @author byterocket
  */
-contract PaymentProcessor is Module, IPaymentProcessor {
+contract SimplePaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;
 
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    /// @notice checks that the caller is an active module
     modifier onlyModule() {
         if (!proposal().isModule(_msgSender())) {
             revert Module__PaymentManager__OnlyCallableByModule();
+        }
+        _;
+    }
+
+    /// @notice checks that the client is calling for itself
+    modifier validClient(IPaymentClient client) {
+        if (_msgSender() != address(client)) {
+            revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
         }
         _;
     }
@@ -54,7 +66,11 @@ contract PaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external onlyModule {
+    function processPayments(IPaymentClient client)
+        external
+        onlyModule
+        validClient(client)
+    {
         // Collect outstanding orders and their total token amount.
         IPaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
@@ -85,10 +101,10 @@ contract PaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    function cancelRunningPayments(IPaymentClient)
+    function cancelRunningPayments(IPaymentClient client)
         external
-        view
-        onlyAuthorizedOrOwner
+        onlyModule
+        validClient(client)
     {
         //Since we pay out on processing, this function does nothing
         return;

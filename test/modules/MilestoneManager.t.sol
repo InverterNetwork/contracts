@@ -444,7 +444,7 @@ contract MilestoneManagerTest is ModuleTest {
         public
     {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -624,7 +624,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint id = 1; // Note that id's start at 1.
 
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -706,7 +706,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         milestoneManager.startNextMilestone();
 
-        assertEq(milestoneManager.listMilestoneIds().length, id2);
+        assertEq(milestoneManager.listMilestoneIds().length, 1);
         assertEq(milestoneManager.getActiveMilestoneId(), id2);
     }
 
@@ -764,8 +764,15 @@ contract MilestoneManagerTest is ModuleTest {
             vm.warp(block.timestamp + DURATION + 1);
             milestoneManager.startNextMilestone();
         }
+
         // check for correctness in end state
-        assertEq(milestoneManager.listMilestoneIds().length, numOfMilestones);
+
+        //The amount of milestones in the list should be number of created milestones minus 1 because we removed one
+        assertEq(
+            milestoneManager.listMilestoneIds().length, numOfMilestones - 1
+        );
+
+        //ActiveMilestoneId should be the number of created milestones
         assertEq(milestoneManager.getActiveMilestoneId(), numOfMilestones);
     }
     //----------------------------------
@@ -803,13 +810,13 @@ contract MilestoneManagerTest is ModuleTest {
         // Remove milestones from the back, i.e. highest milestone id, until
         // list is empty.
         for (uint i; i < amount; ++i) {
-            // Note that id's start at 1.
-            uint prevId = amount - i - 1;
-            uint id = amount - i;
+            // Note that id's start at amount, because they have been created before.
+            uint prevId = 2 * amount - i - 1;
+            uint id = 2 * amount - i;
 
             // Note that removing the last milestone requires the sentinel as
             // prevId.
-            if (prevId == 0) {
+            if (prevId == amount) {
                 prevId = _SENTINEL;
             }
 
@@ -825,7 +832,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -961,7 +968,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1108,7 +1115,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1635,7 +1642,7 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
@@ -1758,7 +1765,7 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);

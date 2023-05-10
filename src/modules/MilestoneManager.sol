@@ -8,7 +8,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Internal Dependencies
-import {Types} from "src/common/Types.sol";
 import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
 import {
     IPaymentClient,
@@ -121,7 +120,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         for (uint i; i < contribLength; ++i) {
             address contributorAddr = contribs[i].addr;
             uint contributorSalary = contribs[i].salary;
-            bytes32 contributorData = contribs[i].data;
 
             // check the address is valid
             if (
@@ -180,6 +178,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     //--------------------------------------------------------------------------
     // Storage
+
+    /// @dev Value for what the next id will be.
+    uint private _nextId;
 
     /// @dev Registry mapping milestone ids to Milestone structs.
     mapping(uint => Milestone) private _milestoneRegistry;
@@ -389,7 +390,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    ) external onlyAuthorizedOrOwner returns (uint) {
+    ) external onlyAuthorizedOrManager returns (uint) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
         Milestone memory _mlstn =
@@ -401,7 +402,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function stopMilestone(uint prevId, uint id)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(id)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -416,9 +417,13 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             revert Module__MilestoneManager__MilestoneNotActive();
         }
 
-        // Update _milestones list and _activeMilestone
-        _milestones[prevId] = _milestones[id];
+        //Move ActiveId To Previous Id
         _activeMilestone = prevId;
+
+        // Remove Current id from _milestones list
+        _milestones[prevId] = _milestones[id];
+        delete _milestones[id];
+        _milestoneCounter--;
 
         // In case last element was removed, update _last to its previous
         // element.
@@ -437,7 +442,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function removeMilestone(uint prevId, uint id)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(id)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -467,7 +472,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function startNextMilestone() external onlyAuthorizedOrOwner {
+    function startNextMilestone() external onlyAuthorizedOrManager {
         if (!isNextMilestoneActivatable()) {
             revert Module__MilestoneManager__MilestoneNotActivateable();
         }
@@ -541,7 +546,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    ) external onlyAuthorizedOrOwner validId(id) {
+    ) external onlyAuthorizedOrManager validId(id) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
         Milestone storage m = _milestoneRegistry[id];
@@ -590,10 +595,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(id)
-        validPosition(idToPositionAfter)
         validPosition(prevId)
+        validPosition(idToPositionAfter)
         validIntermediatePosition(id, prevId, idToPositionAfter)
         onlyConsecutiveMilestones(prevId, id)
     {
@@ -646,7 +651,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function completeMilestone(uint milestoneId)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(milestoneId)
     {
         Milestone storage m = _milestoneRegistry[milestoneId];
@@ -665,7 +670,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     /// @inheritdoc IMilestoneManager
     function declineMilestone(uint milestoneId)
         external
-        onlyAuthorizedOrOwner
+        onlyAuthorizedOrManager
         validId(milestoneId)
     {
         Milestone storage m = _milestoneRegistry[milestoneId];
@@ -725,9 +730,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         internal
         returns (uint _id)
     {
+        // Note ids start at 1.
+        uint milestoneId = ++_nextId;
+
         // Increase counter and cache result.
-        // Note that ids therefore start at 1.
-        uint milestoneId = ++_milestoneCounter;
+        ++_milestoneCounter;
 
         // Add milestone's id to end of list.
         _milestones[_last] = milestoneId;
@@ -826,15 +833,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint balance = __Module_proposal.token().balanceOf(address(this));
 
         if (balance < amount) {
-            // Trigger delegatecall-callback from proposal to transfer tokens
+            // Trigger callback from proposal to transfer tokens
             // to address(this).
             bool ok;
             (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
                 address(__Module_proposal.token()),
                 abi.encodeWithSignature(
                     "transfer(address,uint256)", address(this), amount - balance
-                ),
-                Types.Operation.Call
+                )
             );
 
             if (!ok) {
@@ -862,18 +868,5 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         returns (bool)
     {
         return __Module_proposal.paymentProcessor() == who;
-    }
-
-    //--------------------------------------------------------------------------
-    // Proposal Callback Functions
-
-    /// @dev WantProposalContext-callback function to transfer `amount` of
-    ///      tokens from proposal to `receiver`.
-    /// @dev For more info, see src/modules/base/Module.sol.
-    function __Proposal_transferERC20(address receiver, uint amount)
-        external
-        wantProposalContext
-    {
-        __Proposal__token.safeTransfer(receiver, amount);
     }
 }

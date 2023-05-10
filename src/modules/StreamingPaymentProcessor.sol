@@ -6,7 +6,6 @@ import {
     IPaymentProcessor,
     IPaymentClient
 } from "src/modules/IPaymentProcessor.sol";
-import {Types} from "src/common/Types.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
@@ -23,11 +22,11 @@ import {IProposal} from "src/proposal/IProposal.sol";
  * @author byterocket
  */
 
-contract VestingPaymentProcessor is Module, IPaymentProcessor {
+contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 
-    struct VestingWallet {
+    struct StreamingWallet {
         uint _salary;
         uint _released;
         uint _start;
@@ -35,7 +34,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     // paymentClient => contributor => Payment
-    mapping(address => mapping(address => VestingWallet)) private vestings;
+    mapping(address => mapping(address => StreamingWallet)) private vestings;
     // paymentClient => contributor => unclaimableAmount
     mapping(address => mapping(address => uint)) private unclaimableAmounts;
 
@@ -50,7 +49,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param duration Timestamp at which the full amount should be claimable.
-    event VestingPaymentAdded(
+    event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
@@ -60,7 +59,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Emitted when the vesting to an address is removed.
     /// @param recipient The address that will stop receiving payment.
-    event VestingPaymentRemoved(
+    event StreamingPaymentRemoved(
         address indexed paymentClient, address indexed recipient
     );
 
@@ -75,7 +74,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param duration Number of blocks over which the amount will vest
-    event InvalidVestingOrderDiscarded(
+    event InvalidStreamingOrderDiscarded(
         address indexed recipient, uint amount, uint start, uint duration
     );
 
@@ -88,9 +87,18 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @notice checks that the caller is an active module
     modifier onlyModule() {
         if (!proposal().isModule(_msgSender())) {
             revert Module__PaymentManager__OnlyCallableByModule();
+        }
+        _;
+    }
+
+    /// @notice checks that the client is calling for itself
+    modifier validClient(IPaymentClient client) {
+        if (_msgSender() != address(client)) {
+            revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
         }
         _;
     }
@@ -114,7 +122,11 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client) external onlyModule {
+    function processPayments(IPaymentClient client)
+        external
+        onlyModule
+        validClient(client)
+    {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // If there are, we remove all payments that would be overwritten
@@ -131,7 +143,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
                 );
             }
 
-            // Generate Vesting Payments for all orders
+            // Generate Streaming Payments for all orders
             address _recipient;
             uint _amount;
             uint _start;
@@ -153,24 +165,13 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
+    /// @inheritdoc IPaymentProcessor
     function cancelRunningPayments(IPaymentClient client)
         external
-        onlyAuthorized
+        onlyModule
+        validClient(client)
     {
         _cancelRunningOrders(client);
-    }
-
-    function _cancelRunningOrders(IPaymentClient client) internal {
-        //IPaymentClient.PaymentOrder[] memory orders;
-        //orders = client.paymentOrders();
-        address[] memory _activePayments = activePayments[address(client)];
-
-        address _recipient;
-        for (uint i; i < _activePayments.length; ++i) {
-            _recipient = _activePayments[i];
-
-            _removePayment(address(client), _recipient);
-        }
     }
 
     /// @notice Deletes a contributors payment and leaves non-released tokens
@@ -268,6 +269,19 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
         return type(uint).max;
     }
 
+    function _cancelRunningOrders(IPaymentClient client) internal {
+        //IPaymentClient.PaymentOrder[] memory orders;
+        //orders = client.paymentOrders();
+        address[] memory _activePayments = activePayments[address(client)];
+
+        address _recipient;
+        for (uint i; i < _activePayments.length; ++i) {
+            _recipient = _activePayments[i];
+
+            _removePayment(address(client), _recipient);
+        }
+    }
+
     function _removePayment(address client, address contributor) internal {
         //we claim the earned funds for the contributor.
         _claim(client, contributor);
@@ -284,7 +298,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
 
             delete vestings[client][contributor];
 
-            emit VestingPaymentRemoved(client, contributor);
+            emit StreamingPaymentRemoved(client, contributor);
         }
 
         /// Note that all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
@@ -295,7 +309,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
     /// @param _contributor Contributor's address.
     /// @param _salary Salary contributor will receive per epoch.
     /// @param _start Start vesting timestamp.
-    /// @param _duration Vesting duration timestamp.
+    /// @param _duration Streaming duration timestamp.
     function _addPayment(
         address client,
         address _contributor,
@@ -307,12 +321,12 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
             !validAddress(_contributor) || !validSalary(_salary)
                 || !validStart(_start) || !validDuration(_duration)
         ) {
-            emit InvalidVestingOrderDiscarded(
+            emit InvalidStreamingOrderDiscarded(
                 _contributor, _salary, _start, _duration
             );
         } else {
             vestings[client][_contributor] =
-                VestingWallet(_salary, 0, _start, _duration);
+                StreamingWallet(_salary, 0, _start, _duration);
 
             uint contribIndex =
                 findAddressInActivePayments(client, _contributor);
@@ -320,7 +334,7 @@ contract VestingPaymentProcessor is Module, IPaymentProcessor {
                 activePayments[client].push(_contributor);
             }
 
-            emit VestingPaymentAdded(
+            emit StreamingPaymentAdded(
                 client, _contributor, _salary, _start, _duration
             );
         }

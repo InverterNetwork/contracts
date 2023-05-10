@@ -5,7 +5,7 @@ interface IMetadataManager {
     //--------------------------------------------------------------------------
     // Types
 
-    struct OwnerMetadata {
+    struct ManagerMetadata {
         string name;
         address account;
         string twitterHandle;
@@ -29,7 +29,7 @@ interface IMetadataManager {
     // Events
 
     /// @notice Event emitted when the owner metadata changed.
-    event OwnerMetadataUpdated(
+    event ManagerMetadataUpdated(
         string name, address account, string twitterHandle
     );
 

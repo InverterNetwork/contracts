@@ -1,10 +1,11 @@
 # Module.sol
+
 File: [Module.sol](../../src/modules/base/Module.sol)
 
 ## Things to know
 
 1. This contract acts as the base contract for modules.
-2. This contract provides a framework for triggering and receiving proposal callbacks (via `call` or `delegatecall`)
+2. This contract provides a framework for triggering and receiving proposal callbacks (via `call`)
 3. This contract also provides a modifier to authenticate callers via the module's proposal.
 4. Each module is identified via a unique identifier based on its major version, title, and url given in the metadata.
 5. Modules will automatically be updated incase of minor updates, however they won't be automatically updated in case of major updates
@@ -16,15 +17,7 @@ File: [Module.sol](../../src/modules/base/Module.sol)
 Modifier to guarantee function is only callable by addresses authorized via Proposal.
 `onlyAuthorized` functions SHOULD only be used to trigger callbacks from the proposal via the `_triggerProposalCallback()` function.
 
-### 2. wantProposalContext
-
-Modifier to guarantee that the function is not executed in the module's context.
-As long as wantProposalContext-protected functions only access the proposal storage variables (`__Proposal_`) inherited from
-`{ProposalStorage}`, the module's own state is never mutated.
-It's therefore safe to not authenticate the caller in these functions. A function only accessing the proposal storage variables, as recommended, can not alter it's own module's storage.
-Advised to use function prefix `__Proposal_`.
-
-### 3. onlyProposal
+### 2. onlyProposal
 
 Modifier to guarantee function is only callable by the proposal. `onlyProposal` functions MUST only access the module's storage, i.e. `__Module_` variables. Advised to use function prefix `__Module_`
 
@@ -128,7 +121,7 @@ They can be deactivated by authorized addresses at any time.
 ## The Base Module Contract
 
 The base Module contract (`src/modules/base/Module.sol`) provides a framework
-for triggering and receiving proposal callbacks (via `call` or `delegatecall`)
+for triggering and receiving proposal callbacks (via `call`)
 and a modifier to authenticate callers via the module's proposal using the
 `IAuthorizer` interface.
 
@@ -136,67 +129,9 @@ and a modifier to authenticate callers via the module's proposal using the
 
 A module can trigger a callback from its proposal via the internal
 `_triggerProposalCallback(funcData, op)` function.
-The `op` argument specifies whether the callback is executed via `call` or
-`delegatecall`, i.e. whether the callback is executed in the proposal's context
-or the module's context.
-
-### Callbacks executed in the Proposal's Context
-
-In order to easily access the proposal's storage in a given proposal, callback functions are
-invoked via `delegatecall`, the *base module* contract inherits from the auto-generated
-`ProposalStorage` contract (`src/generated/ProposalStorage.gen.sol`)
-to mirror the proposal's storage layout.
-
-All variables inherited from the `ProposalStorage` are prefixed with `__Proposal_` and declared as `internal` for convenience.
-
-Per convention, such `delegatecall`-callbacks **SHOULD**:
-
-1. Prefix the function name with `__Proposal_`
-2. Only access `ProposalStorage` variables
-
-In order to guarantee the callback is NOT executed in the module's context,
-`wantProposalContext` modifier **MUST** be used!
-
-Example:
-
-```solidity
-function doSmth(
-    uint256 dataNumber,
-    string memory dataString,
-) public returns (uint256, bool){
-    bool ok;
-    bytes memory returnData;
-
-    (ok, returnData) = _triggerProposalCallback(
-        abi.encodeWithSignature(
-            "__Proposal_doSmth(uint256,string)",
-            dataNumber,
-            dataString
-        ),
-        Types.Operation.DelegateCall
-    );
-
-    if (!ok) {
-        revert Module_ProposalCallbackFailed();
-    }
-    return abi.decode(returnData, (uint256, bool));
-}
-
-function __Proposal_doSmth(
-    uint256 dataNumber,
-    string memory dataString,
-) external wantProposalContext returns(uint256, bool){
-    // This function is executed in the proposal's context.
-    doSmth(dataNumber, dataString);
-
-    return (1, true);
-}
-```
+The callback is executed via `call` in the module's context.
 
 ### Callbacks executed in the Module's Context
-
-Proposal callbacks executed in the module's context **MUST NOT** access
-`__Proposal_` variables inherited from the `ProposalStorage` contract.
 
 Per convention, the function name **SHOULD** be prefixed with `__Module_`.
 
@@ -218,8 +153,7 @@ function doSmth(
             "__Module_doSmth(uint256,string)",
             dataNumber,
             dataString
-        ),
-        Types.Operation.Call
+        )
     );
 
     if (!ok) {

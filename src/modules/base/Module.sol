@@ -7,10 +7,6 @@ import {
     ContextUpgradeable
 } from "@oz-up/security/PausableUpgradeable.sol";
 
-// Internal Dependencies
-import {Types} from "src/common/Types.sol";
-import {ProposalStorage} from "src/generated/ProposalStorage.gen.sol";
-
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -24,7 +20,7 @@ import {IAuthorizer} from "src/modules/IAuthorizer.sol";
  * @dev The base contract for modules.
  *
  *      This contract provides a framework for triggering and receiving proposal
- *      callbacks (via `call` or `delegatecall`) and a modifier to authenticate
+ *      callbacks (via `call`) and a modifier to authenticate
  *      callers via the module's proposal.
  *
  *      Each module is identified via a unique identifier based on its major
@@ -36,7 +32,7 @@ import {IAuthorizer} from "src/modules/IAuthorizer.sol";
  *
  * @author byterocket
  */
-abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
+abstract contract Module is IModule, PausableUpgradeable {
     //--------------------------------------------------------------------------
     // Storage
     //
@@ -70,12 +66,12 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     }
 
     /// @notice Modifier to guarantee function is only callable by either
-    ///         addresses authorized via Proposal or the Proposal's owner.
-    modifier onlyAuthorizedOrOwner() {
+    ///         addresses authorized via Proposal or the Proposal's manager.
+    modifier onlyAuthorizedOrManager() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (
             !authorizer.isAuthorized(_msgSender())
-                && __Module_proposal.owner() != _msgSender()
+                && __Module_proposal.manager() != _msgSender()
         ) {
             revert Module__CallerNotAuthorized();
         }
@@ -89,29 +85,6 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     modifier onlyProposal() {
         if (_msgSender() != address(__Module_proposal)) {
             revert Module__OnlyCallableByProposal();
-        }
-        _;
-    }
-
-    /// @notice Modifier to guarantee that the function is not executed in the
-    ///         module's context.
-    /// @dev As long as wantProposalContext-protected functions only access the
-    ///      proposal storage variables (`__Proposal_`) inherited from
-    ///      {ProposalStorage}, the module's own state is never mutated.
-    /// @dev Note that it's therefore safe to not authenticate the caller in
-    ///      these functions. A function only accessing the proposal storage
-    ///      variables, as recommended, can not alter it's own module's storage.
-    /// @dev Note to use function prefix `__Proposal_`.
-    modifier wantProposalContext() {
-        // If we are in the proposal's context, the following storage access
-        // returns the zero address. That is because the module's storage
-        // starts after the proposal's storage due to inheriting from
-        // {ProposalStorage}.
-        // If we are in the module's context, the following storage access can
-        // not return the zero address. That is because the `__Module_proposal`
-        // variable is set during initialization and never mutated again.
-        if (address(__Module_proposal) != address(0)) {
-            revert Module__WantProposalContext();
         }
         _;
     }
@@ -160,12 +133,12 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
     // API functions for authenticated users.
 
     /// @inheritdoc IModule
-    function pause() external override(IModule) onlyAuthorizedOrOwner {
+    function pause() external override(IModule) onlyAuthorizedOrManager {
         _pause();
     }
 
     /// @inheritdoc IModule
-    function unpause() external override(IModule) onlyAuthorizedOrOwner {
+    function unpause() external override(IModule) onlyAuthorizedOrManager {
         _unpause();
     }
 
@@ -202,17 +175,16 @@ abstract contract Module is IModule, ProposalStorage, PausableUpgradeable {
 
     /// @dev Internal function to trigger a callback from the proposal.
     /// @param data The call data for the proposal to call.
-    /// @param op Whether the callback should be a `call` or `delegatecall`.
     /// @return Whether the callback succeeded.
     /// @return The return data of the callback.
-    function _triggerProposalCallback(bytes memory data, Types.Operation op)
+    function _triggerProposalCallback(bytes memory data)
         internal
         returns (bool, bytes memory)
     {
         bool ok;
         bytes memory returnData;
         (ok, returnData) =
-            __Module_proposal.executeTxFromModule(address(this), data, op);
+            __Module_proposal.executeTxFromModule(address(this), data);
 
         // Note that there is no check whether the proposal callback succeeded.
         // This responsibility is delegated to the caller, i.e. downstream
