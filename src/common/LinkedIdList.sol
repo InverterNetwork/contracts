@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
-import "forge-std/Test.sol";
+
 /*
 Assumptions
 -Continous Usage of List
 -List is initiated with init ->once<-
 -used ids are unique 
 */
+
 library LinkedIdList {
     struct List {
         /// @dev Size of the list
@@ -47,15 +48,9 @@ library LinkedIdList {
     }
 
     modifier validId(List storage self, uint id) {
+        //@todo cant use 0
         if (!isExistingId(self, id)) {
             revert Library__LinkedIdList__InvalidId();
-        }
-        _;
-    }
-
-    modifier onlyConsecutiveIds(List storage self, uint prevId, uint id) {
-        if (self.list[prevId] != id) {
-            revert Library__LinkedIdList__IdNotConsecutive();
         }
         _;
     }
@@ -67,18 +62,38 @@ library LinkedIdList {
         _;
     }
 
-    /// @dev this does not check if id is SENTINEL. This has to be checked seperately via validId()
-    modifier validIntermediatePosition(
+    modifier onlyConsecutiveIds(List storage self, uint prevId, uint id) {
+        if (self.list[prevId] != id) {
+            revert Library__LinkedIdList__IdNotConsecutive();
+        }
+        _;
+    }
+
+    modifier validMoveParameter(
         List storage self,
         uint id,
         uint prevId,
         uint idToPositionAfter
     ) {
+        //Check that id is existing
+        if (!isExistingId(self, id)) {
+            revert Library__LinkedIdList__InvalidId();
+        }
+        //Check that prevId and idToPositionAfter are in the list
+        if (self.list[idToPositionAfter] == 0 || self.list[prevId] == 0) {
+            revert Library__LinkedIdList__InvalidPosition();
+        }
+        //Check if it is a valid intermediate position
         if (
             (id == idToPositionAfter) //Make sure it doesnt move after itself
                 || (idToPositionAfter == prevId) //Make sure it doesnt move before itself
         ) {
             revert Library__LinkedIdList__InvalidIntermediatePosition();
+        }
+
+        //Check for Consecutive Id
+        if (self.list[prevId] != id) {
+            revert Library__LinkedIdList__IdNotConsecutive();
         }
         _;
     }
@@ -136,15 +151,19 @@ library LinkedIdList {
         view
         returns (bool)
     {
-        return id != _SENTINEL && self.list[id] != 0;
+        //Return true if id is in list and not Sentinel
+        return self.list[id] != 0 && id != _SENTINEL; //@todo  This doesnt really check for Sentinel does it?
     }
 
     function getPreviousId(List storage self, uint id)
         internal
         view
-        validId(self, id)
+        validPosition(self, id)
         returns (uint prevId)
     {
+        if (id == _SENTINEL) {
+            return self.last;
+        }
         uint[] memory Ids = listIds(self);
 
         uint len = Ids.length;
@@ -158,7 +177,7 @@ library LinkedIdList {
     function getNextId(List storage self, uint id)
         internal
         view
-        validId(self, id)
+        validPosition(self, id)
         returns (uint nextId)
     {
         return self.list[id];
@@ -168,7 +187,7 @@ library LinkedIdList {
     // Mutating Functions
 
     // add To list at last position
-    function addId(List storage self, uint id) internal validNewId(self, id){
+    function addId(List storage self, uint id) internal validNewId(self, id) {
         self.list[self.last] = id;
         self.list[id] = _SENTINEL;
         self.last = id;
@@ -197,14 +216,7 @@ library LinkedIdList {
         uint id,
         uint prevId,
         uint idToPositionAfter
-    )
-        internal
-        validId(self, id)
-        validPosition(self, idToPositionAfter)
-        validPosition(self, prevId)
-        validIntermediatePosition(self, id, prevId, idToPositionAfter)
-        onlyConsecutiveIds(self, prevId, id)
-    {
+    ) internal validMoveParameter(self, id, prevId, idToPositionAfter) {
         //Remove current id from list
         uint nextIdInLine = self.list[id];
         self.list[prevId] = nextIdInLine;
