@@ -61,13 +61,7 @@ abstract contract FundingManager is
         override(ElasticReceiptTokenBase)
         returns (uint)
     {
-        uint tokenBalance = token().balanceOf(address(this));
-
-        // if(tokenBalance == 0 || tokenBalance > MAX_SUPPLY) {
-        //     revert Proposal__FundingManaget__TokenBalanceOutOfRange();
-        // }
-
-        return tokenBalance;
+        return token().balanceOf(address(this));
     }
 
     //--------------------------------------------------------------------------
