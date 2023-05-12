@@ -14,8 +14,7 @@ contract ModuleFactoryMock is IModuleFactory {
     IBeacon private _beacon;
 
     // Note to not start too low as, e.g., modules are not allowed to have
-    // address(0x1). For more info, see _SENTINEL constants in
-    // src/proposal/base.
+    // address(0x1).
     uint public addressCounter = 10;
 
     function createModule(IModule.Metadata memory, IProposal, bytes memory)
