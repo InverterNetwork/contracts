@@ -393,10 +393,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     ) external onlyAuthorizedOrManager returns (uint) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
-        Milestone memory _mlstn =
-            _createMilestoneInstance(duration, budget, contributors, details);
-
-        return _addMilestoneInstance(_mlstn);
+        return _addMilestone(duration, budget, contributors, details);
     }
 
     /// @inheritdoc IMilestoneManager
@@ -695,41 +692,19 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Internal Function Implementations
 
-    /// @notice Creates a memory instance of the milestone we want to add
-    /// @dev sub-function created to circumvent stackTooDeep errors
+    /// @notice Adds a milestone instance to the list of current milestones
+    /// @dev sub-function created to circumvent stackTooDeep errors, assumes parameters have been validated before
     /// @param duration The duration of the milestone.
     /// @param budget The budget for the milestone.
     /// @param contributors The contributor information for the milestone
     /// @param details The milestone's details.
-    /// @return The newly created milestone.
-    function _createMilestoneInstance(
+    /// @return _id The newly added milestone's id.
+    function _addMilestone(
         uint duration,
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    ) internal view returns (Milestone memory) {
-        Milestone memory _mlstn = Milestone({
-            duration: duration,
-            budget: budget,
-            contributors: contributors,
-            details: details,
-            startTimestamp: 0,
-            submissionData: "",
-            completed: false,
-            lastUpdatedTimestamp: block.timestamp
-        });
-
-        return _mlstn;
-    }
-
-    /// @notice Adds a milestone instance to the list of current milestones
-    /// @dev sub-function created to circumvent stackTooDeep errors
-    /// @param milestone The milestone we want to add.
-    /// @return _id The newly added milestone's id.
-    function _addMilestoneInstance(Milestone memory milestone)
-        internal
-        returns (uint _id)
-    {
+    ) internal returns (uint _id) {
         // Note ids start at 1.
         uint milestoneId = ++_nextId;
 
@@ -742,28 +717,22 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _last = milestoneId;
 
         // Add milestone instance to registry.
-        _milestoneRegistry[milestoneId].duration = milestone.duration;
-        _milestoneRegistry[milestoneId].budget = milestone.budget;
+        _milestoneRegistry[milestoneId].duration = duration;
+        _milestoneRegistry[milestoneId].budget = budget;
 
-        uint len = milestone.contributors.length;
+        uint len = contributors.length;
         for (uint i; i < len; ++i) {
-            _milestoneRegistry[milestoneId].contributors.push(
-                milestone.contributors[i]
-            );
+            _milestoneRegistry[milestoneId].contributors.push(contributors[i]);
         }
 
-        _milestoneRegistry[milestoneId].details = milestone.details;
+        _milestoneRegistry[milestoneId].details = details;
         _milestoneRegistry[milestoneId].startTimestamp = 0;
         _milestoneRegistry[milestoneId].submissionData = "";
         _milestoneRegistry[milestoneId].completed = false;
         _milestoneRegistry[milestoneId].lastUpdatedTimestamp = block.timestamp;
 
         emit MilestoneAdded(
-            milestoneId,
-            milestone.duration,
-            milestone.budget,
-            milestone.contributors,
-            milestone.details
+            milestoneId, duration, budget, contributors, details
         );
 
         return milestoneId;
