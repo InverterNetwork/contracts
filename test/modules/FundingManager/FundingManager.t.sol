@@ -113,13 +113,40 @@ contract FundingManagerTest1 is ModuleTest {
         assertEq(fundingManager.balanceOf(user), amount - expenses);
     }
 
-    function testSelfDepositFails() public {
+    function testSelfDepositFails(address user, uint amount) public {
+        vm.assume(user != address(0) && user != address(fundingManager));
+        vm.assume(amount > 1 && amount <= DEPOSIT_CAP);
+
         // User deposits tokens.
         vm.prank(address(fundingManager));
         vm.expectRevert(
-            IFundingManager.Proposal__FundingManager__CannotSelfDeposit.selector
+            IFundingManager.Module__FundingManager__CannotSelfDeposit.selector
         );
         fundingManager.deposit(1);
+
+        // Mint tokens to depositor.
+        _token.mint(user, amount + 1);
+
+        // User deposits tokens.
+        vm.startPrank(user);
+        {
+            _token.approve(address(fundingManager), type(uint).max);
+            fundingManager.deposit(amount);
+        }
+        vm.stopPrank();
+
+        if (amount + 1 > DEPOSIT_CAP) {
+            vm.expectRevert(
+                IFundingManager
+                    .Module__FundingManager__CannotSelfDeposit
+                    .selector
+            );
+        }
+        vm.startPrank(user);
+        {
+            fundingManager.deposit(1);
+        }
+        vm.stopPrank();
     }
 
     function testDepositAndSpendFunds(

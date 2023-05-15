@@ -35,7 +35,13 @@ contract FundingManager is
     using Strings for uint;
     using SafeERC20 for IERC20;
 
+    //--------------------------------------------------------------------------
+    // Constants
+
     uint internal constant DEPOSIT_CAP = 100_000_000e18;
+
+    //--------------------------------------------------------------------------
+    // Init Function
 
     /// @inheritdoc Module
     function init(IProposal proposal_, Metadata memory metadata, bytes memory)
@@ -106,11 +112,11 @@ contract FundingManager is
     function _deposit(address from, address to, uint amount) internal {
         //Depositing from itself with its own balance would mint tokens without increasing underlying balance.
         if (from == address(this)) {
-            revert Proposal__FundingManager__CannotSelfDeposit();
+            revert Module__FundingManager__CannotSelfDeposit();
         }
 
         if ((amount + token().balanceOf(address(this))) > DEPOSIT_CAP) {
-            revert Proposal__FundingManager__DepositCapReached();
+            revert Module__FundingManager__DepositCapReached();
         }
 
         _mint(to, amount);

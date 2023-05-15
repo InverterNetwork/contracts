@@ -7,11 +7,14 @@ interface IFundingManager is IRebasingERC20 {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @dev Invalid Address
+    error Module__FundingManager__InvalidAddress();
+
     /// @notice Function is only callable by authorized address.
-    error Proposal__FundingManager__CannotSelfDeposit();
+    error Module__FundingManager__CannotSelfDeposit();
 
     /// @notice There is a cap on deposits.
-    error Proposal__FundingManager__DepositCapReached();
+    error Module__FundingManager__DepositCapReached();
 
     //--------------------------------------------------------------------------
     // Events
