@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
+import "forge-std/console.sol";
+
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
 import {
@@ -36,14 +38,14 @@ contract FundingManager is
     uint internal constant DEPOSIT_CAP = 100_000_000e18;
 
     /// @inheritdoc Module
-    function init(
-        IProposal proposal_,
-        Metadata memory metadata,
-        bytes memory configdata
-    ) external override(Module) initializer {
+    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
+        external
+        override(Module)
+        initializer
+    {
         __Module_init(proposal_, metadata);
 
-        uint _id = proposal_.proposalId();
+        string memory _id = proposal_.proposalId().toString();
         string memory _name =
             string(abi.encodePacked("Inverter Funding Token - Proposal #", _id));
         string memory _symbol = string(abi.encodePacked("IFT-", _id));

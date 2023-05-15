@@ -21,9 +21,18 @@ import {
     IFundingManager
 } from "src/modules/FundingManager/FundingManager.sol";
 
-contract FundingManagerTest is ModuleTest {
+contract FundingManagerTest1 is ModuleTest {
+    struct UserDeposits {
+        address[] users;
+        uint[] deposits;
+    }
+
     // SuT
     FundingManager fundingManager;
+
+    mapping(address => bool) _usersCache;
+
+    UserDeposits userDeposits;
 
     /// The deposit cap of underlying tokens. We keep it one factor below the MAX_SUPPLY of the rebasing token.
     /// Note that this sets the deposit limit for the fundign manager.
@@ -34,6 +43,9 @@ contract FundingManagerTest is ModuleTest {
     uint private constant PROPOSAL_ID = 1;
 
     function setUp() public {
+        //because generateValidUserDeposits uses a mechanism to generate random numbers based on blocktimestamp we warp it
+        vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
+
         //Add Module to Mock Proposal
 
         address impl = address(new FundingManager());
@@ -108,43 +120,6 @@ contract FundingManagerTest is ModuleTest {
             IFundingManager.Proposal__FundingManager__CannotSelfDeposit.selector
         );
         fundingManager.deposit(1);
-    }
-
-    struct UserDeposits {
-        address[] users;
-        uint[] deposits;
-    }
-
-    mapping(address => bool) _usersCache;
-
-    UserDeposits userDeposits;
-
-    function generateValidUserDeposits(
-        uint amountOfDepositors,
-        uint[] memory depositAmounts
-    ) public returns (UserDeposits memory) {
-        // We cap the amount each user will deposit so we dont exceed the total supply.
-        uint maxDeposit = (DEPOSIT_CAP / amountOfDepositors);
-        for (uint i = 0; i < amountOfDepositors; i++) {
-            //we generate a "random" address
-            address addr = address(uint160(i + 1));
-            if (
-                addr != address(0) && addr != address(fundingManager)
-                    && !_usersCache[addr] && addr != address(this)
-            ) {
-                //This should be enough for the case we generated a duplicate address
-                addr = address(uint160(block.timestamp - i));
-            }
-
-            // Store the address and mark it as used.
-            userDeposits.users.push(addr);
-            _usersCache[addr] = true;
-
-            //This is to avoid the fuzzer to generate a deposit amount that is too big
-            depositAmounts[i] = bound(depositAmounts[i], 1, maxDeposit - 1);
-            userDeposits.deposits.push(depositAmounts[i]);
-        }
-        return userDeposits;
     }
 
     function testDepositAndSpendFunds(
@@ -342,5 +317,37 @@ contract FundingManagerTest is ModuleTest {
             }
         }
     }
+
+    //--------------------------------------------------------------------------
+    // Helper Functions
+
+    function generateValidUserDeposits(
+        uint amountOfDepositors,
+        uint[] memory depositAmounts
+    ) internal returns (UserDeposits memory) {
+        // We cap the amount each user will deposit so we dont exceed the total supply.
+        uint maxDeposit = (DEPOSIT_CAP / amountOfDepositors);
+        for (uint i = 0; i < amountOfDepositors; i++) {
+            //we generate a "random" address
+            address addr = address(uint160(i + 1));
+            if (
+                addr != address(0) && addr != address(fundingManager)
+                    && !_usersCache[addr] && addr != address(this)
+            ) {
+                //This should be enough for the case we generated a duplicate address
+                addr = address(uint160(block.timestamp - i));
+            }
+
+            // Store the address and mark it as used.
+            userDeposits.users.push(addr);
+            _usersCache[addr] = true;
+
+            //This is to avoid the fuzzer to generate a deposit amount that is too big
+            depositAmounts[i] = bound(depositAmounts[i], 1, maxDeposit - 1);
+            userDeposits.deposits.push(depositAmounts[i]);
+        }
+        return userDeposits;
+    }
+
     // =========================================================================
 }
