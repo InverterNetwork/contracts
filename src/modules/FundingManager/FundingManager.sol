@@ -36,6 +36,17 @@ contract FundingManager is
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
+    // Modifier
+
+    /// @dev Checks if the given Address is valid.
+    modifier validAddress(address to) {
+        if (to == address(0) || to == address(this)) {
+            revert Module__FundingManager__InvalidAddress();
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
     // Constants
 
     uint internal constant DEPOSIT_CAP = 100_000_000e18;
@@ -102,6 +113,7 @@ contract FundingManager is
     function transferProposalToken(address to, uint amount)
         external
         onlyProposal
+        validAddress(to)
     {
         _transferProposalToken(to, amount);
     }

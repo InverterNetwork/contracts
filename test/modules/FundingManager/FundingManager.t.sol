@@ -346,6 +346,32 @@ contract FundingManagerTest1 is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
+    // Tests: OnlyProposal Mutating Functions
+
+    function testTransferProposalToken(address to, uint amount) public {}
+
+    function testTransferProposalTokenFails(address caller, address to)
+        public
+    {
+        _token.mint(address(fundingManager), 2);
+
+        if (caller != address(_proposal)) {
+            vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        }
+        vm.prank(caller);
+        fundingManager.transferProposalToken(address(0xBEEF), 1);
+
+        if (to == address(0) || to == address(fundingManager)) {
+            vm.expectRevert(
+                IFundingManager.Module__FundingManager__InvalidAddress.selector
+            );
+        }
+
+        vm.prank(address(_proposal));
+        fundingManager.transferProposalToken(to, 1);
+    }
+
+    //--------------------------------------------------------------------------
     // Helper Functions
 
     function generateValidUserDeposits(
