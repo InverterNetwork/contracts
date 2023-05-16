@@ -1257,7 +1257,6 @@ end_of_record
 TN:
 SF:src/modules/base/Module.sol
 FN:100,Module.init
-FN:100,Module.init
 FNDA:0,Module.init
 DA:105,0
 FN:111,Module.__Module_init
