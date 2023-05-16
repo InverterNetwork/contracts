@@ -64,4 +64,6 @@ interface IProposal is IModuleManager, IFundingManager {
     function version() external pure returns (string memory);
 
     function owner() external view returns (address);
+
+    function manager() external view returns (address);
 }

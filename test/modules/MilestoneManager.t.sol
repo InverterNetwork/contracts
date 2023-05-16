@@ -444,7 +444,7 @@ contract MilestoneManagerTest is ModuleTest {
         public
     {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -624,7 +624,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint id = 1; // Note that id's start at 1.
 
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -832,7 +832,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -968,7 +968,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1115,7 +1115,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1642,7 +1642,7 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
@@ -1765,7 +1765,7 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.owner());
+        vm.assume(caller != _proposal.manager());
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);

@@ -1,9 +1,10 @@
-# PaymentProcessor.sol
-File: [PaymentProcessor.sol](../../src/modules/PaymentProcessor.sol)
+# SimplePaymentProcessor.sol
+
+File: [SimplePaymentProcessor.sol](../../src/modules/SimplePaymentProcessor.sol)
 
 ## Things to know
 
-1. The PaymentProcessor is a module to process payment orders from other modules. 
+1. The SimplePaymentProcessor is a module to process payment orders from other modules.
 2. In order to process a module's payment orders, the module must implement the `{IPaymentClient}` interface.
 
 ## Modifier(s)

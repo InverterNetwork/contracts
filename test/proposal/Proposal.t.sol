@@ -78,7 +78,7 @@ contract ProposalTest is Test {
 
         // Check that proposal's storage correctly initialized.
         assertEq(proposal.proposalId(), proposalId);
-        assertEq(address(proposal.owner()), address(this));
+        assertEq(address(proposal.manager()), address(this));
         assertEq(address(proposal.token()), address(token));
         assertEq(address(proposal.authorizer()), address(authorizer));
         assertEq(
@@ -87,7 +87,7 @@ contract ProposalTest is Test {
 
         // Check that proposal's dependencies correctly initialized.
         // Ownable:
-        assertEq(proposal.owner(), address(this));
+        assertEq(proposal.manager(), address(this));
     }
 
     function testReinitFails(uint proposalId, address[] memory modules)

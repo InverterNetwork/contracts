@@ -8,9 +8,9 @@ import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {
-    PaymentProcessor,
+    SimplePaymentProcessor,
     IPaymentProcessor
-} from "src/modules/PaymentProcessor.sol";
+} from "src/modules/SimplePaymentProcessor.sol";
 
 // Mocks
 import {PaymentClientMock} from
@@ -21,14 +21,14 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PaymentProcessorTest is ModuleTest {
     // SuT
-    PaymentProcessor paymentProcessor;
+    SimplePaymentProcessor paymentProcessor;
 
     // Mocks
     PaymentClientMock paymentClient = new PaymentClientMock(_token);
 
     function setUp() public {
-        address impl = address(new PaymentProcessor());
-        paymentProcessor = PaymentProcessor(Clones.clone(impl));
+        address impl = address(new SimplePaymentProcessor());
+        paymentProcessor = SimplePaymentProcessor(Clones.clone(impl));
 
         _setUpProposal(paymentProcessor);
 

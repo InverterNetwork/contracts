@@ -34,7 +34,6 @@ contract TypeSanityHelper is Test {
     // Types for Module
     // Contract: base/ModuleManager.sol
 
-    address private constant _SENTINEL_MODULE = address(0x1);
     uint8 private constant MAX_MODULES = 128;
 
     mapping(address => bool) moduleCache;
@@ -64,8 +63,7 @@ contract TypeSanityHelper is Test {
         address[] memory invalids = new address[](3);
 
         invalids[0] = address(0);
-        invalids[1] = _SENTINEL_MODULE;
-        invalids[2] = _self;
+        invalids[1] = _self;
 
         return invalids;
     }
