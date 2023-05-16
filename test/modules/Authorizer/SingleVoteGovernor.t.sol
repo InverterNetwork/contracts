@@ -7,7 +7,7 @@ import {Test} from "forge-std/Test.sol";
 import {
     SingleVoteGovernor,
     ISingleVoteGovernor
-} from "src/modules/governance/SingleVoteGovernor.sol";
+} from "src/modules/Authorizer/SingleVoteGovernor.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";

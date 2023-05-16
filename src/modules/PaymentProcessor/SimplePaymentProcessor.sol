@@ -11,7 +11,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {
     IPaymentProcessor,
     IPaymentClient
-} from "src/modules/IPaymentProcessor.sol";
+} from "src/modules/PaymentProcessor/IPaymentProcessor.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces

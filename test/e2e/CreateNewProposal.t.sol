@@ -8,17 +8,17 @@ import "forge-std/console.sol";
 import {
     IAuthorizer,
     ListAuthorizer
-} from "src/modules/governance/ListAuthorizer.sol";
+} from "src/modules/Authorizer/ListAuthorizer.sol";
 
 import {
     IPaymentProcessor,
     SimplePaymentProcessor
-} from "src/modules/SimplePaymentProcessor.sol";
+} from "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
 
 import {
     IMilestoneManager,
     MilestoneManager
-} from "src/modules/MilestoneManager.sol";
+} from "src/modules/LogicModule/MilestoneManager.sol";
 
 import {
     IMetadataManager, MetadataManager

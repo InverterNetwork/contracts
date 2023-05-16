@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
+import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
 interface IMilestoneManager is IPaymentClient {
     //--------------------------------------------------------------------------

@@ -8,7 +8,7 @@ import {IProposal} from "src/proposal/IProposal.sol";
 import {
     ISingleVoteGovernor,
     IAuthorizer
-} from "src/modules/governance/ISingleVoteGovernor.sol";
+} from "src/modules/Authorizer/ISingleVoteGovernor.sol";
 
 contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------

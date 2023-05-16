@@ -9,9 +9,10 @@ import {IProposal} from "src/proposal/Proposal.sol";
 import {
     MilestoneManager,
     IMilestoneManager
-} from "src/modules/MilestoneManager.sol";
-import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
-import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
+} from "src/modules/LogicModule/MilestoneManager.sol";
+import {SimplePaymentProcessor} from
+    "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
+import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

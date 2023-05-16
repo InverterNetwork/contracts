@@ -3,11 +3,13 @@ pragma solidity ^0.8.13;
 
 // SuT
 import {
-    PaymentClient, IPaymentClient
-} from "src/modules/mixins/PaymentClient.sol";
+    PaymentClient,
+    IPaymentClient
+} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Interfaces
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
+import {IPaymentProcessor} from
+    "src/modules/PaymentProcessor/IPaymentProcessor.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

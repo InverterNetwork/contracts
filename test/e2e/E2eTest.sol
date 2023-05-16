@@ -15,8 +15,9 @@ import {Proposal, IProposal} from "src/proposal/Proposal.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
-import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
-import {MilestoneManager} from "src/modules/MilestoneManager.sol";
+import {SimplePaymentProcessor} from
+    "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
+import {MilestoneManager} from "src/modules/LogicModule/MilestoneManager.sol";
 
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 

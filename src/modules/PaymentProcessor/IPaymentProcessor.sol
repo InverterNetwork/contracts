@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
+import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
 interface IPaymentProcessor {
     //--------------------------------------------------------------------------

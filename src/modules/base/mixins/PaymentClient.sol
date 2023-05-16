@@ -8,7 +8,7 @@ import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {
     IPaymentClient,
     IPaymentProcessor
-} from "src/modules/mixins/IPaymentClient.sol";
+} from "src/modules/base/mixins/IPaymentClient.sol";
 
 /**
  * @title PaymentClient

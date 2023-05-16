@@ -13,10 +13,10 @@ import {
     IPaymentClient,
     PaymentClient,
     IPaymentProcessor
-} from "src/modules/mixins/PaymentClient.sol";
+} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Interfaces
-import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
+import {IMilestoneManager} from "src/modules/LogicModule/IMilestoneManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
 // Internal Libraries
