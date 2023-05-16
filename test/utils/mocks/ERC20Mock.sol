@@ -31,7 +31,7 @@ contract ERC20Mock is ERC20 {
         returnFalse = !returnFalse;
     }
 
-    function isBlockedAddress(address user) public returns (bool) {
+    function isBlockedAddress(address user) public view returns (bool) {
         return blockedAddresses[user];
     }
 
