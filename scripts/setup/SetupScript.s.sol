@@ -125,12 +125,44 @@ contract SetupScript is Test, Script, DeploymentScript {
             contributors,
             bytes("Here could be a more detailed description")
         );
+
+        proposalCreatedMilestoneManager.addMilestone(
+            2 weeks,
+            5000e18,
+            contributors,
+            bytes("The second milestone, right after the first one")
+        );
+
+        // IMPORTANT
+        // =========
+        // Due to how the underlying rebase mechanism works, it is necessary
+        // to always have some amount of tokens in the proposal.
+        // It's best, if the owner deposits them right after deployment.
+        uint initialDeposit = 10e18;
+        token.mint(address(proposalOwner), initialDeposit);
+        token.approve(address(test_proposal), initialDeposit);
+        test_proposal.deposit(initialDeposit);
+
         vm.stopPrank();
 
         // Let's confirm whether the milestone was added or not.
         // milestoneId 1 should exist and 0 shouldn't, since IDs start from 1.
         assertTrue(!(proposalCreatedMilestoneManager.isExistingMilestoneId(0)));        
         assertTrue(proposalCreatedMilestoneManager.isExistingMilestoneId(1));
+
+        assertTrue(proposalCreatedMilestoneManager.isContributor(1, alice.addr));
+        assertTrue(proposalCreatedMilestoneManager.isContributor(2, alice.addr));
+
+        // Seeing this great working on the proposal, funder1 decides to fund
+        // the proposal with 1k of tokens.
+        token.mint(funder1, 1000e18);
+
+        vm.startPrank(funder1);
+        {
+            token.approve(address(test_proposal), 1000e18);
+            test_proposal.deposit(1000e18);
+        }
+        vm.stopPrank();
     }
 
 }
