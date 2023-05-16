@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
+import "forge-std/StdJson.sol";
 
 import "../deployment/DeploymentScript.s.sol";
 
@@ -11,6 +12,7 @@ import {IProposal} from "../../src/proposal/Proposal.sol";
 import {ERC20Mock} from "../../test/utils/mocks/ERC20Mock.sol";
 
 contract SetupScript is Test, Script, DeploymentScript {
+    using stdJson for string;
     /*
         // Before we can start a milestone, two things need to be present:
         // 1. A non-empty list of contributors for it
@@ -65,16 +67,29 @@ contract SetupScript is Test, Script, DeploymentScript {
                                             optionalModules
                                         );
         vm.stopPrank();
-        
-        MilestoneManager proposalCreatedMilestoneManager = MilestoneManager(0x8198f5d8F8CfFE8f9C413d98a0A55aEB8ab9FbB7);
 
-        assertTrue(!(proposalCreatedMilestoneManager.isNextMilestoneActivatable()), "Milestone manager wrong address inputted");
+        string memory json = vm.readFile("broadcast/SetupScript.s.sol/31337/run-latest.json");
+        // bytes memory transactionDetails = json.parseRaw("transactions[0].tx");
+        // RawTx1559Detail memory rawTxDetail = abi.decode(transactionDetails, (RawTx1559Detail));
+        // Tx1559Detail memory txDetail = rawToConvertedEIP1559Detail(rawTxDetail);
+        // assertEq(txDetail.from, makeAddr("Beef"));
 
-        contributors.push(alice);
-        contributors.push(bob);
+        uint index = 0;
+        Receipt memory receipt = readReceipt("broadcast/SetupScript.s.sol/31337/run-latest.json", index);
+        console2.log("Contract Address", receipt.contractAddress);
+        //assertEq(receipt.contractAddress, address(0));
 
-        // vm.startPrank(proposalOwner);
-        // proposalCreatedMilestoneManager.addMilestone(
+        // console2.log(latestRunJson);
+        //console2.log("Transaction 2", transactions[2].contractName);
+        // MilestoneManager proposalCreatedMilestoneManager = MilestoneManager(0x8198f5d8F8CfFE8f9C413d98a0A55aEB8ab9FbB7);
+
+        // assertTrue(!(proposalCreatedMilestoneManager.isNextMilestoneActivatable()), "Milestone manager wrong address inputted");
+
+        // contributors.push(alice);
+        // contributors.push(bob);
+
+        // vm.startPrank(address(test_proposal));
+        // milestoneManager.addMilestone(
         //     1 weeks,
         //     1000e18,
         //     contributors,
@@ -82,8 +97,8 @@ contract SetupScript is Test, Script, DeploymentScript {
         // );
         // vm.stopPrank();
 
-        console2.log("ERC20 token address: ", address(token));
-        console2.log("Test Proposal address", address(test_proposal));
+        // console2.log("ERC20 token address: ", address(token));
+        // console2.log("Test Proposal address", address(test_proposal));
     }
 
 }

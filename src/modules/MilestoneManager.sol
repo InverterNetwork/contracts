@@ -384,6 +384,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Milestone API Functions
 
+    event Debugger(string cp);
+
     /// @inheritdoc IMilestoneManager
     function addMilestone(
         uint duration,
@@ -391,11 +393,12 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         Contributor[] calldata contributors,
         bytes calldata details
     ) external onlyAuthorizedOrOwner returns (uint) {
+        emit Debugger("Checkpoint 1");
         _validateMilestoneDetails(duration, budget, contributors, details);
-
+        emit Debugger("Checkpoint 2");
         Milestone memory _mlstn =
             _createMilestoneInstance(duration, budget, contributors, details);
-
+        emit Debugger("Checkpoint 3");
         return _addMilestoneInstance(_mlstn);
     }
 
