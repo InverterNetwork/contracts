@@ -135,6 +135,24 @@ contract SetupScript is Test, Script, DeploymentScript {
             contributors,
             bytes("Here could be a more detailed description")
         );
+
+        proposalCreatedMilestoneManager.addMilestone(
+            2 weeks,
+            5000e18,
+            contributors,
+            bytes("The second milestone, right after the first one")
+        );
+
+        // IMPORTANT
+        // =========
+        // Due to how the underlying rebase mechanism works, it is necessary
+        // to always have some amount of tokens in the proposal.
+        // It's best, if the owner deposits them right after deployment.
+        uint initialDeposit = 10e18;
+        token.mint(address(proposalOwner), initialDeposit);
+        token.approve(address(test_proposal), initialDeposit);
+        test_proposal.deposit(initialDeposit);
+
         vm.stopPrank();
 
         vm.startPrank(address(proposalOwner));
