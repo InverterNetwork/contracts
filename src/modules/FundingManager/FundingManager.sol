@@ -19,6 +19,8 @@ import {IProposal} from "src/proposal/IProposal.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20MetadataUpgradeable} from
     "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IRebasingERC20} from
+    "src/modules/FundingManager/token/IRebasingERC20.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -28,6 +30,7 @@ import {IFundingManager} from "src/modules/FundingManager/IFundingManager.sol";
 
 contract FundingManager is
     IFundingManager,
+    IRebasingERC20,
     ContextUpgradeable,
     ElasticReceiptTokenUpgradeable,
     Module
