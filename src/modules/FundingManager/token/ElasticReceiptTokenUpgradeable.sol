@@ -2,13 +2,21 @@
 pragma solidity ^0.8.13;
 
 import {ElasticReceiptTokenBase} from
-    "src/proposal/token/ElasticReceiptTokenBase.sol";
+    "src/modules/FundingManager/token/ElasticReceiptTokenBase.sol";
 
-abstract contract ElasticReceiptToken is ElasticReceiptTokenBase {
+abstract contract ElasticReceiptTokenUpgradeable is ElasticReceiptTokenBase {
     //--------------------------------------------------------------------------
-    // Constructor
+    // Initialization
 
-    constructor(string memory name_, string memory symbol_, uint8 decimals_) {
+    /// @dev Initializes the contract.
+    /// @dev Reinitialization possible as long as no tokens minted.
+    function __ElasticReceiptToken_init(
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_
+    ) internal {
+        require(_totalTokenSupply == 0);
+
         // Set IERC20Metadata.
         name = name_;
         symbol = symbol_;

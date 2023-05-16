@@ -117,11 +117,12 @@ contract FundingManagerTest1 is ModuleTest {
         vm.assume(user != address(0) && user != address(fundingManager));
         vm.assume(amount > 1 && amount <= DEPOSIT_CAP);
 
-        // User deposits tokens.
-        vm.prank(address(fundingManager));
         vm.expectRevert(
             IFundingManager.Module__FundingManager__CannotSelfDeposit.selector
         );
+
+        // User deposits tokens.
+        vm.prank(address(fundingManager));
         fundingManager.deposit(1);
 
         // Mint tokens to depositor.

@@ -6,7 +6,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {
     ElasticReceiptToken,
     ElasticReceiptTokenBase
-} from "src/proposal/token/ElasticReceiptToken.sol";
+} from "src/modules/FundingManager/token/ElasticReceiptToken.sol";
 
 contract ElasticReceiptTokenMock is ElasticReceiptToken {
     // The token's underlier.

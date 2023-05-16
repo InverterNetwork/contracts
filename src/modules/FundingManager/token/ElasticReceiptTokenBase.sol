@@ -6,7 +6,7 @@ import {
     IERC20,
     IRebasingERC20,
     IERC20Metadata
-} from "src/proposal/token/IRebasingERC20.sol";
+} from "src/modules/FundingManager/token/IRebasingERC20.sol";
 
 /**
  * @title The Elastic Receipt Token

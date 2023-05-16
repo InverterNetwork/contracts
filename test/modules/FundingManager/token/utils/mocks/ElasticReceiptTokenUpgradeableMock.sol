@@ -1,27 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.10;
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-import {ElasticReceiptTokenBase} from
-    "src/proposal/token/ElasticReceiptTokenBase.sol";
+import {
+    ElasticReceiptTokenUpgradeable,
+    ElasticReceiptTokenBase
+} from "src/modules/FundingManager/token/ElasticReceiptTokenUpgradeable.sol";
 
-contract ElasticReceiptTokenBaseMock is ElasticReceiptTokenBase {
+contract ElasticReceiptTokenUpgradeableMock is
+    ElasticReceiptTokenUpgradeable
+{
     // The token's underlier.
     // Is of type ERC20.
     address public underlier;
 
-    constructor(
+    function init(
         address underlier_,
         string memory name_,
         string memory symbol_,
         uint8 decimals_
-    ) {
-        name = name_;
-        symbol = symbol_;
-        decimals = decimals_;
+    ) external {
+        __ElasticReceiptToken_init(name_, symbol_, decimals_);
 
-        _accountBits[address(0)] = TOTAL_BITS;
         underlier = underlier_;
     }
 

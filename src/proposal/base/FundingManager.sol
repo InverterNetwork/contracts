@@ -6,7 +6,7 @@ pragma solidity ^0.8.13;
 import {
     ElasticReceiptTokenUpgradeable,
     ElasticReceiptTokenBase
-} from "src/proposal/token/ElasticReceiptTokenUpgradeable.sol";
+} from "src/modules/FundingManager/token/ElasticReceiptTokenUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
