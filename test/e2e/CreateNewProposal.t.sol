@@ -92,6 +92,10 @@ contract ProposalCreation is Test {
     // -ModuleFactory: A factory that creates Modules. Modules have to be registered with Metadata and the intended beacon, which contains the module template, for it to be used
     // -ProposalFactory: A Factory that creates Proposals. Needs to have a Proposal Template and a module factory as a reference.
 
+    function testUncomment() public {
+        revert();
+    }
+    /* 
     function setUp() public {
         //==========================================
         //Create Beacons
@@ -295,5 +299,5 @@ contract ProposalCreation is Test {
         //--------------------------------------------------------------------------------
         // Removing Module
         proposal.removeModule(milestoneManager);
-    }
+    } */
 }

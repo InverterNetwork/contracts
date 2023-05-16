@@ -6,12 +6,12 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
 import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
-import {IFundingManager} from "src/proposal/base/IFundingManager.sol";
+import {IFundingManager} from "src/modules/FundingManager/IFundingManager.sol";
 import {IAuthorizer} from "src/modules/Authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/PaymentProcessor/IPaymentProcessor.sol";
 
-interface IProposal is IModuleManager, IFundingManager {
+interface IProposal is IModuleManager {
     //--------------------------------------------------------------------------
     // Errors
 
@@ -30,6 +30,7 @@ interface IProposal is IModuleManager, IFundingManager {
         address owner,
         IERC20 token,
         address[] calldata modules,
+        IFundingManager fundingManager,
         IAuthorizer authorizer,
         IPaymentProcessor paymentProcessor
     ) external;
@@ -46,6 +47,9 @@ interface IProposal is IModuleManager, IFundingManager {
     /// @notice Returns the proposal's id.
     /// @dev Unique id set by the {ProposalFactory} during initialization.
     function proposalId() external view returns (uint);
+
+    /// @notice The {IFundingManager} implementation used to hold and distribute Funds.
+    function fundingManager() external view returns (IFundingManager);
 
     /// @notice The {IAuthorizer} implementation used to authorize addresses.
     function authorizer() external view returns (IAuthorizer);

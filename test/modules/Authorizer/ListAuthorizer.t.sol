@@ -21,6 +21,8 @@ import {IModule, IProposal} from "src/modules/base/IModule.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
+import {FundingManagerMock} from
+    "test/utils/mocks/modules/FundingManagerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 
@@ -29,6 +31,7 @@ contract ListAuthorizerTest is Test {
     ListAuthorizer _authorizer;
     Proposal internal _proposal = new Proposal();
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
+    FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
     address ALBA = address(0xa1ba); //default authorized person
 
@@ -60,6 +63,7 @@ contract ListAuthorizerTest is Test {
             address(this),
             _token,
             modules,
+            _fundingManager,
             _authorizer,
             _paymentProcessor
         );

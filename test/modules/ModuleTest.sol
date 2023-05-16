@@ -13,6 +13,8 @@ import {Proposal} from "src/proposal/Proposal.sol";
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 
 // Mocks
+import {FundingManagerMock} from
+    "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {PaymentProcessorMock} from
@@ -25,6 +27,7 @@ abstract contract ModuleTest is Test {
     Proposal _proposal;
 
     // Mocks
+    FundingManagerMock _fundingManager = new FundingManagerMock();
     AuthorizerMock _authorizer = new AuthorizerMock();
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
@@ -56,6 +59,7 @@ abstract contract ModuleTest is Test {
             address(this),
             _token,
             modules,
+            _fundingManager,
             _authorizer,
             _paymentProcessor
         );

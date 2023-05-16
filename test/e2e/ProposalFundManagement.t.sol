@@ -26,6 +26,10 @@ contract ProposaFundManagement is E2eTest {
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
+    function testUncomment1() public {
+        revert();
+    }
+    /* 
     function test_e2e_ProposalFundManagement() public {
         // address(this) creates a new proposal.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
@@ -103,5 +107,5 @@ contract ProposaFundManagement is E2eTest {
         // burned.
         assertEq(proposal.balanceOf(alice), 0);
         assertEq(proposal.balanceOf(bob), 0);
-    }
+    } */
 }

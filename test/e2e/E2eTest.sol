@@ -74,6 +74,11 @@ contract E2eTest is Test {
     IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory
         .ModuleConfig(authorizerMetadata, abi.encode(address(this)));
 
+    function testUncomment() public {
+        revert();
+    }
+
+    /* 
     function setUp() public {
         // Deploy Proposal implementation.
         proposalImpl = new Proposal();
@@ -129,5 +134,5 @@ contract E2eTest is Test {
             paymentProcessorFactoryConfig,
             optionalModules
         );
-    }
+    } */
 }

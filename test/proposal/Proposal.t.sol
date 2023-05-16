@@ -20,6 +20,8 @@ import {
 } from "src/proposal/IProposal.sol";
 
 // Mocks
+import {FundingManagerMock} from
+    "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
@@ -39,11 +41,13 @@ contract ProposalTest is Test {
     TypeSanityHelper types;
 
     // Mocks
+    FundingManagerMock fundingManager;
     AuthorizerMock authorizer;
     PaymentProcessorMock paymentProcessor;
     ERC20Mock token;
 
     function setUp() public {
+        fundingManager = new FundingManagerMock();
         authorizer = new AuthorizerMock();
         paymentProcessor = new PaymentProcessorMock();
         token = new ERC20Mock("TestToken", "TST");
@@ -72,6 +76,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -107,6 +112,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -117,6 +123,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -140,6 +147,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -169,6 +177,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -197,6 +206,7 @@ contract ProposalTest is Test {
             address(0xCAFE), // Note to not be the owner
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );

@@ -22,6 +22,8 @@ import {IModule} from "src/modules/base/IModule.sol";
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {FundingManagerMock} from
+    "test/utils/mocks/modules/FundingManagerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 
@@ -49,6 +51,7 @@ contract SingleVoteGovernorTest is Test {
 
     // Mocks
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
+    FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
     ModuleMock module = new  ModuleMock();
     // Mock users
@@ -74,6 +77,7 @@ contract SingleVoteGovernorTest is Test {
             address(this),
             _token,
             modules,
+            _fundingManager,
             _authorizer,
             _paymentProcessor
         );

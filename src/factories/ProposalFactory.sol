@@ -13,7 +13,11 @@ import {
     IProposal,
     IModule
 } from "src/factories/IProposalFactory.sol";
-import {IAuthorizer, IPaymentProcessor} from "src/proposal/IProposal.sol";
+import {
+    IFundingManager,
+    IAuthorizer,
+    IPaymentProcessor
+} from "src/proposal/IProposal.sol";
 import {IModuleFactory} from "src/factories/IModuleFactory.sol";
 
 /**
@@ -68,6 +72,7 @@ contract ProposalFactory is IProposalFactory {
     /// @inheritdoc IProposalFactory
     function createProposal(
         ProposalConfig memory proposalConfig,
+        ModuleConfig memory fundingnManagerConfig,
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
@@ -76,6 +81,13 @@ contract ProposalFactory is IProposalFactory {
 
         //Map proposal clone
         _proposals[++_proposalIdCounter] = clone;
+
+        // Deploy and cache {IAuthorizer} module.
+        address fundingnManager = IModuleFactory(moduleFactory).createModule(
+            fundingnManagerConfig.metadata,
+            IProposal(clone),
+            fundingnManagerConfig.configdata
+        );
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
@@ -108,6 +120,7 @@ contract ProposalFactory is IProposalFactory {
             proposalConfig.owner,
             proposalConfig.token,
             modules,
+            IFundingManager(fundingnManager),
             IAuthorizer(authorizer),
             IPaymentProcessor(paymentProcessor)
         );
