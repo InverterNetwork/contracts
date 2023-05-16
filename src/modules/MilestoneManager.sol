@@ -9,7 +9,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Internal Dependencies
 import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
-import {MilestoneManagerViewContract} from "src/modules/MilestoneManagerViewContract.sol";
+import {MilestoneManagerViewContract} from
+    "src/modules/MilestoneManagerViewContract.sol";
 import {
     IPaymentClient,
     PaymentClient,
@@ -43,7 +44,12 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *
  * @author byterocket
  */
-contract MilestoneManager is IMilestoneManager, Module, PaymentClient, MilestoneManagerViewContract {
+contract MilestoneManager is
+    IMilestoneManager,
+    Module,
+    PaymentClient,
+    MilestoneManagerViewContract
+{
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
