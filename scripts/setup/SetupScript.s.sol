@@ -128,8 +128,14 @@ contract SetupScript is Test, Script, DeploymentScript {
             //console2.log("Transaction 2", transactions[2].contractName);
         */
 
-        // contributors.push(alice);
-        // contributors.push(bob);
+        vm.startPrank(address(proposalOwner));
+        proposalCreatedMilestoneManager.addMilestone(
+            1 weeks,
+            1000e18,
+            contributors,
+            bytes("Here could be a more detailed description")
+        );
+        vm.stopPrank();
 
         vm.startPrank(address(proposalOwner));
         proposalCreatedMilestoneManager.addMilestone(
