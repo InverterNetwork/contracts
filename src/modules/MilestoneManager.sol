@@ -356,6 +356,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Milestone API Functions
 
+    event Debugger(string cp);
+
     /// @inheritdoc IMilestoneManager
     function addMilestone(
         uint duration,
