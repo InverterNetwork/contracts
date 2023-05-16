@@ -75,7 +75,6 @@ abstract contract Module is IModule, PausableUpgradeable {
         ) {
             revert Module__CallerNotAuthorized();
         }
-
         _;
     }
 
