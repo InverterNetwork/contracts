@@ -58,11 +58,11 @@ contract FundingManager is
     // Init Function
 
     /// @inheritdoc Module
-    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
-        external
-        override(Module)
-        initializer
-    {
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory configdata
+    ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
 
         address proposalTokenAddress = abi.decode(configdata, (address));
