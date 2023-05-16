@@ -68,37 +68,69 @@ contract SetupScript is Test, Script, DeploymentScript {
                                         );
         vm.stopPrank();
 
-        string memory json = vm.readFile("broadcast/SetupScript.s.sol/31337/run-latest.json");
-        // bytes memory transactionDetails = json.parseRaw("transactions[0].tx");
-        // RawTx1559Detail memory rawTxDetail = abi.decode(transactionDetails, (RawTx1559Detail));
-        // Tx1559Detail memory txDetail = rawToConvertedEIP1559Detail(rawTxDetail);
-        // assertEq(txDetail.from, makeAddr("Beef"));
+        console2.log("Proposal Contract", address(test_proposal));
+        assert(address(test_proposal) != address(0));
 
-        uint index = 0;
-        Receipt memory receipt = readReceipt("broadcast/SetupScript.s.sol/31337/run-latest.json", index);
-        console2.log("Contract Address", receipt.contractAddress);
-        //assertEq(receipt.contractAddress, address(0));
+        address proposalToken = address(IProposal(test_proposal).token());
+        assertEq(proposalToken, address(token));
+        
+        // Now since ModuleManager is an abstract contract, inherited by ModuleManager and it has a function called `listModules` that returns a list of 
+        // active modules, let's use that to get the address of the Milestone Manager.
 
-        // console2.log(latestRunJson);
-        //console2.log("Transaction 2", transactions[2].contractName);
-        // MilestoneManager proposalCreatedMilestoneManager = MilestoneManager(0x8198f5d8F8CfFE8f9C413d98a0A55aEB8ab9FbB7);
+        address[] memory moduleAddresses = IProposal(test_proposal).listModules();
+        uint256 lenModules = moduleAddresses.length;
+        address proposalCreatedMilestoneManagerAddress;
 
-        // assertTrue(!(proposalCreatedMilestoneManager.isNextMilestoneActivatable()), "Milestone manager wrong address inputted");
+        for(uint i; i < lenModules; ) {
+            try MilestoneManager(moduleAddresses[i]).hasActiveMilestone() returns(bool) {
+                proposalCreatedMilestoneManagerAddress = moduleAddresses[i];
+                break;
+            } catch {
+                unchecked {
+                    ++i;
+                }
+            }
+        }
 
-        // contributors.push(alice);
-        // contributors.push(bob);
+        MilestoneManager proposalCreatedMilestoneManager = MilestoneManager(proposalCreatedMilestoneManagerAddress);
 
-        // vm.startPrank(address(test_proposal));
-        // milestoneManager.addMilestone(
-        //     1 weeks,
-        //     1000e18,
-        //     contributors,
-        //     bytes("Here could be a more detailed description")
-        // );
-        // vm.stopPrank();
+        assertTrue(!proposalCreatedMilestoneManager.hasActiveMilestone(), "Milestone manager wrong address inputted");
+        assertTrue(!proposalCreatedMilestoneManager.isExistingMilestoneId(type(uint256).max), "Milestone manager wrong address inputted");
+        assertEq(proposalCreatedMilestoneManager.getMaximumContributors(), 50, "Milestone manager wrong address inputted");
 
-        // console2.log("ERC20 token address: ", address(token));
-        // console2.log("Test Proposal address", address(test_proposal));
+
+        /*
+            string memory json = vm.readFile("broadcast/SetupScript.s.sol/31337/run-latest.json");
+            // bytes memory transactionDetails = json.parseRaw("transactions[0].tx");
+            // RawTx1559Detail memory rawTxDetail = abi.decode(transactionDetails, (RawTx1559Detail));
+            // Tx1559Detail memory txDetail = rawToConvertedEIP1559Detail(rawTxDetail);
+            // assertEq(txDetail.from, makeAddr("Beef"));
+
+            uint index = 0;
+            Receipt memory receipt = readReceipt("broadcast/SetupScript.s.sol/31337/run-latest.json", index);
+            console2.log("Contract Address", receipt.contractAddress);
+            //assertEq(receipt.contractAddress, address(0));
+
+            // console2.log(latestRunJson);
+            //console2.log("Transaction 2", transactions[2].contractName);
+        */
+
+        contributors.push(alice);
+        contributors.push(bob);
+
+        vm.startPrank(address(proposalOwner));
+        proposalCreatedMilestoneManager.addMilestone(
+            1 weeks,
+            1000e18,
+            contributors,
+            bytes("Here could be a more detailed description")
+        );
+        vm.stopPrank();
+
+        // Let's confirm whether the milestone was added or not.
+        // milestoneId 1 should exist and 0 shouldn't, since IDs start from 1.
+        assertTrue(!(proposalCreatedMilestoneManager.isExistingMilestoneId(0)));        
+        assertTrue(proposalCreatedMilestoneManager.isExistingMilestoneId(1));
     }
 
 }
