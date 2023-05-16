@@ -58,22 +58,24 @@ contract FundingManager is
     // Init Function
 
     /// @inheritdoc Module
-    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
-        external
-        override(Module)
-        initializer
-    {
+    function init(
+        IProposal proposal_,
+        Metadata memory metadata,
+        bytes memory configdata
+    ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
+
+        address proposalTokenAddress = abi.decode(configdata, (address));
 
         string memory _id = proposal_.proposalId().toString();
         string memory _name =
-            string(abi.encodePacked("Inverter Funding Token - Proposal #", _id));
+            string(abi.encodePacked("Inverter Funding Token - Proposal #", _id)); //@todo Is this really set correctly? @audit Late Dependency Injection necessary here?
         string memory _symbol = string(abi.encodePacked("IFT-", _id));
         // Initial upstream contracts.
         __ElasticReceiptToken_init(
             _name,
             _symbol,
-            IERC20MetadataUpgradeable(address(proposal_.token())).decimals()
+            IERC20MetadataUpgradeable(proposalTokenAddress).decimals()
         );
     }
 

@@ -21,7 +21,7 @@ import {
     IFundingManager
 } from "src/modules/FundingManager/FundingManager.sol";
 
-contract FundingManagerTest1 is ModuleTest {
+contract FundingManagerTest is ModuleTest {
     struct UserDeposits {
         address[] users;
         uint[] deposits;
@@ -54,7 +54,7 @@ contract FundingManagerTest1 is ModuleTest {
         _setUpProposal(fundingManager);
 
         //Init Module
-        fundingManager.init(_proposal, _METADATA, abi.encode());
+        fundingManager.init(_proposal, _METADATA, abi.encode(address(_token)));
     }
 
     //--------------------------------------------------------------------------
