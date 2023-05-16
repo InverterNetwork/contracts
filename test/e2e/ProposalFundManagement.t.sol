@@ -30,6 +30,10 @@ contract ProposalFundManagement is
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
+    function testUncomment1() public {
+        revert();
+    }
+
     function test_e2e_ProposalFundManagement() public {
         // address(this) creates a new proposal.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory

@@ -42,6 +42,10 @@ contract MilestoneLifecycle is E2eTest {
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
+    function testUncomment1() public {
+        revert();
+    }
+    /* 
     function test_e2e_MilestoneLifecycle() public {
         // First, we create a new proposal.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
@@ -190,5 +194,5 @@ contract MilestoneLifecycle is E2eTest {
             fundingManager.withdraw(fundingManager.balanceOf(funder2));
         }
         vm.stopPrank();
-    }
+    } */
 }
