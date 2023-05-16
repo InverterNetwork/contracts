@@ -3,15 +3,15 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import {IModule} from "src/modules/base/IModule.sol";
-import {Proposal} from "../../src/proposal/Proposal.sol";
-import {PaymentProcessor} from "../../src/modules/PaymentProcessor.sol";
-import {MilestoneManager} from "../../src/modules/MilestoneManager.sol";
-import {ListAuthorizer} from "../../src/modules/governance/ListAuthorizer.sol";
+import {Proposal} from "src/proposal/Proposal.sol";
+import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
+import {MilestoneManager} from "src/modules/MilestoneManager.sol";
+import {ListAuthorizer} from "src/modules/governance/ListAuthorizer.sol";
 
-import {ModuleFactory} from "../../src/factories/ModuleFactory.sol";
+import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 import {ProposalFactory, IProposalFactory} from "src/factories/ProposalFactory.sol";
 
-import {Beacon, IBeacon} from "../../src/factories/beacon/Beacon.sol";
+import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 
 contract DeploymentScript is Script {
     address deployer = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
@@ -24,7 +24,7 @@ contract DeploymentScript is Script {
     address deploymentScript = address(this);
     
     Proposal proposal;
-    PaymentProcessor paymentProcessor;
+    SimplePaymentProcessor simplePaymentProcessor;
     MilestoneManager milestoneManager;
     ModuleFactory moduleFactory;
     ProposalFactory proposalFactory;
@@ -35,7 +35,7 @@ contract DeploymentScript is Script {
     Beacon milestoneManagerBeacon;
     Beacon authorizerBeacon;
 
-    IModule.Metadata paymentProcessorMetadata = IModule.Metadata( 1, 1, "https://github.com/inverter/payment-processor", "PaymentProcessor");
+    IModule.Metadata paymentProcessorMetadata = IModule.Metadata( 1, 1, "https://github.com/inverter/payment-processor", "SimplePaymentProcessor");
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig = IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
 
     IModule.Metadata milestoneManagerMetadata = IModule.Metadata(1, 1, "https://github.com/inverter/milestone-manager", "MilestoneManager");
@@ -53,7 +53,7 @@ contract DeploymentScript is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             proposal = new Proposal();
-            paymentProcessor = new PaymentProcessor();
+            simplePaymentProcessor = new SimplePaymentProcessor();
             milestoneManager = new MilestoneManager();
             authorizer = new ListAuthorizer();
             moduleFactory = new ModuleFactory();
@@ -81,7 +81,7 @@ contract DeploymentScript is Script {
 
         // Let us set beacon's implementations.
         vm.prank(paymentProcessorBeaconOwner);
-        paymentProcessorBeacon.upgradeTo(address(paymentProcessor));
+        paymentProcessorBeacon.upgradeTo(address(simplePaymentProcessor));
         
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManager));
@@ -98,7 +98,7 @@ contract DeploymentScript is Script {
 
         // Logging the deployed addresses
         console2.log("Proposal Contract Deployed at: ", address(proposal));
-        console2.log("Payment Processor Contract Deployed at: ", address(paymentProcessor));
+        console2.log("Simple Payment Processor Contract Deployed at: ", address(simplePaymentProcessor));
         console2.log("Milestone Manager Contract Deployed at: ", address(milestoneManager));
         console2.log("Payment Processor Beacon Deployed at: ", address(paymentProcessorBeacon));
         console2.log("Milestone Manager Beacon Deployed at: ", address(milestoneManagerBeacon));
