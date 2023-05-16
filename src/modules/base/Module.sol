@@ -66,15 +66,17 @@ abstract contract Module is IModule, PausableUpgradeable {
     }
 
     /// @notice Modifier to guarantee function is only callable by either
-    ///         addresses authorized via Proposal or the Proposal's manager.
-    modifier onlyAuthorizedOrManager() {
+    ///         addresses authorized via Proposal or the Proposal's owner.
+    modifier onlyAuthorizedOrOwner() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (
             !authorizer.isAuthorized(_msgSender())
                 && __Module_proposal.manager() != _msgSender()
         ) {
+            emit ModuleDebugger("3");
             revert Module__CallerNotAuthorized();
         }
+        emit ModuleDebugger("4");
         _;
     }
 
