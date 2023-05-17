@@ -714,9 +714,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             // to address(this).
             bool ok;
             (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.token()),
+                address(__Module_proposal.fundingManager()),
                 abi.encodeWithSignature(
-                    "transfer(address,uint256)", address(this), amount - balance
+                    "transferProposalToken(address,uint256)",
+                    address(this),
+                    amount - balance
                 )
             );
 

@@ -10,6 +10,9 @@ import {
     MilestoneManager,
     IMilestoneManager
 } from "src/modules/LogicModule/MilestoneManager.sol";
+
+import {FundingManager} from "src/modules/FundingManager/FundingManager.sol";
+
 import {SimplePaymentProcessor} from
     "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
 import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
@@ -39,16 +42,15 @@ contract MilestoneLifecycle is E2eTest {
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
-    function testUncomment1() public {
-        revert();
-    }
-    /* 
     function test_e2e_MilestoneLifecycle() public {
         // First, we create a new proposal.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
             .ProposalConfig({owner: address(this), token: token});
 
         IProposal proposal = _createNewProposalWithAllModules(proposalConfig);
+
+        FundingManager fundingManager =
+            FundingManager(address(proposal.fundingManager()));
 
         // Now we add a few milestones.
         // For that, we need to access the proposal's milestone module.
@@ -58,7 +60,7 @@ contract MilestoneLifecycle is E2eTest {
         // copied the module's (deterministic in this test) address from the
         // logs.
         MilestoneManager milestoneManager =
-            MilestoneManager(0xa78f6C9322C3f1b396720945B6C3035A4a1B3d70);
+            MilestoneManager(0x06c5A9c5b19E69ba3D0A3F7e6d8273156B6fa0e5);
 
         contributors.push(alice);
         contributors.push(bob);
@@ -83,8 +85,8 @@ contract MilestoneLifecycle is E2eTest {
         // It's best, if the owner deposits them right after deployment.
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
-        token.approve(address(proposal), initialDeposit);
-        proposal.deposit(initialDeposit);
+        token.approve(address(fundingManager), initialDeposit);
+        fundingManager.deposit(initialDeposit);
 
         // However, the salary is not yet taken into in the Milestone module.
         // The milestone's budget is shared equally between all contributors.
@@ -99,15 +101,17 @@ contract MilestoneLifecycle is E2eTest {
 
         vm.startPrank(funder1);
         {
-            token.approve(address(proposal), 1000e18);
-            proposal.deposit(1000e18);
+            token.approve(address(fundingManager), 1000e18);
+            fundingManager.deposit(1000e18);
         }
         vm.stopPrank();
 
         // The proposal now has 1k tokens of funding. Exactly the amount needed
         // for the first milestone.
-        assertEq(token.balanceOf(address(proposal)), 1000e18 + initialDeposit);
-        assertEq(proposal.totalSupply(), 1000e18 + initialDeposit);
+        assertEq(
+            token.balanceOf(address(fundingManager)), 1000e18 + initialDeposit
+        );
+        assertEq(fundingManager.totalSupply(), 1000e18 + initialDeposit);
 
         // Now we ait for the timelock to pass and start the first milestone.
         vm.warp(
@@ -157,8 +161,8 @@ contract MilestoneLifecycle is E2eTest {
 
         vm.startPrank(funder2);
         {
-            token.approve(address(proposal), 10_000e18);
-            proposal.deposit(10_000e18);
+            token.approve(address(fundingManager), 10_000e18);
+            fundingManager.deposit(10_000e18);
         }
         vm.stopPrank();
 
@@ -170,19 +174,21 @@ contract MilestoneLifecycle is E2eTest {
         // Now start the next proposal...
         milestoneManager.startNextMilestone();
         // ...which leaves 5k of tokens left in the proposal.
-        assertEq(token.balanceOf(address(proposal)), 5000e18 + initialDeposit);
+        assertEq(
+            token.balanceOf(address(fundingManager)), 5000e18 + initialDeposit
+        );
 
         // These tokens can now be withdrawn by funder1 and funder2.
         vm.startPrank(funder1);
         {
-            proposal.withdraw(proposal.balanceOf(funder1));
+            fundingManager.withdraw(fundingManager.balanceOf(funder1));
         }
         vm.stopPrank();
 
         vm.startPrank(funder2);
         {
-            proposal.withdraw(proposal.balanceOf(funder2));
+            fundingManager.withdraw(fundingManager.balanceOf(funder2));
         }
         vm.stopPrank();
-    } */
+    }
 }

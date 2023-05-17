@@ -179,10 +179,10 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: getActiveMilestoneId()
 
     function testGetActiveMilestoneId() public {
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -214,10 +214,10 @@ contract MilestoneManagerTest is ModuleTest {
     // Test: hasActiveMilestone()
 
     function testHasActiveMilestone() public {
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -245,10 +245,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -273,10 +273,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
 
@@ -302,10 +302,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
 
@@ -324,10 +324,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
 
@@ -369,10 +369,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
         milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -650,7 +650,7 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        _token.mint(address(_proposal), BUDGET * 2);
+        _token.mint(address(_fundingManager), BUDGET * 2);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -684,7 +684,7 @@ contract MilestoneManagerTest is ModuleTest {
         // - DURATION is bigger than TIMELOCK
         numOfMilestones = bound(numOfMilestones, 3, MAX_MILESTONES);
         milestoneToStop = bound(milestoneToStop, 2, numOfMilestones - 1); //numOfMilestones is zero-counting, milestoneToStop isn't. Also, we want to avoid stopping the last Milestone, since then startNextMilestone would revert anyway
-        _token.mint(address(_proposal), BUDGET * numOfMilestones ** 2);
+        _token.mint(address(_fundingManager), BUDGET * numOfMilestones ** 2);
         //Create the first Milestone,pass the timelock and start it
         milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -821,10 +821,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -849,10 +849,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1157,10 +1157,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1230,7 +1230,7 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
 
@@ -1274,10 +1274,10 @@ contract MilestoneManagerTest is ModuleTest {
 
         vm.assume(submissionData.length != 0);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1315,10 +1315,10 @@ contract MilestoneManagerTest is ModuleTest {
         //Assume submissionData 1 and 2 is different
         vm.assume(keccak256(submissionData1) != keccak256(submissionData2));
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1361,10 +1361,10 @@ contract MilestoneManagerTest is ModuleTest {
             _generateEqualContributors(contributors);
         _assumeElemNotInSet(contributors, address(this));
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1388,10 +1388,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1417,10 +1417,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1446,10 +1446,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1472,10 +1472,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1509,10 +1509,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1540,10 +1540,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1568,10 +1568,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1599,10 +1599,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1629,10 +1629,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1663,10 +1663,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1691,10 +1691,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1722,10 +1722,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1751,10 +1751,10 @@ contract MilestoneManagerTest is ModuleTest {
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
 
-        // Mint tokens to proposal.
+        // Mint tokens to fundingManager.
         // Note that these tokens are transfered to the milestone module
         // when the payment orders are created.
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint id =
             milestoneManager.addMilestone(DURATION, BUDGET, contribs, DETAILS);
@@ -1788,7 +1788,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint[] memory payouts = new uint[](contributors.length);
 
         //we are not using them, but startNextMilestone pulls the tokens
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint feePayout = ((BUDGET / SALARY_PRECISION) * FEE_PERCENTAGE);
 
@@ -1836,7 +1836,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint[] memory payouts = new uint[](contributors.length);
 
         //we are not using them, but startNextMilestone pulls the tokens
-        _token.mint(address(_proposal), BUDGET);
+        _token.mint(address(_fundingManager), BUDGET);
 
         uint feePayout = ((BUDGET / SALARY_PRECISION) * FEE_PERCENTAGE);
 

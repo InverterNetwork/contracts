@@ -22,7 +22,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * receipt tokens to the total amount of funds left in the proposal.
  */
 
-contract ProposalFundManagement is E2eTest {
+contract ProposalFundManagement is
+    E2eTest //@todo Might be worth to rename this to just FundManagement and remove all the "proposal" quotes down below. Might be confusing for readers otherwise.
+{
     address alice = address(0xA11CE);
     address bob = address(0x606);
 

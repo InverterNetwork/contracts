@@ -6,6 +6,9 @@ import "forge-std/Test.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
 
@@ -63,6 +66,7 @@ abstract contract ModuleTest is Test {
             _authorizer,
             _paymentProcessor
         );
+        _fundingManager.setToken(IERC20(address(_token)));
     }
 
     //--------------------------------------------------------------------------------
