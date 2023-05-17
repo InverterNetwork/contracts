@@ -6,6 +6,8 @@ import {E2eTest} from "test/e2e/E2eTest.sol";
 import {IProposalFactory} from "src/factories/ProposalFactory.sol";
 import {IProposal} from "src/proposal/Proposal.sol";
 
+import {FundingManager} from "src/modules/FundingManager/FundingManager.sol";
+
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 /**
@@ -20,22 +22,21 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * receipt tokens to the total amount of funds left in the proposal.
  */
 
-contract ProposaFundManagement is E2eTest {
+contract ProposalFundManagement is E2eTest {
     address alice = address(0xA11CE);
     address bob = address(0x606);
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
-    function testUncomment1() public {
-        revert();
-    }
-    /* 
     function test_e2e_ProposalFundManagement() public {
         // address(this) creates a new proposal.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
             .ProposalConfig({owner: address(this), token: token});
 
         IProposal proposal = _createNewProposalWithAllModules(proposalConfig);
+
+        FundingManager fundingManager =
+            FundingManager(address(proposal.fundingManager())); //@todo Me dont like. How can we improve this froma usability perspective?
 
         // IMPORTANT
         // =========
@@ -44,8 +45,8 @@ contract ProposaFundManagement is E2eTest {
         // It's best, if the owner deposits them right after deployment.
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
-        token.approve(address(proposal), initialDeposit);
-        proposal.deposit(initialDeposit);
+        token.approve(address(fundingManager), initialDeposit);
+        fundingManager.deposit(initialDeposit);
 
         // Mint some tokens to alice and bob in order to fund the proposal.
         token.mint(alice, 1000e18);
@@ -55,14 +56,14 @@ contract ProposaFundManagement is E2eTest {
         vm.startPrank(alice);
         {
             // Approve tokens to proposal.
-            token.approve(address(proposal), 1000e18);
+            token.approve(address(fundingManager), 1000e18);
 
             // Deposit tokens, i.e. fund the proposal.
-            proposal.deposit(1000e18);
+            fundingManager.deposit(1000e18);
 
             // After the deposit, alice received some amount of receipt tokens
             // from the proposal.
-            assertTrue(proposal.balanceOf(alice) > 0);
+            assertTrue(fundingManager.balanceOf(alice) > 0);
         }
         vm.stopPrank();
 
@@ -70,14 +71,14 @@ contract ProposaFundManagement is E2eTest {
         vm.startPrank(bob);
         {
             // Approve tokens to proposal.
-            token.approve(address(proposal), 5000e18);
+            token.approve(address(fundingManager), 5000e18);
 
             // Deposit tokens, i.e. fund the proposal.
-            proposal.deposit(5000e18);
+            fundingManager.deposit(5000e18);
 
             // After the deposit, bob received some amount of receipt tokens
             // from the proposal.
-            assertTrue(proposal.balanceOf(bob) > 0);
+            assertTrue(fundingManager.balanceOf(bob) > 0);
         }
         vm.stopPrank();
 
@@ -85,12 +86,15 @@ contract ProposaFundManagement is E2eTest {
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
         // Note that we simulate proposal spending by just burning tokens.
-        token.burn(address(proposal), token.balanceOf(address(proposal)) / 2);
+        token.burn(
+            address(fundingManager),
+            token.balanceOf(address(fundingManager)) / 2
+        );
 
         // Alice is now able to withdraw half her funded tokens.
         vm.startPrank(alice);
         {
-            proposal.withdraw(proposal.balanceOf(alice));
+            fundingManager.withdraw(fundingManager.balanceOf(alice));
             assertEq(token.balanceOf(alice), 500e18);
         }
         vm.stopPrank();
@@ -98,14 +102,14 @@ contract ProposaFundManagement is E2eTest {
         // Bob is also able to withdraw half of his funded tokens.
         vm.startPrank(bob);
         {
-            proposal.withdraw(proposal.balanceOf(bob));
+            fundingManager.withdraw(fundingManager.balanceOf(bob));
             assertEq(token.balanceOf(bob), 2500e18);
         }
         vm.stopPrank();
 
         // After redeeming all their proposal function tokens, the tokens got
         // burned.
-        assertEq(proposal.balanceOf(alice), 0);
-        assertEq(proposal.balanceOf(bob), 0);
-    } */
+        assertEq(fundingManager.balanceOf(alice), 0);
+        assertEq(fundingManager.balanceOf(bob), 0);
+    }
 }
