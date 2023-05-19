@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-interface IFundingManager { //@todo the fundingManager interface can probably be reduced to transferProposalToken(). Your Thoughts @0xNuggan,@marvinkrus ?
+interface IFundingManager {
     //--------------------------------------------------------------------------
     // Errors
 

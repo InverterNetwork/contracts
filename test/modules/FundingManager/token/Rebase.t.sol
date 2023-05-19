@@ -23,7 +23,6 @@ contract Rebase is ElasticReceiptTokenTest {
     // expanded on expansion, contracted on contraction or did not change due
     // to equilibrium rebase.
     function testRebaseTables() public {
-        // @todo How to make the TestCase array and the balances dynamic?
         TestCase[5] memory testTable = [
             // Equilibrium rebase.
             TestCase([uint(1e18), 1e18], 2e18),

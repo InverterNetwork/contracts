@@ -2056,8 +2056,6 @@ contract MilestoneManagerTest is ModuleTest {
     }
 
     // =========================================================================
-    // Copied from proposal/helper/TypeSanityHelper.sol
-    // @todo Make TypeSanityHelper globally for test available.
 
     address private constant _SENTINEL_CONTRIBUTOR = address(0x1);
 

@@ -73,6 +73,4 @@ contract TypeSanityHelper is Test {
     // Contract: base/FunderManager.sol
 
     function assumeValidFunders(address[] memory funders) public {}
-
-    // @todo nejc, mp: FunderManager Type Sanity check- and creater functions.
 }
