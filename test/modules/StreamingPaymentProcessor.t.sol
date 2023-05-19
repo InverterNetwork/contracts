@@ -123,10 +123,9 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             emit InvalidStreamingOrderDiscarded(
                 recipients[i], 100, block.timestamp, 100
             );
+            // Call processPayments and expect emits
+            paymentProcessor.processPayments(paymentClient);
         }
-
-        // Call processPayments and expect emits
-        paymentProcessor.processPayments(paymentClient);
 
         //add invalid dur process and expect emit
         paymentClient.addPaymentOrderUnchecked(
