@@ -17,18 +17,18 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // SuT
 import {
-    FundingManager,
+    RebasingFundingManager,
     IFundingManager
-} from "src/modules/FundingManager/FundingManager.sol";
+} from "src/modules/FundingManager/RebasingFundingManager.sol";
 
-contract FundingManagerTest is ModuleTest {
+contract RebasingFundingManagerTest is ModuleTest {
     struct UserDeposits {
         address[] users;
         uint[] deposits;
     }
 
     // SuT
-    FundingManager fundingManager;
+    RebasingFundingManager fundingManager;
 
     mapping(address => bool) _usersCache;
 
@@ -48,8 +48,8 @@ contract FundingManagerTest is ModuleTest {
 
         //Add Module to Mock Proposal
 
-        address impl = address(new FundingManager());
-        fundingManager = FundingManager(Clones.clone(impl));
+        address impl = address(new RebasingFundingManager());
+        fundingManager = RebasingFundingManager(Clones.clone(impl));
 
         _setUpProposal(fundingManager);
 

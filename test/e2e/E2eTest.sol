@@ -15,7 +15,8 @@ import {Proposal, IProposal} from "src/proposal/Proposal.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
-import {FundingManager} from "src/modules/FundingManager/FundingManager.sol";
+import {RebasingFundingManager} from
+    "src/modules/FundingManager/RebasingFundingManager.sol";
 import {SimplePaymentProcessor} from
     "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/LogicModule/MilestoneManager.sol";
@@ -42,11 +43,14 @@ contract E2eTest is Test {
 
     //-- Module implementations, beacons, config for factory, and metadata.
 
-    FundingManager fundingManagerImpl;
-    Beacon fundingManagerBeacon;
-    address fundingManagerBeaconOwner = address(0x3BEAC0);
-    IModule.Metadata fundingManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/funding-manager", "FundingManager"
+    RebasingFundingManager rebasingFundingManagerImpl;
+    Beacon rebasingFundingManagerBeacon;
+    address rebasingFundingManagerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/funding-manager",
+        "RebasingFundingManager"
     );
     //IProposalFactory.ModuleConfig has to be set with token address, so needs a later Injection -> see _createNewProposalWithAllModules()
 
@@ -92,14 +96,14 @@ contract E2eTest is Test {
         proposalImpl = new Proposal();
 
         // Deploy module implementations.
-        fundingManagerImpl = new FundingManager();
+        rebasingFundingManagerImpl = new RebasingFundingManager();
         paymentProcessorImpl = new SimplePaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
         authorizerImpl = new AuthorizerMock();
 
         // Deploy module beacons.
-        vm.prank(fundingManagerBeaconOwner);
-        fundingManagerBeacon = new Beacon();
+        vm.prank(rebasingFundingManagerBeaconOwner);
+        rebasingFundingManagerBeacon = new Beacon();
         vm.prank(paymentProcessorBeaconOwner);
         paymentProcessorBeacon = new Beacon();
         vm.prank(milestoneManagerBeaconOwner);
@@ -108,8 +112,10 @@ contract E2eTest is Test {
         authorizerBeacon = new Beacon();
 
         // Set beacon's implementations.
-        vm.prank(fundingManagerBeaconOwner);
-        fundingManagerBeacon.upgradeTo(address(fundingManagerImpl));
+        vm.prank(rebasingFundingManagerBeaconOwner);
+        rebasingFundingManagerBeacon.upgradeTo(
+            address(rebasingFundingManagerImpl)
+        );
         vm.prank(paymentProcessorBeaconOwner);
         paymentProcessorBeacon.upgradeTo(address(paymentProcessorImpl));
         vm.prank(milestoneManagerBeaconOwner);
@@ -124,7 +130,8 @@ contract E2eTest is Test {
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            fundingManagerMetadata, IBeacon(fundingManagerBeacon)
+            rebasingFundingManagerMetadata,
+            IBeacon(rebasingFundingManagerBeacon)
         );
         moduleFactory.registerMetadata(
             paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
@@ -144,14 +151,14 @@ contract E2eTest is Test {
             new IProposalFactory.ModuleConfig[](1);
         optionalModules[0] = milestoneManagerFactoryConfig;
 
-        IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
+        IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            fundingManagerMetadata, abi.encode(address(config.token))
+            rebasingFundingManagerMetadata, abi.encode(address(config.token))
         );
 
         return proposalFactory.createProposal(
             config,
-            fundingManagerFactoryConfig,
+            rebasingFundingManagerFactoryConfig,
             authorizerFactoryConfig,
             paymentProcessorFactoryConfig,
             optionalModules

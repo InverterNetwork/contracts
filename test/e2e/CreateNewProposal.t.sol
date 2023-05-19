@@ -7,8 +7,8 @@ import "forge-std/console.sol";
 //Modules
 import {
     IFundingManager,
-    FundingManager
-} from "src/modules/FundingManager/FundingManager.sol";
+    RebasingFundingManager
+} from "src/modules/FundingManager/RebasingFundingManager.sol";
 
 import {
     IAuthorizer,
@@ -105,7 +105,7 @@ contract ProposalCreation is Test {
         //Create Beacons
 
         //Create Module Templates
-        fundingManagerTemplate = new FundingManager();
+        fundingManagerTemplate = new RebasingFundingManager();
         authorizerTemplate = new ListAuthorizer();
         paymentProcessorTemplate = new SimplePaymentProcessor();
         milestoneManagerTemplate = new MilestoneManager();

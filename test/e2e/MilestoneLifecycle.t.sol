@@ -11,7 +11,8 @@ import {
     IMilestoneManager
 } from "src/modules/LogicModule/MilestoneManager.sol";
 
-import {FundingManager} from "src/modules/FundingManager/FundingManager.sol";
+import {RebasingFundingManager} from
+    "src/modules/FundingManager/RebasingFundingManager.sol";
 
 import {SimplePaymentProcessor} from
     "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
@@ -49,8 +50,8 @@ contract MilestoneLifecycle is E2eTest {
 
         IProposal proposal = _createNewProposalWithAllModules(proposalConfig);
 
-        FundingManager fundingManager =
-            FundingManager(address(proposal.fundingManager()));
+        RebasingFundingManager fundingManager =
+            RebasingFundingManager(address(proposal.fundingManager()));
 
         // Now we add a few milestones.
         // For that, we need to access the proposal's milestone module.
@@ -91,7 +92,6 @@ contract MilestoneLifecycle is E2eTest {
         // However, the salary is not yet taken into in the Milestone module.
         // The milestone's budget is shared equally between all contributors.
 
-        //@todo rewrite comments. We check the milestone ID, too, maybe we should save it on creation for cleanliness
         assertTrue(milestoneManager.isContributor(1, alice.addr));
         assertTrue(milestoneManager.isContributor(1, bob.addr));
 

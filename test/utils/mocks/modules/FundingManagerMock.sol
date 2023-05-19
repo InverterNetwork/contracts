@@ -6,10 +6,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
-import {
-    FundingManager,
-    IFundingManager
-} from "src/modules/FundingManager/FundingManager.sol";
+import {IFundingManager} from "src/modules/FundingManager/IFundingManager.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";

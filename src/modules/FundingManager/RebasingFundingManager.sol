@@ -28,7 +28,7 @@ import {Strings} from "@oz/utils/Strings.sol";
 
 import {IFundingManager} from "src/modules/FundingManager/IFundingManager.sol";
 
-contract FundingManager is
+contract RebasingFundingManager is
     IFundingManager,
     IRebasingERC20,
     ContextUpgradeable,
@@ -69,7 +69,7 @@ contract FundingManager is
 
         string memory _id = proposal_.proposalId().toString();
         string memory _name =
-            string(abi.encodePacked("Inverter Funding Token - Proposal #", _id)); //@todo Is this really set correctly? @audit Late Dependency Injection necessary here?
+            string(abi.encodePacked("Inverter Funding Token - Proposal #", _id));
         string memory _symbol = string(abi.encodePacked("IFT-", _id));
         // Initial upstream contracts.
         __ElasticReceiptToken_init(
