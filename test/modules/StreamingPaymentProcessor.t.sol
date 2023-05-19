@@ -243,6 +243,9 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i = 0; i < recipients.length; ++i) {
             paymentClient.addPaymentOrder(recipients[i], amounts[i], duration);
+        }
+        //Expect the correct number and sequence of emits
+        for (uint i = 0; i < recipients.length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
                 address(paymentClient),
