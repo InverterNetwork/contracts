@@ -119,13 +119,17 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             paymentClient.addPaymentOrderUnchecked(
                 recipients[i], 100, (block.timestamp + 100)
             );
+        }
+        //Expect the correct number and sequence of emits
+        for (uint i = 0; i < recipients.length - 1; ++i) {
             vm.expectEmit(true, true, true, true);
             emit InvalidStreamingOrderDiscarded(
                 recipients[i], 100, block.timestamp, 100
             );
-            // Call processPayments and expect emits
-            paymentProcessor.processPayments(paymentClient);
         }
+
+        // Call processPayments and expect emits
+        paymentProcessor.processPayments(paymentClient);
 
         //add invalid dur process and expect emit
         paymentClient.addPaymentOrderUnchecked(
