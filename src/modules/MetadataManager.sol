@@ -79,12 +79,14 @@ contract MetadataManager is IMetadataManager, Module {
         _setManagerMetadata(managerMetadata_);
     }
 
-    function _setOwnerMetadata(OwnerMetadata memory ownerMetadata_) private {
-        _ownerMetadata = ownerMetadata_;
-        emit OwnerMetadataUpdated(
-            ownerMetadata_.name,
-            ownerMetadata_.account,
-            ownerMetadata_.twitterHandle
+    function _setManagerMetadata(ManagerMetadata memory managerMetadata_)
+        private
+    {
+        _managerMetadata = managerMetadata_;
+        emit ManagerMetadataUpdated(
+            managerMetadata_.name,
+            managerMetadata_.account,
+            managerMetadata_.twitterHandle
         );
     }
 
