@@ -1657,7 +1657,7 @@ DA:34,6506
 FN:37,ElasticReceiptTokenBaseMock.mint
 FNDA:3338,ElasticReceiptTokenBaseMock.mint
 DA:38,3338
-DA:39,2941
+DA:39,2965
 FN:42,ElasticReceiptTokenBaseMock.burn
 FNDA:158,ElasticReceiptTokenBaseMock.burn
 DA:43,158
