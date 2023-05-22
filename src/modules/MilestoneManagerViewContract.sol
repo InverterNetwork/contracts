@@ -4,7 +4,11 @@ pragma solidity ^0.8.13;
 import {MilestoneManager} from "src/modules/MilestoneManager.sol";
 import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 
+// Internal Libraries
+import {LinkedIdList} from "src/common/LinkedIdList.sol";
+
 abstract contract MilestoneManagerViewContract is IMilestoneManager {
+    using LinkedIdList for LinkedIdList.List;
     //--------------------------------------------------------------------------
     // Constants
 
@@ -30,10 +34,7 @@ abstract contract MilestoneManagerViewContract is IMilestoneManager {
     mapping(uint => Milestone) internal _milestoneRegistry;
 
     /// @dev List of milestone id's.
-    mapping(uint => uint) internal _milestones;
-
-    /// @dev Counter for number of milestone id's in the _milestones list.
-    uint internal _milestoneCounter;
+    LinkedIdList.List _milestoneList;
 
     /// @dev The current active milestone's id.
     /// @dev Uses _SENTINEL to indicate no current active milestone.
@@ -71,18 +72,7 @@ abstract contract MilestoneManagerViewContract is IMilestoneManager {
 
     /// @inheritdoc IMilestoneManager
     function listMilestoneIds() public view returns (uint[] memory) {
-        uint[] memory result = new uint256[](_milestoneCounter);
-
-        // Populate result array.
-        uint index;
-        uint elem = _milestones[_SENTINEL];
-        while (elem != _SENTINEL) {
-            result[index] = elem;
-            elem = _milestones[elem];
-            index++;
-        }
-
-        return result;
+        return _milestoneList.listIds();
     }
 
     /// @inheritdoc IMilestoneManager
@@ -112,7 +102,7 @@ abstract contract MilestoneManagerViewContract is IMilestoneManager {
     /// @inheritdoc IMilestoneManager
     function isNextMilestoneActivatable() public view returns (bool) {
         // Return false if next milestone does not exist.
-        uint next = _milestones[_activeMilestone];
+        uint next = _milestoneList.getNextId(_activeMilestone);
         if (!isExistingMilestoneId(next)) {
             return false;
         }
@@ -143,7 +133,7 @@ abstract contract MilestoneManagerViewContract is IMilestoneManager {
 
     /// @inheritdoc IMilestoneManager
     function isExistingMilestoneId(uint id) public view returns (bool) {
-        return id != _SENTINEL && _milestones[id] != 0;
+        return _milestoneList.isExistingId(id);
     }
 
     /// @inheritdoc IMilestoneManager
