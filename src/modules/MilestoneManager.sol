@@ -544,11 +544,7 @@ contract MilestoneManager is
         _milestoneRegistry[milestoneId].lastUpdatedTimestamp = block.timestamp;
 
         emit MilestoneAdded(
-            milestoneId,
-            milestone.duration,
-            milestone.budget,
-            milestone.contributors,
-            milestone.details
+            milestoneId, duration, budget, contributors, details
         );
 
         return milestoneId;
