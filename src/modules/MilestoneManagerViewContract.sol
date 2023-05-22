@@ -5,7 +5,6 @@ import {MilestoneManager} from "src/modules/MilestoneManager.sol";
 import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 
 abstract contract MilestoneManagerViewContract is IMilestoneManager {
-abstract contract MilestoneManagerViewContract is IMilestoneManager {
     //--------------------------------------------------------------------------
     // Constants
 
