@@ -2,7 +2,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {PaymentProcessor} from "../../src/modules/PaymentProcessor.sol";
+import {PaymentProcessor} from "src/modules/PaymentProcessor.sol";
 
  /**
   * @title PaymentProcessor Deployment Script

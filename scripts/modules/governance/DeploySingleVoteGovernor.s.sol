@@ -2,7 +2,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {SingleVoteGovernor} from "../../../src/modules/governance/SingleVoteGovernor.sol";
+import {SingleVoteGovernor} from "src/modules/governance/SingleVoteGovernor.sol";
 
  /**
   * @title SingleVoteGovernor Deployment Script

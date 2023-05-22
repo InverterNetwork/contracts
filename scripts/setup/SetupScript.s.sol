@@ -7,9 +7,9 @@ import "forge-std/StdJson.sol";
 
 import "../deployment/DeploymentScript.s.sol";
 
-import {IMilestoneManager} from "../../src/modules/MilestoneManager.sol";
-import {IProposal} from "../../src/proposal/Proposal.sol";
-import {ERC20Mock} from "../../test/utils/mocks/ERC20Mock.sol";
+import {IMilestoneManager} from "src/modules/MilestoneManager.sol";
+import {IProposal} from "src/proposal/Proposal.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // import {IMilestoneManager} from "../../src/modules/MilestoneManager.sol";
 // import {IProposal} from "../../src/proposal/Proposal.sol";

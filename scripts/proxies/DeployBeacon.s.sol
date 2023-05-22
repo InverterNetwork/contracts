@@ -2,7 +2,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {Beacon} from "../../src/factories/beacon/Beacon.sol";
+import {Beacon} from "src/factories/beacon/Beacon.sol";
 
  /**
   * @title Beacon Deployment Script
