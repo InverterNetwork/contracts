@@ -19,7 +19,7 @@ import {PaymentClientMock} from
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract PaymentProcessorTest is ModuleTest {
+contract SimplePaymentProcessorTest is ModuleTest {
     // SuT
     SimplePaymentProcessor paymentProcessor;
 
@@ -126,6 +126,7 @@ contract PaymentProcessorTest is ModuleTest {
     {
         vm.assume(nonModule != address(paymentProcessor));
         vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_fundingManager));
         vm.assume(nonModule != address(_authorizer));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
