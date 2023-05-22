@@ -41,14 +41,13 @@ library LinkedIdList {
     // Modifier
 
     modifier validNewId(List storage self, uint id) {
-        if (isExistingId(self, id)) {
+        if (isExistingId(self, id) || id == 0) {
             revert Library__LinkedIdList__InvalidNewId();
         }
         _;
     }
 
     modifier validId(List storage self, uint id) {
-        //@todo cant use 0
         if (!isExistingId(self, id)) {
             revert Library__LinkedIdList__InvalidId();
         }
@@ -153,7 +152,7 @@ library LinkedIdList {
         returns (bool)
     {
         //Return true if id is in list and not Sentinel
-        return self.list[id] != 0 && id != _SENTINEL; //@todo  This doesnt really check for Sentinel does it?
+        return self.list[id] != 0 && id != _SENTINEL;
     }
 
     ///@dev id and prevId can be _SENTINEL

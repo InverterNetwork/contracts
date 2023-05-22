@@ -33,7 +33,7 @@ contract LinkedIdListTest is Test {
         uint[] memory ids = createIds(seed);
         addIds(ids);
 
-        if (containsId(ids, id)) {
+        if (containsId(ids, id) || id == 0) {
             vm.expectRevert(
                 LinkedIdList.Library__LinkedIdList__InvalidNewId.selector
             );
@@ -240,14 +240,14 @@ contract LinkedIdListTest is Test {
     }
 
     function testAddIdModifier() public {
-        list.addId(0);
+        list.addId(1);
 
         //Check validNewId is in place
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__InvalidNewId.selector
         );
 
-        list.addId(0);
+        list.addId(1);
     }
 
     function testRemoveId(uint[] calldata seed) public {
@@ -304,19 +304,19 @@ contract LinkedIdListTest is Test {
     }
 
     function testRemoveIdModifier() public {
-        list.addId(0);
+        list.addId(1);
 
         //Check validId is in place
         vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
 
-        list.removeId(0, 1);
+        list.removeId(1, 2);
 
         //Check onlyConsecutiveIds is in place
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__IdNotConsecutive.selector
         );
 
-        list.removeId(0, 0);
+        list.removeId(1, 0);
     }
 
     function testMoveId(uint[] calldata seed, uint idToMoveToIndex) public {
