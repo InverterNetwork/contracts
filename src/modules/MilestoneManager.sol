@@ -776,23 +776,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     function setSpecificFunderManagerAddress(address adr)
         public
-        onlyAuthorizedOrOwner //@note is this correct?
+        onlyAuthorizedOrManager //@note is this correct?
         validAddress(adr)
     {
         specificFundingManagerAddress = adr;
         emit SpecificFundingManagerAddressUpdated(adr);
-    }
-
-    //--------------------------------------------------------------------------
-    // Proposal Callback Functions
-
-    /// @dev WantProposalContext-callback function to transfer `amount` of
-    ///      tokens from proposal to `receiver`.
-    /// @dev For more info, see src/modules/base/Module.sol.
-    function __Proposal_transferERC20(address receiver, uint amount)
-        external
-        wantProposalContext
-    {
-        __Proposal__token.safeTransfer(receiver, amount);
     }
 }

@@ -7,12 +7,7 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {
-    ModuleTest,
-    IModule,
-    IProposal,
-    LibString
-} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
@@ -26,8 +21,6 @@ import {
 } from "src/modules/milestoneSubModules/SpecificFundingManager.sol";
 
 contract SpecificFundingManagerTest is ModuleTest {
-    using LibString for string;
-
     address milestoneManager = address(0xBeef);
 
     address Alice = address(0xA11CE);
@@ -487,7 +480,7 @@ contract SpecificFundingManagerTest is ModuleTest {
     //----------------------------------
     // Test: Collect Funding Functions
 
-    function testCollectFundingNotingFunded(uint id, uint amountNeeded)
+    function testCollectFundingNothingFunded(uint id, uint amountNeeded)
         public
     {
         amountNeeded = bound(amountNeeded, 1, 2 ** 128);
@@ -507,15 +500,18 @@ contract SpecificFundingManagerTest is ModuleTest {
             token.balanceOf(address(specificFundingManager));
         uint tokenBalanceOfMilestoneModule =
             token.balanceOf(address(milestoneManager));
-        uint remainginFundingAmountOfAlice = specificFundingManager
+        uint remainingFundingAmountOfAlice = specificFundingManager
             .getFundingAmountForMilestoneIdAndAddress(id, Alice);
-        uint remainginFundingAmountOfBob = specificFundingManager
+        uint remainingFundingAmountOfBob = specificFundingManager
             .getFundingAmountForMilestoneIdAndAddress(id, Bob);
 
         //Noting Funded
 
         assertTrue(tokenBalanceOfFundingManager == 0);
         assertTrue(tokenBalanceOfMilestoneModule == 0);
+
+        assertTrue(remainingFundingAmountOfAlice == 0);
+        assertTrue(remainingFundingAmountOfBob == 0);
     }
 
     function testCollectFundingLessFundedThanNeeded(
@@ -555,16 +551,16 @@ contract SpecificFundingManagerTest is ModuleTest {
             token.balanceOf(address(specificFundingManager));
         uint tokenBalanceOfMilestoneModule =
             token.balanceOf(address(milestoneManager));
-        uint remainginFundingAmountOfAlice = specificFundingManager
+        uint remainingFundingAmountOfAlice = specificFundingManager
             .getFundingAmountForMilestoneIdAndAddress(id, Alice);
-        uint remainginFundingAmountOfBob = specificFundingManager
+        uint remainingFundingAmountOfBob = specificFundingManager
             .getFundingAmountForMilestoneIdAndAddress(id, Bob);
 
         assertTrue(tokenBalanceOfFundingManager == 0);
         assertTrue(tokenBalanceOfMilestoneModule == amountFunded);
 
-        assertTrue(remainginFundingAmountOfAlice == 0);
-        assertTrue(remainginFundingAmountOfBob == 0);
+        assertTrue(remainingFundingAmountOfAlice == 0);
+        assertTrue(remainingFundingAmountOfBob == 0);
     }
 
     function testCollectFundingMoreFundedThanNeeded(

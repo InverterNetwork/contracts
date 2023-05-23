@@ -22,8 +22,6 @@ import {SpecificFundingManagerMock} from
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract MilestoneManagerTest is ModuleTest {
-    using LibString for string;
-
     // SuT
     MilestoneManager milestoneManager;
 

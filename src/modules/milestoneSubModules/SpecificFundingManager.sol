@@ -85,11 +85,11 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
     // Initialization
 
     /// @inheritdoc Module
-    function init(
-        IProposal proposal_,
-        Metadata memory metadata,
-        bytes memory configdata
-    ) external override(Module) initializer {
+    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
+        external
+        override(Module)
+        initializer
+    {
         __Module_init(proposal_, metadata);
     }
 
@@ -281,7 +281,7 @@ contract SpecificFundingManager is ISpecificFundingManager, Module {
 
     function setMilestoneManagerAddress(address adr)
         public
-        onlyAuthorizedOrOwner //@note is this correct?
+        onlyAuthorizedOrManager //@note is this correct?
         validAddress(adr)
     {
         milestoneManager = adr;

@@ -133,21 +133,7 @@ contract MilestoneLifecycle is
         // creates set set of payment orders inside the module and calls
         // the SimplePaymentProcessor module to process them. Note however, that the
         // orders are guaranteed to be payable, i.e. the tokens are already
-        // fetched from the proposal.
-        assertEq(token.balanceOf(address(proposal)), initialDeposit);
-
-        // The address of the proposal's PaymentProcessor can be read from the
-        // logs during the proposal's creation.
-        PaymentProcessor paymentProcessor =
-            PaymentProcessor(0x9914ff9347266f1949C557B717936436402fc636);
-
-        // The PaymentProcessor's `processPayments()` function is publicly
-        // callable. This ensures the contributors can call the function too,
-        // guaranteeing their payment.
-        vm.prank(alice.addr);
-        paymentProcessor.processPayments(
-            IPaymentClient(address(milestoneManager))
-        );
+        // fetched from the proposal on creation of the order.
 
         // since we take 1% fee, the expected balance is 990e18/2
 
