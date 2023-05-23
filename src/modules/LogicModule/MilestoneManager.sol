@@ -299,17 +299,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function getPreviousMilestoneId(uint id)
         external
         view
-        validId(id)
         returns (uint prevId)
     {
-        uint[] memory milestoneIds = listMilestoneIds();
-
-        uint len = milestoneIds.length;
-        for (uint i; i < len; ++i) {
-            if (milestoneIds[i] == id) {
-                return i != 0 ? milestoneIds[i - 1] : _SENTINEL;
-            }
-        }
+        return _milestoneList.getPreviousId(id);
     }
 
     /// @inheritdoc IMilestoneManager
