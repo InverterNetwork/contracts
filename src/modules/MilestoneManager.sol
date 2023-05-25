@@ -21,6 +21,9 @@ import {
 import {IMilestoneManager} from "src/modules/IMilestoneManager.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 
+// Internal Libraries
+import {LinkedIdList} from "src/common/LinkedIdList.sol";
+
 /**
  * @title MilestoneManager
  *
@@ -51,6 +54,7 @@ contract MilestoneManager is
     MilestoneManagerViewContract
 {
     using SafeERC20 for IERC20;
+    using LinkedIdList for LinkedIdList.List;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -69,32 +73,17 @@ contract MilestoneManager is
         _;
     }
 
-    modifier validBudget(uint budget) {
-        // Note that there are no constraints for a budget (Issue #97).
-        _;
-    }
-
-    modifier validPosition(uint id) {
-        if (_milestones[id] == 0) {
-            revert Module__MilestoneManager__InvalidPosition();
-        }
-        _;
-    }
-
     /// @dev this does not check if id is SENTINEL. This has to be checked seperately via validId()
-    modifier validIntermediatePosition(
+    modifier validIntermediateMilestonePosition(
         uint id,
-        uint prevId,
         uint idToPositionAfter
     ) {
         if (
-            (id == idToPositionAfter) //Make sure it doesnt move after itself
-                || (idToPositionAfter == prevId) //Make sure it doesnt move before itself
-                || _milestoneRegistry[id].startTimestamp != 0 //Milestone hasnt started
+            _milestoneRegistry[id].startTimestamp != 0 //Milestone hasnt started
                 || (
-                    _milestoneRegistry[_milestones[idToPositionAfter]]
+                    _milestoneRegistry[_milestoneList.getNextId(idToPositionAfter)]
                         .startTimestamp != 0
-                ) //If the following milestone already started you cant move or add a new milestone here, because it could never be started
+                ) //If the following milestone already started you cant move or add a new milestone here, because it could never be started//@todo has to be put into other modifier
         ) {
             revert Module__MilestoneManager__InvalidIntermediatePosition();
         }
@@ -161,13 +150,6 @@ contract MilestoneManager is
         _;
     }
 
-    modifier onlyConsecutiveMilestones(uint prevId, uint id) {
-        if (_milestones[prevId] != id) {
-            revert Module__MilestoneManager__MilestonesNotConsecutive();
-        }
-        _;
-    }
-
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -180,8 +162,7 @@ contract MilestoneManager is
         __Module_init(proposal_, metadata);
 
         // Set up empty list of milestones.
-        _milestones[_SENTINEL] = _SENTINEL;
-        _last = _SENTINEL;
+        _milestoneList.init();
 
         // Set _activeMilestone to sentinel as otherwise the 0th milestone would
         // be interpreted as active.
@@ -216,7 +197,6 @@ contract MilestoneManager is
         external
         onlyAuthorizedOrManager
         validId(id)
-        onlyConsecutiveMilestones(prevId, id)
     {
         Milestone storage m = _milestoneRegistry[id];
 
@@ -232,16 +212,8 @@ contract MilestoneManager is
         //Move ActiveId To Previous Id
         _activeMilestone = prevId;
 
-        // Remove Current id from _milestones list
-        _milestones[prevId] = _milestones[id];
-        delete _milestones[id];
-        _milestoneCounter--;
-
-        // In case last element was removed, update _last to its previous
-        // element.
-        if (id == _last) {
-            _last = prevId;
-        }
+        //Remove Id from list
+        _milestoneList.removeId(prevId, id);
 
         // stop all currently running payments
         __Module_proposal.paymentProcessor().cancelRunningPayments(
@@ -256,7 +228,6 @@ contract MilestoneManager is
         external
         onlyAuthorizedOrManager
         validId(id)
-        onlyConsecutiveMilestones(prevId, id)
     {
         Milestone storage m = _milestoneRegistry[id];
 
@@ -269,16 +240,8 @@ contract MilestoneManager is
         // Remove milestone instance from registry.
         delete _milestoneRegistry[id];
 
-        // Remove milestone's id from list and decrease counter.
-        _milestones[prevId] = _milestones[id];
-        delete _milestones[id];
-        _milestoneCounter--;
-
-        // In case last element was removed, update _last to its previous
-        // element.
-        if (id == _last) {
-            _last = prevId;
-        }
+        //Remove Id from list
+        _milestoneList.removeId(prevId, id);
 
         emit MilestoneRemoved(id);
     }
@@ -290,7 +253,7 @@ contract MilestoneManager is
         }
 
         // Get next milestone's id and update _activeMilestone.
-        uint next = _milestones[_activeMilestone];
+        uint next = _milestoneList.getNextId(_activeMilestone);
         _activeMilestone = next;
 
         // Receive pointer to next milestone instance.
@@ -408,36 +371,9 @@ contract MilestoneManager is
     function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
         external
         onlyAuthorizedOrManager
-        validId(id)
-        validPosition(prevId)
-        validPosition(idToPositionAfter)
-        validIntermediatePosition(id, prevId, idToPositionAfter)
-        onlyConsecutiveMilestones(prevId, id)
+        validIntermediateMilestonePosition(id, idToPositionAfter)
     {
-        //Remove current milestone id from list
-        uint nextIdInLine = _milestones[id];
-        _milestones[prevId] = nextIdInLine;
-
-        //Re-Add Milestone in list:
-
-        //Get the milestone Id that should come after the milestone with idToPositionAfter
-        nextIdInLine = _milestones[idToPositionAfter];
-
-        // Add milestone's id inbetween the targeted milestone id (idToPositionAfter) and the originally following id (nextIdInLine)
-        _milestones[idToPositionAfter] = id;
-        _milestones[id] = nextIdInLine;
-
-        //If _last doesnt point towards Sentinel
-        if (_milestones[_last] != _SENTINEL) {
-            //either id moved to last position
-            if (_milestones[id] == _SENTINEL) {
-                _last = id;
-            }
-            //or id moved away from last position
-            else {
-                _last = prevId;
-            }
-        }
+        _milestoneList.moveIdInList(id, prevId, idToPositionAfter);
     }
 
     /// @inheritdoc IMilestoneManager
@@ -523,13 +459,8 @@ contract MilestoneManager is
         // Note ids start at 1.
         uint milestoneId = ++_nextId;
 
-        // Increase counter and cache result.
-        ++_milestoneCounter;
-
-        // Add milestone's id to end of list.
-        _milestones[_last] = milestoneId;
-        _milestones[milestoneId] = _SENTINEL;
-        _last = milestoneId;
+        // Add milestone's id to the list.
+        _milestoneList.addId(milestoneId);
 
         // Add milestone instance to registry.
         _milestoneRegistry[milestoneId].duration = duration;
@@ -565,13 +496,7 @@ contract MilestoneManager is
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    )
-        internal
-        view
-        validDuration(duration)
-        validBudget(budget)
-        validContributors(contributors)
-    {}
+    ) internal view validDuration(duration) validContributors(contributors) {}
 
     /// @notice Creates a hash of a given set of ontributors for easy comparison
     /// @param contributors The set of contributors to hash.
