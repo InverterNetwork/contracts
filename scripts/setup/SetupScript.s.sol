@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
-import "forge-std/StdJson.sol";
 
 import "../deployment/DeploymentScript.s.sol";
 
@@ -12,8 +11,6 @@ import {IProposal} from "src/proposal/Proposal.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract SetupScript is Test, Script, DeploymentScript {
-    // using stdJson for string;
-    
     /*
         // Before we can start a milestone, two things need to be present:
         // 1. A non-empty list of contributors for it
@@ -87,9 +84,7 @@ contract SetupScript is Test, Script, DeploymentScript {
                 proposalCreatedMilestoneManagerAddress = moduleAddresses[i];
                 break;
             } catch {
-                unchecked {
-                    ++i;
-                }
+                i++;
             }
         }
 
@@ -98,23 +93,6 @@ contract SetupScript is Test, Script, DeploymentScript {
         assertTrue(!proposalCreatedMilestoneManager.hasActiveMilestone(), "Milestone manager wrong address inputted");
         assertTrue(!proposalCreatedMilestoneManager.isExistingMilestoneId(type(uint256).max), "Milestone manager wrong address inputted");
         assertEq(proposalCreatedMilestoneManager.getMaximumContributors(), 50, "Milestone manager wrong address inputted");
-
-
-        /*
-            string memory json = vm.readFile("broadcast/SetupScript.s.sol/31337/run-latest.json");
-            // bytes memory transactionDetails = json.parseRaw("transactions[0].tx");
-            // RawTx1559Detail memory rawTxDetail = abi.decode(transactionDetails, (RawTx1559Detail));
-            // Tx1559Detail memory txDetail = rawToConvertedEIP1559Detail(rawTxDetail);
-            // assertEq(txDetail.from, makeAddr("Beef"));
-
-            uint index = 0;
-            Receipt memory receipt = readReceipt("broadcast/SetupScript.s.sol/31337/run-latest.json", index);
-            console2.log("Contract Address", receipt.contractAddress);
-            //assertEq(receipt.contractAddress, address(0));
-
-            // console2.log(latestRunJson);
-            //console2.log("Transaction 2", transactions[2].contractName);
-        */
 
         contributors.push(alice);
         contributors.push(bob);
