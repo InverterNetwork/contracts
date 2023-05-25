@@ -96,7 +96,6 @@ fmt-check: ## Check whether code formatted correctly
 pre-commit: ## Git pre-commit hook
 	@forge fmt
 	@forge coverage --report lcov
-	@genhtml lcov.info --branch-coverage --output-dir coverage
 	@forge snapshot
 
 # -----------------------------------------------------------------------------
