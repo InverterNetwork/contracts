@@ -2,33 +2,31 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {PaymentProcessor} from "src/modules/PaymentProcessor.sol";
+import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
 
- /**
-  * @title PaymentProcessor Deployment Script
-  *
-  * @dev Script to deploy a new PaymentProcessor.
-  *
-  *
-  * @author byterocket
-  */
+/**
+ * @title PaymentProcessor Deployment Script
+ *
+ * @dev Script to deploy a new PaymentProcessor.
+ *
+ * @author byterocket
+ */
 
 contract DeployPaymentProcessor is Script {
-
-    PaymentProcessor paymentProcessor;
+    SimplePaymentProcessor paymentProcessor;
 
     function run() external {
-
         // Deploy the milestoneManager.
         vm.startBroadcast();
         {
-            paymentProcessor = new PaymentProcessor();
+            paymentProcessor = new SimplePaymentProcessor();
         }
         vm.stopBroadcast();
 
         // Log the deployed MilestoneManager contract address.
-        console2.log("Deployment of PaymentProcessor at address",
-            address(paymentProcessor));
+        console2.log(
+            "Deployment of PaymentProcessor at address",
+            address(paymentProcessor)
+        );
     }
-
 }
