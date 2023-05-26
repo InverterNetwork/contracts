@@ -19,7 +19,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {
     RebasingFundingManager,
     IFundingManager
-} from "src/modules/FundingManager/RebasingFundingManager.sol";
+} from "src/modules/fundingManager/RebasingFundingManager.sol";
 
 contract RebasingFundingManagerTest is ModuleTest {
     struct UserDeposits {

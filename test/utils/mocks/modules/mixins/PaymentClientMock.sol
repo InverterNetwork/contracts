@@ -9,7 +9,7 @@ import {
 
 // Internal Interfaces
 import {IPaymentProcessor} from
-    "src/modules/PaymentProcessor/IPaymentProcessor.sol";
+    "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

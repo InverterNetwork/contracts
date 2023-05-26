@@ -7,7 +7,7 @@ import {IProposalFactory} from "src/factories/ProposalFactory.sol";
 import {IProposal} from "src/proposal/Proposal.sol";
 
 import {RebasingFundingManager} from
-    "src/modules/FundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

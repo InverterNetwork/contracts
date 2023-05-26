@@ -16,10 +16,10 @@ import {Proposal, IProposal} from "src/proposal/Proposal.sol";
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
 import {RebasingFundingManager} from
-    "src/modules/FundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 import {SimplePaymentProcessor} from
-    "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
-import {MilestoneManager} from "src/modules/LogicModule/MilestoneManager.sol";
+    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
+import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 
 //Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";

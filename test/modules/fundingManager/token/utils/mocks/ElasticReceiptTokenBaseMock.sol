@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 import {ElasticReceiptTokenBase} from
-    "src/modules/FundingManager/token/ElasticReceiptTokenBase.sol";
+    "src/modules/fundingManager/token/ElasticReceiptTokenBase.sol";
 
 contract ElasticReceiptTokenBaseMock is ElasticReceiptTokenBase {
     // The token's underlier.

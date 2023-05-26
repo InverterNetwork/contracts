@@ -6,12 +6,12 @@ import {IModule} from "src/modules/base/IModule.sol";
 import {Proposal} from "src/proposal/Proposal.sol";
 
 import {RebasingFundingManager} from
-    "src/modules/FundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 
 import {SimplePaymentProcessor} from
-    "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
-import {MilestoneManager} from "src/modules/LogicModule/MilestoneManager.sol";
-import {ListAuthorizer} from "src/modules/Authorizer/ListAuthorizer.sol";
+    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
+import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
+import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
 
 import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 import {

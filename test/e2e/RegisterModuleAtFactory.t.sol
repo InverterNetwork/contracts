@@ -5,7 +5,7 @@ import {E2eTest} from "test/e2e/E2eTest.sol";
 
 import {IModule} from "src/modules/base/IModule.sol";
 import {SimplePaymentProcessor} from
-    "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
+    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 

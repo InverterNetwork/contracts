@@ -9,13 +9,13 @@ import {IProposal} from "src/proposal/Proposal.sol";
 import {
     MilestoneManager,
     IMilestoneManager
-} from "src/modules/LogicModule/MilestoneManager.sol";
+} from "src/modules/logicModule/MilestoneManager.sol";
 
 import {RebasingFundingManager} from
-    "src/modules/FundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 
 import {SimplePaymentProcessor} from
-    "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
+    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
 // Mocks

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {ElasticReceiptTokenBase} from
-    "src/modules/FundingManager/token/ElasticReceiptTokenBase.sol";
+    "src/modules/fundingManager/token/ElasticReceiptTokenBase.sol";
 
 abstract contract ElasticReceiptTokenUpgradeable is ElasticReceiptTokenBase {
     //--------------------------------------------------------------------------

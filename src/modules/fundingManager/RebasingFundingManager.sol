@@ -6,7 +6,7 @@ import {Module} from "src/modules/base/Module.sol";
 import {
     ElasticReceiptTokenUpgradeable,
     ElasticReceiptTokenBase
-} from "src/modules/FundingManager/token/ElasticReceiptTokenUpgradeable.sol";
+} from "src/modules/fundingManager/token/ElasticReceiptTokenUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
@@ -18,13 +18,13 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20MetadataUpgradeable} from
     "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {IRebasingERC20} from
-    "src/modules/FundingManager/token/IRebasingERC20.sol";
+    "src/modules/fundingManager/token/IRebasingERC20.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
 
-import {IFundingManager} from "src/modules/FundingManager/IFundingManager.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 contract RebasingFundingManager is
     IFundingManager,

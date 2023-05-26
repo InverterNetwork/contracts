@@ -8,22 +8,22 @@ import "forge-std/console.sol";
 import {
     IFundingManager,
     RebasingFundingManager
-} from "src/modules/FundingManager/RebasingFundingManager.sol";
+} from "src/modules/fundingManager/RebasingFundingManager.sol";
 
 import {
     IAuthorizer,
     ListAuthorizer
-} from "src/modules/Authorizer/ListAuthorizer.sol";
+} from "src/modules/authorizer/ListAuthorizer.sol";
 
 import {
     IPaymentProcessor,
     SimplePaymentProcessor
-} from "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
+} from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 
 import {
     IMilestoneManager,
     MilestoneManager
-} from "src/modules/LogicModule/MilestoneManager.sol";
+} from "src/modules/logicModule/MilestoneManager.sol";
 
 import {
     IMetadataManager, MetadataManager

@@ -10,7 +10,7 @@ import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 import {
     SimplePaymentProcessor,
     IPaymentProcessor
-} from "src/modules/PaymentProcessor/SimplePaymentProcessor.sol";
+} from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 
 // Mocks
 import {PaymentClientMock} from

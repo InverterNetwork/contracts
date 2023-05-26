@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 
 import "../deployment/DeploymentScript.s.sol";
 
-import {IMilestoneManager} from "src/modules/LogicModule/MilestoneManager.sol";
+import {IMilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 import {IProposal} from "src/proposal/Proposal.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 

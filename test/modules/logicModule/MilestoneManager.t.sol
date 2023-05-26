@@ -12,7 +12,7 @@ import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 import {
     MilestoneManager,
     IMilestoneManager
-} from "src/modules/LogicModule/MilestoneManager.sol";
+} from "src/modules/logicModule/MilestoneManager.sol";
 
 import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 

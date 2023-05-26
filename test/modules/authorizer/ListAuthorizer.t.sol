@@ -7,7 +7,7 @@ import {Test} from "forge-std/Test.sol";
 import {
     ListAuthorizer,
     IAuthorizer
-} from "src/modules/Authorizer/ListAuthorizer.sol";
+} from "src/modules/authorizer/ListAuthorizer.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";

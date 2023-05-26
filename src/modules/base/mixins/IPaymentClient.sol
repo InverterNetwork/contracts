@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 // Internal Interfaces
 import {IPaymentProcessor} from
-    "src/modules/PaymentProcessor/IPaymentProcessor.sol";
+    "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
 interface IPaymentClient {
     struct PaymentOrder {

@@ -5,7 +5,7 @@ pragma solidity ^0.8.13;
 import {
     IPaymentProcessor,
     IPaymentClient
-} from "src/modules/PaymentProcessor/IPaymentProcessor.sol";
+} from "src/modules/paymentProcessor/IPaymentProcessor.sol";
 import {Module} from "src/modules/base/Module.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
