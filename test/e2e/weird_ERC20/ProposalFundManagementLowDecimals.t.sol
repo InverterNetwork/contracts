@@ -14,10 +14,11 @@ import {LowDecimalsToken} from "test/utils/mocks/weird_ERC20/LowDecimalsToken.so
  * @title ProposaFundManagementLowDecimals
  *
  * @dev LowDecimals token has significantly less decimals than the standard
- *      18. We will use token with 2 decimals, which simulates token
- *     such as BUSD, a widely used stablecoin issued on the
- *      Binance Smart Chain.
- *
+ *      18. We use token with 2 decimals, which simulates token such as BUSD,
+ *      a widely used stablecoin issued on the Binance Smart Chain.
+ * @dev For this test we use fuzzing with different initialDeposits,
+ *      aliceInitialBalance and bobInitialBalance and verify balances on
+ *      withdrawals/deposits are still correct.
  * @author byterocket
  */
 

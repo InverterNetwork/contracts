@@ -8,25 +8,33 @@ import {IProposal} from "src/proposal/Proposal.sol";
 
 // Mocks
 import {PauseableToken} from "test/utils/mocks/weird_ERC20/PauseableToken.sol";
-/**
- * E2e test demonstrating a proposal's fund management.
- *
- * Funding of a proposal is managed via an ERC4626 vault.
- * For more info, see [FundingVault.sol](src/proposal/base/FundingVault.sol).
- *
- * Upon deposit of funds, users receive receipt token.
- *
- * The withdrawal amount of funds is _always_ in relation of the amount of
- * receipt tokens to the total amount of funds left in the proposal.
- */
+
+ /**
+  * @title ProposaFundManagementPauseable
+  *
+  * @dev Pauseable token has the ability to pause, preventing use of approve,
+  *      transfer and transferFrom functions. Contract can than be unpaused
+  *      again, allowing the usual functionality of aforementioned functions.
+  *      Examples of popular pauseable tokens are BNB, AAVE, ZRX, SNX, COMP
+  *      and many more. Overall pauseable tokens are widely present in
+  *      crypto space.
+  * @dev For this test we pause token, before making deposit, either calling
+  *      approve before pausing or after. In both cases deposit is expected to
+  *      fail, but succeed when the token is unpaused, without the need to
+  *      approve it again (in Bobs case). We then pause the token again,
+  *      expacting withdrawal to fail but succeed when the token is unpaused,
+  *      while making all further withdrawals possible, giving correct amounts
+  *      to their respective recipients.
+  * @author byterocket
+  */
 
 contract ProposaFundManagementPauseable is E2eTest {
     address alice = address(0xA11CE);
     address bob = address(0x606);
 
-    // weird_ERC20: Blockable token allows blocking/unblocking
-    // (blacklisting) individual addresses.
-    // Note approve() is overwriten in Pausable as well so it won't work when
+    // @note Pauseable token allows disabling of approve, transfer and
+    //       transferFrom functions. Those functions can be re-enabled by owner.
+    // @dev approve() is overwriten in Pausable as well so it won't work when
     // token is on pause.
     PauseableToken token = new PauseableToken(10e18);
 
@@ -52,20 +60,20 @@ contract ProposaFundManagementPauseable is E2eTest {
         token.mint(alice, 1000e18);
         token.mint(bob, 5000e18);
 
-        // weird_ERC20: token got Paused.
+        // Token got Paused.
         token.stop();
         assertFalse(token.isLive());
 
         // Alice funds the proposal with 1k tokens.
         vm.startPrank(alice);
         {
-            // weird_ERC20: token can't be approved when on pause.
+            // Token can't be approved when on pause.
             try token.approve(address(proposal), 1000e18) {
                 proposal.deposit(1000e18);
-                // if calls were successful, test should fail.
+                // If calls were successful, test should fail.
                 assertTrue(false);
             } catch {
-                // weird_ERC20: Token is Unpaused again.
+                // Token is Unpaused again.
                 vm.stopPrank();
                 token.start();
                 assertTrue(token.isLive());
@@ -92,19 +100,19 @@ contract ProposaFundManagementPauseable is E2eTest {
         }
         vm.stopPrank();
 
-        // weird_ERC20: token got Paused.
+        // Token got Paused.
         token.stop();
         assertFalse(token.isLive());
 
         vm.startPrank(bob);
         {
-            // weird_ERC20: token can't be deposited when on pause.
+            // Token can't be deposited when on pause.
             try proposal.deposit(5000e18) {
                 assertTrue(proposal.balanceOf(bob) > 0);
-                // if deposit was successful, test should fail.
+                // If deposit was successful, test should fail.
                 assertTrue(false);
             } catch {
-                // weird_ERC20: Token is Unpaused again.
+                // Token is Unpaused again.
                 vm.stopPrank();
                 token.start();
                 assertTrue(token.isLive());
@@ -128,19 +136,19 @@ contract ProposaFundManagementPauseable is E2eTest {
         // Note that we simulate proposal spending by just burning tokens.
         token.burn(address(proposal), token.balanceOf(address(proposal)) / 2);
 
-        // weird_ERC20: token got Paused.
+        // Token got Paused.
         token.stop();
         assertFalse(token.isLive());
 
-        // weird_ERC20: Alice is not able to withdraw half her funded tokens
+        // Alice is not able to withdraw half her funded tokens
         // as long token is Paused. After that withdraw is possible again.
         vm.startPrank(alice);
         {
             try proposal.withdraw(proposal.balanceOf(alice)) {
-                // if withdraw is successful, test should fail.
+                // If withdraw is successful, test should fail.
                 assertTrue(false);
             } catch {
-                // weird_ERC20: Alice gets in unblocked again
+                // Alice gets in unblocked again
                 vm.stopPrank();
                 token.start();
                 assertTrue(token.isLive());

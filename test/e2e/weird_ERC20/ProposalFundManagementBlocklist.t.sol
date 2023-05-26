@@ -8,26 +8,29 @@ import {IProposal} from "src/proposal/Proposal.sol";
 
 // Mocks
 import {BlockableToken} from "test/utils/mocks/weird_ERC20/BlockableToken.sol";
-/**
- * E2e test demonstrating a proposal's fund management.
- *
- * Funding of a proposal is managed via an ERC4626 vault.
- * For more info, see [FundingVault.sol](src/proposal/base/FundingVault.sol).
- *
- * Upon deposit of funds, users receive receipt token.
- *
- * The withdrawal amount of funds is _always_ in relation of the amount of
- * receipt tokens to the total amount of funds left in the proposal.
- */
+
+ /**
+  * @title ProposaFundManagementBlocklist
+  *
+  * @dev Blockable token has the ability to block (blacklist) addresses,
+  *      preventing use of transferFrom, if either source or desitnation
+  *      address is on the list. Examples of popular tokens with blacklist are
+  *      stablecoins such as USDT, USDC, BUSD and Dai.
+  * @dev For this test we block funders Alice and Bob so they can't withdraw
+  *      their unspent tokens right away. After first failed withdraw we unblock
+  *      their address and call withdraw again. Second call should be successful
+  *      and they should receive their respective amounts nevertheless.
+  * @author byterocket
+  */
 
 contract ProposaFundManagementBlocklist is E2eTest {
     address alice = address(0xA11CE);
     address bob = address(0x606);
 
-    // weird_ERC20: Blockable token allows blocking/unblocking
-    // (blacklisting) individual addresses.
-    // Note transfer() is not overwritten by BlockableToken,
-    // so it may stil work.
+    // @note Blockable token allows blocking(blacklisting)/unblocking
+    //       individual addresses.
+    // @dev transfer() is not overwritten by BlockableToken,
+    //      so it may stil work.
     BlockableToken token = new BlockableToken(10e18);
 
     function test_e2e_ProposalFundManagement() public {
@@ -87,21 +90,21 @@ contract ProposaFundManagementBlocklist is E2eTest {
         // Note that we simulate proposal spending by just burning tokens.
         token.burn(address(proposal), token.balanceOf(address(proposal)) / 2);
 
-        // weird_ERC20: In the meantime Alice gets blocked
+        // In the meantime Alice and Bob get blocked
         token.blockUser(alice);
         token.blockUser(bob);
         assertTrue(token.isBlocked(alice));
         assertTrue(token.isBlocked(bob));
 
-        // weird_ERC20: Alice is not able to withdraw half her funded tokens
-        // as long as she is blocked. After that withdraw is possible again.
+        // Alice is not able to withdraw half her funded tokens as long as she
+        // is blocked. After being unblocked, withdraw is possible again.
         vm.startPrank(alice);
         {
             try proposal.withdraw(proposal.balanceOf(alice)) {
                 // if withdraw is successful, test should fail.
                 assertTrue(false);
             } catch {
-                // weird_ERC20: Alice gets in unblocked again
+                // Alice gets is unblocked again
                 vm.stopPrank();
                 token.allow(alice);
                 assertFalse(token.isBlocked(alice));
@@ -116,15 +119,15 @@ contract ProposaFundManagementBlocklist is E2eTest {
             }
         }
 
-        // weird_ERC20: Bob is not able to withdraw half his funded tokens
-        // as long as he is blocked. After that withdraw is possible again.
+        // Bob is not able to withdraw half his funded tokens since he
+        // is blocked. After being unblocked, withdraw is possible again.
         vm.startPrank(bob);
         {
             try proposal.withdraw(proposal.balanceOf(bob)) {
                 // if withdraw is successful, test should fail.
                 assertTrue(false);
             } catch {
-                // weird_ERC20: Bob gets in unblocked again
+                // Bob gets in unblocked again
                 vm.stopPrank();
                 token.allow(bob);
                 assertFalse(token.isBlocked(bob));

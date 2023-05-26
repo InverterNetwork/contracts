@@ -10,13 +10,12 @@ import {IProposal} from "src/proposal/Proposal.sol";
 import {HighDecimalsToken} from "test/utils/mocks/weird_ERC20/HighDecimalsToken.sol";
 
 /**
- * @title ProposaFundManagementLowDecimals
+ * @title ProposaFundManagementHighDecimals
  *
- * @dev LowDecimals token has significantly less decimals than the standard
- *      18. We will use token with 2 decimals, which simulates token
- *      such as BUSD, a widely used stablecoin issued on the
- *      Binance Smart Chain.
- * @dev For this test we will use fuzzing with different initialDeposits,
+ * @dev HighDecimals token has significantly more decimals than the standard
+ *      18. While it is uncommon to find tokens with such extremely high number
+ *      of decimals, we will use 50 decimals to test stability of the system.
+ * @dev For this test we use fuzzing with different initialDeposits,
  *      aliceInitialBalance and bobInitialBalance and verify balances on
  *      withdrawals/deposits are still correct.
  * @author byterocket
@@ -35,13 +34,13 @@ contract ProposaFundManagementHighDecimals is E2eTest {
     )
         public
     {
-        // @dev Make sure amounts are divisible by 2, otherwise tests may fail
+        // @dev Amounts should be divisible by 2, otherwise tests may fail
         //      due to precision loss.
-        // @note DEPOSIT_CAP in FundingManager ensures proposal never holds
+        // @dev DEPOSIT_CAP in FundingManager ensures proposal never holds
         //       more than 100_000_000e18 (which is 10e27)
-        initialDeposit = bound(initialDeposit, 2, 10e27);
-        aliceInitialBalance = bound(aliceInitialBalance, 2, 10e27);
-        bobInitialBalance = bound(bobInitialBalance, 2, 10e27);
+        initialDeposit = bound(initialDeposit, 2, 10e30);
+        aliceInitialBalance = bound(aliceInitialBalance, 2, 10e30);
+        bobInitialBalance = bound(bobInitialBalance, 2, 10e30);
         vm.assume(initialDeposit %2== 0);
         vm.assume(aliceInitialBalance %2== 0);
         vm.assume(bobInitialBalance %2== 0);
@@ -60,11 +59,6 @@ contract ProposaFundManagementHighDecimals is E2eTest {
         // Due to how the underlying rebase mechanism works, it is necessary
         // to always have some amount of tokens in the proposal.
         // It's best, if the owner deposits them right after deployment.
-
-        // @dev Make sure amounts are divisible by 2, otherwise tests may fail.
-        // uint initialDeposit = 10e18;
-        // uint aliceInitialBalance = 10;
-        // uint bobInitialBalance = 50;
 
         token.mint(address(this), initialDeposit);
         token.approve(address(proposal), initialDeposit);
