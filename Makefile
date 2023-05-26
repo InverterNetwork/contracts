@@ -50,6 +50,20 @@ testFactories: ## Run factories/ package tests
 testE2e: ## Rune e2e test suite
 	@forge test -vvv --match-path "*/e2e/*"
 
+.PHONY: testScripts
+testScripts: ## Rune e2e test suite
+	
+	@forge script scripts/deployment/DeploymentScript.s.sol
+	@forge script scripts/factories/DeployModuleFactory.s.sol
+	@forge script scripts/factories/DeployProposalFactory.s.sol
+	@forge script scripts/modules/governance/DeployListAuthorizer.s.sol
+	@forge script scripts/modules/governance/DeploySingleVoteGovernor.s.sol
+	@forge script scripts/modules/DeployMilestoneManager.s.sol
+	@forge script scripts/modules/DeployPaymentProcessor.s.sol
+	@forge script scripts/proposal/DeployProposal.s.sol
+	@forge script scripts/proxies/DeployBeacon.s.sol
+	@forge script scripts/setup/SetupScript.s.sol
+
 # -----------------------------------------------------------------------------
 # Static Analyzers
 
@@ -95,8 +109,11 @@ fmt-check: ## Check whether code formatted correctly
 .PHONY: pre-commit
 pre-commit: ## Git pre-commit hook
 	@forge fmt
+	@make testScripts
 	@forge coverage --report lcov
+	@genhtml lcov.info --branch-coverage --output-dir coverage
 	@forge snapshot
+	
 
 # -----------------------------------------------------------------------------
 # Help Command

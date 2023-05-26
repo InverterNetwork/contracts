@@ -66,11 +66,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _;
     }
 
-    modifier validBudget(uint budget) {
-        // Note that there are no constraints for a budget (Issue #97).
-        _;
-    }
-
     /// @dev this does not check if id is SENTINEL. This has to be checked seperately via validId()
     modifier validIntermediateMilestonePosition(
         uint id,
@@ -672,13 +667,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    )
-        internal
-        view
-        validDuration(duration)
-        validBudget(budget)
-        validContributors(contributors)
-    {}
+    ) internal view validDuration(duration) validContributors(contributors) {}
 
     /// @notice Creates a hash of a given set of ontributors for easy comparison
     /// @param contributors The set of contributors to hash.
