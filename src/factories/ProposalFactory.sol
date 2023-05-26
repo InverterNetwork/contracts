@@ -72,7 +72,7 @@ contract ProposalFactory is IProposalFactory {
     /// @inheritdoc IProposalFactory
     function createProposal(
         ProposalConfig memory proposalConfig,
-        ModuleConfig memory fundingnManagerConfig,
+        ModuleConfig memory fundingManagerConfig,
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
@@ -83,10 +83,10 @@ contract ProposalFactory is IProposalFactory {
         _proposals[++_proposalIdCounter] = clone;
 
         // Deploy and cache {IAuthorizer} module.
-        address fundingnManager = IModuleFactory(moduleFactory).createModule(
-            fundingnManagerConfig.metadata,
+        address fundingManager = IModuleFactory(moduleFactory).createModule(
+            fundingManagerConfig.metadata,
             IProposal(clone),
-            fundingnManagerConfig.configdata
+            fundingManagerConfig.configdata
         );
 
         // Deploy and cache {IAuthorizer} module.
@@ -120,7 +120,7 @@ contract ProposalFactory is IProposalFactory {
             proposalConfig.owner,
             proposalConfig.token,
             modules,
-            IFundingManager(fundingnManager),
+            IFundingManager(fundingManager),
             IAuthorizer(authorizer),
             IPaymentProcessor(paymentProcessor)
         );
