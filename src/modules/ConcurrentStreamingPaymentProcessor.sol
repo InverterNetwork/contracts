@@ -41,7 +41,7 @@ import {IProposal} from "src/proposal/IProposal.sol";
 
 // @note StreamingPaymentProcessor is module because the **module** contract is the base contract for all modules and StreamingPaymentProcessor is a module
 // @note IPaymentProcessor cancels and fulfills payment orders based on a particular instance of a paymentClient
-contract StreamingPaymentProcessor is Module, IPaymentProcessor {
+contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 
@@ -50,59 +50,45 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
         uint _released;
         uint _start;
         uint _duration;
+        uint _streamingWalletID //@audit-ok valid values will start from 1. 0 is not a valid streamingWalletID.
     }
 
-    // paymentClient => contributor => Payment
-    mapping(address => mapping(address => StreamingWallet)) private vestings;
+    ////////////////////////////////
+    // START ADDITIONAL CODE
+    ////////////////////////////////
+
+    mapping(address => mapping(address => bool)) public isActiveContributor;
+    mapping(address => mapping(address => uint256)) public numContributorWallets;
+
+    ////////////////////////////////
+    // END ADDITIONAL CODE
+    ////////////////////////////////
+
+    ////////////////////////////////
+    // START EDITED CODE
+    ////////////////////////////////
+
+    // paymentClient => contributor => streamingWalletID => Wallet
+    mapping(address => mapping(address => mapping(uint256 => StreamingWallet))) private vestings;
+
+    ////////////////////////////////
+    // END EDITED CODE
+    ////////////////////////////////
+
     // paymentClient => contributor => unclaimableAmount
     mapping(address => mapping(address => uint)) private unclaimableAmounts;
 
+    ////////////////////////////////
+    // START EDITED CODE
+    ////////////////////////////////
     /// @notice list of addresses with open payment Orders per paymentClient
-    // @note for one particular paymentClient, which addresses have pending payment orders
     mapping(address => address[]) private activePayments;
 
-    //--------------------------------------------------------------------------
-    // Events
-
-    /// @notice Emitted when a payment gets processed for execution.
-    /// @param recipient The address that will receive the payment.
-    /// @param amount The amount of tokens the payment consists of.
-    /// @param start Timestamp at which the vesting starts.
-    /// @param duration Timestamp at which the full amount should be claimable.
-    event StreamingPaymentAdded(
-        address indexed paymentClient,
-        address indexed recipient,
-        uint amount,
-        uint start,
-        uint duration
-    );
-
-    /// @notice Emitted when the vesting to an address is removed.
-    /// @param recipient The address that will stop receiving payment.
-    event StreamingPaymentRemoved(
-        address indexed paymentClient, address indexed recipient
-    );
-
-    /// @notice Emitted when a running vesting schedule gets updated.
-    /// @param recipient The address that will receive the payment.
-    /// @param newSalary The new amount of tokens the payment consists of.
-    /// @param newDuration Number of blocks over which the amount will vest.
-    event PaymentUpdated(address recipient, uint newSalary, uint newDuration);
-
-    /// @notice Emitted when a running vesting schedule gets updated.
-    /// @param recipient The address that will receive the payment.
-    /// @param amount The amount of tokens the payment consists of.
-    /// @param start Timestamp at which the vesting starts.
-    /// @param duration Number of blocks over which the amount will vest
-    event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint duration
-    );
-
-    //--------------------------------------------------------------------------
-    // Errors
-
-    /// @notice insufficient tokens in the client to do payments
-    error Module__PaymentManager__InsufficientTokenBalanceInClient();
+    /// @notice client => contributor => arrayOfWalletIdsWithPendingPayment
+    mapping(address => mapping(address => uint256[])) private activeContributorPayments;
+    ////////////////////////////////
+    // END EDITED CODE
+    ////////////////////////////////
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -138,8 +124,21 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Release the releasable tokens.
     ///         In OZ VestingWallet this method is named release().
-    function claim(IPaymentClient client) external {
+    function claimAll(IPaymentClient client) external {
         _claim(address(client), _msgSender());
+    }
+
+    // @todo add a function `claimFromSpecificId`
+    function claimForSpecificWalletId(IPaymentClient client, uint256 walletId, bool retryForUnclaimableAmounts) external {
+        if(!isActiveContributor[address(client)][_msgSender()] || (walletId > numContributorWallets[address(client)][_msgSender()])) {
+            revert Module__PaymentManager__InvalidWallet();
+        }
+
+        if(_verifyActiveWalletId(walletId) == type(uint256).max) {
+            revert Module__PaymentManager__InactiveWallet();
+        }
+
+        _claimForSpecificWalletId(address(client), _msgSender(), walletId, retryForUnclaimableAmounts);
     }
 
     /// @inheritdoc IPaymentProcessor
@@ -149,11 +148,13 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
         validClient(client)
     {
         //We check if there are any new paymentOrders, without processing them
-        if (client.paymentOrders().length > 0) { // @note returns the list of outstanding payment orders.
-            // If there are, we remove all payments that would be overwritten
-            // Doing it at the start ensures that collectPaymentOrders will always start from a blank slate concerning balances/allowances.
-            // @note cancel will try and force-pay the pending payments to the contributors.
-            _cancelRunningOrders(client);
+        if (client.paymentOrders().length > 0) {
+            // @audit-ok
+            // Ok, now, we do not want to over-write the payment orders and want to be able to create new ones.
+            // Let's see how this goes
+            
+            // @audit-ok Remove the LOC that basically force-pays and therefore cancels all the pending open orders.
+            // _cancelRunningOrders(client);
 
             // Collect outstanding orders and their total token amount.
             IPaymentClient.PaymentOrder[] memory orders;
@@ -163,21 +164,32 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
             if (token().balanceOf(address(client)) < totalAmount) {
                 revert Module__PaymentManager__InsufficientTokenBalanceInClient();
             }
-
+            
             // Generate Streaming Payments for all orders
             address _recipient;
             uint _amount;
             uint _start;
             uint _duration;
-            // @audit gas-opti
+            uint _walletId;
+
             for (uint i; i < orders.length; i++) {
                 _recipient = orders[i].recipient;
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
                 _duration = (orders[i].dueTo - _start);
 
+                // @audit-ok we can't increase the value of numContributorWallets here, as it is possible that in the next
+                // _addPayment step, this wallet is not actually added. So, we will increment the value of this mapping there only.
+                // And for the same reason we cannot set the isActiveContributor mapping to true here.
+
+                if(isActiveContributor[address(client)][_recipient]) {
+                    _walletId = numContributorWallets[address(client)][_recipient] + 1;
+                } else {
+                    _walletId = 1;
+                }
+
                 _addPayment(
-                    address(client), _recipient, _amount, _start, _duration
+                    address(client), _recipient, _amount, _start, _duration, _walletId
                 );
 
                 emit PaymentOrderProcessed(
@@ -196,8 +208,6 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
         _cancelRunningOrders(client);
     }
 
-    // @follow-up why discrepancy between who can call cancelRunningPayments and who can call removePayment
-
     /// @notice Deletes a contributors payment and leaves non-released tokens
     ///         in the PaymentClient.
     /// @param contributor Contributor's address.
@@ -213,53 +223,54 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Getter for the start timestamp.
     /// @param contributor Contributor's address.
-    function start(address client, address contributor)
+    function startForSpecificWalletId(address client, address contributor, uint256 walletId)
         public
         view
         returns (uint)
     {
-        return vestings[client][contributor]._start;
+        return vestings[client][contributor][walletId]._start;
     }
 
     /// @notice Getter for the vesting duration.
     /// @param contributor Contributor's address.
-    function duration(address client, address contributor)
+    function durationForSpecificWalletId(address client, address contributor, uint256 walletId)
         public
         view
         returns (uint)
     {
-        return vestings[client][contributor]._duration;
+        return vestings[client][contributor][walletId]._duration;
     }
 
-    /// @notice Getter for the amount of eth already released // @audit does it have to be ETH necessarily?
+    /// @notice Getter for the amount of eth already released
     /// @param contributor Contributor's address.
-    function released(address client, address contributor)
+    function releasedForSpecificWalletId(address client, address contributor, uint256 walletId)
         public
         view
         returns (uint)
     {
-        return vestings[client][contributor]._released;
+        return vestings[client][contributor][walletId]._released;
     }
 
     /// @notice Calculates the amount of tokens that has already vested.
     /// @param contributor Contributor's address.
-    function vestedAmount(address client, address contributor, uint timestamp)
+    function vestedAmountForSpecificWalletId(address client, address contributor, uint timestamp, uint walletId)
         public
         view
         returns (uint)
     {
-        return _vestingSchedule(client, contributor, timestamp);
+        return _vestingScheduleForSpecificWalletId(client, contributor, timestamp, walletId);
     }
 
     /// @notice Getter for the amount of releasable tokens.
-    function releasable(address client, address contributor)
+    function releasableForSpecificWalletId(address client, address contributor, uint256 walletId)
         public
         view
         returns (uint)
     {
         // @audit unnecessary casting. block.timestamp returns uint256 by default
-        return vestedAmount(client, contributor, uint(block.timestamp))
-            - released(client, contributor);
+        return 
+            vestedAmountForSpecificWalletId(client, contributor, uint(block.timestamp), walletId)
+            - releasedForSpecificWalletId(client, contributor, walletId);
     }
 
     /// @notice Getter for the amount of tokens that could not be claimed.
@@ -278,7 +289,6 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    // @audit if internal function, why underscore not used?
     function findAddressInActivePayments(address client, address contributor)
         internal
         view
@@ -295,6 +305,23 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
         }
         return type(uint).max;
     }
+
+    function _verifyActiveWalletId(address client, address contributor, uint256 walletId) internal view returns(uint256) {
+        uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
+        uint256 contributorWalletsArrayLength = contributorsWalletArray.length;
+
+        uint index;
+        for(index; index < contributorWalletsArrayLength; ) {
+            if(contributorWalletsArray[index] == walletId) {
+                return index;
+            }
+            unchecked {
+                ++index;
+            }
+        }
+
+        return type(uint256).max;
+    } 
 
     function _cancelRunningOrders(IPaymentClient client) internal {
         //IPaymentClient.PaymentOrder[] memory orders;
@@ -341,40 +368,39 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param _salary Salary contributor will receive per epoch.
     /// @param _start Start vesting timestamp.
     /// @param _duration Streaming duration timestamp.
+    /// @param _walletId ID of the new wallet of the a particular contributor being added
     function _addPayment(
         address client,
         address _contributor,
         uint _salary,
         uint _start,
-        uint _duration
+        uint _duration,
+        uint _walletId
     ) internal {
         if (
-            !validAddress(_contributor) || !validSalary(_salary)
-                || !validStart(_start) || !validDuration(_duration)
+            !validAddress(_contributor) || !validSalary(_salary) || !validStart(_start) || !validDuration(_duration)
         ) {
-            emit InvalidStreamingOrderDiscarded(
-                _contributor, _salary, _start, _duration
-            );
-        } 
-        // @follow-up else statment isn't really wrong. but why have we used it?
-        else {
-            vestings[client][_contributor] =
+            emit InvalidStreamingOrderDiscarded ( _contributor, _salary, _start, _duration);
+        } else {
+            ++numContributorWallets[client][_contributor];
+
+            if(_walletId == 1) {
+                isActiveContributor[client][_contributor] = true;
+                activePayments[client].push(_contributor); // @note If the walletId is not 1, then the contributor already exists.
+            }
+
+            vestings[client][_contributor][_walletId] =
                 StreamingWallet(_salary, 0, _start, _duration);
 
-            uint contribIndex =
-                findAddressInActivePayments(client, _contributor);
-            if (contribIndex == type(uint).max) {
-                activePayments[client].push(_contributor);
-            } // @audit why is the else statement not included?
+            activePayments[client][_contributor].push(_walletId);
 
-            // This event would be emitted even if the contributor isn't necessarily added. Fix?
             emit StreamingPaymentAdded(
                 client, _contributor, _salary, _start, _duration
             );
         }
     }
 
-    function _claim(address client, address beneficiary) internal {
+    function _claimAll(address client, address beneficiary) internal {
         uint amount = releasable(client, beneficiary);
         vestings[client][beneficiary]._released += amount;
 
@@ -394,9 +420,6 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
                 amount
             )
         );
-        // @audit-issue the `call` will return true for any EOA address and also for address(0).
-        // @audit-issue So a better approach would be to check the before and after balance of the token for the beneficiary
-        // @audit-issue The data returned by _token can be so large, that it results in a DOS attack/consistent OOG
         if (success && (data.length == 0 || abi.decode(data, (bool)))) {
             emit TokensReleased(beneficiary, _token, amount);
         } else {
@@ -405,23 +428,53 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
+    function _claimForSpecificWalletId(address client, address beneficiary, uint256 walletId, bool retryForUnclaimableAmounts) internal {
+        uint amount = releasableForSpecificWalletId(client, beneficiary, walletId);
+        vestings[client][beneficiary][walletId]._released += amount;
+
+        if(retryForUnclaimableAmounts && unclaimableAmounts[client][beneficiary] > 0) {
+            amount += unclaimable(client, beneficiary);
+            delete unclaimableAmounts[client][beneficiary];
+        }
+
+        address _token = address(token());
+
+        (bool success, bytes memory data) = _token.call(
+            IERC20(_token).transferFrom.selector,
+            client,
+            beneficiary,
+            amount
+        );
+
+        if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+            emit TokensReleased(beneficiary, _token, amount);
+        } else {
+            // if transfer fails, store amount to unclaimableAmounts.
+            unclaimableAmounts[client][beneficiary] += amount;
+        }
+
+        // @todo decide whether you want to re-check the activeContributor and numWallets and activePayment array accounting here.
+    }
+
     /// @notice Virtual implementation of the vesting formula.
     ///         Returns the amount vested, as a function of time,
     ///         for an asset given its total historical allocation.
     /// @param contributor The contributor to check on.
     /// @param timestamp Current block.timestamp
-    function _vestingSchedule(
+    /// @param walletId ID of a particular contributor's wallet whose vesting schedule needs to be checked
+    function _vestingScheduleForSpecificWalletId(
         address client,
         address contributor,
-        uint timestamp
+        uint timestamp,
+        uint walletId
     ) internal view virtual returns (uint) {
-        uint totalAllocation = vestings[client][contributor]._salary;
-        uint startContributor = start(client, contributor);
-        uint durationContributor = duration(client, contributor);
+        uint totalAllocation = vestings[client][contributor][walletId]._salary;
+        uint startContributor = startForSpecificWalletId(client, contributor, walletId);
+        uint durationContributor = durationForSpecificWalletId(client, contributor, walletId);
 
         if (timestamp < startContributor) {
             return 0;
-        } else if (timestamp > startContributor + durationContributor) { // @audit we can make this >= ,right?
+        } else if (timestamp >= startContributor + durationContributor) {
             return totalAllocation;
         } else {
             return (totalAllocation * (timestamp - startContributor))
