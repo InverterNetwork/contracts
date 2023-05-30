@@ -167,18 +167,21 @@ contract ReocurringPaymentManager is
             ReocurringPayment memory currentPayment =
                 _paymentRegistry[currentId]; //@todo Optimize?
 
-            //Catch up every not triggered epoch
-            while (currentPayment.lastTriggeredEpoch != currentEpoch) {
-                _addPaymentOrder(
-                    currentPayment.target,
-                    currentPayment.amount,
-                    (currentPayment.lastTriggeredEpoch + 1) * epochLength //End of next epoch to the lastTriggeredEpoch is the dueTo Date
-                );
-                currentPayment.lastTriggeredEpoch++;
-            }
-            //When done update the real state of lastTriggeredEpoch
-            _paymentRegistry[currentId].lastTriggeredEpoch == currentEpoch;
+            //check if payment started
+            if (currentPayment.startEpoch <= currentEpoch) {
+                //Catch up every not triggered epoch
+                while (currentPayment.lastTriggeredEpoch != currentEpoch) {
+                    _addPaymentOrder(
+                        currentPayment.target,
+                        currentPayment.amount,
+                        (currentPayment.lastTriggeredEpoch + 1) * epochLength //End of next epoch to the lastTriggeredEpoch is the dueTo Date
+                    );
+                    currentPayment.lastTriggeredEpoch++;
+                }
 
+                //When done update the real state of lastTriggeredEpoch
+                _paymentRegistry[currentId].lastTriggeredEpoch = currentEpoch;
+            }
             //Set to next Id in List
             currentId = _paymentList.list[currentId];
         }
