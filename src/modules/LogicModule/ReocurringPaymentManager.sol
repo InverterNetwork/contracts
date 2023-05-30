@@ -44,6 +44,13 @@ contract ReocurringPaymentManager is
         _;
     }
 
+    modifier validStartEpoch(uint startEpoch) {
+        if (getCurrentEpoch() > startEpoch) {
+            revert Module__ReocurringPaymentManager__InvalidStartEpoch();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
@@ -77,16 +84,25 @@ contract ReocurringPaymentManager is
         //Set empty list of ReocurringPayment
         _paymentList.init();
 
-        //@todo revert if not at least 1 week
         epochLength = abi.decode(configdata, (uint));
+
+        //revert if not at least 1 week
+        if (epochLength < 1 weeks) {
+            revert Module__ReocurringPaymentManager__EpochLengthToShort();
+        }
     }
 
     //--------------------------------------------------------------------------
     // Getter Functions
 
     /// @inheritdoc IReocurringPaymentManager
+    function getEpochLength() external view returns (uint) {
+        return epochLength;
+    }
+
+    /// @inheritdoc IReocurringPaymentManager
     function getReocurringPaymentInformation(uint id)
-        public
+        external
         view
         validId(id)
         returns (ReocurringPayment memory)
@@ -95,7 +111,7 @@ contract ReocurringPaymentManager is
     }
 
     /// @inheritdoc IReocurringPaymentManager
-    function listReocurringPaymentIds() public view returns (uint[] memory) {
+    function listReocurringPaymentIds() external view returns (uint[] memory) {
         return _paymentList.listIds();
     }
 
@@ -109,13 +125,45 @@ contract ReocurringPaymentManager is
     }
 
     //--------------------------------------------------------------------------
+    // Epoch Functions
+
+    /// @inheritdoc IReocurringPaymentManager
+    function getEpochFromTimestamp(uint timestamp)
+        external
+        view
+        returns (uint epoch)
+    {
+        return timestamp / epochLength;
+    }
+
+    /// @inheritdoc IReocurringPaymentManager
+    function getCurrentEpoch() public view returns (uint epoch) {
+        return block.timestamp / epochLength;
+    }
+
+    /// @inheritdoc IReocurringPaymentManager
+    function getFutureEpoch(uint xEpochsInTheFuture)
+        external
+        view
+        returns (uint futureEpoch)
+    {
+        return getCurrentEpoch() + xEpochsInTheFuture;
+    }
+
+    //--------------------------------------------------------------------------
     // Mutating Functions
 
     /// @inheritdoc IReocurringPaymentManager
-    function addReocurringPayment(uint amount, uint startEpoch, address target)
+    function addReocurringPayment(
+        uint amount,
+        uint startEpoch,
+        address recipient
+    )
         external
+        validAmount(amount)
+        validStartEpoch(startEpoch)
+        validRecipient(recipient)
         returns (uint id)
-    //@todo Modifier amount startEpoch
     {
         // Note ids start at 1.
         uint reocurringPaymentId = ++_nextId;
@@ -130,14 +178,14 @@ contract ReocurringPaymentManager is
         _paymentRegistry[reocurringPaymentId].lastTriggeredEpoch =
             startEpoch - 1;
 
-        _paymentRegistry[reocurringPaymentId].target = target;
+        _paymentRegistry[reocurringPaymentId].recipient = recipient;
 
         emit ReocurringPaymentAdded(
             reocurringPaymentId,
             amount,
             startEpoch,
             startEpoch - 1, //lastTriggeredEpoch
-            target
+            recipient
         );
 
         return reocurringPaymentId;
@@ -145,11 +193,11 @@ contract ReocurringPaymentManager is
 
     /// @inheritdoc IReocurringPaymentManager
     function removeReocurringPayment(uint prevId, uint id) external {
-        // Remove ReocurringPayment instance from registry.
-        delete _paymentRegistry[id];
-
         //Remove Id from list
         _paymentList.removeId(prevId, id);
+
+        // Remove ReocurringPayment instance from registry.
+        delete _paymentRegistry[id];
 
         emit ReocurringPaymentRemoved(id);
     }
@@ -160,7 +208,7 @@ contract ReocurringPaymentManager is
         //Get First Position in payment list
         uint currentId = _paymentList.getNextId(_SENTINEL);
 
-        uint currentEpoch = block.timestamp / epochLength;
+        uint currentEpoch = getCurrentEpoch();
 
         //Loop through every element in payment list
         while (currentId != _SENTINEL) {
@@ -172,7 +220,7 @@ contract ReocurringPaymentManager is
                 //Catch up every not triggered epoch
                 while (currentPayment.lastTriggeredEpoch != currentEpoch) {
                     _addPaymentOrder(
-                        currentPayment.target,
+                        currentPayment.recipient,
                         currentPayment.amount,
                         (currentPayment.lastTriggeredEpoch + 1) * epochLength //End of next epoch to the lastTriggeredEpoch is the dueTo Date
                     );
