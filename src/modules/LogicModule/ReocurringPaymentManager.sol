@@ -86,8 +86,8 @@ contract ReocurringPaymentManager is
 
         epochLength = abi.decode(configdata, (uint));
 
-        //revert if not at least 1 week
-        if (epochLength < 1 weeks) {
+        //revert if not at least 1 week and at most a year
+        if (epochLength < 1 weeks && epochLength <= 52 weeks) {
             revert Module__ReocurringPaymentManager__EpochLengthToShort();
         }
     }
