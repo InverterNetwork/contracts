@@ -61,6 +61,11 @@ interface IReocurringPaymentManager {
     /// @return List of ReocurringPayment ids.
     function listReocurringPaymentIds() external view returns (uint[] memory);
 
+    /// @notice Returns the id of previous ReocurringPayment.
+    /// @param id The id of the ReocurringPayment to return.
+    /// @return prevId The id of previous ReocurringPayment.
+    function getPreviousPaymentId(uint id) external view returns (uint prevId) ;
+
     /// @notice Returns whether ReocurringPayment with id `id` exists.
     /// @return True if ReocurringPayment with id `id` exists, false otherwise.
     function isExistingReocurringPaymentId(uint id)
