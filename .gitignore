@@ -10,3 +10,6 @@ coverage/
 
 # Dotenv file
 .env
+
+.DS_Store
+test/.DS_Store
