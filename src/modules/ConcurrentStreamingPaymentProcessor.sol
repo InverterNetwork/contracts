@@ -33,7 +33,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         uint _released;
         uint _start;
         uint _duration;
-        uint _streamingWalletID
+        uint _streamingWalletID;
     }
 
     mapping(address => mapping(address => bool)) public isActiveContributor;
@@ -207,9 +207,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             // handles vesting information
             _removeVestingInformationForSpecificWalletId(address(client), contributor, walletId);
 
-            // handles activePayments and isActiveContributor is required
+            // handles activePayments and isActiveContributor if required
             if(activeContributorPayments[client][contributor].length == 0) {
-                isActive[client][contributor] = false;
+                isActiveContributor[client][contributor] = false;
                 _removeContributorFromActivePayments(client, contributor);
             }
         }
@@ -303,7 +303,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
     function _verifyActiveWalletId(address client, address contributor, uint256 walletId) internal view returns(uint256) {
         uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
-        uint256 contributorWalletsArrayLength = contributorsWalletArray.length;
+        uint256 contributorWalletsArrayLength = contributorWalletsArray.length;
 
         uint index;
         for(index; index < contributorWalletsArrayLength; ) {
@@ -323,7 +323,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         uint256 contributorsLength = contributors.length;
         
         uint index;
-        for (index; i < contributorsLength; ) {
+        for (index; index < contributorsLength; ) {
             _removePayment(client, contributors[index]);
 
             unchecked {
@@ -334,7 +334,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
     function _removePayment(address client, address contributor) internal {
         uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
-        uint256 contributorWalletsArrayLength = contributorsWalletArray.length;
+        uint256 contributorWalletsArrayLength = contributorWalletsArray.length;
 
         uint256 index;
         uint256 startContributor;
@@ -352,8 +352,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
                 _removeVestingInformationForSpecificWalletId(client, contributor, walletId);
 
-                if(activeContributor[client][contributor].length == 0) {
-                    isActive[client][contributor] = false;
+                if(isActiveContributor[client][contributor].length == 0) {
+                    isActiveContributor[client][contributor] = false;
                     _removeContributorFromActivePayments(client, contributor);
                 }
             }
@@ -442,7 +442,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
                 activePayments[client].push(_contributor);
             }
 
-            activeContributorPayments[client][_contributor].push(walletId);
+            activeContributorPayments[client][_contributor].push(_walletId);
 
             emit StreamingPaymentAdded(
                 client, _contributor, _salary, _start, _duration
@@ -452,7 +452,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
     function _claimAll(address client, address contributor) internal {
         uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
-        uint256 contributorWalletsArrayLength = contributorsWalletArray.length;
+        uint256 contributorWalletsArrayLength = contributorWalletsArray.length;
 
         uint256 index;
         for(index; index < contributorWalletsArrayLength; ) {
@@ -502,7 +502,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             // 3. activePayments and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
             //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
             if(activeContributorPayments[client][beneficiary].length == 0) {
-                isActive[client][beneficiary] = false;
+                isActiveContributor[client][beneficiary] = false;
                 _removeContributorFromActivePayments(client, beneficiary);
             }
 
