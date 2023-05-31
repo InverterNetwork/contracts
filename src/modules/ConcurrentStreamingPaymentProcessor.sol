@@ -82,8 +82,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         __Module_init(proposal_, metadata);
     }
 
-    /// @notice Release the releasable tokens.
-    ///         In OZ VestingWallet this method is named release().
+    /// @dev This function should be callable if the _msgSender is either an activeContributor or has some unclaimedAmounts
     function claimAll(IPaymentClient client) external {
         if(!(isActiveContributor[address(client)][_msgSender()] || unclaimable(address(client), _msgSender()) > 0)) {
             revert Module__PaymentClient__NothingToClaim();
@@ -114,13 +113,6 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
-            // @audit-ok
-            // Ok, now, we do not want to over-write the payment orders and want to be able to create new ones.
-            // Let's see how this goes
-            
-            // @audit-ok Remove the LOC that basically force-pays and therefore cancels all the pending open orders.
-            // _cancelRunningOrders(client);
-
             // Collect outstanding orders and their total token amount.
             IPaymentClient.PaymentOrder[] memory orders;
             uint totalAmount;
@@ -143,15 +135,11 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
                 _start = orders[i].createdAt;
                 _duration = (orders[i].dueTo - _start);
 
-                // @audit-ok we can't increase the value of numContributorWallets here, as it is possible that in the next
-                // _addPayment step, this wallet is not actually added. So, we will increment the value of this mapping there only.
-                // And for the same reason we cannot set the isActiveContributor mapping to true here.
-
-                if(isActiveContributor[address(client)][_recipient]) {
-                    _walletId = numContributorWallets[address(client)][_recipient] + 1;
-                } else {
-                    _walletId = 1;
-                }
+                // We can't increase the value of numContributorWallets here, as it is possible that in the next
+                // _addPayment step, this wallet is not actually added. So, we will increment the value of this 
+                // mapping there only, and for the same reason we cannot set the isActiveContributor mapping 
+                // to true here.
+                _walletId = numContributorWallets[address(client)][_recipient] + 1;
 
                 _addPayment(
                     address(client), _recipient, _amount, _start, _duration, _walletId
