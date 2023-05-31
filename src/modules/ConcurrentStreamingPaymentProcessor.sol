@@ -27,50 +27,29 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 
+    // **_streamingWalletID**: Valid values will start from 1. 0 is not a valid streamingWalletID.
     struct StreamingWallet {
         uint _salary;
         uint _released;
         uint _start;
         uint _duration;
-        uint _streamingWalletID //@audit-ok valid values will start from 1. 0 is not a valid streamingWalletID.
+        uint _streamingWalletID
     }
-
-    ////////////////////////////////
-    // START ADDITIONAL CODE
-    ////////////////////////////////
 
     mapping(address => mapping(address => bool)) public isActiveContributor;
     mapping(address => mapping(address => uint256)) public numContributorWallets;
 
-    ////////////////////////////////
-    // END ADDITIONAL CODE
-    ////////////////////////////////
-
-    ////////////////////////////////
-    // START EDITED CODE
-    ////////////////////////////////
-
     // paymentClient => contributor => streamingWalletID => Wallet
     mapping(address => mapping(address => mapping(uint256 => StreamingWallet))) private vestings;
-
-    ////////////////////////////////
-    // END EDITED CODE
-    ////////////////////////////////
 
     // paymentClient => contributor => unclaimableAmount
     mapping(address => mapping(address => uint)) private unclaimableAmounts;
 
-    ////////////////////////////////
-    // START EDITED CODE
-    ////////////////////////////////
     /// @notice list of addresses with open payment Orders per paymentClient
     mapping(address => address[]) private activePayments;
 
     /// @notice client => contributor => arrayOfWalletIdsWithPendingPayment
     mapping(address => mapping(address => uint256[])) private activeContributorPayments;
-    ////////////////////////////////
-    // END EDITED CODE
-    ////////////////////////////////
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -457,7 +436,14 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             vestings[client][_contributor][_walletId] =
                 StreamingWallet(_salary, 0, _start, _duration);
 
-            activePayments[client][_contributor].push(_walletId);
+            // Adding this case since numContributorWallets doesn't decrease, and it is possible that all payment 
+            // orders could have been removed for a particular client<>contributor pair once in the past. 
+            if(findAddressInActivePayments(client, _contributor) != type(uint256).max) {
+                // We do not want activePayments[client] to have duplicate contributor entries
+                activePayments[client].push(_contributor);
+            }
+
+            activeContributorPayments[client][_contributor].push(walletId);
 
             emit StreamingPaymentAdded(
                 client, _contributor, _salary, _start, _duration
