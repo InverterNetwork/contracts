@@ -27,7 +27,13 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev _streamingWalletID: Valid values will start from 1. 0 is not a valid streamingWalletID.
+    /// @notice This struct is used to store the payment order for a particular contributor by a particular payment client
+    /// @dev for _streamingWalletID, valid values will start from 1. 0 is not a valid streamingWalletID.
+    /// @param _salary: The total amount that the contributor should eventually get
+    /// @param _released: The amount that has been claimed by the contributor till now
+    /// @param _start: The start date of the vesting period
+    /// @param _duration: The length of the vesting period
+    /// @param _streamingWalletID: A unique identifier of a wallet for a specific paymentClient and contributor combination
     struct StreamingWallet {
         uint _salary;
         uint _released;
