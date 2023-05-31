@@ -74,18 +74,21 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param duration Timestamp at which the full amount should be claimable.
+    /// @param walletId ID of the payment order that was added
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint start,
-        uint duration
+        uint duration,
+        uint walletId
     );
 
     /// @notice Emitted when the vesting to an address is removed.
     /// @param recipient The address that will stop receiving payment.
+    /// @param walletId ID of the payment order removed
     event StreamingPaymentRemoved(
-        address indexed paymentClient, address indexed recipient
+        address indexed paymentClient, address indexed recipient, uint indexed walletId
     );
 
     /// @notice Emitted when a running vesting schedule gets updated.
@@ -101,6 +104,22 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param duration Number of blocks over which the amount will vest
     event InvalidStreamingOrderDiscarded(
         address indexed recipient, uint amount, uint start, uint duration
+    );
+
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param createdAt Timestamp at which the order was created.
+    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    /// @param walletId ID of the payment order that was processed
+    event PaymentOrderProcessed(
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint createdAt,
+        uint dueTo,
+        uint walletId
     );
 
     //--------------------------------------------------------------------------
@@ -228,7 +247,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
                 );
 
                 emit PaymentOrderProcessed(
-                    address(client), _recipient, _amount, _start, _duration
+                    address(client), _recipient, _amount, _start, _duration, _walletId
                 );
             }
         }
@@ -268,7 +287,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param client The {IPaymentClient} instance from which we will remove the payment
     /// @param contributor address of the contributor whose payment order is to be removed
     /// @param walletId The ID of the contributor's payment order which is to be removed
-    /// @param retryForUnclaimableAmount boolean that determines whether the function would try to return the unclaimableAmounts along
+    /// @param retryForUnclaimableAmounts boolean that determines whether the function would try to return the unclaimableAmounts along
     ///        with the vested amounts from the payment order with id = walletId to the contributor
     function removePaymentForSpecificWalletId(
         IPaymentClient client, 
@@ -477,6 +496,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
                     isActiveContributor[client][contributor] = false;
                     _removeContributorFromActivePayments(client, contributor);
                 }
+
+                emit StreamingPaymentRemoved(client, contributor, walletId);
             }
 
             unchecked {
@@ -582,7 +603,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             activeContributorPayments[client][_contributor].push(_walletId);
 
             emit StreamingPaymentAdded(
-                client, _contributor, _salary, _start, _duration
+                client, _contributor, _salary, _start, _duration, _walletId
             );
         }
     }
@@ -662,6 +683,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
             // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
             // Note Also, we do not need to update numContributorWallets, as claiming completely from a wallet does not affect this mapping.
+
+            emit StreamingPaymentRemoved(client, contributor, walletId);
         }
     }
 
