@@ -383,6 +383,12 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Internal Functions
 
+    /// @notice used to find whether a particular contributor has pending payments with a client
+    /// @dev This function returns the first instance of the contributor address in the activePayments[client] array, but that
+    ///      is completely fine as the activePayments[client] array does not allow duplicates.
+    /// @param client address of the payment client
+    /// @param contributor address of the contributor
+    /// @return the index of the contributor in the activePayments[client] array. Returns type(uint256).max otherwise.
     function _findAddressInActivePayments(address client, address contributor)
         internal
         view
@@ -399,6 +405,13 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return type(uint).max;
     }
 
+    /// @notice used to find whether a particular payment order associated with a contributor and paymentClient with id = walletId is active or not
+    /// @dev active means that the particular payment order is still to be paid out/claimed. This function returns the first instance of the walletId 
+    ///      in the activeContributorPayments[client][contributor] array, but that is fine as the array does not allow duplicates.
+    /// @param client address of the payment client
+    /// @param contributor address of the contributor
+    /// @param walletId ID of the payment order that needs to be searched
+    /// @return the index of the contributor in the activeContributorPayments[client][contributor] array. Returns type(uint256).max otherwise.
     function _verifyActiveWalletId(address client, address contributor, uint256 walletId) internal view returns(uint256) {
         uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
         uint256 contributorWalletsArrayLength = contributorWalletsArray.length;
@@ -416,6 +429,10 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return type(uint256).max;
     } 
 
+    /// @notice used to cancel all unfinished payments from the client
+    /// @dev all active payment orders of all active contributors associated with the client, are iterated through and
+    ///      their details are deleted
+    /// @param client address of the payment client
     function _cancelRunningOrders(address client) internal {
         address[] memory contributors = activePayments[client];
         uint256 contributorsLength = contributors.length;
@@ -430,6 +447,12 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
+    /// @notice Deletes all payments related to a contributor & leaves unvested tokens in the PaymentClient.
+    /// @dev this function calls _removePayment which goes through all the payment orders for a contributor. For the payment orders
+    ///      that are completely vested, their details are deleted in the _claimForSpecificWalletId function and for others it is
+    ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the paymentClient itself.
+    /// @param client address of the payment client
+    /// @param contributor address of the contributor
     function _removePayment(address client, address contributor) internal {
         uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
         uint256 contributorWalletsArrayLength = contributorWalletsArray.length;
@@ -462,7 +485,12 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    // @todo add relevant event emissions
+    /// @notice used to remove the payment order with id = walletId from the activeContributorPayments[client][contributor] array.
+    /// @dev This function simply removes a particular payment order from the earlier mentioned array. The implications of removing a payment order
+    ///      from this array have to be handled outside of this function, such as checking whether the contributor is still active or not, etc.
+    /// @param client Address of the payment client
+    /// @param contributor Address of the contributor
+    /// @param walletId Id of the payment order that needs to be removed
     function _removePaymentForSpecificWalletId(
         address client, 
         address contributor, 
@@ -479,7 +507,12 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         activeContributorPayments[client][contributor].pop();
     }
 
-    // @todo add relevant event emission
+    /// @notice used to remove the vesting info of the payment order with id = walletId.
+    /// @dev This function simply removes the vesting details of a particular payment order. The implications of removing the vesting info of 
+    ///      payment order have to be handled outside of this function.
+    /// @param client Address of the payment client
+    /// @param contributor Address of the contributor
+    /// @param walletId Id of the payment order whose vesting information needs to be removed
     function _removeVestingInformationForSpecificWalletId(
         address client, 
         address contributor, 
@@ -488,7 +521,11 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         delete vestings[client][contributor][walletId];
     }
 
-    // @todo add relevant event emissions
+    /// @notice used to remove a contributor as one of the beneficiaries of the payment client
+    /// @dev this function will be called when all the payment orders of a payment client associated with a particular contributor has been fulfilled.
+    ///      Also signals that the contributor is no longer an active contributor according to the payment client
+    /// @param client address of the payment client
+    /// @param contributor address of the contributor
     function _removeContributorFromActivePayments(
         address client,
         address contributor
@@ -510,6 +547,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Adds a new payment containing the details of the monetary flow
     ///         depending on the module.
+    /// @dev This function can handle multiple payment orders associated with a particular contributor for the same payment client
+    ///      without overriding the earlier ones. The maximum payment orders for a contributor MUST BE capped at (2**256-1).
     /// @param _contributor Contributor's address.
     /// @param _salary Salary contributor will receive per epoch.
     /// @param _start Start vesting timestamp.
@@ -548,6 +587,13 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
+    /// @notice used to claim all the payment orders associated with a particular contributor for a given payment client
+    /// @dev Calls the _claimForSpecificWalletId function for all the active wallets of a particular contributor for the 
+    ///      given payment client. Depending on the time this function is called, the vested payments are transferred to the 
+    ///      contributor or accounted in unclaimableAmounts. 
+    ///      For payment orders that are fully vested, their details are deleted and changes are made to the state of the contract accordingly.
+    /// @param client address of the payment client
+    /// @param contributor address of the contributor for which every payment order will be claimed
     function _claimAll(address client, address contributor) internal {
         uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
         uint256 contributorWalletsArrayLength = contributorWalletsArray.length;
@@ -562,13 +608,21 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    function _claimForSpecificWalletId(address client, address beneficiary, uint256 walletId, bool retryForUnclaimableAmounts) internal {
-        uint amount = releasableForSpecificWalletId(client, beneficiary, walletId);
-        vestings[client][beneficiary][walletId]._released += amount;
+    /// @notice used to claim the payment order of a particular contributor for a given payment client with id = walletId
+    /// @dev Depending on the time this function is called, the vested payments are transferred to the contributor or accounted in unclaimableAmounts. 
+    ///      For payment orders that are fully vested, their details are deleted and changes are made to the state of the contract accordingly.
+    /// @param client address of the payment client
+    /// @param contributor address of the contributor for which every payment order will be claimed
+    /// @param walletId ID of the payment order that is to be claimed
+    /// @param retryForUnclaimableAmounts boolean which determines if the function will try to pay the unclaimable amounts from earlier
+    ///        along with the vested salary from the payment order with id = walletId
+    function _claimForSpecificWalletId(address client, address contributor, uint256 walletId, bool retryForUnclaimableAmounts) internal {
+        uint amount = releasableForSpecificWalletId(client, contributor, walletId);
+        vestings[client][contributor][walletId]._released += amount;
 
-        if(retryForUnclaimableAmounts && unclaimableAmounts[client][beneficiary] > 0) {
-            amount += unclaimable(client, beneficiary);
-            delete unclaimableAmounts[client][beneficiary];
+        if(retryForUnclaimableAmounts && unclaimableAmounts[client][contributor] > 0) {
+            amount += unclaimable(client, contributor);
+            delete unclaimableAmounts[client][contributor];
         }
 
         address _token = address(token());
@@ -577,33 +631,33 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             abi.encodeWithSelector(
                 IERC20(_token).transferFrom.selector,
                 client,
-                beneficiary,
+                contributor,
                 amount
             )
         );
 
         if (success && (data.length == 0 || abi.decode(data, (bool)))) {
-            emit TokensReleased(beneficiary, _token, amount);
+            emit TokensReleased(contributor, _token, amount);
         } else {
-            unclaimableAmounts[client][beneficiary] += amount;
+            unclaimableAmounts[client][contributor] += amount;
         }
 
-        uint startContributor = startForSpecificWalletId(client, beneficiary, walletId);
-        uint durationContributor = durationForSpecificWalletId(client, beneficiary, walletId);
+        uint startContributor = startForSpecificWalletId(client, contributor, walletId);
+        uint durationContributor = durationForSpecificWalletId(client, contributor, walletId);
 
         // This if conditional block represents that nothing more remains to be vested from the specific walletId
         if(block.timestamp >= startContributor + durationContributor) {
             // 1. remove walletId from the activeContributorPayments mapping
-            _removePaymentForSpecificWalletId(client, beneficiary, walletId);
+            _removePaymentForSpecificWalletId(client, contributor, walletId);
 
             // 2. delete the vesting information for this specific walletId
-            _removeVestingInformationForSpecificWalletId(client, beneficiary, walletId);
+            _removeVestingInformationForSpecificWalletId(client, contributor, walletId);
 
             // 3. activePayments and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
             //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
-            if(activeContributorPayments[client][beneficiary].length == 0) {
-                isActiveContributor[client][beneficiary] = false;
-                _removeContributorFromActivePayments(client, beneficiary);
+            if(activeContributorPayments[client][contributor].length == 0) {
+                isActiveContributor[client][contributor] = false;
+                _removeContributorFromActivePayments(client, contributor);
             }
 
             // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
@@ -650,6 +704,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return true;
     }
 
+    /// @notice validate uint salary input.
+    /// @param _salary uint to validate.
+    /// @return True if uint is valid.
     function validSalary(uint _salary) internal pure returns (bool) {
         if (_salary == 0) {
             return false;
@@ -657,6 +714,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return true;
     }
 
+    /// @notice validate uint start input.
+    /// @param _start uint to validate.
+    /// @return True if uint is valid.
     function validStart(uint _start) internal view returns (bool) {
         if (_start < block.timestamp || _start >= type(uint).max) {
             return false;
@@ -664,6 +724,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return true;
     }
 
+    /// @notice validate uint duration input.
+    /// @param _duration uint to validate.
+    /// @return True if duration is valid.
     function validDuration(uint _duration) internal pure returns (bool) {
         if (_duration == 0) {
             return false;
