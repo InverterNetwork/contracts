@@ -52,6 +52,57 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     mapping(address => mapping(address => uint256[])) private activeContributorPayments;
 
     //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param duration Timestamp at which the full amount should be claimable.
+    event StreamingPaymentAdded(
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint start,
+        uint duration
+    );
+
+    /// @notice Emitted when the vesting to an address is removed.
+    /// @param recipient The address that will stop receiving payment.
+    event StreamingPaymentRemoved(
+        address indexed paymentClient, address indexed recipient
+    );
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param newSalary The new amount of tokens the payment consists of.
+    /// @param newDuration Number of blocks over which the amount will vest.
+    event PaymentUpdated(address recipient, uint newSalary, uint newDuration);
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param duration Number of blocks over which the amount will vest
+    event InvalidStreamingOrderDiscarded(
+        address indexed recipient, uint amount, uint start, uint duration
+    );
+
+    //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice insufficient tokens in the client to do payments
+    error Module__PaymentManager__InsufficientTokenBalanceInClient();
+
+    error Module__PaymentManager__NothingToClaim();
+
+    error Module__PaymentManager__InvalidWallet();
+
+    error Module__PaymentManager__InactiveWallet();
+
+    error Module__PaymentManager__InvalidContributor();
+
+    //--------------------------------------------------------------------------
     // Modifiers
 
     /// @notice checks that the caller is an active module
@@ -85,7 +136,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @dev This function should be callable if the _msgSender is either an activeContributor or has some unclaimedAmounts
     function claimAll(IPaymentClient client) external {
         if(!(isActiveContributor[address(client)][_msgSender()] || unclaimable(address(client), _msgSender()) > 0)) {
-            revert Module__PaymentClient__NothingToClaim();
+            revert Module__PaymentManager__NothingToClaim();
         }
 
         _claimAll(address(client), _msgSender());
@@ -169,12 +220,12 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         onlyAuthorized
     {
         if(_findAddressInActivePayments(address(client), contributor) == type(uint256).max) {
-            revert Module__PaymentClient__InvalidContributor();
+            revert Module__PaymentManager__InvalidContributor();
         }
         _removePayment(address(client), contributor);
     }
 
-    /// @todo add relevant event emissions
+    // @todo add relevant event emissions
     function removePaymentForSpecificWalletId(
         IPaymentClient client, 
         address contributor, 
@@ -364,7 +415,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    /// @todo add relevant event emissions
+    // @todo add relevant event emissions
     function _removePaymentForSpecificWalletId(
         address client, 
         address contributor, 
@@ -381,7 +432,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         activeContributorPayments[client][contributor].pop();
     }
 
-    /// @todo add relevant event emission
+    // @todo add relevant event emission
     function _removeVestingInformationForSpecificWalletId(
         address client, 
         address contributor, 
@@ -390,7 +441,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         delete vestings[client][contributor][walletId];
     }
 
-    /// @todo add relevant event emissions
+    // @todo add relevant event emissions
     function _removeContributorFromActivePayments(
         address client,
         address contributor
@@ -399,7 +450,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         uint contributorIndex = _findAddressInActivePayments(client, contributor);
 
         if(contributorIndex == type(uint256).max) {
-            revert Module__PaymentClient__InvalidContributor();
+            revert Module__PaymentManager__InvalidContributor();
         }
 
         // Replace the element to be deleted with the last element of the array
