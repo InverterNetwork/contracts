@@ -2,7 +2,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {Proposal} from "../src/proposal/Proposal.sol";
+import {Proposal} from "src/proposal/Proposal.sol";
 
  /**
   * @title Proposal Deployment Script

@@ -2,7 +2,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {ModuleFactory} from "../src/factories/ModuleFactory.sol";
+import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 
  /**
   * @title ModuleFactory Deployment Script
