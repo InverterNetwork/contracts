@@ -94,13 +94,17 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice insufficient tokens in the client to do payments
     error Module__PaymentManager__InsufficientTokenBalanceInClient();
 
-    error Module__PaymentManager__NothingToClaim();
+    /// @notice the contributor is not owed any money by the paymentClient
+    error Module__PaymentManager__NothingToClaim(address paymentClient, address contributor);
 
-    error Module__PaymentManager__InvalidWallet();
+    /// @notice contributor's walletId for the paymentClient is not valid 
+    error Module__PaymentManager__InvalidWallet(address paymentClient, address contributor, uint256 walletId);
 
-    error Module__PaymentManager__InactiveWallet();
+    /// @notice contributor's walletId for the paymentClient is no longer active
+    error Module__PaymentManager__InactiveWallet(address paymentClient, address contributor, uint256 walletId);
 
-    error Module__PaymentManager__InvalidContributor();
+    /// @notice the contributor for the given paymentClient does not exist (anymore)
+    error Module__PaymentManager__InvalidContributor(address paymentClient, address contributor);
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -136,7 +140,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @dev This function should be callable if the _msgSender is either an activeContributor or has some unclaimedAmounts
     function claimAll(IPaymentClient client) external {
         if(!(isActiveContributor[address(client)][_msgSender()] || unclaimable(address(client), _msgSender()) > 0)) {
-            revert Module__PaymentManager__NothingToClaim();
+            revert Module__PaymentManager__NothingToClaim(address(client), _msgSender());
         }
 
         _claimAll(address(client), _msgSender());
@@ -146,11 +150,11 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     ///      of the contributor, and the amount would no longer hold any co-relation with the specific walletId of the contributor.
     function claimForSpecificWalletId(IPaymentClient client, uint256 walletId, bool retryForUnclaimableAmounts) external {
         if(!isActiveContributor[address(client)][_msgSender()] || (walletId > numContributorWallets[address(client)][_msgSender()])) {
-            revert Module__PaymentManager__InvalidWallet();
+            revert Module__PaymentManager__InvalidWallet(address(client), _msgSender(), walletId);
         }
 
         if(_verifyActiveWalletId(address(client), _msgSender(), walletId) == type(uint256).max) {
-            revert Module__PaymentManager__InactiveWallet();
+            revert Module__PaymentManager__InactiveWallet(address(client), _msgSender(), walletId);
         }
 
         _claimForSpecificWalletId(address(client), _msgSender(), walletId, retryForUnclaimableAmounts);
@@ -220,7 +224,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         onlyAuthorized
     {
         if(_findAddressInActivePayments(address(client), contributor) == type(uint256).max) {
-            revert Module__PaymentManager__InvalidContributor();
+            revert Module__PaymentManager__InvalidContributor(address(client), contributor);
         }
         _removePayment(address(client), contributor);
     }
@@ -424,7 +428,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         uint256 walletIdIndex = _verifyActiveWalletId(client, contributor, walletId);
 
         if(walletIdIndex == type(uint256).max) {
-            revert Module__PaymentManager__InactiveWallet();
+            revert Module__PaymentManager__InactiveWallet(address(client), _msgSender(), walletId);
         }
 
         activeContributorPayments[client][contributor][walletIdIndex] = activeContributorPayments[client][contributor][activeContributorPayments[client][contributor].length - 1];
@@ -450,7 +454,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         uint contributorIndex = _findAddressInActivePayments(client, contributor);
 
         if(contributorIndex == type(uint256).max) {
-            revert Module__PaymentManager__InvalidContributor();
+            revert Module__PaymentManager__InvalidContributor(client, contributor);
         }
 
         // Replace the element to be deleted with the last element of the array
