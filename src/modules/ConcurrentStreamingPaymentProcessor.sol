@@ -205,9 +205,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             _removeVestingInformationForSpecificWalletId(address(client), contributor, walletId);
 
             // handles activePayments and isActiveContributor is required
-            if(activeContributorPayments[client][beneficiary].length == 0) {
-                isActive[client][beneficiary] = false;
-                _removeContributorFromActivePayments(client, beneficiary);
+            if(activeContributorPayments[client][contributor].length == 0) {
+                isActive[client][contributor] = false;
+                _removeContributorFromActivePayments(client, contributor);
             }
         }
     }
@@ -329,25 +329,35 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     function _removePayment(address client, address contributor) internal {
-        //we claim the earned funds for the contributor.
-        _claim(client, contributor); 
+        uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
+        uint256 contributorWalletsArrayLength = contributorsWalletArray.length;
 
-        //we remove the payment from the activePayments array
-        uint contribIndex = findAddressInActivePayments(client, contributor);
+        uint256 index;
+        uint256 startContributor;
+        uint256 durationContributor;
+        uint256 walletId;
+        for(index; index < contributorWalletsArrayLength; ) {
+            walletId = contributorWalletsArray[index];
+            _claimForSpecificWalletId(client, contributor, walletId, true);
 
-        if (contribIndex != type(uint).max) {
-            // Move the last element into the place to delete
-            activePayments[client][contribIndex] =
-                activePayments[client][activePayments[client].length - 1];
-            // Remove the last element
-            activePayments[client].pop();
+            startContributor = startForSpecificWalletId(client, contributor, walletId);
+            durationContributor = durationForSpecificWalletId(client, contributor, walletId);
 
-            delete vestings[client][contributor];
+            if(block.timestamp < startContributor + durationContributor) {
+                _removePaymentForSpecificWalletId(client, contributor, walletId);
 
-            emit StreamingPaymentRemoved(client, contributor);
+                _removeVestingInformationForSpecificWalletId(client, contributor, walletId);
+
+                if(activeContributor[client][contributor].length == 0) {
+                    isActive[client][contributor] = false;
+                    _removeContributorFromActivePayments(client, contributor);
+                }
+            }
+
+            unchecked {
+                ++index;
+            }
         }
-
-        /// Note that all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
     }
 
     /// @todo add relevant event emissions
@@ -379,8 +389,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @todo add relevant event emissions
     function _removeContributorFromActivePayments(
         address client,
-        address contributor, 
-        uint256 walletId
+        address contributor
     ) internal {
         // Find the contributor's index in the array of activePayments mapping.
         uint contributorIndex = findAddressInActivePayments(client, contributor);
