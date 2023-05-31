@@ -85,7 +85,11 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice Release the releasable tokens.
     ///         In OZ VestingWallet this method is named release().
     function claimAll(IPaymentClient client) external {
-        _claim(address(client), _msgSender());
+        if(!(isActiveContributor[address(client)][_msgSender()] || unclaimable(address(client), _msgSender()) > 0)) {
+            revert Module__PaymentClient__NothingToClaim();
+        }
+
+        _claimAll(address(client), _msgSender());
     }
 
     /// @dev If for a specific walletId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
@@ -451,31 +455,17 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    function _claimAll(address client, address beneficiary) internal {
-        uint amount = releasable(client, beneficiary);
-        vestings[client][beneficiary]._released += amount;
+    function _claimAll(address client, address contributor) internal {
+        uint256[] memory contributorWalletsArray = activeContributorPayments[client][contributor];
+        uint256 contributorWalletsArrayLength = contributorsWalletArray.length;
 
-        //if beneficiary has unclaimable tokens from before, add it to releasable amount
-        if (unclaimableAmounts[client][beneficiary] > 0) {
-            amount += unclaimable(client, beneficiary);
-            delete unclaimableAmounts[client][beneficiary];
-        }
-
-        // we claim the earned funds for the contributor.
-        address _token = address(token());
-        (bool success, bytes memory data) = address(_token).call(
-            abi.encodeWithSelector(
-                IERC20(_token).transferFrom.selector,
-                client,
-                beneficiary,
-                amount
-            )
-        );
-        if (success && (data.length == 0 || abi.decode(data, (bool)))) {
-            emit TokensReleased(beneficiary, _token, amount);
-        } else {
-            // if transfer fails, store amount to unclaimableAmounts.
-            unclaimableAmounts[client][beneficiary] += amount;
+        uint256 index;
+        for(index; index < contributorWalletsArrayLength; ) {
+            _claimForSpecificWalletId(client, contributor, contributorWalletsArray[index], true);
+            
+            unchecked {
+                ++index;
+            }
         }
     }
 
