@@ -128,7 +128,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         _claim(address(client), _msgSender());
     }
 
-    // @todo add a function `claimFromSpecificId`
+    /// @dev If for a specific walletId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
+    ///      of the contributor, and the amount would no longer hold any co-relation with the specific walletId of the contributor.
     function claimForSpecificWalletId(IPaymentClient client, uint256 walletId, bool retryForUnclaimableAmounts) external {
         if(!isActiveContributor[address(client)][_msgSender()] || (walletId > numContributorWallets[address(client)][_msgSender()])) {
             revert Module__PaymentManager__InvalidWallet();
@@ -362,6 +363,53 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         /// Note that all unvested funds remain in the PaymentClient, where they will be accounted for in future payment orders.
     }
 
+    /// @todo add relevant event emissions
+    function _removePaymentForSpecificWalletId(
+        address client, 
+        address contributor, 
+        uint256 walletId
+    ) internal {
+        uint256 walletIdIndex = _verifyActiveWalletId(client, contributor, walletId);
+
+        if(walletIdIndex == type(uint256).max) {
+            revert Module__PaymentManager__InactiveWallet();
+        }
+
+        activeContributorPayments[client][contributor][walletIdIndex] = activeContributorPayments[client][contributor][activeContributorPayments[client][contributor].length - 1];
+
+        activeContributorPayments[client][contributor].pop();
+    }
+
+    /// @todo add relevant event emission
+    function _removeVestingInformationForSpecificWalletId(
+        address client, 
+        address contributor, 
+        uint256 walletId
+    ) internal  {
+        delete vestings[client][contributor][walletId];
+    }
+
+    /// @todo add relevant event emissions
+    function _removeContributorFromActivePayments(
+        address client,
+        address contributor, 
+        uint256 walletId
+    ) internal {
+        // Find the contributor's index in the array of activePayments mapping.
+        uint contributorIndex = findAddressInActivePayments(client, contributor);
+
+        if(contributorIndex == type(uint256).max) {
+            revert Module__PaymentClient__InvalidContributor();
+        }
+
+        // Replace the element to be deleted with the last element of the array
+        uint256 contributorsLength = activePayments[client].length; 
+        activePayments[client][contributorIndex] = activePayments[client][contributorsLength - 1];
+
+        // pop the last element of the array
+        activePayments[client].pop();
+    }
+
     /// @notice Adds a new payment containing the details of the monetary flow
     ///         depending on the module.
     /// @param _contributor Contributor's address.
@@ -449,11 +497,30 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         if (success && (data.length == 0 || abi.decode(data, (bool)))) {
             emit TokensReleased(beneficiary, _token, amount);
         } else {
-            // if transfer fails, store amount to unclaimableAmounts.
             unclaimableAmounts[client][beneficiary] += amount;
         }
 
-        // @todo decide whether you want to re-check the activeContributor and numWallets and activePayment array accounting here.
+        uint startContributor = startForSpecificWalletId(client, beneficiary, walletId);
+        uint durationContributor = durationForSpecificWalletId(client, beneficiary, walletId);
+
+        // This if conditional block represents that nothing more remains to be vested from the specific walletId
+        if(block.timestamp >= startContributor + durationContributor) {
+            // 1. remove walletId from the activeContributorPayments mapping
+            _removePaymentForSpecificWalletId(client, beneficiary, walletId);
+
+            // 2. delete the vesting information for this specific walletId
+            _removeVestingInformationForSpecificWalletId(client, beneficiary, walletId);
+
+            // 3. activePayments and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
+            //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
+            if(activeContributorPayments[client][beneficiary].length == 0) {
+                isActive[client][beneficiary] = false;
+                _removeContributorFromActivePayments(client, beneficiary);
+            }
+
+            // @Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
+            // @Note Also, we do not need to update numContributorWallets, as claiming completely from a wallet does not affect this mapping.
+        }
     }
 
     /// @notice Virtual implementation of the vesting formula.
