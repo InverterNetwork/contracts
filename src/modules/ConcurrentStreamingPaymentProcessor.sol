@@ -219,6 +219,47 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         _removePayment(address(client), contributor);
     }
 
+    /// @todo add relevant event emissions
+    function removePaymentForSpecificWalletId(
+        IPaymentClient client, 
+        address contributor, 
+        uint256 walletId,
+        bool retryForUnclaimableAmounts
+    ) external onlyAuthorized {
+        // We need to make sure that this function updates these following storage variables
+        // 1. activePayments               [X]
+        // 2. activeContributorPayments    [X]
+        // 3. unclaimableAmounts           [X]
+        // 4. vestings                     [X]
+        // 5. isActiveContributor          [X]
+        // 6. numContributorWallets        ~NA~
+
+        // First, we **claim** the vested funds from this specific walletId
+        _claimForSpecificWalletId(address(client), contributor, walletId, retryForUnclaimableAmounts);
+        // This function will take care of: unclaimableAmounts
+
+        // And in the case that the current block.timestamp >= vesting timestamp of walletId, then the following are also taken care of:
+        // activePayments, activeContributorPayments, vestings, isActiveContributor, numContributorWallets
+
+        // So, we need to check when this function was called to determine if we need to modify the other mappings or not
+        uint startContributor = startForSpecificWalletId(client, contributor, walletId);
+        uint durationContributor = durationForSpecificWalletId(client, contributor, walletId);
+
+        if(block.timestamp < startContributor + durationContributor) {
+            // handles activeContributorPayments
+            _removePaymentForSpecificWalletId(address(client), contributor, walletId);
+
+            // handles vesting information
+            _removeVestingInformationForSpecificWalletId(address(client), contributor, walletId);
+
+            // handles activePayments and isActiveContributor is required
+            if(activeContributorPayments[client][beneficiary].length == 0) {
+                isActive[client][beneficiary] = false;
+                _removeContributorFromActivePayments(client, beneficiary);
+            }
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Public Functions
 
@@ -341,13 +382,11 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
     function _removePayment(address client, address contributor) internal {
         //we claim the earned funds for the contributor.
-        _claim(client, contributor); //@note try to force pay the pending payment to the contributors
+        _claim(client, contributor); 
 
         //we remove the payment from the activePayments array
         uint contribIndex = findAddressInActivePayments(client, contributor);
 
-        // @audit Shouldn't we first try and find the contributor in the activePayments array,
-        // and only once we find it, then we should go ahead and call _claim, right? atleast would save a bit of gas.
         if (contribIndex != type(uint).max) {
             // Move the last element into the place to delete
             activePayments[client][contribIndex] =
