@@ -232,7 +232,10 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    /// @inheritdoc IPaymentProcessor
+    /// @notice Cancels all unfinished payments from an {IPaymentClient} instance.
+    /// @dev this function will try to force-pay the contributors for the salary that has been vested upto the point,
+    ///      this function was called. Either the salary goes to the contributor or gets accounted in unclaimableAmounts
+    /// @param client The {IPaymentClient} instance for which all unfinished payments will be cancelled.
     function cancelRunningPayments(IPaymentClient client)
         external
         onlyModule
@@ -241,8 +244,11 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         _cancelRunningOrders(address(client));
     }
 
-    /// @notice Deletes a contributors payment and leaves non-released tokens
-    ///         in the PaymentClient.
+    /// @notice Deletes all payments related to a contributor & leaves unvested tokens in the PaymentClient.
+    /// @dev this function calls _removePayment which goes through all the payment orders for a contributor. For the payment orders
+    ///      that are completely vested, their details are deleted in the _claimForSpecificWalletId function and for others it is
+    ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the paymentClient itself.
+    /// @param client The {IPaymentClient} instance from which we will remove the payments
     /// @param contributor Contributor's address.
     function removePayment(IPaymentClient client, address contributor)
         external
@@ -254,40 +260,35 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         _removePayment(address(client), contributor);
     }
 
-    // @todo add relevant event emissions
+    /// @notice Deletes a specific payment with id = walletId for a contributor & leaves unvested tokens in the PaymentClient.
+    /// @dev the detail of the wallet that is being removed is either deleted in the _claimForSpecificWalletId or later down in this
+    ///      function itself depending on the timestamp of when this function was called
+    /// @param client The {IPaymentClient} instance from which we will remove the payment
+    /// @param contributor address of the contributor whose payment order is to be removed
+    /// @param walletId The ID of the contributor's payment order which is to be removed
+    /// @param retryForUnclaimableAmount boolean that determines whether the function would try to return the unclaimableAmounts along
+    ///        with the vested amounts from the payment order with id = walletId to the contributor
     function removePaymentForSpecificWalletId(
         IPaymentClient client, 
         address contributor, 
         uint256 walletId,
         bool retryForUnclaimableAmounts
     ) external onlyAuthorized {
-        // We need to make sure that this function updates these following storage variables
-        // 1. activePayments               [X]
-        // 2. activeContributorPayments    [X]
-        // 3. unclaimableAmounts           [X]
-        // 4. vestings                     [X]
-        // 5. isActiveContributor          [X]
-        // 6. numContributorWallets        ~NA~
-
         // First, we **claim** the vested funds from this specific walletId
         _claimForSpecificWalletId(address(client), contributor, walletId, retryForUnclaimableAmounts);
-        // This function will take care of: unclaimableAmounts
 
-        // And in the case that the current block.timestamp >= vesting timestamp of walletId, then the following are also taken care of:
-        // activePayments, activeContributorPayments, vestings, isActiveContributor, numContributorWallets
-
-        // So, we need to check when this function was called to determine if we need to modify the other mappings or not
+        // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
         uint startContributor = startForSpecificWalletId(address(client), contributor, walletId);
         uint durationContributor = durationForSpecificWalletId(address(client), contributor, walletId);
 
         if(block.timestamp < startContributor + durationContributor) {
-            // handles activeContributorPayments
+            // deletes activeContributorPayments
             _removePaymentForSpecificWalletId(address(client), contributor, walletId);
 
-            // handles vesting information
+            // deletes vesting information
             _removeVestingInformationForSpecificWalletId(address(client), contributor, walletId);
 
-            // handles activePayments and isActiveContributor if required
+            // deletes activePayments & isActiveContributor if it was the contributor's last paymentOrder
             if(activeContributorPayments[address(client)][contributor].length == 0) {
                 isActiveContributor[address(client)][contributor] = false;
                 _removeContributorFromActivePayments(address(client), contributor);
