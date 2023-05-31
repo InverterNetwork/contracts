@@ -116,6 +116,11 @@ contract ReocurringPaymentManager is
     }
 
     /// @inheritdoc IReocurringPaymentManager
+    function getPreviousPaymentId(uint id) external view returns (uint) {
+        return _paymentList.getPreviousId(id);
+    }
+
+    /// @inheritdoc IReocurringPaymentManager
     function isExistingReocurringPaymentId(uint id)
         public
         view
@@ -160,6 +165,7 @@ contract ReocurringPaymentManager is
         address recipient
     )
         external
+        onlyAuthorizedOrManager
         validAmount(amount)
         validStartEpoch(startEpoch)
         validRecipient(recipient)
@@ -192,7 +198,10 @@ contract ReocurringPaymentManager is
     }
 
     /// @inheritdoc IReocurringPaymentManager
-    function removeReocurringPayment(uint prevId, uint id) external {
+    function removeReocurringPayment(uint prevId, uint id)
+        external
+        onlyAuthorizedOrManager
+    {
         //Remove Id from list
         _paymentList.removeId(prevId, id);
 
