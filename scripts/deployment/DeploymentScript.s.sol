@@ -14,10 +14,10 @@ import {ProposalFactory, IProposalFactory} from "src/factories/ProposalFactory.s
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 
 contract DeploymentScript is Script {
-    address deployer = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    address paymentProcessorBeaconOwner = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-    address milestoneManagerBeaconOwner = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
-    address authorizerBeaconOwner = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
+    address deployer = vm.envUint("PROPOSAL_OWNER_ADDRESS");
+    address paymentProcessorBeaconOwner = vm.envUint("PPBO_ADDRESS");
+    address milestoneManagerBeaconOwner = vm.envUint("MMBO_ADDRESS");
+    address authorizerBeaconOwner = vm.envUint("ABO_ADDRESS");
 
     address[] authorizerAddresses=[address(0xBEEF)];
 
@@ -44,7 +44,7 @@ contract DeploymentScript is Script {
     IModule.Metadata authorizerMetadata = IModule.Metadata(1, 1, "https://github.com/inverter/authorizer", "Authorizer");
     IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory.ModuleConfig(authorizerMetadata, abi.encode(authorizerAddresses));
 
-    uint256 deployerPrivateKey = vm.envUint("ANVIL_PRIVATE_KEY");
+    uint256 deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
     uint256 paymentProcessorBeaconOwnerPrivateKey = vm.envUint("PPBO_PRIVATE_KEY");
     uint256 milestoneManagerBeaconOwnerPrivateKey = vm.envUint("MMBO_PRIVATE_KEY");
     uint256 authorizerBeaconOwnerPrivateKey = vm.envUint("ABO_PRIVATE_KEY");
@@ -80,28 +80,34 @@ contract DeploymentScript is Script {
         vm.stopBroadcast();
 
         // Let us set beacon's implementations.
-        vm.prank(paymentProcessorBeaconOwner);
+        vm.startBroadcast(paymentProcessorBeaconOwner);
         paymentProcessorBeacon.upgradeTo(address(simplePaymentProcessor));
+        vm.stopBroadcast();
         
-        vm.prank(milestoneManagerBeaconOwner);
+        vm.startBroadcast(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManager));
+        vm.stopBroadcast();
         
-        vm.prank(authorizerBeaconOwner);
+        vm.startBroadcast(authorizerBeaconOwner);
         authorizerBeacon.upgradeTo(address(authorizer));
+        vm.stopBroadcast();
 
         // Register modules at moduleFactory.
-        vm.startPrank(deployer);
+        vm.startBroadcast(deployer);
         moduleFactory.registerMetadata(paymentProcessorMetadata, IBeacon(paymentProcessorBeacon));
         moduleFactory.registerMetadata(milestoneManagerMetadata, IBeacon(milestoneManagerBeacon));
         moduleFactory.registerMetadata(authorizerMetadata, IBeacon(authorizerBeacon));
-        vm.stopPrank();
+        vm.stopBroadcast();
 
         // Logging the deployed addresses
-        console2.log("Proposal Contract Deployed at: ", address(proposal));
-        console2.log("Simple Payment Processor Contract Deployed at: ", address(simplePaymentProcessor));
-        console2.log("Milestone Manager Contract Deployed at: ", address(milestoneManager));
+        console2.log("Proposal Implemntation Contract Deployed at: ", address(proposal));
+        console2.log("Simple Payment Processor Implementation Contract Deployed at: ", address(simplePaymentProcessor));
+        console2.log("Milestone Manager Implementation Contract Deployed at: ", address(milestoneManager));
+        console2.log("List Authorizer Implementation Contract Deployed at: ", address(authorizer));
         console2.log("Payment Processor Beacon Deployed at: ", address(paymentProcessorBeacon));
         console2.log("Milestone Manager Beacon Deployed at: ", address(milestoneManagerBeacon));
         console2.log("List Authorizer Beacon Deployed at: ", address(authorizerBeacon));
+        console2.log("Proposal Factory Deployed at: ", address(proposalFactory));
+        console2.log("Module Factory Deployed at: ", address(moduleFactory));
     }
 }

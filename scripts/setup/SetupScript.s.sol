@@ -33,7 +33,7 @@ contract SetupScript is Test, Script, DeploymentScript {
     address funder1 = address(0xF1);
     address funder2 = address(0xF2);
 
-    address proposalOwner = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
+    address proposalOwner = vm.envUint("PROPOSAL_OWNER_ADDRESS");
     uint256 proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
 
     function run() public override {
@@ -57,14 +57,14 @@ contract SetupScript is Test, Script, DeploymentScript {
         IProposalFactory.ModuleConfig[] memory optionalModules = new IProposalFactory.ModuleConfig[](1);
         optionalModules[0] = milestoneManagerFactoryConfig;
 
-        vm.startPrank(proposalOwner);
+        vm.startBroadcast(proposalOwnerPrivateKey);
         test_proposal = proposalFactory.createProposal(
                                             proposalConfig,
                                             authorizerFactoryConfig,
                                             paymentProcessorFactoryConfig,
                                             optionalModules
                                         );
-        vm.stopPrank();
+        vm.stopBroadcast();
 
         console2.log("Proposal Contract", address(test_proposal));
         assert(address(test_proposal) != address(0));
@@ -97,7 +97,7 @@ contract SetupScript is Test, Script, DeploymentScript {
         contributors.push(alice);
         contributors.push(bob);
 
-        vm.startPrank(address(proposalOwner));
+        vm.startBroadcast(proposalOwnerPrivateKey);
         proposalCreatedMilestoneManager.addMilestone(
             1 weeks,
             1000e18,
@@ -122,7 +122,7 @@ contract SetupScript is Test, Script, DeploymentScript {
         token.approve(address(test_proposal), initialDeposit);
         test_proposal.deposit(initialDeposit);
 
-        vm.stopPrank();
+        vm.stopBroadcast();
 
         // Let's confirm whether the milestone was added or not.
         // milestoneId 1 should exist and 0 shouldn't, since IDs start from 1.
@@ -134,14 +134,17 @@ contract SetupScript is Test, Script, DeploymentScript {
 
         // Seeing this great working on the proposal, funder1 decides to fund
         // the proposal with 1k of tokens.
-        token.mint(funder1, 1000e18);
+        
+        vm.startBroadcast(deployerPrivateKey);
+        token.mint(proposalOwner, 1000e18);
+        vm.stopBroadcast();
 
-        vm.startPrank(funder1);
+        vm.startBroadcast(deployerPrivateKey);
         {
             token.approve(address(test_proposal), 1000e18);
             test_proposal.deposit(1000e18);
         }
-        vm.stopPrank();
+        vm.stopBroadcast();
     }
 
 }
