@@ -158,7 +158,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         onlyModule
         validClient(client)
     {
-        _cancelRunningOrders(client);
+        _cancelRunningOrders(address(client));
     }
 
     /// @notice Deletes a contributors payment and leaves non-released tokens
@@ -168,6 +168,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         external
         onlyAuthorized
     {
+        if(_findAddressInActivePayments(address(client), contributor) == type(uint256).max) {
+            revert Module__PaymentClient__InvalidContributor();
+        }
         _removePayment(address(client), contributor);
     }
 
@@ -282,7 +285,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function findAddressInActivePayments(address client, address contributor)
+    function _findAddressInActivePayments(address client, address contributor)
         internal
         view
         returns (uint)
@@ -315,16 +318,17 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return type(uint256).max;
     } 
 
-    function _cancelRunningOrders(IPaymentClient client) internal {
-        //IPaymentClient.PaymentOrder[] memory orders;
-        //orders = client.paymentOrders();
-        address[] memory _activePayments = activePayments[address(client)];
+    function _cancelRunningOrders(address client) internal {
+        address[] memory contributors = activePayments[client];
+        uint256 contributorsLength = contributors.length;
+        
+        uint index;
+        for (index; i < contributorsLength; ) {
+            _removePayment(client, contributors[index]);
 
-        address _recipient;
-        for (uint i; i < _activePayments.length; ++i) {
-            _recipient = _activePayments[i];
-
-            _removePayment(address(client), _recipient);
+            unchecked {
+                ++index;
+            }
         }
     }
 
@@ -392,7 +396,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         address contributor
     ) internal {
         // Find the contributor's index in the array of activePayments mapping.
-        uint contributorIndex = findAddressInActivePayments(client, contributor);
+        uint contributorIndex = _findAddressInActivePayments(client, contributor);
 
         if(contributorIndex == type(uint256).max) {
             revert Module__PaymentClient__InvalidContributor();
@@ -434,7 +438,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
             // We do not want activePayments[client] to have duplicate contributor entries
             // So we avoid pushing the _contributor to activePayments[client] if it already exists
-            if(findAddressInActivePayments(client, _contributor) == type(uint256).max) {
+            if(_findAddressInActivePayments(client, _contributor) == type(uint256).max) {
                 activePayments[client].push(_contributor);
             }
 
