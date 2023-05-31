@@ -182,7 +182,10 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         _claimForSpecificWalletId(address(client), _msgSender(), walletId, retryForUnclaimableAmounts);
     }
 
-    /// @inheritdoc IPaymentProcessor
+    /// @notice processes all payments from an {IPaymentClient} instance.
+    /// @dev in the concurrentStreamingPaymentProcessor, a payment client can have multiple payment orders for the same
+    ///      contributor and they will be processed separately without being overwritten by this function
+    /// @param client The {IPaymentClient} instance to process its to payments.
     function processPayments(IPaymentClient client)
         external
         onlyModule
