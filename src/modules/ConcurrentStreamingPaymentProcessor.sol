@@ -27,7 +27,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 
-    // **_streamingWalletID**: Valid values will start from 1. 0 is not a valid streamingWalletID.
+    /// @dev _streamingWalletID: Valid values will start from 1. 0 is not a valid streamingWalletID.
     struct StreamingWallet {
         uint _salary;
         uint _released;
@@ -36,19 +36,28 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         uint _streamingWalletID;
     }
 
+    /// @notice tracks whether a specific contributor is active in a paymentClient
+    /// @dev paymentClient => contributor => isActive(bool)
     mapping(address => mapping(address => bool)) public isActiveContributor;
+
+    /// @notice provides a unique id for new payment orders added for a specific client & contributor combo
+    /// @dev paymentClient => contributor => walletId(uint256)
     mapping(address => mapping(address => uint256)) public numContributorWallets;
 
-    // paymentClient => contributor => streamingWalletID => Wallet
+    /// @notice tracks all vesting details for all payment orders of a contributor for a specific paymentClient
+    /// @dev paymentClient => contributor => streamingWalletID => Wallet
     mapping(address => mapping(address => mapping(uint256 => StreamingWallet))) private vestings;
 
-    // paymentClient => contributor => unclaimableAmount
+    /// @notice tracks all payments that could not be made to the contributor due to any reason
+    /// @dev paymentClient => contributor => unclaimableAmount
     mapping(address => mapping(address => uint)) private unclaimableAmounts;
 
     /// @notice list of addresses with open payment Orders per paymentClient
+    /// @dev paymentClient => listOfContributors(address[]). Duplicates are not allowed.
     mapping(address => address[]) private activePayments;
 
-    /// @notice client => contributor => arrayOfWalletIdsWithPendingPayment
+    /// @notice list of walletIDs of all payment orders of a particular contributor for a particular paymentClient
+    /// @dev client => contributor => arrayOfWalletIdsWithPendingPayment(uint256[])
     mapping(address => mapping(address => uint256[])) private activeContributorPayments;
 
     //--------------------------------------------------------------------------
