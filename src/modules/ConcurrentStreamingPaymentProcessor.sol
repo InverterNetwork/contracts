@@ -152,7 +152,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         __Module_init(proposal_, metadata);
     }
 
+    /// @notice used to claim everything that the paymentClient owes to the _msgSender till the current timestamp
     /// @dev This function should be callable if the _msgSender is either an activeContributor or has some unclaimedAmounts
+    /// @param client The {IPaymentClient} instance to process all claims from _msgSender
     function claimAll(IPaymentClient client) external {
         if(!(isActiveContributor[address(client)][_msgSender()] || unclaimable(address(client), _msgSender()) > 0)) {
             revert Module__PaymentManager__NothingToClaim(address(client), _msgSender());
@@ -161,8 +163,13 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         _claimAll(address(client), _msgSender());
     }
 
+    /// @notice used to claim the salary uptil block.timestamp from the client for a payment order with id = walletId by _msgSender
     /// @dev If for a specific walletId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
     ///      of the contributor, and the amount would no longer hold any co-relation with the specific walletId of the contributor.
+    /// @param client The {IPaymentClient} instance to process the walletId claim from _msgSender
+    /// @param walletId The ID of the payment order for which claim is being made
+    /// @param retryForUnclaimableAmounts boolean which determines if the function will try to pay the unclaimable amounts from earlier
+    ///        along with the vested salary from the payment order with id = walletId
     function claimForSpecificWalletId(IPaymentClient client, uint256 walletId, bool retryForUnclaimableAmounts) external {
         if(!isActiveContributor[address(client)][_msgSender()] || (walletId > numContributorWallets[address(client)][_msgSender()])) {
             revert Module__PaymentManager__InvalidWallet(address(client), _msgSender(), walletId);
