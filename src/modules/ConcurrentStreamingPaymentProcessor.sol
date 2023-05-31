@@ -149,7 +149,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             revert Module__PaymentManager__InvalidWallet();
         }
 
-        if(_verifyActiveWalletId(walletId) == type(uint256).max) {
+        if(_verifyActiveWalletId(address(client), _msgSender(), walletId) == type(uint256).max) {
             revert Module__PaymentManager__InactiveWallet();
         }
 
@@ -248,8 +248,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         // activePayments, activeContributorPayments, vestings, isActiveContributor, numContributorWallets
 
         // So, we need to check when this function was called to determine if we need to modify the other mappings or not
-        uint startContributor = startForSpecificWalletId(client, contributor, walletId);
-        uint durationContributor = durationForSpecificWalletId(client, contributor, walletId);
+        uint startContributor = startForSpecificWalletId(address(client), contributor, walletId);
+        uint durationContributor = durationForSpecificWalletId(address(client), contributor, walletId);
 
         if(block.timestamp < startContributor + durationContributor) {
             // handles activeContributorPayments
@@ -259,9 +259,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             _removeVestingInformationForSpecificWalletId(address(client), contributor, walletId);
 
             // handles activePayments and isActiveContributor if required
-            if(activeContributorPayments[client][contributor].length == 0) {
-                isActiveContributor[client][contributor] = false;
-                _removeContributorFromActivePayments(client, contributor);
+            if(activeContributorPayments[address(client)][contributor].length == 0) {
+                isActiveContributor[address(client)][contributor] = false;
+                _removeContributorFromActivePayments(address(client), contributor);
             }
         }
     }
@@ -403,7 +403,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
                 _removeVestingInformationForSpecificWalletId(client, contributor, walletId);
 
-                if(isActiveContributor[client][contributor].length == 0) {
+                if(activeContributorPayments[client][contributor].length == 0) {
                     isActiveContributor[client][contributor] = false;
                     _removeContributorFromActivePayments(client, contributor);
                 }
@@ -485,7 +485,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             isActiveContributor[client][_contributor] = true;
 
             vestings[client][_contributor][_walletId] =
-                StreamingWallet(_salary, 0, _start, _duration);
+                StreamingWallet(_salary, 0, _start, _duration, _walletId);
 
             // We do not want activePayments[client] to have duplicate contributor entries
             // So we avoid pushing the _contributor to activePayments[client] if it already exists
@@ -527,10 +527,12 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         address _token = address(token());
 
         (bool success, bytes memory data) = _token.call(
-            IERC20(_token).transferFrom.selector,
-            client,
-            beneficiary,
-            amount
+            abi.encodeWithSelector(
+                IERC20(_token).transferFrom.selector,
+                client,
+                beneficiary,
+                amount
+            )
         );
 
         if (success && (data.length == 0 || abi.decode(data, (bool)))) {
