@@ -2,32 +2,16 @@
 pragma solidity ^0.8.13;
 
 // Internal Dependencies
-// @note paymentClient is a interface that provides functions pertaining to different payment orders, the list of remaining orders and fulfilling those orders etc.
-//       struct paymentOrder is defined as {address recepient, uint256 amount, uint256 createdAt, uint256 dueTo}
-// @note paymentProcessor can cancelPaymentOrders & fulfillPaymentOrders based on a particular instance of PaymentClient.
 import {
     IPaymentProcessor,
     IPaymentClient
 } from "src/modules/IPaymentProcessor.sol";
 
-// @note Module is the BASE contract for all modules
-/*   
-        1. Each module has a unique identifier
-        2. Used to trigger and receive callbacks and a modifier to authenticate the callers via module's proposal. trigger and recieve callback simply means -> communicate with the proposal contract
-        3. Storage variables are the module's proposal and module's identifier. Does not change post initialization
-*/
 import {Module} from "src/modules/base/Module.sol";
-
-// @note standard ERC20 token implementation from OZ
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 // Interfaces
-// @note standard ERC20 token interface from OZ
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
-// @note 1. executeTx
-// 2. A really lengthy initialization function, involving owner, token, modules, authorizer, paymentProcessors and so on.
-// 3. Rest all are external view functions
 import {IProposal} from "src/proposal/IProposal.sol";
 
 /**
@@ -39,8 +23,6 @@ import {IProposal} from "src/proposal/IProposal.sol";
  * @author byterocket
  */
 
-// @note StreamingPaymentProcessor is module because the **module** contract is the base contract for all modules and StreamingPaymentProcessor is a module
-// @note IPaymentProcessor cancels and fulfills payment orders based on a particular instance of a paymentClient
 contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
@@ -118,8 +100,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         Metadata memory metadata,
         bytes memory /*configdata*/
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata); // @note This is fine, because one proposal can have
-        // multiple modules but one module will only have one proposal attached to it.
+        __Module_init(proposal_, metadata);
     }
 
     /// @notice Release the releasable tokens.
@@ -309,9 +290,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         view
         returns (uint)
     {
-        // @audit unnecessary casting. block.timestamp returns uint256 by default
         return 
-            vestedAmountForSpecificWalletId(client, contributor, uint(block.timestamp), walletId)
+            vestedAmountForSpecificWalletId(client, contributor, block.timestamp, walletId)
             - releasedForSpecificWalletId(client, contributor, walletId);
     }
 
@@ -339,7 +319,6 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         address[] memory contribSearchArray = activePayments[client];
 
         uint length = activePayments[client].length;
-        // @audit-issue gas-opti
         for (uint i; i < length; i++) {
             if (contribSearchArray[i] == contributor) {
                 return i;
@@ -368,11 +347,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     function _cancelRunningOrders(IPaymentClient client) internal {
         //IPaymentClient.PaymentOrder[] memory orders;
         //orders = client.paymentOrders();
-        // @note _activePayments basically is the list of addresses of contributors that have pending payments
         address[] memory _activePayments = activePayments[address(client)];
 
         address _recipient;
-        // @audit gas-opti
         for (uint i; i < _activePayments.length; ++i) {
             _recipient = _activePayments[i];
 
@@ -471,9 +448,10 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         } else {
             ++numContributorWallets[client][_contributor];
 
+            // If the walletId is not 1, then the contributor already exists.
             if(_walletId == 1) {
                 isActiveContributor[client][_contributor] = true;
-                activePayments[client].push(_contributor); // @note If the walletId is not 1, then the contributor already exists.
+                activePayments[client].push(_contributor);
             }
 
             vestings[client][_contributor][_walletId] =
@@ -557,8 +535,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
                 _removeContributorFromActivePayments(client, beneficiary);
             }
 
-            // @Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
-            // @Note Also, we do not need to update numContributorWallets, as claiming completely from a wallet does not affect this mapping.
+            // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
+            // Note Also, we do not need to update numContributorWallets, as claiming completely from a wallet does not affect this mapping.
         }
     }
 
@@ -616,23 +594,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     function validDuration(uint _duration) internal pure returns (bool) {
-        // @audit gas-opti: return !(_duration == 0);
         if (_duration == 0) {
             return false;
         }
         return true;
     }
 }
-
-/**
-I think one of the issues pointed out in the audit was the we were using both `msg.sender` and `_msgSender` 
-interchangeably, right? And later this was fixed and we made `_msgSender` as our default. However, the `ElasticTokenReceipt` still uses `msg.sender`. Do we need to change that or let it be?
-
-function `owner` and function `manager` are missing inline comments in `IProposal.sol`.
-
-Most likely, the `@notice` comment for `event InvalidStreamingOrderDiscarded` in `StreamingPaymentProcessor` is not entirely accurate.
-
-`StreamingPaymentProcessor._claim` uses the `transferFrom` function to transfer the proposal token from the PaymentClient to the contributor. Where is the approval from the `IPaymentClient` ?
- */
-
- // @note Payment order => PaymentProcessor processes them => Vesting payment is done over a period of time
