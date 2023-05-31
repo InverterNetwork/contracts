@@ -427,20 +427,14 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             emit InvalidStreamingOrderDiscarded ( _contributor, _salary, _start, _duration);
         } else {
             ++numContributorWallets[client][_contributor];
-
-            // If the walletId is not 1, then the contributor already exists.
-            if(_walletId == 1) {
-                isActiveContributor[client][_contributor] = true;
-                activePayments[client].push(_contributor);
-            }
+            isActiveContributor[client][_contributor] = true;
 
             vestings[client][_contributor][_walletId] =
                 StreamingWallet(_salary, 0, _start, _duration);
 
-            // Adding this case since numContributorWallets doesn't decrease, and it is possible that all payment 
-            // orders could have been removed for a particular client<>contributor pair once in the past. 
-            if(findAddressInActivePayments(client, _contributor) != type(uint256).max) {
-                // We do not want activePayments[client] to have duplicate contributor entries
+            // We do not want activePayments[client] to have duplicate contributor entries
+            // So we avoid pushing the _contributor to activePayments[client] if it already exists
+            if(findAddressInActivePayments(client, _contributor) == type(uint256).max) {
                 activePayments[client].push(_contributor);
             }
 
