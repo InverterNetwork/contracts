@@ -33,7 +33,7 @@ contract SetupScript is Test, Script, DeploymentScript {
     address funder1 = address(0xF1);
     address funder2 = address(0xF2);
 
-    address proposalOwner = vm.envUint("PROPOSAL_OWNER_ADDRESS");
+    address proposalOwner = vm.envAddress("PROPOSAL_OWNER_ADDRESS");
     uint256 proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
 
     function run() public override {
