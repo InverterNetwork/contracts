@@ -184,7 +184,9 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice processes all payments from an {IPaymentClient} instance.
     /// @dev in the concurrentStreamingPaymentProcessor, a payment client can have multiple payment orders for the same
-    ///      contributor and they will be processed separately without being overwritten by this function
+    ///      contributor and they will be processed separately without being overwritten by this function.
+    ///      The maximum number of payment orders that can be associated with a particular contributor by a 
+    ///      particular paymentClient is (2**256 - 1).
     /// @param client The {IPaymentClient} instance to process its to payments.
     function processPayments(IPaymentClient client)
         external
@@ -299,8 +301,10 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    /// @notice Getter for the start timestamp.
+    /// @notice Getter for the start timestamp of a particular payment order with id = walletId associated with a particular contributor
+    /// @param client address of the payment client
     /// @param contributor Contributor's address.
+    /// @param walletId Id of the wallet for which start is fetched
     function startForSpecificWalletId(address client, address contributor, uint256 walletId)
         public
         view
@@ -309,8 +313,10 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return vestings[client][contributor][walletId]._start;
     }
 
-    /// @notice Getter for the vesting duration.
+    /// @notice Getter for the vesting duration of a particular payment order with id = walletId associated with a particular contributor
+    /// @param client address of the payment client
     /// @param contributor Contributor's address.
+    /// @param walletId Id of the wallet for which duration is fetched
     function durationForSpecificWalletId(address client, address contributor, uint256 walletId)
         public
         view
@@ -319,8 +325,10 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return vestings[client][contributor][walletId]._duration;
     }
 
-    /// @notice Getter for the amount of eth already released
+    /// @notice Getter for the amount of tokens already released for a particular payment order with id = walletId associated with a particular contributor
+    /// @param client address of the payment client
     /// @param contributor Contributor's address.
+    /// @param walletId Id of the wallet for which released is fetched
     function releasedForSpecificWalletId(address client, address contributor, uint256 walletId)
         public
         view
@@ -329,8 +337,11 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return vestings[client][contributor][walletId]._released;
     }
 
-    /// @notice Calculates the amount of tokens that has already vested.
+    /// @notice Calculates the amount of tokens that has already vested for a particular payment order with id = walletId associated with a particular contributor.
+    /// @param client address of the payment client
     /// @param contributor Contributor's address.
+    /// @param timestamp the time upto which we want the vested amount
+    /// @param walletId Id of the wallet for which the vested amount is fetched
     function vestedAmountForSpecificWalletId(address client, address contributor, uint timestamp, uint walletId)
         public
         view
@@ -339,7 +350,10 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return _vestingScheduleForSpecificWalletId(client, contributor, timestamp, walletId);
     }
 
-    /// @notice Getter for the amount of releasable tokens.
+    /// @notice Getter for the amount of releasable tokens for a particular payment order with id = walletId associated with a particular contributor.
+    /// @param client address of the payment client
+    /// @param contributor Contributor's address.
+    /// @param walletId Id of the wallet for which the releasable amount is fetched
     function releasableForSpecificWalletId(address client, address contributor, uint256 walletId)
         public
         view
@@ -351,6 +365,8 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @notice Getter for the amount of tokens that could not be claimed.
+    /// @param client address of the payment client
+    /// @param contributor Contributor's address.
     function unclaimable(address client, address contributor)
         public
         view
@@ -359,6 +375,7 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return unclaimableAmounts[client][contributor];
     }
 
+    /// @notice Returns the token used by the proposal to pay salaries to the contributors
     function token() public view returns (IERC20) {
         return this.proposal().token();
     }
