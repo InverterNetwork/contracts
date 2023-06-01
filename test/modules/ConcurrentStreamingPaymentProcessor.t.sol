@@ -272,6 +272,87 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         vm.stopPrank();
     }
 
+    function test_processPayments_vestingInfoGetsDeletedPostFullPayment(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        speedRunStreamingAndClaim(recipients, amounts, durations);
+
+        //We run process payments again, but since there are no new orders, nothing should happen.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+
+            // Check that the vesting information is deleted once vested tokens are claimed after total vesting duration
+            assertEq(
+                paymentProcessor.vestedAmountForSpecificWalletId(
+                    address(paymentClient), address(recipient), block.timestamp, 1
+                ),
+                0
+            );
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Helper functions
+
+    // Speedruns a round of vesting + claiming
+    // note Neither checks the inputs nor verifies results
+    function speedRunStreamingAndClaim(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) internal {
+        uint max_time = uint(durations[0]);
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+            uint time = uint(durations[i]);
+
+            if (time > max_time) {
+                max_time = time;
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        vm.warp(block.timestamp + max_time + 1);
+
+        for (uint i; i < recipients.length; i++) {
+            vm.prank(address(recipients[i]));
+            paymentProcessor.claimAll(paymentClient);
+        }
+    }
+
+    function blockAddress(address blockedAddress) internal {
+        _token.blockAddress(blockedAddress);
+        bool blocked = _token.isBlockedAddress(blockedAddress);
+        assertTrue(blocked);
+    }
+
+    function unblockAddress(address blockedAddress) internal {
+        _token.unblockAddress(blockedAddress);
+        bool blocked = _token.isBlockedAddress(blockedAddress);
+        assertFalse(blocked);
+    }
+
     //--------------------------------------------------------------------------
     // Fuzzing Validation Helpers
 
