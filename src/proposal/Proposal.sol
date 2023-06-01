@@ -9,11 +9,11 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
-import {FundingManager} from "src/proposal/base/FundingManager.sol";
 
 // Internal Interfaces
 import {
     IProposal,
+    IFundingManager,
     IPaymentProcessor,
     IAuthorizer
 } from "src/proposal/IProposal.sol";
@@ -35,12 +35,7 @@ import {
  *
  * @author byterocket
  */
-contract Proposal is
-    IProposal,
-    OwnableUpgradeable,
-    ModuleManager,
-    FundingManager
-{
+contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -74,6 +69,9 @@ contract Proposal is
     uint public override(IProposal) proposalId;
 
     /// @inheritdoc IProposal
+    IFundingManager public override(IProposal) fundingManager;
+
+    /// @inheritdoc IProposal
     IAuthorizer public override(IProposal) authorizer;
 
     /// @inheritdoc IProposal
@@ -92,20 +90,21 @@ contract Proposal is
         address owner_,
         IERC20 token_,
         address[] calldata modules,
+        IFundingManager fundingManager_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
     ) external override(IProposal) initializer {
         // Initialize upstream contracts.
         __Ownable_init();
         __ModuleManager_init(modules);
-        IERC20 receiptToken_ = __FundingManager_init(proposalId_, token_);
 
         // Set storage variables.
         proposalId = proposalId_;
 
         _token = token_;
-        _receiptToken = receiptToken_;
+        _receiptToken = IERC20(address(fundingManager_));
 
+        fundingManager = fundingManager_;
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
 
@@ -115,6 +114,7 @@ contract Proposal is
         // Add necessary modules.
         // Note to not use the public addModule function as the factory
         // is (most probably) not authorized.
+        __ModuleManager_addModule(address(fundingManager_));
         __ModuleManager_addModule(address(authorizer_));
         __ModuleManager_addModule(address(paymentProcessor_));
     }
@@ -157,12 +157,7 @@ contract Proposal is
     // View Functions
 
     /// @inheritdoc IProposal
-    function token()
-        public
-        view
-        override(FundingManager, IProposal)
-        returns (IERC20)
-    {
+    function token() public view override(IProposal) returns (IERC20) {
         return _token;
     }
 

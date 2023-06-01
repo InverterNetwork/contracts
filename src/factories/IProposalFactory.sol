@@ -43,6 +43,7 @@ interface IProposalFactory {
     ///                      data.
     function createProposal(
         ProposalConfig memory proposalConfig,
+        ModuleConfig memory fundingnManagerConfig,
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs

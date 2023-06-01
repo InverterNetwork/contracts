@@ -6,19 +6,24 @@ import "forge-std/console.sol";
 
 //Modules
 import {
+    IFundingManager,
+    RebasingFundingManager
+} from "src/modules/fundingManager/RebasingFundingManager.sol";
+
+import {
     IAuthorizer,
     ListAuthorizer
-} from "src/modules/governance/ListAuthorizer.sol";
+} from "src/modules/authorizer/ListAuthorizer.sol";
 
 import {
     IPaymentProcessor,
     SimplePaymentProcessor
-} from "src/modules/SimplePaymentProcessor.sol";
+} from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 
 import {
     IMilestoneManager,
     MilestoneManager
-} from "src/modules/MilestoneManager.sol";
+} from "src/modules/logicModule/MilestoneManager.sol";
 
 import {
     IMetadataManager, MetadataManager
@@ -51,18 +56,21 @@ import {IProposal, Proposal} from "src/proposal/Proposal.sol";
  */
 contract ProposalCreation is Test {
     //Module Templates
-    IAuthorizer authorizerTemplate; //This is just the template thats referenced in the Factory later
+    IFundingManager fundingManagerTemplate; //This is just the template thats referenced in the Factory later
+    IAuthorizer authorizerTemplate; //Just a template
     IPaymentProcessor paymentProcessorTemplate; //Just a template
     IMilestoneManager milestoneManagerTemplate; //Just a template
     IMetadataManager metadataManagerTemplate; //Just a template
 
     //Module Beacons
+    Beacon fundingManagerBeacon;
     Beacon authorizerBeacon;
     Beacon paymentProcessorBeacon;
     Beacon milestoneManagerBeacon;
     Beacon metadataManagerBeacon;
 
     //Metadata for Modules
+    IModule.Metadata fundingManagerMetadata;
     IModule.Metadata authorizerMetadata;
     IModule.Metadata paymentProcessorMetadata;
     IModule.Metadata milestoneManagerMetadata;
@@ -97,18 +105,21 @@ contract ProposalCreation is Test {
         //Create Beacons
 
         //Create Module Templates
+        fundingManagerTemplate = new RebasingFundingManager();
         authorizerTemplate = new ListAuthorizer();
         paymentProcessorTemplate = new SimplePaymentProcessor();
         milestoneManagerTemplate = new MilestoneManager();
         metadataManagerTemplate = new MetadataManager();
 
         //Create Beacons for every Module
+        fundingManagerBeacon = new Beacon();
         authorizerBeacon = new Beacon();
         paymentProcessorBeacon = new Beacon();
         milestoneManagerBeacon = new Beacon();
         metadataManagerBeacon = new Beacon();
 
         //Upgrade Beacons to correct implementation
+        fundingManagerBeacon.upgradeTo(address(fundingManagerTemplate));
         authorizerBeacon.upgradeTo(address(authorizerTemplate));
         paymentProcessorBeacon.upgradeTo(address(paymentProcessorTemplate));
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerTemplate));
@@ -118,6 +129,12 @@ contract ProposalCreation is Test {
         //Setup Factory
 
         //Create Metadata for the Modules
+        fundingManagerMetadata = IModule.Metadata(
+            1,
+            1,
+            "https://github.com/inverter/funding-manager",
+            "FundingManager"
+        );
         authorizerMetadata = IModule.Metadata(
             1, 1, "https://github.com/inverter/authorizer", "Authorizer"
         );
@@ -145,6 +162,9 @@ contract ProposalCreation is Test {
         moduleFactory = new ModuleFactory();
 
         //Register Module Metadata in ModuleFactory
+        moduleFactory.registerMetadata(
+            fundingManagerMetadata, IBeacon(fundingManagerBeacon)
+        );
         moduleFactory.registerMetadata(
             authorizerMetadata, IBeacon(authorizerBeacon)
         );
@@ -221,6 +241,11 @@ contract ProposalCreation is Test {
             token: paymentToken
         });
 
+        IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
+        IProposalFactory.ModuleConfig(
+            fundingManagerMetadata, abi.encode(address(paymentToken))
+        );
+
         //Create ModuleConfig for Authorizer
         address[] memory initialAuthorizedAddresses = new address[](1);
         initialAuthorizedAddresses[0] = address(this);
@@ -251,6 +276,7 @@ contract ProposalCreation is Test {
         //Create proposal using the different needed configs
         IProposal proposal = proposalFactory.createProposal(
             proposalFactoryConfig,
+            fundingManagerFactoryConfig,
             authorizerFactoryConfig,
             paymentProcessorFactoryConfig,
             optionalModules
