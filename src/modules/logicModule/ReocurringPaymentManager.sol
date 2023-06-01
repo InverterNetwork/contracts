@@ -10,17 +10,17 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
 
-import {PaymentClient} from "src/modules/mixins/PaymentClient.sol";
+import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
 import {IReocurringPaymentManager} from
-    "src/modules/LogicModule/IReocurringPaymentManager.sol";
+    "src/modules/logicModule/IReocurringPaymentManager.sol";
 
 import {
     IPaymentClient,
     IPaymentProcessor
-} from "src/modules/mixins/PaymentClient.sol";
+} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
