@@ -603,6 +603,85 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.cancelRunningPayments(otherPaymentClient);
     }
 
+    //This test creates a new set of payments in a client which finished all running payments.
+    //one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
+    function testCancelRunningPayments(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        uint max_duration = uint(durations[0]);
+        uint total_amount;
+        // add payment orders
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            total_amount += amounts[i];
+
+            if (durations[i] > max_duration) {
+                max_duration = durations[i];
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amounts[i], (block.timestamp + durations[i])
+            );
+        }
+
+        // make sure all the balances are transfered to paymentClient
+        assertTrue(_token.balanceOf(address(paymentClient)) == total_amount);
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // FF to half the max_duration
+        vm.warp(max_duration / 2);
+
+        // calling cancelRunningPayments also calls claim() so no need to repeat?
+        vm.prank(address(paymentClient));
+        paymentProcessor.cancelRunningPayments(paymentClient);
+
+        // measure recipients balances before attempting second claim.
+        uint[] memory balancesBefore = new uint256[](recipients.length);
+        for (uint i; i < recipients.length; i++) {
+            vm.prank(recipients[i]);
+            balancesBefore[i] = _token.balanceOf(recipients[i]);
+        }
+
+        // skip to end of max_duration
+        vm.warp(max_duration / 2);
+
+        // make sure recipients cant claim 2nd time after cancelRunningPayments.
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            
+            vm.startPrank(recipient);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    ConcurrentStreamingPaymentProcessor.Module__PaymentManager__NothingToClaim.selector,
+                    address(paymentClient),
+                    recipient
+                )
+            );
+            paymentProcessor.claimAll(paymentClient);
+            vm.stopPrank();
+
+            uint balanceAfter = _token.balanceOf(recipient);
+
+            assertEq(balancesBefore[i], balanceAfter);
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(address(paymentClient), recipient, 1),
+                0
+            );
+        }
+    }
+
     // Sanity Math Check
     function testStreamingCalculation(
         address[] memory recipients,
