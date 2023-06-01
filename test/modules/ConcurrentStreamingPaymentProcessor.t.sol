@@ -44,7 +44,8 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
 
     function setUp() public {
         address impl = address(new ConcurrentStreamingPaymentProcessor());
-        paymentProcessor = ConcurrentStreamingPaymentProcessor(Clones.clone(impl));
+        paymentProcessor =
+            ConcurrentStreamingPaymentProcessor(Clones.clone(impl));
 
         _setUpProposal(paymentProcessor);
 
@@ -67,6 +68,67 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: Payment Processing
+
+    function testProcessPayments(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        uint max_time = uint(durations[0]);
+        uint totalAmount;
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+            uint time = uint(durations[i]);
+
+            if (time > max_time) {
+                max_time = time;
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+
+            totalAmount += amount;
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        for (uint i; i < recipients.length;) {
+            assertTrue(
+                paymentProcessor.isActiveContributor(
+                    address(paymentClient), recipients[i]
+                )
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "Nothing would have vested at the start of the vesting duration"
+            );
+            unchecked {
+                ++i;
+            }
+        }
+
+        assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
     }
 
     //--------------------------------------------------------------------------
