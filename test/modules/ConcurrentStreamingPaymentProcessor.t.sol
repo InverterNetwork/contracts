@@ -131,6 +131,100 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
     }
 
+    function test_claimVestedAmounts_fullVesting(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        uint max_time = uint(durations[0]);
+        uint totalAmount;
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+            uint time = uint(durations[i]);
+
+            if (time > max_time) {
+                max_time = time;
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+
+            totalAmount += amount;
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        for (uint i; i < recipients.length;) {
+            assertTrue(
+                paymentProcessor.isActiveContributor(
+                    address(paymentClient), recipients[i]
+                )
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "Nothing would have vested at the start of the vesting duration"
+            );
+            unchecked {
+                ++i;
+            }
+        }
+
+        assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
+
+        // Moving ahead in time, past the longest vesting period
+        vm.warp(block.timestamp + (max_time + 1));
+
+        // All recepients try to claim their vested tokens
+        for (uint i; i < recipients.length;) {
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(paymentClient);
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Now, all recipients should have their entire vested amount with them
+        for (uint i; i < recipients.length;) {
+            // Check recipient balance
+            assertEq(
+                _token.balanceOf(recipients[i]),
+                uint(amounts[i]),
+                "Vested tokens not received by the contributor"
+            );
+
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "All vested amount is already released"
+            );
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Fuzzing Validation Helpers
 
