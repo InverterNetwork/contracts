@@ -559,6 +559,50 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         }
     }
 
+    function testCancelPaymentsFailsWhenCalledByNonModule(address nonModule)
+        public
+    {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_authorizer));
+        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
+        // if deployed address is same as nonModule, this test will fail.
+        vm.assume(nonModule != address(_paymentProcessor));
+
+        vm.prank(nonModule);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPaymentProcessor
+                    .Module__PaymentManager__OnlyCallableByModule
+                    .selector
+            )
+        );
+        paymentProcessor.cancelRunningPayments(paymentClient);
+    }
+
+    function testCancelPaymentsFailsWhenCalledOnOtherClient(address nonModule)
+        public
+    {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_authorizer));
+        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
+        // if deployed address is same as nonModule, this test will fail.
+        vm.assume(nonModule != address(_paymentProcessor));
+
+        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+
+        vm.prank(address(paymentClient));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPaymentProcessor
+                    .Module__PaymentManager__CannotCallOnOtherClientsOrders
+                    .selector
+            )
+        );
+        paymentProcessor.cancelRunningPayments(otherPaymentClient);
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
