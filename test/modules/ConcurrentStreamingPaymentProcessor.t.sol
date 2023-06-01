@@ -603,6 +603,47 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.cancelRunningPayments(otherPaymentClient);
     }
 
+    // Sanity Math Check
+    function testStreamingCalculation(
+        address[] memory recipients,
+        uint128[] memory amounts
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+
+        uint start = block.timestamp;
+        uint duration = 1 weeks;
+
+        for (uint i = 0; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = amounts[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(recipient, amount, (start + duration));
+        }
+
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        for (uint z = 0; z <= duration; z += 1 hours) {
+            //we check each hour
+            vm.warp(start + z);
+
+            for (uint i = 0; i < recipients.length; i++) {
+                address recipient = recipients[i];
+                uint claimableAmt = amounts[i] * z / duration;
+
+                assertEq(
+                    claimableAmt,
+                    paymentProcessor.releasableForSpecificWalletId(
+                        address(paymentClient), recipient, 1
+                    )
+                );
+            }
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
