@@ -73,7 +73,7 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Payment Processing
 
-    function testProcessPayments(
+    function test_processPayments(
         address[] memory recipients,
         uint128[] memory amounts,
         uint64[] memory durations
@@ -223,6 +223,53 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
                 ++i;
             }
         }
+    }
+
+    function test_processPayments_discardsInvalidPaymentOrders() public {
+        address[] memory recipients = createInvalidRecipients();
+
+        uint invalidDur = 0;
+        uint invalidAmt = 0;
+
+        vm.warp(1000);
+        vm.startPrank(address(paymentClient));
+        //we don't mind about adding address(this)in this case
+        for (uint i = 0; i < recipients.length - 1; ++i) {
+            paymentClient.addPaymentOrderUnchecked(
+                recipients[i], 100, (block.timestamp + 100)
+            );
+        }
+        //Expect the correct number and sequence of emits
+        for (uint i = 0; i < recipients.length - 1; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit InvalidStreamingOrderDiscarded(
+                recipients[i], 100, block.timestamp, 100
+            );
+        }
+
+        // Call processPayments and expect emits
+        paymentProcessor.processPayments(paymentClient);
+
+        //add invalid dur process and expect emit
+        paymentClient.addPaymentOrderUnchecked(
+            address(0xB0B), 100, (block.timestamp + invalidDur)
+        );
+        vm.expectEmit(true, true, true, true);
+        emit InvalidStreamingOrderDiscarded(
+            address(0xB0B), 100, block.timestamp, invalidDur
+        );
+        paymentProcessor.processPayments(paymentClient);
+
+        paymentClient.addPaymentOrderUnchecked(
+            address(0xB0B), invalidAmt, (block.timestamp + 100)
+        );
+        vm.expectEmit(true, true, true, true);
+        emit InvalidStreamingOrderDiscarded(
+            address(0xB0B), invalidAmt, block.timestamp, 100
+        );
+        paymentProcessor.processPayments(paymentClient);
+
+        vm.stopPrank();
     }
 
     //--------------------------------------------------------------------------
