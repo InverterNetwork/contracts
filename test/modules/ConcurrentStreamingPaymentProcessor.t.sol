@@ -35,11 +35,14 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         address indexed recipient,
         uint amount,
         uint start,
-        uint duration
+        uint duration,
+        uint walletId
     );
 
     event StreamingPaymentRemoved(
-        address indexed paymentClient, address indexed recipient
+        address indexed paymentClient,
+        address indexed recipient,
+        uint indexed walletId
     );
 
     function setUp() public {
@@ -482,6 +485,78 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
             )
         );
         paymentProcessor.processPayments(otherPaymentClient);
+    }
+
+    function test_cancelRunningPayments_allCreatedOrdersGetCancelled(
+        address[] memory recipients,
+        uint128[] memory amounts
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+
+        uint duration = 4 weeks;
+
+        for (uint i = 0; i < recipients.length; ++i) {
+            paymentClient.addPaymentOrder(recipients[i], amounts[i], duration);
+        }
+        //Expect the correct number and sequence of emits
+        for (uint i = 0; i < recipients.length; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit StreamingPaymentAdded(
+                address(paymentClient),
+                recipients[i],
+                amounts[i],
+                block.timestamp,
+                duration - block.timestamp,
+                1
+            );
+        }
+
+        // Call processPayments and expect emits
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // FF to half the max_duration
+        vm.warp(block.timestamp + 2 weeks);
+
+        //we expect cancellation events for each payment
+        for (uint i = 0; i < recipients.length; ++i) {
+            vm.expectEmit(true, true, true, true);
+            // we can expect all recipient to be unique due to the call to assumeValidRecipients.
+            // Therefore, the walletId of all these contributors would be 1.
+            emit StreamingPaymentRemoved(address(paymentClient), recipients[i], 1);
+        }
+
+        // calling cancelRunningPayments
+        vm.prank(address(paymentClient));
+        paymentProcessor.cancelRunningPayments(paymentClient);
+
+        // make sure the payments have been reset
+
+        for (uint i; i < recipients.length; ++i) {
+            address recipient = recipients[i];
+
+            assertEq(
+                paymentProcessor.startForSpecificWalletId(address(paymentClient), recipient, 1),0
+            );
+            assertEq(
+                paymentProcessor.durationForSpecificWalletId(address(paymentClient), recipient, 1),0
+            );
+            assertEq(
+                paymentProcessor.releasedForSpecificWalletId(address(paymentClient), recipient, 1),0
+            );
+            assertEq(
+                paymentProcessor.vestedAmountForSpecificWalletId(
+                    address(paymentClient), recipient, block.timestamp,1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(address(paymentClient), recipient,1),
+                0
+            );
+        }
     }
 
     //--------------------------------------------------------------------------
