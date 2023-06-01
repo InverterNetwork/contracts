@@ -467,6 +467,40 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
         return this.proposal().token();
     }
 
+    /// @notice used to see all active payment orders for a paymentClient associated with a particular contributor
+    /// @dev the contributor must be an active contributor for the particular payment client
+    /// @param client Address of the payment client
+    /// @param contributor Address of the contributor
+    function viewAllPaymentOrders(address client, address contributor)
+        public
+        view
+        returns (StreamingWallet[] memory)
+    {
+        if (!(isActiveContributor[client][contributor])) {
+            revert Module__PaymentManager__InvalidContributor(
+                client, contributor
+            );
+        }
+
+        uint[] memory contributorWalletsArray =
+            activeContributorPayments[client][contributor];
+        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+
+        StreamingWallet[] memory contributorStreamingWallets;
+        uint index;
+        uint walletId;
+        for (index; index < contributorWalletsArrayLength;) {
+            walletId = contributorWalletsArray[index];
+            contributorStreamingWallets[index] =
+                vestings[client][contributor][walletId];
+            unchecked {
+                ++index;
+            }
+        }
+
+        return contributorStreamingWallets;
+    }
+
     //--------------------------------------------------------------------------
     // Internal Functions
 
