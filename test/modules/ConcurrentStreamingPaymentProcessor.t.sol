@@ -298,7 +298,10 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
             // Check that the vesting information is deleted once vested tokens are claimed after total vesting duration
             assertEq(
                 paymentProcessor.vestedAmountForSpecificWalletId(
-                    address(paymentClient), address(recipient), block.timestamp, 1
+                    address(paymentClient),
+                    address(recipient),
+                    block.timestamp,
+                    1
                 ),
                 0
             );
@@ -306,15 +309,15 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
     }
 
     function test_processPayments_paymentOrdersAreNotOverwritten(
-        uint256 randomDuration,
-        uint256 randomAmount,
-        uint256 randomDuration_2,
-        uint256 randomAmount_2
-     ) public {
-        randomDuration = bound(randomDuration, 10, 10000000);
-        randomAmount = bound(randomAmount, 10, 10000);
-        randomDuration_2 = bound(randomDuration_2, 1000, 10000000);
-        randomAmount_2 = bound(randomAmount_2, 100, 10000);
+        uint randomDuration,
+        uint randomAmount,
+        uint randomDuration_2,
+        uint randomAmount_2
+    ) public {
+        randomDuration = bound(randomDuration, 10, 10_000_000);
+        randomAmount = bound(randomAmount, 10, 10_000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 10_000_000);
+        randomAmount_2 = bound(randomAmount_2, 100, 10_000);
 
         address contributor1 = makeAddr("contributor1");
         address contributor2 = makeAddr("contributor2");
@@ -326,13 +329,13 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         contributorArray_1[1] = contributor2;
         contributorArray_1[2] = contributor3;
 
-        uint256[3] memory durations_1;
-        for(uint i; i < 3; i++) {
+        uint[3] memory durations_1;
+        for (uint i; i < 3; i++) {
             durations_1[i] = (randomDuration * (i + 1));
         }
 
-        uint256[3] memory amounts_1;
-        for(uint i; i < 3; i++) {
+        uint[3] memory amounts_1;
+        for (uint i; i < 3; i++) {
             amounts_1[i] = (randomAmount * (i + 1));
         }
 
@@ -356,19 +359,19 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         // Also, remember, nothing is claimed yet
         vm.warp(block.timestamp + durations_1[0]);
 
-        // Now, the payment client decided to add a few more payment orders (with a few beneficiaries overlapping)  
+        // Now, the payment client decided to add a few more payment orders (with a few beneficiaries overlapping)
         address[3] memory contributorArray_2;
         contributorArray_2[0] = contributor2;
         contributorArray_2[1] = contributor3;
         contributorArray_2[2] = contributor4;
-        
-        uint256[3] memory durations_2;
-        for(uint i; i < 3; i++) {
+
+        uint[3] memory durations_2;
+        for (uint i; i < 3; i++) {
             durations_2[i] = (randomDuration_2 * (i + 1));
         }
 
-        uint256[3] memory amounts_2;
-        for(uint i; i < 3; i++) {
+        uint[3] memory amounts_2;
+        for (uint i; i < 3; i++) {
             amounts_2[i] = (randomAmount_2 * (i + 1));
         }
 
@@ -390,12 +393,12 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
 
         // Now, let's check whether all vesting informations exist or not
         // checking for contributor2
-        ConcurrentStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets;
+        ConcurrentStreamingPaymentProcessor.StreamingWallet[] memory
+            contributorWallets;
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-                                                    address(paymentClient),
-                                                    contributor2
-                                               );
-        
+            address(paymentClient), contributor2
+        );
+
         assertTrue(contributorWallets.length == 2);
         assertEq(
             (contributorWallets[0]._salary + contributorWallets[1]._salary),
@@ -405,10 +408,9 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
 
         // checking for contributor3
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-                                                    address(paymentClient),
-                                                    contributor3
-                                               );
-        
+            address(paymentClient), contributor3
+        );
+
         assertTrue(contributorWallets.length == 2);
         assertEq(
             (contributorWallets[0]._salary + contributorWallets[1]._salary),
@@ -418,10 +420,9 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
 
         // checking for contributor 4
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-                                                    address(paymentClient),
-                                                    contributor4
-                                               );
-        
+            address(paymentClient), contributor4
+        );
+
         assertTrue(contributorWallets.length == 1);
         assertEq(
             (contributorWallets[0]._salary),
@@ -431,10 +432,9 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
 
         // checking for contributor 1
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-                                                    address(paymentClient),
-                                                    contributor1
-                                               );
-        
+            address(paymentClient), contributor1
+        );
+
         assertTrue(contributorWallets.length == 1);
         assertEq(
             (contributorWallets[0]._salary),
@@ -525,7 +525,9 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
             vm.expectEmit(true, true, true, true);
             // we can expect all recipient to be unique due to the call to assumeValidRecipients.
             // Therefore, the walletId of all these contributors would be 1.
-            emit StreamingPaymentRemoved(address(paymentClient), recipients[i], 1);
+            emit StreamingPaymentRemoved(
+                address(paymentClient), recipients[i], 1
+            );
         }
 
         // calling cancelRunningPayments
@@ -538,22 +540,33 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
             address recipient = recipients[i];
 
             assertEq(
-                paymentProcessor.startForSpecificWalletId(address(paymentClient), recipient, 1),0
-            );
-            assertEq(
-                paymentProcessor.durationForSpecificWalletId(address(paymentClient), recipient, 1),0
-            );
-            assertEq(
-                paymentProcessor.releasedForSpecificWalletId(address(paymentClient), recipient, 1),0
-            );
-            assertEq(
-                paymentProcessor.vestedAmountForSpecificWalletId(
-                    address(paymentClient), recipient, block.timestamp,1
+                paymentProcessor.startForSpecificWalletId(
+                    address(paymentClient), recipient, 1
                 ),
                 0
             );
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(address(paymentClient), recipient,1),
+                paymentProcessor.durationForSpecificWalletId(
+                    address(paymentClient), recipient, 1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.releasedForSpecificWalletId(
+                    address(paymentClient), recipient, 1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.vestedAmountForSpecificWalletId(
+                    address(paymentClient), recipient, block.timestamp, 1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient), recipient, 1
+                ),
                 0
             );
         }
@@ -660,11 +673,13 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         // make sure recipients cant claim 2nd time after cancelRunningPayments.
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            
+
             vm.startPrank(recipient);
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    ConcurrentStreamingPaymentProcessor.Module__PaymentManager__NothingToClaim.selector,
+                    ConcurrentStreamingPaymentProcessor
+                        .Module__PaymentManager__NothingToClaim
+                        .selector,
                     address(paymentClient),
                     recipient
                 )
@@ -676,7 +691,9 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
 
             assertEq(balancesBefore[i], balanceAfter);
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(address(paymentClient), recipient, 1),
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient), recipient, 1
+                ),
                 0
             );
         }
@@ -790,7 +807,10 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
         assertEq(
-            paymentProcessor.releasableForSpecificWalletId(address(paymentClient), recipient, 1), 0
+            paymentProcessor.releasableForSpecificWalletId(
+                address(paymentClient), recipient, 1
+            ),
+            0
         );
         assertEq(
             paymentProcessor.unclaimable(address(paymentClient), recipient),
@@ -809,7 +829,10 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 2);
         assertEq(
-            paymentProcessor.releasableForSpecificWalletId(address(paymentClient), recipient, 1), 0
+            paymentProcessor.releasableForSpecificWalletId(
+                address(paymentClient), recipient, 1
+            ),
+            0
         );
         assertEq(
             paymentProcessor.unclaimable(address(paymentClient), recipient), 0
@@ -845,7 +868,10 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
         assertEq(
-            paymentProcessor.releasableForSpecificWalletId(address(paymentClient), recipient, 1), 0
+            paymentProcessor.releasableForSpecificWalletId(
+                address(paymentClient), recipient, 1
+            ),
+            0
         );
         assertEq(
             paymentProcessor.unclaimable(address(paymentClient), recipient),
@@ -864,7 +890,10 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 2);
         assertEq(
-            paymentProcessor.releasableForSpecificWalletId(address(paymentClient), recipient, 1), 0
+            paymentProcessor.releasableForSpecificWalletId(
+                address(paymentClient), recipient, 1
+            ),
+            0
         );
         assertEq(
             paymentProcessor.unclaimable(address(paymentClient), recipient), 0
