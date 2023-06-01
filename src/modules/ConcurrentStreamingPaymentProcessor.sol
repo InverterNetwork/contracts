@@ -486,13 +486,13 @@ contract ConcurrentStreamingPaymentProcessor is Module, IPaymentProcessor {
             activeContributorPayments[client][contributor];
         uint contributorWalletsArrayLength = contributorWalletsArray.length;
 
-        StreamingWallet[] memory contributorStreamingWallets;
         uint index;
-        uint walletId;
+        StreamingWallet[] memory contributorStreamingWallets = new StreamingWallet[](contributorWalletsArrayLength);
+
         for (index; index < contributorWalletsArrayLength;) {
-            walletId = contributorWalletsArray[index];
             contributorStreamingWallets[index] =
-                vestings[client][contributor][walletId];
+                vestings[client][contributor][contributorWalletsArray[index]];
+            
             unchecked {
                 ++index;
             }

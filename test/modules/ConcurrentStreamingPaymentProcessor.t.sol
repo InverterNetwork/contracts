@@ -302,6 +302,144 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         }
     }
 
+    function test_processPayments_paymentOrdersAreNotOverwritten(
+        uint256 randomDuration,
+        uint256 randomAmount,
+        uint256 randomDuration_2,
+        uint256 randomAmount_2
+     ) public {
+        randomDuration = bound(randomDuration, 10, 10000000);
+        randomAmount = bound(randomAmount, 10, 10000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 10000000);
+        randomAmount_2 = bound(randomAmount_2, 100, 10000);
+
+        address contributor1 = makeAddr("contributor1");
+        address contributor2 = makeAddr("contributor2");
+        address contributor3 = makeAddr("contributor3");
+        address contributor4 = makeAddr("contributor4");
+
+        address[3] memory contributorArray_1;
+        contributorArray_1[0] = contributor1;
+        contributorArray_1[1] = contributor2;
+        contributorArray_1[2] = contributor3;
+
+        uint256[3] memory durations_1;
+        for(uint i; i < 3; i++) {
+            durations_1[i] = (randomDuration * (i + 1));
+        }
+
+        uint256[3] memory amounts_1;
+        for(uint i; i < 3; i++) {
+            amounts_1[i] = (randomAmount * (i + 1));
+        }
+
+        // Add these payment orders to the payment client
+        for (uint i; i < 3; i++) {
+            address recipient = contributorArray_1[i];
+            uint amount = amounts_1[i];
+            uint time = durations_1[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Let's travel in time, to the point after contributor1's tokens are fully vested.
+        // Also, remember, nothing is claimed yet
+        vm.warp(block.timestamp + durations_1[0]);
+
+        // Now, the payment client decided to add a few more payment orders (with a few beneficiaries overlapping)  
+        address[3] memory contributorArray_2;
+        contributorArray_2[0] = contributor2;
+        contributorArray_2[1] = contributor3;
+        contributorArray_2[2] = contributor4;
+        
+        uint256[3] memory durations_2;
+        for(uint i; i < 3; i++) {
+            durations_2[i] = (randomDuration_2 * (i + 1));
+        }
+
+        uint256[3] memory amounts_2;
+        for(uint i; i < 3; i++) {
+            amounts_2[i] = (randomAmount_2 * (i + 1));
+        }
+
+        // Add these payment orders to the payment client
+        for (uint i; i < 3; i++) {
+            address recipient = contributorArray_2[i];
+            uint amount = amounts_2[i];
+            uint time = durations_2[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Now, let's check whether all vesting informations exist or not
+        // checking for contributor2
+        ConcurrentStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets;
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+                                                    address(paymentClient),
+                                                    contributor2
+                                               );
+        
+        assertTrue(contributorWallets.length == 2);
+        assertEq(
+            (contributorWallets[0]._salary + contributorWallets[1]._salary),
+            (amounts_1[1] + amounts_2[0]),
+            "Improper accounting of orders"
+        );
+
+        // checking for contributor3
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+                                                    address(paymentClient),
+                                                    contributor3
+                                               );
+        
+        assertTrue(contributorWallets.length == 2);
+        assertEq(
+            (contributorWallets[0]._salary + contributorWallets[1]._salary),
+            (amounts_1[2] + amounts_2[1]),
+            "Improper accounting of orders"
+        );
+
+        // checking for contributor 4
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+                                                    address(paymentClient),
+                                                    contributor4
+                                               );
+        
+        assertTrue(contributorWallets.length == 1);
+        assertEq(
+            (contributorWallets[0]._salary),
+            (amounts_2[2]),
+            "Improper accounting of orders"
+        );
+
+        // checking for contributor 1
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+                                                    address(paymentClient),
+                                                    contributor1
+                                               );
+        
+        assertTrue(contributorWallets.length == 1);
+        assertEq(
+            (contributorWallets[0]._salary),
+            (amounts_1[0]),
+            "Improper accounting of orders"
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
