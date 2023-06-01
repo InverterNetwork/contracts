@@ -644,6 +644,44 @@ contract ConcurrentStreamingPaymentProcessorTest is ModuleTest {
         }
     }
 
+    //This test creates a new set of payments in a client which finished all running payments. one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
+    function testUpdateFinishedPayments(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        speedRunStreamingAndClaim(recipients, amounts, durations);
+
+        vm.warp(block.timestamp + 52 weeks);
+
+        speedRunStreamingAndClaim(recipients, amounts, durations);
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]) * 2; //we paid two rounds
+
+            assertEq(_token.balanceOf(address(recipient)), amount);
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient), address(recipient), 1
+                ),
+                0
+            );
+        }
+
+        // No funds left in the PaymentClient
+        assertEq(_token.balanceOf(address(paymentClient)), 0);
+
+        // Invariant: Payment processor does not hold funds.
+        assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
