@@ -102,9 +102,6 @@ interface IReocurringPaymentManager {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @notice Function that triggers the start of the due payments
-    function trigger() external;
-
     /// @notice Adds a reocurring payment to the manager
     /// @dev a new id is created for each Payment
     /// @param amount : amount of tokens send to the recipient address
@@ -121,4 +118,10 @@ interface IReocurringPaymentManager {
     /// @param prevId : id of the previous reocurring payment in the payment list
     /// @param id : id of the reocurring payment that is to be removed
     function removeReocurringPayment(uint prevId, uint id) external;
+
+    //--------------------------------------------------------------------------
+    // Trigger
+
+    /// @notice Function that triggers the start of the due payments
+    function trigger() external;
 }

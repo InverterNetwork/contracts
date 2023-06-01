@@ -211,6 +211,9 @@ contract ReocurringPaymentManager is
         emit ReocurringPaymentRemoved(id);
     }
 
+    //--------------------------------------------------------------------------
+    // Trigger
+
     /// @inheritdoc IReocurringPaymentManager
     //@note @0xNuggan maybe include a triggerFor(startId,endId) function that allows you to trigger in intervals, to prevent runOutOfGas
     function trigger() external {
