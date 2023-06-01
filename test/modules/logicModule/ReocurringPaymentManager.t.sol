@@ -17,7 +17,7 @@ import {
     ReocurringPaymentManager,
     IReocurringPaymentManager,
     IPaymentClient
-} from "src/modules/LogicModule/ReocurringPaymentManager.sol";
+} from "src/modules/logicModule/ReocurringPaymentManager.sol";
 
 contract ReocurringPaymentManagerTest is ModuleTest {
     // SuT
