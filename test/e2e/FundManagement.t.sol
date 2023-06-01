@@ -14,18 +14,14 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 /**
  * E2e test demonstrating a proposal's fund management.
  *
- * Funding of a proposal is managed via an ERC4626 vault.
- * For more info, see [FundingVault.sol](src/proposal/base/FundingVault.sol).
+ * Funding of a proposal is managed via a fundingmanager.
  *
  * Upon deposit of funds, users receive receipt token.
- *
  * The withdrawal amount of funds is _always_ in relation of the amount of
- * receipt tokens to the total amount of funds left in the proposal.
+ * receipt tokens to the total amount of funds left in the fundingmanager.
  */
 
-contract ProposalFundManagement is
-    E2eTest //@todo Might be worth to rename this to just FundManagement and remove all the "proposal" quotes down below. Might be confusing for readers otherwise.
-{
+contract FundManagement is E2eTest {
     address alice = address(0xA11CE);
     address bob = address(0x606);
 
@@ -44,48 +40,48 @@ contract ProposalFundManagement is
         // IMPORTANT
         // =========
         // Due to how the underlying rebase mechanism works, it is necessary
-        // to always have some amount of tokens in the proposal.
+        // to always have some amount of tokens in the fundingmanager.
         // It's best, if the owner deposits them right after deployment.
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
         token.approve(address(fundingManager), initialDeposit);
         fundingManager.deposit(initialDeposit);
 
-        // Mint some tokens to alice and bob in order to fund the proposal.
+        // Mint some tokens to alice and bob in order to fund the fundingmanager.
         token.mint(alice, 1000e18);
         token.mint(bob, 5000e18);
 
-        // Alice funds the proposal with 1k tokens.
+        // Alice funds the fundingmanager with 1k tokens.
         vm.startPrank(alice);
         {
             // Approve tokens to proposal.
             token.approve(address(fundingManager), 1000e18);
 
-            // Deposit tokens, i.e. fund the proposal.
+            // Deposit tokens, i.e. fund the fundingmanager.
             fundingManager.deposit(1000e18);
 
             // After the deposit, alice received some amount of receipt tokens
-            // from the proposal.
+            // from the fundingmanager.
             assertTrue(fundingManager.balanceOf(alice) > 0);
         }
         vm.stopPrank();
 
-        // Bob funds the proposal with 5k tokens.
+        // Bob funds the fundingmanager with 5k tokens.
         vm.startPrank(bob);
         {
-            // Approve tokens to proposal.
+            // Approve tokens to fundingmanager.
             token.approve(address(fundingManager), 5000e18);
 
-            // Deposit tokens, i.e. fund the proposal.
+            // Deposit tokens, i.e. fund the fundingmanager.
             fundingManager.deposit(5000e18);
 
             // After the deposit, bob received some amount of receipt tokens
-            // from the proposal.
+            // from the fundingmanager.
             assertTrue(fundingManager.balanceOf(bob) > 0);
         }
         vm.stopPrank();
 
-        // If the proposal spends half their tokens, i.e. for a milestone,
+        // If the proposal spends half of the deposited tokens in the fundingmanager, i.e. for a milestone,
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
         // Note that we simulate proposal spending by just burning tokens.
@@ -110,7 +106,7 @@ contract ProposalFundManagement is
         }
         vm.stopPrank();
 
-        // After redeeming all their proposal function tokens, the tokens got
+        // After redeeming all their fundingmanager function tokens, the tokens got
         // burned.
         assertEq(fundingManager.balanceOf(alice), 0);
         assertEq(fundingManager.balanceOf(bob), 0);
