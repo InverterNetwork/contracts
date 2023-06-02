@@ -40,7 +40,6 @@ contract PaymentClientTest is Test {
 
         _assumeValidRecipient(recipient);
         _assumeValidAmount(amount);
-        _assumeValidDueTo(dueTo);
 
         // Sum of all token amounts should not overflow.
         uint sum;
@@ -91,19 +90,6 @@ contract PaymentClientTest is Test {
                 IPaymentClient.Module__PaymentClient__InvalidAmount.selector
             );
             paymentClient.addPaymentOrder(recipient, invalids[0], dueTo);
-        }
-    }
-
-    function testAddPaymentOrderFailsForInvalidDueTo() public {
-        address recipient = address(0xCAFE);
-        uint amount = 1e18;
-        uint[] memory invalids = _createInvalidDueTos();
-
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IPaymentClient.Module__PaymentClient__InvalidDueTo.selector
-            );
-            paymentClient.addPaymentOrder(recipient, amount, invalids[0]);
         }
     }
 
@@ -206,22 +192,6 @@ contract PaymentClientTest is Test {
         }
     }
 
-    function testAddIdenticalPaymentOrdersFailsForInvalidDueTo() public {
-        address[] memory recipients = new address[](1);
-        recipients[0] = address(0xCAFE);
-        uint amount = 1e18;
-        uint[] memory invalids = _createInvalidDueTos();
-
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IPaymentClient.Module__PaymentClient__InvalidDueTo.selector
-            );
-            paymentClient.addIdenticalPaymentOrders(
-                recipients, amount, invalids[0]
-            );
-        }
-    }
-
     //----------------------------------
     // Test: collectPaymentOrders()
 
@@ -236,7 +206,6 @@ contract PaymentClientTest is Test {
 
         _assumeValidRecipient(recipient);
         _assumeValidAmount(amount);
-        _assumeValidDueTo(dueTo);
 
         // Sum of all token amounts should not overflow.
         uint sum;
@@ -307,13 +276,6 @@ contract PaymentClientTest is Test {
         }
     }
 
-    function _assumeValidDueTo(uint dueTo) internal view {
-        uint[] memory invalids = _createInvalidDueTos();
-        for (uint i; i < invalids.length; ++i) {
-            vm.assume(dueTo != invalids[i]);
-        }
-    }
-
     //--------------------------------------------------------------------------
     // Data Creation Helper Functions
 
@@ -336,15 +298,6 @@ contract PaymentClientTest is Test {
         uint[] memory invalids = new uint[](1);
 
         invalids[0] = 0;
-
-        return invalids;
-    }
-
-    /// @dev Returns possible invalid dueTos.
-    function _createInvalidDueTos() internal view returns (uint[] memory) {
-        uint[] memory invalids = new uint[](1);
-
-        invalids[0] = block.timestamp - 1;
 
         return invalids;
     }
