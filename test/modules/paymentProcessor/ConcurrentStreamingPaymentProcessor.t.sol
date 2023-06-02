@@ -10,7 +10,7 @@ import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 import {
     ConcurrentStreamingPaymentProcessor,
     IPaymentProcessor
-} from "src/modules/ConcurrentStreamingPaymentProcessor.sol";
+} from "src/modules/paymentProcessor/ConcurrentStreamingPaymentProcessor.sol";
 
 // Mocks
 import {PaymentClientMock} from
