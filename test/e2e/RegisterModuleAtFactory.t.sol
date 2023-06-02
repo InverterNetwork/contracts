@@ -4,7 +4,8 @@ pragma solidity ^0.8.13;
 import {E2eTest} from "test/e2e/E2eTest.sol";
 
 import {IModule} from "src/modules/base/IModule.sol";
-import {SimplePaymentProcessor} from "src/modules/SimplePaymentProcessor.sol";
+import {SimplePaymentProcessor} from
+    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 

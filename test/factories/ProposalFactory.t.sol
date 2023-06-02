@@ -42,6 +42,12 @@ contract ProposalFactoryTest is Test {
         token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
     });
 
+    IProposalFactory.ModuleConfig fundingManagerConfig = IProposalFactory
+        .ModuleConfig(
+        IModule.Metadata(1, 1, "https://fundingmanager.com", "FundingManager"),
+        bytes("data")
+    );
+
     IProposalFactory.ModuleConfig authorizerConfig = IProposalFactory
         .ModuleConfig(
         IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
@@ -104,6 +110,7 @@ contract ProposalFactoryTest is Test {
         // Deploy Proposal with id=1
         IProposal proposal = factory.createProposal(
             proposalConfig,
+            fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
             moduleConfigs
@@ -122,6 +129,7 @@ contract ProposalFactoryTest is Test {
         // Deploy Proposal with id=2
         proposal = factory.createProposal(
             proposalConfig,
+            fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
             moduleConfigs
@@ -151,6 +159,7 @@ contract ProposalFactoryTest is Test {
         // Deploy Proposal
         IProposal proposal = factory.createProposal(
             proposalConfig,
+            fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
             moduleConfigs
