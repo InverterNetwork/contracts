@@ -215,12 +215,15 @@ contract ReocurringPaymentManager is
     // Trigger
 
     /// @inheritdoc IReocurringPaymentManager
-    //@note @0xNuggan maybe include a triggerFor(startId,endId) function that allows you to trigger in intervals, to prevent runOutOfGas
+    //@todo @0xNuggan maybe include a triggerFor(startId,endId) function that allows you to trigger in intervals, to prevent runOutOfGas
     function trigger() external {
         //Get First Position in payment list
         uint currentId = _paymentList.getNextId(_SENTINEL);
 
         uint currentEpoch = getCurrentEpoch();
+
+        //Amount of funds needed for the payment
+        uint totalAmount;
 
         //Loop through every element in payment list
         while (currentId != _SENTINEL) {
@@ -231,6 +234,7 @@ contract ReocurringPaymentManager is
             if (currentPayment.startEpoch <= currentEpoch) {
                 //Catch up every not triggered epoch
                 while (currentPayment.lastTriggeredEpoch != currentEpoch) {
+                    totalAmount += currentPayment.amount;
                     _addPaymentOrder(
                         currentPayment.recipient,
                         currentPayment.amount,
@@ -245,6 +249,9 @@ contract ReocurringPaymentManager is
             //Set to next Id in List
             currentId = _paymentList.list[currentId];
         }
+
+        //ensure that this contract has enough tokens fulfill payments
+        _ensureTokenBalance(totalAmount);
 
         //when done process the Payments correclty
         __Module_proposal.paymentProcessor().processPayments(
@@ -268,9 +275,11 @@ contract ReocurringPaymentManager is
             // to address(this).
             bool ok;
             (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.token()),
+                address(__Module_proposal.fundingManager()),
                 abi.encodeWithSignature(
-                    "transfer(address,uint256)", address(this), amount - balance
+                    "transferProposalToken(address,uint256)",
+                    address(this),
+                    amount - balance
                 )
             );
 
