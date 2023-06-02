@@ -32,11 +32,6 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         _;
     }
 
-    modifier validDueTo(uint dueTo) {
-        _ensureValidDueTo(dueTo);
-        _;
-    }
-
     //--------------------------------------------------------------------------
     // State
 
@@ -80,7 +75,6 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         virtual
         validRecipient(recipient)
         validAmount(amount)
-        validDueTo(dueTo)
     {
         // Add order's token amount to current outstanding amount.
         _outstandingTokenAmount += amount;
@@ -116,7 +110,6 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         for (uint i; i < orderAmount; ++i) {
             _ensureValidRecipient(recipients[i]);
             _ensureValidAmount(amounts[i]);
-            _ensureValidDueTo(dueTos[i]);
 
             // Add order's amount to total amount of new orders.
             totalTokenAmount += amounts[i];
@@ -148,7 +141,7 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         address[] memory recipients,
         uint amount,
         uint dueTo
-    ) internal virtual validAmount(amount) validDueTo(dueTo) {
+    ) internal virtual validAmount(amount) {
         uint orderAmount = recipients.length;
 
         for (uint i; i < orderAmount; ++i) {
@@ -245,12 +238,6 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     function _ensureValidAmount(uint amount) private pure {
         if (amount == 0) {
             revert Module__PaymentClient__InvalidAmount();
-        }
-    }
-
-    function _ensureValidDueTo(uint dueTo) private view {
-        if (dueTo < block.timestamp) {
-            revert Module__PaymentClient__InvalidDueTo();
         }
     }
 }
