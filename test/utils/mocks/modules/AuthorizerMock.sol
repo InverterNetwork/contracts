@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
 
-import {IAuthorizer} from "src/modules/IAuthorizer.sol";
+import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
 contract AuthorizerMock is IAuthorizer, Module {
     mapping(address => bool) private _authorized;

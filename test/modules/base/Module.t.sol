@@ -18,6 +18,8 @@ import {Proposal} from "src/proposal/Proposal.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
+import {FundingManagerMock} from
+    "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
@@ -33,7 +35,9 @@ contract ModuleTest is Test {
     Proposal proposal;
 
     // Mocks
+    FundingManagerMock fundingManager;
     AuthorizerMock authorizer;
+    PaymentProcessorMock paymentProcessor;
 
     // Constants
     uint constant MAJOR_VERSION = 1;
@@ -47,8 +51,12 @@ contract ModuleTest is Test {
     bytes CONFIGDATA = bytes("");
 
     function setUp() public {
+        fundingManager = new FundingManagerMock();
+
         authorizer = new AuthorizerMock();
         authorizer.setAllAuthorized(true);
+
+        paymentProcessor = new PaymentProcessorMock();
 
         address proposalImpl = address(new Proposal());
         proposal = Proposal(Clones.clone(proposalImpl));
@@ -66,8 +74,9 @@ contract ModuleTest is Test {
             address(this),
             IERC20(new ERC20Mock("Mock", "MOCK")),
             modules,
+            fundingManager,
             authorizer,
-            new PaymentProcessorMock()
+            paymentProcessor
         );
     }
 

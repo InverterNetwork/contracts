@@ -2,23 +2,21 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 
-import {MilestoneManager} from "src/modules/MilestoneManager.sol";
+import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 
- /**
-  * @title MilestoneManager Deployment Script
-  *
-  * @dev Script to deploy a new MilestoneManager.
-  *
-  *
-  * @author byterocket
-  */
+/**
+ * @title MilestoneManager Deployment Script
+ *
+ * @dev Script to deploy a new MilestoneManager.
+ *
+ *
+ * @author byterocket
+ */
 
 contract DeployMilestoneManager is Script {
-
     MilestoneManager milestoneManager;
 
     function run() external {
-
         // Deploy the milestoneManager.
         vm.startBroadcast();
         {
@@ -27,8 +25,9 @@ contract DeployMilestoneManager is Script {
         vm.stopBroadcast();
 
         // Log the deployed MilestoneManager contract address.
-        console2.log("Deployment of MilestoneManager at address",
-            address(milestoneManager));
+        console2.log(
+            "Deployment of MilestoneManager at address",
+            address(milestoneManager)
+        );
     }
-
 }

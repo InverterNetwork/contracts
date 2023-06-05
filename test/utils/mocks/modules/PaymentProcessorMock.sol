@@ -3,8 +3,9 @@ pragma solidity ^0.8.13;
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-import {IPaymentProcessor} from "src/modules/IPaymentProcessor.sol";
-import {IPaymentClient} from "src/modules/mixins/IPaymentClient.sol";
+import {IPaymentProcessor} from
+    "src/modules/paymentProcessor/IPaymentProcessor.sol";
+import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
 contract PaymentProcessorMock is IPaymentProcessor {
     //--------------------------------------------------------------------------

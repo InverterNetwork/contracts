@@ -20,6 +20,8 @@ import {
 } from "src/proposal/IProposal.sol";
 
 // Mocks
+import {FundingManagerMock} from
+    "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
@@ -39,11 +41,13 @@ contract ProposalTest is Test {
     TypeSanityHelper types;
 
     // Mocks
+    FundingManagerMock fundingManager;
     AuthorizerMock authorizer;
     PaymentProcessorMock paymentProcessor;
     ERC20Mock token;
 
     function setUp() public {
+        fundingManager = new FundingManagerMock();
         authorizer = new AuthorizerMock();
         paymentProcessor = new PaymentProcessorMock();
         token = new ERC20Mock("TestToken", "TST");
@@ -62,9 +66,7 @@ contract ProposalTest is Test {
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
-        types.assumeElemNotInSet(modules, address(authorizer));
-        types.assumeElemNotInSet(modules, address(paymentProcessor));
-        types.assumeElemNotInSet(modules, address(token));
+        assumeMockAreNotInSet(modules);
 
         // Initialize proposal.
         proposal.init(
@@ -72,6 +74,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -97,9 +100,7 @@ contract ProposalTest is Test {
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
-        types.assumeElemNotInSet(modules, address(authorizer));
-        types.assumeElemNotInSet(modules, address(paymentProcessor));
-        types.assumeElemNotInSet(modules, address(token));
+        assumeMockAreNotInSet(modules);
 
         // Initialize proposal.
         proposal.init(
@@ -107,6 +108,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -117,6 +119,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -130,9 +133,7 @@ contract ProposalTest is Test {
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
-        types.assumeElemNotInSet(modules, address(authorizer));
-        types.assumeElemNotInSet(modules, address(paymentProcessor));
-        types.assumeElemNotInSet(modules, address(token));
+        assumeMockAreNotInSet(modules);
 
         // Initialize proposal.
         proposal.init(
@@ -140,6 +141,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -159,9 +161,7 @@ contract ProposalTest is Test {
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
-        types.assumeElemNotInSet(modules, address(authorizer));
-        types.assumeElemNotInSet(modules, address(paymentProcessor));
-        types.assumeElemNotInSet(modules, address(token));
+        assumeMockAreNotInSet(modules);
 
         // Initialize proposal.
         proposal.init(
@@ -169,6 +169,7 @@ contract ProposalTest is Test {
             address(this),
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -187,9 +188,7 @@ contract ProposalTest is Test {
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
-        types.assumeElemNotInSet(modules, address(authorizer));
-        types.assumeElemNotInSet(modules, address(paymentProcessor));
-        types.assumeElemNotInSet(modules, address(token));
+        assumeMockAreNotInSet(modules);
 
         // Initialize proposal.
         proposal.init(
@@ -197,6 +196,7 @@ contract ProposalTest is Test {
             address(0xCAFE), // Note to not be the owner
             token,
             modules,
+            fundingManager,
             authorizer,
             paymentProcessor
         );
@@ -220,5 +220,15 @@ contract ProposalTest is Test {
 
     function testVersion() public {
         assertEq(proposal.version(), "1");
+    }
+
+    //--------------------------------------------------------------------------
+    // Helper Functions
+
+    function assumeMockAreNotInSet(address[] memory modules) private view {
+        types.assumeElemNotInSet(modules, address(fundingManager));
+        types.assumeElemNotInSet(modules, address(authorizer));
+        types.assumeElemNotInSet(modules, address(paymentProcessor));
+        types.assumeElemNotInSet(modules, address(token));
     }
 }
