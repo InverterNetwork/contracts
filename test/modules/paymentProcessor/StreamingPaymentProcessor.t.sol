@@ -47,8 +47,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
     function setUp() public {
         address impl = address(new StreamingPaymentProcessor());
-        paymentProcessor =
-            StreamingPaymentProcessor(Clones.clone(impl));
+        paymentProcessor = StreamingPaymentProcessor(Clones.clone(impl));
 
         _setUpProposal(paymentProcessor);
 
@@ -393,8 +392,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Now, let's check whether all vesting informations exist or not
         // checking for contributor2
-        StreamingPaymentProcessor.StreamingWallet[] memory
-            contributorWallets;
+        StreamingPaymentProcessor.StreamingWallet[] memory contributorWallets;
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), contributor2
         );

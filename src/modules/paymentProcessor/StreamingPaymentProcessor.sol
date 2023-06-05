@@ -255,8 +255,8 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
             (orders, totalAmount) = client.collectPaymentOrders();
 
             if (token().balanceOf(address(client)) < totalAmount) {
-                revert Module__PaymentProcessor__InsufficientTokenBalanceInClient(
-                );
+                revert
+                    Module__PaymentProcessor__InsufficientTokenBalanceInClient();
             }
 
             // Generate Streaming Payments for all orders
@@ -525,7 +525,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
         address[] memory contribSearchArray = activePayments[client];
 
         uint length = activePayments[client].length;
-        for (uint i; i < length; ) {
+        for (uint i; i < length;) {
             if (contribSearchArray[i] == contributor) {
                 return i;
             }
@@ -875,10 +875,8 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @return True if address is valid.
     function validAddress(address addr) internal view returns (bool) {
         return !(
-            addr == address(0) || 
-            addr == _msgSender() ||
-            addr == address(this) ||
-            addr == address(proposal())
+            addr == address(0) || addr == _msgSender() || addr == address(this)
+                || addr == address(proposal())
         );
     }
 
@@ -893,7 +891,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param _start uint to validate.
     /// @return True if uint is valid.
     function validStart(uint _start) internal view returns (bool) {
-        return !(_start < block.timestamp || _start >= type(uint256).max);
+        return !(_start < block.timestamp || _start >= type(uint).max);
     }
 
     /// @notice validate uint duration input.
