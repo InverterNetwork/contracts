@@ -161,7 +161,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             address _recipient;
             uint _amount;
             uint _start;
-            uint _duration;
+            uint _dueTo;
             uint _walletId;
 
             uint numOrders = orders.length;
@@ -170,7 +170,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _recipient = orders[i].recipient;
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
-                _duration = (orders[i].dueTo - _start);
+                _dueTo = (orders[i].dueTo);
                 _walletId =
                     numContributorWallets[address(client)][_recipient] + 1;
 
@@ -179,7 +179,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                     _recipient,
                     _amount,
                     _start,
-                    _duration,
+                    _dueTo,
                     _walletId
                 );
 
@@ -188,7 +188,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                     _recipient,
                     _amount,
                     _start,
-                    _duration,
+                    _dueTo,
                     _walletId
                 );
 
@@ -238,12 +238,10 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
         // We will delete the payment order in question, if it hasn't already reached the end of its duration.
-        uint startContributor =
-            startForSpecificWalletId(address(client), contributor, walletId);
-        uint durationContributor =
-            durationForSpecificWalletId(address(client), contributor, walletId);
+        uint dueToContributor =
+            dueToForSpecificWalletId(address(client), contributor, walletId);
 
-        if (block.timestamp < startContributor + durationContributor) {
+        if (block.timestamp < dueToContributor) {
             // deletes activeContributorPayments
             _removePaymentForSpecificWalletId(
                 address(client), contributor, walletId
@@ -280,12 +278,12 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
-    function durationForSpecificWalletId(
+    function dueToForSpecificWalletId(
         address client,
         address contributor,
         uint walletId
     ) public view returns (uint) {
-        return vestings[client][contributor][walletId]._duration;
+        return vestings[client][contributor][walletId]._dueTo;
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
@@ -458,7 +456,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             if (
                 block.timestamp
                     < startForSpecificWalletId(client, contributor, walletId)
-                        + durationForSpecificWalletId(client, contributor, walletId)
+                        + dueToForSpecificWalletId(client, contributor, walletId)
             ) {
                 _removePaymentForSpecificWalletId(client, contributor, walletId);
 
@@ -559,29 +557,29 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param _contributor Contributor's address.
     /// @param _salary Salary contributor will receive per epoch.
     /// @param _start Start vesting timestamp.
-    /// @param _duration Streaming duration timestamp.
+    /// @param _dueTo Streaming dueTo timestamp.
     /// @param _walletId ID of the new wallet of the a particular contributor being added
     function _addPayment(
         address client,
         address _contributor,
         uint _salary,
         uint _start,
-        uint _duration,
+        uint _dueTo,
         uint _walletId
     ) internal {
         if (
             !validAddress(_contributor) || !validSalary(_salary)
-                || !validStart(_start) || !validDuration(_duration)
+                || !validStart(_start)
         ) {
             emit InvalidStreamingOrderDiscarded(
-                _contributor, _salary, _start, _duration
+                _contributor, _salary, _start, _dueTo
             );
         } else {
             ++numContributorWallets[client][_contributor];
             isActiveContributor[client][_contributor] = true;
 
             vestings[client][_contributor][_walletId] =
-                StreamingWallet(_salary, 0, _start, _duration, _walletId);
+                StreamingWallet(_salary, 0, _start, _dueTo, _walletId);
 
             // We do not want activePayments[client] to have duplicate contributor entries
             // So we avoid pushing the _contributor to activePayments[client] if it already exists
@@ -595,7 +593,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             activeContributorPayments[client][_contributor].push(_walletId);
 
             emit StreamingPaymentAdded(
-                client, _contributor, _salary, _start, _duration, _walletId
+                client, _contributor, _salary, _start, _dueTo, _walletId
             );
         }
     }
@@ -667,13 +665,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             unclaimableAmounts[client][contributor] += amount;
         }
 
-        uint startContributor =
-            startForSpecificWalletId(client, contributor, walletId);
-        uint durationContributor =
-            durationForSpecificWalletId(client, contributor, walletId);
+        uint dueToContributor =
+            dueToForSpecificWalletId(client, contributor, walletId);
 
         // This if conditional block represents that nothing more remains to be vested from the specific walletId
-        if (block.timestamp >= startContributor + durationContributor) {
+        if (block.timestamp >= dueToContributor) {
             // 1. remove walletId from the activeContributorPayments mapping
             _removePaymentForSpecificWalletId(client, contributor, walletId);
 
@@ -711,16 +707,16 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         uint totalAllocation = vestings[client][contributor][walletId]._salary;
         uint startContributor =
             startForSpecificWalletId(client, contributor, walletId);
-        uint durationContributor =
-            durationForSpecificWalletId(client, contributor, walletId);
+        uint dueToContributor =
+            dueToForSpecificWalletId(client, contributor, walletId);
 
         if (timestamp < startContributor) {
             return 0;
-        } else if (timestamp >= startContributor + durationContributor) {
+        } else if (timestamp >= dueToContributor) {
             return totalAllocation;
         } else {
             return (totalAllocation * (timestamp - startContributor))
-                / durationContributor;
+                / (dueToContributor - startContributor);
         }
     }
 
@@ -746,12 +742,5 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @return True if uint is valid.
     function validStart(uint _start) internal view returns (bool) {
         return !(_start < block.timestamp || _start >= type(uint).max);
-    }
-
-    /// @notice validate uint duration input.
-    /// @param _duration uint to validate.
-    /// @return True if duration is valid.
-    function validDuration(uint _duration) internal pure returns (bool) {
-        return !(_duration == 0);
     }
 }
