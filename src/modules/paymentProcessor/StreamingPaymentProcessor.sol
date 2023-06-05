@@ -30,7 +30,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
         uint _salary;
         uint _released;
         uint _start;
-        uint _duration;
+        uint _dueTo;
     }
 
     // paymentClient => contributor => Payment
@@ -48,13 +48,13 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param duration Timestamp at which the full amount should be claimable.
+    /// @param dueTo Timestamp at which the full amount should be claimable.
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint start,
-        uint duration
+        uint dueTo
     );
 
     /// @notice Emitted when the vesting to an address is removed.
@@ -66,16 +66,16 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param newSalary The new amount of tokens the payment consists of.
-    /// @param newDuration Number of blocks over which the amount will vest.
-    event PaymentUpdated(address recipient, uint newSalary, uint newDuration);
+    /// @param newDueTo Number of blocks over which the amount will vest.
+    event PaymentUpdated(address recipient, uint newSalary, uint newDueTo);
 
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param duration Number of blocks over which the amount will vest
+    /// @param dueTo Number of blocks over which the amount will vest
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint duration
+        address indexed recipient, uint amount, uint start, uint dueTo
     );
 
     //--------------------------------------------------------------------------
@@ -147,19 +147,19 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
             address _recipient;
             uint _amount;
             uint _start;
-            uint _duration;
+            uint _dueTo;
             for (uint i; i < orders.length; i++) {
                 _recipient = orders[i].recipient;
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
-                _duration = (orders[i].dueTo - _start);
+                _dueTo = (orders[i].dueTo);
 
                 _addPayment(
-                    address(client), _recipient, _amount, _start, _duration
+                    address(client), _recipient, _amount, _start, _dueTo
                 );
 
                 emit PaymentOrderProcessed(
-                    address(client), _recipient, _amount, _start, _duration
+                    address(client), _recipient, _amount, _start, _dueTo
                 );
             }
         }
@@ -199,12 +199,12 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice Getter for the vesting duration.
     /// @param contributor Contributor's address.
-    function duration(address client, address contributor)
+    function dueTo(address client, address contributor)
         public
         view
         returns (uint)
     {
-        return vestings[client][contributor]._duration;
+        return vestings[client][contributor]._dueTo;
     }
 
     /// @notice Getter for the amount of eth already released
@@ -309,24 +309,24 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     /// @param _contributor Contributor's address.
     /// @param _salary Salary contributor will receive per epoch.
     /// @param _start Start vesting timestamp.
-    /// @param _duration Streaming duration timestamp.
+    /// @param _dueTo Streaming dueTo timestamp.
     function _addPayment(
         address client,
         address _contributor,
         uint _salary,
         uint _start,
-        uint _duration
+        uint _dueTo
     ) internal {
         if (
             !validAddress(_contributor) || !validSalary(_salary)
-                || !validStart(_start) || !validDuration(_duration)
+                || !validStart(_start)
         ) {
             emit InvalidStreamingOrderDiscarded(
-                _contributor, _salary, _start, _duration
+                _contributor, _salary, _start, _dueTo
             );
         } else {
             vestings[client][_contributor] =
-                StreamingWallet(_salary, 0, _start, _duration);
+                StreamingWallet(_salary, 0, _start, _dueTo);
 
             uint contribIndex =
                 findAddressInActivePayments(client, _contributor);
@@ -335,7 +335,7 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
             }
 
             emit StreamingPaymentAdded(
-                client, _contributor, _salary, _start, _duration
+                client, _contributor, _salary, _start, _dueTo
             );
         }
     }
@@ -380,15 +380,15 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
     ) internal view virtual returns (uint) {
         uint totalAllocation = vestings[client][contributor]._salary;
         uint startContributor = start(client, contributor);
-        uint durationContributor = duration(client, contributor);
+        uint dueToContributor = dueTo(client, contributor);
 
         if (timestamp < startContributor) {
             return 0;
-        } else if (timestamp > startContributor + durationContributor) {
+        } else if (timestamp >= dueToContributor) {
             return totalAllocation;
         } else {
             return (totalAllocation * (timestamp - startContributor))
-                / durationContributor;
+                / (dueToContributor - startContributor);
         }
     }
 
@@ -414,13 +414,6 @@ contract StreamingPaymentProcessor is Module, IPaymentProcessor {
 
     function validStart(uint _start) internal view returns (bool) {
         if (_start < block.timestamp || _start >= type(uint).max) {
-            return false;
-        }
-        return true;
-    }
-
-    function validDuration(uint _duration) internal pure returns (bool) {
-        if (_duration == 0) {
             return false;
         }
         return true;

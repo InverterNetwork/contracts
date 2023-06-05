@@ -13,8 +13,10 @@ import {
 } from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
 // Mocks
-import {PaymentClientMock} from
-    "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
+import {
+    IPaymentClient,
+    PaymentClientMock
+} from "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -27,7 +29,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     PaymentClientMock paymentClient = new PaymentClientMock(_token);
 
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint duration
+        address indexed recipient, uint amount, uint start, uint dueTo
     );
 
     event StreamingPaymentAdded(
@@ -35,7 +37,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address indexed recipient,
         uint amount,
         uint start,
-        uint duration
+        uint dueTo
     );
 
     event StreamingPaymentRemoved(
@@ -85,12 +87,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         speedRunStreamingAndClaim(recipients, amounts, durations);
 
+        address recipient;
         for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = uint(amounts[i]);
+            recipient = recipients[i];
 
             // Check correct balances.
-            assertEq(_token.balanceOf(address(recipient)), amount);
+            assertEq(_token.balanceOf(address(recipient)), uint(amounts[i]));
             assertEq(
                 paymentProcessor.releasable(
                     address(paymentClient), address(recipient)
@@ -106,10 +108,62 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
     }
 
+    function testProcessPaymentsWorksForDueTimeThatIsPlacedBeforeStartTime(
+        address[] memory recipients,
+        uint[] memory dueTimes
+    ) public {
+        uint length = recipients.length;
+        vm.assume(length < 50); //Restrict to reasonable size
+        vm.assume(length <= dueTimes.length);
+
+        assumeValidRecipients(recipients);
+
+        // Warp to reasonable time to test wether orders before timestamp are retrievable
+        vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
+
+        for (uint i; i < length; i++) {
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(recipients[i], 100, dueTimes[i]);
+        }
+
+        IPaymentClient.PaymentOrder[] memory orders =
+            paymentClient.paymentOrders();
+
+        // Call processPayments
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        for (uint i; i < length; i++) {
+            address recipient = recipients[i];
+            IPaymentClient.PaymentOrder memory order = orders[i];
+
+            //If dueTo is before currentTimestamp evereything should be releasable
+            if (order.dueTo <= block.timestamp) {
+                assertEq(
+                    paymentProcessor.releasable(
+                        address(paymentClient), address(recipient)
+                    ),
+                    100
+                );
+
+                vm.prank(recipient);
+                paymentProcessor.claim(paymentClient);
+
+                // Check correct balances.
+                assertEq(_token.balanceOf(recipient), 100);
+                assertEq(
+                    paymentProcessor.releasable(
+                        address(paymentClient), recipient
+                    ),
+                    0
+                );
+            }
+        }
+    }
+
     function testProcessPaymentsDiscardsInvalidPaymentOrders() public {
         address[] memory recipients = createInvalidRecipients();
 
-        uint invalidDur = 0;
         uint invalidAmt = 0;
 
         vm.warp(1000);
@@ -124,21 +178,11 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i = 0; i < recipients.length - 1; ++i) {
             vm.expectEmit(true, true, true, true);
             emit InvalidStreamingOrderDiscarded(
-                recipients[i], 100, block.timestamp, 100
+                recipients[i], 100, block.timestamp, block.timestamp + 100
             );
         }
 
         // Call processPayments and expect emits
-        paymentProcessor.processPayments(paymentClient);
-
-        //add invalid dur process and expect emit
-        paymentClient.addPaymentOrderUnchecked(
-            address(0xB0B), 100, (block.timestamp + invalidDur)
-        );
-        vm.expectEmit(true, true, true, true);
-        emit InvalidStreamingOrderDiscarded(
-            address(0xB0B), 100, block.timestamp, invalidDur
-        );
         paymentProcessor.processPayments(paymentClient);
 
         paymentClient.addPaymentOrderUnchecked(
@@ -146,7 +190,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         );
         vm.expectEmit(true, true, true, true);
         emit InvalidStreamingOrderDiscarded(
-            address(0xB0B), invalidAmt, block.timestamp, 100
+            address(0xB0B), invalidAmt, block.timestamp, block.timestamp + 100
         );
         paymentProcessor.processPayments(paymentClient);
 
@@ -235,24 +279,27 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
-        vm.assume(recipients.length <= amounts.length);
+        uint length = recipients.length;
+        vm.assume(length <= amounts.length);
         assumeValidRecipients(recipients);
-        assumeValidAmounts(amounts, recipients.length);
+        assumeValidAmounts(amounts, length);
 
         uint duration = 4 weeks;
 
-        for (uint i = 0; i < recipients.length; ++i) {
-            paymentClient.addPaymentOrder(recipients[i], amounts[i], duration);
+        for (uint i = 0; i < length; ++i) {
+            paymentClient.addPaymentOrder(
+                recipients[i], amounts[i], block.timestamp + duration
+            );
         }
         //Expect the correct number and sequence of emits
-        for (uint i = 0; i < recipients.length; ++i) {
+        for (uint i = 0; i < length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
                 address(paymentClient),
                 recipients[i],
                 amounts[i],
                 block.timestamp,
-                duration - block.timestamp
+                block.timestamp + duration
             );
         }
 
@@ -264,7 +311,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.warp(block.timestamp + 2 weeks);
 
         //we expect cancellation events for each payment
-        for (uint i = 0; i < recipients.length; ++i) {
+        for (uint i = 0; i < length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentRemoved(address(paymentClient), recipients[i]);
         }
@@ -275,14 +322,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // make sure the payments have been reset
 
-        for (uint i; i < recipients.length; ++i) {
+        for (uint i; i < length; ++i) {
             address recipient = recipients[i];
 
             assertEq(
                 paymentProcessor.start(address(paymentClient), recipient), 0
             );
             assertEq(
-                paymentProcessor.duration(address(paymentClient), recipient), 0
+                paymentProcessor.dueTo(address(paymentClient), recipient), 0
             );
             assertEq(
                 paymentProcessor.released(address(paymentClient), recipient), 0
@@ -305,14 +352,16 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
-        vm.assume(recipients.length <= amounts.length);
+        uint length = recipients.length;
+        vm.assume(length < 50); //Reasonable amount
+        vm.assume(length <= amounts.length);
         assumeValidRecipients(recipients);
-        assumeValidAmounts(amounts, recipients.length);
+        assumeValidAmounts(amounts, length);
 
         uint start = block.timestamp;
         uint duration = 1 weeks;
 
-        for (uint i = 0; i < recipients.length; i++) {
+        for (uint i = 0; i < length; i++) {
             address recipient = recipients[i];
             uint amount = amounts[i];
 
@@ -710,14 +759,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     function speedRunStreamingAndClaim(
         address[] memory recipients,
         uint128[] memory amounts,
-        uint64[] memory durations
+        uint64[] memory dueTos
     ) internal {
-        uint max_time = uint(durations[0]);
+        uint max_time = dueTos[0];
 
         for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = uint(amounts[i]);
-            uint time = uint(durations[i]);
+            uint time = dueTos[i];
 
             if (time > max_time) {
                 max_time = time;
@@ -725,7 +772,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + time)
+                recipients[i], amounts[i], (block.timestamp + time)
             );
         }
 
