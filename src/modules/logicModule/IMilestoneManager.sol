@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
