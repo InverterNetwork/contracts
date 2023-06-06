@@ -172,11 +172,6 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
                 _duration = (orders[i].dueTo - _start);
-
-                // We can't increase the value of numContributorWallets here, as it is possible that in the next
-                // _addPayment step, this wallet is not actually added. So, we will increment the value of this
-                // mapping there only, and for the same reason we cannot set the isActiveContributor mapping
-                // to true here.
                 _walletId =
                     numContributorWallets[address(client)][_recipient] + 1;
 
