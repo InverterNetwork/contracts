@@ -9,7 +9,7 @@ import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 // SuT
 import {
     StreamingPaymentProcessor,
-    IPaymentProcessor
+    IStreamingPaymentProcessor
 } from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
 // Mocks
@@ -35,11 +35,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address indexed recipient,
         uint amount,
         uint start,
-        uint duration
+        uint duration,
+        uint walletId
     );
 
     event StreamingPaymentRemoved(
-        address indexed paymentClient, address indexed recipient
+        address indexed paymentClient,
+        address indexed recipient,
+        uint indexed walletId
     );
 
     function setUp() public {
@@ -72,7 +75,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Payment Processing
 
-    function testProcessPayments(
+    function test_processPayments(
         address[] memory recipients,
         uint128[] memory amounts,
         uint64[] memory durations
@@ -83,30 +86,148 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         assumeValidAmounts(amounts, recipients.length);
         assumeValidDurations(durations, recipients.length);
 
-        speedRunStreamingAndClaim(recipients, amounts, durations);
+        uint max_time = uint(durations[0]);
+        uint totalAmount;
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
             uint amount = uint(amounts[i]);
+            uint time = uint(durations[i]);
 
-            // Check correct balances.
-            assertEq(_token.balanceOf(address(recipient)), amount);
-            assertEq(
-                paymentProcessor.releasable(
-                    address(paymentClient), address(recipient)
-                ),
-                0
+            if (time > max_time) {
+                max_time = time;
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
             );
+
+            totalAmount += amount;
         }
 
-        // No funds left in the PaymentClient
-        assertEq(_token.balanceOf(address(paymentClient)), 0);
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
 
-        // Invariant: Payment processor does not hold funds.
-        assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+        for (uint i; i < recipients.length;) {
+            assertTrue(
+                paymentProcessor.isActiveContributor(
+                    address(paymentClient), recipients[i]
+                )
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "Nothing would have vested at the start of the vesting duration"
+            );
+            unchecked {
+                ++i;
+            }
+        }
+
+        assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
     }
 
-    function testProcessPaymentsDiscardsInvalidPaymentOrders() public {
+    function test_claimVestedAmounts_fullVesting(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        uint max_time = uint(durations[0]);
+        uint totalAmount;
+
+        for (uint i; i < recipients.length; i++) {
+            address recipient = recipients[i];
+            uint amount = uint(amounts[i]);
+            uint time = uint(durations[i]);
+
+            if (time > max_time) {
+                max_time = time;
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+
+            totalAmount += amount;
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        for (uint i; i < recipients.length;) {
+            assertTrue(
+                paymentProcessor.isActiveContributor(
+                    address(paymentClient), recipients[i]
+                )
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "Nothing would have vested at the start of the vesting duration"
+            );
+            unchecked {
+                ++i;
+            }
+        }
+
+        assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
+
+        // Moving ahead in time, past the longest vesting period
+        vm.warp(block.timestamp + (max_time + 1));
+
+        // All recepients try to claim their vested tokens
+        for (uint i; i < recipients.length;) {
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(paymentClient);
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Now, all recipients should have their entire vested amount with them
+        for (uint i; i < recipients.length;) {
+            // Check recipient balance
+            assertEq(
+                _token.balanceOf(recipients[i]),
+                uint(amounts[i]),
+                "Vested tokens not received by the contributor"
+            );
+
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "All vested amount is already released"
+            );
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function test_processPayments_discardsInvalidPaymentOrders() public {
         address[] memory recipients = createInvalidRecipients();
 
         uint invalidDur = 0;
@@ -153,7 +274,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.stopPrank();
     }
 
-    function testProcessPaymentsDoesNotOVerwriteIfThereAreNoNewOrders(
+    function test_processPayments_vestingInfoGetsDeletedPostFullPayment(
         address[] memory recipients,
         uint128[] memory amounts,
         uint64[] memory durations
@@ -172,20 +293,378 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint amount = uint(amounts[i]);
 
-            // Check that the vesting is still in state
+            // Check that the vesting information is deleted once vested tokens are claimed after total vesting duration
             assertEq(
-                paymentProcessor.vestedAmount(
-                    address(paymentClient), address(recipient), block.timestamp
+                paymentProcessor.vestedAmountForSpecificWalletId(
+                    address(paymentClient),
+                    address(recipient),
+                    block.timestamp,
+                    1
                 ),
-                amount
+                0
             );
         }
     }
 
-    // test fails when not module calls
-    function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)
+    function test_processPayments_paymentOrdersAreNotOverwritten(
+        uint randomDuration,
+        uint randomAmount,
+        uint randomDuration_2,
+        uint randomAmount_2
+    ) public {
+        randomDuration = bound(randomDuration, 10, 100_000_000);
+        randomAmount = bound(randomAmount, 10, 10_000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
+        randomAmount_2 = bound(randomAmount_2, 100, 10_000);
+
+        address contributor1 = makeAddr("contributor1");
+        address contributor2 = makeAddr("contributor2");
+        address contributor3 = makeAddr("contributor3");
+        address contributor4 = makeAddr("contributor4");
+
+        address[3] memory contributorArray_1;
+        contributorArray_1[0] = contributor1;
+        contributorArray_1[1] = contributor2;
+        contributorArray_1[2] = contributor3;
+
+        uint[3] memory durations_1;
+        for (uint i; i < 3; i++) {
+            durations_1[i] = (randomDuration * (i + 1));
+        }
+
+        uint[3] memory amounts_1;
+        for (uint i; i < 3; i++) {
+            amounts_1[i] = (randomAmount * (i + 1));
+        }
+
+        // Add these payment orders to the payment client
+        for (uint i; i < 3; i++) {
+            address recipient = contributorArray_1[i];
+            uint amount = amounts_1[i];
+            uint time = durations_1[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Let's travel in time, to the point after contributor1's tokens are fully vested.
+        // Also, remember, nothing is claimed yet
+        vm.warp(block.timestamp + durations_1[0]);
+
+        // Now, the payment client decided to add a few more payment orders (with a few beneficiaries overlapping)
+        address[3] memory contributorArray_2;
+        contributorArray_2[0] = contributor2;
+        contributorArray_2[1] = contributor3;
+        contributorArray_2[2] = contributor4;
+
+        uint[3] memory durations_2;
+        for (uint i; i < 3; i++) {
+            durations_2[i] = (randomDuration_2 * (i + 1));
+        }
+
+        uint[3] memory amounts_2;
+        for (uint i; i < 3; i++) {
+            amounts_2[i] = (randomAmount_2 * (i + 1));
+        }
+
+        // Add these payment orders to the payment client
+        for (uint i; i < 3; i++) {
+            address recipient = contributorArray_2[i];
+            uint amount = amounts_2[i];
+            uint time = durations_2[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Now, let's check whether all vesting informations exist or not
+        // checking for contributor2
+        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets;
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor2
+        );
+
+        assertTrue(contributorWallets.length == 2);
+        assertEq(
+            (contributorWallets[0]._salary + contributorWallets[1]._salary),
+            (amounts_1[1] + amounts_2[0]),
+            "Improper accounting of orders"
+        );
+
+        // checking for contributor3
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor3
+        );
+
+        assertTrue(contributorWallets.length == 2);
+        assertEq(
+            (contributorWallets[0]._salary + contributorWallets[1]._salary),
+            (amounts_1[2] + amounts_2[1]),
+            "Improper accounting of orders"
+        );
+
+        // checking for contributor 4
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor4
+        );
+
+        assertTrue(contributorWallets.length == 1);
+        assertEq(
+            (contributorWallets[0]._salary),
+            (amounts_2[2]),
+            "Improper accounting of orders"
+        );
+
+        // checking for contributor 1
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor1
+        );
+
+        assertTrue(contributorWallets.length == 1);
+        assertEq(
+            (contributorWallets[0]._salary),
+            (amounts_1[0]),
+            "Improper accounting of orders"
+        );
+    }
+
+    uint initialNumWallets;
+    uint initialContributorBalance;
+    uint initialWalletIdAtIndex1;
+    uint finalNumWallets;
+    uint finalContributorBalance;
+
+    function test_removePaymentForSpecificWalletId_halfVestingDoneMultipleOrdersForSingleBeneficiary(
+        uint randomDuration,
+        uint randomAmount,
+        uint randomDuration_2,
+        uint randomAmount_2
+    ) public {
+        randomDuration = bound(randomDuration, 10, 100_000_000);
+        randomAmount = bound(randomAmount, 10, 10_000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
+        randomAmount_2 = bound(randomAmount_2, 100, 10_000);
+
+        address contributor1 = makeAddr("contributor1");
+        address contributor2 = makeAddr("contributor2");
+        address contributor3 = makeAddr("contributor3");
+        address contributor4 = makeAddr("contributor4");
+
+        address[6] memory contributorArray;
+        contributorArray[0] = contributor1;
+        contributorArray[1] = contributor2;
+        contributorArray[2] = contributor3;
+        contributorArray[3] = contributor1;
+        contributorArray[4] = contributor4;
+        contributorArray[5] = contributor1;
+
+        uint[6] memory durations;
+        for (uint i; i < 6; i++) {
+            durations[i] = (randomDuration * (i + 1));
+        }
+
+        uint[6] memory amounts;
+        for (uint i; i < 6; i++) {
+            amounts[i] = (randomAmount * (i + 1));
+        }
+
+        // Add these payment orders to the payment client
+        for (uint i; i < 6; i++) {
+            address recipient = contributorArray[i];
+            uint amount = amounts[i];
+            uint time = durations[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Let's travel in time, to the point after contributor1's tokens for the second payment order
+        // are 1/2 vested.
+        vm.warp(block.timestamp + (durations[3] / 2));
+
+        // This means, that when we call removePaymentForSpecificWalletId, that should increase the balance of the
+        // contributor by 1/2 of the vested token amount
+        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets =
+        paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor1
+        );
+
+        // We are interested in finding the details of the 2nd wallet of contributor1
+        uint expectedSalary = contributorWallets[1]._salary;
+        uint walletId = contributorWallets[1]._streamingWalletID;
+
+        initialNumWallets = contributorWallets.length;
+        initialContributorBalance = _token.balanceOf(contributor1);
+        initialWalletIdAtIndex1 = walletId;
+
+        assertTrue(expectedSalary != 0);
+
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
+        paymentProcessor.removePaymentForSpecificWalletId(
+            paymentClient, contributor1, walletId, false
+        );
+
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor1
+        );
+
+        finalNumWallets = contributorWallets.length;
+        finalContributorBalance = _token.balanceOf(contributor1);
+
+        assertEq(finalNumWallets + 1, initialNumWallets);
+        assertEq(
+            (finalContributorBalance - initialContributorBalance),
+            (expectedSalary / 2)
+        );
+        assertTrue(
+            initialWalletIdAtIndex1 != contributorWallets[1]._streamingWalletID
+        );
+    }
+
+    uint salary1;
+    uint salary2;
+    uint salary3;
+
+    function test_removePaymentAndClaimForSpecificWalletId(
+        uint randomDuration,
+        uint randomAmount,
+        uint randomDuration_2,
+        uint randomAmount_2
+    ) public {
+        randomDuration = bound(randomDuration, 10, 100_000_000);
+        randomAmount = bound(randomAmount, 10, 10_000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
+        randomAmount_2 = bound(randomAmount_2, 100, 10_000);
+
+        address contributor1 = makeAddr("contributor1");
+        address contributor2 = makeAddr("contributor2");
+        address contributor3 = makeAddr("contributor3");
+        address contributor4 = makeAddr("contributor4");
+
+        address[6] memory contributorArray;
+        contributorArray[0] = contributor1;
+        contributorArray[1] = contributor2;
+        contributorArray[2] = contributor3;
+        contributorArray[3] = contributor1;
+        contributorArray[4] = contributor4;
+        contributorArray[5] = contributor1;
+
+        uint[6] memory durations;
+        for (uint i; i < 6; i++) {
+            durations[i] = (randomDuration * (i + 1));
+        }
+
+        // we want the durations of vesting for contributor 1 to be double of the initial one
+        // and the last payment order to have the same duration as the middle one
+        durations[3] = durations[0] * 2;
+        durations[5] = durations[3];
+
+        uint[6] memory amounts;
+        for (uint i; i < 6; i++) {
+            amounts[i] = (randomAmount * (i + 1));
+        }
+
+        // Add these payment orders to the payment client
+        for (uint i; i < 6; i++) {
+            address recipient = contributorArray[i];
+            uint amount = amounts[i];
+            uint time = durations[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Let's travel in time, to the point after contributor1's tokens for the second payment order
+        // are 1/2 vested, or the complete vesting of duration of the first payment order
+        vm.warp(block.timestamp + durations[0]);
+
+        // Let's note down the current balance of the contributor1
+        initialContributorBalance = _token.balanceOf(contributor1);
+
+        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets =
+        paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor1
+        );
+
+        salary1 = contributorWallets[0]._salary;
+
+        // Now we claim the entire salary from the first payment order
+        vm.prank(contributor1);
+        paymentProcessor.claimForSpecificWalletId(
+            paymentClient, contributorWallets[0]._streamingWalletID, false
+        );
+
+        // Now we note down the balance of the contributor1 again after claiming for the first wallet.
+        finalContributorBalance = _token.balanceOf(contributor1);
+
+        assertEq((finalContributorBalance - initialContributorBalance), salary1);
+
+        // Now we are interested in finding the details of the 2nd wallet of contributor1
+        salary2 = (contributorWallets[1]._salary) / 2; // since we are at half the vesting duration
+        initialContributorBalance += _token.balanceOf(contributor1);
+
+        assertTrue(salary2 != 0);
+
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
+        paymentProcessor.removePaymentForSpecificWalletId(
+            paymentClient,
+            contributor1,
+            contributorWallets[1]._streamingWalletID,
+            false
+        );
+
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor1
+        );
+
+        finalNumWallets = contributorWallets.length;
+        finalContributorBalance = _token.balanceOf(contributor1);
+
+        assertEq(finalNumWallets, 1); // One was deleted because the vesting was completed and claimed. The other was deleted because of removePayment
+        assertEq((finalContributorBalance - initialContributorBalance), salary2);
+
+        // Now we try and claim the 3rd payment order for contributor1
+        // we are at half it's vesting period, so the salary3 should be half of the total salary
+        // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete vesting.
+        salary3 = (contributorWallets[0]._salary) / 2;
+        initialContributorBalance = _token.balanceOf(contributor1);
+
+        vm.prank(contributor1);
+        paymentProcessor.claimForSpecificWalletId(
+            paymentClient, contributorWallets[0]._streamingWalletID, false
+        );
+
+        finalContributorBalance = _token.balanceOf(contributor1);
+
+        assertEq((finalContributorBalance - initialContributorBalance), salary3);
+    }
+
+    function test_processPayments_failsWhenCalledByNonModule(address nonModule)
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
@@ -198,7 +677,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor
+                IStreamingPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
@@ -221,7 +700,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor
+                IStreamingPaymentProcessor
                     .Module__PaymentManager__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -229,9 +708,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.processPayments(otherPaymentClient);
     }
 
-    // test all running orders get cancelled indeed
-
-    function testAllCreatedOrdersGetCancelled(
+    function test_cancelRunningPayments_allCreatedOrdersGetCancelled(
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
@@ -252,7 +729,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipients[i],
                 amounts[i],
                 block.timestamp,
-                duration - block.timestamp
+                duration - block.timestamp,
+                1
             );
         }
 
@@ -266,7 +744,11 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         //we expect cancellation events for each payment
         for (uint i = 0; i < recipients.length; ++i) {
             vm.expectEmit(true, true, true, true);
-            emit StreamingPaymentRemoved(address(paymentClient), recipients[i]);
+            // we can expect all recipient to be unique due to the call to assumeValidRecipients.
+            // Therefore, the walletId of all these contributors would be 1.
+            emit StreamingPaymentRemoved(
+                address(paymentClient), recipients[i], 1
+            );
         }
 
         // calling cancelRunningPayments
@@ -279,104 +761,80 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             address recipient = recipients[i];
 
             assertEq(
-                paymentProcessor.start(address(paymentClient), recipient), 0
-            );
-            assertEq(
-                paymentProcessor.duration(address(paymentClient), recipient), 0
-            );
-            assertEq(
-                paymentProcessor.released(address(paymentClient), recipient), 0
-            );
-            assertEq(
-                paymentProcessor.vestedAmount(
-                    address(paymentClient), recipient, block.timestamp
+                paymentProcessor.startForSpecificWalletId(
+                    address(paymentClient), recipient, 1
                 ),
                 0
             );
             assertEq(
-                paymentProcessor.releasable(address(paymentClient), recipient),
+                paymentProcessor.durationForSpecificWalletId(
+                    address(paymentClient), recipient, 1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.releasedForSpecificWalletId(
+                    address(paymentClient), recipient, 1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.vestedAmountForSpecificWalletId(
+                    address(paymentClient), recipient, block.timestamp, 1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient), recipient, 1
+                ),
                 0
             );
         }
     }
 
-    // Sanity Math Check
-    function testStreamingCalculation(
-        address[] memory recipients,
-        uint128[] memory amounts
-    ) public {
-        vm.assume(recipients.length <= amounts.length);
-        assumeValidRecipients(recipients);
-        assumeValidAmounts(amounts, recipients.length);
+    function testCancelPaymentsFailsWhenCalledByNonModule(address nonModule)
+        public
+    {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_authorizer));
+        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
+        // if deployed address is same as nonModule, this test will fail.
+        vm.assume(nonModule != address(_paymentProcessor));
 
-        uint start = block.timestamp;
-        uint duration = 1 weeks;
+        vm.prank(nonModule);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStreamingPaymentProcessor
+                    .Module__PaymentManager__OnlyCallableByModule
+                    .selector
+            )
+        );
+        paymentProcessor.cancelRunningPayments(paymentClient);
+    }
 
-        for (uint i = 0; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = amounts[i];
+    function testCancelPaymentsFailsWhenCalledOnOtherClient(address nonModule)
+        public
+    {
+        vm.assume(nonModule != address(paymentProcessor));
+        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(_authorizer));
+        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
+        // if deployed address is same as nonModule, this test will fail.
+        vm.assume(nonModule != address(_paymentProcessor));
 
-            // Add payment order to client.
-            paymentClient.addPaymentOrder(recipient, amount, (start + duration));
-        }
+        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
 
         vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
-
-        for (uint z = 0; z <= duration; z += 1 hours) {
-            //we check each hour
-            vm.warp(start + z);
-
-            for (uint i = 0; i < recipients.length; i++) {
-                address recipient = recipients[i];
-                uint claimableAmt = amounts[i] * z / duration;
-
-                assertEq(
-                    claimableAmt,
-                    paymentProcessor.releasable(
-                        address(paymentClient), recipient
-                    )
-                );
-            }
-        }
-    }
-
-    //This test creates a new set of payments in a client which finished all running payments. one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
-    function testUpdateFinishedPayments(
-        address[] memory recipients,
-        uint128[] memory amounts,
-        uint64[] memory durations
-    ) public {
-        vm.assume(recipients.length <= amounts.length);
-        vm.assume(recipients.length <= durations.length);
-        assumeValidRecipients(recipients);
-        assumeValidAmounts(amounts, recipients.length);
-        assumeValidDurations(durations, recipients.length);
-
-        speedRunStreamingAndClaim(recipients, amounts, durations);
-
-        vm.warp(block.timestamp + 52 weeks);
-
-        speedRunStreamingAndClaim(recipients, amounts, durations);
-
-        for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = uint(amounts[i]) * 2; //we paid two rounds
-
-            assertEq(_token.balanceOf(address(recipient)), amount);
-            assertEq(
-                paymentProcessor.releasable(
-                    address(paymentClient), address(recipient)
-                ),
-                0
-            );
-        }
-
-        // No funds left in the PaymentClient
-        assertEq(_token.balanceOf(address(paymentClient)), 0);
-
-        // Invariant: Payment processor does not hold funds.
-        assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStreamingPaymentProcessor
+                    .Module__PaymentManager__CannotCallOnOtherClientsOrders
+                    .selector
+            )
+        );
+        paymentProcessor.cancelRunningPayments(otherPaymentClient);
     }
 
     //This test creates a new set of payments in a client which finished all running payments.
@@ -427,8 +885,6 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint[] memory balancesBefore = new uint256[](recipients.length);
         for (uint i; i < recipients.length; i++) {
             vm.prank(recipients[i]);
-            paymentProcessor.claim(paymentClient);
-
             balancesBefore[i] = _token.balanceOf(recipients[i]);
         }
 
@@ -439,69 +895,33 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
 
-            vm.prank(recipient);
-            paymentProcessor.claim(paymentClient);
+            vm.startPrank(recipient);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IStreamingPaymentProcessor
+                        .Module__PaymentProcessor__NothingToClaim
+                        .selector,
+                    address(paymentClient),
+                    recipient
+                )
+            );
+            paymentProcessor.claimAll(paymentClient);
+            vm.stopPrank();
 
             uint balanceAfter = _token.balanceOf(recipient);
 
             assertEq(balancesBefore[i], balanceAfter);
             assertEq(
-                paymentProcessor.releasable(address(paymentClient), recipient),
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient), recipient, 1
+                ),
                 0
             );
         }
     }
 
-    function testCancelPaymentsFailsWhenCalledByNonModule(address nonModule)
-        public
-    {
-        vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
-        vm.assume(nonModule != address(_fundingManager));
-        vm.assume(nonModule != address(_authorizer));
-        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
-        // if deployed address is same as nonModule, this test will fail.
-        vm.assume(nonModule != address(_paymentProcessor));
-
-        vm.prank(nonModule);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IPaymentProcessor
-                    .Module__PaymentManager__OnlyCallableByModule
-                    .selector
-            )
-        );
-        paymentProcessor.cancelRunningPayments(paymentClient);
-    }
-
-    function testCancelPaymentsFailsWhenCalledOnOtherClient(address nonModule)
-        public
-    {
-        vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
-        vm.assume(nonModule != address(_authorizer));
-        // PaymentProcessorMock gets deployed and initialized in ModuleTest,
-        // if deployed address is same as nonModule, this test will fail.
-        vm.assume(nonModule != address(_paymentProcessor));
-
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
-
-        vm.prank(address(paymentClient));
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IPaymentProcessor
-                    .Module__PaymentManager__CannotCallOnOtherClientsOrders
-                    .selector
-            )
-        );
-        paymentProcessor.cancelRunningPayments(otherPaymentClient);
-    }
-
-    //we create a set of payments, but befor they finish, we supply a new set of orders.
-    //Intended behavior is:
-    //  - workers get all the funds they already had earned (but maybe not claimed)
-    //  - Their remaining payment gets cancelled and substituted by the new one
-    function testUpdateRunningPayments(
+    // Sanity Math Check
+    function testStreamingCalculation(
         address[] memory recipients,
         uint128[] memory amounts
     ) public {
@@ -509,83 +929,70 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         assumeValidRecipients(recipients);
         assumeValidAmounts(amounts, recipients.length);
 
-        //In this case, we want to specifiy the same duration for everbody:
-        uint duration = 4 weeks;
+        uint start = block.timestamp;
+        uint duration = 1 weeks;
 
-        for (uint i; i < recipients.length; i++) {
+        for (uint i = 0; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint amount = uint(amounts[i]) * 2;
+            uint amount = amounts[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + duration)
-            );
+            paymentClient.addPaymentOrder(recipient, amount, (start + duration));
         }
 
-        // Call processPayments.
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
-        vm.warp(block.timestamp + 2 weeks);
+        for (uint z = 0; z <= duration; z += 1 hours) {
+            //we check each hour
+            vm.warp(start + z);
 
-        //check how much each address can claim:
-        uint[] memory claims = new uint[](recipients.length);
-        for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            claims[i] = paymentProcessor.vestedAmount(
-                address(paymentClient), recipient, block.timestamp
-            );
-            assertEq(claims[i], amounts[i]);
+            for (uint i = 0; i < recipients.length; i++) {
+                address recipient = recipients[i];
+                uint claimableAmt = amounts[i] * z / duration;
+
+                assertEq(
+                    claimableAmt,
+                    paymentProcessor.releasableForSpecificWalletId(
+                        address(paymentClient), recipient, 1
+                    )
+                );
+            }
         }
+    }
 
-        //add a modified round of vesting with different amount/duration (but don't process it yet):
-        for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint newAmount = uint(amounts[i]) * 3;
+    //This test creates a new set of payments in a client which finished all running payments. one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
+    function testUpdateFinishedPayments(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
 
-            // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                recipient, newAmount, (block.timestamp + (duration * 3))
-            );
-        }
+        speedRunStreamingAndClaim(recipients, amounts, durations);
 
-        // Call processPayments again.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.warp(block.timestamp + 52 weeks);
 
-        //we check everybody received what they were owed and can't claim for the new one
-        for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            assertEq(_token.balanceOf(recipient), claims[i]);
-            assertEq(
-                paymentProcessor.vestedAmount(
-                    address(paymentClient), recipient, block.timestamp
-                ),
-                0
-            );
-        }
-
-        //at the end of the new period, everybody was only able to claim the new salary + what they earned before.
-        vm.warp(block.timestamp + (duration * 3) + 1);
+        speedRunStreamingAndClaim(recipients, amounts, durations);
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
-            uint amount = uint(amounts[i]) * 4;
+            uint amount = uint(amounts[i]) * 2; //we paid two rounds
 
-            vm.prank(address(recipient));
-            paymentProcessor.claim(paymentClient);
-
-            // Check that balances are correct and that noody can claim anything else
             assertEq(_token.balanceOf(address(recipient)), amount);
             assertEq(
-                paymentProcessor.releasable(
-                    address(paymentClient), address(recipient)
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient), address(recipient), 1
                 ),
                 0
             );
         }
 
-        //No funds remain in the PaymentClient
+        // No funds left in the PaymentClient
         assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
@@ -615,13 +1022,16 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claim(paymentClient);
+        paymentProcessor.claimAll(paymentClient);
 
         // after failed claim attempt receiver should receive 0 token,
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
         assertEq(
-            paymentProcessor.releasable(address(paymentClient), recipient), 0
+            paymentProcessor.releasableForSpecificWalletId(
+                address(paymentClient), recipient, 1
+            ),
+            0
         );
         assertEq(
             paymentProcessor.unclaimable(address(paymentClient), recipient),
@@ -634,13 +1044,16 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claim(paymentClient);
+        paymentProcessor.claimAll(paymentClient);
 
         // after successful claim attempt receiver should 50% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 2);
         assertEq(
-            paymentProcessor.releasable(address(paymentClient), recipient), 0
+            paymentProcessor.releasableForSpecificWalletId(
+                address(paymentClient), recipient, 1
+            ),
+            0
         );
         assertEq(
             paymentProcessor.unclaimable(address(paymentClient), recipient), 0
@@ -670,13 +1083,16 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claim(paymentClient);
+        paymentProcessor.claimAll(paymentClient);
 
         // after failed claim attempt receiver should receive 0 token,
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
         assertEq(
-            paymentProcessor.releasable(address(paymentClient), recipient), 0
+            paymentProcessor.releasableForSpecificWalletId(
+                address(paymentClient), recipient, 1
+            ),
+            0
         );
         assertEq(
             paymentProcessor.unclaimable(address(paymentClient), recipient),
@@ -689,13 +1105,16 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claim(paymentClient);
+        paymentProcessor.claimAll(paymentClient);
 
         // after successful claim attempt receiver should 50% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 2);
         assertEq(
-            paymentProcessor.releasable(address(paymentClient), recipient), 0
+            paymentProcessor.releasableForSpecificWalletId(
+                address(paymentClient), recipient, 1
+            ),
+            0
         );
         assertEq(
             paymentProcessor.unclaimable(address(paymentClient), recipient), 0
@@ -737,7 +1156,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < recipients.length; i++) {
             vm.prank(address(recipients[i]));
-            paymentProcessor.claim(paymentClient);
+            paymentProcessor.claimAll(paymentClient);
         }
     }
 

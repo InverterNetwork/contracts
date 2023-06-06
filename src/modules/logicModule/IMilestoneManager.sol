@@ -63,7 +63,6 @@ interface IMilestoneManager is IPaymentClient {
     /// @notice Given duration invalid.
     error Module__MilestoneManager__InvalidDuration();
 
-    // @audit-info If needed, add error for invalid budget here.
     /// @notice Given budget invalid.
     //error Module__MilestoneManager__InvalidBudget();
 
