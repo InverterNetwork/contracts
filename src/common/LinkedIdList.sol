@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 /*
 Assumptions
 -Continous Usage of List
 -List is initiated with init ->once<-
--used ids are unique 
+-used ids are unique
 */
 
 library LinkedIdList {
