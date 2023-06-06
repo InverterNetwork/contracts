@@ -163,6 +163,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             uint _start;
             uint _duration;
             uint _walletId;
+            bool isPaymentOrderAdded;
 
             uint numOrders = orders.length;
 
@@ -179,7 +180,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _walletId =
                     numContributorWallets[address(client)][_recipient] + 1;
 
-                _addPayment(
+                isPaymentOrderAdded = _addPayment(
                     address(client),
                     _recipient,
                     _amount,
@@ -187,6 +188,10 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                     _duration,
                     _walletId
                 );
+
+                if (isPaymentOrderAdded) {
+                    ++numContributorWallets[address(client)][_recipient];
+                }
 
                 emit PaymentOrderProcessed(
                     address(client),
@@ -573,7 +578,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         uint _start,
         uint _duration,
         uint _walletId
-    ) internal {
+    ) internal returns (bool) {
         if (
             !validAddress(_contributor) || !validSalary(_salary)
                 || !validStart(_start) || !validDuration(_duration)
@@ -581,8 +586,9 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             emit InvalidStreamingOrderDiscarded(
                 _contributor, _salary, _start, _duration
             );
+
+            return false;
         } else {
-            ++numContributorWallets[client][_contributor];
             isActiveContributor[client][_contributor] = true;
 
             vestings[client][_contributor][_walletId] =
@@ -602,6 +608,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             emit StreamingPaymentAdded(
                 client, _contributor, _salary, _start, _duration, _walletId
             );
+
+            return true;
         }
     }
 
