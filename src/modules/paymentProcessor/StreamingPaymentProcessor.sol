@@ -233,6 +233,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         );
 
         // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
+        // We will delete the payment order in question, if it hasn't already reached the end of its duration.
         uint startContributor =
             startForSpecificWalletId(address(client), contributor, walletId);
         uint durationContributor =
