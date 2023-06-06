@@ -73,6 +73,15 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         _;
     }
 
+    modifier activeContributor(address client, address contributor) {
+        if (!(isActiveContributor[client][contributor])) {
+            revert Module__PaymentProcessor__InvalidContributor(
+                client, contributor
+            );
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // External Functions
 
@@ -332,16 +341,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IStreamingPaymentProcessor
     function viewAllPaymentOrders(address client, address contributor)
+        activeContributor(client, contributor)
         external
         view
         returns (StreamingWallet[] memory)
     {
-        if (!(isActiveContributor[client][contributor])) {
-            revert Module__PaymentProcessor__InvalidContributor(
-                client, contributor
-            );
-        }
-
         uint[] memory contributorWalletsArray =
             activeContributorPayments[client][contributor];
         uint contributorWalletsArrayLength = contributorWalletsArray.length;
