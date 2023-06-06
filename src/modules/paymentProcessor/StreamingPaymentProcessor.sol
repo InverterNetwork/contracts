@@ -499,8 +499,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         address contributor,
         uint walletId
     ) internal {
-        uint walletIdIndex =
-            _findActiveWalletId(client, contributor, walletId);
+        uint walletIdIndex = _findActiveWalletId(client, contributor, walletId);
 
         if (walletIdIndex == type(uint).max) {
             revert Module__PaymentProcessor__InactiveWallet(
