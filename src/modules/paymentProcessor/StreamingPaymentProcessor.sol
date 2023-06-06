@@ -503,6 +503,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             );
         }
 
+        // Standard deletion process.
+        // Move the last element to the index which is to be deleted and then pop the last element of the array.
         activeContributorPayments[client][contributor][walletIdIndex] =
         activeContributorPayments[client][contributor][activeContributorPayments[client][contributor]
             .length - 1];
