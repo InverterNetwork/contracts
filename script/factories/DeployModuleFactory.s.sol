@@ -14,14 +14,20 @@ import {ModuleFactory} from "src/factories/ModuleFactory.sol";
  */
 
 contract DeployModuleFactory is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     ModuleFactory moduleFactory;
 
     function run() external returns (address) {
-        // Deploy the moduleFactory.
-        vm.startBroadcast();
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the moduleFactory.
             moduleFactory = new ModuleFactory();
         }
+
         vm.stopBroadcast();
 
         // Log the deployed ModuleFactory contract address.

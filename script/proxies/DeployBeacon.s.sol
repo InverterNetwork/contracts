@@ -14,14 +14,21 @@ import {Beacon} from "src/factories/beacon/Beacon.sol";
  */
 
 contract DeployBeacon is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     Beacon beacon;
 
     function run() external returns (address) {
-        // Deploy the beacon.
-        vm.startBroadcast();
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the beacon.
+
             beacon = new Beacon();
         }
+
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.

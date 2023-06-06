@@ -14,14 +14,21 @@ import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol"
  */
 
 contract DeploySingleVoteGovernor is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     SingleVoteGovernor singleVoteGovernor;
 
     function run() external returns (address) {
-        // Deploy the singleVoteGovernor.
-        vm.startBroadcast();
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the singleVoteGovernor.
+
             singleVoteGovernor = new SingleVoteGovernor();
         }
+
         vm.stopBroadcast();
 
         // Log the deployed SingleVoteGovernor contract address.

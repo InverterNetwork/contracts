@@ -14,14 +14,21 @@ import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
  */
 
 contract DeployListAuthorizer is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     ListAuthorizer listAuthorizer;
 
     function run() external returns (address) {
-        // Deploy the listAuthorizer.
-        vm.startBroadcast();
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the listAuthorizer.
+
             listAuthorizer = new ListAuthorizer();
         }
+
         vm.stopBroadcast();
 
         // Log the deployed ListAuthorizer contract address.

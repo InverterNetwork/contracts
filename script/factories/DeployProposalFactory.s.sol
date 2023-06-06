@@ -17,6 +17,11 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
  */
 
 contract DeployProposalFactory is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     ProposalFactory proposalFactory;
 
     function run() external returns (address) {
@@ -43,11 +48,12 @@ contract DeployProposalFactory is Script {
         public
         returns (address)
     {
-        // Deploy the proposalFactory.
-        vm.startBroadcast();
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the proposalFactory.
             proposalFactory = new ProposalFactory(target, moduleFactory);
         }
+
         vm.stopBroadcast();
 
         // Log the deployed ProposalFactory contract address.

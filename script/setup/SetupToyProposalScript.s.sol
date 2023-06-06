@@ -10,7 +10,18 @@ import {IMilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 import {IProposal} from "src/proposal/Proposal.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract SetupScript is Test, Script, DeploymentScript {
+
+
+// NOTE: THIS WHOLE FILE CAN BE CONSIDERED A TODO
+
+contract SetupToyProposalScript is Test, DeploymentScript {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address proposalOwner = vm.addr(deployerPrivateKey);
+
+
+
     /*
         // Before we can start a milestone, two things need to be present:
         // 1. A non-empty list of contributors for it
@@ -20,6 +31,11 @@ contract SetupScript is Test, Script, DeploymentScript {
         // Note the salary is specified in relation to the SALARY_PRECISION variable in the MilestoneManager.
     */
 
+
+    //-------------------------------------------------------------------------
+    // MOCK CONTRIBUTOR AND FUNDER INFORMATION
+
+    // TODO: Use foundry cheatcodes to create mock funders and workers
     IMilestoneManager.Contributor alice = IMilestoneManager.Contributor(
         address(0xA11CE), 50_000_000, "AliceIdHash"
     );
@@ -29,8 +45,8 @@ contract SetupScript is Test, Script, DeploymentScript {
 
     IMilestoneManager.Contributor[] contributors;
 
-    address proposalOwner = vm.envAddress("PROPOSAL_OWNER_ADDRESS");
-    uint proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+
+
     //This address is taken accordingly to the anvil private key of the env file
     address funder1 = address(0x976EA74026E726554dB657fA54763abd0C3a0aa9);
     uint funder1PrivateKey = vm.envUint("FUNDER_1_PRIVATE_KEY");
@@ -39,15 +55,35 @@ contract SetupScript is Test, Script, DeploymentScript {
         ERC20Mock token;
         IProposal test_proposal;
 
+        // First, we run the deployment script to deploy the factories, implementations and Beacons.
         DeploymentScript.run();
 
+        // Then we deploy a mock ERC20 to act as funding token for the proposal. It has a public mint function.
         vm.startBroadcast(deployerPrivateKey);
         {
             token = new ERC20Mock("Mock", "MOCK");
         }
         vm.stopBroadcast();
 
-        // First, we create a new proposal.
+         // ------------------------------------------------------------------------
+        // Proposal Configuration Data
+        // TODO: Clean up + revise
+
+    address[] initialAuthorizedAddresses = [proposalOwner];
+
+    // MilestoneManager config: Metadata, salary precision, fee percentage, fee treasury address
+    IProposalFactory.ModuleConfig milestoneManagerFactoryConfig =
+    IProposalFactory.ModuleConfig(
+        milestoneManagerMetadata,
+        abi.encode(100_000_000, 1_000_000, proposalOwner)
+    );
+
+    IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory
+        .ModuleConfig(authorizerMetadata, abi.encode(initialAuthorizedAddresses));
+
+    IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
+        IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
+
 
         IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
@@ -61,6 +97,9 @@ contract SetupScript is Test, Script, DeploymentScript {
             new IProposalFactory.ModuleConfig[](1);
         optionalModules[0] = milestoneManagerFactoryConfig;
 
+
+        // Create the proposal with the given configuration.
+        // TODO: Add funding manager 
         vm.startBroadcast(proposalOwnerPrivateKey);
         test_proposal = proposalFactory.createProposal(
             proposalConfig,
@@ -72,6 +111,9 @@ contract SetupScript is Test, Script, DeploymentScript {
         vm.stopBroadcast();
 
         console2.log("Proposal Contract", address(test_proposal));
+
+        // Check if the proposal has been created correctly.
+
         assert(address(test_proposal) != address(0));
 
         address proposalToken = address(IProposal(test_proposal).token());
@@ -114,6 +156,8 @@ contract SetupScript is Test, Script, DeploymentScript {
             "Milestone manager wrong address inputted"
         );
 
+        // Initialize Milestone Manager
+
         contributors.push(alice);
         contributors.push(bob);
 
@@ -133,6 +177,8 @@ contract SetupScript is Test, Script, DeploymentScript {
             bytes("The second milestone, right after the first one")
         );
 
+        // Initialize FundingManager
+
         // IMPORTANT
         // =========
         // Due to how the underlying rebase mechanism works, it is necessary
@@ -150,6 +196,9 @@ contract SetupScript is Test, Script, DeploymentScript {
         fundingManager.deposit(initialDeposit);
 
         vm.stopBroadcast();
+
+
+        // Final checks
 
         // Let's confirm whether the milestone was added or not.
         // milestoneId 1 should exist and 0 shouldn't, since IDs start from 1.

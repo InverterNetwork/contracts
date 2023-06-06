@@ -14,19 +14,26 @@ import {SimplePaymentProcessor} from
  */
 
 contract DeployPaymentProcessor is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     SimplePaymentProcessor paymentProcessor;
 
     function run() external returns (address) {
-        // Deploy the milestoneManager.
-        vm.startBroadcast();
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the milestoneManager.
+
             paymentProcessor = new SimplePaymentProcessor();
         }
+
         vm.stopBroadcast();
 
         // Log the deployed MilestoneManager contract address.
         console2.log(
-            "Deployment of PaymentProcessor Implementation at address",
+            "Deployment of SimplePaymentProcessor Implementation at address",
             address(paymentProcessor)
         );
 

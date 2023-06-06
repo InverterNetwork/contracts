@@ -18,6 +18,11 @@ import {DeployBeacon} from "script/proxies/DeployBeacon.s.sol";
  */
 
 contract DeployAndSetUpBeacon is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     Beacon beacon;
 
     function run(
@@ -25,14 +30,20 @@ contract DeployAndSetUpBeacon is Script {
         address moduleFactory,
         IModule.Metadata calldata metadata
     ) external returns (address) {
-        // Deploy the beacon.
-        beacon = new Beacon();
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            // Deploy the beacon.
+            beacon = new Beacon();
 
-        // Upgrade the Beacon to the chosen implementation
-        beacon.upgradeTo(address(implementation));
+            // Upgrade the Beacon to the chosen implementation
+            beacon.upgradeTo(address(implementation));
 
-        // Register Metadata at the ModuleFactory
-        ModuleFactory(moduleFactory).registerMetadata(metadata, Beacon(beacon));
+            // Register Metadata at the ModuleFactory
+            ModuleFactory(moduleFactory).registerMetadata(
+                metadata, Beacon(beacon)
+            );
+        }
+        vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
         console2.log("Deployment of Beacon at address", address(beacon));

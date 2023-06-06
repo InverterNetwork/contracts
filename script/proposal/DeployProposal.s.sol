@@ -14,14 +14,21 @@ import {Proposal} from "src/proposal/Proposal.sol";
  */
 
 contract DeployProposal is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     Proposal proposal;
 
-    function run() external {
-        // Deploy the proposal.
-        vm.startBroadcast();
+    function run() external returns (address) {
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the proposal.
+
             proposal = new Proposal();
         }
+
         vm.stopBroadcast();
 
         // Log the deployed Proposal contract address.
@@ -29,5 +36,7 @@ contract DeployProposal is Script {
             "Deployment of Proposal Implementation at address",
             address(proposal)
         );
+
+        return address(proposal);
     }
 }

@@ -14,16 +14,22 @@ import {RebasingFundingManager} from
  */
 
 contract DeployRebasingFundingManager is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     RebasingFundingManager fundingManager;
 
     function run() external returns (address) {
-        // Deploy the milestoneManager.
-        vm.startBroadcast();
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the milestoneManager.
+
             fundingManager = new RebasingFundingManager();
         }
-        vm.stopBroadcast();
 
+        vm.stopBroadcast();
         // Log the deployed MilestoneManager contract address.
         console2.log(
             "Deployment of RebasingFundingManager Implementation at address: ",
