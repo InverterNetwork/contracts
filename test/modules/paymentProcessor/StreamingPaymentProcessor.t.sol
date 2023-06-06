@@ -441,6 +441,105 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         );
     }
 
+
+    uint initialNumWallets;
+    uint initialContributorBalance;
+    uint initialWalletIdAtIndex1;
+    uint finalNumWallets;
+    uint finalContributorBalance;
+
+    function test_removePaymentForSpecificWalletId_halfVestingDoneMultipleOrdersForSingleBeneficiary (
+        uint randomDuration,
+        uint randomAmount,
+        uint randomDuration_2,
+        uint randomAmount_2
+    ) public {
+        randomDuration = bound(randomDuration, 10, 10_000_000);
+        randomAmount = bound(randomAmount, 10, 10_000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 10_000_000);
+        randomAmount_2 = bound(randomAmount_2, 100, 10_000);
+
+        address contributor1 = makeAddr("contributor1");
+        address contributor2 = makeAddr("contributor2");
+        address contributor3 = makeAddr("contributor3");
+        address contributor4 = makeAddr("contributor4");
+
+        address[6] memory contributorArray;
+        contributorArray[0] = contributor1;
+        contributorArray[1] = contributor2;
+        contributorArray[2] = contributor3;
+        contributorArray[3] = contributor1;
+        contributorArray[4] = contributor4;
+        contributorArray[5] = contributor1;
+
+        uint[6] memory durations;
+        for (uint i; i < 6; i++) {
+            durations[i] = (randomDuration * (i + 1));
+        }
+
+        uint[6] memory amounts;
+        for (uint i; i < 6; i++) {
+            amounts[i] = (randomAmount * (i + 1));
+        }
+
+        // Add these payment orders to the payment client
+        for (uint i; i < 6; i++) {
+            address recipient = contributorArray[i];
+            uint amount = amounts[i];
+            uint time = durations[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Let's travel in time, to the point after contributor1's tokens for the second payment order
+        // are 1/2 vested.
+        vm.warp(block.timestamp + (durations[3]/2));
+
+        // This means, that when we call removePaymentForSpecificWalletId, that should increase the balance of the 
+        // contributor by 1/2 of the vested token amount
+        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient),
+            contributor1
+        );
+
+        // We are interested in finding the details of the 2nd wallet of contributor1
+        uint expectedSalary = contributorWallets[1]._salary;
+        uint walletId = contributorWallets[1]._streamingWalletID;
+
+        initialNumWallets = contributorWallets.length;
+        initialContributorBalance = _token.balanceOf(contributor1);
+        initialWalletIdAtIndex1 = walletId;
+
+        assertTrue(expectedSalary != 0); 
+
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
+        paymentProcessor.removePaymentForSpecificWalletId(
+            paymentClient,
+            contributor1,
+            walletId,
+            false
+        );
+
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient),
+            contributor1
+        );
+
+        finalNumWallets = contributorWallets.length;
+        finalContributorBalance = _token.balanceOf(contributor1);
+
+        assertEq(finalNumWallets + 1, initialNumWallets);
+        assertEq((finalContributorBalance - initialContributorBalance), (expectedSalary/2));
+        assertTrue(initialWalletIdAtIndex1 != contributorWallets[1]._streamingWalletID);
+    }
+
     function test_processPayments_failsWhenCalledByNonModule(address nonModule)
         public
     {
