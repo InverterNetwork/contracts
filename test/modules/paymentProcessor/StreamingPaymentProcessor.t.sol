@@ -441,14 +441,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         );
     }
 
-
     uint initialNumWallets;
     uint initialContributorBalance;
     uint initialWalletIdAtIndex1;
     uint finalNumWallets;
     uint finalContributorBalance;
 
-    function test_removePaymentForSpecificWalletId_halfVestingDoneMultipleOrdersForSingleBeneficiary (
+    function test_removePaymentForSpecificWalletId_halfVestingDoneMultipleOrdersForSingleBeneficiary(
         uint randomDuration,
         uint randomAmount,
         uint randomDuration_2,
@@ -500,13 +499,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Let's travel in time, to the point after contributor1's tokens for the second payment order
         // are 1/2 vested.
-        vm.warp(block.timestamp + (durations[3]/2));
+        vm.warp(block.timestamp + (durations[3] / 2));
 
-        // This means, that when we call removePaymentForSpecificWalletId, that should increase the balance of the 
+        // This means, that when we call removePaymentForSpecificWalletId, that should increase the balance of the
         // contributor by 1/2 of the vested token amount
-        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient),
-            contributor1
+        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets =
+        paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor1
         );
 
         // We are interested in finding the details of the 2nd wallet of contributor1
@@ -517,27 +516,28 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         initialContributorBalance = _token.balanceOf(contributor1);
         initialWalletIdAtIndex1 = walletId;
 
-        assertTrue(expectedSalary != 0); 
+        assertTrue(expectedSalary != 0);
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
-            paymentClient,
-            contributor1,
-            walletId,
-            false
+            paymentClient, contributor1, walletId, false
         );
 
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient),
-            contributor1
+            address(paymentClient), contributor1
         );
 
         finalNumWallets = contributorWallets.length;
         finalContributorBalance = _token.balanceOf(contributor1);
 
         assertEq(finalNumWallets + 1, initialNumWallets);
-        assertEq((finalContributorBalance - initialContributorBalance), (expectedSalary/2));
-        assertTrue(initialWalletIdAtIndex1 != contributorWallets[1]._streamingWalletID);
+        assertEq(
+            (finalContributorBalance - initialContributorBalance),
+            (expectedSalary / 2)
+        );
+        assertTrue(
+            initialWalletIdAtIndex1 != contributorWallets[1]._streamingWalletID
+        );
     }
 
     function test_processPayments_failsWhenCalledByNonModule(address nonModule)
