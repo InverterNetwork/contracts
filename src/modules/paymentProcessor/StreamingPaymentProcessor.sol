@@ -126,7 +126,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
 
         if (
-            _verifyActiveWalletId(address(client), _msgSender(), walletId)
+            _findActiveWalletId(address(client), _msgSender(), walletId)
                 == type(uint).max
         ) {
             revert Module__PaymentProcessor__InactiveWallet(
@@ -401,7 +401,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param contributor address of the contributor
     /// @param walletId ID of the payment order that needs to be searched
     /// @return the index of the contributor in the activeContributorPayments[client][contributor] array. Returns type(uint256).max otherwise.
-    function _verifyActiveWalletId(
+    function _findActiveWalletId(
         address client,
         address contributor,
         uint walletId
@@ -500,7 +500,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         uint walletId
     ) internal {
         uint walletIdIndex =
-            _verifyActiveWalletId(client, contributor, walletId);
+            _findActiveWalletId(client, contributor, walletId);
 
         if (walletIdIndex == type(uint).max) {
             revert Module__PaymentProcessor__InactiveWallet(
