@@ -341,9 +341,9 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IStreamingPaymentProcessor
     function viewAllPaymentOrders(address client, address contributor)
-        activeContributor(client, contributor)
         external
         view
+        activeContributor(client, contributor)
         returns (StreamingWallet[] memory)
     {
         uint[] memory contributorWalletsArray =
@@ -460,12 +460,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             walletId = contributorWalletsArray[index];
             _claimForSpecificWalletId(client, contributor, walletId, true);
 
-            startContributor =
-                startForSpecificWalletId(client, contributor, walletId);
-            durationContributor =
-                durationForSpecificWalletId(client, contributor, walletId);
-
-            if (block.timestamp < startContributor + durationContributor) {
+            // If the paymentOrder being removed was already past its duration, then it would have been removed in the earlier _claimForSpecificWalletId call
+            // Otherwise, we would remove that paymentOrder in the following lines.
+            if (
+                block.timestamp
+                    < startForSpecificWalletId(client, contributor, walletId)
+                        + durationForSpecificWalletId(client, contributor, walletId)
+            ) {
                 _removePaymentForSpecificWalletId(client, contributor, walletId);
 
                 _removeVestingInformationForSpecificWalletId(
