@@ -4,7 +4,8 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {Proposal} from "src/proposal/Proposal.sol";
-import {StreamingPaymentProcessor} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
+import {StreamingPaymentProcessor} from
+    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
@@ -26,7 +27,7 @@ contract DeploymentScript is Script {
     address milestoneManagerBeaconOwner = vm.envAddress("MMBO_ADDRESS");
     address authorizerBeaconOwner = vm.envAddress("ABO_ADDRESS");
 
-    address[] authorizerAddresses=[address(0xBEEF)];
+    address[] authorizerAddresses = [address(0xBEEF)];
 
     address deploymentScript = address(this);
 
@@ -44,8 +45,14 @@ contract DeploymentScript is Script {
     Beacon fundingManagerBeacon;
     Beacon authorizerBeacon;
 
-    IModule.Metadata paymentProcessorMetadata = IModule.Metadata( 1, 1, "https://github.com/inverter/payment-processor", "StreamingPaymentProcessor");
-    IProposalFactory.ModuleConfig paymentProcessorFactoryConfig = IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
+    IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/payment-processor",
+        "StreamingPaymentProcessor"
+    );
+    IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
+        IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
 
     IModule.Metadata milestoneManagerMetadata = IModule.Metadata(
         1,
@@ -59,10 +66,11 @@ contract DeploymentScript is Script {
         abi.encode(100_000_000, 1_000_000, makeAddr("treasury"))
     );
 
-    uint256 deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
-    uint256 paymentProcessorBeaconOwnerPrivateKey = vm.envUint("PPBO_PRIVATE_KEY");
-    uint256 milestoneManagerBeaconOwnerPrivateKey = vm.envUint("MMBO_PRIVATE_KEY");
-    uint256 authorizerBeaconOwnerPrivateKey = vm.envUint("ABO_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    uint paymentProcessorBeaconOwnerPrivateKey = vm.envUint("PPBO_PRIVATE_KEY");
+    uint milestoneManagerBeaconOwnerPrivateKey = vm.envUint("MMBO_PRIVATE_KEY");
+    uint authorizerBeaconOwnerPrivateKey = vm.envUint("ABO_PRIVATE_KEY");
+    uint fundingManagerBeaconOwnerPrivateKey = vm.envUint("FMBO_PRIVATE_KEY");
     IModule.Metadata fundingManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/funding-manager", "FundingManager"
     );
@@ -72,12 +80,6 @@ contract DeploymentScript is Script {
     );
     IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory
         .ModuleConfig(authorizerMetadata, abi.encode(authorizerAddresses));
-
-    uint deployerPrivateKey = vm.envUint("ANVIL_PRIVATE_KEY");
-    uint paymentProcessorBeaconOwnerPrivateKey = vm.envUint("PPBO_PRIVATE_KEY");
-    uint milestoneManagerBeaconOwnerPrivateKey = vm.envUint("MMBO_PRIVATE_KEY");
-    uint fundingManagerBeaconOwnerPrivateKey = vm.envUint("FMBO_PRIVATE_KEY");
-    uint authorizerBeaconOwnerPrivateKey = vm.envUint("ABO_PRIVATE_KEY");
 
     function run() public virtual {
         vm.startBroadcast(deployerPrivateKey);
@@ -123,18 +125,25 @@ contract DeploymentScript is Script {
         }
         vm.stopBroadcast();
 
-
         // Register modules at moduleFactory.
         vm.startBroadcast(deployer);
-        moduleFactory.registerMetadata(paymentProcessorMetadata, IBeacon(paymentProcessorBeacon));
-        moduleFactory.registerMetadata(milestoneManagerMetadata, IBeacon(milestoneManagerBeacon));
-        moduleFactory.registerMetadata(authorizerMetadata, IBeacon(authorizerBeacon));
+        moduleFactory.registerMetadata(
+            paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
+        );
+        moduleFactory.registerMetadata(
+            milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
+        );
+        moduleFactory.registerMetadata(
+            authorizerMetadata, IBeacon(authorizerBeacon)
+        );
         moduleFactory.registerMetadata(
             fundingManagerMetadata, IBeacon(fundingManagerBeacon)
         );
         vm.stopBroadcast();
         // Logging the deployed addresses
-        console2.log("Proposal Implementatio Contract Deployed at: ", address(proposal));
+        console2.log(
+            "Proposal Implementation Contract Deployed at: ", address(proposal)
+        );
         console2.log(
             "Streaming Payment Processor Implementation Contract Deployed at: ",
             address(streamingPaymentProcessor)

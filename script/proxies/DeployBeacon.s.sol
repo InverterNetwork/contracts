@@ -4,21 +4,19 @@ import "forge-std/Script.sol";
 
 import {Beacon} from "src/factories/beacon/Beacon.sol";
 
- /**
-  * @title Beacon Deployment Script
-  *
-  * @dev Script to deploy a new Beacon.
-  *
-  *
-  * @author byterocket
-  */
+/**
+ * @title Beacon Deployment Script
+ *
+ * @dev Script to deploy a new Beacon.
+ *
+ *
+ * @author byterocket
+ */
 
 contract DeployBeacon is Script {
-
     Beacon beacon;
 
-    function run() external {
-
+    function run() external returns (address) {
         // Deploy the beacon.
         vm.startBroadcast();
         {
@@ -27,8 +25,8 @@ contract DeployBeacon is Script {
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
-        console2.log("Deployment of Beacon at address",
-            address(beacon));
-    }
+        console2.log("Deployment of Beacon at address", address(beacon));
 
+        return address(beacon);
+    }
 }

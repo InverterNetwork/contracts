@@ -4,21 +4,19 @@ import "forge-std/Script.sol";
 
 import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 
- /**
-  * @title ModuleFactory Deployment Script
-  *
-  * @dev Script to deploy a new ModuleFactory.
-  *
-  *
-  * @author byterocket
-  */
+/**
+ * @title ModuleFactory Deployment Script
+ *
+ * @dev Script to deploy a new ModuleFactory.
+ *
+ *
+ * @author byterocket
+ */
 
 contract DeployModuleFactory is Script {
-
     ModuleFactory moduleFactory;
 
-    function run() external {
-
+    function run() external returns (address) {
         // Deploy the moduleFactory.
         vm.startBroadcast();
         {
@@ -27,8 +25,10 @@ contract DeployModuleFactory is Script {
         vm.stopBroadcast();
 
         // Log the deployed ModuleFactory contract address.
-        console2.log("Deployment of ModuleFactory at address",
-            address(moduleFactory));
-    }
+        console2.log(
+            "Deployment of ModuleFactory at address", address(moduleFactory)
+        );
 
+        return address(moduleFactory);
+    }
 }

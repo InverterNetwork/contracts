@@ -16,7 +16,7 @@ import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol"
 contract DeploySingleVoteGovernor is Script {
     SingleVoteGovernor singleVoteGovernor;
 
-    function run() external {
+    function run() external returns (address) {
         // Deploy the singleVoteGovernor.
         vm.startBroadcast();
         {
@@ -26,8 +26,10 @@ contract DeploySingleVoteGovernor is Script {
 
         // Log the deployed SingleVoteGovernor contract address.
         console2.log(
-            "Deployment of SingleVoteGovernor at address",
+            "Deployment of SingleVoteGovernor Implementation at address",
             address(singleVoteGovernor)
         );
+
+        return address(singleVoteGovernor);
     }
 }

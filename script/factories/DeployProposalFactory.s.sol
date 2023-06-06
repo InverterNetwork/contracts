@@ -9,7 +9,7 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
  *
  * @dev Script to deploy a new ProposalFactory.
  *
- *      The following environment variables MUST be provided:
+ *         The implementation and moduleFactory addresses can be supplied directly or read from the following environment variables:
  *      - DEPLOYMENT_PROPOSAL_FACTORY_TARGET
  *      - DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY
  *
@@ -17,23 +17,32 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
  */
 
 contract DeployProposalFactory is Script {
-
     ProposalFactory proposalFactory;
 
-    function run() external {
-
+    function run() external returns (address) {
         // Read deployment settings from environment variables.
-        address target
-            = vm.envAddress("DEPLOYMENT_PROPOSAL_FACTORY_TARGET");
-        address moduleFactory
-            = vm.envAddress("DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY");
+        address target = vm.envAddress("DEPLOYMENT_PROPOSAL_FACTORY_TARGET");
+        address moduleFactory =
+            vm.envAddress("DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY");
 
         // Check settings.
-        require(target != address(0),
-            "DeployProposalFactory: Missing env variable: target");
-        require(moduleFactory != address(0),
-            "DeployProposalFactory: Missing env variable: moduleFactory");
+        require(
+            target != address(0),
+            "DeployProposalFactory: Missing env variable: target"
+        );
+        require(
+            moduleFactory != address(0),
+            "DeployProposalFactory: Missing env variable: moduleFactory"
+        );
 
+        // Deploy the proposalFactory.
+        return run(target, moduleFactory);
+    }
+
+    function run(address target, address moduleFactory)
+        public
+        returns (address)
+    {
         // Deploy the proposalFactory.
         vm.startBroadcast();
         {
@@ -42,8 +51,10 @@ contract DeployProposalFactory is Script {
         vm.stopBroadcast();
 
         // Log the deployed ProposalFactory contract address.
-        console2.log("Deployment of ProposalFactory at address",
-            address(proposalFactory));
-    }
+        console2.log(
+            "Deployment of ProposalFactory at address", address(proposalFactory)
+        );
 
+        return address(proposalFactory);
+    }
 }

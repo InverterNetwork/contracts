@@ -16,7 +16,7 @@ import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 contract DeployMilestoneManager is Script {
     MilestoneManager milestoneManager;
 
-    function run() external {
+    function run() external returns (address) {
         // Deploy the milestoneManager.
         vm.startBroadcast();
         {
@@ -26,8 +26,10 @@ contract DeployMilestoneManager is Script {
 
         // Log the deployed MilestoneManager contract address.
         console2.log(
-            "Deployment of MilestoneManager at address",
+            "Deployment of MilestoneManager Implementation at address",
             address(milestoneManager)
         );
+
+        return address(milestoneManager);
     }
 }

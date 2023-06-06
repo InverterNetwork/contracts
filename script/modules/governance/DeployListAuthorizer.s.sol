@@ -16,7 +16,7 @@ import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
 contract DeployListAuthorizer is Script {
     ListAuthorizer listAuthorizer;
 
-    function run() external {
+    function run() external returns (address) {
         // Deploy the listAuthorizer.
         vm.startBroadcast();
         {
@@ -26,7 +26,10 @@ contract DeployListAuthorizer is Script {
 
         // Log the deployed ListAuthorizer contract address.
         console2.log(
-            "Deployment of ListAuthorizer at address", address(listAuthorizer)
+            "Deployment of ListAuthorizer Implementation at address",
+            address(listAuthorizer)
         );
+
+        return address(listAuthorizer);
     }
 }

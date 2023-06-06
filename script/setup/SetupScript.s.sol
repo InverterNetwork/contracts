@@ -29,12 +29,8 @@ contract SetupScript is Test, Script, DeploymentScript {
 
     IMilestoneManager.Contributor[] contributors;
 
-    //This address is taken accordingly to the anvil private key of the env file
-    address proposalOwner = address(0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc);
-    uint proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
-
     address proposalOwner = vm.envAddress("PROPOSAL_OWNER_ADDRESS");
-    uint256 proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    uint proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
     //This address is taken accordingly to the anvil private key of the env file
     address funder1 = address(0x976EA74026E726554dB657fA54763abd0C3a0aa9);
     uint funder1PrivateKey = vm.envUint("FUNDER_1_PRIVATE_KEY");
@@ -165,7 +161,7 @@ contract SetupScript is Test, Script, DeploymentScript {
 
         // Seeing this great working on the proposal, funder1 decides to fund
         // the proposal with 1k of tokens.
-        
+
         vm.startBroadcast(deployerPrivateKey);
         token.mint(funder1, 1000e18);
         vm.stopBroadcast();
