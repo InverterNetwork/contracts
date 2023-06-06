@@ -313,9 +313,9 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint randomDuration_2,
         uint randomAmount_2
     ) public {
-        randomDuration = bound(randomDuration, 10, 10_000_000);
+        randomDuration = bound(randomDuration, 10, 100_000_000);
         randomAmount = bound(randomAmount, 10, 10_000);
-        randomDuration_2 = bound(randomDuration_2, 1000, 10_000_000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
         randomAmount_2 = bound(randomAmount_2, 100, 10_000);
 
         address contributor1 = makeAddr("contributor1");
@@ -453,9 +453,9 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint randomDuration_2,
         uint randomAmount_2
     ) public {
-        randomDuration = bound(randomDuration, 10, 10_000_000);
+        randomDuration = bound(randomDuration, 10, 100_000_000);
         randomAmount = bound(randomAmount, 10, 10_000);
-        randomDuration_2 = bound(randomDuration_2, 1000, 10_000_000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
         randomAmount_2 = bound(randomAmount_2, 100, 10_000);
 
         address contributor1 = makeAddr("contributor1");
