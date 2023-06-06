@@ -9,7 +9,7 @@ import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 // SuT
 import {
     StreamingPaymentProcessor,
-    IPaymentProcessor
+    IStreamingPaymentProcessor
 } from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
 // Mocks
@@ -392,7 +392,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Now, let's check whether all vesting informations exist or not
         // checking for contributor2
-        StreamingPaymentProcessor.StreamingWallet[] memory contributorWallets;
+        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets;
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), contributor2
         );
@@ -454,7 +454,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor
+                IStreamingPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
@@ -477,7 +477,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor
+                IStreamingPaymentProcessor
                     .Module__PaymentManager__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -583,7 +583,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor
+                IStreamingPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
@@ -606,7 +606,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor
+                IStreamingPaymentProcessor
                     .Module__PaymentManager__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -675,7 +675,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             vm.startPrank(recipient);
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    StreamingPaymentProcessor
+                    IStreamingPaymentProcessor
                         .Module__PaymentProcessor__NothingToClaim
                         .selector,
                     address(paymentClient),
