@@ -227,7 +227,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         uint walletId,
         bool retryForUnclaimableAmounts
     ) external onlyAuthorized {
-        // First, we **claim** the vested funds from this specific walletId
+        // First, we give the vested funds from this specific walletId to the beneficiary
         _claimForSpecificWalletId(
             address(client), contributor, walletId, retryForUnclaimableAmounts
         );

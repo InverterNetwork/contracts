@@ -137,12 +137,12 @@ interface IStreamingPaymentProcessor {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice used to claim everything that the paymentClient owes to the _msgSender till the current timestamp
+    /// @notice claim everything that the paymentClient owes to the _msgSender till the current timestamp
     /// @dev This function should be callable if the _msgSender is either an activeContributor or has some unclaimedAmounts
     /// @param client The {IPaymentClient} instance to process all claims from _msgSender
     function claimAll(IPaymentClient client) external;
 
-    /// @notice used to claim the salary uptil block.timestamp from the client for a payment order with id = walletId by _msgSender
+    /// @notice claim the salary uptil block.timestamp from the client for a payment order with id = walletId by _msgSender
     /// @dev If for a specific walletId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
     ///      of the contributor, and the amount would no longer hold any co-relation with the specific walletId of the contributor.
     /// @param client The {IPaymentClient} instance to process the walletId claim from _msgSender
@@ -253,7 +253,7 @@ interface IStreamingPaymentProcessor {
         view
         returns (uint);
 
-    /// @notice used to see all active payment orders for a paymentClient associated with a particular contributor
+    /// @notice see all active payment orders for a paymentClient associated with a particular contributor
     /// @dev the contributor must be an active contributor for the particular payment client
     /// @param client Address of the payment client
     /// @param contributor Address of the contributor
