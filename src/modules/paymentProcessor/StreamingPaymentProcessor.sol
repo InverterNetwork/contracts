@@ -19,6 +19,7 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *
  * @dev The payment module handles the money flow to the contributors
  * (e.g. how many tokens are sent to which contributor at what time).
+ * Concurrent streaming allows for several active vestings per destination address.
  *
  * @author byterocket
  */
