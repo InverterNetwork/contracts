@@ -453,8 +453,6 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         uint contributorWalletsArrayLength = contributorWalletsArray.length;
 
         uint index;
-        uint startContributor;
-        uint durationContributor;
         uint walletId;
         for (index; index < contributorWalletsArrayLength;) {
             walletId = contributorWalletsArray[index];

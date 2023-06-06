@@ -540,6 +540,130 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         );
     }
 
+    uint salary1;
+    uint salary2;
+    uint salary3;
+
+    function test_removePaymentAndClaimForSpecificWalletId(
+        uint randomDuration,
+        uint randomAmount,
+        uint randomDuration_2,
+        uint randomAmount_2
+    ) public {
+        randomDuration = bound(randomDuration, 10, 100_000_000);
+        randomAmount = bound(randomAmount, 10, 10_000);
+        randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
+        randomAmount_2 = bound(randomAmount_2, 100, 10_000);
+
+        address contributor1 = makeAddr("contributor1");
+        address contributor2 = makeAddr("contributor2");
+        address contributor3 = makeAddr("contributor3");
+        address contributor4 = makeAddr("contributor4");
+
+        address[6] memory contributorArray;
+        contributorArray[0] = contributor1;
+        contributorArray[1] = contributor2;
+        contributorArray[2] = contributor3;
+        contributorArray[3] = contributor1;
+        contributorArray[4] = contributor4;
+        contributorArray[5] = contributor1;
+
+        uint[6] memory durations;
+        for (uint i; i < 6; i++) {
+            durations[i] = (randomDuration * (i + 1));
+        }
+
+        // we want the durations of vesting for contributor 1 to be double of the initial one
+        // and the last payment order to have the same duration as the middle one
+        durations[3] = durations[0] * 2;
+        durations[5] = durations[3];
+
+        uint[6] memory amounts;
+        for (uint i; i < 6; i++) {
+            amounts[i] = (randomAmount * (i + 1));
+        }
+
+        // Add these payment orders to the payment client
+        for (uint i; i < 6; i++) {
+            address recipient = contributorArray[i];
+            uint amount = amounts[i];
+            uint time = durations[i];
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                recipient, amount, (block.timestamp + time)
+            );
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Let's travel in time, to the point after contributor1's tokens for the second payment order
+        // are 1/2 vested, or the complete vesting of duration of the first payment order
+        vm.warp(block.timestamp + durations[0]);
+
+        // Let's note down the current balance of the contributor1
+        initialContributorBalance = _token.balanceOf(contributor1);
+
+        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets =
+        paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor1
+        );
+
+        salary1 = contributorWallets[0]._salary;
+
+        // Now we claim the entire salary from the first payment order
+        vm.prank(contributor1);
+        paymentProcessor.claimForSpecificWalletId(
+            paymentClient, contributorWallets[0]._streamingWalletID, false
+        );
+
+        // Now we note down the balance of the contributor1 again after claiming for the first wallet.
+        finalContributorBalance = _token.balanceOf(contributor1);
+
+        assertEq((finalContributorBalance - initialContributorBalance), salary1);
+
+        // Now we are interested in finding the details of the 2nd wallet of contributor1
+        salary2 = (contributorWallets[1]._salary) / 2; // since we are at half the vesting duration
+        initialContributorBalance += _token.balanceOf(contributor1);
+
+        assertTrue(salary2 != 0);
+
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
+        paymentProcessor.removePaymentForSpecificWalletId(
+            paymentClient,
+            contributor1,
+            contributorWallets[1]._streamingWalletID,
+            false
+        );
+
+        contributorWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), contributor1
+        );
+
+        finalNumWallets = contributorWallets.length;
+        finalContributorBalance = _token.balanceOf(contributor1);
+
+        assertEq(finalNumWallets, 1); // One was deleted because the vesting was completed and claimed. The other was deleted because of removePayment
+        assertEq((finalContributorBalance - initialContributorBalance), salary2);
+
+        // Now we try and claim the 3rd payment order for contributor1
+        // we are at half it's vesting period, so the salary3 should be half of the total salary
+        // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete vesting.
+        salary3 = (contributorWallets[0]._salary) / 2;
+        initialContributorBalance = _token.balanceOf(contributor1);
+
+        vm.prank(contributor1);
+        paymentProcessor.claimForSpecificWalletId(
+            paymentClient, contributorWallets[0]._streamingWalletID, false
+        );
+
+        finalContributorBalance = _token.balanceOf(contributor1);
+
+        assertEq((finalContributorBalance - initialContributorBalance), salary3);
+    }
+
     function test_processPayments_failsWhenCalledByNonModule(address nonModule)
         public
     {
