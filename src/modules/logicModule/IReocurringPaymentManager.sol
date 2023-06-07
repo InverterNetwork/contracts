@@ -20,8 +20,8 @@ interface IReocurringPaymentManager {
     /// @notice Start epoch cant be placed before the current epoch.
     error Module__ReocurringPaymentManager__InvalidStartEpoch();
 
-    /// @notice Given EpochLength is too short.
-    error Module__ReocurringPaymentManager__EpochLengthToShort();
+    /// @notice Given EpochLength is invalid.
+    error Module__ReocurringPaymentManager__InvalidEpochLength();
 
     //--------------------------------------------------------------------------
     // Events
@@ -64,7 +64,10 @@ interface IReocurringPaymentManager {
     /// @notice Returns the id of previous ReocurringPayment.
     /// @param id The id of the ReocurringPayment to return.
     /// @return prevId The id of previous ReocurringPayment.
-    function getPreviousPaymentId(uint id) external view returns (uint prevId) ;
+    function getPreviousPaymentId(uint id)
+        external
+        view
+        returns (uint prevId);
 
     /// @notice Returns whether ReocurringPayment with id `id` exists.
     /// @return True if ReocurringPayment with id `id` exists, false otherwise.
