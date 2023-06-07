@@ -51,13 +51,24 @@ contract ReocurringPaymentManagerTest is ModuleTest {
     function testInit() public override(ModuleTest) {
         vm.expectRevert(
             IReocurringPaymentManager
-                .Module__ReocurringPaymentManager__EpochLengthToShort
+                .Module__ReocurringPaymentManager__InvalidEpochLength
                 .selector
         );
 
         //Init Module wrongly
         reocurringPaymentManager.init(
             _proposal, _METADATA, abi.encode(1 weeks - 1)
+        );
+
+        vm.expectRevert(
+            IReocurringPaymentManager
+                .Module__ReocurringPaymentManager__InvalidEpochLength
+                .selector
+        );
+
+        //Init Module wrongly
+        reocurringPaymentManager.init(
+            _proposal, _METADATA, abi.encode(52 weeks + 1)
         );
 
         //Init Module correct
