@@ -84,8 +84,9 @@ contract DeploymentScript is Script {
         1, 1, "https://github.com/inverter/authorizer", "Authorizer"
     );
 
-    function run() public virtual {
-
+    /// @notice Deploys all necessary factories, beacons and iplementations
+    /// @return factory The addresses of the fully deployed proposal factory. All other addresses should be accessible from this.
+    function run() public virtual returns (address factory) {
         // Deploy implementation contracts.
         proposal = deployProposal.run();
         streamingPaymentProcessor = deployStreamingPaymentProcessor.run();
@@ -109,5 +110,7 @@ contract DeploymentScript is Script {
         milestoneManagerBeacon = deployAndSetUpBeacon.run(
             milestoneManager, moduleFactory, milestoneManagerMetadata
         );
+
+        return (proposalFactory);
     }
 }

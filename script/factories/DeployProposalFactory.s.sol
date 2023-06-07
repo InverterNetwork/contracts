@@ -9,7 +9,7 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
  *
  * @dev Script to deploy a new ProposalFactory.
  *
- *         The implementation and moduleFactory addresses can be supplied directly or read from the following environment variables:
+ *      The implementation and moduleFactory addresses can be supplied directly or read from the following environment variables:
  *      - DEPLOYMENT_PROPOSAL_FACTORY_TARGET
  *      - DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY
  *
