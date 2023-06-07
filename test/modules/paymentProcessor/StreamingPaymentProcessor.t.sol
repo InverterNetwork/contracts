@@ -91,11 +91,9 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint max_time = uint(durations[0]);
         uint totalAmount;
 
-        address recipient;
         for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = uint(amounts[i]);
-            uint time = uint(durations[i]);
+            uint amount = amounts[i];
+            uint time = durations[i];
 
             if (time > max_time) {
                 max_time = time;
@@ -103,7 +101,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + time)
+                recipients[i], amount, (block.timestamp + time)
             );
 
             totalAmount += amount;
@@ -268,20 +266,20 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             //If dueTo is before currentTimestamp evereything should be releasable
             if (order.dueTo <= block.timestamp) {
                 assertEq(
-                    paymentProcessor.releasable(
-                        address(paymentClient), address(recipient)
+                    paymentProcessor.releasableForSpecificWalletId(
+                        address(paymentClient), address(recipient), 1
                     ),
                     payoutAmount
                 );
 
                 vm.prank(recipient);
-                paymentProcessor.claim(paymentClient);
+                paymentProcessor.claimAll(paymentClient);
 
                 // Check correct balances.
                 assertEq(_token.balanceOf(recipient), payoutAmount);
                 assertEq(
-                    paymentProcessor.releasable(
-                        address(paymentClient), recipient
+                    paymentProcessor.releasableForSpecificWalletId(
+                        address(paymentClient), recipient, 1
                     ),
                     0
                 );
@@ -1009,8 +1007,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
                 assertEq(
                     claimableAmt,
-                    paymentProcessor.releasable(
-                        address(paymentClient), recipient
+                    paymentProcessor.releasableForSpecificWalletId(
+                        address(paymentClient), recipient, 1
                     )
                 );
             }
