@@ -228,13 +228,14 @@ contract ReocurringPaymentManager is
         //Loop through every element in payment list
         while (currentId != _SENTINEL) {
             ReocurringPayment memory currentPayment =
-                _paymentRegistry[currentId]; //@todo Optimize?
+                _paymentRegistry[currentId];
 
             //check if payment started
             if (currentPayment.startEpoch <= currentEpoch) {
                 //Catch up every not triggered epoch
-                while (currentPayment.lastTriggeredEpoch != currentEpoch) {
+                while (currentPayment.lastTriggeredEpoch < currentEpoch) {
                     totalAmount += currentPayment.amount;
+
                     _addPaymentOrder(
                         currentPayment.recipient,
                         currentPayment.amount,
