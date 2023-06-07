@@ -230,6 +230,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
     }
 
+    // @dev Assume recipient can withdraw full amount immediately if dueTo is less than or equal to block.timestamp.
     function testProcessPaymentsWorksForDueTimeThatIsPlacedBeforeStartTime(
         address[] memory recipients,
         uint[] memory dueTimes
@@ -243,9 +244,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // Warp to reasonable time to test wether orders before timestamp are retrievable
         vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
 
+        //Amount of tokens for user that should be payed out
+        uint payoutAmount = 100;
+
         for (uint i; i < length; i++) {
             // Add payment order to client.
-            paymentClient.addPaymentOrder(recipients[i], 100, dueTimes[i]);
+            paymentClient.addPaymentOrder(
+                recipients[i], payoutAmount, dueTimes[i]
+            );
         }
 
         IPaymentClient.PaymentOrder[] memory orders =
@@ -265,14 +271,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     paymentProcessor.releasable(
                         address(paymentClient), address(recipient)
                     ),
-                    100
+                    payoutAmount
                 );
 
                 vm.prank(recipient);
                 paymentProcessor.claim(paymentClient);
 
                 // Check correct balances.
-                assertEq(_token.balanceOf(recipient), 100);
+                assertEq(_token.balanceOf(recipient), payoutAmount);
                 assertEq(
                     paymentProcessor.releasable(
                         address(paymentClient), recipient
