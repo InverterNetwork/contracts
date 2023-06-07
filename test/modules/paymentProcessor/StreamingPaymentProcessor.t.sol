@@ -91,7 +91,6 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint max_time = uint(durations[0]);
         uint totalAmount;
 
-        address recipient;
         for (uint i; i < recipients.length; i++) {
             uint amount = amounts[i];
             uint time = durations[i];
@@ -1012,8 +1011,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
                 assertEq(
                     claimableAmt,
-                    paymentProcessor.releasable(
-                        address(paymentClient), recipient
+                    paymentProcessor.releasableForSpecificWalletId(
+                        address(paymentClient), recipient, 1
                     )
                 );
             }
