@@ -325,11 +325,11 @@ contract ReocurringPaymentManagerTest is
     // Trigger
 
     function testTrigger(uint seed, address[] memory receivers) public {
-        vm.assume(receivers.length < 5 && receivers.length >= 3); //Reasonable amount
+        vm.assume(receivers.length < 100 && receivers.length >= 3); //Reasonable amount
 
         receivers = convertToValidRecipients(receivers);
 
-        uint timejumps = bound(seed, 1, 2);
+        uint timejumps = bound(seed, 1, 20);
 
         reasonableWarpAndInit(seed);
 
