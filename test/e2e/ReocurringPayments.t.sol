@@ -117,13 +117,13 @@ contract ReocurringPayments is E2eTest {
         reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 1);  // Bob at index 1
 
         // 5. warp forward they both withdraw again
-        vm.warp(epochLength + epochsAmount + 1);
+        vm.warp(epochLength * epochsAmount + 1);
         reocurringPaymentManager.trigger();
 
         // 6. bob gets nothing while alice still gets 1 payment
         // In total Alice should received 30 payments (3 * epochsAmount),
         // while Bob should received 10 payments (1 * epochs amount)
-        assertEq(token.balanceOf(alice), epochLength * epochsAmount * 3);
-        assertEq(token.balanceOf(alice), epochLength * epochsAmount);
+        assertEq(token.balanceOf(alice), paymentAmount * epochsAmount * 3);
+        assertEq(token.balanceOf(alice), paymentAmount * epochsAmount);
     }
 }
