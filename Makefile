@@ -31,6 +31,12 @@ update: ## Update dependencies
 test: ## Run whole testsuite
 	@forge test -vvv
 
+.PHONY: testDeep
+testDeep: ## Run whole testsuite with more fuzz runs
+	@read -p "Fuzz runs (no input = defaults to 1024): " RUNS; \
+	export FOUNDRY_FUZZ_RUNS=$$(if [[ $$RUNS =~ ^[0-9]+$$ && $$RUNS -ge 1 ]]; then echo $$RUNS; else echo 1024; fi);  \
+	forge test -vvv
+
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
