@@ -33,8 +33,12 @@ test: ## Run whole testsuite
 
 .PHONY: testDeep
 testDeep: ## Run whole testsuite with more fuzz runs
-	@read -p "Fuzz runs (no input = defaults to 1024): " RUNS; \
-	export FOUNDRY_FUZZ_RUNS=$$(if [[ $$RUNS =~ ^[0-9]+$$ && $$RUNS -ge 1 ]]; then echo $$RUNS; else echo 1024; fi);  \
+	@if [[ "$(filter-out $@,$(MAKECMDGOALS))" =~ ^[0-9]+$$ && "$(filter-out $@,$(MAKECMDGOALS))" -ge 1 ]]; then \
+		export FOUNDRY_FUZZ_RUNS=$(filter-out $@,$(MAKECMDGOALS)); \
+	else \
+		read -p "Fuzz runs (no input = defaults to 1024): " RUNS; \
+		export FOUNDRY_FUZZ_RUNS=$$(if [[ "$$RUNS" =~ ^[0-9]+$$ && "$$RUNS" -ge 1 ]]; then echo $$RUNS; else echo 1024; fi); \
+	fi; \
 	forge test -vvv
 
 # -----------------------------------------------------------------------------
