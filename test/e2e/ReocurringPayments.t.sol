@@ -81,7 +81,6 @@ contract ReocurringPayments is E2eTest {
         reocurringPaymentManager.init(proposal, _METADATA, abi.encode(1 weeks));
         assertEq(reocurringPaymentManager.getEpochLength(), 1 weeks);
 
-        _setUpProposal(reocurringPaymentManager);
         _authorizer.setIsAuthorized(address(this), true);
 
         // ----------------
