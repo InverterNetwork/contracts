@@ -24,23 +24,22 @@ import {
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
- // 1. deopsit some funds to fundingManager
- // 2. create reocurringPayments: 2 for alice, 1 for bob
- // 3. warp forward, they both withdraw
- // 4. remove 1 payment for alice and 1 for bob
- // 5. warp forward they both withdraw again
- // 6. bob gets nothing while alice still gets 1 payment
+// 1. deopsit some funds to fundingManager
+// 2. create reocurringPayments: 2 for alice, 1 for bob
+// 3. warp forward, they both withdraw
+// 4. remove 1 payment for alice and 1 for bob
+// 5. warp forward they both withdraw again
+// 6. bob gets nothing while alice still gets 1 payment
 
 contract ReocurringPayments is E2eTest {
-
     // Alice and Bob are receivers
-    address alice = address(0xA11CE);
-    address bob = address(0x606);
+    address alice = makeAddr("alice");
+    address bob = makeAddr("bob");
 
     // Parameters for reocurring payments
     uint paymentAmount = 10e12;
     uint startEpoch;
-    uint epochLength = 604800; // 1 week;
+    uint epochLength = 604_800; // 1 week;
     uint epochsAmount = 10;
 
     // Constants
@@ -55,7 +54,6 @@ contract ReocurringPayments is E2eTest {
     string constant _TITLE = "Module";
 
     function test_e2e_ReocurringPayments() public {
-
         ReocurringPaymentManager reocurringPaymentManager;
 
         // -----------INIT
@@ -94,13 +92,13 @@ contract ReocurringPayments is E2eTest {
         // 2. create reocurringPayments: 2 for alice, 1 for bob
         startEpoch = reocurringPaymentManager.getCurrentEpoch();
         reocurringPaymentManager.addReocurringPayment(
-            paymentAmount, startEpoch+1, bob
+            paymentAmount, startEpoch + 1, bob
         );
         reocurringPaymentManager.addReocurringPayment(
-            paymentAmount, startEpoch+1, alice
+            paymentAmount, startEpoch + 1, alice
         );
         reocurringPaymentManager.addReocurringPayment(
-            paymentAmount, startEpoch+1, alice
+            paymentAmount, startEpoch + 1, alice
         );
 
         // 3. warp forward, they both withdraw
@@ -113,8 +111,8 @@ contract ReocurringPayments is E2eTest {
         assertEq(token.balanceOf(bob), epochLength * epochsAmount);
 
         // 4. remove 1 payment for alice and 1 for bob
-        reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 2);  // Alice at index 2
-        reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 1);  // Bob at index 1
+        reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 2); // Alice at index 2
+        reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 1); // Bob at index 1
 
         // 5. warp forward they both withdraw again
         vm.warp(epochLength * epochsAmount + 1);
