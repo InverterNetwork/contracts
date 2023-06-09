@@ -31,13 +31,6 @@ import {
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-// 1. deopsit some funds to fundingManager
-// 2. create reocurringPayments: 2 for alice, 1 for bob
-// 3. warp forward, they both withdraw
-// 4. remove 1 payment for alice and 1 for bob
-// 5. warp forward they both withdraw again
-// 6. bob gets nothing while alice still gets 1 payment
-
 contract ReocurringPayments is e2e {
     // Let's create a list of contributors
     address contributor1 = makeAddr("contributor 1");
@@ -131,7 +124,7 @@ contract ReocurringPayments is e2e {
 
         // 3.1 jump another epoch, so that we can claim the vested tokens
         uint oneEpochsInFuture = recurringPaymentManager.getFutureEpoch(1);
-        vm.warp((startEpoch * epochLength) + (oneEpochsInFuture * epochLength));
+        vm.warp((block.timestamp) + (oneEpochsInFuture * epochLength));
 
         // 4. Let the contributors claim their vested tokens
         /// Let's first find the address of the streamingPaymentProcessor
@@ -162,18 +155,12 @@ contract ReocurringPayments is e2e {
         assertEq((token.balanceOf(contributor1) - contributor1InitialBalance), (paymentAmount * epochsAmount));
         assertEq((token.balanceOf(contributor2) - contributor2InitialBalance), ((paymentAmount * 2 + paymentAmount)*epochsAmount));
 
-        // // 4. remove 1 payment for alice and 1 for bob
-        // reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 2); // Alice at index 2
-        // reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 1); // Bob at index 1
+        contributor1InitialBalance = token.balanceOf(contributor1);
+        contributor2InitialBalance = token.balanceOf(contributor2);
 
-        // // 5. warp forward they both withdraw again
-        // vm.warp(epochLength * epochsAmount + 1);
-        // reocurringPaymentManager.trigger();
-
-        // // 6. bob gets nothing while alice still gets 1 payment
-        // // In total Alice should received 30 payments (3 * epochsAmount),
-        // // while Bob should received 10 payments (1 * epochs amount)
-        // assertEq(token.balanceOf(alice), paymentAmount * epochsAmount * 3);
-        // assertEq(token.balanceOf(alice), paymentAmount * epochsAmount);
+        // Now since the entire vested amount was claimed by the contributors, their payment orders should no longer exist.
+        // Let's check that
+        assertTrue(!streamingPaymentProcessor.isActiveContributor(address(recurringPaymentManager), contributor1));
+        assertTrue(!streamingPaymentProcessor.isActiveContributor(address(recurringPaymentManager), contributor2));
     }
 }
