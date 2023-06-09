@@ -21,6 +21,7 @@ import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 import {StreamingPaymentProcessor} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
+import {ReocurringPaymentManager} from "src/modules/logicModule/ReocurringPaymentManager.sol";
 
 //Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -92,6 +93,21 @@ contract e2e is Test {
     IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig = IProposalFactory.ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
 
     MilestoneManager milestoneManagerImpl;
+    ReocurringPaymentManager recurringPaymentManagerImpl;
+
+    Beacon recurringPaymentManagerBeacon;
+    address recurringPaymentManagerBeaconOwner = makeAddr("recurring payment manager beacon owner");
+    IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/recurring-payment-manager",
+        "RecurringPaymentManager"        
+    );
+    IProposalFactory.ModuleConfig recurringPaymentManagerFactoryConfig = IProposalFactory.ModuleConfig(
+        recurringPaymentManagerMetadata,
+        abi.encode(1 weeks)
+    );
+
     Beacon milestoneManagerBeacon;
     address milestoneManagerBeaconOwner = address(0x2BEAC0);
     IModule.Metadata milestoneManagerMetadata = IModule.Metadata(
@@ -115,6 +131,7 @@ contract e2e is Test {
         paymentProcessorImpl = new SimplePaymentProcessor();
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
+        recurringPaymentManagerImpl = new ReocurringPaymentManager();
         authorizerImpl = new AuthorizerMock();
 
         // Deploy module beacons.
@@ -126,6 +143,8 @@ contract e2e is Test {
         streamingPaymentProcessorBeacon = new Beacon();
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon = new Beacon();
+        vm.prank(recurringPaymentManagerBeaconOwner);
+        recurringPaymentManagerBeacon = new Beacon();
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon = new Beacon();
 
@@ -140,6 +159,8 @@ contract e2e is Test {
         streamingPaymentProcessorBeacon.upgradeTo(address(streamingPaymentProcessorImpl));
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
+        vm.prank(recurringPaymentManagerBeaconOwner);
+        recurringPaymentManagerBeacon.upgradeTo(address(recurringPaymentManagerImpl));
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon.upgradeTo(address(authorizerImpl));
 
@@ -161,6 +182,9 @@ contract e2e is Test {
         );
         moduleFactory.registerMetadata(
             milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
+        );
+        moduleFactory.registerMetadata(
+            recurringPaymentManagerMetadata, IBeacon(recurringPaymentManagerBeacon)
         );
         moduleFactory.registerMetadata(
             authorizerMetadata, IBeacon(authorizerBeacon)
@@ -193,7 +217,7 @@ contract e2e is Test {
     ) internal returns (IProposal) {
         IProposalFactory.ModuleConfig[] memory optionalModules =
             new IProposalFactory.ModuleConfig[](1);
-        optionalModules[0] = milestoneManagerFactoryConfig;
+        optionalModules[0] = recurringPaymentManagerFactoryConfig;
 
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
