@@ -41,6 +41,12 @@ testFuzz: ## Run whole testsuite with a custom amount of fuzz runs
 		read -p "Fuzz runs (no input = defaults to 1024): " RUNS; \
 		export FOUNDRY_FUZZ_RUNS=$$(if [ "$$RUNS" -ge 1 ] 2>/dev/null; then echo $$RUNS; else echo 1024; fi); \
 	fi; \
+	if [ $$FOUNDRY_FUZZ_RUNS -gt 1024 ]; then \
+		export FOUNDRY_FUZZ_MAX_TEST_REJECTS=$$((FOUNDRY_FUZZ_RUNS * 50)); \
+	else \
+		export FOUNDRY_FUZZ_MAX_TEST_REJECTS=65536; \
+	fi; \
+	echo "Running tests with $${FOUNDRY_FUZZ_RUNS} fuzz runs and $${FOUNDRY_FUZZ_MAX_TEST_REJECTS} accepted test rejections..."; \
 	forge test -vvv
 
 # -----------------------------------------------------------------------------
