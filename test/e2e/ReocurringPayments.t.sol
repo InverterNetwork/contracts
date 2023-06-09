@@ -61,7 +61,7 @@ contract ReocurringPayments is e2e {
 
     function test_e2e_ReocurringPayments(uint paymentAmount) public {
         vm.assume(paymentAmount > 0 && paymentAmount <= 1e18);
-        ReocurringPaymentManager reocurringPaymentManager;
+        ReocurringPaymentManager recurringPaymentManager;
 
         // -----------INIT
         // address(this) creates a new proposal.
@@ -76,19 +76,21 @@ contract ReocurringPayments is e2e {
             RebasingFundingManager(address(proposal.fundingManager()));
 
         // ------------------ FROM ModuleTest.sol
-        address impl = address(new ReocurringPaymentManager());
-        reocurringPaymentManager = ReocurringPaymentManager(Clones.clone(impl));
-
-        IModule.Metadata memory _METADATA =
-            IModule.Metadata(_MAJOR_VERSION, _MINOR_VERSION, _URL, _TITLE);
+        address[] memory modulesList = proposal.listModules();
+        for(uint i; i < modulesList.length; ++i) {
+            try IReocurringPaymentManager(modulesList[i]).getCurrentEpoch() returns(uint) {
+                recurringPaymentManager = ReocurringPaymentManager(modulesList[i]);
+                break;
+            } catch {
+                continue;
+            }
+        }
 
         AuthorizerMock _authorizer = new AuthorizerMock();
-
-        //Init Module correct
-        reocurringPaymentManager.init(proposal, _METADATA, abi.encode(1 weeks));
-        assertEq(reocurringPaymentManager.getEpochLength(), 1 weeks);
-
         _authorizer.setIsAuthorized(address(this), true);
+
+        // check if the recurringPaymentManager is initialized correctly or not.
+        assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
 
         // ----------------
 
@@ -99,25 +101,22 @@ contract ReocurringPayments is e2e {
         fundingManager.deposit(initialDeposit);
 
         // 2. create reocurringPayments: 2 for alice, 1 for bob
-        startEpoch = reocurringPaymentManager.getCurrentEpoch();
+        startEpoch = recurringPaymentManager.getCurrentEpoch();
 
         // paymentAmount => amount that has to be paid out each epoch
-        reocurringPaymentManager.addReocurringPayment(
+        recurringPaymentManager.addReocurringPayment(
             paymentAmount, startEpoch + 1, contributor1
         );
-        reocurringPaymentManager.addReocurringPayment(
+        recurringPaymentManager.addReocurringPayment(
             paymentAmount, startEpoch + 1, contributor2
         );
-        reocurringPaymentManager.addReocurringPayment(
+        recurringPaymentManager.addReocurringPayment(
             (paymentAmount * 2), startEpoch + 1, contributor2
         );
 
         // 3. warp forward, they both withdraw
         vm.warp(block.timestamp + ((epochLength * epochsAmount) + 1));
-        
-        // Since processPayments is only callable by the module.
-        vm.prank(address(fundingManager));
-        reocurringPaymentManager.trigger();
+        recurringPaymentManager.trigger();
 
         // // Alice should have twice as much as Bob, since two reocurring
         // // payments were made for her.
