@@ -466,6 +466,39 @@ contract ReocurringPaymentManagerTest is
         );
     }
 
+    function testTriggerForModifierInPosition(uint seed) public {
+        reasonableWarpAndInit(seed);
+
+        reocurringPaymentManager.addReocurringPayment(
+            1, reocurringPaymentManager.getCurrentEpoch(), address(0xBEEF)
+        );
+
+        reocurringPaymentManager.addReocurringPayment(
+            1, reocurringPaymentManager.getCurrentEpoch(), address(0xBEEF)
+        );
+
+        vm.expectRevert(
+            IReocurringPaymentManager
+                .Module__ReocurringPaymentManager__InvalidReocurringPaymentId
+                .selector
+        );
+        reocurringPaymentManager.triggerFor(0, 1);
+
+        vm.expectRevert(
+            IReocurringPaymentManager
+                .Module__ReocurringPaymentManager__InvalidReocurringPaymentId
+                .selector
+        );
+        reocurringPaymentManager.triggerFor(1, 0);
+
+        vm.expectRevert(
+            IReocurringPaymentManager
+                .Module__ReocurringPaymentManager__StartIdNotBeforeEndId
+                .selector
+        );
+        reocurringPaymentManager.triggerFor(2, 1);
+    }
+
     // =========================================================================
 
     //--------------------------------------------------------------------------
