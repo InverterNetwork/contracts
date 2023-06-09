@@ -61,9 +61,11 @@ contract ReocurringPayments is e2e {
     string constant _URL = "https://github.com/organization/module";
     string constant _TITLE = "Module";
 
+    uint contributor1InitialBalance;
+    uint contributor2InitialBalance;
+
     function test_e2e_ReocurringPayments(uint paymentAmount) public {
-        paymentAmount = 10000;
-        //vm.assume(paymentAmount > 0 && paymentAmount <= 1e18);
+        vm.assume(paymentAmount > 0 && paymentAmount <= 1e18);
         ReocurringPaymentManager recurringPaymentManager;
 
         // -----------INIT
@@ -106,6 +108,11 @@ contract ReocurringPayments is e2e {
         // 2. create reocurringPayments: 2 for alice, 1 for bob
         startEpoch = recurringPaymentManager.getCurrentEpoch();
 
+        contributor1InitialBalance = token.balanceOf(contributor1);
+        contributor2InitialBalance = token.balanceOf(contributor2);
+
+        emit log_named_uint("C1 balance", contributor1InitialBalance);
+
         // paymentAmount => amount that has to be paid out each epoch
         recurringPaymentManager.addReocurringPayment(
             paymentAmount, startEpoch + 1, contributor1
@@ -118,9 +125,13 @@ contract ReocurringPayments is e2e {
         );
 
         // 3. warp forward, they both withdraw
-        uint tenEpochsInFuture = recurringPaymentManager.getFutureEpoch(9);
+        uint tenEpochsInFuture = recurringPaymentManager.getFutureEpoch(10);
         vm.warp((startEpoch * epochLength) + (tenEpochsInFuture * epochLength));
         recurringPaymentManager.trigger();
+
+        // 3.1 jump another epoch, so that we can claim the vested tokens
+        uint oneEpochsInFuture = recurringPaymentManager.getFutureEpoch(1);
+        vm.warp((startEpoch * epochLength) + (oneEpochsInFuture * epochLength));
 
         // 4. Let the contributors claim their vested tokens
         /// Let's first find the address of the streamingPaymentProcessor
@@ -143,10 +154,13 @@ contract ReocurringPayments is e2e {
         vm.prank(contributor2);
         streamingPaymentProcessor.claimAll(recurringPaymentManager);
 
+        vm.prank(contributor1);
+        streamingPaymentProcessor.claimAll(recurringPaymentManager);
+
         // Contributor2 should have got payments from both of their payment orders
         // Contributor1 should have got payment from one of their payment order
-        //assertEq(token.balanceOf(contributor1), paymentAmount);
-        //assertEq(token.balanceOf(contributor2), (paymentAmount * 3));
+        assertEq((token.balanceOf(contributor1) - contributor1InitialBalance), (paymentAmount * epochsAmount));
+        assertEq((token.balanceOf(contributor2) - contributor2InitialBalance), ((paymentAmount * 2 + paymentAmount)*epochsAmount));
 
         // // 4. remove 1 payment for alice and 1 for bob
         // reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 2); // Alice at index 2
