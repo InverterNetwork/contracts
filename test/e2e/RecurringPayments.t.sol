@@ -120,13 +120,17 @@ contract RecurringPayments is e2e {
         );
 
         // 3. warp forward, they both withdraw
-        uint tenEpochsInFuture = recurringPaymentManager.getFutureEpoch(10);
-        vm.warp((startEpoch * epochLength) + (tenEpochsInFuture * epochLength));
+        vm.warp(
+            (startEpoch * epochLength)
+                + (recurringPaymentManager.getFutureEpoch(10) * epochLength)
+        );
         recurringPaymentManager.trigger();
 
         // 3.1 jump another epoch, so that we can claim the vested tokens
-        uint oneEpochsInFuture = recurringPaymentManager.getFutureEpoch(1);
-        vm.warp((block.timestamp) + (oneEpochsInFuture * epochLength));
+        vm.warp(
+            (block.timestamp)
+                + (recurringPaymentManager.getFutureEpoch(1) * epochLength)
+        );
 
         // 4. Let the contributors claim their vested tokens
         /// Let's first find the address of the streamingPaymentProcessor
@@ -170,9 +174,6 @@ contract RecurringPayments is e2e {
             (token.balanceOf(contributor2) - contributor2InitialBalance),
             ((paymentAmount * 2 + paymentAmount) * epochsAmount)
         );
-
-        contributor1InitialBalance = token.balanceOf(contributor1);
-        contributor2InitialBalance = token.balanceOf(contributor2);
 
         // Now since the entire vested amount was claimed by the contributors, their payment orders should no longer exist.
         // Let's check that

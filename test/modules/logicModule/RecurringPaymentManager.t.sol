@@ -19,9 +19,7 @@ import {
     IPaymentClient
 } from "src/modules/logicModule/RecurringPaymentManager.sol";
 
-contract RecurringPaymentManagerTest is
-    ModuleTest //@todo Rename to RecurringPaymentManager
-{
+contract RecurringPaymentManagerTest is ModuleTest {
     // SuT
     RecurringPaymentManager recurringPaymentManager;
 
@@ -145,7 +143,15 @@ contract RecurringPaymentManagerTest is
     //--------------------------------------------------------------------------
     // Epoch Functions
     //Trivial to test
-    //@todo test getFutureEpoch for coverage
+
+    //Testing this for coverage
+    function testGetFutureEpoch(uint seed) public {
+        uint x = bound(seed, 0, 100_000_000); //Reasonable amount
+        reasonableWarpAndInit(seed);
+
+        uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
+        assertEq(recurringPaymentManager.getFutureEpoch(x), currentEpoch + x);
+    }
 
     //--------------------------------------------------------------------------
     // Mutating Functions
