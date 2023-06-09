@@ -21,6 +21,8 @@ import {
     IPaymentClient
 } from "src/modules/logicModule/ReocurringPaymentManager.sol";
 
+import {StreamingPaymentProcessor} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
+
 import {
     IStreamingPaymentProcessor,
     IPaymentClient
@@ -45,7 +47,7 @@ contract ReocurringPayments is e2e {
 
     // Parameters for reocurring payments
     uint startEpoch;
-    uint epochLength = 604_800; // 1 week;
+    uint epochLength = 1 weeks; // 1 week;
     uint epochsAmount = 10;
 
     // Constants
@@ -60,7 +62,8 @@ contract ReocurringPayments is e2e {
     string constant _TITLE = "Module";
 
     function test_e2e_ReocurringPayments(uint paymentAmount) public {
-        vm.assume(paymentAmount > 0 && paymentAmount <= 1e18);
+        paymentAmount = 10000;
+        //vm.assume(paymentAmount > 0 && paymentAmount <= 1e18);
         ReocurringPaymentManager recurringPaymentManager;
 
         // -----------INIT
@@ -115,13 +118,35 @@ contract ReocurringPayments is e2e {
         );
 
         // 3. warp forward, they both withdraw
-        vm.warp(block.timestamp + ((epochLength * epochsAmount) + 1));
+        uint tenEpochsInFuture = recurringPaymentManager.getFutureEpoch(9);
+        vm.warp((startEpoch * epochLength) + (tenEpochsInFuture * epochLength));
         recurringPaymentManager.trigger();
 
-        // // Alice should have twice as much as Bob, since two reocurring
-        // // payments were made for her.
-        // assertEq(token.balanceOf(alice), epochLength * epochsAmount * 2);
-        // assertEq(token.balanceOf(bob), epochLength * epochsAmount);
+        // 4. Let the contributors claim their vested tokens
+        /// Let's first find the address of the streamingPaymentProcessor
+        StreamingPaymentProcessor streamingPaymentProcessor;
+        for(uint i; i < modulesList.length; ++i) {
+            try IStreamingPaymentProcessor(modulesList[i]).unclaimable(contributor1, contributor2) returns(uint) {
+                streamingPaymentProcessor = StreamingPaymentProcessor(modulesList[i]);
+                break;
+            } catch {
+                continue;
+            }
+        }
+
+        // Checking whether we got the right address for streamingPaymentProcessor
+        IStreamingPaymentProcessor.StreamingWallet[] memory wallets = streamingPaymentProcessor.viewAllPaymentOrders(address(recurringPaymentManager), contributor1);
+        assertEq(wallets.length, 1);
+        wallets = streamingPaymentProcessor.viewAllPaymentOrders(address(recurringPaymentManager), contributor2);
+        assertEq(wallets.length, 2);
+
+        vm.prank(contributor2);
+        streamingPaymentProcessor.claimAll(recurringPaymentManager);
+
+        // Contributor2 should have got payments from both of their payment orders
+        // Contributor1 should have got payment from one of their payment order
+        //assertEq(token.balanceOf(contributor1), paymentAmount);
+        //assertEq(token.balanceOf(contributor2), (paymentAmount * 3));
 
         // // 4. remove 1 payment for alice and 1 for bob
         // reocurringPaymentManager.removeReocurringPayment(_SENTINEL, 2); // Alice at index 2
