@@ -354,16 +354,17 @@ contract ReocurringPaymentManagerTest is
         reocurringPaymentManager.trigger();
 
         //compare that Orders were placed and lastTriggered got updated accordingly
-        uint ordersMade = reocurringPaymentsAreCorrect(
-            reocurringPayments,
-            currentEpoch,
-            0 //Starts at first position in Orders
+        reocurringPaymentsAreCorrect(reocurringPayments, currentEpoch);
+
+        //remove tokens and orders from reocurringPaymentManager for easier testing
+        _paymentProcessor.deleteAllPayments(
+            IPaymentClient(address(reocurringPaymentManager))
         );
-        //remove tokens from reocurringPaymentManager for easier testing
         _token.burn(
             address(reocurringPaymentManager),
             _token.balanceOf(address(reocurringPaymentManager))
         );
+
         //Update Payments for later comparison
         reocurringPayments = fetchReocurringPayments();
         //Do a timejump and check again
@@ -381,14 +382,17 @@ contract ReocurringPaymentManagerTest is
             emit ReocurringPaymentsTriggered(currentEpoch);
             reocurringPaymentManager.trigger();
             //compare that Orders were placed and lastTriggered got updated accordingly
-            ordersMade = reocurringPaymentsAreCorrect(
-                reocurringPayments, currentEpoch, ordersMade
+            reocurringPaymentsAreCorrect(reocurringPayments, currentEpoch);
+
+            //remove tokens and orders from reocurringPaymentManager for easier testing
+            _paymentProcessor.deleteAllPayments(
+                IPaymentClient(address(reocurringPaymentManager))
             );
-            //remove tokens from reocurringPaymentManager for easier testing
             _token.burn(
                 address(reocurringPaymentManager),
                 _token.balanceOf(address(reocurringPaymentManager))
             );
+
             //Update Payments for later comparison
             reocurringPayments = fetchReocurringPayments();
         }
@@ -491,17 +495,8 @@ contract ReocurringPaymentManagerTest is
     function reocurringPaymentsAreCorrect(
         IReocurringPaymentManager.ReocurringPayment[] memory
             reocurringPaymentsToBeChecked,
-        uint currentEpoch,
-        //Because there is a possibility that multiple orders are created to fullfill a late reocurring payment
-        //we'll have to count for each individual reocurringpayment
-        uint numberOfOrdersMade
-    )
-        internal
-        returns (
-            //We have to return numberOfOrdersMade accordingly too
-            uint
-        )
-    {
+        uint currentEpoch
+    ) internal {
         uint length = reocurringPaymentsToBeChecked.length;
 
         IReocurringPaymentManager.ReocurringPayment[] memory
@@ -513,10 +508,19 @@ contract ReocurringPaymentManagerTest is
         assertEq(length, currentReocurringPayments.length);
 
         //prediction of how many orders have to be created for this reocurring payment
-        uint predictionOfOrdersCreated;
+        uint epochsTriggered;
+
+        //Amount of tokens that should be in the RecurringPaymentManager
+        uint totalAmount;
+
+        //Amount of tokens in a single order
+        uint orderAmount;
 
         IReocurringPaymentManager.ReocurringPayment memory
             currentReocurringPaymentToBeChecked;
+
+        //Because some of the RecurringPaymentOrders start only in the future we have to have a seperate index for that
+        uint numberOfOrdersMade;
 
         for (uint i; i < length; i++) {
             currentReocurringPaymentToBeChecked =
@@ -527,35 +531,29 @@ contract ReocurringPaymentManagerTest is
                 currentReocurringPaymentToBeChecked.lastTriggeredEpoch
                     < currentEpoch
             ) {
-                predictionOfOrdersCreated = currentEpoch
+                epochsTriggered = currentEpoch
                     - currentReocurringPaymentToBeChecked.lastTriggeredEpoch;
 
-                for (uint j = 0; j < predictionOfOrdersCreated; j++) {
-                    assertEq(
-                        orders[numberOfOrdersMade].recipient,
-                        currentReocurringPaymentToBeChecked.recipient
-                    );
+                orderAmount =
+                    currentReocurringPaymentToBeChecked.amount * epochsTriggered;
 
-                    assertEq(
-                        orders[numberOfOrdersMade].amount,
-                        currentReocurringPaymentToBeChecked.amount
-                    );
-                    assertEq(
-                        orders[numberOfOrdersMade].createdAt, block.timestamp
-                    );
+                assertEq(
+                    orders[numberOfOrdersMade].recipient,
+                    currentReocurringPaymentToBeChecked.recipient
+                );
 
-                    assertEq(
-                        orders[numberOfOrdersMade].dueTo,
-                        (
-                            currentReocurringPaymentToBeChecked
-                                .lastTriggeredEpoch + 1
-                        ) * reocurringPaymentManager.getEpochLength()
-                    );
-                    currentReocurringPaymentToBeChecked.lastTriggeredEpoch++;
-                    numberOfOrdersMade++;
-                }
-                //reset predictionOfOrdersCreated
-                predictionOfOrdersCreated = 0;
+                assertEq(orders[numberOfOrdersMade].amount, orderAmount);
+                assertEq(orders[numberOfOrdersMade].createdAt, block.timestamp);
+
+                assertEq(
+                    orders[numberOfOrdersMade].dueTo,
+                    (currentEpoch + 1)
+                        * reocurringPaymentManager.getEpochLength()
+                );
+
+                totalAmount += orderAmount;
+
+                numberOfOrdersMade++;
 
                 //Check if updated payment lastTriggeredEpoch is current epoch
                 assertEq(
@@ -565,13 +563,19 @@ contract ReocurringPaymentManagerTest is
             }
         }
 
+        emit checker(
+            "_token.balanceOf(address(reocurringPaymentManager))",
+            _token.balanceOf(address(reocurringPaymentManager))
+        );
+
+        emit checker("totalAmount", totalAmount);
+
         // Check that reocurringPaymentManager's token balance is sufficient for the
         // payment orders by comparing it with the total amount of orders made (numberOfOrdersMade)
         assertTrue(
-            _token.balanceOf(address(reocurringPaymentManager))
-                == numberOfOrdersMade
+            _token.balanceOf(address(reocurringPaymentManager)) == totalAmount
         );
-
-        return numberOfOrdersMade;
     }
+
+    event checker(string, uint);
 }
