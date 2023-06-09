@@ -14,35 +14,35 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // SuT
 import {
-    ReocurringPaymentManager,
-    IReocurringPaymentManager,
+    RecurringPaymentManager,
+    IRecurringPaymentManager,
     IPaymentClient
-} from "src/modules/logicModule/ReocurringPaymentManager.sol";
+} from "src/modules/logicModule/RecurringPaymentManager.sol";
 
-contract ReocurringPaymentManagerTest is
+contract RecurringPaymentManagerTest is
     ModuleTest //@todo Rename to RecurringPaymentManager
 {
     // SuT
-    ReocurringPaymentManager reocurringPaymentManager;
+    RecurringPaymentManager recurringPaymentManager;
 
     uint private constant _SENTINEL = type(uint).max;
 
-    event ReocurringPaymentAdded(
-        uint indexed reocurringPaymentId,
+    event RecurringPaymentAdded(
+        uint indexed recurringPaymentId,
         uint amount,
         uint startEpoch,
         uint lastTriggeredEpoch,
         address recipient
     );
-    event ReocurringPaymentRemoved(uint indexed reocurringPaymentId);
-    event ReocurringPaymentsTriggered(uint indexed currentEpoch);
+    event RecurringPaymentRemoved(uint indexed recurringPaymentId);
+    event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
     function setUp() public {
         //Add Module to Mock Proposal
-        address impl = address(new ReocurringPaymentManager());
-        reocurringPaymentManager = ReocurringPaymentManager(Clones.clone(impl));
+        address impl = address(new RecurringPaymentManager());
+        recurringPaymentManager = RecurringPaymentManager(Clones.clone(impl));
 
-        _setUpProposal(reocurringPaymentManager);
+        _setUpProposal(recurringPaymentManager);
         _authorizer.setIsAuthorized(address(this), true);
     }
 
@@ -52,38 +52,38 @@ contract ReocurringPaymentManagerTest is
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {
         vm.expectRevert(
-            IReocurringPaymentManager
-                .Module__ReocurringPaymentManager__InvalidEpochLength
+            IRecurringPaymentManager
+                .Module__RecurringPaymentManager__InvalidEpochLength
                 .selector
         );
 
         //Init Module wrongly
-        reocurringPaymentManager.init(
+        recurringPaymentManager.init(
             _proposal, _METADATA, abi.encode(1 weeks - 1)
         );
 
         vm.expectRevert(
-            IReocurringPaymentManager
-                .Module__ReocurringPaymentManager__InvalidEpochLength
+            IRecurringPaymentManager
+                .Module__RecurringPaymentManager__InvalidEpochLength
                 .selector
         );
 
         //Init Module wrongly
-        reocurringPaymentManager.init(
+        recurringPaymentManager.init(
             _proposal, _METADATA, abi.encode(52 weeks + 1)
         );
 
         //Init Module correct
-        reocurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
 
-        assertEq(reocurringPaymentManager.getEpochLength(), 1 weeks);
+        assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
     }
 
     function testReinitFails() public override(ModuleTest) {
-        reocurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        reocurringPaymentManager.init(_proposal, _METADATA, bytes(""));
+        recurringPaymentManager.init(_proposal, _METADATA, bytes(""));
     }
 
     //--------------------------------------------------------------------------
@@ -95,36 +95,36 @@ contract ReocurringPaymentManagerTest is
         reasonableWarpAndInit(seed);
 
         for (uint i = 0; i < usedIds; i++) {
-            reocurringPaymentManager.addReocurringPayment(
-                1, reocurringPaymentManager.getCurrentEpoch(), address(0xBEEF)
+            recurringPaymentManager.addRecurringPayment(
+                1, recurringPaymentManager.getCurrentEpoch(), address(0xBEEF)
             );
         }
 
         if (id > usedIds || id == 0) {
             vm.expectRevert(
-                IReocurringPaymentManager
-                    .Module__ReocurringPaymentManager__InvalidReocurringPaymentId
+                IRecurringPaymentManager
+                    .Module__RecurringPaymentManager__InvalidRecurringPaymentId
                     .selector
             );
         }
 
-        reocurringPaymentManager.getReocurringPaymentInformation(id);
+        recurringPaymentManager.getRecurringPaymentInformation(id);
     }
 
     function testValidStartEpoch(uint seed, uint startEpoch) public {
         reasonableWarpAndInit(seed);
 
-        uint currentEpoch = reocurringPaymentManager.getCurrentEpoch();
+        uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
         if (currentEpoch > startEpoch) {
             vm.expectRevert(
-                IReocurringPaymentManager
-                    .Module__ReocurringPaymentManager__InvalidStartEpoch
+                IRecurringPaymentManager
+                    .Module__RecurringPaymentManager__InvalidStartEpoch
                     .selector
             );
         }
 
-        reocurringPaymentManager.addReocurringPayment(
+        recurringPaymentManager.addRecurringPayment(
             1, startEpoch, address(0xBeef)
         );
     }
@@ -133,13 +133,13 @@ contract ReocurringPaymentManagerTest is
     // Getter
     // Just test if Modifier is in position, because otherwise trivial
 
-    function testGetReocurringPaymentInformationModifierInPosition() public {
+    function testGetRecurringPaymentInformationModifierInPosition() public {
         vm.expectRevert(
-            IReocurringPaymentManager
-                .Module__ReocurringPaymentManager__InvalidReocurringPaymentId
+            IRecurringPaymentManager
+                .Module__RecurringPaymentManager__InvalidRecurringPaymentId
                 .selector
         );
-        reocurringPaymentManager.getReocurringPaymentInformation(0);
+        recurringPaymentManager.getRecurringPaymentInformation(0);
     }
 
     //--------------------------------------------------------------------------
@@ -151,9 +151,9 @@ contract ReocurringPaymentManagerTest is
     // Mutating Functions
 
     //-----------------------------------------
-    //AddReocurringPayment
+    //AddRecurringPayment
 
-    function testAddReocurringPayment(
+    function testAddRecurringPayment(
         uint seed,
         uint amount,
         uint startEpoch,
@@ -164,25 +164,25 @@ contract ReocurringPaymentManagerTest is
         //Assume correct inputs
         vm.assume(
             recipient != address(0)
-                && recipient != address(reocurringPaymentManager)
+                && recipient != address(recurringPaymentManager)
         );
         amount = bound(amount, 1, type(uint).max);
-        uint currentEpoch = reocurringPaymentManager.getCurrentEpoch();
+        uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
         startEpoch = bound(startEpoch, currentEpoch, type(uint).max);
 
         vm.expectEmit(true, true, true, true);
-        emit ReocurringPaymentAdded(
+        emit RecurringPaymentAdded(
             1, //Id starts at 1
             amount,
             startEpoch,
             startEpoch - 1, //lastTriggeredEpoch has to be startEpoch - 1
             recipient
         );
-        reocurringPaymentManager.addReocurringPayment(
+        recurringPaymentManager.addRecurringPayment(
             amount, startEpoch, recipient
         );
 
-        assertEqualReocurringPayment(
+        assertEqualRecurringPayment(
             1, amount, startEpoch, startEpoch - 1, recipient
         );
 
@@ -191,26 +191,26 @@ contract ReocurringPaymentManagerTest is
         uint length = bound(amount, 1, 30); //Reasonable amount
         for (uint i = 2; i < length + 2; i++) {
             vm.expectEmit(true, true, true, true);
-            emit ReocurringPaymentAdded(
+            emit RecurringPaymentAdded(
                 i, //Id starts at 1
                 1,
                 currentEpoch,
                 currentEpoch - 1, //lastTriggeredEpoch has to be startEpoch - 1
                 address(0xBEEF)
             );
-            id = reocurringPaymentManager.addReocurringPayment(
+            id = recurringPaymentManager.addRecurringPayment(
                 1, currentEpoch, address(0xBEEF)
             );
             assertEq(id, i); //Maybe a bit overtested, that id is correct but ¯\_(ツ)_/¯
-            assertEqualReocurringPayment(
+            assertEqualRecurringPayment(
                 i, 1, currentEpoch, currentEpoch - 1, address(0xBEEF)
             );
         }
     }
 
-    function testAddReocurringPaymentModifierInPosition() public {
+    function testAddRecurringPaymentModifierInPosition() public {
         //Init Module
-        reocurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
 
         //Warp to a reasonable time
         vm.warp(2 weeks);
@@ -219,69 +219,65 @@ contract ReocurringPaymentManagerTest is
         vm.prank(address(0xBEEF)); //Not Authorized
 
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        reocurringPaymentManager.addReocurringPayment(
-            1, 2 weeks, address(0xBEEF)
-        );
+        recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0xBEEF));
 
         //validAmount
         vm.expectRevert(
             IPaymentClient.Module__PaymentClient__InvalidAmount.selector
         );
-        reocurringPaymentManager.addReocurringPayment(
-            0, 2 weeks, address(0xBEEF)
-        );
+        recurringPaymentManager.addRecurringPayment(0, 2 weeks, address(0xBEEF));
 
         //validStartEpoch
 
         vm.expectRevert(
-            IReocurringPaymentManager
-                .Module__ReocurringPaymentManager__InvalidStartEpoch
+            IRecurringPaymentManager
+                .Module__RecurringPaymentManager__InvalidStartEpoch
                 .selector
         );
-        reocurringPaymentManager.addReocurringPayment(1, 0, address(0xBEEF));
+        recurringPaymentManager.addRecurringPayment(1, 0, address(0xBEEF));
 
         //validRecipient
 
         vm.expectRevert(
             IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
         );
-        reocurringPaymentManager.addReocurringPayment(1, 2 weeks, address(0));
+        recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0));
     }
 
     //-----------------------------------------
-    //RemoveReocurringPayment
+    //RemoveRecurringPayment
 
-    function testRemoveReocurringPayment(uint seed, uint amount) public {
+    function testRemoveRecurringPayment(uint seed, uint amount) public {
         reasonableWarpAndInit(seed);
         amount = bound(amount, 1, 30); //Reasonable number of repetitions
 
-        uint currentEpoch = reocurringPaymentManager.getCurrentEpoch();
+        uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
-        // Fill list with ReocurringPayments.
+        // Fill list with RecurringPayments.
         for (uint i; i < amount; ++i) {
-            reocurringPaymentManager.addReocurringPayment(
+            recurringPaymentManager.addRecurringPayment(
                 1, currentEpoch, address(0xBEEF)
             );
         }
 
-        // Remove ReocurringPayments from the front, i.e. lowest ReocurringPayment id, until
+        // Remove RecurringPayments from the front, i.e. lowest RecurringPayment id, until
         // list is empty.
         for (uint i; i < amount; ++i) {
             uint id = i + 1; // Note that id's start at 1.
 
             vm.expectEmit(true, true, true, true);
-            emit ReocurringPaymentRemoved(id);
+            emit RecurringPaymentRemoved(id);
 
-            reocurringPaymentManager.removeReocurringPayment(_SENTINEL, id);
+            recurringPaymentManager.removeRecurringPayment(_SENTINEL, id);
             assertEq(
-                reocurringPaymentManager.listReocurringPaymentIds().length,
+                recurringPaymentManager.listRecurringPaymentIds().length,
                 amount - i - 1
             );
         }
 
         // Fill list again with milestones.
         for (uint i; i < amount; ++i) {
-            reocurringPaymentManager.addReocurringPayment(
+            recurringPaymentManager.addRecurringPayment(
                 1, currentEpoch, address(0xBEEF)
             );
         }
@@ -300,25 +296,25 @@ contract ReocurringPaymentManagerTest is
             }
 
             vm.expectEmit(true, true, true, true);
-            emit ReocurringPaymentRemoved(id);
+            emit RecurringPaymentRemoved(id);
 
-            reocurringPaymentManager.removeReocurringPayment(prevId, id);
+            recurringPaymentManager.removeRecurringPayment(prevId, id);
             assertEq(
-                reocurringPaymentManager.listReocurringPaymentIds().length,
+                recurringPaymentManager.listRecurringPaymentIds().length,
                 amount - i - 1
             );
         }
     }
 
-    function testRemoveReocurringPaymentModifierInPosition() public {
+    function testRemoveRecurringPaymentModifierInPosition() public {
         //Init Module
-        reocurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
 
         //onlyAuthorizedOrManager
         vm.prank(address(0xBEEF)); //Not Authorized
 
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        reocurringPaymentManager.removeReocurringPayment(0, 1);
+        recurringPaymentManager.removeRecurringPayment(0, 1);
     }
 
     //--------------------------------------------------------------------------
@@ -333,10 +329,10 @@ contract ReocurringPaymentManagerTest is
 
         reasonableWarpAndInit(seed);
 
-        uint currentEpoch = reocurringPaymentManager.getCurrentEpoch();
+        uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
         //Generate appropriate Payment Orders
-        createReocurringPaymentOrders(seed, receivers);
+        createRecurringPaymentOrders(seed, receivers);
 
         //Mint enough tokens based on the payment order
 
@@ -345,67 +341,65 @@ contract ReocurringPaymentManagerTest is
         _token.mint(address(_fundingManager), 10_000);
 
         //Copy Payments for later comparison
-        IReocurringPaymentManager.ReocurringPayment[] memory
-            reocurringPaymentsToBeChecked = fetchReocurringPayments();
+        IRecurringPaymentManager.RecurringPayment[] memory
+            recurringPaymentsToBeChecked = fetchRecurringPayments();
 
         //Payout created Payments via trigger
         vm.expectEmit(true, true, true, true);
-        emit ReocurringPaymentsTriggered(currentEpoch);
-        reocurringPaymentManager.trigger();
+        emit RecurringPaymentsTriggered(currentEpoch);
+        recurringPaymentManager.trigger();
 
-        IReocurringPaymentManager.ReocurringPayment[] memory
-            currentReocurringPayments = fetchReocurringPayments();
+        IRecurringPaymentManager.RecurringPayment[] memory
+            currentRecurringPayments = fetchRecurringPayments();
 
         //compare that Orders were placed and lastTriggered got updated accordingly
-        reocurringPaymentsAreCorrect(
-            reocurringPaymentsToBeChecked,
-            currentReocurringPayments,
-            currentEpoch
+        recurringPaymentsAreCorrect(
+            recurringPaymentsToBeChecked, currentRecurringPayments, currentEpoch
         );
 
-        //remove tokens and orders from reocurringPaymentManager for easier testing
+        //remove tokens and orders from recurringPaymentManager for easier testing
         _paymentProcessor.deleteAllPayments(
-            IPaymentClient(address(reocurringPaymentManager))
+            IPaymentClient(address(recurringPaymentManager))
         );
         _token.burn(
-            address(reocurringPaymentManager),
-            _token.balanceOf(address(reocurringPaymentManager))
+            address(recurringPaymentManager),
+            _token.balanceOf(address(recurringPaymentManager))
         );
 
         //Do a timejump and check again
         for (uint i = 0; i < timejumps; i++) {
             //Update Payments for later comparison
-            reocurringPaymentsToBeChecked = fetchReocurringPayments();
+            recurringPaymentsToBeChecked = fetchRecurringPayments();
 
             vm.warp(
                 block.timestamp
                     + bound(
                         seed, //Introduce some randomness for the jump
-                        reocurringPaymentManager.getEpochLength(),
-                        reocurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
+                        recurringPaymentManager.getEpochLength(),
+                        recurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
                     )
             );
-            currentEpoch = reocurringPaymentManager.getCurrentEpoch();
+            currentEpoch = recurringPaymentManager.getCurrentEpoch();
             vm.expectEmit(true, true, true, true);
-            emit ReocurringPaymentsTriggered(currentEpoch);
-            reocurringPaymentManager.trigger();
+            emit RecurringPaymentsTriggered(currentEpoch);
+            recurringPaymentManager.trigger();
 
-            currentReocurringPayments = fetchReocurringPayments();
+            currentRecurringPayments = fetchRecurringPayments();
 
             //compare that Orders were placed and lastTriggered got updated accordingly
-            reocurringPaymentsAreCorrect(
-                reocurringPaymentsToBeChecked,
-                currentReocurringPayments,
+            recurringPaymentsAreCorrect(
+                recurringPaymentsToBeChecked,
+                currentRecurringPayments,
                 currentEpoch
             );
 
-            //remove tokens and orders from reocurringPaymentManager for easier testing
+            //remove tokens and orders from recurringPaymentManager for easier testing
             _paymentProcessor.deleteAllPayments(
-                IPaymentClient(address(reocurringPaymentManager))
+                IPaymentClient(address(recurringPaymentManager))
             );
             _token.burn(
-                address(reocurringPaymentManager),
-                _token.balanceOf(address(reocurringPaymentManager))
+                address(recurringPaymentManager),
+                _token.balanceOf(address(recurringPaymentManager))
             );
         }
     }
@@ -426,7 +420,7 @@ contract ReocurringPaymentManagerTest is
         reasonableWarpAndInit(seed);
 
         //Generate appropriate Payment Orders
-        createReocurringPaymentOrders(seed, receivers);
+        createRecurringPaymentOrders(seed, receivers);
 
         //Mint enough tokens based on the payment order
 
@@ -435,33 +429,33 @@ contract ReocurringPaymentManagerTest is
         _token.mint(address(_fundingManager), 500);
 
         //Copy Payments for later comparison
-        IReocurringPaymentManager.ReocurringPayment[] memory
-            filteredReocurringPaymentsToBeChecked =
-                filterPayments(fetchReocurringPayments(), startId, endId);
+        IRecurringPaymentManager.RecurringPayment[] memory
+            filteredRecurringPaymentsToBeChecked =
+                filterPayments(fetchRecurringPayments(), startId, endId);
 
         vm.warp(
             block.timestamp
                 + bound(
                     seed, //Introduce some randomness for the jump
                     0,
-                    reocurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
+                    recurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
                 )
         );
-        uint currentEpoch = reocurringPaymentManager.getCurrentEpoch();
+        uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
         vm.expectEmit(true, true, true, true);
-        emit ReocurringPaymentsTriggered(currentEpoch);
-        reocurringPaymentManager.triggerFor(startId, endId);
+        emit RecurringPaymentsTriggered(currentEpoch);
+        recurringPaymentManager.triggerFor(startId, endId);
 
         //Get currentPayments and filter them
-        IReocurringPaymentManager.ReocurringPayment[] memory
-            currentReocurringPayments =
-                filterPayments(fetchReocurringPayments(), startId, endId);
+        IRecurringPaymentManager.RecurringPayment[] memory
+            currentRecurringPayments =
+                filterPayments(fetchRecurringPayments(), startId, endId);
 
         //compare that Orders were placed and lastTriggered got updated accordingly
-        reocurringPaymentsAreCorrect(
-            filteredReocurringPaymentsToBeChecked,
-            currentReocurringPayments,
+        recurringPaymentsAreCorrect(
+            filteredRecurringPaymentsToBeChecked,
+            currentRecurringPayments,
             currentEpoch
         );
     }
@@ -469,34 +463,34 @@ contract ReocurringPaymentManagerTest is
     function testTriggerForModifierInPosition(uint seed) public {
         reasonableWarpAndInit(seed);
 
-        reocurringPaymentManager.addReocurringPayment(
-            1, reocurringPaymentManager.getCurrentEpoch(), address(0xBEEF)
+        recurringPaymentManager.addRecurringPayment(
+            1, recurringPaymentManager.getCurrentEpoch(), address(0xBEEF)
         );
 
-        reocurringPaymentManager.addReocurringPayment(
-            1, reocurringPaymentManager.getCurrentEpoch(), address(0xBEEF)
+        recurringPaymentManager.addRecurringPayment(
+            1, recurringPaymentManager.getCurrentEpoch(), address(0xBEEF)
         );
-
-        vm.expectRevert(
-            IReocurringPaymentManager
-                .Module__ReocurringPaymentManager__InvalidReocurringPaymentId
-                .selector
-        );
-        reocurringPaymentManager.triggerFor(0, 1);
 
         vm.expectRevert(
-            IReocurringPaymentManager
-                .Module__ReocurringPaymentManager__InvalidReocurringPaymentId
+            IRecurringPaymentManager
+                .Module__RecurringPaymentManager__InvalidRecurringPaymentId
                 .selector
         );
-        reocurringPaymentManager.triggerFor(1, 0);
+        recurringPaymentManager.triggerFor(0, 1);
 
         vm.expectRevert(
-            IReocurringPaymentManager
-                .Module__ReocurringPaymentManager__StartIdNotBeforeEndId
+            IRecurringPaymentManager
+                .Module__RecurringPaymentManager__InvalidRecurringPaymentId
                 .selector
         );
-        reocurringPaymentManager.triggerFor(2, 1);
+        recurringPaymentManager.triggerFor(1, 0);
+
+        vm.expectRevert(
+            IRecurringPaymentManager
+                .Module__RecurringPaymentManager__StartIdNotBeforeEndId
+                .selector
+        );
+        recurringPaymentManager.triggerFor(2, 1);
     }
 
     // =========================================================================
@@ -514,7 +508,7 @@ contract ReocurringPaymentManagerTest is
         vm.warp(currentTimestamp);
 
         //Init Module
-        reocurringPaymentManager.init(
+        recurringPaymentManager.init(
             _proposal, _METADATA, abi.encode(epochLength)
         );
     }
@@ -529,22 +523,22 @@ contract ReocurringPaymentManagerTest is
         for (uint i; i < length; i++) {
             if (
                 addrs[i] == address(0)
-                    || addrs[i] == address(reocurringPaymentManager)
+                    || addrs[i] == address(recurringPaymentManager)
             ) addrs[i] = address(0x1);
         }
 
         return addrs;
     }
 
-    function assertEqualReocurringPayment(
+    function assertEqualRecurringPayment(
         uint idToProve,
         uint amount,
         uint startEpoch,
         uint lastTriggeredEpoch,
         address recipient
     ) internal {
-        IReocurringPaymentManager.ReocurringPayment memory payment =
-            reocurringPaymentManager.getReocurringPaymentInformation(idToProve);
+        IRecurringPaymentManager.RecurringPayment memory payment =
+            recurringPaymentManager.getRecurringPaymentInformation(idToProve);
 
         assertEq(payment.amount, amount);
         assertEq(payment.startEpoch, startEpoch);
@@ -552,12 +546,12 @@ contract ReocurringPaymentManagerTest is
         assertEq(payment.recipient, recipient);
     }
 
-    function createReocurringPaymentOrders(uint seed, address[] memory receiver)
+    function createRecurringPaymentOrders(uint seed, address[] memory receiver)
         internal
     {
         uint length = receiver.length;
 
-        uint currentEpoch = reocurringPaymentManager.getCurrentEpoch();
+        uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
         uint startEpoch;
         uint growingSequenceBefore;
@@ -571,42 +565,42 @@ contract ReocurringPaymentManagerTest is
 
             growingSequenceBefore = growingSequenceCurrent;
 
-            reocurringPaymentManager.addReocurringPayment(
+            recurringPaymentManager.addRecurringPayment(
                 1, startEpoch, receiver[i]
             );
         }
     }
 
-    function fetchReocurringPayments()
+    function fetchRecurringPayments()
         internal
         view
-        returns (IReocurringPaymentManager.ReocurringPayment[] memory)
+        returns (IRecurringPaymentManager.RecurringPayment[] memory)
     {
-        uint[] memory ids = reocurringPaymentManager.listReocurringPaymentIds();
+        uint[] memory ids = recurringPaymentManager.listRecurringPaymentIds();
         uint length = ids.length;
 
-        IReocurringPaymentManager.ReocurringPayment[] memory reocurringPayments =
-            new IReocurringPaymentManager.ReocurringPayment[](length);
+        IRecurringPaymentManager.RecurringPayment[] memory recurringPayments =
+            new IRecurringPaymentManager.RecurringPayment[](length);
 
         for (uint i = 0; i < length; i++) {
-            reocurringPayments[i] =
-                reocurringPaymentManager.getReocurringPaymentInformation(ids[i]);
+            recurringPayments[i] =
+                recurringPaymentManager.getRecurringPaymentInformation(ids[i]);
         }
-        return reocurringPayments;
+        return recurringPayments;
     }
 
     function filterPayments(
-        IReocurringPaymentManager.ReocurringPayment[] memory paymentsToFilter,
+        IRecurringPaymentManager.RecurringPayment[] memory paymentsToFilter,
         uint startId,
         uint endId
     )
         internal
         pure
-        returns (IReocurringPaymentManager.ReocurringPayment[] memory)
+        returns (IRecurringPaymentManager.RecurringPayment[] memory)
     {
         uint filterArrayLength = endId - startId + 1; //even if endId and startId are the same its at least one order
-        IReocurringPaymentManager.ReocurringPayment[] memory returnArray =
-            new IReocurringPaymentManager.ReocurringPayment[](filterArrayLength);
+        IRecurringPaymentManager.RecurringPayment[] memory returnArray =
+            new IRecurringPaymentManager.RecurringPayment[](filterArrayLength);
         for (uint i = 0; i < filterArrayLength; i++) {
             returnArray[i] = paymentsToFilter[startId - 1 + i]; //because ids start at 1 substract 1 to get appropriate array position
         }
@@ -614,21 +608,21 @@ contract ReocurringPaymentManagerTest is
     }
 
     //Note: this needs the old version of the orders before the trigger function was called to work
-    function reocurringPaymentsAreCorrect(
-        IReocurringPaymentManager.ReocurringPayment[] memory
-            reocurringPaymentsToBeChecked,
-        IReocurringPaymentManager.ReocurringPayment[] memory
-            currentReocurringPayments,
+    function recurringPaymentsAreCorrect(
+        IRecurringPaymentManager.RecurringPayment[] memory
+            recurringPaymentsToBeChecked,
+        IRecurringPaymentManager.RecurringPayment[] memory
+            currentRecurringPayments,
         uint currentEpoch
     ) internal {
-        uint length = reocurringPaymentsToBeChecked.length;
+        uint length = recurringPaymentsToBeChecked.length;
 
         IPaymentClient.PaymentOrder[] memory orders =
-            reocurringPaymentManager.paymentOrders();
+            recurringPaymentManager.paymentOrders();
 
-        assertEq(length, currentReocurringPayments.length);
+        assertEq(length, currentRecurringPayments.length);
 
-        //prediction of how many orders have to be created for this reocurring payment
+        //prediction of how many orders have to be created for this recurring payment
         uint epochsTriggered;
 
         //Amount of tokens that should be in the RecurringPaymentManager
@@ -637,30 +631,29 @@ contract ReocurringPaymentManagerTest is
         //Amount of tokens in a single order
         uint orderAmount;
 
-        IReocurringPaymentManager.ReocurringPayment memory
-            currentReocurringPaymentToBeChecked;
+        IRecurringPaymentManager.RecurringPayment memory
+            currentRecurringPaymentToBeChecked;
 
         //Because some of the RecurringPaymentOrders start only in the future we have to have a seperate index for that
         uint numberOfOrdersMade;
 
         for (uint i; i < length; i++) {
-            currentReocurringPaymentToBeChecked =
-                reocurringPaymentsToBeChecked[i];
+            currentRecurringPaymentToBeChecked = recurringPaymentsToBeChecked[i];
 
             //Orders are only created if lastTriggeredEpoch is smaller than currentEpoch
             if (
-                currentReocurringPaymentToBeChecked.lastTriggeredEpoch
+                currentRecurringPaymentToBeChecked.lastTriggeredEpoch
                     < currentEpoch
             ) {
                 epochsTriggered = currentEpoch
-                    - currentReocurringPaymentToBeChecked.lastTriggeredEpoch;
+                    - currentRecurringPaymentToBeChecked.lastTriggeredEpoch;
 
                 orderAmount =
-                    currentReocurringPaymentToBeChecked.amount * epochsTriggered;
+                    currentRecurringPaymentToBeChecked.amount * epochsTriggered;
 
                 assertEq(
                     orders[numberOfOrdersMade].recipient,
-                    currentReocurringPaymentToBeChecked.recipient
+                    currentRecurringPaymentToBeChecked.recipient
                 );
 
                 assertEq(orders[numberOfOrdersMade].amount, orderAmount);
@@ -669,7 +662,7 @@ contract ReocurringPaymentManagerTest is
                 assertEq(
                     orders[numberOfOrdersMade].dueTo,
                     (currentEpoch + 1)
-                        * reocurringPaymentManager.getEpochLength()
+                        * recurringPaymentManager.getEpochLength()
                 );
 
                 totalAmount += orderAmount;
@@ -678,16 +671,15 @@ contract ReocurringPaymentManagerTest is
 
                 //Check if updated payment lastTriggeredEpoch is current epoch
                 assertEq(
-                    currentReocurringPayments[i].lastTriggeredEpoch,
-                    currentEpoch
+                    currentRecurringPayments[i].lastTriggeredEpoch, currentEpoch
                 );
             }
         }
 
-        // Check that reocurringPaymentManager's token balance is sufficient for the
+        // Check that recurringPaymentManager's token balance is sufficient for the
         // payment orders by comparing it with the total amount of orders made (numberOfOrdersMade)
         assertTrue(
-            _token.balanceOf(address(reocurringPaymentManager)) == totalAmount
+            _token.balanceOf(address(recurringPaymentManager)) == totalAmount
         );
     }
 }

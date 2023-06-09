@@ -22,8 +22,8 @@ import {SimplePaymentProcessor} from
 import {StreamingPaymentProcessor} from
     "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
-import {ReocurringPaymentManager} from
-    "src/modules/logicModule/ReocurringPaymentManager.sol";
+import {RecurringPaymentManager} from
+    "src/modules/logicModule/RecurringPaymentManager.sol";
 
 //Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -97,7 +97,7 @@ contract e2e is Test {
     IProposalFactory.ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
 
     MilestoneManager milestoneManagerImpl;
-    ReocurringPaymentManager recurringPaymentManagerImpl;
+    RecurringPaymentManager recurringPaymentManagerImpl;
 
     Beacon recurringPaymentManagerBeacon;
     address recurringPaymentManagerBeaconOwner =
@@ -136,7 +136,7 @@ contract e2e is Test {
         paymentProcessorImpl = new SimplePaymentProcessor();
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
-        recurringPaymentManagerImpl = new ReocurringPaymentManager();
+        recurringPaymentManagerImpl = new RecurringPaymentManager();
         authorizerImpl = new AuthorizerMock();
 
         // Deploy module beacons.

@@ -16,10 +16,10 @@ import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 // SuT
 import {
-    ReocurringPaymentManager,
-    IReocurringPaymentManager,
+    RecurringPaymentManager,
+    IRecurringPaymentManager,
     IPaymentClient
-} from "src/modules/logicModule/ReocurringPaymentManager.sol";
+} from "src/modules/logicModule/RecurringPaymentManager.sol";
 
 import {StreamingPaymentProcessor} from
     "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
@@ -32,14 +32,14 @@ import {
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract ReocurringPayments is e2e {
+contract RecurringPayments is e2e {
     // Let's create a list of contributors
     address contributor1 = makeAddr("contributor 1");
     address contributor2 = makeAddr("contributor 2");
     address contributor3 = makeAddr("contributor 3");
     address contributor4 = makeAddr("contributor 4");
 
-    // Parameters for reocurring payments
+    // Parameters for recurring payments
     uint startEpoch;
     uint epochLength = 1 weeks; // 1 week;
     uint epochsAmount = 10;
@@ -58,9 +58,9 @@ contract ReocurringPayments is e2e {
     uint contributor1InitialBalance;
     uint contributor2InitialBalance;
 
-    function test_e2e_ReocurringPayments(uint paymentAmount) public {
+    function test_e2e_RecurringPayments(uint paymentAmount) public {
         vm.assume(paymentAmount > 0 && paymentAmount <= 1e18);
-        ReocurringPaymentManager recurringPaymentManager;
+        RecurringPaymentManager recurringPaymentManager;
 
         // -----------INIT
         // address(this) creates a new proposal.
@@ -78,10 +78,10 @@ contract ReocurringPayments is e2e {
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = proposal.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try IReocurringPaymentManager(modulesList[i]).getCurrentEpoch()
+            try IRecurringPaymentManager(modulesList[i]).getCurrentEpoch()
             returns (uint) {
                 recurringPaymentManager =
-                    ReocurringPaymentManager(modulesList[i]);
+                    RecurringPaymentManager(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -102,20 +102,20 @@ contract ReocurringPayments is e2e {
         token.approve(address(fundingManager), initialDeposit);
         fundingManager.deposit(initialDeposit);
 
-        // 2. create reocurringPayments: 2 for alice, 1 for bob
+        // 2. create recurringPayments: 2 for alice, 1 for bob
         startEpoch = recurringPaymentManager.getCurrentEpoch();
 
         contributor1InitialBalance = token.balanceOf(contributor1);
         contributor2InitialBalance = token.balanceOf(contributor2);
 
         // paymentAmount => amount that has to be paid out each epoch
-        recurringPaymentManager.addReocurringPayment(
+        recurringPaymentManager.addRecurringPayment(
             paymentAmount, startEpoch + 1, contributor1
         );
-        recurringPaymentManager.addReocurringPayment(
+        recurringPaymentManager.addRecurringPayment(
             paymentAmount, startEpoch + 1, contributor2
         );
-        recurringPaymentManager.addReocurringPayment(
+        recurringPaymentManager.addRecurringPayment(
             (paymentAmount * 2), startEpoch + 1, contributor2
         );
 

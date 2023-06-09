@@ -14,8 +14,8 @@ import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
-import {IReocurringPaymentManager} from
-    "src/modules/logicModule/IReocurringPaymentManager.sol";
+import {IRecurringPaymentManager} from
+    "src/modules/logicModule/IRecurringPaymentManager.sol";
 
 import {
     IPaymentClient,
@@ -25,8 +25,8 @@ import {
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
-contract ReocurringPaymentManager is
-    IReocurringPaymentManager,
+contract RecurringPaymentManager is
+    IRecurringPaymentManager,
     Module,
     PaymentClient
 {
@@ -36,24 +36,23 @@ contract ReocurringPaymentManager is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier validId(uint reocurringPaymentId) {
-        if (!isExistingReocurringPaymentId(reocurringPaymentId)) {
-            revert Module__ReocurringPaymentManager__InvalidReocurringPaymentId(
-            );
+    modifier validId(uint recurringPaymentId) {
+        if (!isExistingRecurringPaymentId(recurringPaymentId)) {
+            revert Module__RecurringPaymentManager__InvalidRecurringPaymentId();
         }
         _;
     }
 
     modifier validStartEpoch(uint startEpoch) {
         if (getCurrentEpoch() > startEpoch) {
-            revert Module__ReocurringPaymentManager__InvalidStartEpoch();
+            revert Module__RecurringPaymentManager__InvalidStartEpoch();
         }
         _;
     }
 
     modifier startIdBeforeEndId(uint startId, uint endId) {
         if (startId > endId) {
-            revert Module__ReocurringPaymentManager__StartIdNotBeforeEndId();
+            revert Module__RecurringPaymentManager__StartIdNotBeforeEndId();
         }
         _;
     }
@@ -73,10 +72,10 @@ contract ReocurringPaymentManager is
     /// @dev length of an epoch
     uint private epochLength;
 
-    /// @dev Registry mapping ids to ReocurringPayment structs.
-    mapping(uint => ReocurringPayment) private _paymentRegistry;
+    /// @dev Registry mapping ids to RecurringPayment structs.
+    mapping(uint => RecurringPayment) private _paymentRegistry;
 
-    /// @dev List of ReocurringPayment id's.
+    /// @dev List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
     //--------------------------------------------------------------------------
     // Initialization
@@ -88,58 +87,54 @@ contract ReocurringPaymentManager is
         bytes memory configdata
     ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
-        //Set empty list of ReocurringPayment
+        //Set empty list of RecurringPayment
         _paymentList.init();
 
         epochLength = abi.decode(configdata, (uint));
 
         //revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
-            revert Module__ReocurringPaymentManager__InvalidEpochLength();
+            revert Module__RecurringPaymentManager__InvalidEpochLength();
         }
     }
 
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc IReocurringPaymentManager
+    /// @inheritdoc IRecurringPaymentManager
     function getEpochLength() external view returns (uint) {
         return epochLength;
     }
 
-    /// @inheritdoc IReocurringPaymentManager
-    function getReocurringPaymentInformation(uint id)
+    /// @inheritdoc IRecurringPaymentManager
+    function getRecurringPaymentInformation(uint id)
         external
         view
         validId(id)
-        returns (ReocurringPayment memory)
+        returns (RecurringPayment memory)
     {
         return _paymentRegistry[id];
     }
 
-    /// @inheritdoc IReocurringPaymentManager
-    function listReocurringPaymentIds() external view returns (uint[] memory) {
+    /// @inheritdoc IRecurringPaymentManager
+    function listRecurringPaymentIds() external view returns (uint[] memory) {
         return _paymentList.listIds();
     }
 
-    /// @inheritdoc IReocurringPaymentManager
+    /// @inheritdoc IRecurringPaymentManager
     function getPreviousPaymentId(uint id) external view returns (uint) {
         return _paymentList.getPreviousId(id);
     }
 
-    /// @inheritdoc IReocurringPaymentManager
-    function isExistingReocurringPaymentId(uint id)
-        public
-        view
-        returns (bool)
-    {
+    /// @inheritdoc IRecurringPaymentManager
+    function isExistingRecurringPaymentId(uint id) public view returns (bool) {
         return _paymentList.isExistingId(id);
     }
 
     //--------------------------------------------------------------------------
     // Epoch Functions
 
-    /// @inheritdoc IReocurringPaymentManager
+    /// @inheritdoc IRecurringPaymentManager
     function getEpochFromTimestamp(uint timestamp)
         external
         view
@@ -148,12 +143,12 @@ contract ReocurringPaymentManager is
         return timestamp / epochLength;
     }
 
-    /// @inheritdoc IReocurringPaymentManager
+    /// @inheritdoc IRecurringPaymentManager
     function getCurrentEpoch() public view returns (uint epoch) {
         return block.timestamp / epochLength;
     }
 
-    /// @inheritdoc IReocurringPaymentManager
+    /// @inheritdoc IRecurringPaymentManager
     function getFutureEpoch(uint xEpochsInTheFuture)
         external
         view
@@ -165,8 +160,8 @@ contract ReocurringPaymentManager is
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc IReocurringPaymentManager
-    function addReocurringPayment(
+    /// @inheritdoc IRecurringPaymentManager
+    function addRecurringPayment(
         uint amount,
         uint startEpoch,
         address recipient
@@ -179,54 +174,53 @@ contract ReocurringPaymentManager is
         returns (uint id)
     {
         // Note ids start at 1.
-        uint reocurringPaymentId = ++_nextId;
+        uint recurringPaymentId = ++_nextId;
 
-        // Add ReocurringPayment id to the list.
-        _paymentList.addId(reocurringPaymentId);
+        // Add RecurringPayment id to the list.
+        _paymentList.addId(recurringPaymentId);
 
-        // Add ReocurringPayment instance to registry.
-        _paymentRegistry[reocurringPaymentId].amount = amount;
-        _paymentRegistry[reocurringPaymentId].startEpoch = startEpoch;
+        // Add RecurringPayment instance to registry.
+        _paymentRegistry[recurringPaymentId].amount = amount;
+        _paymentRegistry[recurringPaymentId].startEpoch = startEpoch;
         //
-        _paymentRegistry[reocurringPaymentId].lastTriggeredEpoch =
-            startEpoch - 1;
+        _paymentRegistry[recurringPaymentId].lastTriggeredEpoch = startEpoch - 1;
 
-        _paymentRegistry[reocurringPaymentId].recipient = recipient;
+        _paymentRegistry[recurringPaymentId].recipient = recipient;
 
-        emit ReocurringPaymentAdded(
-            reocurringPaymentId,
+        emit RecurringPaymentAdded(
+            recurringPaymentId,
             amount,
             startEpoch,
             startEpoch - 1, //lastTriggeredEpoch
             recipient
         );
 
-        return reocurringPaymentId;
+        return recurringPaymentId;
     }
 
-    /// @inheritdoc IReocurringPaymentManager
-    function removeReocurringPayment(uint prevId, uint id)
+    /// @inheritdoc IRecurringPaymentManager
+    function removeRecurringPayment(uint prevId, uint id)
         external
         onlyAuthorizedOrManager
     {
         //Remove Id from list
         _paymentList.removeId(prevId, id);
 
-        // Remove ReocurringPayment instance from registry.
+        // Remove RecurringPayment instance from registry.
         delete _paymentRegistry[id];
 
-        emit ReocurringPaymentRemoved(id);
+        emit RecurringPaymentRemoved(id);
     }
 
     //--------------------------------------------------------------------------
     // Trigger
 
-    /// @inheritdoc IReocurringPaymentManager
+    /// @inheritdoc IRecurringPaymentManager
     function trigger() external {
         _triggerFor(_paymentList.getNextId(_SENTINEL), _SENTINEL);
     }
 
-    /// @inheritdoc IReocurringPaymentManager
+    /// @inheritdoc IRecurringPaymentManager
     function triggerFor(uint startId, uint endId)
         external
         validId(startId)
@@ -254,8 +248,7 @@ contract ReocurringPaymentManager is
 
         //Loop through every element in payment list until endId is reached
         while (currentId != endId) {
-            ReocurringPayment memory currentPayment =
-                _paymentRegistry[currentId];
+            RecurringPayment memory currentPayment = _paymentRegistry[currentId];
 
             //check if payment started
             if (currentPayment.startEpoch <= currentEpoch) {
@@ -288,7 +281,7 @@ contract ReocurringPaymentManager is
             IPaymentClient(address(this))
         );
 
-        emit ReocurringPaymentsTriggered(currentEpoch);
+        emit RecurringPaymentsTriggered(currentEpoch);
     }
 
     //--------------------------------------------------------------------------

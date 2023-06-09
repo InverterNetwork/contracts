@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-interface IReocurringPaymentManager {
-    struct ReocurringPayment {
+interface IRecurringPaymentManager {
+    struct RecurringPayment {
         uint amount;
         //in which epoch this should start
         uint startEpoch;
@@ -14,24 +14,24 @@ interface IReocurringPaymentManager {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Given ReocurringPayment id is invalid.
-    error Module__ReocurringPaymentManager__InvalidReocurringPaymentId();
+    /// @notice Given RecurringPayment id is invalid.
+    error Module__RecurringPaymentManager__InvalidRecurringPaymentId();
 
     /// @notice Start epoch cant be placed before the current epoch.
-    error Module__ReocurringPaymentManager__InvalidStartEpoch();
+    error Module__RecurringPaymentManager__InvalidStartEpoch();
 
     /// @notice Given EpochLength is invalid.
-    error Module__ReocurringPaymentManager__InvalidEpochLength();
+    error Module__RecurringPaymentManager__InvalidEpochLength();
 
     /// @notice Given startId is not position before endId
-    error Module__ReocurringPaymentManager__StartIdNotBeforeEndId();
+    error Module__RecurringPaymentManager__StartIdNotBeforeEndId();
 
     //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a new milestone added.
-    event ReocurringPaymentAdded(
-        uint indexed reocurringPaymentId,
+    event RecurringPaymentAdded(
+        uint indexed recurringPaymentId,
         uint amount,
         uint startEpoch,
         uint lastTriggeredEpoch,
@@ -39,10 +39,10 @@ interface IReocurringPaymentManager {
     );
 
     /// @notice Event emitted when a new milestone added.
-    event ReocurringPaymentRemoved(uint indexed reocurringPaymentId);
+    event RecurringPaymentRemoved(uint indexed recurringPaymentId);
 
     /// @notice Event emitted when a new milestone added.
-    event ReocurringPaymentsTriggered(uint indexed currentEpoch);
+    event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
     //--------------------------------------------------------------------------
     // Getter Functions
@@ -51,30 +51,30 @@ interface IReocurringPaymentManager {
     /// @return epochLength Length of an epoch in a uint timestamp
     function getEpochLength() external view returns (uint epochLength);
 
-    /// @notice Returns the ReocurringPayment instance with id `id`.
-    /// @param id The id of the ReocurringPayment to return.
-    /// @return ReocurringPayment with id `id`.
-    function getReocurringPaymentInformation(uint id)
+    /// @notice Returns the RecurringPayment instance with id `id`.
+    /// @param id The id of the RecurringPayment to return.
+    /// @return RecurringPayment with id `id`.
+    function getRecurringPaymentInformation(uint id)
         external
         view
-        returns (ReocurringPayment memory);
+        returns (RecurringPayment memory);
 
-    /// @notice Returns total list of ReocurringPayment ids.
+    /// @notice Returns total list of RecurringPayment ids.
     /// @dev List is in ascending order.
-    /// @return List of ReocurringPayment ids.
-    function listReocurringPaymentIds() external view returns (uint[] memory);
+    /// @return List of RecurringPayment ids.
+    function listRecurringPaymentIds() external view returns (uint[] memory);
 
-    /// @notice Returns the id of previous ReocurringPayment.
-    /// @param id The id of the ReocurringPayment to return.
-    /// @return prevId The id of previous ReocurringPayment.
+    /// @notice Returns the id of previous RecurringPayment.
+    /// @param id The id of the RecurringPayment to return.
+    /// @return prevId The id of previous RecurringPayment.
     function getPreviousPaymentId(uint id)
         external
         view
         returns (uint prevId);
 
-    /// @notice Returns whether ReocurringPayment with id `id` exists.
-    /// @return True if ReocurringPayment with id `id` exists, false otherwise.
-    function isExistingReocurringPaymentId(uint id)
+    /// @notice Returns whether RecurringPayment with id `id` exists.
+    /// @return True if RecurringPayment with id `id` exists, false otherwise.
+    function isExistingRecurringPaymentId(uint id)
         external
         view
         returns (bool);
@@ -108,22 +108,22 @@ interface IReocurringPaymentManager {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @notice Adds a reocurring payment to the manager
+    /// @notice Adds a recurring payment to the manager
     /// @dev a new id is created for each Payment
     /// @param amount : amount of tokens send to the recipient address
     /// @param startEpoch : epoch in which the payment starts. Use getEpochFromTimestamp() or getCurrentEpoch() to get the appropriate epoch
     /// @param recipient : recipient address that should receive tokens
-    /// @return id : id of the newly created reocurring payment
-    function addReocurringPayment(
+    /// @return id : id of the newly created recurring payment
+    function addRecurringPayment(
         uint amount,
         uint startEpoch,
         address recipient
     ) external returns (uint id);
 
-    /// @notice Removes a reocurring Payment
-    /// @param prevId : id of the previous reocurring payment in the payment list
-    /// @param id : id of the reocurring payment that is to be removed
-    function removeReocurringPayment(uint prevId, uint id) external;
+    /// @notice Removes a recurring Payment
+    /// @param prevId : id of the previous recurring payment in the payment list
+    /// @param id : id of the recurring payment that is to be removed
+    function removeRecurringPayment(uint prevId, uint id) external;
 
     //--------------------------------------------------------------------------
     // Trigger
@@ -133,7 +133,7 @@ interface IReocurringPaymentManager {
 
     /// @notice See trigger() but enables you to determine which ids you want to trigger payment ordes for
     /// @dev this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal trigger function
-    /// @param startId : id of start position of the reocurring payments that should be triggered
-    /// @param endId : id of end position of the reocurring payments that should be triggered
+    /// @param startId : id of start position of the recurring payments that should be triggered
+    /// @param endId : id of end position of the recurring payments that should be triggered
     function triggerFor(uint startId, uint endId) external;
 }
