@@ -76,7 +76,7 @@ contract ProposalFactoryTest is Test {
 
     function testValidProposalId(uint getId, uint proposalsCreated) public {
         // Note to stay reasonable
-        vm.assume(proposalsCreated < 50);
+        proposalsCreated = bound(proposalsCreated, 0, 50);
 
         for (uint i = 0; i < proposalsCreated; ++i) {
             _deployProposal();
@@ -96,7 +96,7 @@ contract ProposalFactoryTest is Test {
 
     function testCreateProposal(uint modulesLen) public {
         // Note to stay reasonable
-        vm.assume(modulesLen < 50);
+        modulesLen = bound(modulesLen, 0, 50);
 
         // Create optional ModuleConfig instances.
         IProposalFactory.ModuleConfig[] memory moduleConfigs =
@@ -143,7 +143,7 @@ contract ProposalFactoryTest is Test {
 
     function testProposalMapping(uint proposalAmount) public {
         // Note to stay reasonable
-        vm.assume(proposalAmount < 50);
+        proposalAmount = bound(proposalAmount, 0, 50);
 
         for (uint i = 1; i < proposalAmount; ++i) {
             address proposal = _deployProposal();

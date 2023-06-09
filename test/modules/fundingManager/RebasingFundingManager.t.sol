@@ -83,7 +83,7 @@ contract RebasingFundingManagerTest is ModuleTest {
 
     function testDeposit(address user, uint amount) public {
         vm.assume(user != address(0) && user != address(fundingManager));
-        vm.assume(amount > 1 && amount <= DEPOSIT_CAP);
+        amount = bound(amount, 2, DEPOSIT_CAP);
 
         // Mint tokens to depositor.
         _token.mint(user, amount);
@@ -115,7 +115,7 @@ contract RebasingFundingManagerTest is ModuleTest {
 
     function testSelfDepositFails(address user, uint amount) public {
         vm.assume(user != address(0) && user != address(fundingManager));
-        vm.assume(amount > 1 && amount <= DEPOSIT_CAP);
+        amount = bound(amount, 2, DEPOSIT_CAP - 1);
 
         vm.expectRevert(
             IFundingManager.Module__FundingManager__CannotSelfDeposit.selector

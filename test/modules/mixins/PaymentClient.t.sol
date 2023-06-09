@@ -36,7 +36,7 @@ contract PaymentClientTest is Test {
         uint dueTo
     ) public {
         // Note to stay reasonable.
-        vm.assume(orderAmount < 10);
+        orderAmount = bound(orderAmount, 0, 10);
 
         _assumeValidRecipient(recipient);
         _assumeValidAmount(amount);
@@ -232,7 +232,7 @@ contract PaymentClientTest is Test {
         uint dueTo
     ) public {
         // Note to stay reasonable.
-        vm.assume(orderAmount < 10);
+        orderAmount = bound(orderAmount, 0, 10);
 
         _assumeValidRecipient(recipient);
         _assumeValidAmount(amount);

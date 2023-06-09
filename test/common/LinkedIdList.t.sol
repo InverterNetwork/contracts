@@ -102,9 +102,9 @@ contract LinkedIdListTest is Test {
     ) public {
         vm.assume(seed.length < 1000); //Reasonable size
         vm.assume(seed.length > 0);
-        vm.assume(prevId < 2000);
-        vm.assume(id < 2000);
-        vm.assume(idToPositionAfter < 2000);
+        prevId = bound(prevId, 0, 2000);
+        id = bound(id, 0, 2000);
+        idToPositionAfter = bound(idToPositionAfter, 0, 2000);
 
         uint[] memory ids = createIds(seed);
         addIds(ids);

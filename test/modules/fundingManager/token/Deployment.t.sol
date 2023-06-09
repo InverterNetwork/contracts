@@ -36,7 +36,7 @@ contract Deployment is ElasticReceiptTokenTest {
         uint amount
     ) public {
         vm.assume(user != address(0));
-        vm.assume(amount != 0 && amount <= MAX_SUPPLY);
+        amount = bound(amount, 1, MAX_SUPPLY);
 
         underlier.mint(user, amount);
 
