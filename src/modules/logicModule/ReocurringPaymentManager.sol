@@ -222,7 +222,13 @@ contract ReocurringPaymentManager is
 
         uint currentEpoch = getCurrentEpoch();
 
-        //Amount of funds needed for the payment
+        //Amount of how many epochs have been not triggered
+        uint epochsNotTriggered;
+
+        //Amount of tokens in a single order
+        uint orderAmount;
+
+        //Amount of funds needed for all the recurring payment orders
         uint totalAmount;
 
         //Loop through every element in payment list
@@ -232,20 +238,22 @@ contract ReocurringPaymentManager is
 
             //check if payment started
             if (currentPayment.startEpoch <= currentEpoch) {
-                //Catch up every not triggered epoch
-                while (currentPayment.lastTriggeredEpoch < currentEpoch) {
-                    totalAmount += currentPayment.amount;
+                epochsNotTriggered =
+                    currentEpoch - currentPayment.lastTriggeredEpoch;
+                //If order hasnt been triggered this epoch
+                if (epochsNotTriggered > 0) {
+                    orderAmount = currentPayment.amount * epochsNotTriggered;
+                    totalAmount += orderAmount;
 
                     _addPaymentOrder(
                         currentPayment.recipient,
-                        currentPayment.amount,
-                        (currentPayment.lastTriggeredEpoch + 1) * epochLength //End of next epoch to the lastTriggeredEpoch is the dueTo Date
+                        orderAmount,
+                        (currentEpoch + 1) * epochLength //End of current epoch to the lastTriggeredEpoch is the dueTo Date
                     );
-                    currentPayment.lastTriggeredEpoch++;
+                    //When done update the real state of lastTriggeredEpoch
+                    _paymentRegistry[currentId].lastTriggeredEpoch =
+                        currentEpoch;
                 }
-
-                //When done update the real state of lastTriggeredEpoch
-                _paymentRegistry[currentId].lastTriggeredEpoch = currentEpoch;
             }
             //Set to next Id in List
             currentId = _paymentList.list[currentId];
@@ -254,7 +262,7 @@ contract ReocurringPaymentManager is
         //ensure that this contract has enough tokens fulfill payments
         _ensureTokenBalance(totalAmount);
 
-        //when done process the Payments correclty
+        //when done process the Payments correctly
         __Module_proposal.paymentProcessor().processPayments(
             IPaymentClient(address(this))
         );
