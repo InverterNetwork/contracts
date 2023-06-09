@@ -104,8 +104,6 @@ contract ReocurringPayments is e2e {
         contributor1InitialBalance = token.balanceOf(contributor1);
         contributor2InitialBalance = token.balanceOf(contributor2);
 
-        emit log_named_uint("C1 balance", contributor1InitialBalance);
-
         // paymentAmount => amount that has to be paid out each epoch
         recurringPaymentManager.addReocurringPayment(
             paymentAmount, startEpoch + 1, contributor1
