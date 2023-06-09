@@ -673,6 +673,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_authorizer));
+        vm.assume(nonModule != address(_fundingManager));
 
         vm.prank(nonModule);
         vm.expectRevert(
