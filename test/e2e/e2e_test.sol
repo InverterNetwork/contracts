@@ -19,6 +19,7 @@ import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
+import {StreamingPaymentProcessor} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 
 //Mocks
@@ -65,6 +66,8 @@ contract E2eTest is Test {
         .ModuleConfig(authorizerMetadata, abi.encode(address(this)));
 
     SimplePaymentProcessor paymentProcessorImpl;
+    StreamingPaymentProcessor streamingPaymentProcessorImpl;
+
     Beacon paymentProcessorBeacon;
     address paymentProcessorBeaconOwner = address(0x1BEAC0);
     IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
@@ -73,8 +76,20 @@ contract E2eTest is Test {
         "https://github.com/inverter/payment-processor",
         "SimplePaymentProcessor"
     );
+    
+    Beacon streamingPaymentProcessorBeacon;
+    address streamingPaymentProcessorBeaconOwner = makeAddr("streaming payment processor beacon owner");
+    IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/streaming-payment-processor",
+        "StreamingPaymentProcessor"
+    );
+
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
         IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
+    
+    IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig = IProposalFactory.ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
 
     MilestoneManager milestoneManagerImpl;
     Beacon milestoneManagerBeacon;
@@ -98,6 +113,7 @@ contract E2eTest is Test {
         // Deploy module implementations.
         rebasingFundingManagerImpl = new RebasingFundingManager();
         paymentProcessorImpl = new SimplePaymentProcessor();
+        streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
         authorizerImpl = new AuthorizerMock();
 
@@ -106,6 +122,8 @@ contract E2eTest is Test {
         rebasingFundingManagerBeacon = new Beacon();
         vm.prank(paymentProcessorBeaconOwner);
         paymentProcessorBeacon = new Beacon();
+        vm.prank(streamingPaymentProcessorBeaconOwner);
+        streamingPaymentProcessorBeacon = new Beacon();
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon = new Beacon();
         vm.prank(authorizerBeaconOwner);
@@ -118,6 +136,8 @@ contract E2eTest is Test {
         );
         vm.prank(paymentProcessorBeaconOwner);
         paymentProcessorBeacon.upgradeTo(address(paymentProcessorImpl));
+        vm.prank(streamingPaymentProcessorBeaconOwner);
+        streamingPaymentProcessorBeacon.upgradeTo(address(streamingPaymentProcessorImpl));
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
         vm.prank(authorizerBeaconOwner);
@@ -135,6 +155,9 @@ contract E2eTest is Test {
         );
         moduleFactory.registerMetadata(
             paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
+        );
+        moduleFactory.registerMetadata(
+            streamingPaymentProcessorMetadata, IBeacon(streamingPaymentProcessorBeacon)
         );
         moduleFactory.registerMetadata(
             milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
@@ -161,6 +184,27 @@ contract E2eTest is Test {
             rebasingFundingManagerFactoryConfig,
             authorizerFactoryConfig,
             paymentProcessorFactoryConfig,
+            optionalModules
+        );
+    }
+
+    function _createNewProposalWithAllModules_withStreamingPaymentProcessor(
+        IProposalFactory.ProposalConfig memory config
+    ) internal returns (IProposal) {
+        IProposalFactory.ModuleConfig[] memory optionalModules =
+            new IProposalFactory.ModuleConfig[](1);
+        optionalModules[0] = milestoneManagerFactoryConfig;
+
+        IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
+        IProposalFactory.ModuleConfig(
+            rebasingFundingManagerMetadata, abi.encode(address(config.token))
+        );
+
+        return proposalFactory.createProposal(
+            config,
+            rebasingFundingManagerFactoryConfig,
+            authorizerFactoryConfig,
+            streamingPaymentProcessorFactoryConfig,
             optionalModules
         );
     }
