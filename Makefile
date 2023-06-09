@@ -31,13 +31,15 @@ update: ## Update dependencies
 test: ## Run whole testsuite
 	@forge test -vvv
 
-.PHONY: testDeep
-testDeep: ## Run whole testsuite with more fuzz runs
-	@if [[ "$(filter-out $@,$(MAKECMDGOALS))" =~ ^[0-9]+$$ && "$(filter-out $@,$(MAKECMDGOALS))" -ge 1 ]]; then \
+.PHONY: testFuzz .DEFAULT
+.DEFAULT:
+	@:
+testFuzz: ## Run whole testsuite with a custom amount of fuzz runs
+	@if [ "$(filter-out $@,$(MAKECMDGOALS))" -ge 1 ] 2>/dev/null; then \
 		export FOUNDRY_FUZZ_RUNS=$(filter-out $@,$(MAKECMDGOALS)); \
 	else \
 		read -p "Fuzz runs (no input = defaults to 1024): " RUNS; \
-		export FOUNDRY_FUZZ_RUNS=$$(if [[ "$$RUNS" =~ ^[0-9]+$$ && "$$RUNS" -ge 1 ]]; then echo $$RUNS; else echo 1024; fi); \
+		export FOUNDRY_FUZZ_RUNS=$$(if [ "$$RUNS" -ge 1 ] 2>/dev/null; then echo $$RUNS; else echo 1024; fi); \
 	fi; \
 	forge test -vvv
 
