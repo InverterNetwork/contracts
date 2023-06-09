@@ -34,7 +34,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  * @dev Base contract for e2e tests.
  */
 
-contract E2eTest is Test {
+contract e2e is Test {
     // Factory instances.
     ModuleFactory moduleFactory;
     ProposalFactory proposalFactory;
