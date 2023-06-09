@@ -51,6 +51,13 @@ contract ReocurringPaymentManager is
         _;
     }
 
+    modifier startIdBeforeEndId(uint startId, uint endId) {
+        if (startId > endId) {
+            revert Module__ReocurringPaymentManager__StartIdNotBeforeEndId();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
@@ -215,10 +222,24 @@ contract ReocurringPaymentManager is
     // Trigger
 
     /// @inheritdoc IReocurringPaymentManager
-    //@todo @0xNuggan maybe include a triggerFor(startId,endId) function that allows you to trigger in intervals, to prevent runOutOfGas
     function trigger() external {
-        //Get First Position in payment list
-        uint currentId = _paymentList.getNextId(_SENTINEL);
+        _triggerFor(_paymentList.getNextId(_SENTINEL), _SENTINEL);
+    }
+
+    /// @inheritdoc IReocurringPaymentManager
+    function triggerFor(uint startId, uint endId)
+        external
+        validId(startId)
+        validId(endId)
+        startIdBeforeEndId(startId, endId)
+    {
+        //in the loop in _triggerFor it wouldnt run through endId itself, so we take the position afterwards in the list
+        _triggerFor(startId, _paymentList.getNextId(endId));
+    }
+
+    function _triggerFor(uint startId, uint endId) private {
+        //Set startId to be the current position in List
+        uint currentId = startId;
 
         uint currentEpoch = getCurrentEpoch();
 
@@ -231,8 +252,8 @@ contract ReocurringPaymentManager is
         //Amount of funds needed for all the recurring payment orders
         uint totalAmount;
 
-        //Loop through every element in payment list
-        while (currentId != _SENTINEL) {
+        //Loop through every element in payment list until endId is reached
+        while (currentId != endId) {
             ReocurringPayment memory currentPayment =
                 _paymentRegistry[currentId];
 

@@ -345,16 +345,23 @@ contract ReocurringPaymentManagerTest is
         _token.mint(address(_fundingManager), 10_000);
 
         //Copy Payments for later comparison
-        IReocurringPaymentManager.ReocurringPayment[] memory reocurringPayments =
-            fetchReocurringPayments();
+        IReocurringPaymentManager.ReocurringPayment[] memory
+            reocurringPaymentsToBeChecked = fetchReocurringPayments();
 
         //Payout created Payments via trigger
         vm.expectEmit(true, true, true, true);
         emit ReocurringPaymentsTriggered(currentEpoch);
         reocurringPaymentManager.trigger();
 
+        IReocurringPaymentManager.ReocurringPayment[] memory
+            currentReocurringPayments = fetchReocurringPayments();
+
         //compare that Orders were placed and lastTriggered got updated accordingly
-        reocurringPaymentsAreCorrect(reocurringPayments, currentEpoch);
+        reocurringPaymentsAreCorrect(
+            reocurringPaymentsToBeChecked,
+            currentReocurringPayments,
+            currentEpoch
+        );
 
         //remove tokens and orders from reocurringPaymentManager for easier testing
         _paymentProcessor.deleteAllPayments(
@@ -365,24 +372,32 @@ contract ReocurringPaymentManagerTest is
             _token.balanceOf(address(reocurringPaymentManager))
         );
 
-        //Update Payments for later comparison
-        reocurringPayments = fetchReocurringPayments();
         //Do a timejump and check again
         for (uint i = 0; i < timejumps; i++) {
+            //Update Payments for later comparison
+            reocurringPaymentsToBeChecked = fetchReocurringPayments();
+
             vm.warp(
                 block.timestamp
                     + bound(
                         seed, //Introduce some randomness for the jump
                         reocurringPaymentManager.getEpochLength(),
-                        reocurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years //@todo reasonable?
+                        reocurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
                     )
             );
             currentEpoch = reocurringPaymentManager.getCurrentEpoch();
             vm.expectEmit(true, true, true, true);
             emit ReocurringPaymentsTriggered(currentEpoch);
             reocurringPaymentManager.trigger();
+
+            currentReocurringPayments = fetchReocurringPayments();
+
             //compare that Orders were placed and lastTriggered got updated accordingly
-            reocurringPaymentsAreCorrect(reocurringPayments, currentEpoch);
+            reocurringPaymentsAreCorrect(
+                reocurringPaymentsToBeChecked,
+                currentReocurringPayments,
+                currentEpoch
+            );
 
             //remove tokens and orders from reocurringPaymentManager for easier testing
             _paymentProcessor.deleteAllPayments(
@@ -392,10 +407,63 @@ contract ReocurringPaymentManagerTest is
                 address(reocurringPaymentManager),
                 _token.balanceOf(address(reocurringPaymentManager))
             );
-
-            //Update Payments for later comparison
-            reocurringPayments = fetchReocurringPayments();
         }
+    }
+
+    function testTriggerFor(
+        uint seed,
+        address[] memory receivers,
+        uint startId,
+        uint endId
+    ) public {
+        vm.assume(receivers.length < 100 && receivers.length >= 3); //Reasonable amount
+
+        endId = bound(endId, 1, receivers.length);
+        startId = bound(startId, 1, endId);
+
+        receivers = convertToValidRecipients(receivers);
+
+        reasonableWarpAndInit(seed);
+
+        //Generate appropriate Payment Orders
+        createReocurringPaymentOrders(seed, receivers);
+
+        //Mint enough tokens based on the payment order
+
+        //Quick estimate: 1 token per payment Max receivers 100, max epochs used in jump 4 -> 400 tokens needed (lets go with 500)
+        //note to 1 token: im not testing if the paymentProcessor works just if it creates payment orders accordingly
+        _token.mint(address(_fundingManager), 500);
+
+        //Copy Payments for later comparison
+        IReocurringPaymentManager.ReocurringPayment[] memory
+            filteredReocurringPaymentsToBeChecked =
+                filterPayments(fetchReocurringPayments(), startId, endId);
+
+        vm.warp(
+            block.timestamp
+                + bound(
+                    seed, //Introduce some randomness for the jump
+                    0,
+                    reocurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
+                )
+        );
+        uint currentEpoch = reocurringPaymentManager.getCurrentEpoch();
+
+        vm.expectEmit(true, true, true, true);
+        emit ReocurringPaymentsTriggered(currentEpoch);
+        reocurringPaymentManager.triggerFor(startId, endId);
+
+        //Get currentPayments and filter them
+        IReocurringPaymentManager.ReocurringPayment[] memory
+            currentReocurringPayments =
+                filterPayments(fetchReocurringPayments(), startId, endId);
+
+        //compare that Orders were placed and lastTriggered got updated accordingly
+        reocurringPaymentsAreCorrect(
+            filteredReocurringPaymentsToBeChecked,
+            currentReocurringPayments,
+            currentEpoch
+        );
     }
 
     // =========================================================================
@@ -404,7 +472,7 @@ contract ReocurringPaymentManagerTest is
     // Helper
 
     function reasonableWarpAndInit(uint seed) internal {
-        uint epochLength = bound(seed, 1 weeks, 52 weeks); //@todo I might be able to randomise this even better -> thinking about doing a bitshift split in the middle and get left side and right side
+        uint epochLength = bound(seed, 1 weeks, 52 weeks);
 
         //with this we are at least in epoch 2 and there is enough time to go on from that time (3_153_600_000 seconds are 100 years)
         uint currentTimestamp = bound(seed, 52 weeks + 1, 3_153_600_000);
@@ -420,13 +488,16 @@ contract ReocurringPaymentManagerTest is
 
     function convertToValidRecipients(address[] memory addrs)
         internal
-        pure
+        view
         returns (address[] memory)
     {
         uint length = addrs.length;
         //Convert address(0) to address (1)
         for (uint i; i < length; i++) {
-            if (addrs[i] == address(0)) addrs[i] = address(0x1);
+            if (
+                addrs[i] == address(0)
+                    || addrs[i] == address(reocurringPaymentManager)
+            ) addrs[i] = address(0x1);
         }
 
         return addrs;
@@ -491,16 +562,33 @@ contract ReocurringPaymentManagerTest is
         return reocurringPayments;
     }
 
+    function filterPayments(
+        IReocurringPaymentManager.ReocurringPayment[] memory paymentsToFilter,
+        uint startId,
+        uint endId
+    )
+        internal
+        pure
+        returns (IReocurringPaymentManager.ReocurringPayment[] memory)
+    {
+        uint filterArrayLength = endId - startId + 1; //even if endId and startId are the same its at least one order
+        IReocurringPaymentManager.ReocurringPayment[] memory returnArray =
+            new IReocurringPaymentManager.ReocurringPayment[](filterArrayLength);
+        for (uint i = 0; i < filterArrayLength; i++) {
+            returnArray[i] = paymentsToFilter[startId - 1 + i]; //because ids start at 1 substract 1 to get appropriate array position
+        }
+        return returnArray;
+    }
+
     //Note: this needs the old version of the orders before the trigger function was called to work
     function reocurringPaymentsAreCorrect(
         IReocurringPaymentManager.ReocurringPayment[] memory
             reocurringPaymentsToBeChecked,
+        IReocurringPaymentManager.ReocurringPayment[] memory
+            currentReocurringPayments,
         uint currentEpoch
     ) internal {
         uint length = reocurringPaymentsToBeChecked.length;
-
-        IReocurringPaymentManager.ReocurringPayment[] memory
-            currentReocurringPayments = fetchReocurringPayments();
 
         IPaymentClient.PaymentOrder[] memory orders =
             reocurringPaymentManager.paymentOrders();
@@ -563,19 +651,10 @@ contract ReocurringPaymentManagerTest is
             }
         }
 
-        emit checker(
-            "_token.balanceOf(address(reocurringPaymentManager))",
-            _token.balanceOf(address(reocurringPaymentManager))
-        );
-
-        emit checker("totalAmount", totalAmount);
-
         // Check that reocurringPaymentManager's token balance is sufficient for the
         // payment orders by comparing it with the total amount of orders made (numberOfOrdersMade)
         assertTrue(
             _token.balanceOf(address(reocurringPaymentManager)) == totalAmount
         );
     }
-
-    event checker(string, uint);
 }
