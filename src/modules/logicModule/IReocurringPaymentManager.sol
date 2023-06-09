@@ -23,6 +23,9 @@ interface IReocurringPaymentManager {
     /// @notice Given EpochLength is invalid.
     error Module__ReocurringPaymentManager__InvalidEpochLength();
 
+    /// @notice Given startId is not position before endId
+    error Module__ReocurringPaymentManager__StartIdNotBeforeEndId();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -125,6 +128,12 @@ interface IReocurringPaymentManager {
     //--------------------------------------------------------------------------
     // Trigger
 
-    /// @notice Function that triggers the start of the due payments
+    /// @notice Triggers the start of the due payments for all recurring payment orders
     function trigger() external;
+
+    /// @notice See trigger() but enables you to determine which ids you want to trigger payment ordes for
+    /// @dev this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal trigger function
+    /// @param startId : id of start position of the reocurring payments that should be triggered
+    /// @param endId : id of end position of the reocurring payments that should be triggered
+    function triggerFor(uint startId, uint endId) external;
 }
