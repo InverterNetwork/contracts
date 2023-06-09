@@ -21,7 +21,8 @@ import {
     IPaymentClient
 } from "src/modules/logicModule/ReocurringPaymentManager.sol";
 
-import {StreamingPaymentProcessor} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
+import {StreamingPaymentProcessor} from
+    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
 import {
     IStreamingPaymentProcessor,
@@ -66,7 +67,8 @@ contract ReocurringPayments is e2e {
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
             .ProposalConfig({owner: address(this), token: token});
 
-        IProposal proposal = _createNewProposalWithAllModules_withStreamingPaymentProcessor(
+        IProposal proposal =
+        _createNewProposalWithAllModules_withStreamingPaymentProcessor(
             proposalConfig
         );
 
@@ -75,9 +77,11 @@ contract ReocurringPayments is e2e {
 
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = proposal.listModules();
-        for(uint i; i < modulesList.length; ++i) {
-            try IReocurringPaymentManager(modulesList[i]).getCurrentEpoch() returns(uint) {
-                recurringPaymentManager = ReocurringPaymentManager(modulesList[i]);
+        for (uint i; i < modulesList.length; ++i) {
+            try IReocurringPaymentManager(modulesList[i]).getCurrentEpoch()
+            returns (uint) {
+                recurringPaymentManager =
+                    ReocurringPaymentManager(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -127,9 +131,12 @@ contract ReocurringPayments is e2e {
         // 4. Let the contributors claim their vested tokens
         /// Let's first find the address of the streamingPaymentProcessor
         StreamingPaymentProcessor streamingPaymentProcessor;
-        for(uint i; i < modulesList.length; ++i) {
-            try IStreamingPaymentProcessor(modulesList[i]).unclaimable(contributor1, contributor2) returns(uint) {
-                streamingPaymentProcessor = StreamingPaymentProcessor(modulesList[i]);
+        for (uint i; i < modulesList.length; ++i) {
+            try IStreamingPaymentProcessor(modulesList[i]).unclaimable(
+                contributor1, contributor2
+            ) returns (uint) {
+                streamingPaymentProcessor =
+                    StreamingPaymentProcessor(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -137,9 +144,14 @@ contract ReocurringPayments is e2e {
         }
 
         // Checking whether we got the right address for streamingPaymentProcessor
-        IStreamingPaymentProcessor.StreamingWallet[] memory wallets = streamingPaymentProcessor.viewAllPaymentOrders(address(recurringPaymentManager), contributor1);
+        IStreamingPaymentProcessor.StreamingWallet[] memory wallets =
+        streamingPaymentProcessor.viewAllPaymentOrders(
+            address(recurringPaymentManager), contributor1
+        );
         assertEq(wallets.length, 1);
-        wallets = streamingPaymentProcessor.viewAllPaymentOrders(address(recurringPaymentManager), contributor2);
+        wallets = streamingPaymentProcessor.viewAllPaymentOrders(
+            address(recurringPaymentManager), contributor2
+        );
         assertEq(wallets.length, 2);
 
         vm.prank(contributor2);
@@ -150,15 +162,29 @@ contract ReocurringPayments is e2e {
 
         // Contributor2 should have got payments from both of their payment orders
         // Contributor1 should have got payment from one of their payment order
-        assertEq((token.balanceOf(contributor1) - contributor1InitialBalance), (paymentAmount * epochsAmount));
-        assertEq((token.balanceOf(contributor2) - contributor2InitialBalance), ((paymentAmount * 2 + paymentAmount)*epochsAmount));
+        assertEq(
+            (token.balanceOf(contributor1) - contributor1InitialBalance),
+            (paymentAmount * epochsAmount)
+        );
+        assertEq(
+            (token.balanceOf(contributor2) - contributor2InitialBalance),
+            ((paymentAmount * 2 + paymentAmount) * epochsAmount)
+        );
 
         contributor1InitialBalance = token.balanceOf(contributor1);
         contributor2InitialBalance = token.balanceOf(contributor2);
 
         // Now since the entire vested amount was claimed by the contributors, their payment orders should no longer exist.
         // Let's check that
-        assertTrue(!streamingPaymentProcessor.isActiveContributor(address(recurringPaymentManager), contributor1));
-        assertTrue(!streamingPaymentProcessor.isActiveContributor(address(recurringPaymentManager), contributor2));
+        assertTrue(
+            !streamingPaymentProcessor.isActiveContributor(
+                address(recurringPaymentManager), contributor1
+            )
+        );
+        assertTrue(
+            !streamingPaymentProcessor.isActiveContributor(
+                address(recurringPaymentManager), contributor2
+            )
+        );
     }
 }

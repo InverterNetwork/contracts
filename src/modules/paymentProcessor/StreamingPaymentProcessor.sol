@@ -170,7 +170,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _recipient = orders[i].recipient;
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
-                _dueTo = (orders[i].dueTo);
+                _dueTo = orders[i].dueTo;
                 _walletId =
                     numContributorWallets[address(client)][_recipient] + 1;
 

@@ -19,9 +19,11 @@ import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
-import {StreamingPaymentProcessor} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
+import {StreamingPaymentProcessor} from
+    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
-import {ReocurringPaymentManager} from "src/modules/logicModule/ReocurringPaymentManager.sol";
+import {ReocurringPaymentManager} from
+    "src/modules/logicModule/ReocurringPaymentManager.sol";
 
 //Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -77,9 +79,10 @@ contract e2e is Test {
         "https://github.com/inverter/payment-processor",
         "SimplePaymentProcessor"
     );
-    
+
     Beacon streamingPaymentProcessorBeacon;
-    address streamingPaymentProcessorBeaconOwner = makeAddr("streaming payment processor beacon owner");
+    address streamingPaymentProcessorBeaconOwner =
+        makeAddr("streaming payment processor beacon owner");
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
         1,
         1,
@@ -89,23 +92,25 @@ contract e2e is Test {
 
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
         IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
-    
-    IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig = IProposalFactory.ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
+
+    IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
+    IProposalFactory.ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
 
     MilestoneManager milestoneManagerImpl;
     ReocurringPaymentManager recurringPaymentManagerImpl;
 
     Beacon recurringPaymentManagerBeacon;
-    address recurringPaymentManagerBeaconOwner = makeAddr("recurring payment manager beacon owner");
+    address recurringPaymentManagerBeaconOwner =
+        makeAddr("recurring payment manager beacon owner");
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/recurring-payment-manager",
-        "RecurringPaymentManager"        
+        "RecurringPaymentManager"
     );
-    IProposalFactory.ModuleConfig recurringPaymentManagerFactoryConfig = IProposalFactory.ModuleConfig(
-        recurringPaymentManagerMetadata,
-        abi.encode(1 weeks)
+    IProposalFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
+    IProposalFactory.ModuleConfig(
+        recurringPaymentManagerMetadata, abi.encode(1 weeks)
     );
 
     Beacon milestoneManagerBeacon;
@@ -156,11 +161,15 @@ contract e2e is Test {
         vm.prank(paymentProcessorBeaconOwner);
         paymentProcessorBeacon.upgradeTo(address(paymentProcessorImpl));
         vm.prank(streamingPaymentProcessorBeaconOwner);
-        streamingPaymentProcessorBeacon.upgradeTo(address(streamingPaymentProcessorImpl));
+        streamingPaymentProcessorBeacon.upgradeTo(
+            address(streamingPaymentProcessorImpl)
+        );
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
         vm.prank(recurringPaymentManagerBeaconOwner);
-        recurringPaymentManagerBeacon.upgradeTo(address(recurringPaymentManagerImpl));
+        recurringPaymentManagerBeacon.upgradeTo(
+            address(recurringPaymentManagerImpl)
+        );
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon.upgradeTo(address(authorizerImpl));
 
@@ -178,13 +187,15 @@ contract e2e is Test {
             paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
         );
         moduleFactory.registerMetadata(
-            streamingPaymentProcessorMetadata, IBeacon(streamingPaymentProcessorBeacon)
+            streamingPaymentProcessorMetadata,
+            IBeacon(streamingPaymentProcessorBeacon)
         );
         moduleFactory.registerMetadata(
             milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
         );
         moduleFactory.registerMetadata(
-            recurringPaymentManagerMetadata, IBeacon(recurringPaymentManagerBeacon)
+            recurringPaymentManagerMetadata,
+            IBeacon(recurringPaymentManagerBeacon)
         );
         moduleFactory.registerMetadata(
             authorizerMetadata, IBeacon(authorizerBeacon)
