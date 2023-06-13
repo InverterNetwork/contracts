@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.13;
 
-import {e2e} from "test/e2e/e2e_test.sol";
+import {e2e} from "test/e2e/E2eTestRecurring.sol";
 import "forge-std/console.sol";
 
 //Internal Dependencies
@@ -59,7 +59,7 @@ contract RecurringPayments is e2e {
     uint contributor2InitialBalance;
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {
-        vm.assume(paymentAmount > 0 && paymentAmount <= 1e18);
+        paymentAmount = bound(paymentAmount, 1, 1e18);
         RecurringPaymentManager recurringPaymentManager;
 
         // -----------INIT

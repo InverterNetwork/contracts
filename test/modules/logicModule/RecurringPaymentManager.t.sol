@@ -88,7 +88,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
     // Modifier
 
     function testValidId(uint seed, uint usedIds, uint id) public {
-        vm.assume(usedIds < 1000); //Reasonable size
+        usedIds = bound(usedIds, 0, 1000);
 
         reasonableWarpAndInit(seed);
 
