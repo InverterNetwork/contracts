@@ -294,7 +294,7 @@ contract SingleVoteGovernorTest is Test {
         // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
 
         vm.assume(testVoters.length >= 2);
-        vm.assume(position > 0 && position < testVoters.length);
+        position = uint8(bound(position, 1, testVoters.length - 1));
 
         address authImpl = address(new SingleVoteGovernor());
         SingleVoteGovernor testAuthorizer =
@@ -706,7 +706,7 @@ contract SingleVoteGovernorTest is Test {
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         for (uint i; i < nums.length; ++i) {
-            vm.assume(nums[i] < 100_000_000_000);
+            nums[i] = bound(nums[i], 0, 100_000_000_000);
             vm.warp(block.timestamp + DEFAULT_DURATION + 1 + nums[i]);
 
             // For

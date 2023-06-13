@@ -10,8 +10,8 @@ optimizer = true
 optimizer_runs = 5_000
 via_ir = false
 
-# Testing
-fuzz_runs = 256
+[fuzz]
+runs = 256
 
 [fmt]
 line_length = 80
@@ -20,7 +20,7 @@ number_underscore = "thousands"
 ignore = ['src/generated/*']
 
 [profile.ci]
-fuzz_runs = 1_000
+fuzz = { runs = 1_024 }
 verbosity = 4
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

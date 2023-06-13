@@ -673,6 +673,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_authorizer));
+        vm.assume(nonModule != address(_fundingManager));
 
         vm.prank(nonModule);
         vm.expectRevert(
@@ -694,6 +695,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
+        vm.assume(nonModule != address(_fundingManager));
 
         PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
 
@@ -802,6 +804,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
+        vm.assume(nonModule != address(_fundingManager));
 
         vm.prank(nonModule);
         vm.expectRevert(
@@ -823,6 +826,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
+        vm.assume(nonModule != address(_fundingManager));
 
         PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
 
