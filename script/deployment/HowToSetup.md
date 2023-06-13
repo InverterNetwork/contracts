@@ -16,4 +16,4 @@ PROPOSAL_OWNER_PRIVATE_KEY=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639
 3. Run the following command: `anvil`
 4. Open another tab in your terminal
 5. Run the following command:
-   `forge script scripts/deployment/DeploymentScript.s.sol --fork-url http://localhost:8545/ --broadcast`
+   `forge script script/deployment/DeploymentScript.s.sol --fork-url http://localhost:8545/ --broadcast`
