@@ -410,7 +410,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testAddMilestone(uint amount) public {
         // Note to stay reasonable.
-        vm.assume(amount < MAX_MILESTONES);
+        amount = bound(amount, 0, MAX_MILESTONES - 1);
 
         uint id;
 

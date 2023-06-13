@@ -14,13 +14,13 @@ interface IStreamingPaymentProcessor {
     /// @param _salary: The total amount that the contributor should eventually get
     /// @param _released: The amount that has been claimed by the contributor till now
     /// @param _start: The start date of the vesting period
-    /// @param _duration: The length of the vesting period
+    /// @param _dueTo: The ending of the vesting period
     /// @param _streamingWalletID: A unique identifier of a wallet for a specific paymentClient and contributor combination
     struct StreamingWallet {
         uint _salary;
         uint _released;
         uint _start;
-        uint _duration;
+        uint _dueTo;
         uint _streamingWalletID;
     }
 
@@ -30,14 +30,14 @@ interface IStreamingPaymentProcessor {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param duration Timestamp at which the full amount should be claimable.
+    /// @param dueTo Timestamp at which the full amount should be claimable.
     /// @param walletId ID of the payment order that was added
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint start,
-        uint duration,
+        uint dueTo,
         uint walletId
     );
 
@@ -53,16 +53,16 @@ interface IStreamingPaymentProcessor {
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param newSalary The new amount of tokens the payment consists of.
-    /// @param newDuration Number of blocks over which the amount will vest.
-    event PaymentUpdated(address recipient, uint newSalary, uint newDuration);
+    /// @param newDueTo The new Timestamp at which the full amount should be claimable.
+    event PaymentUpdated(address recipient, uint newSalary, uint newDueTo);
 
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param duration Number of blocks over which the amount will vest
+    /// @param dueTo Timestamp at which the full amount should be claimable.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint duration
+        address indexed recipient, uint amount, uint start, uint dueTo
     );
 
     /// @notice Emitted when a payment gets processed for execution.
@@ -203,11 +203,11 @@ interface IStreamingPaymentProcessor {
         uint walletId
     ) external view returns (uint);
 
-    /// @notice Getter for the vesting duration of a particular payment order with id = walletId associated with a particular contributor
+    /// @notice Getter for the vesting dueTo timestamp of a particular payment order with id = walletId associated with a particular contributor
     /// @param client address of the payment client
     /// @param contributor Contributor's address.
-    /// @param walletId Id of the wallet for which duration is fetched
-    function durationForSpecificWalletId(
+    /// @param walletId Id of the wallet for which dueTo is fetched
+    function dueToForSpecificWalletId(
         address client,
         address contributor,
         uint walletId

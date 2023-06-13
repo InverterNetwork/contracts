@@ -18,4 +18,8 @@ contract PaymentProcessorMock is IPaymentProcessor {
     function token() external pure returns (IERC20) {
         return IERC20(address(0));
     }
+
+    function deleteAllPayments(IPaymentClient client) external {
+        client.collectPaymentOrders();
+    }
 }

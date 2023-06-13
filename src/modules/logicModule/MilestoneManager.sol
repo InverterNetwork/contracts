@@ -147,7 +147,6 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     // Constants
 
     /// @dev Marks the beginning of the list.
-    /// @dev Unrealistic to have that many milestones.
     uint internal constant _SENTINEL = type(uint).max;
 
     /// @dev Marks the last element of the list.
