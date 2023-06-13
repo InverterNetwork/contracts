@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 // External Dependencies
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
@@ -16,7 +16,7 @@ import {
  * @dev The PaymentClient mixin enables modules to create payment orders that
  *      are processable by a proposal's {IPaymentProcessor} module.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     //--------------------------------------------------------------------------

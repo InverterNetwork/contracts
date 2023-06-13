@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
@@ -10,7 +10,7 @@ import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
  * @dev Script to deploy a new MilestoneManager.
  *
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployMilestoneManager is Script {

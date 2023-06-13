@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
@@ -14,7 +14,7 @@ import {DeployBeacon} from "script/proxies/DeployBeacon.s.sol";
  * @dev Script to deploy a new Beacon.
  *
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployAndSetUpBeacon is Script {

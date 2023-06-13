@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
@@ -13,7 +13,7 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
  *      - DEPLOYMENT_PROPOSAL_FACTORY_TARGET
  *      - DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployProposalFactory is Script {

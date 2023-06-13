@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -25,7 +25,7 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
  *
  * @dev An immutable factory for deploying proposals.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 contract ProposalFactory is IProposalFactory {
     //--------------------------------------------------------------------------

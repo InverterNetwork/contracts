@@ -1,10 +1,10 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                              Inverter Makefile
+#                          Inverter Network Makefile
 #
 # WARNING: This file is part of the git repo. DO NOT INCLUDE SENSITIVE DATA!
 #
-# The Inverter smart contracts project uses this Makefile to execute common
-# tasks.
+# The Inverter Network smart contracts project uses this Makefile to execute 
+# common tasks.
 #
 # The Makefile supports a help command, i.e. `make help`.
 #
@@ -65,11 +65,11 @@ testFactories: ## Run factories/ package tests
 	@forge test -vvv --match-path "*/factories/*"
 
 .PHONY: testE2e
-testE2e: ## Rune e2e test suite
+testE2e: ## Run e2e test suite
 	@forge test -vvv --match-path "*/e2e/*"
 
 .PHONY: testScripts
-testScripts: ## Rune e2e test suite
+testScripts: ## Run e2e test suite
 	
 	@forge script script/deployment/DeploymentScript.s.sol
 
@@ -97,7 +97,7 @@ testScripts: ## Rune e2e test suite
 .PHONY: analyze-slither
 analyze-slither: ## Run slither analyzer against project (requires solc-select)
 	@forge build --extra-output abi --extra-output userdoc --extra-output devdoc --extra-output evm.methodIdentifiers
-	@solc-select use 0.8.13
+	@solc-select use 0.8.19
 	@slither --ignore-compile src/common   || \
 	slither --ignore-compile src/factories || \
 	slither --ignore-compile src/generated || \
@@ -140,7 +140,6 @@ pre-commit: ## Git pre-commit hook
 	@forge coverage --report lcov
 	@genhtml lcov.info --branch-coverage --output-dir coverage
 	@forge snapshot
-	
 
 # -----------------------------------------------------------------------------
 # Help Command

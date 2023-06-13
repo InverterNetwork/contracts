@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
 

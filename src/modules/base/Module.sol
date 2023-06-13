@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 // External Dependencies
 import {
@@ -30,7 +30,7 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
  *      instances when its minor version changes, but supports differentiating
  *      otherwise equal modules with different major versions.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 abstract contract Module is IModule, PausableUpgradeable {
     //--------------------------------------------------------------------------

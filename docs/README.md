@@ -1,4 +1,4 @@
-# Inverter Documentation
+# Inverter Network Documentation
 
 These folders contain the documentation of the Inverter Network smart contracts.
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
@@ -10,7 +10,7 @@ import {RebasingFundingManager} from
  *
  * @dev Script to deploy a new PaymentProcessor.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployRebasingFundingManager is Script {

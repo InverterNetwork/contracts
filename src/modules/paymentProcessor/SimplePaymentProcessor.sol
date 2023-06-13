@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -24,7 +24,7 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *      modules. In order to process a module's payment orders, the module must
  *      implement the {IPaymentClient} interface.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 contract SimplePaymentProcessor is Module, IPaymentProcessor {
     using SafeERC20 for IERC20;

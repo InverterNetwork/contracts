@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 // External Dependencies
 import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
@@ -33,7 +33,7 @@ import {
  *
  *      Each proposal has a unique id set during initialization.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //--------------------------------------------------------------------------

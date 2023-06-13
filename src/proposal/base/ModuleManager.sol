@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 // External Dependencies
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
@@ -22,7 +22,7 @@ import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
  *      Safe's [ModuleManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/ModuleManager.sol).
  *
  * @author Adapted from Gnosis Safe
- * @author byterocket
+ * @author Inverter Network
  */
 abstract contract ModuleManager is
     IModuleManager,

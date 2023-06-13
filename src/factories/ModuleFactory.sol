@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity 0.8.19;
 
 // External Dependencies
 import {Context} from "@oz/utils/Context.sol";
@@ -30,7 +30,7 @@ import {
  *      implementations. Note that a metadata's registered {IBeacon}
  *      implementation can not be changed after registration!
  *
- * @author byterocket
+ * @author Inverter Network
  */
 contract ModuleFactory is IModuleFactory, Ownable2Step {
     //--------------------------------------------------------------------------

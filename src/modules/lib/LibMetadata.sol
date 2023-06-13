@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import {IModule} from "src/modules/base/IModule.sol";
 
@@ -8,7 +8,7 @@ import {IModule} from "src/modules/base/IModule.sol";
  *
  * @dev Provides common functions for {IModule}'s Metadata type.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 library LibMetadata {
     /// @dev Returns the identifier for given metadata.
