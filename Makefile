@@ -69,7 +69,6 @@ testScripts: ## Rune e2e test suite
 
 	@forge script script/proposal/DeployProposal.s.sol
 
-	@forge script script/proxies/DeployAndSetUpBeacon.s.sol
 	@forge script script/proxies/DeployBeacon.s.sol
 
 	@forge script script/setup/SetupToyProposalScript.s.sol
