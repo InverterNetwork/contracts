@@ -97,7 +97,7 @@ testScripts: ## Rune e2e test suite
 .PHONY: analyze-slither
 analyze-slither: ## Run slither analyzer against project (requires solc-select)
 	@forge build --extra-output abi --extra-output userdoc --extra-output devdoc --extra-output evm.methodIdentifiers
-	@solc-select use 0.8.13
+	@solc-select use 0.8.19
 	@slither --ignore-compile src/common   || \
 	slither --ignore-compile src/factories || \
 	slither --ignore-compile src/generated || \
