@@ -65,11 +65,11 @@ testFactories: ## Run factories/ package tests
 	@forge test -vvv --match-path "*/factories/*"
 
 .PHONY: testE2e
-testE2e: ## Rune e2e test suite
+testE2e: ## Run e2e test suite
 	@forge test -vvv --match-path "*/e2e/*"
 
 .PHONY: testScripts
-testScripts: ## Rune e2e test suite
+testScripts: ## Run e2e test suite
 	
 	@forge script script/deployment/DeploymentScript.s.sol
 
@@ -140,7 +140,6 @@ pre-commit: ## Git pre-commit hook
 	@forge coverage --report lcov
 	@genhtml lcov.info --branch-coverage --output-dir coverage
 	@forge snapshot
-	
 
 # -----------------------------------------------------------------------------
 # Help Command
