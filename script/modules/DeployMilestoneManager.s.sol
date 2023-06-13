@@ -14,20 +14,28 @@ import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
  */
 
 contract DeployMilestoneManager is Script {
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
     MilestoneManager milestoneManager;
 
-    function run() external {
-        // Deploy the milestoneManager.
-        vm.startBroadcast();
+    function run() external returns (address) {
+        vm.startBroadcast(deployerPrivateKey);
         {
+            // Deploy the milestoneManager.
+
             milestoneManager = new MilestoneManager();
         }
-        vm.stopBroadcast();
 
+        vm.stopBroadcast();
         // Log the deployed MilestoneManager contract address.
         console2.log(
-            "Deployment of MilestoneManager at address",
+            "Deployment of MilestoneManager Implementation at address",
             address(milestoneManager)
         );
+
+        return address(milestoneManager);
     }
 }
