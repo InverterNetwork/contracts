@@ -22,7 +22,7 @@ import {DeployStreamingPaymentProcessor} from
 import {DeployMilestoneManager} from
     "script/modules/DeployMilestoneManager.s.sol";
 import {DeployRebasingFundingManager} from
-    "script/modules/DeployRebasingFundingManager.sol";
+    "script/modules/DeployRebasingFundingManager.s.sol";
 import {DeployListAuthorizer} from
     "script/modules/governance/DeployListAuthorizer.s.sol";
 

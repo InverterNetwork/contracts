@@ -28,7 +28,6 @@ contract DeployStreamingPaymentProcessor is Script {
 
             paymentProcessor = new StreamingPaymentProcessor();
         }
-
         vm.stopBroadcast();
 
         // Log the deployed MilestoneManager contract address.

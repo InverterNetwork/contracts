@@ -53,16 +53,26 @@ testE2e: ## Rune e2e test suite
 .PHONY: testScripts
 testScripts: ## Rune e2e test suite
 	
-	@forge script scripts/deployment/DeploymentScript.s.sol
-	@forge script scripts/factories/DeployModuleFactory.s.sol
-	@forge script scripts/factories/DeployProposalFactory.s.sol
-	@forge script scripts/modules/governance/DeployListAuthorizer.s.sol
-	@forge script scripts/modules/governance/DeploySingleVoteGovernor.s.sol
-	@forge script scripts/modules/DeployMilestoneManager.s.sol
-	@forge script scripts/modules/DeployPaymentProcessor.s.sol
-	@forge script scripts/proposal/DeployProposal.s.sol
-	@forge script scripts/proxies/DeployBeacon.s.sol
-	@forge script scripts/setup/SetupScript.s.sol
+	@forge script script/deployment/DeploymentScript.s.sol
+
+	@forge script script/factories/DeployModuleFactory.s.sol
+	@forge script script/factories/DeployProposalFactory.s.sol
+	
+	@forge script script/modules/governance/DeployListAuthorizer.s.sol
+	@forge script script/modules/governance/DeploySingleVoteGovernor.s.sol
+	
+	@forge script script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol
+	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
+
+	@forge script script/modules/DeployMilestoneManager.s.sol
+	@forge script script/modules/DeployRebasingFundingManager.s.sol
+
+	@forge script script/proposal/DeployProposal.s.sol
+
+	@forge script script/proxies/DeployAndSetUpBeacon.s.sol
+	@forge script script/proxies/DeployBeacon.s.sol
+
+	@forge script script/setup/SetupToyProposalScript.s.sol
 
 # -----------------------------------------------------------------------------
 # Static Analyzers
