@@ -1189,14 +1189,15 @@ contract MilestoneManagerTest is ModuleTest {
         uint moveToId
     ) public {
         amountOfMilestones = bound(amountOfMilestones, 2, 30);
-        vm.assume(moveId != moveToId);
 
-        vm.assume(moveId != 0 && moveId < amountOfMilestones + 1);
+        moveId = bound(moveId, 1, amountOfMilestones);
 
         //MoveToId can be SENTINEL
         if (moveToId != type(uint).max) {
-            vm.assume(moveToId != 0 && moveToId < amountOfMilestones + 1);
+            moveToId = bound(moveToId, 1, amountOfMilestones);
         }
+
+        vm.assume(moveId != moveToId);
 
         for (uint i = 0; i < amountOfMilestones; ++i) {
             milestoneManager.addMilestone(
