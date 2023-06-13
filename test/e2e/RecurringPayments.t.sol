@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import {e2e} from "test/e2e/E2eTestRecurring.sol";
 import "forge-std/console.sol";

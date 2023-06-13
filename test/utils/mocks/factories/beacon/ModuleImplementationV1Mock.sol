@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 
