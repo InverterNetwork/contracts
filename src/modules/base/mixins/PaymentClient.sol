@@ -16,7 +16,7 @@ import {
  * @dev The PaymentClient mixin enables modules to create payment orders that
  *      are processable by a proposal's {IPaymentProcessor} module.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     //--------------------------------------------------------------------------

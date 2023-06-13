@@ -10,7 +10,7 @@ import {SimplePaymentProcessor} from
  *
  * @dev Script to deploy a new PaymentProcessor.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployPaymentProcessor is Script {

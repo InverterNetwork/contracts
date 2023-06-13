@@ -21,7 +21,7 @@ import {IProposal} from "src/proposal/IProposal.sol";
  * (e.g. how many tokens are sent to which contributor at what time).
  * Concurrent streaming allows for several active vestings per destination address.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {

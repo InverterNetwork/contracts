@@ -1,12 +1,13 @@
-<a href="https://byterocket.com" target="_blank"><img align="right" width="150" height="150" top="100" src="./assets/logo.png"></a>
+<a href="https://inverter.network" target="_blank"><img align="right" width="150" height="150" top="100" src="./assets/logo_circle.svg"></a>
 
-# Inverter Smart Contracts
+# Inverter Network Smart Contracts
+*Build, customize, and innovate with Inverter's modular logic and extensive web3 interoperability.*
 
 > A new funding primitive to enable multiple actors within a decentralized network to collaborate on proposals. You can find more information in the [GitBook](https://inverter-network.gitbook.io/inverter-network-docs/inverter-overview/introduction-to-inverter).
 
 ## Installation
 
-The Inverter smart contracts are developed using the [foundry toolchain](https://getfoundry.sh).
+The Inverter Network smart contracts are developed using the [foundry toolchain](https://getfoundry.sh).
 
 1. Clone the repository
 2. `cd` into the repository

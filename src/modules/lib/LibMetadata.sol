@@ -8,7 +8,7 @@ import {IModule} from "src/modules/base/IModule.sol";
  *
  * @dev Provides common functions for {IModule}'s Metadata type.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 library LibMetadata {
     /// @dev Returns the identifier for given metadata.

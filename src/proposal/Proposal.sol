@@ -33,7 +33,7 @@ import {
  *
  *      Each proposal has a unique id set during initialization.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //--------------------------------------------------------------------------

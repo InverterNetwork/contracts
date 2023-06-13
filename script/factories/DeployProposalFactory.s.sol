@@ -13,7 +13,7 @@ import {ProposalFactory} from "src/factories/ProposalFactory.sol";
  *      - DEPLOYMENT_PROPOSAL_FACTORY_TARGET
  *      - DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployProposalFactory is Script {

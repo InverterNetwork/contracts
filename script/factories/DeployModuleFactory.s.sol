@@ -10,7 +10,7 @@ import {ModuleFactory} from "src/factories/ModuleFactory.sol";
  * @dev Script to deploy a new ModuleFactory.
  *
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployModuleFactory is Script {

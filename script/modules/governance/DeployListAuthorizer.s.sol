@@ -10,7 +10,7 @@ import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
  * @dev Script to deploy a new ListAuthorizer.
  *
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployListAuthorizer is Script {

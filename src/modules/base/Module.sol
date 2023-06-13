@@ -30,7 +30,7 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
  *      instances when its minor version changes, but supports differentiating
  *      otherwise equal modules with different major versions.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 abstract contract Module is IModule, PausableUpgradeable {
     //--------------------------------------------------------------------------

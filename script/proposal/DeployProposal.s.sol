@@ -10,7 +10,7 @@ import {Proposal} from "src/proposal/Proposal.sol";
  * @dev Script to deploy a new Proposal.
  *
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployProposal is Script {

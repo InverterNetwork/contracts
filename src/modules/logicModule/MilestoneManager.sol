@@ -43,7 +43,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
  *              After a milestone was submitted, it can be marked as completed.
  *              This marks the end of the milestone.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     using SafeERC20 for IERC20;

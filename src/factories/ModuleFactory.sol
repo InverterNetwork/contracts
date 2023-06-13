@@ -30,7 +30,7 @@ import {
  *      implementations. Note that a metadata's registered {IBeacon}
  *      implementation can not be changed after registration!
  *
- * @author byterocket
+ * @author Inverter Network
  */
 contract ModuleFactory is IModuleFactory, Ownable2Step {
     //--------------------------------------------------------------------------

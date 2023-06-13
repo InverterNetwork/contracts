@@ -22,7 +22,7 @@ import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
  *      Safe's [ModuleManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/ModuleManager.sol).
  *
  * @author Adapted from Gnosis Safe
- * @author byterocket
+ * @author Inverter Network
  */
 abstract contract ModuleManager is
     IModuleManager,

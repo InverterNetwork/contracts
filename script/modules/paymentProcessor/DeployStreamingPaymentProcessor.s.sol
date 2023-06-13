@@ -10,7 +10,7 @@ import {StreamingPaymentProcessor} from
  *
  * @dev Script to deploy a new PaymentProcessor.
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployStreamingPaymentProcessor is Script {

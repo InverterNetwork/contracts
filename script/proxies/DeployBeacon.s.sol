@@ -10,7 +10,7 @@ import {Beacon} from "src/factories/beacon/Beacon.sol";
  * @dev Script to deploy a new Beacon.
  *
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployBeacon is Script {

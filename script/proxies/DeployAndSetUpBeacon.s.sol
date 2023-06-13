@@ -14,7 +14,7 @@ import {DeployBeacon} from "script/proxies/DeployBeacon.s.sol";
  * @dev Script to deploy a new Beacon.
  *
  *
- * @author byterocket
+ * @author Inverter Network
  */
 
 contract DeployAndSetUpBeacon is Script {
