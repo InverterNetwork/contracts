@@ -1,13 +1,13 @@
-<img align="right" width="150" height="150" top="100" src="./assets/logo.png">
+<img align="right" width="150" height="150" top="100" src="./assets/logo_circle.svg">
 
-# Contributing to the Proposal Inverter Contracts
+# Contributing to the Inverter Network Contracts
 
-Thanks for your interest in improving the Proposal Inverter contracts!
+Thanks for your interest in improving the Inverter Network contracts!
 
 ## Resolving an Issue
 
 Pull requests are the way concrete changes are made to the code, documentation,
-and dependencies of the Proposal Inverter.
+and dependencies of the Inverter Network.
 
 Even tiny pull requests, like fixing wording, are greatly appreciated.
 Before making a large change, it is usually a good idea to first open an issue
