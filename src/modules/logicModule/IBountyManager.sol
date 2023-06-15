@@ -15,14 +15,13 @@ interface IBountyManager is IPaymentClient {
         /// @dev Arbitrary data to store Bounty details if necessary.
         ///      CAN be empty.
         bytes details;
-        /// @dev Whether the Bounty is completed.
-        ///      A Bounty is completed if it got acknowledged by a Verifier
-        bool completed;
+        /// @dev Whether the Bounty is verified.
+        ///      A Bounty is verified if it got acknowledged by a Verifier
+        bool verified;
     }
 
     struct Contributor {
         /// @dev The contributor's address.
-        ///      MUST not be empty.
         address addr;
         /// @dev The reward for claiming the bounty.
         ///      That is the number of tokens payed to contributor when the
@@ -33,8 +32,14 @@ interface IBountyManager is IPaymentClient {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Function is only callable by contributor.
-    error Module__BountyManager__();
+    /// @notice Given Bounty id is not existing
+    error Module__BountyManager__InvalidBountyId();
+
+    /// @notice Given Contributors are either empty or their bountyAmount is zero
+    error Module__BountyManager__InvalidContributors();
+
+    /// @notice Given Bounty id is already verified
+    error Module__BountyManager__BountyAlreadyVerified();
 
     //--------------------------------------------------------------------------
     // Events
@@ -53,7 +58,7 @@ interface IBountyManager is IPaymentClient {
         bytes indexed details
     );
 
-    /// @notice Event emitted when a Bounty is removed.
+    /// @notice Event emitted when a Bounty is removed.//@todo Is this necessary?
     event BountyRemoved(uint indexed id);
 
     /// @notice Event emitted when a Bounty is verified.
@@ -101,7 +106,7 @@ interface IBountyManager is IPaymentClient {
     /// @param details The Bounty's details.
     /// @return The newly added Bounty's id.
     function addBounty(
-        Contributor[] calldata contributors,
+        Contributor[] memory contributors,
         bytes calldata details
     ) external returns (uint);
 
@@ -110,9 +115,9 @@ interface IBountyManager is IPaymentClient {
     /// @param id The Bounty's id.
     /// @param contributors The contributor information for the Bounty
     /// @param details The Bounty's details.
-    function updateMilestone(
+    function updateBounty(
         uint id,
-        Contributor[] calldata contributors,
+        Contributor[] memory contributors,
         bytes calldata details
     ) external;
 
