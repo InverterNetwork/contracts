@@ -43,8 +43,16 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         if (length == 0) {
             revert Module__BountyManager__InvalidContributors();
         }
+        address contrib;
         for (uint i; i < length; i++) {
             if (contributors[i].bountyAmount == 0) {
+                revert Module__BountyManager__InvalidContributors();
+            }
+            contrib = contributors[i].addr;
+            if (
+                contrib == address(0) || contrib == address(this)
+                    || contrib == address(proposal())
+            ) {
                 revert Module__BountyManager__InvalidContributors();
             }
         }
@@ -128,8 +136,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         bytes calldata details
     )
         external
-        onlyAuthorizedOrManager //@todo restrict to appropriate role
-        validContributors(contributors) //@todo not empty
+        //@todo restrict to appropriate role
+        validContributors(contributors)
         returns (uint id)
     {
         // Note ids start at 1.
@@ -160,7 +168,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         bytes calldata details
     )
         external
-        onlyAuthorizedOrManager //@todo update access
+        //@todo update access
         validId(id)
         validContributors(contributors)
     {

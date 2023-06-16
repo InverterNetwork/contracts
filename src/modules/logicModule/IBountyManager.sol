@@ -106,7 +106,7 @@ interface IBountyManager is IPaymentClient {
     /// @param details The Bounty's details.
     /// @return The newly added Bounty's id.
     function addBounty(
-        Contributor[] memory contributors,
+        Contributor[] calldata contributors,
         bytes calldata details
     ) external returns (uint);
 
@@ -117,7 +117,7 @@ interface IBountyManager is IPaymentClient {
     /// @param details The Bounty's details.
     function updateBounty(
         uint id,
-        Contributor[] memory contributors,
+        Contributor[] calldata contributors,
         bytes calldata details
     ) external;
 
