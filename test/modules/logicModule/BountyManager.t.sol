@@ -175,7 +175,7 @@ contract BountyManagerTest is ModuleTest {
     // Mutating Functions
 
     //-----------------------------------------
-    //AddRecurringPayment
+    //AddBounty
 
     function testAddBounty(
         address[] memory addrs,
@@ -211,6 +211,49 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.addBounty(INVALID_CONTRIBUTORS, bytes(""));
     }
 
+    //-----------------------------------------
+    //UpdateBounty
+
+    function testUpdateBounty(
+        address[] memory addrs,
+        uint[] memory amounts,
+        bytes calldata details
+    ) public {
+        addrs = cutArray(50, addrs); //cut to reasonable size
+        uint length = addrs.length;
+        vm.assume(length <= amounts.length);
+
+        IBountyManager.Contributor[] memory contribs =
+            createValidContributors(addrs, amounts);
+
+        uint id = bountyManager.addBounty(DEFAULT_CONTRIBUTORS, bytes(""));
+
+        vm.expectEmit(true, true, true, true);
+        emit BountyUpdated(1, contribs, details);
+
+        bountyManager.updateBounty(1, contribs, details);
+
+        assertEqualBounty(id, contribs, details, false);
+    }
+
+    function testUpdateBountyModifierInPosition() public {
+        //@todo onlyRole
+
+        //validContributors
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidBountyId.selector
+        );
+        bountyManager.updateBounty(0, DEFAULT_CONTRIBUTORS, bytes(""));
+
+        bountyManager.addBounty(DEFAULT_CONTRIBUTORS, bytes(""));
+
+        //validContributors
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidContributors.selector
+        );
+        bountyManager.updateBounty(1, INVALID_CONTRIBUTORS, bytes(""));
+    }
+
     //--------------------------------------------------------------------------
     // Helper
 
@@ -220,6 +263,8 @@ contract BountyManagerTest is ModuleTest {
         returns (address[] memory)
     {
         uint length = addrs.length;
+        vm.assume(length > 0); //Array has to be at least 1
+
         if (length <= size) {
             return addrs;
         }
