@@ -40,11 +40,13 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
 
     modifier validContributors(Contributor[] memory contributors) {
         uint length = contributors.length;
+        //length cant be zero
         if (length == 0) {
             revert Module__BountyManager__InvalidContributors();
         }
         address contrib;
         for (uint i; i < length; i++) {
+            //amount cant be zero
             if (contributors[i].bountyAmount == 0) {
                 revert Module__BountyManager__InvalidContributors();
             }

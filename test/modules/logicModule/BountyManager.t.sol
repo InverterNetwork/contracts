@@ -254,6 +254,85 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.updateBounty(1, INVALID_CONTRIBUTORS, bytes(""));
     }
 
+    //-----------------------------------------
+    //VerifyBounty
+
+    function testVerifyBounty(
+        address[] memory addrs,
+        uint[] memory amounts,
+        bytes calldata details
+    ) public {
+        addrs = cutArray(5, addrs); //cut to reasonable size
+        uint length = addrs.length;
+        vm.assume(length <= amounts.length);
+
+        IBountyManager.Contributor[] memory contribs =
+            createValidContributors(addrs, amounts);
+
+        uint id = bountyManager.addBounty(contribs, details);
+
+        //createValidContributors restricts individual amounts to 1_000_000_000_000_000
+        //In combination with max 50 contributors thats 50_000_000_000_000_000
+        _token.mint(address(_fundingManager), 50_000_000_000_000_000);
+
+        vm.expectEmit(true, true, true, true);
+        emit BountyVerified(id);
+
+        bountyManager.verifyBounty(id);
+
+        IPaymentClient.PaymentOrder[] memory orders =
+            bountyManager.paymentOrders();
+
+        assertEq(length, orders.length);
+
+        //Amount of tokens that should be in the RecurringPaymentManager
+        uint totalAmount;
+
+        //Amount of tokens in a single order
+        uint bountyAmount;
+
+        for (uint i = 0; i < length; i++) {
+            bountyAmount = contribs[i].bountyAmount;
+            totalAmount += bountyAmount;
+
+            assertEq(orders[i].recipient, contribs[i].addr);
+
+            assertEq(orders[i].amount, bountyAmount);
+            assertEq(orders[i].createdAt, block.timestamp);
+
+            assertEq(orders[i].dueTo, block.timestamp);
+        }
+
+        // Check that bountyManager's token balance is sufficient for the
+        // payment orders by comparing it with the total amount of orders made
+        assertTrue(_token.balanceOf(address(bountyManager)) == totalAmount);
+
+        assertEqualBounty(id, contribs, details, true); //Verified has to be true
+    }
+
+    function testVerifyBountyModifierInPosition() public {
+        //@todo onlyRole
+
+        //validContributors
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidBountyId.selector
+        );
+        bountyManager.verifyBounty(0);
+
+        //Create Bounty and verify it
+        bountyManager.addBounty(DEFAULT_CONTRIBUTORS, bytes(""));
+
+        _token.mint(address(_fundingManager), 100_000_000);
+        bountyManager.verifyBounty(1);
+
+        //@todo
+        //validContributors
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__BountyAlreadyVerified.selector
+        );
+        bountyManager.verifyBounty(1);
+    }
+
     //--------------------------------------------------------------------------
     // Helper
 
@@ -295,6 +374,10 @@ contract BountyManagerTest is ModuleTest {
             //Convert amount 0 to 1
             if (amounts[i] == 0) {
                 amounts[i] = 1;
+            }
+            //If Higher than 1_000_000_000_000_000 convert to 1_000_000_000_000_000 //@note is that a reasonable amount?
+            if (amounts[i] > 1_000_000_000_000_000) {
+                amounts[i] = 1_000_000_000_000_000;
             }
         }
 
