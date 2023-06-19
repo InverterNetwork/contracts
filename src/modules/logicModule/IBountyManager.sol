@@ -10,7 +10,6 @@ interface IBountyManager is IPaymentClient {
     struct Bounty {
         /// @dev The contributors for the Bounty
         ///      MUST not be empty
-        ///      All contributors.salary MUST add up to 100_000_000 (100%)
         Contributor[] contributors;
         /// @dev Arbitrary data to store Bounty details if necessary.
         ///      CAN be empty.

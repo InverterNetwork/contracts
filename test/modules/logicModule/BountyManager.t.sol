@@ -29,7 +29,10 @@ contract BountyManagerTest is ModuleTest {
         IBountyManager.Contributor(address(0xA11CE), 50_000_000);
     IBountyManager.Contributor BOB =
         IBountyManager.Contributor(address(0x606), 50_000_000);
+    IBountyManager.Contributor BEEF =
+        IBountyManager.Contributor(address(0xBEEF), 0);
     IBountyManager.Contributor[] DEFAULT_CONTRIBUTORS;
+    IBountyManager.Contributor[] INVALID_CONTRIBUTORS;
 
     event BountyAdded(
         uint indexed id,
@@ -57,6 +60,8 @@ contract BountyManagerTest is ModuleTest {
 
         DEFAULT_CONTRIBUTORS.push(ALICE);
         DEFAULT_CONTRIBUTORS.push(BOB);
+
+        INVALID_CONTRIBUTORS.push(BEEF);
 
         bountyManager.init(_proposal, _METADATA, bytes(""));
     }
@@ -172,106 +177,66 @@ contract BountyManagerTest is ModuleTest {
     //-----------------------------------------
     //AddRecurringPayment
 
-    /* function testAddRecurringPayment(
-        uint seed,
-        uint amount,
-        uint startEpoch,
-        address recipient
+    function testAddBounty(
+        address[] memory addrs,
+        uint[] memory amounts,
+        bytes calldata details
     ) public {
-        reasonableWarpAndInit(seed);
+        addrs = cutArray(50, addrs); //cut to reasonable size
+        uint length = addrs.length;
+        vm.assume(length <= amounts.length);
 
-        //Assume correct inputs
-        vm.assume(
-            recipient != address(0)
-                && recipient != address(recurringPaymentManager)
-        );
-        amount = bound(amount, 1, type(uint).max);
-        uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
-        startEpoch = bound(startEpoch, currentEpoch, type(uint).max);
+        IBountyManager.Contributor[] memory contribs =
+            createValidContributors(addrs, amounts);
 
-        vm.expectEmit(true, true, true, true);
-        emit RecurringPaymentAdded(
-            1, //Id starts at 1
-            amount,
-            startEpoch,
-            startEpoch - 1, //lastTriggeredEpoch has to be startEpoch - 1
-            recipient
-        );
-        recurringPaymentManager.addRecurringPayment(
-            amount, startEpoch, recipient
-        );
-
-        assertEqualRecurringPayment(
-            1, amount, startEpoch, startEpoch - 1, recipient
-        );
-
-        //Check for multiple Adds
         uint id;
-        uint length = bound(amount, 1, 30); //Reasonable amount
-        for (uint i = 2; i < length + 2; i++) {
+
+        for (uint i = 0; i < length; i++) {
             vm.expectEmit(true, true, true, true);
-            emit RecurringPaymentAdded(
-                i, //Id starts at 1
-                1,
-                currentEpoch,
-                currentEpoch - 1, //lastTriggeredEpoch has to be startEpoch - 1
-                address(0xBEEF)
-            );
-            id = recurringPaymentManager.addRecurringPayment(
-                1, currentEpoch, address(0xBEEF)
-            );
-            assertEq(id, i); //Maybe a bit overtested, that id is correct but ¯\_(ツ)_/¯
-            assertEqualRecurringPayment(
-                i, 1, currentEpoch, currentEpoch - 1, address(0xBEEF)
-            );
+            emit BountyAdded(i + 1, contribs, details);
+
+            id = bountyManager.addBounty(contribs, details);
+
+            assertEqualBounty(id, contribs, details, false);
         }
     }
 
-    function testAddRecurringPaymentModifierInPosition() public {
-        //Init Module
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+    function testAddBountyModifierInPosition() public {
+        //@todo onlyRole
 
-        //Warp to a reasonable time
-        vm.warp(2 weeks);
-
-        //onlyAuthorizedOrManager
-        vm.prank(address(0xBEEF)); //Not Authorized
-
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0xBEEF));
-
-        //validAmount
+        //validContributors
         vm.expectRevert(
-            IPaymentClient.Module__PaymentClient__InvalidAmount.selector
+            IBountyManager.Module__BountyManager__InvalidContributors.selector
         );
-        recurringPaymentManager.addRecurringPayment(0, 2 weeks, address(0xBEEF));
-
-        //validStartEpoch
-
-        vm.expectRevert(
-            IRecurringPaymentManager
-                .Module__RecurringPaymentManager__InvalidStartEpoch
-                .selector
-        );
-        recurringPaymentManager.addRecurringPayment(1, 0, address(0xBEEF));
-
-        //validRecipient
-
-        vm.expectRevert(
-            IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
-        );
-        recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0));
-    } */
+        bountyManager.addBounty(INVALID_CONTRIBUTORS, bytes(""));
+    }
 
     //--------------------------------------------------------------------------
     // Helper
+
+    function cutArray(uint size, address[] memory addrs)
+        internal
+        pure
+        returns (address[] memory)
+    {
+        uint length = addrs.length;
+        if (length <= size) {
+            return addrs;
+        }
+
+        address[] memory cutArry = new address[](size);
+        for (uint i = 0; i < size - 1; i++) {
+            cutArry[i] = addrs[i];
+        }
+        return cutArry;
+    }
 
     function createValidContributors(
         address[] memory addrs,
         uint[] memory amounts
     ) internal view returns (IBountyManager.Contributor[] memory) {
         uint length = addrs.length;
-        vm.assume(length == amounts.length);
+        assert(length <= amounts.length);
         address a;
 
         for (uint i; i < length; i++) {
@@ -297,5 +262,30 @@ contract BountyManagerTest is ModuleTest {
             });
         }
         return contribs;
+    }
+
+    function assertEqualBounty(
+        uint idToProve,
+        IBountyManager.Contributor[] memory contribsToTest,
+        bytes calldata detailsToTest,
+        bool verifiedToTest
+    ) internal {
+        IBountyManager.Bounty memory currentBounty =
+            bountyManager.getBountyInformation(idToProve);
+
+        IBountyManager.Contributor[] memory currentContribs =
+            currentBounty.contributors;
+
+        uint length = currentContribs.length;
+
+        assertEq(length, contribsToTest.length);
+        for (uint i = 0; i < length; ++i) {
+            assertEq(currentContribs[i].addr, contribsToTest[i].addr);
+            assertEq(
+                currentContribs[i].bountyAmount, contribsToTest[i].bountyAmount
+            );
+        }
+        assertEq(currentBounty.details, detailsToTest);
+        assertEq(currentBounty.verified, verifiedToTest);
     }
 }
