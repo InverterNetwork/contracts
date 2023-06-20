@@ -6,6 +6,9 @@ import {IModule} from "src/modules/base/IModule.sol";
 import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
 import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
+import {RebasingFundingManager} from "src/modules/fundingManager/RebasingFundingManager.sol";
+
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 contract DependencyInjection {
 
@@ -131,6 +134,16 @@ contract DependencyInjection {
         PaymentClient paymentClient = PaymentClient(paymentClientAddress);
 
         try paymentClient.outstandingTokenAmount() returns(uint256) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsRebasingFundingManager(address rebasingFundingManagerAddress) external view returns(bool) {
+        RebasingFundingManager rebasingFundingManager = RebasingFundingManager(rebasingFundingManagerAddress);
+
+        try rebasingFundingManager.token() returns(IERC20) {
             return true;
         } catch {
             return false;
