@@ -3,7 +3,8 @@ pragma solidity 0.8.19;
 
 import {Proposal} from "src/proposal/Proposal.sol";
 import {IModule} from "src/modules/base/IModule.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
+import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
 
 contract DependencyInjection {
 
@@ -103,5 +104,25 @@ contract DependencyInjection {
         }
 
         return moduleAddress;
+    }
+
+    function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress) external view returns (bool) {
+        ListAuthorizer listAuthorizer = ListAuthorizer(listAuthorizerAddress);
+
+        try listAuthorizer.getAmountAuthorized() returns(uint) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsSingleVoteGovernorModule(address singleVoteGovernorAddress) external view returns (bool) {
+        SingleVoteGovernor singleVoteGovernor = SingleVoteGovernor(singleVoteGovernorAddress);
+
+        try singleVoteGovernor.getReceipt(type(uint256).max, address(0)) returns(SingleVoteGovernor.Receipt memory) {
+            return true;
+        } catch {
+            return false;
+        }
     }
 }
