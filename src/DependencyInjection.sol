@@ -5,6 +5,7 @@ import {Proposal} from "src/proposal/Proposal.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
+import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 
 contract DependencyInjection {
 
@@ -109,7 +110,7 @@ contract DependencyInjection {
     function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress) external view returns (bool) {
         ListAuthorizer listAuthorizer = ListAuthorizer(listAuthorizerAddress);
 
-        try listAuthorizer.getAmountAuthorized() returns(uint) {
+        try listAuthorizer.getAmountAuthorized() returns(uint256) {
             return true;
         } catch {
             return false;
@@ -120,6 +121,16 @@ contract DependencyInjection {
         SingleVoteGovernor singleVoteGovernor = SingleVoteGovernor(singleVoteGovernorAddress);
 
         try singleVoteGovernor.getReceipt(type(uint256).max, address(0)) returns(SingleVoteGovernor.Receipt memory) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsPaymentClient(address paymentClientAddress) external view returns(bool) {
+        PaymentClient paymentClient = PaymentClient(paymentClientAddress);
+
+        try paymentClient.outstandingTokenAmount() returns(uint256) {
             return true;
         } catch {
             return false;
