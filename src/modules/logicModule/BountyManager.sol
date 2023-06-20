@@ -31,14 +31,35 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier validId(uint bountyId) {
+    modifier validPayoutAmounts(
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount
+    ) {
+        if (
+            minimumPayoutAmount == 0 || maximumPayoutAmount == 0
+                || maximumPayoutAmount < minimumPayoutAmount
+        ) {
+            revert Module__BountyManager__InvalidPayoutAmounts();
+        }
+        _;
+    }
+
+    modifier validBountyId(uint bountyId) {
         if (!isExistingBountyId(bountyId)) {
             revert Module__BountyManager__InvalidBountyId();
         }
         _;
     }
 
+    modifier validClaimId(uint claimId) {
+        if (!isExistingClaimId(claimId)) {
+            revert Module__BountyManager__InvalidClaimId();
+        }
+        _;
+    }
+
     modifier validContributors(Contributor[] memory contributors) {
+        //@update to be in correct range
         uint length = contributors.length;
         //length cant be zero
         if (length == 0) {
@@ -62,8 +83,17 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         _;
     }
 
-    modifier notVerified(uint bountyId) {
-        if (_bountyRegistry[bountyId].verified) {
+    modifier accordingClaimToBounty(uint claimId, uint bountyId) {
+        //Its not claimed if claimedBy is still 0
+        if (_bountyRegistry[bountyId].claimedBy != 0) {
+            revert Module__BountyManager__NotAccordingClaimToBounty();
+        }
+        _;
+    }
+
+    modifier notClaimed(uint bountyId) {
+        //Its not claimed if claimedBy is still 0
+        if (_bountyRegistry[bountyId].claimedBy != 0) {
             revert Module__BountyManager__BountyAlreadyVerified();
         }
         _;
@@ -86,6 +116,15 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
 
     /// @dev List of Bounty id's.
     LinkedIdList.List _bountyList;
+
+    /// @dev Registry mapping ids to Claim structs.
+    mapping(uint => Claim) private _claimRegistry;
+
+    /// @dev List of Bounty id's.
+    LinkedIdList.List _claimList;
+
+    //@dev Connects contributor addresses to claim Ids
+    mapping(address => uint[]) contributorAddressToClaimIds;
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -96,21 +135,22 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         initializer
     {
         __Module_init(proposal_, metadata);
-        //Set empty list of RecurringPayment
+        //init empty list of bounties and claims
         _bountyList.init();
+        _claimList.init();
     }
 
     //--------------------------------------------------------------------------
     // Getter Functions
 
     /// @inheritdoc IBountyManager
-    function getBountyInformation(uint id)
+    function getBountyInformation(uint bountyId)
         external
         view
-        validId(id)
+        validBountyId(bountyId)
         returns (Bounty memory)
     {
-        return _bountyRegistry[id];
+        return _bountyRegistry[bountyId];
     }
 
     /// @inheritdoc IBountyManager
@@ -119,14 +159,35 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function getPreviousBountyId(uint id) external view returns (uint) {
-        //@todo this is tied to if Bounties can be removed
-        return _bountyList.getPreviousId(id);
+    function isExistingBountyId(uint bountyId) public view returns (bool) {
+        return _bountyList.isExistingId(bountyId);
     }
 
     /// @inheritdoc IBountyManager
-    function isExistingBountyId(uint id) public view returns (bool) {
-        return _bountyList.isExistingId(id);
+    function getClaimInformation(uint claimId)
+        external
+        view
+        validClaimId(claimId)
+        returns (Claim memory)
+    {
+        return _claimRegistry[claimId];
+    }
+
+    /// @inheritdoc IBountyManager
+    function listClaimIds() external view returns (uint[] memory) {
+        return _claimList.listIds();
+    }
+
+    /// @inheritdoc IBountyManager
+    function isExistingClaimId(uint claimId) public view returns (bool) {
+        return _claimList.isExistingId(claimId);
+    }
+
+    /// @inheritdoc IBountyManager
+    function listClaimIdsForContributorAddress(
+        address contributorAddrs //@todo test for empty
+    ) external view returns (uint[] memory) {
+        return contributorAddressToClaimIds[contributorAddrs];
     }
 
     //--------------------------------------------------------------------------
@@ -134,12 +195,13 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
 
     /// @inheritdoc IBountyManager
     function addBounty(
-        Contributor[] calldata contributors,
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
         bytes calldata details
     )
         external
         //@todo restrict to appropriate role
-        validContributors(contributors)
+        validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
         // Note ids start at 1.
@@ -150,64 +212,117 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
 
         Bounty storage b = _bountyRegistry[bountyId];
 
-        // Add Bounty instance to registry.
-        uint length = contributors.length;
-        for (uint i; i < length; ++i) {
-            b.contributors.push(contributors[i]);
-        }
-
+        b.minimumPayoutAmount = minimumPayoutAmount;
+        b.maximumPayoutAmount = maximumPayoutAmount;
         b.details = details;
 
-        emit BountyAdded(bountyId, contributors, details);
+        emit BountyAdded(
+            bountyId, minimumPayoutAmount, maximumPayoutAmount, details
+        );
 
         return bountyId;
     }
 
     /// @inheritdoc IBountyManager
     function updateBounty(
-        uint id,
+        uint bountyId,
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
+        bytes calldata details
+    )
+        external
+        //@todo update access
+        validBountyId(bountyId)
+        validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
+    {
+        Bounty storage b = _bountyRegistry[bountyId];
+
+        b.minimumPayoutAmount = minimumPayoutAmount;
+        b.maximumPayoutAmount = maximumPayoutAmount;
+        b.details = details;
+
+        emit BountyUpdated(
+            bountyId, minimumPayoutAmount, maximumPayoutAmount, details
+        );
+    }
+
+    /// @inheritdoc IBountyManager
+    function addClaim(
+        uint bountyId,
+        Contributor[] calldata contributors,
+        bytes calldata details
+    )
+        external
+        //@todo restrict to appropriate role
+        validBountyId(bountyId)
+        validContributors(contributors)
+        returns (uint id)
+    {
+        // Note ids start at 1.
+        uint claimId = ++_nextId;
+
+        // Add Claim id to the list.
+        _claimList.addId(claimId);
+
+        Claim storage c = _claimRegistry[claimId];
+
+        // Add Claim instance to registry.
+        c.bountyId = bountyId;
+
+        uint length = contributors.length;
+        for (uint i; i < length; ++i) {
+            c.contributors.push(contributors[i]);
+
+            //add ClaimId to each contributor address accoringly//@todo take a look here /mirrored on the update Function?
+            contributorAddressToClaimIds[contributors[i].addr].push(claimId);
+        }
+
+        c.details = details;
+
+        emit ClaimAdded(claimId, bountyId, contributors, details);
+
+        return claimId;
+    }
+
+    /// @inheritdoc IBountyManager
+    function updateClaim(
+        uint claimId,
+        uint bountyId,
         Contributor[] calldata contributors,
         bytes calldata details
     )
         external
         //@todo update access
-        validId(id)
+        validClaimId(claimId)
+        validBountyId(bountyId)
         validContributors(contributors)
     {
-        Bounty storage b = _bountyRegistry[id];
+        Claim storage c = _claimRegistry[claimId];
 
-        delete b.contributors;
+        c.bountyId = bountyId;
+
+        delete c.contributors;
 
         uint length = contributors.length; //@todo Do a seperate version for just updating contributors? gas inefficient
         for (uint i; i < length; ++i) {
-            b.contributors.push(contributors[i]);
+            c.contributors.push(contributors[i]);
         }
 
-        b.details = details;
+        c.details = details;
 
-        emit BountyUpdated(id, contributors, details);
+        emit ClaimUpdated(claimId, bountyId, contributors, details);
     }
 
-    //@todo keep that in?
-    /* /// @inheritdoc IRecurringPaymentManager
-    function removeRecurringPayment(uint prevId, uint id)
-        external
-        onlyAuthorizedOrManager
-    {
-        //Remove Id from list
-        _paymentList.removeId(prevId, id);
-
-        // Remove RecurringPayment instance from registry.
-        delete _paymentRegistry[id];
-
-        emit RecurringPaymentRemoved(id);
-    } */
-
     /// @inheritdoc IBountyManager
-    function verifyBounty(uint id) external validId(id) notVerified(id) 
+    function verifyClaim(uint claimId, uint bountyId)
+        external
+        validClaimId(claimId)
+        validBountyId(bountyId)
+        accordingClaimToBounty(claimId, bountyId)
+        notClaimed(bountyId)
     //@todo access
     {
-        Contributor[] memory contribs = _bountyRegistry[id].contributors;
+        Contributor[] memory contribs = _claimRegistry[claimId].contributors;
 
         uint length = contribs.length;
 
@@ -238,9 +353,9 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         );
 
         //Set completed to true
-        _bountyRegistry[id].verified = true;
+        _bountyRegistry[bountyId].claimedBy = claimId;
 
-        emit BountyVerified(id);
+        emit ClaimVerified(claimId, bountyId);
     }
 
     //--------------------------------------------------------------------------

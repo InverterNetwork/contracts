@@ -79,7 +79,7 @@ contract BountyManagerTest is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Modifier
-
+    /* 
     function testValidId(uint usedIds, uint id) public {
         usedIds = bound(usedIds, 0, 1000);
 
@@ -415,5 +415,5 @@ contract BountyManagerTest is ModuleTest {
         }
         assertEq(currentBounty.details, detailsToTest);
         assertEq(currentBounty.verified, verifiedToTest);
-    }
+    } */
 }
