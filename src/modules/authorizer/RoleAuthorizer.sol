@@ -8,6 +8,8 @@ import {Module, IModule} from "src/modules/base/Module.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 import {IRoleAuthorizer} from "./IRoleAuthorizer.sol";
 
+import "forge-std/console.sol";
+
 contract RoleAuthorizer is
     IRoleAuthorizer,
     AccessControlEnumerableUpgradeable,
@@ -63,8 +65,9 @@ contract RoleAuthorizer is
     // If false it uses the proposal's roles.
     mapping(address => bool) public selfManagedModules;
 
-    // For quick reference, since we'll be comparing against role this on revocation
+    // For public reference. Other Modules can assume the following roles to exist
     bytes32 public PROPOSAL_OWNER_ROLE;
+    bytes32 public PROPOSAL_MANAGER_ROLE;
 
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -98,7 +101,7 @@ contract RoleAuthorizer is
 
         // Generate RoleIDs for the Proposal roles:
         PROPOSAL_OWNER_ROLE = generateRoleId(address(proposal()), 0);
-        bytes32 managerRoleId = generateRoleId(address(proposal()), 1);
+        PROPOSAL_MANAGER_ROLE = generateRoleId(address(proposal()), 1);
 
         // Set up OWNER role structure:
 
@@ -121,9 +124,9 @@ contract RoleAuthorizer is
 
         // Set up MANAGER role structure:
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
-        _setRoleAdmin(managerRoleId, PROPOSAL_OWNER_ROLE);
+        _setRoleAdmin(PROPOSAL_MANAGER_ROLE, PROPOSAL_OWNER_ROLE);
         // grant MANAGER Role to specified address
-        _grantRole(managerRoleId, initialManager);
+        _grantRole(PROPOSAL_MANAGER_ROLE, initialManager);
     }
 
     //--------------------------------------------------------------------------
@@ -134,14 +137,9 @@ contract RoleAuthorizer is
         view
         returns (bool)
     {
-        bytes32 roleId;
-        // If module uses own roles, check if account has role in module
-        // else check if account has role in proposal
-        if (selfManagedModules[_msgSender()]) {
-            roleId = generateRoleId(module, role);
-        } else {
-            roleId = generateRoleId(address(proposal()), role);
-        }
+        // Note: if module has delegated management, the fact that the address is authorized must not mean that it will be able to execute transactions
+        bytes32 roleId = generateRoleId(address(proposal()), role);
+
         return hasRole(roleId, who);
     }
 
@@ -162,7 +160,16 @@ contract RoleAuthorizer is
         view
         returns (bool)
     {
-        return hasRole(_msgSender(), role, who);
+        //Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()
+        bytes32 roleId;
+        // If the module uses its own roles, check if account has the role.
+        // else check if account has role in proposal
+        if (selfManagedModules[_msgSender()]) {
+            roleId = generateRoleId(_msgSender(), role);
+        } else {
+            roleId = generateRoleId(address(proposal()), role);
+        }
+        return hasRole(roleId, who);
     }
 
     function isAuthorized(address who) external view returns (bool) {
