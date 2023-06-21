@@ -59,7 +59,7 @@ abstract contract Module is IModule, PausableUpgradeable {
     ///         authorized via Proposal.
     modifier onlyAuthorized() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
-        if (!authorizer.isAuthorized(_msgSender())) {
+        if (!authorizer.isAuthorized(0, _msgSender())) {
             revert Module__CallerNotAuthorized();
         }
         _;
@@ -70,8 +70,8 @@ abstract contract Module is IModule, PausableUpgradeable {
     modifier onlyAuthorizedOrManager() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (
-            !authorizer.isAuthorized(_msgSender())
-                && __Module_proposal.manager() != _msgSender()
+            !authorizer.isAuthorized(0, _msgSender())
+                && !authorizer.isAuthorized(0, _msgSender())
         ) {
             revert Module__CallerNotAuthorized();
         }
