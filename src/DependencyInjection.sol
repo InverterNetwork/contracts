@@ -24,39 +24,6 @@ contract DependencyInjection {
     /// @notice The given module is not used in the given proposal
     error DependencyInjection__ModuleNotUsedInProposal();
 
-    string[] moduleList = [
-        "ListAuthorizer",
-        "SingleVoteGovernor",
-        "PaymentClient",
-        "RebasingFundingManager",
-        "MilestoneManager",
-        "RecurringPaymentManager",
-        "SimplePaymentProcessor",
-        "StreamingPaymentProcessor",
-        "MetadataManager"
-    ];
-
-    function _isModuleNameValid(string calldata moduleName) private view returns(bool) {
-        uint256 moduleListLength = moduleList.length;
-
-        uint index;
-        for(; index < moduleListLength; ) {
-            // length comparison saves gas for each non-matching iteration
-            if(bytes(moduleName).length == bytes(moduleList[index]).length) {
-                if(keccak256(abi.encodePacked(moduleName)) == keccak256(abi.encodePacked(moduleList[index]))) {
-                    return true;
-                }
-            }
-            
-            unchecked {
-                ++index;
-            }
-        }
-
-        // if the loop ended and the function did not terminate, that means the string was not present in the moduleList array.
-        return false;
-    }
-
     function _isProposalAddressValid(address proposalAddress) private view returns(bool) {
         Proposal proposal = Proposal(proposalAddress);
 
@@ -94,10 +61,6 @@ contract DependencyInjection {
     }
 
     function findModuleAddressInProposal(address proposalAddress, string calldata moduleName) external view returns (address) {
-        if(!(_isModuleNameValid(moduleName))) {
-            revert DependencyInjection__InvalidModuleName();
-        }
-
         if(!(_isProposalAddressValid(proposalAddress))) {
             revert DependencyInjection__InvalidProposalAddress();
         }
