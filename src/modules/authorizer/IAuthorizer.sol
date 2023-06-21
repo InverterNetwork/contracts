@@ -2,8 +2,5 @@
 pragma solidity ^0.8.0;
 
 interface IAuthorizer {
-    function isAuthorized(uint8 role, address who)
-        external
-        view
-        returns (bool);
+    function isAuthorized(address who) external view returns (bool);
 }

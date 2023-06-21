@@ -42,19 +42,19 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
     modifier onlyAuthorized() {
-        if (!authorizer.isAuthorized(0, _msgSender())) {
+        if (!authorizer.isAuthorized(_msgSender())) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
     }
 
+    // TODO NOTE: Do we need this? it isn't used anywhere
+
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address or manager.
     modifier onlyAuthorizedOrManager() {
-        if (
-            !authorizer.isAuthorized(0, _msgSender())
-                && !authorizer.isAuthorized(0, _msgSender())
-        ) {
+        if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != manager())
+        {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -132,7 +132,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         override(ModuleManager)
         returns (bool)
     {
-        return authorizer.isAuthorized(0, who);
+        return authorizer.isAuthorized(who);
     }
 
     //--------------------------------------------------------------------------

@@ -38,11 +38,7 @@ contract AuthorizerMock is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // IAuthorizer Functions
 
-    function isAuthorized(uint8 role, address who)
-        external
-        view
-        returns (bool)
-    {
+    function isAuthorized(address who) external view returns (bool) {
         return _authorized[who] || _allAuthorized;
     }
 }

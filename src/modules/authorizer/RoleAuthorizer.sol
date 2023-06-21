@@ -48,8 +48,8 @@ contract RoleAuthorizer is
 
     modifier notLastOwner(bytes32 role) {
         if (
-            role == generateRoleId(address(proposal()), 0)
-                && getRoleMemberCount(role) == 1
+            role == PROPOSAL_OWNER_ROLE
+                && getRoleMemberCount(PROPOSAL_OWNER_ROLE) == 1
         ) {
             revert Module__RoleAuthorizer__OwnerRoleCannotBeEmpty();
         }
@@ -102,6 +102,8 @@ contract RoleAuthorizer is
 
         // Set up OWNER role structure:
 
+        // -> set OWNER as admin of itself
+        _setRoleAdmin(PROPOSAL_OWNER_ROLE, PROPOSAL_OWNER_ROLE);
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
         _setRoleAdmin(DEFAULT_ADMIN_ROLE, PROPOSAL_OWNER_ROLE);
 
@@ -161,6 +163,11 @@ contract RoleAuthorizer is
         returns (bool)
     {
         return hasRole(_msgSender(), role, who);
+    }
+
+    function isAuthorized(address who) external view returns (bool) {
+        // In case no role is specfied, we ask if the caller is an owner
+        return hasRole(PROPOSAL_OWNER_ROLE, who);
     }
 
     function toggleSelfManagement() external onlyModule {
