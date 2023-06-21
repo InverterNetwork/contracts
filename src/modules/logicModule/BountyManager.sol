@@ -58,34 +58,48 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         _;
     }
 
-    modifier validContributors(Contributor[] memory contributors) {
+    function validContributorsForBounty(
+        Contributor[] memory contributors,
+        Bounty memory bounty
+    ) internal view {
         //@update to be in correct range
         uint length = contributors.length;
         //length cant be zero
         if (length == 0) {
-            revert Module__BountyManager__InvalidContributors();
+            revert Module__BountyManager__InvalidContributorsLength();
         }
+        uint totalAmount;
+        uint currentAmount;
         address contrib;
         for (uint i; i < length; i++) {
+            currentAmount = contributors[i].claimAmount;
+
             //amount cant be zero
-            if (contributors[i].bountyAmount == 0) {
-                revert Module__BountyManager__InvalidContributors();
+            if (currentAmount == 0) {
+                revert Module__BountyManager__InvalidContributorAmount();
             }
+            totalAmount += currentAmount;
+
             contrib = contributors[i].addr;
             if (
                 contrib == address(0) || contrib == address(this)
                     || contrib == address(proposal())
             ) {
-                revert Module__BountyManager__InvalidContributors();
+                revert Module__BountyManager__InvalidContributorAddress();
             }
         }
 
-        _;
+        if (
+            totalAmount > bounty.maximumPayoutAmount
+                || totalAmount < bounty.minimumPayoutAmount
+        ) {
+            revert Module__BountyManager__ClaimExceedsGivenPayoutAmounts();
+        }
     }
 
     modifier accordingClaimToBounty(uint claimId, uint bountyId) {
         //Its not claimed if claimedBy is still 0
-        if (_bountyRegistry[bountyId].claimedBy != 0) {
+        if (_claimRegistry[claimId].bountyId != bountyId) {
             revert Module__BountyManager__NotAccordingClaimToBounty();
         }
         _;
@@ -94,7 +108,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     modifier notClaimed(uint bountyId) {
         //Its not claimed if claimedBy is still 0
         if (_bountyRegistry[bountyId].claimedBy != 0) {
-            revert Module__BountyManager__BountyAlreadyVerified();
+            revert Module__BountyManager__BountyAlreadyClaimed();
         }
         _;
     }
@@ -255,9 +269,9 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         external
         //@todo restrict to appropriate role
         validBountyId(bountyId)
-        validContributors(contributors)
         returns (uint id)
     {
+        validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
         // Note ids start at 1.
         uint claimId = ++_nextId;
 
@@ -272,7 +286,6 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         uint length = contributors.length;
         for (uint i; i < length; ++i) {
             c.contributors.push(contributors[i]);
-
             //add ClaimId to each contributor address accoringly//@todo take a look here /mirrored on the update Function?
             contributorAddressToClaimIds[contributors[i].addr].push(claimId);
         }
@@ -295,8 +308,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         //@todo update access
         validClaimId(claimId)
         validBountyId(bountyId)
-        validContributors(contributors)
     {
+        validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
         Claim storage c = _claimRegistry[claimId];
 
         c.bountyId = bountyId;
@@ -332,14 +345,14 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         //current contributor in loop
         Contributor memory contrib;
 
-        //For each Contributor add payments according to the bountyAmount specified
+        //For each Contributor add payments according to the claimAmount specified
         for (uint i; i < length; i++) {
             contrib = contribs[i];
-            totalAmount += contrib.bountyAmount;
+            totalAmount += contrib.claimAmount;
 
             _addPaymentOrder(
                 contrib.addr,
-                contrib.bountyAmount,
+                contrib.claimAmount,
                 block.timestamp //dueTo Date is now
             );
         }

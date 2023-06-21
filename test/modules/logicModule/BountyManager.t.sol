@@ -79,22 +79,32 @@ contract BountyManagerTest is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Modifier
-    /* 
-    function testValidId(uint usedIds, uint id) public {
+
+    function testValidPayoutAmounts(
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount
+    ) public {
+        if (
+            minimumPayoutAmount == 0 || maximumPayoutAmount == 0
+                || maximumPayoutAmount < minimumPayoutAmount
+        ) {
+            vm.expectRevert(
+                IBountyManager
+                    .Module__BountyManager__InvalidPayoutAmounts
+                    .selector
+            );
+        }
+
+        bountyManager.addBounty(
+            minimumPayoutAmount, maximumPayoutAmount, bytes("")
+        );
+    }
+
+    function testValidBountyId(uint usedIds, uint id) public {
         usedIds = bound(usedIds, 0, 1000);
 
-        uint[] memory ids = bountyManager.listBountyIds();
-        for (uint i = 0; i < ids.length; i++) {
-            console.log(ids[i]);
-        }
-
         for (uint i; i < usedIds; i++) {
-            bountyManager.addBounty(DEFAULT_CONTRIBUTORS, bytes(""));
-        }
-
-        ids = bountyManager.listBountyIds();
-        for (uint i = 0; i < ids.length; i++) {
-            console.log(ids[i]);
+            bountyManager.addBounty(1, 1, bytes(""));
         }
 
         if (id > usedIds || id == 0) {
@@ -106,6 +116,24 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.getBountyInformation(id);
     }
 
+    function testValidClaimId(uint usedIds, uint id) public {
+        usedIds = bound(usedIds, 0, 1000);
+
+        uint bountyId = bountyManager.addBounty(1, 100_000_000, bytes(""));
+
+        for (uint i; i < usedIds; i++) {
+            bountyManager.addClaim(bountyId, DEFAULT_CONTRIBUTORS, bytes(""));
+        }
+
+        if (id > usedIds + bountyId || id == 0 || id == bountyId) {
+            vm.expectRevert(
+                IBountyManager.Module__BountyManager__InvalidClaimId.selector
+            );
+        }
+
+        bountyManager.getClaimInformation(id);
+    }
+    /* 
     function testValidContributors(
         address[] memory addrs,
         uint[] memory amounts
@@ -154,11 +182,50 @@ contract BountyManagerTest is ModuleTest {
 
             bountyManager.addBounty(contribs, bytes(""));
         }
+    } */
+
+    function testAccordingClaimToBounty(uint usedIds, uint picker) public {
+        _token.mint(address(_fundingManager), 100_000_000);
+
+        usedIds = bound(usedIds, 1, 100);
+        uint bountyId1 = bountyManager.addBounty(1, 100_000_000, bytes("")); //id 1
+        uint bountyId2 = bountyManager.addBounty(1, 100_000_000, bytes("")); //id 2
+        for (uint i; i < usedIds; i++) {
+            bountyManager.addClaim(bountyId1, DEFAULT_CONTRIBUTORS, bytes("")); //ids should be odd numbers
+            bountyManager.addClaim(bountyId2, DEFAULT_CONTRIBUTORS, bytes("")); //ids should be even numbers
+        }
+
+        picker = bound(picker, 3, usedIds + 2);
+        if ((picker % 2) == 0) {
+            vm.expectRevert(
+                IBountyManager
+                    .Module__BountyManager__NotAccordingClaimToBounty
+                    .selector
+            );
+        }
+
+        bountyManager.verifyClaim(picker, bountyId1);
     }
 
-    function testNotVerified() public {
-        //@todo after verified is done
+    function testNotClaimed(bool isVerified) public {
+        _token.mint(address(_fundingManager), 100_000_000);
+
+        uint bountyId = bountyManager.addBounty(1, 100_000_000, bytes(""));
+        uint claimId =
+            bountyManager.addClaim(bountyId, DEFAULT_CONTRIBUTORS, bytes(""));
+
+        if (isVerified) {
+            bountyManager.verifyClaim(claimId, bountyId);
+            vm.expectRevert(
+                IBountyManager
+                    .Module__BountyManager__BountyAlreadyClaimed
+                    .selector
+            );
+        }
+        bountyManager.verifyClaim(claimId, bountyId);
     }
+
+    /* 
 
     //--------------------------------------------------------------------------
     // Getter

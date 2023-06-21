@@ -33,10 +33,8 @@ interface IBountyManager is IPaymentClient {
     struct Contributor {
         /// @dev The contributor's address.
         address addr;
-        /// @dev The reward for claiming the bounty.
-        ///      That is the number of tokens payed to contributor when the
-        ///      bounty is acknowledged.
-        uint bountyAmount;
+        /// @dev The amount of tokens the Contributor gets upon claimng the bounty
+        uint claimAmount;
     }
 
     //--------------------------------------------------------------------------
@@ -51,14 +49,23 @@ interface IBountyManager is IPaymentClient {
     /// @notice Given Claim id is not existing
     error Module__BountyManager__InvalidClaimId();
 
-    /// @notice Given Contributors are either empty or their bountyAmount is zero
-    error Module__BountyManager__InvalidContributors();
+    /// @notice Given Contributors list is empty
+    error Module__BountyManager__InvalidContributorsLength();
+
+    /// @notice Given claim Amount for contributor is zero
+    error Module__BountyManager__InvalidContributorAmount();
+
+    /// @notice Given Contributor address is invalid
+    error Module__BountyManager__InvalidContributorAddress();
+
+    /// @notice Given total claims of contributors exceed or are below the given payout amounts of the bounty
+    error Module__BountyManager__ClaimExceedsGivenPayoutAmounts();
 
     /// @notice Claim is not trying to claim given bounty
     error Module__BountyManager__NotAccordingClaimToBounty();
 
-    /// @notice Given Bounty id is already verified
-    error Module__BountyManager__BountyAlreadyVerified();
+    /// @notice Given Bounty id is already claimed
+    error Module__BountyManager__BountyAlreadyClaimed();
 
     //--------------------------------------------------------------------------
     // Events
