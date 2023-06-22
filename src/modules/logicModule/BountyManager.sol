@@ -78,7 +78,6 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
             if (currentAmount == 0) {
                 revert Module__BountyManager__InvalidContributorAmount();
             }
-            totalAmount += currentAmount;
 
             contrib = contributors[i].addr;
             if (
@@ -87,6 +86,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
             ) {
                 revert Module__BountyManager__InvalidContributorAddress();
             }
+
+            totalAmount += currentAmount;
         }
 
         if (

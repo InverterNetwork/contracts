@@ -133,8 +133,10 @@ contract BountyManagerTest is ModuleTest {
 
         bountyManager.getClaimInformation(id);
     }
-    /* 
-    function testValidContributors(
+
+    function testValidContributorsForBounty(
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
         address[] memory addrs,
         uint[] memory amounts
     ) public {
@@ -142,47 +144,92 @@ contract BountyManagerTest is ModuleTest {
         vm.assume(length <= 50); //reasonable size
         vm.assume(length <= amounts.length);
 
-        address adr;
-        uint amnt;
-        bool invalid = false;
+        minimumPayoutAmount = bound(minimumPayoutAmount, 1, type(uint).max);
+        maximumPayoutAmount = bound(maximumPayoutAmount, 1, type(uint).max);
+        vm.assume(minimumPayoutAmount <= maximumPayoutAmount);
+
+        //Restrict amounts to 20_000 to test properly(doesnt overflow)
+        amounts = cutAmounts(20_000, amounts);
+        //=> maxAmount = 20_000 * 50 = 1_000_000
+
+        //ID is 1
+        bountyManager.addBounty(
+            minimumPayoutAmount, maximumPayoutAmount, bytes("")
+        );
+
         IBountyManager.Contributor[] memory contribs =
             new IBountyManager.Contributor[](length);
 
         if (length == 0) {
             vm.expectRevert(
                 IBountyManager
-                    .Module__BountyManager__InvalidContributors
+                    .Module__BountyManager__InvalidContributorsLength
                     .selector
             );
 
-            bountyManager.addBounty(contribs, bytes(""));
+            bountyManager.addClaim(1, contribs, bytes(""));
         } else {
             for (uint i; i < length; i++) {
-                adr = addrs[i];
-                amnt = amounts[i];
-                if (
-                    amnt == 0 || adr == address(0)
-                        || adr == address(bountyManager)
-                        || adr == address(_proposal)
-                ) invalid = true;
-
                 contribs[i] = IBountyManager.Contributor({
                     addr: addrs[i],
-                    bountyAmount: amounts[i]
+                    claimAmount: amounts[i]
                 });
             }
 
-            if (invalid) {
+            uint totalAmount;
+            IBountyManager.Contributor memory currentContrib;
+            //Check if it reached the end -> ClaimExceedsGivenPayoutAmounts will only be checked if it ran through everything
+            bool reachedEnd;
+
+            for (uint i; i < length; i++) {
+                currentContrib = contribs[i];
+
+                totalAmount += currentContrib.claimAmount;
+
+                if (currentContrib.claimAmount == 0) {
+                    vm.expectRevert(
+                        IBountyManager
+                            .Module__BountyManager__InvalidContributorAmount
+                            .selector
+                    );
+                    break;
+                }
+
+                if (
+                    currentContrib.addr == address(0)
+                        || currentContrib.addr == address(bountyManager)
+                        || currentContrib.addr == address(_proposal)
+                ) {
+                    vm.expectRevert(
+                        IBountyManager
+                            .Module__BountyManager__InvalidContributorAddress
+                            .selector
+                    );
+                    break;
+                }
+
+                if (i == length - 1) {
+                    reachedEnd = true;
+                }
+            }
+
+            if (
+                reachedEnd
+                    && (
+                        totalAmount > maximumPayoutAmount
+                            || totalAmount < minimumPayoutAmount
+                    )
+            ) {
                 vm.expectRevert(
                     IBountyManager
-                        .Module__BountyManager__InvalidContributors
+                        .Module__BountyManager__ClaimExceedsGivenPayoutAmounts
                         .selector
                 );
             }
 
-            bountyManager.addBounty(contribs, bytes(""));
+            bountyManager.addClaim(1, contribs, bytes(""));
         }
-    } */
+    }
 
     function testAccordingClaimToBounty(uint usedIds, uint picker) public {
         _token.mint(address(_fundingManager), 100_000_000);
@@ -399,6 +446,7 @@ contract BountyManagerTest is ModuleTest {
         );
         bountyManager.verifyBounty(1);
     }
+    */
 
     //--------------------------------------------------------------------------
     // Helper
@@ -420,6 +468,61 @@ contract BountyManagerTest is ModuleTest {
             cutArry[i] = addrs[i];
         }
         return cutArry;
+    }
+
+    function cutAmounts(uint maxAmount, uint[] memory amounts)
+        internal
+        pure
+        returns (uint[] memory)
+    {
+        uint length = amounts.length;
+        vm.assume(length > 0); //Array has to be at least 1
+
+        for (uint i = 0; i < length; i++) {
+            if (amounts[i] > maxAmount) {
+                amounts[i] = maxAmount;
+            }
+        }
+        return amounts;
+    }
+
+    function createPotentiallyInvalidContributors( //@todo
+    address[] memory addrs, uint[] memory amounts)
+        internal
+        view
+        returns (IBountyManager.Contributor[] memory)
+    {
+        uint length = addrs.length;
+        assert(length <= amounts.length);
+        address a;
+
+        for (uint i; i < length; i++) {
+            //Convert address(0) to address (1)
+            a = addrs[i];
+            if (
+                a == address(0) || a == address(bountyManager)
+                    || a == address(_proposal)
+            ) addrs[i] = address(0x1);
+
+            //Convert amount 0 to 1
+            if (amounts[i] == 0) {
+                amounts[i] = 1;
+            }
+            //If Higher than 1_000_000_000_000_000 convert to 1_000_000_000_000_000 //@note is that a reasonable amount?
+            if (amounts[i] > 1_000_000_000_000_000) {
+                amounts[i] = 1_000_000_000_000_000;
+            }
+        }
+
+        IBountyManager.Contributor[] memory contribs =
+            new IBountyManager.Contributor[](length);
+        for (uint i; i < length; i++) {
+            contribs[i] = IBountyManager.Contributor({
+                addr: addrs[i],
+                claimAmount: amounts[i]
+            });
+        }
+        return contribs;
     }
 
     function createValidContributors(
@@ -453,13 +556,13 @@ contract BountyManagerTest is ModuleTest {
         for (uint i; i < length; i++) {
             contribs[i] = IBountyManager.Contributor({
                 addr: addrs[i],
-                bountyAmount: amounts[i]
+                claimAmount: amounts[i]
             });
         }
         return contribs;
     }
 
-    function assertEqualBounty(
+    /* function assertEqualBounty(
         uint idToProve,
         IBountyManager.Contributor[] memory contribsToTest,
         bytes calldata detailsToTest,
