@@ -172,7 +172,7 @@ contract RoleAuthorizer is
         return hasRole(PROPOSAL_OWNER_ROLE, who);
     }
 
-    /// @notice Overloads {isAuthorized} to return whether an address holds the role required to facilitate
+    /// @notice Overloads {isAuthorized} for a Module to ask whether an address holds the required role to execute
     ///         the current transaction.
     /// @param role The identifier of the role we want to check
     /// @param who  The address on which to perform the check.
@@ -195,7 +195,7 @@ contract RoleAuthorizer is
         return hasRole(roleId, who);
     }
 
-    /// @notice generate a bytes32 role hash for a module role
+    /// @notice Helper function to generate a bytes32 role hash for a module role
     /// @param module The address of the module to generate the hash for
     /// @param role  The ID number of the role to generate the hash for
     function generateRoleId(address module, uint8 role)
@@ -220,14 +220,6 @@ contract RoleAuthorizer is
         }
     }
 
-    /// @notice Burns the admin of a given role.
-    /// @param role The role to remove admin access from
-    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
-    function burnAdminRole(uint8 role) external onlyModule onlySelfManaged {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
-    }
-
     /// @notice Used by a Module to grant a role to a user.
     /// @param role The identifier of the role to grant
     /// @param target  The address to which to grant the role.
@@ -250,5 +242,13 @@ contract RoleAuthorizer is
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _revokeRole(roleId, target);
+    }
+
+    /// @notice Burns the admin of a given role.
+    /// @param role The role to remove admin access from
+    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
+    function burnAdminRole(uint8 role) external onlyModule onlySelfManaged {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
 }
