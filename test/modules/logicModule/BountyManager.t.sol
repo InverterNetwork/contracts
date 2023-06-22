@@ -361,10 +361,9 @@ contract BountyManagerTest is ModuleTest {
         vm.assume(length <= amounts.length);
 
         //Restrict amounts to 20_000 to test properly(doesnt overflow)
-        amounts = cutAmounts(20_000, amounts);
-        //=> maxAmount = 20_000 * 50 = 1_000_000
-        uint maxAmount = 1_000_000;
-
+        amounts = cutAmounts(20_000_000, amounts);
+        //=> maxAmount = 20_000 * 50 = 1_000_000_000
+        uint maxAmount = 1_000_000_000;
         IBountyManager.Contributor[] memory contribs =
             createValidContributors(addrs, amounts);
 
@@ -402,11 +401,54 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.addClaim(1, INVALID_CONTRIBUTORS, bytes(""));
     }
 
-    /* 
     //-----------------------------------------
     //UpdateBounty
 
     function testUpdateBounty(
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
+        bytes calldata details
+    ) public {
+        minimumPayoutAmount = bound(minimumPayoutAmount, 1, type(uint).max);
+        maximumPayoutAmount = bound(maximumPayoutAmount, 1, type(uint).max);
+        vm.assume(minimumPayoutAmount <= maximumPayoutAmount);
+
+        uint id = bountyManager.addBounty(1, 1, bytes(""));
+
+        vm.expectEmit(true, true, true, true);
+        emit BountyUpdated(1, minimumPayoutAmount, maximumPayoutAmount, details);
+
+        bountyManager.updateBounty(
+            1, minimumPayoutAmount, maximumPayoutAmount, details
+        );
+
+        assertEqualBounty(
+            id, minimumPayoutAmount, maximumPayoutAmount, details, 0
+        );
+    }
+
+    function testUpdateBountyModifierInPosition() public {
+        bountyManager.addBounty(1, 1, bytes(""));
+
+        //@todo onlyRole
+
+        //validBountyId
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidBountyId.selector
+        );
+        bountyManager.updateBounty(0, 1, 1, bytes(""));
+
+        //validPayoutAmounts
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidPayoutAmounts.selector
+        );
+        bountyManager.updateBounty(1, 0, 0, bytes(""));
+    }
+
+    //-----------------------------------------
+    //UpdateClaim
+
+    function testUpdateClaim(
         address[] memory addrs,
         uint[] memory amounts,
         bytes calldata details
@@ -415,37 +457,52 @@ contract BountyManagerTest is ModuleTest {
         uint length = addrs.length;
         vm.assume(length <= amounts.length);
 
+        //Restrict amounts to 20_000 to test properly(doesnt overflow)
+        amounts = cutAmounts(20_000_000, amounts);
+        //=> maxAmount = 20_000 * 50 = 1_000_000_000
+        uint maxAmount = 1_000_000_000;
+
         IBountyManager.Contributor[] memory contribs =
             createValidContributors(addrs, amounts);
 
-        uint id = bountyManager.addBounty(DEFAULT_CONTRIBUTORS, bytes(""));
+        bountyManager.addBounty(1, maxAmount, bytes(""));
+        bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
         vm.expectEmit(true, true, true, true);
-        emit BountyUpdated(1, contribs, details);
+        emit ClaimUpdated(2, 1, contribs, details);
 
-        bountyManager.updateBounty(1, contribs, details);
+        bountyManager.updateClaim(2, 1, contribs, details);
 
-        assertEqualBounty(id, contribs, details, false);
+        assertEqualClaim(2, 1, contribs, details);
     }
 
-    function testUpdateBountyModifierInPosition() public {
+    function testUpdateClaimModifierInPosition() public {
+        bountyManager.addBounty(1, 100_000_000, bytes(""));
+        bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
         //@todo onlyRole
 
-        //validContributors
+        //validClaimId
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidClaimId.selector
+        );
+        bountyManager.updateClaim(0, 1, DEFAULT_CONTRIBUTORS, bytes(""));
+
+        //validBountyId
         vm.expectRevert(
             IBountyManager.Module__BountyManager__InvalidBountyId.selector
         );
-        bountyManager.updateBounty(0, DEFAULT_CONTRIBUTORS, bytes(""));
+        bountyManager.updateClaim(2, 0, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        bountyManager.addBounty(DEFAULT_CONTRIBUTORS, bytes(""));
-
-        //validContributors
+        //validContributorsForBounty
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__InvalidContributors.selector
+            IBountyManager
+                .Module__BountyManager__InvalidContributorAmount
+                .selector
         );
-        bountyManager.updateBounty(1, INVALID_CONTRIBUTORS, bytes(""));
+        bountyManager.updateClaim(2, 1, INVALID_CONTRIBUTORS, bytes(""));
     }
 
+    /* 
     //-----------------------------------------
     //VerifyBounty
 
@@ -680,4 +737,6 @@ contract BountyManagerTest is ModuleTest {
         }
         assertEq(currentClaim.details, detailsToTest);
     }
+
+    //function assertContributorAddressToClaimIds//@todo
 }
