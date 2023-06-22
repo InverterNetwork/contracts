@@ -35,19 +35,34 @@ contract BountyManagerTest is ModuleTest {
     IBountyManager.Contributor[] INVALID_CONTRIBUTORS;
 
     event BountyAdded(
-        uint indexed id,
-        IBountyManager.Contributor[] indexed contributors,
-        bytes indexed details
-    );
-    /// @notice Event emitted when a Bounty got updated.
-    event BountyUpdated(
-        uint indexed id,
-        IBountyManager.Contributor[] indexed contributors,
-        bytes indexed details
+        uint indexed bountyId,
+        uint indexed minimumPayoutAmount,
+        uint indexed maximumPayoutAmount,
+        bytes details
     );
 
-    event BountyRemoved(uint indexed id);
-    event BountyVerified(uint indexed id);
+    event BountyUpdated(
+        uint indexed bountyId,
+        uint indexed minimumPayoutAmount,
+        uint indexed maximumPayoutAmount,
+        bytes details
+    );
+
+    event ClaimAdded(
+        uint indexed claimId,
+        uint indexed bountyId,
+        IBountyManager.Contributor[] indexed contributors,
+        bytes details
+    );
+
+    event ClaimUpdated(
+        uint indexed claimId,
+        uint indexed bountyId,
+        IBountyManager.Contributor[] indexed contributors,
+        bytes details
+    );
+
+    event ClaimVerified(uint indexed BountyId, uint indexed ClaimId);
 
     function setUp() public {
         //Add Module to Mock Proposal
@@ -150,7 +165,6 @@ contract BountyManagerTest is ModuleTest {
 
         //Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000, amounts);
-        //=> maxAmount = 20_000 * 50 = 1_000_000
 
         //ID is 1
         bountyManager.addBounty(
@@ -272,17 +286,22 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.verifyClaim(claimId, bountyId);
     }
 
-    /* 
-
     //--------------------------------------------------------------------------
     // Getter
     // Just test if Modifier is in position, because otherwise trivial
 
-    function testGetRecurringPaymentInformationModifierInPosition() public {
+    function testGetBountyInformationModifierInPosition() public {
         vm.expectRevert(
             IBountyManager.Module__BountyManager__InvalidBountyId.selector
         );
         bountyManager.getBountyInformation(0);
+    }
+
+    function testGetClaimInformationModifierInPosition() public {
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidClaimId.selector
+        );
+        bountyManager.getClaimInformation(0);
     }
 
     //--------------------------------------------------------------------------
@@ -292,6 +311,47 @@ contract BountyManagerTest is ModuleTest {
     //AddBounty
 
     function testAddBounty(
+        uint testAmount,
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
+        bytes calldata details
+    ) public {
+        testAmount = bound(testAmount, 1, 30); //Reasonable Amount
+        minimumPayoutAmount = bound(minimumPayoutAmount, 1, type(uint).max);
+        maximumPayoutAmount = bound(maximumPayoutAmount, 1, type(uint).max);
+        vm.assume(minimumPayoutAmount <= maximumPayoutAmount);
+
+        uint id;
+        for (uint i; i < testAmount; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit BountyAdded(
+                i + 1, minimumPayoutAmount, maximumPayoutAmount, details
+            );
+
+            id = bountyManager.addBounty(
+                minimumPayoutAmount, maximumPayoutAmount, details
+            );
+
+            assertEqualBounty(
+                id, minimumPayoutAmount, maximumPayoutAmount, details, 0
+            );
+        }
+    }
+
+    function testAddBountyModifierInPosition() public {
+        //@todo onlyRole
+
+        //validPayoutAmounts
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidPayoutAmounts.selector
+        );
+        bountyManager.addBounty(0, 0, bytes(""));
+    }
+
+    //-----------------------------------------
+    //AddClaim
+
+    function testAddClaim(
         address[] memory addrs,
         uint[] memory amounts,
         bytes calldata details
@@ -300,31 +360,49 @@ contract BountyManagerTest is ModuleTest {
         uint length = addrs.length;
         vm.assume(length <= amounts.length);
 
+        //Restrict amounts to 20_000 to test properly(doesnt overflow)
+        amounts = cutAmounts(20_000, amounts);
+        //=> maxAmount = 20_000 * 50 = 1_000_000
+        uint maxAmount = 1_000_000;
+
         IBountyManager.Contributor[] memory contribs =
             createValidContributors(addrs, amounts);
+
+        bountyManager.addBounty(1, maxAmount, bytes(""));
 
         uint id;
 
         for (uint i = 0; i < length; i++) {
             vm.expectEmit(true, true, true, true);
-            emit BountyAdded(i + 1, contribs, details);
+            //id starts at 2 because the id counter starts at 1 and addBounty increases it by 1 again
+            emit ClaimAdded(i + 2, 1, contribs, details);
 
-            id = bountyManager.addBounty(contribs, details);
-
-            assertEqualBounty(id, contribs, details, false);
+            id = bountyManager.addClaim(1, contribs, details);
+            assertEqualClaim(id, 1, contribs, details);
         }
     }
 
-    function testAddBountyModifierInPosition() public {
+    function testAddClaimModifierInPosition() public {
+        bountyManager.addBounty(1, 1, bytes(""));
+
         //@todo onlyRole
 
-        //validContributors
+        //validBountyId
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__InvalidContributors.selector
+            IBountyManager.Module__BountyManager__InvalidBountyId.selector
         );
-        bountyManager.addBounty(INVALID_CONTRIBUTORS, bytes(""));
+        bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
+
+        //validContributorsForBounty
+        vm.expectRevert(
+            IBountyManager
+                .Module__BountyManager__InvalidContributorAmount
+                .selector
+        );
+        bountyManager.addClaim(1, INVALID_CONTRIBUTORS, bytes(""));
     }
 
+    /* 
     //-----------------------------------------
     //UpdateBounty
 
@@ -562,28 +640,44 @@ contract BountyManagerTest is ModuleTest {
         return contribs;
     }
 
-    /* function assertEqualBounty(
+    function assertEqualBounty(
         uint idToProve,
-        IBountyManager.Contributor[] memory contribsToTest,
+        uint minimumPayoutAmountToTest,
+        uint maximumPayoutAmountToTest,
         bytes calldata detailsToTest,
-        bool verifiedToTest
+        uint claimedByToTest
     ) internal {
         IBountyManager.Bounty memory currentBounty =
             bountyManager.getBountyInformation(idToProve);
 
+        assertEq(currentBounty.minimumPayoutAmount, minimumPayoutAmountToTest);
+        assertEq(currentBounty.maximumPayoutAmount, maximumPayoutAmountToTest);
+        assertEq(currentBounty.details, detailsToTest);
+        assertEq(currentBounty.claimedBy, claimedByToTest);
+    }
+
+    function assertEqualClaim(
+        uint idToProve,
+        uint bountyidToTest,
+        IBountyManager.Contributor[] memory contribsToTest,
+        bytes calldata detailsToTest
+    ) internal {
+        IBountyManager.Claim memory currentClaim =
+            bountyManager.getClaimInformation(idToProve);
+
         IBountyManager.Contributor[] memory currentContribs =
-            currentBounty.contributors;
+            currentClaim.contributors;
 
         uint length = currentContribs.length;
 
+        assertEq(currentClaim.bountyId, bountyidToTest);
         assertEq(length, contribsToTest.length);
         for (uint i = 0; i < length; ++i) {
             assertEq(currentContribs[i].addr, contribsToTest[i].addr);
             assertEq(
-                currentContribs[i].bountyAmount, contribsToTest[i].bountyAmount
+                currentContribs[i].claimAmount, contribsToTest[i].claimAmount
             );
         }
-        assertEq(currentBounty.details, detailsToTest);
-        assertEq(currentBounty.verified, verifiedToTest);
-    } */
+        assertEq(currentClaim.details, detailsToTest);
+    }
 }
