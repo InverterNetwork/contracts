@@ -20,6 +20,7 @@ contract RoleAuthorizer is
 
     // Core roles for a proposal. They correspond to uint8(0) and uint(1)
     // NOTE that proposal owner can register more global roles using numbers from 2 onward. They'l need through the DEFAULT_ADMIN_ROLE for this.
+    // TODO Maybe it would be worth it to create an extra function that bypasses DEFAULT_ADMIN_ROLE, but only for proposal roles and only by the owner? This way it would become easier to create global roles.
     enum CoreRoles {
         OWNER, // Partial Access to Protected Functions
         MANAGER // Full Access to Protected Functions
