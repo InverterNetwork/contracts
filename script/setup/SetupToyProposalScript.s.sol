@@ -25,7 +25,7 @@ contract SetupToyProposalScript is Test, DeploymentScript {
     uint funder1PrivateKey = proposalOwnerPrivateKey;
     address funder1 = proposalOwner;
 
-    // Every Milestone needs some contributors
+    // Example Milestone contributors
     IMilestoneManager.Contributor alice = IMilestoneManager.Contributor(
         address(0xA11CE), 50_000_000, "AliceIdHash"
     );
@@ -33,7 +33,7 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
 
     //-------------------------------------------------------------------------
-    // Storage
+    // Storage for internal use
 
     ERC20Mock token;
     IProposal test_proposal;
@@ -49,6 +49,7 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         // Setup
 
         // First we deploy a mock ERC20 to act as funding token for the proposal. It has a public mint function.
+        // In a real deployment this token will probably already exist.
         vm.startBroadcast(proposalOwnerPrivateKey);
         {
             token = new ERC20Mock("Mock", "MOCK");
@@ -56,33 +57,35 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         vm.stopBroadcast();
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
+        // This will be done by the team once, from then on the FE/BE will only clone the deployed implementations
         address proposalFactory = DeploymentScript.run();
 
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
+        // NOTE that the Metadata values are defined in  "../deployment/DeploymentScript.s.sol"
 
-        // Proposal: Owner, funding token
+        // Necessary Proposal Configuration: Owner, funding token
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
             .ProposalConfig({owner: proposalOwner, token: token});
 
-        // Funding Manager: Metadata, token address
+        // Necessary Funding Manager Configuration: Metadata, token address
         IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
             fundingManagerMetadata, abi.encode(address(token))
         );
 
-        // Payment Processor: only Metadata
+        // Necessary Payment Processor Configuration: only Metadata
         IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
             IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
 
-        // Authorizer: Metadata, initial authorized addresses
+        // Necessary Authorizer: Configuration  Metadata, initial authorized addresses
         initialAuthorizedAddresses.push(proposalOwner);
         IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
         IProposalFactory.ModuleConfig(
             authorizerMetadata, abi.encode(initialAuthorizedAddresses)
         );
 
-        // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
+        // Necessary MilestoneManager Configuration: Metadata, salary precision, fee percentage, fee treasury address
         IProposalFactory.ModuleConfig memory milestoneManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
             milestoneManagerMetadata,
@@ -180,10 +183,13 @@ contract SetupToyProposalScript is Test, DeploymentScript {
 
         vm.startBroadcast(proposalOwnerPrivateKey);
         {
+            // since we are using a mock token, we mint some funds
             token.mint(address(proposalOwner), initialDeposit);
 
+            // we apporve the funding manager to spend the tokens
             token.approve(address(fundingManager), initialDeposit);
 
+            // the Proposal deposits the initial deposit. THIS IS NECESSARY FOR THE MANAGER TO WORK CORRECTLY
             fundingManager.deposit(initialDeposit);
         }
         vm.stopBroadcast();
@@ -192,6 +198,7 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         // Mint some tokens for the funder and deposit them
         vm.startBroadcast(funder1PrivateKey);
         {
+            // same as above, this time for the first funder
             token.mint(funder1, 1000e18);
             token.approve(address(fundingManager), 1000e18);
             fundingManager.deposit(1000e18);
