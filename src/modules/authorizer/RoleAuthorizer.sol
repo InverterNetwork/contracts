@@ -19,7 +19,7 @@ contract RoleAuthorizer is
     // Storage
 
     // Core roles for a proposal. They correspond to uint8(0) and uint(1)
-    // If necessary, a proposal can register more roles using number  from 2 onward.
+    // NOTE that proposal owner can register more global roles using numbers from 2 onward.
     enum CoreRoles {
         OWNER, // Partial Access to Protected Functions
         MANAGER // Full Access to Protected Functions
