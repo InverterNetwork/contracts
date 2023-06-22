@@ -15,25 +15,31 @@ contract RoleAuthorizer is
     AccessControlEnumerableUpgradeable,
     Module
 {
-    // Probably not necessary here, but in proposal
-    enum Roles {
+    //--------------------------------------------------------------------------
+    // Storage
+
+    // Core roles for a proposal. They correspond to uint8(0) and uint(1)
+    // If necessary, a proposal can register more roles using number  from 2 onward.
+    enum CoreRoles {
         OWNER, // Partial Access to Protected Functions
         MANAGER // Full Access to Protected Functions
     }
 
-    /// @notice Event emitted when a module toggles self management
-    /// @param who The module.
-    /// @param newValue The new value of the self management flag.
-    event setRoleSelfManagement(address who, bool newValue);
+    // Stores the if a module wants to use it's own roles
+    // If false it uses the proposal's  core roles.
+    mapping(address => bool) public selfManagedModules;
 
-    error Module__RoleAuthorizer__OnlyCallableByModule();
-    error Module__RoleAuthorizer__ModuleNotSelfManaged();
-    error Module__RoleAuthorizer__OwnerRoleCannotBeEmpty();
+    // Stored for easy public reference. Other Modules can assume the following roles to exist
+    bytes32 public PROPOSAL_OWNER_ROLE;
+    bytes32 public PROPOSAL_MANAGER_ROLE;
+
+    bytes32 public constant BURN_ADMIN_ROLE =
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     //--------------------------------------------------------------------------
     // Modifiers
-    /// @notice checks that the caller is an active module
 
+    /// @notice Verifies that the caller is an active module
     modifier onlyModule() {
         if (!proposal().isModule(_msgSender())) {
             revert Module__RoleAuthorizer__OnlyCallableByModule();
@@ -41,6 +47,7 @@ contract RoleAuthorizer is
         _;
     }
 
+    /// @notice Verifies that the calling module has turned on self-management
     modifier onlySelfManaged() {
         if (!selfManagedModules[_msgSender()]) {
             revert Module__RoleAuthorizer__ModuleNotSelfManaged();
@@ -48,10 +55,11 @@ contract RoleAuthorizer is
         _;
     }
 
+    /// @notice Verifies that the owner being removed is not the last one
     modifier notLastOwner(bytes32 role) {
         if (
             role == PROPOSAL_OWNER_ROLE
-                && getRoleMemberCount(PROPOSAL_OWNER_ROLE) == 1
+                && getRoleMemberCount(PROPOSAL_OWNER_ROLE) <= 1
         ) {
             revert Module__RoleAuthorizer__OwnerRoleCannotBeEmpty();
         }
@@ -59,21 +67,10 @@ contract RoleAuthorizer is
     }
 
     //--------------------------------------------------------------------------
-    // Storage
-
-    // Stores the if a module wants to use it's own roles
-    // If false it uses the proposal's roles.
-    mapping(address => bool) public selfManagedModules;
-
-    // For public reference. Other Modules can assume the following roles to exist
-    bytes32 public PROPOSAL_OWNER_ROLE;
-    bytes32 public PROPOSAL_MANAGER_ROLE;
-
-    bytes32 public constant BURN_ADMIN_ROLE =
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    // Constructor and initialization
 
     constructor() {
-        // set up the BURN_ADMIN_ROLE
+        // make the BURN_ADMIN_ROLE immutable
         _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
     }
 
@@ -97,11 +94,13 @@ contract RoleAuthorizer is
     ) internal onlyInitializing {
         // Note about DEFAULT_ADMIN_ROLE: The DEFAULT_ADMIN_ROLE has admin privileges on all roles in the contract. It starts out empty, but we set the proposal owners as "admins of the admin role",
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
-        // Modules can opt out of this in individual roles by  setting the admin role to "BURN_ADMIN_ROLE" which is an immutable empty set of roles.
+        // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        // Generate RoleIDs for the Proposal roles:
-        PROPOSAL_OWNER_ROLE = generateRoleId(address(proposal()), 0);
-        PROPOSAL_MANAGER_ROLE = generateRoleId(address(proposal()), 1);
+        // Store RoleIDs for the Proposal roles:
+        PROPOSAL_OWNER_ROLE =
+            generateRoleId(address(proposal()), uint8(CoreRoles.OWNER));
+        PROPOSAL_MANAGER_ROLE =
+            generateRoleId(address(proposal()), uint8(CoreRoles.MANAGER));
 
         // Set up OWNER role structure:
 
@@ -130,31 +129,55 @@ contract RoleAuthorizer is
     }
 
     //--------------------------------------------------------------------------
-    // Override functions
+    // Overloaded and overriden functions
 
+    /// @notice Overloads {hasRole} to check if an address has a specific role from a module
+    /// @param module The module on which we want to check the role
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
+    /// @dev If the Module isn't self-managing, the fact that an address has the role DOES NOT mean it will be able to execute actions acting as it.
     function hasRole(address module, uint8 role, address who)
         public
         view
         returns (bool)
     {
-        // Note: if module has delegated management, the fact that the address is authorized must not mean that it will be able to execute transactions
-        bytes32 roleId = generateRoleId(address(proposal()), role);
+        bytes32 roleId = generateRoleId(module, role);
 
         return hasRole(roleId, who);
     }
 
-    /**
-     * @dev Overload {_revokeRole} to block empty owner role
-     */
-    function _revokeRole(bytes32 role, address account)
+    /// @notice Overrides {_revokeRole} to prevent having an empty OWNER role
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
+    function _revokeRole(bytes32 role, address who)
         internal
         virtual
         override
         notLastOwner(role)
     {
-        super._revokeRole(role, account);
+        super._revokeRole(role, who);
     }
 
+    //--------------------------------------------------------------------------
+    // Public functions
+
+    // View functions
+
+    /// @notice Returns whether an address is authorized to facilitate
+    ///         the current transaction.
+    /// @param who  The address on which to perform the check.
+    /// @dev Implements the function of the IAuthorizer interface by defauling to check if the caller holds the OWNER role.
+    function isAuthorized(address who) external view returns (bool) {
+        // In case no role is specfied, we ask if the caller is an owner
+        return hasRole(PROPOSAL_OWNER_ROLE, who);
+    }
+
+    /// @notice Overloads {isAuthorized} to return whether an address holds the role required to facilitate
+    ///         the current transaction.
+    /// @param role The identifier of the role we want to check
+    /// @param who  The address on which to perform the check.
+    /// @dev If the role is not self-managed, it will default to the proposal roles
+    /// @dev If not, it will use the calling address to generate the role ID. Therefore, for checking on anything other than itself, hasRole() should be used
     function isAuthorized(uint8 role, address who)
         external
         view
@@ -172,11 +195,21 @@ contract RoleAuthorizer is
         return hasRole(roleId, who);
     }
 
-    function isAuthorized(address who) external view returns (bool) {
-        // In case no role is specfied, we ask if the caller is an owner
-        return hasRole(PROPOSAL_OWNER_ROLE, who);
+    /// @notice generate a bytes32 role hash for a module role
+    /// @param module The address of the module to generate the hash for
+    /// @param role  The ID number of the role to generate the hash for
+    function generateRoleId(address module, uint8 role)
+        public
+        pure
+        returns (bytes32)
+    {
+        // Generate Role ID from module and role
+        return keccak256(abi.encodePacked(module, role));
     }
 
+    // State-altering functions
+
+    /// @notice Toggles if a Module self-manages or defaults to the proposal's roles.
     function toggleSelfManagement() external onlyModule {
         if (selfManagedModules[_msgSender()]) {
             selfManagedModules[_msgSender()] = false;
@@ -187,11 +220,17 @@ contract RoleAuthorizer is
         }
     }
 
+    /// @notice Burns the admin of a given role.
+    /// @param role The role to remove admin access from
+    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
     function burnAdminRole(uint8 role) external onlyModule onlySelfManaged {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
 
+    /// @notice Used by a Module to grant a role to a user.
+    /// @param role The identifier of the role to grant
+    /// @param target  The address to which to grant the role.
     function grantRoleFromModule(uint8 role, address target)
         external
         onlyModule
@@ -201,6 +240,9 @@ contract RoleAuthorizer is
         _grantRole(roleId, target);
     }
 
+    /// @notice Used by a Module to revoke a role from a user.
+    /// @param role The identifier of the role to revoke
+    /// @param target  The address to revoke the role from.
     function revokeRoleFromModule(uint8 role, address target)
         external
         onlyModule
@@ -208,14 +250,5 @@ contract RoleAuthorizer is
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _revokeRole(roleId, target);
-    }
-
-    function generateRoleId(address module, uint8 role)
-        public
-        pure
-        returns (bytes32)
-    {
-        // Generate Role ID from module and role
-        return keccak256(abi.encodePacked(module, role));
     }
 }

@@ -199,7 +199,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                RoleAuthorizer
+                IRoleAuthorizer
                     .Module__RoleAuthorizer__OwnerRoleCannotBeEmpty
                     .selector
             )
@@ -358,8 +358,8 @@ contract RoleAuthorizerTest is Test {
     // - Should not revert if role is already granted, but not emit events either
 
     function testGrantRoleFromModule() public {
-        address newModule = _setupMockSelfManagedModule();
         //If this doesn't revert, the test passes
+        _setupMockSelfManagedModule();
     }
 
     function testGrantRoleFromModuleFailsIfCalledByNonModule() public {
@@ -386,7 +386,7 @@ contract RoleAuthorizerTest is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RoleAuthorizer
+                IRoleAuthorizer
                     .Module__RoleAuthorizer__OnlyCallableByModule
                     .selector
             )
@@ -409,7 +409,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                RoleAuthorizer
+                IRoleAuthorizer
                     .Module__RoleAuthorizer__ModuleNotSelfManaged
                     .selector
             )
@@ -491,7 +491,7 @@ contract RoleAuthorizerTest is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                RoleAuthorizer
+                IRoleAuthorizer
                     .Module__RoleAuthorizer__OnlyCallableByModule
                     .selector
             )
@@ -514,7 +514,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                RoleAuthorizer
+                IRoleAuthorizer
                     .Module__RoleAuthorizer__ModuleNotSelfManaged
                     .selector
             )
@@ -565,8 +565,11 @@ contract RoleAuthorizerTest is Test {
     // Test module is using own roles when selfmanaged
     // Test module can correctly return to managed mode
 
-    // Test burnAdminRole
-    // Test burnAdmin changes state
+    // Test the burnAdminRole
+    // -> Test burnAdmin changes state
+    // -> Test a role with burnt admin cannot be modified by admin
+    // -> Modules with burnt admin CAN return to managed state
+    // -> If they stop selfManaging and then return to selfManaged, the admin is still burned.
 
     // =========================================================================
     // Test Helper Functions
