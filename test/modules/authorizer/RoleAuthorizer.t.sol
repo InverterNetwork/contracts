@@ -75,9 +75,21 @@ contract RoleAuthorizerTest is Test {
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );
-        assertEq(_authorizer.isAuthorized(1, address(this)), true);
-        assertEq(_authorizer.isAuthorized(0, ALBA), true);
-        assertEq(_authorizer.isAuthorized(0, address(this)), false);
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.PROPOSAL_MANAGER_ROLE(), address(this)
+            ),
+            true
+        );
+        assertEq(
+            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA), true
+        );
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.PROPOSAL_OWNER_ROLE(), address(this)
+            ),
+            false
+        );
     }
 
     //--------------------------------------------------------------------------------------
@@ -358,8 +370,26 @@ contract RoleAuthorizerTest is Test {
     // - Should not revert if role is already granted, but not emit events either
 
     function testGrantRoleFromModule() public {
-        //If this doesn't revert, the test passes
-        _setupMockSelfManagedModule();
+        address newModule = _setupMockSelfManagedModule();
+
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
+                ALBA
+            ),
+            false
+        );
+
+        vm.prank(newModule);
+        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), ALBA);
+
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
+                ALBA
+            ),
+            true
+        );
     }
 
     function testGrantRoleFromModuleFailsIfCalledByNonModule() public {
@@ -456,8 +486,30 @@ contract RoleAuthorizerTest is Test {
     function testRevokeRoleFromModule() public {
         address newModule = _setupMockSelfManagedModule();
 
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
+                BOB
+            ),
+            false
+        );
+
         vm.prank(newModule);
-        _authorizer.revokeRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), address(BOB));
+
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
+                BOB
+            ),
+            true
+        );
+
+        vm.prank(newModule);
+        _authorizer.revokeRoleFromModule(
+            uint8(ModuleRoles.ROLE_0), address(BOB)
+        );
+
         assertEq(
             _authorizer.hasRole(
                 _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
@@ -478,7 +530,7 @@ contract RoleAuthorizerTest is Test {
                 _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
                 BOB
             ),
-            true
+            false
         );
     }
 
@@ -502,7 +554,7 @@ contract RoleAuthorizerTest is Test {
                 _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
                 BOB
             ),
-            true
+            false
         );
     }
 
@@ -528,7 +580,7 @@ contract RoleAuthorizerTest is Test {
                 _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
                 BOB
             ),
-            true
+            false
         );
     }
 
@@ -555,21 +607,280 @@ contract RoleAuthorizerTest is Test {
 
     // =========================================================================
     // Test granting and revoking ADMIN control, and test admin control over module roles
+
+    function testGrantAdminRole() public {
+        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        vm.prank(ALBA);
+        _authorizer.grantRole(adminRole, BOB);
+        assertTrue(_authorizer.hasRole(adminRole, BOB));
+    }
+
+    function testGrantAdminRoleFailsIfNotOwner() public {
+        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        vm.prank(BOB);
+        vm.expectRevert();
+        _authorizer.grantRole(adminRole, ALBA);
+        assertFalse(_authorizer.hasRole(adminRole, ALBA));
+    }
+
     // Test that only Owner can change admin
-    // Test that admin can change nondefined roles
+    function testChangeRoleAdminOnModuleRole() public {
+        // First, we make BOB admin
+        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        vm.prank(ALBA);
+        _authorizer.grantRole(adminRole, BOB);
+        assertTrue(_authorizer.hasRole(adminRole, BOB));
+
+        //Then we set up a mock module
+        address newModule = _setupMockSelfManagedModule();
+        bytes32 roleId =
+            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
+
+        // Now we set the OWNER as Role admin
+        vm.startPrank(BOB);
+        _authorizer.transferAdminRole(roleId, _authorizer.PROPOSAL_OWNER_ROLE());
+        vm.stopPrank();
+
+        // ALBA can now freely grant and revoke roles
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.startPrank(ALBA);
+        _authorizer.grantRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), true);
+        _authorizer.revokeRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+    }
+
+    function testChangeRoleAdminOnModuleRoleFailsIfNotAdmin() public {
+        //We set up a mock module
+        address newModule = _setupMockSelfManagedModule();
+
+        bytes32 roleId =
+            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
+        bytes32 ownerRole = _authorizer.PROPOSAL_OWNER_ROLE(); //Buffer this to time revert
+
+        // BOB is not allowed to do this
+        vm.startPrank(BOB);
+        vm.expectRevert();
+        _authorizer.transferAdminRole(roleId, ownerRole);
+        vm.stopPrank();
+    }
+
     // Test that admin can change module roles if self managed and if not
+    function testAdminIgnoresIfRoleIsSelfManaged() public {
+        // First, we make ALBA admin
+        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        vm.prank(ALBA);
+        _authorizer.grantRole(adminRole, ALBA);
+        assertTrue(_authorizer.hasRole(adminRole, ALBA));
+
+        //Then we set up a mock module
+        address newModule = _setupMockSelfManagedModule();
+        bytes32 roleId =
+            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
+
+        // ALBA can now freely grant and revoke roles
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.startPrank(ALBA);
+        _authorizer.grantRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), true);
+        _authorizer.revokeRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.stopPrank();
+
+        // The module returns to Managed mode
+        vm.prank(newModule);
+
+        // ALBA can still freely grant and revoke roles
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.startPrank(ALBA);
+        _authorizer.grantRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), true);
+        _authorizer.revokeRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.stopPrank();
+    }
     // Test that ADMIN cannot change module roles if admin role was burned
+
+    function testAdminCannotModifyRoleIfAdminBurned() public {
+        // First, we make BOB admin
+        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        vm.prank(ALBA);
+        _authorizer.grantRole(adminRole, BOB);
+        assertTrue(_authorizer.hasRole(adminRole, BOB));
+
+        //Then we set up a mock module and buffer the role with burned admin
+        address newModule = _setupMockSelfManagedModule();
+        bytes32 roleId =
+            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_1));
+
+        // BOB can NOT grant and revoke roles even though he's admin
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.startPrank(BOB);
+        vm.expectRevert();
+        _authorizer.grantRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.expectRevert();
+        _authorizer.revokeRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.stopPrank();
+    }
+
+    /*function testOwnerCanStillModifyRoleIfAdminBurnedButInManagedState()
+        public
+    {
+        // First, we make BOB admin
+        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        vm.prank(ALBA);
+        _authorizer.grantRole(adminRole, BOB);
+        assertTrue(_authorizer.hasRole(adminRole, BOB));
+
+        //Then we set up a mock module and buffer the role with burned admin
+        address newModule = _setupMockSelfManagedModule();
+        bytes32 roleId =
+            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_1));
+
+        // We return the module to managed state.
+        vm.prank(newModule);
+        _authorizer.toggleSelfManagement();
+
+        // As seen in the test above BOB can NOT grant and revoke roles even though he's admin
+        // BUT: ALBA, as an OWNER, can
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.startPrank(ALBA);
+        _authorizer.grantRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), true);
+        _authorizer.revokeRole(roleId, BOB);
+        assertEq(_authorizer.hasRole(roleId, BOB), false);
+        vm.stopPrank();
+    }*/
 
     // Test toggleSelfManagement
     // Test selfManagement gets recognized
+    function testToggleSelfManagement() public {
+        // we set up a mock module and buffer the role with burned admin
+        address newModule = _setupMockSelfManagedModule();
+
+        // As per the genrating function, it starts as self-managed
+        assertTrue(_authorizer.selfManagedModules(newModule));
+        // We return the module to managed state.
+        vm.prank(newModule);
+        _authorizer.toggleSelfManagement();
+
+        //Now it isn't self-managed anymore
+        assertFalse(_authorizer.selfManagedModules(newModule));
+    }
     // Test module is using own roles when selfmanaged
+
+    function testModuleOnlyUsesOwnRolesWhenSelfManaged() public {
+        // First, we  set up a modul and authorize BOB
+        address newModule = _setupMockSelfManagedModule();
+
+        vm.startPrank(newModule);
+        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        assertTrue(
+            _authorizer.hasRole(newModule, uint8(ModuleRoles.ROLE_0), BOB)
+        );
+
+        // BOB is authorized
+        assertTrue(_authorizer.isAuthorized(uint8(0), BOB));
+
+        // But ALBA, as owner, is not
+        assertFalse(_authorizer.isAuthorized(uint8(0), ALBA));
+
+        vm.stopPrank();
+    }
+
+    function testModuleOnlyUsesProposalRolesWhenNotSelfManaged() public {
+        // First, we  set up a module and authorize BOB
+        address newModule = _setupMockSelfManagedModule();
+
+        vm.startPrank(newModule);
+        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        assertTrue(
+            _authorizer.hasRole(newModule, uint8(ModuleRoles.ROLE_0), BOB)
+        );
+
+        // We return the module to managed state.
+        _authorizer.toggleSelfManagement();
+
+        // BOB is not authorized anymore
+        assertFalse(_authorizer.isAuthorized(uint8(0), BOB));
+
+        // But ALBA, as owner, is
+        assertTrue(_authorizer.isAuthorized(uint8(0), ALBA));
+
+        vm.stopPrank();
+    }
     // Test module can correctly return to managed mode
+
+    function testModuleReturnToManagedMode() public {
+        //testModuleOnlyUsesProposalRolesWhenNotSelfManaged implicitly tests this
+    }
 
     // Test the burnAdminRole
     // -> Test burnAdmin changes state
+    function testBurnAdminChangesRoleState() public {
+        // _setupMockSelfManagedModule implicitly test this
+    }
     // -> Test a role with burnt admin cannot be modified by admin
+
+    function testModifyRoleByAdminFailsIfAdminBurned() public {
+        // First, we make BOB admin
+        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        vm.prank(ALBA);
+        _authorizer.grantRole(adminRole, BOB);
+        assertTrue(_authorizer.hasRole(adminRole, BOB));
+
+        //Then we set up a mock module and buffer both roles
+        address newModule = _setupMockSelfManagedModule();
+        bytes32 roleId_0 =
+            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
+        bytes32 roleId_1 =
+            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_1));
+
+        vm.startPrank(BOB);
+
+        // BOB can modify role 0
+        assertEq(_authorizer.hasRole(roleId_0, ALBA), false);
+        _authorizer.grantRole(roleId_0, ALBA);
+        assertEq(_authorizer.hasRole(roleId_0, ALBA), true);
+        _authorizer.revokeRole(roleId_0, ALBA);
+        assertEq(_authorizer.hasRole(roleId_0, ALBA), false);
+
+        // But not role 1
+        vm.expectRevert();
+        _authorizer.grantRole(roleId_1, ALBA);
+        assertEq(_authorizer.hasRole(roleId_1, ALBA), false);
+        vm.expectRevert();
+        _authorizer.revokeRole(roleId_1, ALBA);
+        assertEq(_authorizer.hasRole(roleId_1, ALBA), false);
+        vm.stopPrank();
+    }
+
     // -> Modules with burnt admin CAN return to managed state
-    // -> If they stop selfManaging and then return to selfManaged, the admin is still burned.
+    function testBurnedModuleCorrectlyReturnToManagedState() public {
+        // Same as testModuleOnlyUsesProposalRolesWhenNotSelfManaged but with ROLE_1
+
+        // First, we  set up a module and authorize BOB
+        address newModule = _setupMockSelfManagedModule();
+
+        vm.startPrank(newModule);
+        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_1), BOB);
+        assertTrue(
+            _authorizer.hasRole(newModule, uint8(ModuleRoles.ROLE_1), BOB)
+        );
+
+        // We return the module to managed state.
+        _authorizer.toggleSelfManagement();
+
+        // BOB is not authorized anymore
+        assertFalse(_authorizer.isAuthorized(uint8(1), BOB));
+
+        // But ALBA, as owner, is (uint8(0) because we are querying her owner role, not the proposal manager role)
+        assertTrue(_authorizer.isAuthorized(uint8(0), ALBA));
+
+        vm.stopPrank();
+    }
 
     // =========================================================================
     // Test Helper Functions
@@ -588,16 +899,16 @@ contract RoleAuthorizerTest is Test {
         vm.startPrank(address(mockModule));
         _authorizer.toggleSelfManagement();
 
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), address(BOB));
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_1), address(BOB));
+        //_authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), address(BOB));
+        //_authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_1), address(BOB));
         _authorizer.burnAdminRole(uint8(ModuleRoles.ROLE_1));
 
-        assertTrue(
+        /*assertTrue(
             _authorizer.isAuthorized(uint8(ModuleRoles.ROLE_0), address(BOB))
         );
         assertTrue(
             _authorizer.isAuthorized(uint8(ModuleRoles.ROLE_1), address(BOB))
-        );
+        );*/
 
         vm.stopPrank();
 

@@ -252,4 +252,14 @@ contract RoleAuthorizer is
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
+
+    /// @notice Transfer the admin rights to a given role.
+    /// @param roleId The role on which to peform the admin transfer
+    /// @param newAdmin The new role to which to transfer admin access to
+    function transferAdminRole(bytes32 roleId, bytes32 newAdmin)
+        external
+        onlyRole(getRoleAdmin(roleId))
+    {
+        _setRoleAdmin(roleId, newAdmin);
+    }
 }
