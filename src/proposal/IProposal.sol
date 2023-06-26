@@ -21,6 +21,12 @@ interface IProposal is IModuleManager {
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
 
+    /// @notice Passed module name is invalid
+    error DependencyInjection__InvalidModuleName();
+
+    /// @notice The given module is not used in the proposal
+    error DependencyInjection__ModuleNotUsedInProposal();
+
     //--------------------------------------------------------------------------
     // Functions
 

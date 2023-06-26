@@ -8,6 +8,11 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
+import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
+import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
+import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
+import {RebasingFundingManager} from "src/modules/fundingManager/RebasingFundingManager.sol";
+
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 
 // Internal Interfaces
@@ -17,6 +22,7 @@ import {
     IPaymentProcessor,
     IAuthorizer
 } from "src/proposal/IProposal.sol";
+import {IModule} from "src/modules/base/IModule.sol";
 
 /**
  * @title Proposal
@@ -117,6 +123,83 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         __ModuleManager_addModule(address(fundingManager_));
         __ModuleManager_addModule(address(authorizer_));
         __ModuleManager_addModule(address(paymentProcessor_));
+    }
+
+    //--------------------------------------------------------------------------
+    // Module search (late dependency) and verification functions
+
+    function _isModuleUsedInProposal(string calldata moduleName) private view returns (uint256, address) {
+        address[] memory moduleAddresses = listModules();
+        uint256 moduleAddressesLength = moduleAddresses.length;
+        string memory currentModuleName;
+        uint256 index;
+
+        for(; index < moduleAddressesLength; ) {
+            currentModuleName = IModule(moduleAddresses[index]).title();
+            
+            if(bytes(currentModuleName).length == bytes(moduleName).length){
+                if(keccak256(abi.encodePacked(currentModuleName)) == keccak256(abi.encodePacked(moduleName))) {
+                    return (index, moduleAddresses[index]);
+                }
+            }
+
+            unchecked {
+                ++index;
+            }
+        }
+
+        return (type(uint256).max, address(0));
+
+    }
+
+    function findModuleAddressInProposal(string calldata moduleName) external view returns (address) {
+        (uint256 moduleIndex, address moduleAddress) = _isModuleUsedInProposal(moduleName);
+        if( moduleIndex == type(uint256).max) {
+            revert DependencyInjection__ModuleNotUsedInProposal();
+        }
+
+        return moduleAddress;
+    }
+
+    // Module address verification functions
+    function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress) external view returns (bool) {
+        ListAuthorizer listAuthorizer = ListAuthorizer(listAuthorizerAddress);
+
+        try listAuthorizer.getAmountAuthorized() returns(uint256) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsSingleVoteGovernorModule(address singleVoteGovernorAddress) external view returns (bool) {
+        SingleVoteGovernor singleVoteGovernor = SingleVoteGovernor(singleVoteGovernorAddress);
+
+        try singleVoteGovernor.getReceipt(type(uint256).max, address(0)) returns(SingleVoteGovernor.Receipt memory) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsPaymentClient(address paymentClientAddress) external view returns(bool) {
+        PaymentClient paymentClient = PaymentClient(paymentClientAddress);
+
+        try paymentClient.outstandingTokenAmount() returns(uint256) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsRebasingFundingManager(address rebasingFundingManagerAddress) external view returns(bool) {
+        RebasingFundingManager rebasingFundingManager = RebasingFundingManager(rebasingFundingManagerAddress);
+
+        try rebasingFundingManager.token() returns(IERC20) {
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     //--------------------------------------------------------------------------
