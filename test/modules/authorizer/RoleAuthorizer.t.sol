@@ -122,6 +122,30 @@ contract RoleAuthorizerTest is Test {
         );
     }
 
+        function testInitWithoutInitialOwners() public {
+        //Checks that address list gets correctly stored on initialization if there are no owners given
+        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+
+        address authImpl = address(new RoleAuthorizer());
+        RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
+
+        address[] memory initialAuth = new address[](0); 
+
+        testAuthorizer.init(
+            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+        );
+
+        assertEq(address(testAuthorizer.proposal()), address(_proposal));
+
+        assertEq(testAuthorizer.isAuthorized(0, address(this)), true);
+        assertEq(
+            testAuthorizer.getRoleMemberCount(
+                testAuthorizer.PROPOSAL_OWNER_ROLE()
+            ),
+            1
+        );
+    }
+
     function testReinitFails() public {
         //Create a mock new proposal
         Proposal newProposal = Proposal(Clones.clone(address(new Proposal())));
