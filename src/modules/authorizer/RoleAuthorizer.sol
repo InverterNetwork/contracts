@@ -132,11 +132,7 @@ contract RoleAuthorizer is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /// @notice Overloads {hasRole} to check if an address has a specific role from a module
-    /// @param module The module on which we want to check the role
-    /// @param role The id number of the role
-    /// @param who The user we want to check on
-    /// @dev If the Module isn't self-managing, the fact that an address has the role DOES NOT mean it will be able to execute actions acting as it.
+    /// @inheritdoc IRoleAuthorizer
     function hasRole(address module, uint8 role, address who)
         public
         view
@@ -164,21 +160,14 @@ contract RoleAuthorizer is
 
     // View functions
 
-    /// @notice Returns whether an address is authorized to facilitate
-    ///         the current transaction.
-    /// @param who  The address on which to perform the check.
+    /// @inheritdoc IRoleAuthorizer
     /// @dev Implements the function of the IAuthorizer interface by defauling to check if the caller holds the OWNER role.
     function isAuthorized(address who) external view returns (bool) {
         // In case no role is specfied, we ask if the caller is an owner
         return hasRole(PROPOSAL_OWNER_ROLE, who);
     }
 
-    /// @notice Overloads {isAuthorized} for a Module to ask whether an address holds the required role to execute
-    ///         the current transaction.
-    /// @param role The identifier of the role we want to check
-    /// @param who  The address on which to perform the check.
-    /// @dev If the role is not self-managed, it will default to the proposal roles
-    /// @dev If not, it will use the calling address to generate the role ID. Therefore, for checking on anything other than itself, hasRole() should be used
+    /// @inheritdoc IRoleAuthorizer
     function isAuthorized(uint8 role, address who)
         external
         view
@@ -196,9 +185,7 @@ contract RoleAuthorizer is
         return hasRole(roleId, who);
     }
 
-    /// @notice Helper function to generate a bytes32 role hash for a module role
-    /// @param module The address of the module to generate the hash for
-    /// @param role  The ID number of the role to generate the hash for
+    /// @inheritdoc IRoleAuthorizer
     function generateRoleId(address module, uint8 role)
         public
         pure
@@ -210,7 +197,7 @@ contract RoleAuthorizer is
 
     // State-altering functions
 
-    /// @notice Toggles if a Module self-manages or defaults to the proposal's roles.
+    /// @inheritdoc IRoleAuthorizer
     function toggleSelfManagement() external onlyModule {
         if (selfManagedModules[_msgSender()]) {
             selfManagedModules[_msgSender()] = false;
@@ -221,9 +208,7 @@ contract RoleAuthorizer is
         }
     }
 
-    /// @notice Used by a Module to grant a role to a user.
-    /// @param role The identifier of the role to grant
-    /// @param target  The address to which to grant the role.
+    /// @inheritdoc IRoleAuthorizer
     function grantRoleFromModule(uint8 role, address target)
         external
         onlyModule
@@ -233,9 +218,7 @@ contract RoleAuthorizer is
         _grantRole(roleId, target);
     }
 
-    /// @notice Used by a Module to revoke a role from a user.
-    /// @param role The identifier of the role to revoke
-    /// @param target  The address to revoke the role from.
+    /// @inheritdoc IRoleAuthorizer
     function revokeRoleFromModule(uint8 role, address target)
         external
         onlyModule
@@ -245,9 +228,7 @@ contract RoleAuthorizer is
         _revokeRole(roleId, target);
     }
 
-    /// @notice Transfer the admin rights to a given role.
-    /// @param roleId The role on which to peform the admin transfer
-    /// @param newAdmin The new role to which to transfer admin access to
+    /// @inheritdoc IRoleAuthorizer
     function transferAdminRole(bytes32 roleId, bytes32 newAdmin)
         external
         onlyRole(getRoleAdmin(roleId))
@@ -255,9 +236,7 @@ contract RoleAuthorizer is
         _setRoleAdmin(roleId, newAdmin);
     }
 
-    /// @notice Irreversibly burns the admin of a given role.
-    /// @param role The role to remove admin access from
-    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
+    /// @inheritdoc IRoleAuthorizer
     function burnAdminRole(uint8 role) external onlyModule onlySelfManaged {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
