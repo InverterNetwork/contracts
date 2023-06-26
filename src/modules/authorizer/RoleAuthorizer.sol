@@ -245,14 +245,6 @@ contract RoleAuthorizer is
         _revokeRole(roleId, target);
     }
 
-    /// @notice Burns the admin of a given role.
-    /// @param role The role to remove admin access from
-    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
-    function burnAdminRole(uint8 role) external onlyModule onlySelfManaged {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
-    }
-
     /// @notice Transfer the admin rights to a given role.
     /// @param roleId The role on which to peform the admin transfer
     /// @param newAdmin The new role to which to transfer admin access to
@@ -261,5 +253,13 @@ contract RoleAuthorizer is
         onlyRole(getRoleAdmin(roleId))
     {
         _setRoleAdmin(roleId, newAdmin);
+    }
+
+    /// @notice Irreversibly burns the admin of a given role.
+    /// @param role The role to remove admin access from
+    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
+    function burnAdminRole(uint8 role) external onlyModule onlySelfManaged {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
 }
