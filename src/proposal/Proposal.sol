@@ -12,6 +12,10 @@ import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
 import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 import {RebasingFundingManager} from "src/modules/fundingManager/RebasingFundingManager.sol";
+import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
+import {RecurringPaymentManager} from "src/modules/logicModule/RecurringPaymentManager.sol";
+import {SimplePaymentProcessor} from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
+import {StreamingPaymentProcessor} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 
@@ -126,7 +130,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     //--------------------------------------------------------------------------
-    // Module search (late dependency) and verification functions
+    // Module search functions
 
     function _isModuleUsedInProposal(string calldata moduleName) private view returns (uint256, address) {
         address[] memory moduleAddresses = listModules();
@@ -161,7 +165,9 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         return moduleAddress;
     }
 
+    //--------------------------------------------------------------------------
     // Module address verification functions
+
     function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress) external view returns (bool) {
         ListAuthorizer listAuthorizer = ListAuthorizer(listAuthorizerAddress);
 
@@ -196,6 +202,46 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         RebasingFundingManager rebasingFundingManager = RebasingFundingManager(rebasingFundingManagerAddress);
 
         try rebasingFundingManager.token() returns(IERC20) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsMilestoneManager(address milestoneManagerAddress) external view returns (bool) {
+        MilestoneManager milestoneManager = MilestoneManager(milestoneManagerAddress);
+
+        try milestoneManager.listMilestoneIds returns(uint[] memory){
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsRecurringPaymentManager(address recurringPaymentManager) external view returns(bool) {
+        RecurringPaymentManager paymentManager = RecurringPaymentManager(recurringPaymentManager);
+
+        try paymentManager.getEpochLength() returns(uint256) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsSimplePaymentProcessor(address simplePaymentProcessor) external view returns(bool) {
+        SimplePaymentProcessor simplePaymentProcessor = SimplePaymentProcessor(simplePaymentProcessor);
+
+        try simplePaymentProcessor.token() returns(IERC20) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    function verifyAddressIsStreamingPaymentProcessor(address streamingPaymentProcessor) external view returns (bool) {
+        StreamingPaymentProcessor streamingPaymentProcessor = StreamingPaymentProcessor(streamingPaymentProcessor);
+
+        try streamingPaymentProcessor.startForSpecificWalletId(42) returns(uint256) {
             return true;
         } catch {
             return false;
