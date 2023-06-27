@@ -133,6 +133,15 @@ contract ProposalFactory is IProposalFactory {
         return IProposal(clone);
     }
 
+    // @note the current idea is to make every module go through 2 init functions, where the 2nd one is the 
+    //       late dependency injection.
+    // @note However, the problem again would be, if A wants to reference B and B has not been created yet, there is no use running the second init function
+    // @note One solution could be to simply, do a loop of all the modules again in the modules array for the second init function 
+    //       and whichever module requires the late dependency injection could implement that second init function and whichever module 
+    //       does not require the dependency injection could simply leave that second init function blank
+    
+    // NOTE STATUS: TO BE IMPLEMENTED
+
     function requiresLateDependencyInjection(address moduleAddress) public view returns(bool) {
         // to check this, we must have a list of all modules that require a late dependency injection to check against.
     } 
