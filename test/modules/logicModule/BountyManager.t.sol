@@ -351,6 +351,7 @@ contract BountyManagerTest is ModuleTest {
     //AddClaim
 
     function testAddClaim(
+        uint times,
         address[] memory addrs,
         uint[] memory amounts,
         bytes calldata details
@@ -358,6 +359,7 @@ contract BountyManagerTest is ModuleTest {
         addrs = cutArray(50, addrs); //cut to reasonable size
         uint length = addrs.length;
         vm.assume(length <= amounts.length);
+        times = bound(times, 1, 50);
 
         ///Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
@@ -370,13 +372,18 @@ contract BountyManagerTest is ModuleTest {
 
         uint id;
 
-        for (uint i = 0; i < length; i++) {
+        for (uint i = 0; i < times; i++) {
             vm.expectEmit(true, true, true, true);
             //id starts at 2 because the id counter starts at 1 and addBounty increases it by 1 again
             emit ClaimAdded(i + 2, 1, contribs, details);
 
             id = bountyManager.addClaim(1, contribs, details);
             assertEqualClaim(id, 1, contribs, details);
+
+            //Assert set is filled correctly
+            for (uint j; j < length; j++) {
+                assertContributorAddressToClaimIdsContains(contribs[j].addr, id);
+            }
         }
     }
 
@@ -445,7 +452,7 @@ contract BountyManagerTest is ModuleTest {
     }
 
     //-----------------------------------------
-    //UpdateClaimContributors//@todo
+    //UpdateClaimContributors
 
     function testUpdateClaimContributors(
         address[] memory addrs,
@@ -464,14 +471,30 @@ contract BountyManagerTest is ModuleTest {
             createValidContributors(addrs, amounts);
 
         bountyManager.addBounty(1, maxAmount, bytes(""));
-        bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
+        uint id = bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
         vm.expectEmit(true, true, true, true);
-        emit ClaimContributorsUpdated(2, contribs);
+        emit ClaimContributorsUpdated(id, contribs);
 
-        bountyManager.updateClaimContributors(2, 1, contribs);
+        bountyManager.updateClaimContributors(id, 1, contribs);
 
         assertEqualClaim(2, 1, contribs, bytes(""));
+
+        //If new contributors dont contain parts of DEFAULT_CONTRIBUTORS make sure the default are not part of the Set
+
+        bool notInSet = containsParts(contribs, DEFAULT_CONTRIBUTORS);
+        if (notInSet) {
+            for (uint i; i < DEFAULT_CONTRIBUTORS.length; i++) {
+                assertContributorAddressToClaimIdsContainsNot(
+                    DEFAULT_CONTRIBUTORS[i].addr, id
+                );
+            }
+        }
+
+        //Assert set is filled correctly
+        for (uint j; j < length; j++) {
+            assertContributorAddressToClaimIdsContains(contribs[j].addr, id);
+        }
     }
 
     function testUpdateClaimContributorsModifierInPosition() public {
@@ -773,5 +796,55 @@ contract BountyManagerTest is ModuleTest {
         assertEq(currentClaim.details, detailsToTest);
     }
 
-    //function assertContributorAddressToClaimIds//@todo
+    function assertContributorAddressToClaimIdsContains(
+        address contribAddress,
+        uint claimId
+    ) internal {
+        uint[] memory claimIds =
+            bountyManager.listClaimIdsForContributorAddress(contribAddress);
+        uint length = claimIds.length;
+        bool found;
+        for (uint i = 0; i < length; i++) {
+            if (claimIds[i] == claimId) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue(found);
+    }
+
+    function assertContributorAddressToClaimIdsContainsNot(
+        address contribAddress,
+        uint claimId
+    ) internal {
+        uint[] memory claimIds =
+            bountyManager.listClaimIdsForContributorAddress(contribAddress);
+        uint length = claimIds.length;
+        bool found;
+        for (uint i = 0; i < length; i++) {
+            if (claimIds[i] == claimId) {
+                found = true;
+                break;
+            }
+        }
+        assertFalse(found);
+    }
+
+    function containsParts(
+        BountyManager.Contributor[] memory searchThrough,
+        BountyManager.Contributor[] memory searchFor
+    ) internal pure returns (bool) {
+        uint lengthSearchThrough = searchThrough.length;
+        uint lengthSearchFor = searchFor.length;
+        address currentAddress;
+        for (uint i = 0; i < lengthSearchThrough; i++) {
+            currentAddress = searchThrough[i].addr;
+            for (uint j; j < lengthSearchFor; j++) {
+                if (searchFor[j].addr == currentAddress) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
