@@ -55,12 +55,11 @@ contract BountyManagerTest is ModuleTest {
         bytes details
     );
 
-    event ClaimUpdated(
-        uint indexed claimId,
-        uint indexed bountyId,
-        IBountyManager.Contributor[] indexed contributors,
-        bytes details
+    event ClaimContributorsUpdated(
+        uint indexed claimId, IBountyManager.Contributor[] indexed contributors
     );
+
+    event ClaimDetailsUpdated(uint indexed claimId, bytes details);
 
     event ClaimVerified(uint indexed BountyId, uint indexed ClaimId);
 
@@ -446,12 +445,11 @@ contract BountyManagerTest is ModuleTest {
     }
 
     //-----------------------------------------
-    //UpdateClaim
+    //UpdateClaimContributors//@todo
 
-    function testUpdateClaim(
+    function testUpdateClaimContributors(
         address[] memory addrs,
-        uint[] memory amounts,
-        bytes calldata details
+        uint[] memory amounts
     ) public {
         addrs = cutArray(50, addrs); //cut to reasonable size
         uint length = addrs.length;
@@ -469,14 +467,14 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
         vm.expectEmit(true, true, true, true);
-        emit ClaimUpdated(2, 1, contribs, details);
+        emit ClaimContributorsUpdated(2, contribs);
 
-        bountyManager.updateClaim(2, 1, contribs, details);
+        bountyManager.updateClaimContributors(2, 1, contribs);
 
-        assertEqualClaim(2, 1, contribs, details);
+        assertEqualClaim(2, 1, contribs, bytes(""));
     }
 
-    function testUpdateClaimModifierInPosition() public {
+    function testUpdateClaimContributorsModifierInPosition() public {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
         //@todo onlyRole
@@ -485,13 +483,13 @@ contract BountyManagerTest is ModuleTest {
         vm.expectRevert(
             IBountyManager.Module__BountyManager__InvalidClaimId.selector
         );
-        bountyManager.updateClaim(0, 1, DEFAULT_CONTRIBUTORS, bytes(""));
+        bountyManager.updateClaimContributors(0, 1, DEFAULT_CONTRIBUTORS);
 
         //validBountyId
         vm.expectRevert(
             IBountyManager.Module__BountyManager__InvalidBountyId.selector
         );
-        bountyManager.updateClaim(2, 0, DEFAULT_CONTRIBUTORS, bytes(""));
+        bountyManager.updateClaimContributors(2, 0, DEFAULT_CONTRIBUTORS);
 
         //validContributorsForBounty
         vm.expectRevert(
@@ -499,7 +497,34 @@ contract BountyManagerTest is ModuleTest {
                 .Module__BountyManager__InvalidContributorAmount
                 .selector
         );
-        bountyManager.updateClaim(2, 1, INVALID_CONTRIBUTORS, bytes(""));
+        bountyManager.updateClaimContributors(2, 1, INVALID_CONTRIBUTORS);
+    }
+
+    //-----------------------------------------
+    //UpdateClaimDetails
+
+    function testUpdateClaimDetails(bytes calldata details) public {
+        bountyManager.addBounty(1, 100_000_000, bytes(""));
+        bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
+
+        vm.expectEmit(true, true, true, true);
+        emit ClaimDetailsUpdated(2, details);
+
+        bountyManager.updateClaimDetails(2, details);
+
+        assertEqualClaim(2, 1, DEFAULT_CONTRIBUTORS, details);
+    }
+
+    function testUpdateClaimDetailsModifierInPosition() public {
+        bountyManager.addBounty(1, 100_000_000, bytes(""));
+        bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
+        //@todo onlyRole
+
+        //validClaimId
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidClaimId.selector
+        );
+        bountyManager.updateClaimDetails(0, bytes(""));
     }
 
     //-----------------------------------------
@@ -727,7 +752,7 @@ contract BountyManagerTest is ModuleTest {
         uint idToProve,
         uint bountyidToTest,
         IBountyManager.Contributor[] memory contribsToTest,
-        bytes calldata detailsToTest
+        bytes memory detailsToTest
     ) internal {
         IBountyManager.Claim memory currentClaim =
             bountyManager.getClaimInformation(idToProve);

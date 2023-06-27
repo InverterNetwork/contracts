@@ -6,6 +6,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
@@ -26,6 +27,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
 contract BountyManager is IBountyManager, Module, PaymentClient {
     using SafeERC20 for IERC20;
+    using EnumerableSet for EnumerableSet.UintSet;
     using LinkedIdList for LinkedIdList.List;
 
     //--------------------------------------------------------------------------
@@ -139,7 +141,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     LinkedIdList.List _claimList;
 
     //@dev Connects contributor addresses to claim Ids
-    mapping(address => uint[]) contributorAddressToClaimIds;
+    mapping(address => EnumerableSet.UintSet) contributorAddressToClaimIds;
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -199,10 +201,12 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function listClaimIdsForContributorAddress(
-        address contributorAddrs //@todo test for empty
-    ) external view returns (uint[] memory) {
-        return contributorAddressToClaimIds[contributorAddrs];
+    function listClaimIdsForContributorAddress(address contributorAddrs)
+        external
+        view
+        returns (uint[] memory)
+    {
+        return contributorAddressToClaimIds[contributorAddrs].values(); //@note can view functions run out of gas?
     }
 
     //--------------------------------------------------------------------------
@@ -287,8 +291,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         uint length = contributors.length;
         for (uint i; i < length; ++i) {
             c.contributors.push(contributors[i]);
-            //add ClaimId to each contributor address accoringly//@todo take a look here /mirrored on the update Function?
-            contributorAddressToClaimIds[contributors[i].addr].push(claimId);
+            //add ClaimId to each contributor address accordingly
+            contributorAddressToClaimIds[contributors[i].addr].add(claimId);
         }
 
         c.details = details;
@@ -299,11 +303,10 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function updateClaim(
+    function updateClaimContributors(
         uint claimId,
         uint bountyId,
-        Contributor[] calldata contributors,
-        bytes calldata details
+        Contributor[] calldata contributors
     )
         external
         //@todo update access
@@ -313,18 +316,34 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
         Claim storage c = _claimRegistry[claimId];
 
-        c.bountyId = bountyId;
+        uint length = c.contributors.length;
+        for (uint i; i < length; ++i) {
+            //remove ClaimId for each contributor address
+            contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId); //@note c.contributors[i].addr -> is there a more gas efficient alternative to this?
+        }
 
         delete c.contributors;
 
-        uint length = contributors.length; //@todo Do a seperate version for just updating contributors? gas inefficient
+        length = contributors.length;
+
         for (uint i; i < length; ++i) {
             c.contributors.push(contributors[i]);
+            //add ClaimId again to each contributor address
+            contributorAddressToClaimIds[contributors[i].addr].add(claimId);
         }
 
-        c.details = details;
+        emit ClaimContributorsUpdated(claimId, contributors);
+    }
 
-        emit ClaimUpdated(claimId, bountyId, contributors, details);
+    /// @inheritdoc IBountyManager
+    function updateClaimDetails(uint claimId, bytes calldata details)
+        external
+        //@todo update access
+        validClaimId(claimId)
+    {
+        _claimRegistry[claimId].details = details;
+
+        emit ClaimDetailsUpdated(claimId, details);
     }
 
     /// @inheritdoc IBountyManager

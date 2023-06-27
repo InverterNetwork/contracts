@@ -94,13 +94,12 @@ interface IBountyManager is IPaymentClient {
         bytes details
     );
 
-    /// @notice Event emitted when a Claim got updated.
-    event ClaimUpdated(
-        uint indexed claimId,
-        uint indexed bountyId,
-        Contributor[] indexed contributors,
-        bytes details
+    /// @notice Event emitted when Claim Contributors got updated.
+    event ClaimContributorsUpdated(
+        uint indexed claimId, Contributor[] indexed contributors
     );
+    /// @notice Event emitted when Claim Details got updated.
+    event ClaimDetailsUpdated(uint indexed claimId, bytes details);
 
     /// @notice Event emitted when a Claim is verified.
     event ClaimVerified(uint indexed BountyId, uint indexed ClaimId);
@@ -196,18 +195,22 @@ interface IBountyManager is IPaymentClient {
         bytes calldata details
     ) external returns (uint);
 
-    /// @notice Updates a Claim's informations.
+    /// @notice Updates a Claim's contributor informations.
     /// @dev Reverts if an argument invalid.
     /// @param claimId The id of the Claim that will be updated.
     /// @param bountyId The id of the bounty the Claim wants to claim.
-    /// @param contributors The contributor information for the Claim
-    /// @param details The Claim's details.
-    function updateClaim( //@todo because this might change the contributors list ill have to take another look at -> contributorAddressToClaimIds
+    /// @param contributors The contributor information for the Claim.
+    function updateClaimContributors(
         uint claimId,
         uint bountyId,
-        Contributor[] calldata contributors,
-        bytes calldata details
+        Contributor[] calldata contributors
     ) external;
+
+    /// @notice Updates a Claim Details.
+    /// @param claimId The id of the Claim that will be updated.
+    /// @param details The Claim's details.
+    function updateClaimDetails(uint claimId, bytes calldata details)
+        external;
 
     /// @notice Completes a Bounty by verifying a claim.
     /// @dev Only callable by authorized addresses.
