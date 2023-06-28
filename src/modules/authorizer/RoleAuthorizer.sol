@@ -236,7 +236,11 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IRoleAuthorizer
-    function burnAdminRole(uint8 role) external onlyModule(_msgSender()) onlySelfManaged {
+    function burnAdminRole(uint8 role)
+        external
+        onlyModule(_msgSender())
+        onlySelfManaged
+    {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }

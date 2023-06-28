@@ -27,8 +27,6 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     /// @notice There always needs to be at least one owner.
     error Module__TokenGatedRoleAuthorizer__OwnerRoleCannotBeEmpty();
 
-
-
     //--------------------------------------------------------------------------
     // Storage
 
@@ -36,7 +34,11 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     mapping(bytes32 => uint) thresholdMap;
 
     /// @dev Sets up a token-gated empty role.
-    function makeRoleTokenGated(uint8 role) public onlyModule(_msgSender()) onlySelfManaged {
+    function makeRoleTokenGated(uint8 role)
+        public
+        onlyModule(_msgSender())
+        onlySelfManaged
+    {
         bytes32 roleId = generateRoleId(_msgSender(), role);
 
         if (getRoleMemberCount(roleId) != 0) {
@@ -46,7 +48,8 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     }
 
     /// @dev Admin access for rescue purposes.
-    function setTokenGated(bytes32 role, bool to) public
+    function setTokenGated(bytes32 role, bool to)
+        public
         onlyRole(getRoleAdmin(role))
     {
         isTokenGated[role] = to;
