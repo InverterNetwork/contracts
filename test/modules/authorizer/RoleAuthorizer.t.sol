@@ -185,11 +185,6 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
-            // These two should be equivalent
-            assertEq(
-                _authorizer.hasRole(address(_proposal), 0, newAuthorized[i]),
-                true
-            );
             assertEq(
                 _authorizer.hasRole(
                     _authorizer.PROPOSAL_OWNER_ROLE(), newAuthorized[i]
@@ -265,10 +260,6 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(
-                _authorizer.hasRole(address(_proposal), 1, newAuthorized[i]),
-                true
-            );
             assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), true);
         }
         assertEq(
@@ -287,7 +278,7 @@ contract RoleAuthorizerTest is Test {
         _authorizer.grantRole(managerRole, BOB); //Meet your new Manager
         vm.stopPrank();
 
-        assertEq(_authorizer.hasRole(address(_proposal), 1, BOB), true);
+        //assertEq(_authorizer.hasRole(address(_proposal), 1, BOB), true);
         assertEq(_authorizer.hasRole(managerRole, BOB), true);
 
         uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
@@ -302,10 +293,6 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(
-                _authorizer.hasRole(address(_proposal), 1, newAuthorized[i]),
-                false
-            );
             assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), false);
         }
         assertEq(_authorizer.getRoleMemberCount(managerRole), amountManagers);
@@ -326,10 +313,6 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(
-                _authorizer.hasRole(address(_proposal), 1, newAuthorized[i]),
-                true
-            );
             assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), true);
         }
         assertEq(
@@ -346,10 +329,10 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(
+            /* assertEq(
                 _authorizer.hasRole(address(_proposal), 1, newAuthorized[i]),
                 false
-            );
+            );*/
             assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), false);
         }
         assertEq(_authorizer.getRoleMemberCount(managerRole), amountManagers);
@@ -365,7 +348,6 @@ contract RoleAuthorizerTest is Test {
         _authorizer.grantRole(managerRole, BOB); //Meet your new Manager
         vm.stopPrank();
 
-        assertEq(_authorizer.hasRole(address(_proposal), 1, BOB), true);
         assertEq(_authorizer.hasRole(managerRole, BOB), true);
 
         uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
@@ -380,10 +362,6 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(
-                _authorizer.hasRole(address(_proposal), 1, newAuthorized[i]),
-                false
-            );
             assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), false);
         }
         assertEq(_authorizer.getRoleMemberCount(managerRole), amountManagers);
@@ -801,12 +779,9 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(newModule);
         _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
-        assertTrue(
-            _authorizer.hasRole(newModule, uint8(ModuleRoles.ROLE_0), BOB)
-        );
 
         // BOB is authorized
-        assertTrue(_authorizer.isAuthorized(uint8(0), BOB));
+        assertTrue(_authorizer.isAuthorized(uint8(ModuleRoles.ROLE_0), BOB));
 
         // But ALBA, as owner, is not
         assertFalse(_authorizer.isAuthorized(uint8(0), ALBA));
@@ -820,9 +795,9 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(newModule);
         _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
-        assertTrue(
-            _authorizer.hasRole(newModule, uint8(ModuleRoles.ROLE_0), BOB)
-        );
+
+        // BOB is authorized
+        assertTrue(_authorizer.isAuthorized(uint8(ModuleRoles.ROLE_0), BOB));
 
         // We return the module to managed state.
         _authorizer.toggleSelfManagement();
@@ -890,9 +865,9 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(newModule);
         _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_1), BOB);
-        assertTrue(
-            _authorizer.hasRole(newModule, uint8(ModuleRoles.ROLE_1), BOB)
-        );
+
+        // BOB is authorized
+        assertTrue(_authorizer.isAuthorized(uint8(ModuleRoles.ROLE_1), BOB));
 
         // We return the module to managed state.
         _authorizer.toggleSelfManagement();
@@ -923,16 +898,7 @@ contract RoleAuthorizerTest is Test {
         vm.startPrank(address(mockModule));
         _authorizer.toggleSelfManagement();
 
-        //_authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), address(BOB));
-        //_authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_1), address(BOB));
         _authorizer.burnAdminRole(uint8(ModuleRoles.ROLE_1));
-
-        /*assertTrue(
-            _authorizer.isAuthorized(uint8(ModuleRoles.ROLE_0), address(BOB))
-        );
-        assertTrue(
-            _authorizer.isAuthorized(uint8(ModuleRoles.ROLE_1), address(BOB))
-        );*/
 
         vm.stopPrank();
 

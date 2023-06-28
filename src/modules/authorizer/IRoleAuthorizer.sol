@@ -32,6 +32,7 @@ interface IRoleAuthorizer is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
+    /*
     /// @notice Overloads {hasRole} to check if an address has a specific role from a module
     /// @param module The module on which we want to check the role
     /// @param role The id number of the role
@@ -41,6 +42,7 @@ interface IRoleAuthorizer is
         external
         view
         returns (bool);
+        */
 
     /// @inheritdoc IAuthorizer
     function isAuthorized(address who) external view returns (bool);

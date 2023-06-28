@@ -133,7 +133,7 @@ contract RoleAuthorizer is
     // Overloaded and overriden functions
 
     /// @inheritdoc IRoleAuthorizer
-    function hasRole(address module, uint8 role, address who)
+    /*function hasRole(address module, uint8 role, address who)
         public
         view
         returns (bool)
@@ -141,7 +141,7 @@ contract RoleAuthorizer is
         bytes32 roleId = generateRoleId(module, role);
 
         return hasRole(roleId, who);
-    }
+    }*/
 
     /// @notice Overrides {_revokeRole} to prevent having an empty OWNER role
     /// @param role The id number of the role
