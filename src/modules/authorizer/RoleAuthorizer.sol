@@ -168,8 +168,8 @@ contract RoleAuthorizer is
     /// @inheritdoc IRoleAuthorizer
     function isAuthorized(uint8 role, address who)
         external
-        virtual
         view
+        virtual
         returns (bool)
     {
         //Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()

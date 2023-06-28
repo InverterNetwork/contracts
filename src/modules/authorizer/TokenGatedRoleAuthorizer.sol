@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {RoleAuthorizer} from "./RoleAuthorizer.sol";
 
 interface TokenInterface {
-    function balanceOf(address _owner) external view returns (uint256 balance);
+    function balanceOf(address _owner) external view returns (uint balance);
 }
 
 contract TokenGatedRoleAuthorizer is RoleAuthorizer {
@@ -54,7 +54,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         if (
             //TODO VULN: this allows any module to set a specified role.
             !proposal().isModule(_msgSender())
-                && !hasRole(getRoleAdmin(role),_msgSender())
+                && !hasRole(getRoleAdmin(role), _msgSender())
         ) {
             // TODO make real error;
             revert("not allowed to set threshold");
@@ -92,7 +92,11 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         }
     }
 
-    function hasTokenRole(bytes32 role, address who) public view returns (bool) {
+    function hasTokenRole(bytes32 role, address who)
+        public
+        view
+        returns (bool)
+    {
         uint numberOfAllowedTokens = getRoleMemberCount(role);
 
         for (uint i; i < numberOfAllowedTokens; ++i) {
@@ -101,7 +105,9 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
             uint tokenThreshold = thresholdMap[thresholdId];
 
             //Should work with both ERC20 and ERC721
-            try TokenInterface(tokenAddr).balanceOf(who) returns (uint256 tokenBalance) {
+            try TokenInterface(tokenAddr).balanceOf(who) returns (
+                uint tokenBalance
+            ) {
                 if (tokenBalance >= tokenThreshold) {
                     return true;
                 }
