@@ -39,9 +39,9 @@ contract RoleAuthorizer is
     // Modifiers
 
     /// @notice Verifies that the caller is an active module
-    modifier onlyModule() {
-        if (!proposal().isModule(_msgSender())) {
-            revert Module__RoleAuthorizer__OnlyCallableByModule();
+    modifier onlyModule(address module) {
+        if (!proposal().isModule(module)) {
+            revert Module__RoleAuthorizer__NotActiveModule(module);
         }
         _;
     }
@@ -197,7 +197,7 @@ contract RoleAuthorizer is
     // State-altering functions
 
     /// @inheritdoc IRoleAuthorizer
-    function toggleSelfManagement() external onlyModule {
+    function toggleSelfManagement() external onlyModule(_msgSender()) {
         if (selfManagedModules[_msgSender()]) {
             selfManagedModules[_msgSender()] = false;
             emit setRoleSelfManagement(_msgSender(), false);
@@ -210,7 +210,7 @@ contract RoleAuthorizer is
     /// @inheritdoc IRoleAuthorizer
     function grantRoleFromModule(uint8 role, address target)
         external
-        onlyModule
+        onlyModule(_msgSender())
         onlySelfManaged
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
@@ -220,7 +220,7 @@ contract RoleAuthorizer is
     /// @inheritdoc IRoleAuthorizer
     function revokeRoleFromModule(uint8 role, address target)
         external
-        onlyModule
+        onlyModule(_msgSender())
         onlySelfManaged
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
@@ -236,7 +236,7 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IRoleAuthorizer
-    function burnAdminRole(uint8 role) external onlyModule onlySelfManaged {
+    function burnAdminRole(uint8 role) external onlyModule(_msgSender()) onlySelfManaged {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }

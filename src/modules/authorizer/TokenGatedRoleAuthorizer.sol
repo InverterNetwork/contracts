@@ -15,44 +15,58 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     * of one of the specifed tokens.
     */
 
+    //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice The function is only callable by an active Module.
+    error Module__TokenGatedRoleAuthorizer__RoleNotTokenGated();
+
+    /// @notice The function is only callable if the Module is self-managing its roles.
+    error Module__TokenGatedRoleAuthorizer__RoleAlreadyInitialized();
+
+    /// @notice There always needs to be at least one owner.
+    error Module__TokenGatedRoleAuthorizer__OwnerRoleCannotBeEmpty();
+
+
+
+    //--------------------------------------------------------------------------
+    // Storage
+
     mapping(bytes32 => bool) isTokenGated;
     mapping(bytes32 => uint) thresholdMap;
 
-    modifier onlyEmptyRole(bytes32 role) {
-        //Check that the role is empty
-        if (getRoleMemberCount(role) != 0) {
-            // TODO make real error;
-            revert("Role is not empty");
+    /// @dev Sets up a token-gated empty role.
+    function makeRoleTokenGated(uint8 role) public onlyModule(_msgSender()) onlySelfManaged {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+
+        if (getRoleMemberCount(roleId) != 0) {
+            revert Module__TokenGatedRoleAuthorizer__RoleAlreadyInitialized();
         }
-        _;
+        isTokenGated[roleId] = true;
     }
 
-    function toggleTokenGated(bytes32 role)
-        public
-        onlyModule
-        onlySelfManaged
-        onlyEmptyRole(role)
+    /// @dev Admin access for rescue purposes.
+    function setTokenGated(bytes32 role, bool to) public
+        onlyRole(getRoleAdmin(role))
     {
-        isTokenGated[role] = !isTokenGated[role];
+        isTokenGated[role] = to;
     }
 
     /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the total supply of the token.
-    function setThreshold(address module, uint8 role, address token, uint threshold)
-        public
-    {
+    function setThreshold(
+        address module,
+        uint8 role,
+        address token,
+        uint threshold
+    ) public onlyModule(module) {
+        //TODO: Is there a way to move this to modifiers?
+
         //generate Role Id
         bytes32 roleId = generateRoleId(module, role);
 
         //check if ID is token gated
         if (!isTokenGated[roleId]) {
-            // TODO make real error;
-            revert("Role is not token-gated");
-        }
-
-        //check if Module is active
-        if (!proposal().isModule(module)) {
-            // TODO make real error;
-            revert("Module not active");
+            revert Module__TokenGatedRoleAuthorizer__RoleNotTokenGated();
         }
 
         //check that the caller is either the module itself or the role admin
@@ -60,8 +74,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
             !(module == _msgSender())
                 && !hasRole(getRoleAdmin(roleId), _msgSender())
         ) {
-            // TODO make real error;
-            revert("not allowed to set threshold");
+            revert Module__CallerNotAuthorized();
         }
 
         bytes32 thresholdId = keccak256(abi.encodePacked(roleId, token));

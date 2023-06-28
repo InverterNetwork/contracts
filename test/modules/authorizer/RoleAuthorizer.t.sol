@@ -419,8 +419,9 @@ contract RoleAuthorizerTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IRoleAuthorizer
-                    .Module__RoleAuthorizer__OnlyCallableByModule
-                    .selector
+                    .Module__RoleAuthorizer__NotActiveModule
+                    .selector,
+                    newModule
             )
         );
         _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), ALBA);
@@ -546,8 +547,9 @@ contract RoleAuthorizerTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IRoleAuthorizer
-                    .Module__RoleAuthorizer__OnlyCallableByModule
-                    .selector
+                    .Module__RoleAuthorizer__NotActiveModule
+                    .selector,
+                    newModule
             )
         );
         _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);

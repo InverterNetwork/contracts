@@ -21,7 +21,7 @@ interface IRoleAuthorizer is
     // Errors
 
     /// @notice The function is only callable by an active Module.
-    error Module__RoleAuthorizer__OnlyCallableByModule();
+    error Module__RoleAuthorizer__NotActiveModule(address module);
 
     /// @notice The function is only callable if the Module is self-managing its roles.
     error Module__RoleAuthorizer__ModuleNotSelfManaged();
