@@ -38,7 +38,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         uint maximumPayoutAmount
     ) {
         if (
-            minimumPayoutAmount == 0 || maximumPayoutAmount == 0
+            minimumPayoutAmount == 0
                 || maximumPayoutAmount < minimumPayoutAmount
         ) {
             revert Module__BountyManager__InvalidPayoutAmounts();
@@ -100,10 +100,10 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         }
     }
 
-    modifier accordingClaimToBounty(uint claimId, uint bountyId) {
+    modifier claimBelongingToBounty(uint claimId, uint bountyId) {
         //Its not claimed if claimedBy is still 0
         if (_claimRegistry[claimId].bountyId != bountyId) {
-            revert Module__BountyManager__NotAccordingClaimToBounty();
+            revert Module__BountyManager__ClaimNotBelongingToBounty();
         }
         _;
     }
@@ -137,7 +137,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @dev Registry mapping ids to Claim structs.
     mapping(uint => Claim) private _claimRegistry;
 
-    /// @dev List of Bounty id's.
+    /// @dev List of Claim id's.
     LinkedIdList.List _claimList;
 
     //@dev Connects contributor addresses to claim Ids
@@ -243,26 +243,26 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function updateBounty(
-        uint bountyId,
-        uint minimumPayoutAmount,
-        uint maximumPayoutAmount,
-        bytes calldata details
-    )
+    function updateBounty(uint bountyId, bytes calldata details)
         external
         //@todo update access
         validBountyId(bountyId)
-        validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
     {
-        Bounty storage b = _bountyRegistry[bountyId];
+        _bountyRegistry[bountyId].details = details;
 
-        b.minimumPayoutAmount = minimumPayoutAmount;
-        b.maximumPayoutAmount = maximumPayoutAmount;
-        b.details = details;
+        emit BountyUpdated(bountyId, details);
+    }
 
-        emit BountyUpdated(
-            bountyId, minimumPayoutAmount, maximumPayoutAmount, details
-        );
+    /// @inheritdoc IBountyManager
+    function lockBounty(uint bountyId)
+        external
+        //@todo update access
+        validBountyId(bountyId)
+        notClaimed(bountyId)
+    {
+        _bountyRegistry[bountyId].claimedBy = type(uint).max;
+
+        emit BountyLocked(bountyId);
     }
 
     /// @inheritdoc IBountyManager
@@ -274,6 +274,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         external
         //@todo restrict to appropriate role
         validBountyId(bountyId)
+        notClaimed(bountyId)
         returns (uint id)
     {
         validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
@@ -351,7 +352,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         external
         validClaimId(claimId)
         validBountyId(bountyId)
-        accordingClaimToBounty(claimId, bountyId)
+        claimBelongingToBounty(claimId, bountyId)
         notClaimed(bountyId)
     //@todo access
     {

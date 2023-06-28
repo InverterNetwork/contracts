@@ -41,12 +41,9 @@ contract BountyManagerTest is ModuleTest {
         bytes details
     );
 
-    event BountyUpdated(
-        uint indexed bountyId,
-        uint indexed minimumPayoutAmount,
-        uint indexed maximumPayoutAmount,
-        bytes details
-    );
+    event BountyUpdated(uint indexed bountyId, bytes indexed details);
+
+    event BountyLocked(uint indexed bountyId);
 
     event ClaimAdded(
         uint indexed claimId,
@@ -259,7 +256,7 @@ contract BountyManagerTest is ModuleTest {
         if ((picker % 2) == 0) {
             vm.expectRevert(
                 IBountyManager
-                    .Module__BountyManager__NotAccordingClaimToBounty
+                    .Module__BountyManager__ClaimNotBelongingToBounty
                     .selector
             );
         }
@@ -405,32 +402,28 @@ contract BountyManagerTest is ModuleTest {
                 .selector
         );
         bountyManager.addClaim(1, INVALID_CONTRIBUTORS, bytes(""));
+
+        bountyManager.lockBounty(1);
+
+        //notClaimed
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__BountyAlreadyClaimed.selector
+        );
+        bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
     }
 
     //-----------------------------------------
     //UpdateBounty
 
-    function testUpdateBounty(
-        uint minimumPayoutAmount,
-        uint maximumPayoutAmount,
-        bytes calldata details
-    ) public {
-        minimumPayoutAmount = bound(minimumPayoutAmount, 1, type(uint).max);
-        maximumPayoutAmount = bound(maximumPayoutAmount, 1, type(uint).max);
-        vm.assume(minimumPayoutAmount <= maximumPayoutAmount);
-
+    function testUpdateBounty(bytes calldata details) public {
         uint id = bountyManager.addBounty(1, 1, bytes(""));
 
         vm.expectEmit(true, true, true, true);
-        emit BountyUpdated(1, minimumPayoutAmount, maximumPayoutAmount, details);
+        emit BountyUpdated(1, details);
 
-        bountyManager.updateBounty(
-            1, minimumPayoutAmount, maximumPayoutAmount, details
-        );
+        bountyManager.updateBounty(id, details);
 
-        assertEqualBounty(
-            id, minimumPayoutAmount, maximumPayoutAmount, details, 0
-        );
+        assertEqualBounty(id, 1, 1, details, 0);
     }
 
     function testUpdateBountyModifierInPosition() public {
@@ -442,13 +435,40 @@ contract BountyManagerTest is ModuleTest {
         vm.expectRevert(
             IBountyManager.Module__BountyManager__InvalidBountyId.selector
         );
-        bountyManager.updateBounty(0, 1, 1, bytes(""));
+        bountyManager.updateBounty(0, bytes(""));
+    }
 
-        //validPayoutAmounts
+    //-----------------------------------------
+    //UpdateBounty
+
+    function testLockBounty() public {
+        uint id = bountyManager.addBounty(1, 1, bytes(""));
+
+        vm.expectEmit(true, true, true, true);
+        emit BountyLocked(1);
+
+        bountyManager.lockBounty(1);
+
+        assertEqualBounty(id, 1, 1, bytes(""), type(uint).max);
+    }
+
+    function testLockBountyModifierInPosition() public {
+        bountyManager.addBounty(1, 1, bytes(""));
+
+        //@todo onlyRole
+
+        //validBountyId
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__InvalidPayoutAmounts.selector
+            IBountyManager.Module__BountyManager__InvalidBountyId.selector
         );
-        bountyManager.updateBounty(1, 0, 0, bytes(""));
+        bountyManager.lockBounty(0);
+
+        //bountyAlreadyClaimed
+        bountyManager.lockBounty(1);
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__BountyAlreadyClaimed.selector
+        );
+        bountyManager.lockBounty(1);
     }
 
     //-----------------------------------------
@@ -632,7 +652,7 @@ contract BountyManagerTest is ModuleTest {
         //accordingClaimToBounty
         vm.expectRevert(
             IBountyManager
-                .Module__BountyManager__NotAccordingClaimToBounty
+                .Module__BountyManager__ClaimNotBelongingToBounty
                 .selector
         );
         bountyManager.verifyClaim(2, 3);
@@ -759,7 +779,7 @@ contract BountyManagerTest is ModuleTest {
         uint idToProve,
         uint minimumPayoutAmountToTest,
         uint maximumPayoutAmountToTest,
-        bytes calldata detailsToTest,
+        bytes memory detailsToTest,
         uint claimedByToTest
     ) internal {
         IBountyManager.Bounty memory currentBounty =

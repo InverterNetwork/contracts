@@ -62,7 +62,7 @@ interface IBountyManager is IPaymentClient {
     error Module__BountyManager__ClaimExceedsGivenPayoutAmounts();
 
     /// @notice Claim is not trying to claim given bounty
-    error Module__BountyManager__NotAccordingClaimToBounty();
+    error Module__BountyManager__ClaimNotBelongingToBounty();
 
     /// @notice Given Bounty id is already claimed
     error Module__BountyManager__BountyAlreadyClaimed();
@@ -79,12 +79,10 @@ interface IBountyManager is IPaymentClient {
     );
 
     /// @notice Event emitted when a Bounty got updated.
-    event BountyUpdated(
-        uint indexed bountyId,
-        uint indexed minimumPayoutAmount,
-        uint indexed maximumPayoutAmount,
-        bytes details
-    );
+    event BountyUpdated(uint indexed bountyId, bytes indexed details);
+
+    /// @notice Event emitted when a Bounty gets locked.
+    event BountyLocked(uint indexed bountyId);
 
     /// @notice Event emitted when a new Claim is added.
     event ClaimAdded(
@@ -174,15 +172,14 @@ interface IBountyManager is IPaymentClient {
     /// @notice Updates a Bounty's informations.
     /// @dev Reverts if an argument invalid.
     /// @param bountyId The id of the Bounty that will be updated.
-    /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed
-    /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed
     /// @param details The Bounty's details.
-    function updateBounty(
-        uint bountyId,
-        uint minimumPayoutAmount,
-        uint maximumPayoutAmount,
-        bytes calldata details
-    ) external;
+    function updateBounty(uint bountyId, bytes calldata details) external;
+
+    /// @notice Locks the Bounty so it cant be claimed.
+    /// @dev Only callable by authorized addresses.
+    /// @dev Reverts if id invalid.
+    /// @param bountyId The id of the Bounty that will be locked.
+    function lockBounty(uint bountyId) external;
 
     /// @notice Adds a new Claim.
     /// @dev Reverts if an argument invalid.
