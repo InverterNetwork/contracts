@@ -27,15 +27,6 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         _;
     }
 
-    modifier onlyTokenGatedRole(bytes32 role) {
-        //Check that the role is empty
-        if (!isTokenGated[role]) {
-            // TODO make real error;
-            revert("Role is not token-gated");
-        }
-        _;
-    }
-
     function toggleTokenGated(bytes32 role)
         public
         onlyModule
@@ -46,22 +37,35 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     }
 
     /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the total supply of the token.
-    function setThreshold(bytes32 role, address token, uint threshold)
+    function setThreshold(address module, uint8 role, address token, uint threshold)
         public
-        onlyTokenGatedRole(role)
     {
+        //generate Role Id
+        bytes32 roleId = generateRoleId(module, role);
+
+        //check if ID is token gated
+        if (!isTokenGated[roleId]) {
+            // TODO make real error;
+            revert("Role is not token-gated");
+        }
+
+        //check if Module is active
+        if (!proposal().isModule(module)) {
+            // TODO make real error;
+            revert("Module not active");
+        }
+
         //check that the caller is either the module itself or the role admin
         if (
-            //TODO VULN: this allows any module to set a specified role.
-            !proposal().isModule(_msgSender())
-                && !hasRole(getRoleAdmin(role), _msgSender())
+            !(module == _msgSender())
+                && !hasRole(getRoleAdmin(roleId), _msgSender())
         ) {
             // TODO make real error;
             revert("not allowed to set threshold");
         }
 
-        bytes32 id = keccak256(abi.encodePacked(role, token));
-        thresholdMap[id] = threshold;
+        bytes32 thresholdId = keccak256(abi.encodePacked(roleId, token));
+        thresholdMap[thresholdId] = threshold;
     }
 
     function isAuthorized(uint8 role, address who)
@@ -113,12 +117,11 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
                 }
             } catch {
                 // TODO make real error;
-                revert("Unsupported Token Type.");
+                //revert("Unsupported Token Type.");
+                // TODO: maybe just emit an event? BalanceQueryFailed or sth like that. that way the module doens't brick if non token gets whitelisted.
             }
         }
 
         return false;
-        //get list of role addresses
-        // loop through them and check for balance > threshold
     }
 }
