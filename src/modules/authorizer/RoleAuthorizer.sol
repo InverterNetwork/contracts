@@ -8,8 +8,6 @@ import {Module, IModule} from "src/modules/base/Module.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
 import {IRoleAuthorizer} from "./IRoleAuthorizer.sol";
 
-import "forge-std/console.sol";
-
 contract RoleAuthorizer is
     IRoleAuthorizer,
     AccessControlEnumerableUpgradeable,
@@ -170,6 +168,7 @@ contract RoleAuthorizer is
     /// @inheritdoc IRoleAuthorizer
     function isAuthorized(uint8 role, address who)
         external
+        virtual
         view
         returns (bool)
     {
