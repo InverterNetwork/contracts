@@ -301,6 +301,10 @@ contract RecurringPaymentManagerTest is ModuleTest {
                 prevId = _SENTINEL;
             }
 
+            //Check if trigger was called
+            vm.expectEmit(true, true, true, true);
+            emit RecurringPaymentsTriggered(currentEpoch);
+
             vm.expectEmit(true, true, true, true);
             emit RecurringPaymentRemoved(id);
 
