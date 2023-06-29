@@ -547,8 +547,6 @@ contract TokenGatedRoleAuthorizerTest is Test {
         address[] calldata callers,
         bool[] calldata hasNFT
     ) public {
-        //TODO fix to assume unique addressses
-
         vm.assume(callers.length < 50);
         vm.assume(callers.length <= hasNFT.length);
 
@@ -583,6 +581,11 @@ contract TokenGatedRoleAuthorizerTest is Test {
                 assertTrue(result);
             } else {
                 assertFalse(result);
+            }
+
+            // If we minted a token we burn it to guarantee a clean slate in case of address repetition
+            if (hasNFT[i]) {
+                roleNft.burn(roleNft.idCounter() - 1);
             }
         }
     }
