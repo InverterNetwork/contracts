@@ -243,12 +243,6 @@ contract RecurringPaymentManager is
         //Amount of how many epochs have been not triggered
         uint epochsNotTriggered;
 
-        //Amount of tokens in a single order
-        uint orderAmount;
-
-        //Amount of funds needed for all the recurring payment orders
-        uint totalAmount;
-
         //Loop through every element in payment list until endId is reached
         while (currentId != endId) {
             RecurringPayment memory currentPayment = _paymentRegistry[currentId];
@@ -273,17 +267,7 @@ contract RecurringPaymentManager is
                             currentPayment.amount * (epochsNotTriggered - 1), //because we already made a payment that for the current epoch
                             currentEpoch * epochLength //Payment was already due so dueDate is start of this epoch which should already have passed
                         );
-                        //orderAmount for all missed epochs
-                        orderAmount = currentPayment.amount * epochsNotTriggered;
-                    } else {
-                        //orderAmount is a single epoch
-                        orderAmount = currentPayment.amount;
                     }
-                    //When done update the real state of lastTriggeredEpoch
-                    _paymentRegistry[currentId].lastTriggeredEpoch =
-                        currentEpoch;
-
-                    totalAmount += orderAmount;
                     //When done update the real state of lastTriggeredEpoch
                     _paymentRegistry[currentId].lastTriggeredEpoch =
                         currentEpoch;
@@ -292,9 +276,6 @@ contract RecurringPaymentManager is
             //Set to next Id in List
             currentId = _paymentList.list[currentId];
         }
-
-        //ensure that this contract has enough tokens fulfill payments
-        _ensureTokenBalance(totalAmount);
 
         //when done process the Payments correctly
         __Module_proposal.paymentProcessor().processPayments(
