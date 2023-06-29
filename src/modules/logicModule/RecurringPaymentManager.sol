@@ -259,14 +259,31 @@ contract RecurringPaymentManager is
                     currentEpoch - currentPayment.lastTriggeredEpoch;
                 //If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
-                    orderAmount = currentPayment.amount * epochsNotTriggered;
-                    totalAmount += orderAmount;
-
+                    //add paymentOrder for this epoch
                     _addPaymentOrder(
                         currentPayment.recipient,
-                        orderAmount,
-                        (currentEpoch + 1) * epochLength //End of current epoch to the lastTriggeredEpoch is the dueTo Date
+                        currentPayment.amount,
+                        (currentEpoch + 1) * epochLength //End of current epoch is the dueTo Date
                     );
+
+                    //if past epochs have not been triggered
+                    if (epochsNotTriggered > 1) {
+                        _addPaymentOrder(
+                            currentPayment.recipient,
+                            currentPayment.amount * (epochsNotTriggered - 1), //because we already made a payment that for the current epoch
+                            currentEpoch * epochLength //Payment was already due so dueDate is start of this epoch which should already have passed
+                        );
+                        //orderAmount for all missed epochs
+                        orderAmount = currentPayment.amount * epochsNotTriggered;
+                    } else {
+                        //orderAmount is a single epoch
+                        orderAmount = currentPayment.amount;
+                    }
+                    //When done update the real state of lastTriggeredEpoch
+                    _paymentRegistry[currentId].lastTriggeredEpoch =
+                        currentEpoch;
+
+                    totalAmount += orderAmount;
                     //When done update the real state of lastTriggeredEpoch
                     _paymentRegistry[currentId].lastTriggeredEpoch =
                         currentEpoch;
