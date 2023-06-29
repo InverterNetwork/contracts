@@ -436,7 +436,7 @@ contract RoleAuthorizerTest is Test {
         address newModule = _setupMockSelfManagedModule();
 
         vm.startPrank(newModule);
-        _authorizer.toggleSelfManagement();
+        _authorizer.toggleModuleSelfManagement();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -562,7 +562,7 @@ contract RoleAuthorizerTest is Test {
         address newModule = _setupMockSelfManagedModule();
 
         vm.startPrank(newModule);
-        _authorizer.toggleSelfManagement();
+        _authorizer.toggleModuleSelfManagement();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -741,7 +741,7 @@ contract RoleAuthorizerTest is Test {
 
         // We return the module to managed state.
         vm.prank(newModule);
-        _authorizer.toggleSelfManagement();
+        _authorizer.toggleModuleSelfManagement();
 
         // As seen in the test above BOB can NOT grant and revoke roles even though he's admin
         // BUT: ALBA, as an OWNER, can
@@ -754,9 +754,9 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
     }*/
 
-    // Test toggleSelfManagement
+    // Test toggleModuleSelfManagement
     // Test selfManagement gets recognized
-    function testToggleSelfManagement() public {
+    function testtoggleModuleSelfManagement() public {
         // we set up a mock module and buffer the role with burned admin
         address newModule = _setupMockSelfManagedModule();
 
@@ -764,7 +764,7 @@ contract RoleAuthorizerTest is Test {
         assertTrue(_authorizer.selfManagedModules(newModule));
         // We return the module to managed state.
         vm.prank(newModule);
-        _authorizer.toggleSelfManagement();
+        _authorizer.toggleModuleSelfManagement();
 
         //Now it isn't self-managed anymore
         assertFalse(_authorizer.selfManagedModules(newModule));
@@ -798,7 +798,7 @@ contract RoleAuthorizerTest is Test {
         assertTrue(_authorizer.isAuthorized(uint8(ModuleRoles.ROLE_0), BOB));
 
         // We return the module to managed state.
-        _authorizer.toggleSelfManagement();
+        _authorizer.toggleModuleSelfManagement();
 
         // BOB is not authorized anymore
         assertFalse(_authorizer.isAuthorized(uint8(0), BOB));
@@ -868,7 +868,7 @@ contract RoleAuthorizerTest is Test {
         assertTrue(_authorizer.isAuthorized(uint8(ModuleRoles.ROLE_1), BOB));
 
         // We return the module to managed state.
-        _authorizer.toggleSelfManagement();
+        _authorizer.toggleModuleSelfManagement();
 
         // BOB is not authorized anymore
         assertFalse(_authorizer.isAuthorized(uint8(1), BOB));
@@ -894,7 +894,7 @@ contract RoleAuthorizerTest is Test {
         _proposal.addModule(address(mockModule));
 
         vm.startPrank(address(mockModule));
-        _authorizer.toggleSelfManagement();
+        _authorizer.toggleModuleSelfManagement();
 
         _authorizer.burnAdminRole(uint8(ModuleRoles.ROLE_1));
 

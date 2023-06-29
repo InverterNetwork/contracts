@@ -79,7 +79,7 @@ interface IRoleAuthorizer is
     function revokeRoleFromModule(uint8 role, address target) external;
 
     /// @notice Toggles if a Module self-manages its roles or defaults to the proposal's roles.
-    function toggleSelfManagement() external;
+    function toggleModuleSelfManagement() external;
 
     /// @notice Transfer the admin rights to a given role.
     /// @param roleId The role on which to peform the admin transfer

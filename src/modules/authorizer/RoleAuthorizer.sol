@@ -186,7 +186,7 @@ contract RoleAuthorizer is
     // State-altering functions
 
     /// @inheritdoc IRoleAuthorizer
-    function toggleSelfManagement() external onlyModule(_msgSender()) {
+    function toggleModuleSelfManagement() external onlyModule(_msgSender()) {
         if (selfManagedModules[_msgSender()]) {
             selfManagedModules[_msgSender()] = false;
             emit setRoleSelfManagement(_msgSender(), false);

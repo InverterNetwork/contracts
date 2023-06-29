@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {ERC721} from "@oz/token/ERC721/ERC721.sol";
 
 contract ERC721Mock is ERC721 {
-    uint idCounter;
+    uint public idCounter;
 
     mapping(address => bool) blockedAddresses;
 

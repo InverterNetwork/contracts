@@ -27,6 +27,9 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     /// @notice The token doesn't support balance query.
     error Module__TokenGatedRoleAuthorizer__InvalidToken(address token);
 
+    /// @notice The given threshold is invalid
+    error Module__TokenGatedRoleAuthorizer__InvalidThreshold(uint threshold);
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -60,11 +63,19 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         _;
     }
 
+    modifier validThreshold(uint threshold) {
+        // Since base ERC721 does not have a total/max supply, we can only enforce that the value should be non-zero
+        if (threshold == 0) {
+            revert Module__TokenGatedRoleAuthorizer__InvalidThreshold(threshold);
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
-    mapping(bytes32 => bool) isTokenGated;
-    mapping(bytes32 => uint) thresholdMap;
+    mapping(bytes32 => bool) public isTokenGated;
+    mapping(bytes32 => uint) public thresholdMap;
 
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
@@ -139,7 +150,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
             try TokenInterface(tokenAddr).balanceOf(who) returns (
                 uint tokenBalance
             ) {
-                if (tokenBalance > tokenThreshold) {
+                if (tokenBalance >= tokenThreshold) {
                     return true;
                 }
             } catch {
@@ -150,6 +161,15 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         }
 
         return false;
+    }
+
+    function getThresholdValue(bytes32 roleId, address token)
+        public
+        view
+        returns (uint)
+    {
+        bytes32 thresholdId = keccak256(abi.encodePacked(roleId, token));
+        return thresholdMap[thresholdId];
     }
 
     //--------------------------------------------------------------------------
@@ -219,17 +239,8 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     function _setThreshold(bytes32 roleId, address token, uint threshold)
         internal
         onlyTokenGated(roleId)
+        validThreshold(threshold)
     {
-        //TODO: Should we move this to modifiers?
-
-        //check that the caller is either the module itself or the role admin
-        /*         if (
-            !(module == _msgSender())
-                && !hasRole(getRoleAdmin(roleId), _msgSender())
-        ) {
-            revert Module__CallerNotAuthorized();
-        } */
-
         bytes32 thresholdId = keccak256(abi.encodePacked(roleId, token));
         thresholdMap[thresholdId] = threshold;
         emit ChangedTokenThreshold(roleId, token, threshold);

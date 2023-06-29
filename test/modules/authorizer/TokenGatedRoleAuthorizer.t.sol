@@ -163,7 +163,14 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
         //Then, a ERC721 for BOB
         roleNft.mint(BOB);
+
+        // By default, the mockModule will have self-management ON
+        vm.prank(address(mockModule));
+        _authorizer.toggleModuleSelfManagement();
     }
+
+    //-------------------------------------------------
+    // Helper Functions
 
     // function set up tokenGated role with threshold
     function setUpTokenGatedRole(
@@ -171,21 +178,39 @@ contract TokenGatedRoleAuthorizerTest is Test {
         uint8 role,
         address token,
         uint threshold
-    ) internal {
+    ) internal returns (bytes32) {
+        bytes32 roleId = _authorizer.generateRoleId(module, role);
         vm.startPrank(module);
-        _authorizer.toggleSelfManagement();
+        if (!_authorizer.selfManagedModules(module)) {
+            _authorizer.toggleModuleSelfManagement();
+        }
         _authorizer.makeRoleTokenGatedFromModule(role);
         _authorizer.grantTokenRoleFromModule(role, address(token), threshold);
         vm.stopPrank();
+        return roleId;
     }
 
     //function set up nftGated role
-    function setUpNFTGatedRole(address module, uint8 role, address nft) internal {
+    function setUpNFTGatedRole(address module, uint8 role, address nft)
+        internal
+        returns (bytes32)
+    {
+        bytes32 roleId = _authorizer.generateRoleId(module, role);
         vm.startPrank(module);
-        _authorizer.toggleSelfManagement();
+        if (!_authorizer.selfManagedModules(module)) {
+            _authorizer.toggleModuleSelfManagement();
+        }
         _authorizer.makeRoleTokenGatedFromModule(role);
-        _authorizer.grantTokenRoleFromModule(role, address(nft), 0);
+        _authorizer.grantTokenRoleFromModule(role, address(nft), 1);
         vm.stopPrank();
+        return roleId;
+    }
+
+    function makeAddressDefaultAdmin(address who) public {
+        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        vm.prank(ALBA);
+        _authorizer.grantRole(adminRole, who);
+        assertTrue(_authorizer.hasRole(adminRole, who));
     }
 
     // -------------------------------------
@@ -193,24 +218,342 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
     //test make role token gated
 
-    // test admin setTokenGating
+    function testMakeRoleTokenGated() public {
+        bytes32 roleId_1 = setUpTokenGatedRole(
+            address(mockModule),
+            uint8(ModuleRoles.ROLE_TOKEN),
+            address(roleToken),
+            500
+        );
+        assertTrue(_authorizer.isTokenGated(roleId_1));
 
-    // test if admin can still change state if role tokengated
+        bytes32 roleId_2 = setUpNFTGatedRole(
+            address(mockModule), uint8(ModuleRoles.ROLE_NFT), address(roleNft)
+        );
+        assertTrue(_authorizer.isTokenGated(roleId_2));
+    }
+
+    // test admin setTokenGating
+    function testSetTokenGatingByAdmin() public {
+        // we set CLOE as admin
+        makeAddressDefaultAdmin(CLOE);
+
+        //we set and unset on an empty role
+
+        // first we turn on self-management
+        vm.prank(address(mockModule));
+        _authorizer.toggleModuleSelfManagement();
+
+        bytes32 roleId =
+            _authorizer.generateRoleId(address(mockModule), uint8(0));
+
+        //now we make it tokengated as admin
+        vm.prank(CLOE);
+        _authorizer.setTokenGated(roleId, true);
+
+        assertTrue(_authorizer.isTokenGated(roleId));
+
+        //and revert the change
+        vm.prank(CLOE);
+        _authorizer.setTokenGated(roleId, false);
+
+        assertFalse(_authorizer.isTokenGated(roleId));
+    }
+
+    //test makeTokenGated fails if not empty
+    function testMakingFunctionTokenGatedFailsIfAlreadyInUse() public {
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(mockModule), uint8(ModuleRoles.ROLE_TOKEN)
+        );
+
+        //we switch on self-management and whitelist an address
+        vm.startPrank(address(mockModule));
+        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_TOKEN), CLOE);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__RoleNotEmpty
+                    .selector
+            )
+        );
+        _authorizer.makeRoleTokenGatedFromModule(uint8(ModuleRoles.ROLE_TOKEN));
+        assertFalse(_authorizer.isTokenGated(roleId));
+
+        //we revoke the whitelist
+        _authorizer.revokeRoleFromModule(uint8(ModuleRoles.ROLE_TOKEN), CLOE);
+
+        // now it works:
+        _authorizer.makeRoleTokenGatedFromModule(uint8(ModuleRoles.ROLE_TOKEN));
+        assertTrue(_authorizer.isTokenGated(roleId));
+    }
+    // smae but with admin
+
+    function testSetTokenGatedFailsIfRoleAlreadyInUse() public {
+        // we set BOB as admin
+        makeAddressDefaultAdmin(BOB);
+
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(mockModule), uint8(ModuleRoles.ROLE_TOKEN)
+        );
+
+        //we switch on self-management and whitelist an address
+        vm.prank(address(mockModule));
+        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_TOKEN), CLOE);
+
+        vm.startPrank(BOB);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__RoleNotEmpty
+                    .selector
+            )
+        );
+        _authorizer.setTokenGated(roleId, true);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__RoleNotEmpty
+                    .selector
+            )
+        );
+        _authorizer.setTokenGated(roleId, false);
+
+        //we revoke the whitelist
+        _authorizer.revokeRole(roleId, CLOE);
+
+        // now it works:
+        _authorizer.setTokenGated(roleId, true);
+        assertTrue(_authorizer.isTokenGated(roleId));
+
+        _authorizer.setTokenGated(roleId, false);
+        assertFalse(_authorizer.isTokenGated(roleId));
+    }
 
     // test interface enforcement when granting role
     // -> yes case
+    function testCanAddTokenWhenTokenGated() public {
+        setUpTokenGatedRole(
+            address(mockModule),
+            uint8(ModuleRoles.ROLE_TOKEN),
+            address(roleToken),
+            500
+        );
+        setUpNFTGatedRole(
+            address(mockModule), uint8(ModuleRoles.ROLE_NFT), address(roleNft)
+        );
+    }
     // -> no case
 
+    function testCannotAddNonTokenWhenTokenGated() public {
+        setUpTokenGatedRole(
+            address(mockModule),
+            uint8(ModuleRoles.ROLE_TOKEN),
+            address(roleToken),
+            500
+        );
+
+        vm.prank(address(mockModule));
+        //First, the call to the interface reverts without reason
+        vm.expectRevert();
+        //Then the contract handles the reversion and sends the correct error message
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__InvalidToken
+                    .selector,
+                CLOE
+            )
+        );
+        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_TOKEN), CLOE);
+    }
+
+    function testAdminCannotAddNonTokenWhenTokenGated() public {
+        // we set BOB as admin
+        makeAddressDefaultAdmin(BOB);
+
+        bytes32 roleId = setUpTokenGatedRole(
+            address(mockModule),
+            uint8(ModuleRoles.ROLE_TOKEN),
+            address(roleToken),
+            500
+        );
+
+        vm.prank(BOB);
+        //First, the call to the interface reverts without reason
+        vm.expectRevert();
+        //Then the contract handles the reversion and sends the correct error message
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__InvalidToken
+                    .selector,
+                CLOE
+            )
+        );
+        _authorizer.grantRole(roleId, CLOE);
+    }
+
     // Check setting the threshold
+    // yes case
+    function testSettingThreshold() public {
+        bytes32 roleId = setUpTokenGatedRole(
+            address(mockModule),
+            uint8(ModuleRoles.ROLE_TOKEN),
+            address(roleToken),
+            500
+        );
+        assertEq(_authorizer.getThresholdValue(roleId, address(roleToken)), 500);
+    }
+    // invalid threshold from module
+
+    function testSettingInvalidThresholdFails() public {
+        uint8 role = uint8(ModuleRoles.ROLE_TOKEN);
+        vm.startPrank(address(mockModule));
+        _authorizer.makeRoleTokenGatedFromModule(role);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__InvalidThreshold
+                    .selector,
+                0
+            )
+        );
+        _authorizer.grantTokenRoleFromModule(role, address(roleToken), 0);
+
+        vm.stopPrank();
+    }
+    // invalid threshold from admin
+
+    function testSettingInvalidThresholdFromAdminFails() public {
+        // we set BOB as admin
+        makeAddressDefaultAdmin(BOB);
+        //First we set up a valid role
+        bytes32 roleId = setUpTokenGatedRole(
+            address(mockModule),
+            uint8(ModuleRoles.ROLE_TOKEN),
+            address(roleToken),
+            500
+        );
+
+        // and we try to break it
+        vm.prank(BOB);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                TokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__InvalidThreshold
+                    .selector,
+                0
+            )
+        );
+        _authorizer.setThreshold(roleId, address(roleToken), 0);
+    }
 
     //Test Authorization
 
     // Test token authorization
     // -> yes case
-    // -> tokens below threshold
-    // -> no tokens
+    function testFuzzTokenAuthorization(
+        uint threshold,
+        address[] calldata callers,
+        uint[] calldata amounts
+    ) public {
+        vm.assume(callers.length <= amounts.length);
+        vm.assume(threshold !=0);
+
+        //This implcitly confirms ERC20 compatibility
+
+
+        //We burn the tokens created on setup
+        roleToken.burn(BOB, 1000);
+        roleToken.burn(CLOE, 10);
+
+        bytes32 roleId = setUpTokenGatedRole(
+            address(mockModule),
+            uint8(ModuleRoles.ROLE_TOKEN),
+            address(roleToken),
+            threshold
+        );
+
+        for (uint i = 0; i < callers.length; i++) {
+            
+            if(callers[i] == address(0)){
+                //cannot mint to 0 address
+                continue;
+            }
+
+            roleToken.mint(callers[i], amounts[i]);
+
+            //we ensure both ways to check give the same result
+            vm.prank(address(mockModule));
+            bool result = _authorizer.isAuthorized(
+                uint8(ModuleRoles.ROLE_TOKEN), callers[i]
+            );
+            assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
+
+            // we verify the result ir correct
+            if (amounts[i] >= threshold) {
+                assertTrue(result);
+            } else {
+                assertFalse(result);
+            }
+
+            // we burn the minted tokens to avoid overflows
+            roleToken.burn(callers[i], amounts[i]);
+        }
+    }
 
     // Test NFT authorization
     // -> yes case
     // -> no case
+    function testFuzzNFTAuthorization(
+        address[] calldata callers,
+        bool[] calldata hasNFT
+    ) public {
+        vm.assume(callers.length <= hasNFT.length);
+
+        //This is similar to the function above, but in this case we just do a yes/no check
+        //This implcitly confirms ERC721 compatibility
+
+
+        //We burn the token created on setup
+        roleNft.burn(roleNft.idCounter()-1);
+
+        bytes32 roleId = setUpNFTGatedRole(
+            address(mockModule),
+            uint8(ModuleRoles.ROLE_NFT),
+            address(roleNft)
+        );
+
+        for (uint i = 0; i < callers.length; i++) {
+            
+            if(callers[i] == address(0)){
+                //cannot mint to 0 address
+                continue;
+            }
+            if(hasNFT[i]){
+                roleNft.mint(callers[i]);
+            }
+
+            //we ensure both ways to check give the same result
+            vm.prank(address(mockModule));
+            bool result = _authorizer.isAuthorized(
+                uint8(ModuleRoles.ROLE_NFT), callers[i]
+            );
+            assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
+
+            // we verify the result ir correct
+            if (hasNFT[i]) {
+                assertTrue(result);
+            } else {
+                assertFalse(result);
+            }
+
+
+        }
+    }
+
 }
