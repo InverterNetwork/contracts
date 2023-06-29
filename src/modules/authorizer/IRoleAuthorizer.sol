@@ -32,18 +32,6 @@ interface IRoleAuthorizer is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /*
-    /// @notice Overloads {hasRole} to check if an address has a specific role from a module
-    /// @param module The module on which we want to check the role
-    /// @param role The id number of the role
-    /// @param who The user we want to check on
-    /// @dev If the Module isn't self-managing, the fact that an address has the role DOES NOT mean it will be able to execute actions acting as it.
-    function hasRole(address module, uint8 role, address who)
-        external
-        view
-        returns (bool);
-        */
-
     /// @inheritdoc IAuthorizer
     function isAuthorized(address who) external view returns (bool);
 

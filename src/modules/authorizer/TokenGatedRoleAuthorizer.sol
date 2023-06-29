@@ -2,47 +2,22 @@
 pragma solidity 0.8.19;
 // External Libraries
 
+import {ITokenGatedRoleAuthorizer} from "./ITokenGatedRoleAuthorizer.sol";
 import {RoleAuthorizer} from "./RoleAuthorizer.sol";
 
 interface TokenInterface {
     function balanceOf(address _owner) external view returns (uint balance);
 }
 
-contract TokenGatedRoleAuthorizer is RoleAuthorizer {
+contract TokenGatedRoleAuthorizer is
+    ITokenGatedRoleAuthorizer,
+    RoleAuthorizer
+{
     /*
     * This Module expands on the RoleAuthorizer by adding the possibility to set a role as "Token-Gated"
     * Instead of whitelisting a user address, the whitelisted addresses will correspond to a token address, and on authotrization the contract will check on ownership
     * of one of the specifed tokens.
     */
-
-    //--------------------------------------------------------------------------
-    // Errors
-
-    /// @notice The function is only callable by an active Module.
-    error Module__TokenGatedRoleAuthorizer__RoleNotTokenGated();
-
-    /// @notice The function is only callable if the Module is self-managing its roles.
-    error Module__TokenGatedRoleAuthorizer__RoleNotEmpty();
-
-    /// @notice The token doesn't support balance query.
-    error Module__TokenGatedRoleAuthorizer__InvalidToken(address token);
-
-    /// @notice The given threshold is invalid
-    error Module__TokenGatedRoleAuthorizer__InvalidThreshold(uint threshold);
-
-    //--------------------------------------------------------------------------
-    // Events
-
-    /// @notice Event emitted when the token-gating of a role changes.
-    /// @param role The role that was modified.
-    /// @param newValue The new value of the role.
-    event ChangedTokenGating(bytes32 role, bool newValue);
-
-    /// @notice Event emitted when the threshold of a token-gated role changes.
-    /// @param role The role that was modified.
-    /// @param token The token for which the threshold was modified.
-    /// @param newValue The new value of the threshold.
-    event ChangedTokenThreshold(bytes32 role, address token, uint newValue);
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -74,7 +49,9 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     //--------------------------------------------------------------------------
     // Storage
 
+    // Stores if a role is token gated.
     mapping(bytes32 => bool) public isTokenGated;
+    // Stores the threshold amount for each token in a role
     mapping(bytes32 => uint) public thresholdMap;
 
     //--------------------------------------------------------------------------
@@ -90,29 +67,26 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     {
         //Note: since it uses msgSender to generate ID, this should only be used by modules. Users should call hasRole()
         bytes32 roleId;
-        // If the module uses its own roles, check if account has the role.
-        // else check if account has role in proposal
+        // If the module self-manages its roles, check if account has the role.
         if (selfManagedModules[_msgSender()]) {
-            //generate role hash
             roleId = generateRoleId(_msgSender(), role);
             //check if token gated:
             if (isTokenGated[roleId]) {
-                // check if it qualifies for  token ownership
                 return hasTokenRole(roleId, who);
             } else {
-                // regular module role check
                 return hasRole(roleId, who);
             }
+            // If not, check the account against the proposal roles
         } else {
-            //check if in global roles
             roleId = generateRoleId(address(proposal()), role);
             return hasRole(roleId, who);
         }
     }
 
-    /**
-     * @dev Overloads {_grantRole} to enforce interface implementation when role is token-gated
-     */
+    /// @notice Grants a role to an address
+    /// @param role The role to grant
+    /// @param account The address to grant the role to
+    /// @dev Overrides {_grantRole} from AccesControl to enforce interface implementation when role is token-gated
     function _grantRole(bytes32 role, address account)
         internal
         virtual
@@ -131,9 +105,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     //--------------------------------------------------------------------------
     // View functions
 
-    /// @notice Checks if an account qualifies for a token-gated role.
-    /// @param role The role to be checked.
-    /// @param who The account to be checked.
+    /// @inheritdoc ITokenGatedRoleAuthorizer
     function hasTokenRole(bytes32 role, address who)
         public
         view
@@ -163,6 +135,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         return false;
     }
 
+    /// @inheritdoc ITokenGatedRoleAuthorizer
     function getThresholdValue(bytes32 roleId, address token)
         public
         view
@@ -175,9 +148,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     //--------------------------------------------------------------------------
     // State-altering functions
 
-    /// @notice Sets up a token-gated empty role.
-    /// @param role The role to be made token-gated
-    /// @dev This function is only callable by an active Module for itself. Admin should use setTokenGated().
+    /// @inheritdoc ITokenGatedRoleAuthorizer
     function makeRoleTokenGatedFromModule(uint8 role)
         public
         onlyModule(_msgSender())
@@ -190,10 +161,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         emit ChangedTokenGating(roleId, true);
     }
 
-    /// @notice One-step setup for Modules to create a token-gated role and set its threshold.
-    /// @param role The role to be made token-gated
-    /// @param token The token for which the threshold will be set.
-    /// @param threshold The minimum balance of the token required to qualify for the role.
+    /// @inheritdoc ITokenGatedRoleAuthorizer
     function grantTokenRoleFromModule(uint8 role, address token, uint threshold)
         external
         onlyModule(_msgSender())
@@ -207,10 +175,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     //--------------------------------------------------------------------------
     // Setters for the Admin
 
-    /// @notice Sets if a role is token-gated or not.
-    /// @param role The ID of the role to be modified
-    /// @param to The new value to be set.
-    /// @dev Admin access for rescue purposes. If the role has active members, they need to be reovked first.
+    /// @inheritdoc ITokenGatedRoleAuthorizer
     function setTokenGated(bytes32 role, bool to)
         public
         onlyRole(getRoleAdmin(role))
@@ -220,7 +185,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         emit ChangedTokenGating(role, to);
     }
 
-    //change to public func for admin
+    /// @inheritdoc ITokenGatedRoleAuthorizer
     function setThreshold(bytes32 roleId, address token, uint threshold)
         public
         onlyRole(getRoleAdmin(roleId))
@@ -234,7 +199,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     /// @notice Sets the minimum threshold for a token-gated role.
     /// @param roleId  The ID of the role to be modified
     /// @param token The token for which to the threshold.
-    /// @param threshold The user will need to have MORE THAN this number to qualify for the role.
+    /// @param threshold The user will need to have at least this number to qualify for the role.
     /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the total supply of the token.
     function _setThreshold(bytes32 roleId, address token, uint threshold)
         internal
