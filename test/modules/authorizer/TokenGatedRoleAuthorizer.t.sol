@@ -171,7 +171,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
         uint8 role,
         address token,
         uint threshold
-    ) {
+    ) internal {
         vm.startPrank(module);
         _authorizer.toggleSelfManagement();
         _authorizer.makeRoleTokenGatedFromModule(role);
@@ -180,7 +180,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
     }
 
     //function set up nftGated role
-    function setUpNFTGatedRole(address module, uint8 role, address nft) {
+    function setUpNFTGatedRole(address module, uint8 role, address nft) internal {
         vm.startPrank(module);
         _authorizer.toggleSelfManagement();
         _authorizer.makeRoleTokenGatedFromModule(role);

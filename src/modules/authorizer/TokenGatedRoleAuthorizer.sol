@@ -175,14 +175,17 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     /// @param token The token for which the threshold will be set.
     /// @param threshold The minimum balance of the token required to qualify for the role.
     function grantTokenRoleFromModule(uint8 role, address token, uint threshold)
-        public
+        external
         onlyModule(_msgSender())
         onlySelfManaged
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
-        grantRoleFromModule(roleId, target);
+        _grantRole(roleId, token);
         _setThreshold(roleId, token, threshold);
     }
+
+    //--------------------------------------------------------------------------
+    // Setters for the Admin
 
     /// @notice Sets if a role is token-gated or not.
     /// @param role The ID of the role to be modified
@@ -205,9 +208,11 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
         _setThreshold(roleId, token, threshold);
     }
 
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
     /// @notice Sets the minimum threshold for a token-gated role.
-    /// @param module The module that owns the role.
-    /// @param role The role to be modified.
+    /// @param roleId  The ID of the role to be modified
     /// @param token The token for which to the threshold.
     /// @param threshold The user will need to have MORE THAN this number to qualify for the role.
     /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the total supply of the token.
