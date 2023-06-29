@@ -152,11 +152,12 @@ contract RecurringPayments is e2e {
         streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), contributor1
         );
-        assertEq(wallets.length, 1);
+        //One Paymentorder for the current epoch and one for all past payment orders -> 2 orders
+        assertEq(wallets.length, 2);
         wallets = streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), contributor2
         );
-        assertEq(wallets.length, 2);
+        assertEq(wallets.length, 4);
 
         vm.prank(contributor2);
         streamingPaymentProcessor.claimAll(recurringPaymentManager);
