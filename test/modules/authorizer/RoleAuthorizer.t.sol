@@ -48,7 +48,7 @@ contract RoleAuthorizerTest is Test {
     IModule.Metadata _METADATA =
         IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
-    function setUp() public {
+    function setUp() public virtual {
         address authImpl = address(new RoleAuthorizer());
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
         address propImpl = address(new Proposal());
