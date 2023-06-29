@@ -203,6 +203,9 @@ contract RecurringPaymentManager is
         external
         onlyAuthorizedOrManager
     {
+        //trigger to resolve all due Payments
+        _triggerFor(id, id);
+
         //Remove Id from list
         _paymentList.removeId(prevId, id);
 
