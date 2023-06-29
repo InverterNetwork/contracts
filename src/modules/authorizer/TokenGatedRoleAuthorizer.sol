@@ -158,7 +158,7 @@ contract TokenGatedRoleAuthorizer is RoleAuthorizer {
     /// @notice Sets up a token-gated empty role.
     /// @param role The role to be made token-gated
     /// @dev This function is only callable by an active Module for itself. Admin should use setTokenGated().
-    function makeRoleTokenGated(uint8 role)
+    function makeRoleTokenGatedFromModule(uint8 role)
         public
         onlyModule(_msgSender())
         onlySelfManaged
