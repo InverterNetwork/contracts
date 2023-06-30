@@ -52,7 +52,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @notice list of walletIDs of all payment orders of a particular contributor for a particular paymentClient
     /// @dev client => contributor => arrayOfWalletIdsWithPendingPayment(uint[])
     mapping(address => mapping(address => uint[])) private
-        activeContributorPayments;
+        activeStreamingWallets;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -315,7 +315,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         returns (StreamingWallet[] memory)
     {
         uint[] memory streamingWalletsArray =
-            activeContributorPayments[client][contributor];
+            activeStreamingWallets[client][contributor];
         uint streamingWalletsArrayLength = streamingWalletsArray.length;
 
         uint index;
@@ -346,7 +346,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         address contributor,
         uint walletId
     ) internal {
-        // 1. remove walletId from the activeContributorPayments mapping
+        // 1. remove walletId from the activeStreamingWallets mapping
         _removePaymentForSpecificWalletId(client, contributor, walletId);
 
         // 2. delete the vesting information for this specific walletId
@@ -356,7 +356,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         // 3. activeContributors and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
         //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
-        if (activeContributorPayments[client][contributor].length == 0) {
+        if (activeStreamingWallets[client][contributor].length == 0) {
             isActiveContributor[client][contributor] = false;
             _removeContributorFromActivePayments(client, contributor);
         }
@@ -395,18 +395,18 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @notice used to find whether a particular payment order associated with a contributor and paymentClient with id = walletId is active or not
     /// @dev active means that the particular payment order is still to be paid out/claimed. This function returns the first instance of the walletId
-    ///      in the activeContributorPayments[client][contributor] array, but that is fine as the array does not allow duplicates.
+    ///      in the activeStreamingWallets[client][contributor] array, but that is fine as the array does not allow duplicates.
     /// @param client address of the payment client
     /// @param contributor address of the contributor
     /// @param walletId ID of the payment order that needs to be searched
-    /// @return the index of the contributor in the activeContributorPayments[client][contributor] array. Returns type(uint256).max otherwise.
+    /// @return the index of the contributor in the activeStreamingWallets[client][contributor] array. Returns type(uint256).max otherwise.
     function _findActiveWalletId(
         address client,
         address contributor,
         uint walletId
     ) internal view returns (uint) {
         uint[] memory streamingWalletsArray =
-            activeContributorPayments[client][contributor];
+            activeStreamingWallets[client][contributor];
         uint streamingWalletsArrayLength = streamingWalletsArray.length;
 
         uint index;
@@ -448,7 +448,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param contributor address of the contributor
     function _removePayment(address client, address contributor) internal {
         uint[] memory streamingWalletsArray =
-            activeContributorPayments[client][contributor];
+            activeStreamingWallets[client][contributor];
         uint streamingWalletsArrayLength = streamingWalletsArray.length;
 
         uint index;
@@ -472,7 +472,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
     }
 
-    /// @notice used to remove the payment order with id = walletId from the activeContributorPayments[client][contributor] array.
+    /// @notice used to remove the payment order with id = walletId from the activeStreamingWallets[client][contributor] array.
     /// @dev This function simply removes a particular payment order from the earlier mentioned array. The implications of removing a payment order
     ///      from this array have to be handled outside of this function, such as checking whether the contributor is still active or not, etc.
     /// @param client Address of the payment client
@@ -494,11 +494,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         // Standard deletion process.
         // Unordered removal of Contributor payment with walletId WalletIdIndex
         // Move the last element to the index which is to be deleted and then pop the last element of the array.
-        activeContributorPayments[client][contributor][walletIdIndex] =
-        activeContributorPayments[client][contributor][activeContributorPayments[client][contributor]
+        activeStreamingWallets[client][contributor][walletIdIndex] =
+        activeStreamingWallets[client][contributor][activeStreamingWallets[client][contributor]
             .length - 1];
 
-        activeContributorPayments[client][contributor].pop();
+        activeStreamingWallets[client][contributor].pop();
     }
 
     /// @notice used to remove the vesting info of the payment order with id = walletId.
@@ -583,7 +583,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 activeContributors[client].push(_contributor);
             }
 
-            activeContributorPayments[client][_contributor].push(_walletId);
+            activeStreamingWallets[client][_contributor].push(_walletId);
 
             emit StreamingPaymentAdded(
                 client, _contributor, _salary, _start, _dueTo, _walletId
@@ -600,7 +600,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param contributor address of the contributor for which every payment order will be claimed
     function _claimAll(address client, address contributor) internal {
         uint[] memory streamingWalletsArray =
-            activeContributorPayments[client][contributor];
+            activeStreamingWallets[client][contributor];
         uint streamingWalletsArrayLength = streamingWalletsArray.length;
 
         uint index;
