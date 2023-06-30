@@ -178,10 +178,14 @@ contract RecurringPayments is e2e {
         // Now since the entire vested amount was claimed by the contributors, their payment orders should no longer exist.
         // Let's check that
         assertTrue(
-            !streamingPaymentProcessor.isActiveContributor(address(recurringPaymentManager), contributor1)
+            !streamingPaymentProcessor.isActiveContributor(
+                address(recurringPaymentManager), contributor1
+            )
         );
         assertTrue(
-            !streamingPaymentProcessor.isActiveContributor(address(recurringPaymentManager), contributor2)
+            !streamingPaymentProcessor.isActiveContributor(
+                address(recurringPaymentManager), contributor2
+            )
         );
     }
 }

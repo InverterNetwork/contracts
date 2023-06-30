@@ -95,7 +95,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         if (
             !(
                 unclaimable(address(client), _msgSender()) > 0
-                    || activeStreamingWallets[address(client)][_msgSender()].length > 0
+                    || activeStreamingWallets[address(client)][_msgSender()].length
+                        > 0
             )
         ) {
             revert Module__PaymentProcessor__NothingToClaim(
@@ -240,10 +241,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     // Public Functions
 
     /// @inheritdoc IStreamingPaymentProcessor
-    function isActiveContributor(
-        address client,
-        address contributor
-    ) public view returns(bool) {
+    function isActiveContributor(address client, address contributor)
+        public
+        view
+        returns (bool)
+    {
         return activeStreamingWallets[client][contributor].length > 0;
     }
 
@@ -498,7 +500,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         // Unordered removal of Contributor payment with walletId WalletIdIndex
         // Move the last element to the index which is to be deleted and then pop the last element of the array.
         activeStreamingWallets[client][contributor][walletIdIndex] =
-        activeStreamingWallets[client][contributor][activeStreamingWallets[client][contributor].length - 1];
+        activeStreamingWallets[client][contributor][activeStreamingWallets[client][contributor]
+            .length - 1];
 
         activeStreamingWallets[client][contributor].pop();
     }
