@@ -264,6 +264,12 @@ interface IStreamingPaymentProcessor {
         view
         returns (StreamingWallet[] memory);
 
+    /// @notice tells whether a contributor has any pending payments for a particular client
+    /// @dev this function is for convenience and can be easily figured out by other means in the codebase.
+    /// @param client Address of the payment client
+    /// @param contributor Address of the contributor
+    function isActiveContributor(address client, address contributor) external view returns (bool); 
+
     /// @notice Returns the IERC20 token the payment processor can process.
     function token() external view returns (IERC20);
 }

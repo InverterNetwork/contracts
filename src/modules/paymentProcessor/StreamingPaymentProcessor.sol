@@ -28,10 +28,6 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @notice tracks whether a specific contributor is active in a paymentClient
-    /// @dev paymentClient => contributor => isActive(bool)
-    mapping(address => mapping(address => bool)) public isActiveContributor;
-
     /// @notice provides a unique id for new payment orders added for a specific client & contributor combo
     /// @dev paymentClient => contributor => walletId(uint)
     mapping(address => mapping(address => uint)) public numStreamingWallets;
@@ -74,7 +70,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     modifier activeContributor(address client, address contributor) {
-        if (!(isActiveContributor[client][contributor])) {
+        if (activeStreamingWallets[client][contributor].length == 0) {
             revert Module__PaymentProcessor__InvalidContributor(
                 client, contributor
             );
@@ -98,8 +94,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function claimAll(IPaymentClient client) external {
         if (
             !(
-                isActiveContributor[address(client)][_msgSender()]
-                    || unclaimable(address(client), _msgSender()) > 0
+                unclaimable(address(client), _msgSender()) > 0
+                    || activeStreamingWallets[address(client)][_msgSender()].length > 0
             )
         ) {
             revert Module__PaymentProcessor__NothingToClaim(
@@ -117,8 +113,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         bool retryForUnclaimableAmounts
     ) external {
         if (
-            !isActiveContributor[address(client)][_msgSender()]
-                || (walletId > numStreamingWallets[address(client)][_msgSender()])
+            activeStreamingWallets[address(client)][_msgSender()].length == 0
+                || walletId > numStreamingWallets[address(client)][_msgSender()]
         ) {
             revert Module__PaymentProcessor__InvalidWallet(
                 address(client), _msgSender(), walletId
@@ -244,6 +240,14 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     // Public Functions
 
     /// @inheritdoc IStreamingPaymentProcessor
+    function isActiveContributor(
+        address client,
+        address contributor
+    ) public view returns(bool) {
+        return activeStreamingWallets[client][contributor].length > 0;
+    }
+
+    /// @inheritdoc IStreamingPaymentProcessor
     function startForSpecificWalletId(
         address client,
         address contributor,
@@ -357,7 +361,6 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         // 3. activeContributors and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
         //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
         if (activeStreamingWallets[client][contributor].length == 0) {
-            isActiveContributor[client][contributor] = false;
             _removeContributorFromActivePayments(client, contributor);
         }
 
@@ -495,8 +498,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         // Unordered removal of Contributor payment with walletId WalletIdIndex
         // Move the last element to the index which is to be deleted and then pop the last element of the array.
         activeStreamingWallets[client][contributor][walletIdIndex] =
-        activeStreamingWallets[client][contributor][activeStreamingWallets[client][contributor]
-            .length - 1];
+        activeStreamingWallets[client][contributor][activeStreamingWallets[client][contributor].length - 1];
 
         activeStreamingWallets[client][contributor].pop();
     }
@@ -569,7 +571,6 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             );
         } else {
             ++numStreamingWallets[client][_contributor];
-            isActiveContributor[client][_contributor] = true;
 
             vestings[client][_contributor][_walletId] =
                 StreamingWallet(_salary, 0, _start, _dueTo, _walletId);
