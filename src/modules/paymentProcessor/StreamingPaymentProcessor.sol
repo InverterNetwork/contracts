@@ -448,11 +448,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
             // If the paymentOrder being removed was already past its duration, then it would have been removed in the earlier _claimForSpecificWalletId call
             // Otherwise, we would remove that paymentOrder in the following lines.
-            if (
-                block.timestamp
-                    < startForSpecificWalletId(client, contributor, walletId)
-                        + dueToForSpecificWalletId(client, contributor, walletId)
-            ) {
+            if ( block.timestamp < dueToForSpecificWalletId(client, contributor, walletId)) {
                 _removePaymentForSpecificWalletId(client, contributor, walletId);
 
                 _removeVestingInformationForSpecificWalletId(
