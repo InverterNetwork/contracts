@@ -672,7 +672,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ///         Returns the amount vested, as a function of time,
     ///         for an asset given its total historical allocation.
     /// @param contributor The contributor to check on.
-    /// @param timestamp Current block.timestamp
+    /// @param timestamp the time upto which we want the vested amount
     /// @param walletId ID of a particular contributor's wallet whose vesting schedule needs to be checked
     function _vestingAmountForSpecificWalletId(
         address client,
