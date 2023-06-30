@@ -152,11 +152,6 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             uint totalAmount;
             (orders, totalAmount) = client.collectPaymentOrders();
 
-            if (token().balanceOf(address(client)) < totalAmount) {
-                revert
-                    Module__PaymentProcessor__InsufficientTokenBalanceInClient();
-            }
-
             // Generate Streaming Payments for all orders
             address _recipient;
             uint _amount;
