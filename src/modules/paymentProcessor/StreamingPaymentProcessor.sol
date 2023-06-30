@@ -34,7 +34,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @notice provides a unique id for new payment orders added for a specific client & contributor combo
     /// @dev paymentClient => contributor => walletId(uint)
-    mapping(address => mapping(address => uint)) public numContributorWallets;
+    mapping(address => mapping(address => uint)) public numStreamingWallets;
 
     /// @notice tracks all vesting details for all payment orders of a contributor for a specific paymentClient
     /// @dev paymentClient => contributor => streamingWalletID => Wallet
@@ -118,7 +118,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ) external {
         if (
             !isActiveContributor[address(client)][_msgSender()]
-                || (walletId > numContributorWallets[address(client)][_msgSender()])
+                || (walletId > numStreamingWallets[address(client)][_msgSender()])
         ) {
             revert Module__PaymentProcessor__InvalidWallet(
                 address(client), _msgSender(), walletId
@@ -166,8 +166,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
                 _dueTo = orders[i].dueTo;
-                _walletId =
-                    numContributorWallets[address(client)][_recipient] + 1;
+                _walletId = numStreamingWallets[address(client)][_recipient] + 1;
 
                 _addPayment(
                     address(client),
@@ -204,10 +203,10 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
-    function removeAllPaymentForContributor(IPaymentClient client, address contributor)
-        external
-        onlyAuthorized
-    {
+    function removeAllPaymentForContributor(
+        IPaymentClient client,
+        address contributor
+    ) external onlyAuthorized {
         if (
             _findAddressInActivePayments(address(client), contributor)
                 == type(uint).max
@@ -233,7 +232,10 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
         // We will delete the payment order in question, if it hasn't already reached the end of its duration.
-        if (block.timestamp < dueToForSpecificWalletId(address(client), contributor, walletId)) {
+        if (
+            block.timestamp
+                < dueToForSpecificWalletId(address(client), contributor, walletId)
+        ) {
             _afterClaimCleanup(address(client), contributor, walletId);
         }
     }
@@ -312,17 +314,17 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         activeContributor(client, contributor)
         returns (StreamingWallet[] memory)
     {
-        uint[] memory contributorWalletsArray =
+        uint[] memory streamingWalletsArray =
             activeContributorPayments[client][contributor];
-        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+        uint streamingWalletsArrayLength = streamingWalletsArray.length;
 
         uint index;
         StreamingWallet[] memory contributorStreamingWallets =
-            new StreamingWallet[](contributorWalletsArrayLength);
+            new StreamingWallet[](streamingWalletsArrayLength);
 
-        for (index; index < contributorWalletsArrayLength;) {
+        for (index; index < streamingWalletsArrayLength;) {
             contributorStreamingWallets[index] =
-                vestings[client][contributor][contributorWalletsArray[index]];
+                vestings[client][contributor][streamingWalletsArray[index]];
 
             unchecked {
                 ++index;
@@ -339,7 +341,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param client address of the payment client
     /// @param contributor address of the contributor
     /// @param walletId ID of the wallet that was fully claimed
-    function _afterClaimCleanup(address client, address contributor, uint walletId) internal {
+    function _afterClaimCleanup(
+        address client,
+        address contributor,
+        uint walletId
+    ) internal {
         // 1. remove walletId from the activeContributorPayments mapping
         _removePaymentForSpecificWalletId(client, contributor, walletId);
 
@@ -356,7 +362,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
 
         // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
-        // Note Also, we do not need to update numContributorWallets, as claiming completely from a wallet does not affect this mapping.
+        // Note Also, we do not need to update numStreamingWallets, as claiming completely from a wallet does not affect this mapping.
 
         // 4. emit an event broadcasting that a particular payment has been removed
         emit StreamingPaymentRemoved(client, contributor, walletId);
@@ -399,13 +405,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         address contributor,
         uint walletId
     ) internal view returns (uint) {
-        uint[] memory contributorWalletsArray =
+        uint[] memory streamingWalletsArray =
             activeContributorPayments[client][contributor];
-        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+        uint streamingWalletsArrayLength = streamingWalletsArray.length;
 
         uint index;
-        for (index; index < contributorWalletsArrayLength;) {
-            if (contributorWalletsArray[index] == walletId) {
+        for (index; index < streamingWalletsArrayLength;) {
+            if (streamingWalletsArray[index] == walletId) {
                 return index;
             }
             unchecked {
@@ -441,19 +447,22 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param client address of the payment client
     /// @param contributor address of the contributor
     function _removePayment(address client, address contributor) internal {
-        uint[] memory contributorWalletsArray =
+        uint[] memory streamingWalletsArray =
             activeContributorPayments[client][contributor];
-        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+        uint streamingWalletsArrayLength = streamingWalletsArray.length;
 
         uint index;
         uint walletId;
-        for (index; index < contributorWalletsArrayLength;) {
-            walletId = contributorWalletsArray[index];
+        for (index; index < streamingWalletsArrayLength;) {
+            walletId = streamingWalletsArray[index];
             _claimForSpecificWalletId(client, contributor, walletId, true);
 
             // If the paymentOrder being removed was already past its duration, then it would have been removed in the earlier _claimForSpecificWalletId call
             // Otherwise, we would remove that paymentOrder in the following lines.
-            if ( block.timestamp < dueToForSpecificWalletId(client, contributor, walletId)) {
+            if (
+                block.timestamp
+                    < dueToForSpecificWalletId(client, contributor, walletId)
+            ) {
                 _afterClaimCleanup(client, contributor, walletId);
             }
 
@@ -559,7 +568,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _contributor, _salary, _start, _dueTo
             );
         } else {
-            ++numContributorWallets[client][_contributor];
+            ++numStreamingWallets[client][_contributor];
             isActiveContributor[client][_contributor] = true;
 
             vestings[client][_contributor][_walletId] =
@@ -590,14 +599,14 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param client address of the payment client
     /// @param contributor address of the contributor for which every payment order will be claimed
     function _claimAll(address client, address contributor) internal {
-        uint[] memory contributorWalletsArray =
+        uint[] memory streamingWalletsArray =
             activeContributorPayments[client][contributor];
-        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+        uint streamingWalletsArrayLength = streamingWalletsArray.length;
 
         uint index;
-        for (index; index < contributorWalletsArrayLength;) {
+        for (index; index < streamingWalletsArrayLength;) {
             _claimForSpecificWalletId(
-                client, contributor, contributorWalletsArray[index], true
+                client, contributor, streamingWalletsArray[index], true
             );
 
             unchecked {
