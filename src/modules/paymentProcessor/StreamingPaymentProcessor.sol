@@ -33,7 +33,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     mapping(address => mapping(address => bool)) public isActiveContributor;
 
     /// @notice provides a unique id for new payment orders added for a specific client & contributor combo
-    /// @dev paymentClient => contributor => walletId(uint256)
+    /// @dev paymentClient => contributor => walletId(uint)
     mapping(address => mapping(address => uint)) public numContributorWallets;
 
     /// @notice tracks all vesting details for all payment orders of a contributor for a specific paymentClient
@@ -50,7 +50,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     mapping(address => address[]) private activePayments;
 
     /// @notice list of walletIDs of all payment orders of a particular contributor for a particular paymentClient
-    /// @dev client => contributor => arrayOfWalletIdsWithPendingPayment(uint256[])
+    /// @dev client => contributor => arrayOfWalletIdsWithPendingPayment(uint[])
     mapping(address => mapping(address => uint[])) private
         activeContributorPayments;
 
@@ -233,30 +233,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
         // We will delete the payment order in question, if it hasn't already reached the end of its duration.
-        uint dueToContributor =
-            dueToForSpecificWalletId(address(client), contributor, walletId);
-
-        if (block.timestamp < dueToContributor) {
-            // deletes activeContributorPayments
-            _removePaymentForSpecificWalletId(
-                address(client), contributor, walletId
-            );
-
-            // deletes vesting information
-            _removeVestingInformationForSpecificWalletId(
-                address(client), contributor, walletId
-            );
-
-            // deletes activePayments & isActiveContributor if it was the contributor's last paymentOrder
-            if (
-                activeContributorPayments[address(client)][contributor].length
-                    == 0
-            ) {
-                isActiveContributor[address(client)][contributor] = false;
-                _removeContributorFromActivePayments(
-                    address(client), contributor
-                );
-            }
+        if (block.timestamp < dueToForSpecificWalletId(address(client), contributor, walletId)) {
+            _afterClaimCleanup(address(client), contributor, walletId);
         }
     }
 
@@ -357,6 +335,33 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     //--------------------------------------------------------------------------
     // Internal Functions
 
+    /// @notice common set of steps to be taken after everything has been claimed from a specific wallet
+    /// @param client address of the payment client
+    /// @param contributor address of the contributor
+    /// @param walletId ID of the wallet that was fully claimed
+    function _afterClaimCleanup(address client, address contributor, uint walletId) internal {
+        // 1. remove walletId from the activeContributorPayments mapping
+        _removePaymentForSpecificWalletId(client, contributor, walletId);
+
+        // 2. delete the vesting information for this specific walletId
+        _removeVestingInformationForSpecificWalletId(
+            client, contributor, walletId
+        );
+
+        // 3. activePayments and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
+        //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
+        if (activeContributorPayments[client][contributor].length == 0) {
+            isActiveContributor[client][contributor] = false;
+            _removeContributorFromActivePayments(client, contributor);
+        }
+
+        // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
+        // Note Also, we do not need to update numContributorWallets, as claiming completely from a wallet does not affect this mapping.
+
+        // 4. emit an event broadcasting that a particular payment has been removed
+        emit StreamingPaymentRemoved(client, contributor, walletId);
+    }
+
     /// @notice used to find whether a particular contributor has pending payments with a client
     /// @dev This function returns the first instance of the contributor address in the activePayments[client] array, but that
     ///      is completely fine as the activePayments[client] array does not allow duplicates.
@@ -449,19 +454,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             // If the paymentOrder being removed was already past its duration, then it would have been removed in the earlier _claimForSpecificWalletId call
             // Otherwise, we would remove that paymentOrder in the following lines.
             if ( block.timestamp < dueToForSpecificWalletId(client, contributor, walletId)) {
-                _removePaymentForSpecificWalletId(client, contributor, walletId);
-
-                _removeVestingInformationForSpecificWalletId(
-                    client, contributor, walletId
-                );
-
-                if (activeContributorPayments[client][contributor].length == 0)
-                {
-                    isActiveContributor[client][contributor] = false;
-                    _removeContributorFromActivePayments(client, contributor);
-                }
-
-                emit StreamingPaymentRemoved(client, contributor, walletId);
+                _afterClaimCleanup(client, contributor, walletId);
             }
 
             unchecked {
@@ -661,25 +654,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         // This if conditional block represents that nothing more remains to be vested from the specific walletId
         if (block.timestamp >= dueToContributor) {
-            // 1. remove walletId from the activeContributorPayments mapping
-            _removePaymentForSpecificWalletId(client, contributor, walletId);
-
-            // 2. delete the vesting information for this specific walletId
-            _removeVestingInformationForSpecificWalletId(
-                client, contributor, walletId
-            );
-
-            // 3. activePayments and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
-            //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
-            if (activeContributorPayments[client][contributor].length == 0) {
-                isActiveContributor[client][contributor] = false;
-                _removeContributorFromActivePayments(client, contributor);
-            }
-
-            // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
-            // Note Also, we do not need to update numContributorWallets, as claiming completely from a wallet does not affect this mapping.
-
-            emit StreamingPaymentRemoved(client, contributor, walletId);
+            _afterClaimCleanup(client, contributor, walletId);
         }
     }
 
