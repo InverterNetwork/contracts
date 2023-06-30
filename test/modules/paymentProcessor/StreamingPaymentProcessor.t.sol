@@ -112,6 +112,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.processPayments(paymentClient);
 
         for (uint i; i < recipients.length;) {
+
             assertTrue(
                 paymentProcessor.isActiveContributor(
                     address(paymentClient), recipients[i]
