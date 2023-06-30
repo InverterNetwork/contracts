@@ -281,7 +281,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         uint timestamp,
         uint walletId
     ) public view returns (uint) {
-        return _vestingScheduleForSpecificWalletId(
+        return _vestingAmountForSpecificWalletId(
             client, contributor, timestamp, walletId
         );
     }
@@ -674,7 +674,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param contributor The contributor to check on.
     /// @param timestamp Current block.timestamp
     /// @param walletId ID of a particular contributor's wallet whose vesting schedule needs to be checked
-    function _vestingScheduleForSpecificWalletId(
+    function _vestingAmountForSpecificWalletId(
         address client,
         address contributor,
         uint timestamp,
