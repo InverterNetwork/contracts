@@ -47,7 +47,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @notice list of addresses with open payment Orders per paymentClient
     /// @dev paymentClient => listOfContributors(address[]). Duplicates are not allowed.
-    mapping(address => address[]) private activePayments;
+    mapping(address => address[]) private activeContributors;
 
     /// @notice list of walletIDs of all payment orders of a particular contributor for a particular paymentClient
     /// @dev client => contributor => arrayOfWalletIdsWithPendingPayment(uint[])
@@ -348,7 +348,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             client, contributor, walletId
         );
 
-        // 3. activePayments and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
+        // 3. activeContributors and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
         //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
         if (activeContributorPayments[client][contributor].length == 0) {
             isActiveContributor[client][contributor] = false;
@@ -363,19 +363,19 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @notice used to find whether a particular contributor has pending payments with a client
-    /// @dev This function returns the first instance of the contributor address in the activePayments[client] array, but that
-    ///      is completely fine as the activePayments[client] array does not allow duplicates.
+    /// @dev This function returns the first instance of the contributor address in the activeContributors[client] array, but that
+    ///      is completely fine as the activeContributors[client] array does not allow duplicates.
     /// @param client address of the payment client
     /// @param contributor address of the contributor
-    /// @return the index of the contributor in the activePayments[client] array. Returns type(uint256).max otherwise.
+    /// @return the index of the contributor in the activeContributors[client] array. Returns type(uint256).max otherwise.
     function _findAddressInActivePayments(address client, address contributor)
         internal
         view
         returns (uint)
     {
-        address[] memory contribSearchArray = activePayments[client];
+        address[] memory contribSearchArray = activeContributors[client];
 
-        uint length = activePayments[client].length;
+        uint length = activeContributors[client].length;
         for (uint i; i < length;) {
             if (contribSearchArray[i] == contributor) {
                 return i;
@@ -421,7 +421,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ///      their details are deleted
     /// @param client address of the payment client
     function _cancelRunningOrders(address client) internal {
-        address[] memory contributors = activePayments[client];
+        address[] memory contributors = activeContributors[client];
         uint contributorsLength = contributors.length;
 
         uint index;
@@ -515,7 +515,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         address client,
         address contributor
     ) internal {
-        // Find the contributor's index in the array of activePayments mapping.
+        // Find the contributor's index in the array of activeContributors mapping.
         uint contributorIndex =
             _findAddressInActivePayments(client, contributor);
 
@@ -526,12 +526,12 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
 
         // Replace the element to be deleted with the last element of the array
-        uint contributorsLength = activePayments[client].length;
-        activePayments[client][contributorIndex] =
-            activePayments[client][contributorsLength - 1];
+        uint contributorsLength = activeContributors[client].length;
+        activeContributors[client][contributorIndex] =
+            activeContributors[client][contributorsLength - 1];
 
         // pop the last element of the array
-        activePayments[client].pop();
+        activeContributors[client].pop();
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
@@ -565,13 +565,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             vestings[client][_contributor][_walletId] =
                 StreamingWallet(_salary, 0, _start, _dueTo, _walletId);
 
-            // We do not want activePayments[client] to have duplicate contributor entries
-            // So we avoid pushing the _contributor to activePayments[client] if it already exists
+            // We do not want activeContributors[client] to have duplicate contributor entries
+            // So we avoid pushing the _contributor to activeContributors[client] if it already exists
             if (
                 _findAddressInActivePayments(client, _contributor)
                     == type(uint).max
             ) {
-                activePayments[client].push(_contributor);
+                activeContributors[client].push(_contributor);
             }
 
             activeContributorPayments[client][_contributor].push(_walletId);
