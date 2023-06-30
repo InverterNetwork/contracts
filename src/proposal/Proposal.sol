@@ -48,7 +48,9 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         _;
     }
 
-    // TODO NOTE: Do we need this? it isn't used anywhere
+    // TODO: We don't use this modifier or the manager() function
+    // Once we merge the RoleAuthoirzer We can completely remove Ownable
+    // as import and rely on IAuthorizer to validate owners.
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address or manager.
