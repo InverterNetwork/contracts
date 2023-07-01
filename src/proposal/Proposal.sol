@@ -132,6 +132,11 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //--------------------------------------------------------------------------
     // Module search functions
 
+    /// @notice verifies whether a proposal with the title `moduleName` has been used in this proposal
+    /// @dev The query string and the module title should be **exactly** same, as in same whitespaces, same capitalizations, etc.
+    /// @param moduleName Query string which is the title of the module to be searched in the proposal
+    /// @return uint256 index of the module in the list of modules used in the proposal
+    /// @return address address of the module with title `moduleName`
     function _isModuleUsedInProposal(string calldata moduleName) private view returns (uint256, address) {
         address[] memory moduleAddresses = listModules();
         uint256 moduleAddressesLength = moduleAddresses.length;
@@ -153,9 +158,9 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
 
         return (type(uint256).max, address(0));
-
     }
 
+    /// @inheritdoc IProposal
     function findModuleAddressInProposal(string calldata moduleName) external view returns (address) {
         (uint256 moduleIndex, address moduleAddress) = _isModuleUsedInProposal(moduleName);
         if( moduleIndex == type(uint256).max) {
@@ -167,7 +172,11 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
 
     //--------------------------------------------------------------------------
     // Module address verification functions
+    // Note These set of functions are not mandatory for the functioning of the protocol, however they
+    //      are provided for the convenience of the users since matching the names of the modules does not
+    //      fully guarentee that the returned address is the address of the exact module the user was looking for
 
+    /// @inheritdoc IProposal
     function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress) external view returns (bool) {
         ListAuthorizer listAuthorizer = ListAuthorizer(listAuthorizerAddress);
 
@@ -178,6 +187,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
+    /// @inheritodc IProposal
     function verifyAddressIsSingleVoteGovernorModule(address singleVoteGovernorAddress) external view returns (bool) {
         SingleVoteGovernor singleVoteGovernor = SingleVoteGovernor(singleVoteGovernorAddress);
 
@@ -188,6 +198,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
+    /// @inheritdoc IProposal
     function verifyAddressIsPaymentClient(address paymentClientAddress) external view returns(bool) {
         PaymentClient paymentClient = PaymentClient(paymentClientAddress);
 
@@ -198,6 +209,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
+    /// @inheritdoc IProposal
     function verifyAddressIsRebasingFundingManager(address rebasingFundingManagerAddress) external view returns(bool) {
         RebasingFundingManager rebasingFundingManager = RebasingFundingManager(rebasingFundingManagerAddress);
 
@@ -208,6 +220,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
+    /// @inheritdoc IProposal
     function verifyAddressIsMilestoneManager(address milestoneManagerAddress) external view returns (bool) {
         MilestoneManager milestoneManager = MilestoneManager(milestoneManagerAddress);
 
@@ -218,6 +231,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
+    /// @inheritdoc IProposal
     function verifyAddressIsRecurringPaymentManager(address recurringPaymentManager) external view returns(bool) {
         RecurringPaymentManager paymentManager = RecurringPaymentManager(recurringPaymentManager);
 
@@ -228,6 +242,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
+    /// @inheritdoc IProposal
     function verifyAddressIsSimplePaymentProcessor(address simplePaymentProcessor) external view returns(bool) {
         SimplePaymentProcessor simplePaymentProcessor = SimplePaymentProcessor(simplePaymentProcessor);
 
@@ -238,6 +253,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
+    /// @inheritdoc IProposal
     function verifyAddressIsStreamingPaymentProcessor(address streamingPaymentProcessor) external view returns (bool) {
         StreamingPaymentProcessor streamingPaymentProcessor = StreamingPaymentProcessor(streamingPaymentProcessor);
 
