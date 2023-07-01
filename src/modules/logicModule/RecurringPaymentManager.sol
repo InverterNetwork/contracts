@@ -57,6 +57,13 @@ contract RecurringPaymentManager is
         _;
     }
 
+    modifier customInitializer() {
+        if(customInitializer) {
+            revert Module__LateDependencyAlreadyInjected();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
@@ -77,6 +84,9 @@ contract RecurringPaymentManager is
 
     /// @dev List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
+
+    /// @dev defaults to false. Used in the same way as the initializer modifier.
+    bool customInitializer;
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -96,6 +106,11 @@ contract RecurringPaymentManager is
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
             revert Module__RecurringPaymentManager__InvalidEpochLength();
         }
+    }
+
+    /// @inheritdoc Module
+    function initLateDependencyInjection() external customInitializer{
+        customInitialization = true;
     }
 
     //--------------------------------------------------------------------------
