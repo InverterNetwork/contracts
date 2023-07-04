@@ -5,7 +5,7 @@ import {E2eTest} from "test/e2e/E2eTest.sol";
 import "forge-std/Test.sol";
 
 import {IProposalFactory} from "src/factories/ProposalFactory.sol";
-import {IProposal} from "src/proposal/Proposal.sol";
+import {Proposal} from "src/proposal/Proposal.sol";
 
 // Mocks
 import {LowDecimalsToken} from
@@ -48,7 +48,7 @@ contract ProposaFundManagementLowDecimals is E2eTest {
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
             .ProposalConfig({owner: address(this), token: token});
 
-        IProposal proposal = _createNewProposalWithAllModules(proposalConfig);
+        Proposal proposal = _createNewProposalWithAllModules(proposalConfig);
 
         // IMPORTANT
         // =========
