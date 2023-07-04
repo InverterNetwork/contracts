@@ -34,20 +34,16 @@ contract ProposaFundManagementHighDecimals is E2eTest {
     )
         public
     {
-        // @dev Amounts should be divisible by 2, otherwise tests may fail
-        //      due to precision loss.
-        // @dev DEPOSIT_CAP in FundingManager ensures proposal never holds
-        //       more than 100_000_000e18 (which is 10e27)
-        initialDeposit = bound(initialDeposit, 2, 10e30);
-        aliceInitialBalance = bound(aliceInitialBalance, 2, 10e30);
-        bobInitialBalance = bound(bobInitialBalance, 2, 10e30);
+      // @dev Make sure amounts are divisible by 2, otherwise tests may fail.
+      // @note DEPOSIT_CAP in FundingManager ensures proposal never holds
+      //       more than 100_000_000e18
+      initialDeposit = bound(initialDeposit, 2, 10e18);
+      aliceInitialBalance = bound(aliceInitialBalance, 2, 10e18);
+      bobInitialBalance = bound(bobInitialBalance, 2, 10e18);
         vm.assume(initialDeposit %2== 0);
         vm.assume(aliceInitialBalance %2== 0);
         vm.assume(bobInitialBalance %2== 0);
-        vm.assume(
-            initialDeposit + aliceInitialBalance + bobInitialBalance <=
-            100_000_000e18
-        );
+
         // address(this) creates a new proposal.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
             .ProposalConfig({owner: address(this), token: token});
