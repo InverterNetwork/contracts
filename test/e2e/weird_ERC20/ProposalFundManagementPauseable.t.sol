@@ -128,7 +128,6 @@ contract ProposaFundManagementPauseable is E2eTest {
                 assertTrue(proposal.balanceOf(bob) > 0);
             }
         }
-        vm.stopPrank();
 
         // If the proposal spends half their tokens, i.e. for a milestone,
         // alice and bob are still able to withdraw their respective leftover
