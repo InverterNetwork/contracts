@@ -8,12 +8,22 @@ import {ERC20} from "./ERC20.sol";
 contract BlockableToken is ERC20 {
     // --- Access Control ---
     address owner;
-    modifier auth() { require(msg.sender == owner, "unauthorised"); _; }
+
+    modifier auth() {
+        require(msg.sender == owner, "unauthorised");
+        _;
+    }
 
     // --- BlockList ---
     mapping(address => bool) blocked;
-    function blockUser(address usr) auth public { blocked[usr] = true; }
-    function allow(address usr) auth public { blocked[usr] = false; }
+
+    function blockUser(address usr) public auth {
+        blocked[usr] = true;
+    }
+
+    function allow(address usr) public auth {
+        blocked[usr] = false;
+    }
 
     // --- Init ---
     constructor(uint _totalSupply) ERC20(_totalSupply) {
@@ -21,14 +31,14 @@ contract BlockableToken is ERC20 {
     }
 
     // --- Getter ---
-    function isBlocked(address usr) public view returns(bool){
+    function isBlocked(address usr) public view returns (bool) {
         return blocked[usr];
     }
 
     // --- Token ---
     function transferFrom(address src, address dst, uint wad)
-        override
         public
+        override
         returns (bool)
     {
         require(!blocked[src], "source blocked");

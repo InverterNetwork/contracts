@@ -8,7 +8,8 @@ import {IProposalFactory} from "src/factories/ProposalFactory.sol";
 import {IProposal} from "src/proposal/Proposal.sol";
 
 // Mocks
-import {LowDecimalsToken} from "test/utils/mocks/weird_ERC20/LowDecimalsToken.sol";
+import {LowDecimalsToken} from
+    "test/utils/mocks/weird_ERC20/LowDecimalsToken.sol";
 
 /**
  * @title ProposaFundManagementLowDecimals
@@ -26,25 +27,22 @@ contract ProposaFundManagementLowDecimals is E2eTest {
     address alice = address(0xA11CE);
     address bob = address(0x606);
 
-
     LowDecimalsToken token = new LowDecimalsToken(10e18);
 
     function test_e2e_ProposalFundManagement(
         uint initialDeposit,
         uint aliceInitialBalance,
         uint bobInitialBalance
-    )
-        public
-    {
+    ) public {
         // @dev Make sure amounts are divisible by 2, otherwise tests may fail.
         // @note DEPOSIT_CAP in FundingManager ensures proposal never holds
         //       more than 100_000_000e18
         initialDeposit = bound(initialDeposit, 2, 10e18);
         aliceInitialBalance = bound(aliceInitialBalance, 2, 10e18);
         bobInitialBalance = bound(bobInitialBalance, 2, 10e18);
-        vm.assume(initialDeposit %2== 0);
-        vm.assume(aliceInitialBalance %2== 0);
-        vm.assume(bobInitialBalance %2== 0);
+        vm.assume(initialDeposit % 2 == 0);
+        vm.assume(aliceInitialBalance % 2 == 0);
+        vm.assume(bobInitialBalance % 2 == 0);
 
         // address(this) creates a new proposal.
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
@@ -111,7 +109,7 @@ contract ProposaFundManagementLowDecimals is E2eTest {
         vm.startPrank(alice);
         {
             proposal.withdraw(proposal.balanceOf(alice));
-            assertEq(token.balanceOf(alice), aliceInitialBalance/2);
+            assertEq(token.balanceOf(alice), aliceInitialBalance / 2);
         }
         vm.stopPrank();
 
@@ -119,7 +117,7 @@ contract ProposaFundManagementLowDecimals is E2eTest {
         vm.startPrank(bob);
         {
             proposal.withdraw(proposal.balanceOf(bob));
-            assertEq(token.balanceOf(bob), bobInitialBalance/2);
+            assertEq(token.balanceOf(bob), bobInitialBalance / 2);
         }
         vm.stopPrank();
 

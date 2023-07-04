@@ -9,19 +9,19 @@ import {IProposal} from "src/proposal/Proposal.sol";
 // Mocks
 import {BlockableToken} from "test/utils/mocks/weird_ERC20/BlockableToken.sol";
 
- /**
-  * @title ProposaFundManagementBlocklist
-  *
-  * @dev Blockable token has the ability to block (blacklist) addresses,
-  *      preventing use of transferFrom, if either source or desitnation
-  *      address is on the list. Examples of popular tokens with blacklist are
-  *      stablecoins such as USDT, USDC, BUSD and Dai.
-  * @dev For this test we block funders Alice and Bob so they can't withdraw
-  *      their unspent tokens right away. After first failed withdraw we unblock
-  *      their address and call withdraw again. Second call should be successful
-  *      and they should receive their respective amounts nevertheless.
-  * @author byterocket
-  */
+/**
+ * @title ProposaFundManagementBlocklist
+ *
+ * @dev Blockable token has the ability to block (blacklist) addresses,
+ *      preventing use of transferFrom, if either source or desitnation
+ *      address is on the list. Examples of popular tokens with blacklist are
+ *      stablecoins such as USDT, USDC, BUSD and Dai.
+ * @dev For this test we block funders Alice and Bob so they can't withdraw
+ *      their unspent tokens right away. After first failed withdraw we unblock
+ *      their address and call withdraw again. Second call should be successful
+ *      and they should receive their respective amounts nevertheless.
+ * @author byterocket
+ */
 
 contract ProposaFundManagementBlocklist is E2eTest {
     address alice = address(0xA11CE);

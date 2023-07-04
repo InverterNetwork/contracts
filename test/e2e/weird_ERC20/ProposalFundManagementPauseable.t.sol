@@ -9,24 +9,24 @@ import {IProposal} from "src/proposal/Proposal.sol";
 // Mocks
 import {PauseableToken} from "test/utils/mocks/weird_ERC20/PauseableToken.sol";
 
- /**
-  * @title ProposaFundManagementPauseable
-  *
-  * @dev Pauseable token has the ability to pause, preventing use of approve,
-  *      transfer and transferFrom functions. Contract can than be unpaused
-  *      again, allowing the usual functionality of aforementioned functions.
-  *      Examples of popular pauseable tokens are BNB, AAVE, ZRX, SNX, COMP
-  *      and many more. Overall pauseable tokens are widely present in
-  *      crypto space.
-  * @dev For this test we pause token, before making deposit, either calling
-  *      approve before pausing or after. In both cases deposit is expected to
-  *      fail, but succeed when the token is unpaused, without the need to
-  *      approve it again (in Bobs case). We then pause the token again,
-  *      expacting withdrawal to fail but succeed when the token is unpaused,
-  *      while making all further withdrawals possible, giving correct amounts
-  *      to their respective recipients.
-  * @author byterocket
-  */
+/**
+ * @title ProposaFundManagementPauseable
+ *
+ * @dev Pauseable token has the ability to pause, preventing use of approve,
+ *      transfer and transferFrom functions. Contract can than be unpaused
+ *      again, allowing the usual functionality of aforementioned functions.
+ *      Examples of popular pauseable tokens are BNB, AAVE, ZRX, SNX, COMP
+ *      and many more. Overall pauseable tokens are widely present in
+ *      crypto space.
+ * @dev For this test we pause token, before making deposit, either calling
+ *      approve before pausing or after. In both cases deposit is expected to
+ *      fail, but succeed when the token is unpaused, without the need to
+ *      approve it again (in Bobs case). We then pause the token again,
+ *      expacting withdrawal to fail but succeed when the token is unpaused,
+ *      while making all further withdrawals possible, giving correct amounts
+ *      to their respective recipients.
+ * @author byterocket
+ */
 
 contract ProposaFundManagementPauseable is E2eTest {
     address alice = address(0xA11CE);

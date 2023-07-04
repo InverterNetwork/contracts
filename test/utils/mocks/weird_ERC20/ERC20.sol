@@ -10,6 +10,7 @@ contract Math {
     function add(uint x, uint y) internal pure returns (uint z) {
         require((z = x + y) >= x);
     }
+
     function sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x);
     }
@@ -17,13 +18,13 @@ contract Math {
 
 contract ERC20 is IERC20, Math {
     // --- ERC20 Data ---
-    string  public constant name = "Token";
-    string  public constant symbol = "TKN";
-    uint8   public decimals = 18;
-    uint256 public totalSupply;
+    string public constant name = "Token";
+    string public constant symbol = "TKN";
+    uint8 public decimals = 18;
+    uint public totalSupply;
 
-    mapping (address => uint)                      public balanceOf;
-    mapping (address => mapping (address => uint)) public allowance;
+    mapping(address => uint) public balanceOf;
+    mapping(address => mapping(address => uint)) public allowance;
 
     // --- Init ---
     constructor(uint _totalSupply) {
@@ -33,10 +34,15 @@ contract ERC20 is IERC20, Math {
     }
 
     // --- Token ---
-    function transfer(address dst, uint wad) virtual public returns (bool) {
+    function transfer(address dst, uint wad) public virtual returns (bool) {
         return transferFrom(msg.sender, dst, wad);
     }
-    function transferFrom(address src, address dst, uint wad) virtual public returns (bool) {
+
+    function transferFrom(address src, address dst, uint wad)
+        public
+        virtual
+        returns (bool)
+    {
         require(balanceOf[src] >= wad, "insufficient-balance");
         if (src != msg.sender && allowance[src][msg.sender] != type(uint).max) {
             require(allowance[src][msg.sender] >= wad, "insufficient-allowance");
@@ -47,18 +53,18 @@ contract ERC20 is IERC20, Math {
         emit Transfer(src, dst, wad);
         return true;
     }
-    function approve(address usr, uint wad) virtual public returns (bool) {
+
+    function approve(address usr, uint wad) public virtual returns (bool) {
         allowance[msg.sender][usr] = wad;
         emit Approval(msg.sender, usr, wad);
         return true;
     }
 
-
     function mint(address to, uint value) public {
         _mint(to, value);
     }
 
-    function _mint(address account, uint256 amount) internal virtual {
+    function _mint(address account, uint amount) internal virtual {
         require(account != address(0), "ERC20: mint to the zero address");
 
         _beforeTokenTransfer(address(0), account, amount);
@@ -77,12 +83,12 @@ contract ERC20 is IERC20, Math {
         _burn(from, value);
     }
 
-    function _burn(address account, uint256 amount) internal virtual {
+    function _burn(address account, uint amount) internal virtual {
         require(account != address(0), "ERC20: burn from the zero address");
 
         _beforeTokenTransfer(account, address(0), amount);
 
-        uint256 accountBalance = balanceOf[account];
+        uint accountBalance = balanceOf[account];
         require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
         unchecked {
             balanceOf[account] = accountBalance - amount;
@@ -95,11 +101,10 @@ contract ERC20 is IERC20, Math {
         _afterTokenTransfer(account, address(0), amount);
     }
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual {}
+    function _beforeTokenTransfer(address from, address to, uint amount)
+        internal
+        virtual
+    {}
 
     /**
      * @dev Hook that is called after any transfer of tokens. This includes
@@ -115,9 +120,8 @@ contract ERC20 is IERC20, Math {
      *
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual {}
+    function _afterTokenTransfer(address from, address to, uint amount)
+        internal
+        virtual
+    {}
 }
