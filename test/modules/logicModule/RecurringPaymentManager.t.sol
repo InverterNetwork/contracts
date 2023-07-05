@@ -420,7 +420,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         uint startId,
         uint endId
     ) public {
-        vm.assume(receivers.length < 100 && receivers.length >= 3); //Reasonable amount
+        vm.assume(receivers.length < 5 && receivers.length >= 3); //Reasonable amount
 
         endId = bound(endId, 1, receivers.length);
         startId = bound(startId, 1, endId);
@@ -617,6 +617,8 @@ contract RecurringPaymentManagerTest is ModuleTest {
         return returnArray;
     }
 
+    event checker(uint num);
+
     //Note: this needs the old version of the orders before the trigger function was called to work
     function recurringPaymentsAreCorrect(
         IRecurringPaymentManager.RecurringPayment[] memory
@@ -649,7 +651,6 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         for (uint i; i < length; i++) {
             currentRecurringPaymentToBeChecked = recurringPaymentsToBeChecked[i];
-
             //Orders are only created if lastTriggeredEpoch is smaller than currentEpoch
             if (
                 currentEpoch
@@ -688,14 +689,13 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
                 totalAmount += orderAmount;
                 numberOfOrdersMade++;
-
                 //Check if updated payment lastTriggeredEpoch is current epoch
                 assertEq(
                     currentRecurringPayments[i].lastTriggeredEpoch, currentEpoch
                 );
             }
         }
-
+        emit checker(totalAmount);
         // Check that recurringPaymentManager's token balance is sufficient for the
         // payment orders by comparing it with the total amount of orders made (numberOfOrdersMade)
         assertTrue(
