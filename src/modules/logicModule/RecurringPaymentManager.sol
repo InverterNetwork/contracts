@@ -255,17 +255,27 @@ contract RecurringPaymentManager is
                 if (epochsNotTriggered > 0) {
                     //add paymentOrder for this epoch
                     _addPaymentOrder(
-                        currentPayment.recipient,
-                        currentPayment.amount,
-                        (currentEpoch + 1) * epochLength //End of current epoch is the dueTo Date
+                        PaymentOrder({
+                            recipient: currentPayment.recipient,
+                            amount: currentPayment.amount,
+                            createdAt: block.timestamp,
+                            //End of current epoch is the dueTo Date
+                            dueTo: (currentEpoch + 1) * epochLength
+                        })
                     );
 
                     //if past epochs have not been triggered
                     if (epochsNotTriggered > 1) {
                         _addPaymentOrder(
-                            currentPayment.recipient,
-                            currentPayment.amount * (epochsNotTriggered - 1), //because we already made a payment that for the current epoch
-                            currentEpoch * epochLength //Payment was already due so dueDate is start of this epoch which should already have passed
+                            PaymentOrder({
+                                recipient: currentPayment.recipient,
+                                //because we already made a payment that for the current epoch
+                                amount: currentPayment.amount
+                                    * (epochsNotTriggered - 1),
+                                createdAt: block.timestamp,
+                                //Payment was already due so dueDate is start of this epoch which should already have passed
+                                dueTo: currentEpoch * epochLength
+                            })
                         );
                     }
                     //When done update the real state of lastTriggeredEpoch
@@ -276,6 +286,8 @@ contract RecurringPaymentManager is
             //Set to next Id in List
             currentId = _paymentList.list[currentId];
         }
+
+        _addPaymentOrders(orders);
 
         //when done process the Payments correctly
         __Module_proposal.paymentProcessor().processPayments(
