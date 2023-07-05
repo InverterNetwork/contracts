@@ -354,8 +354,6 @@ contract RecurringPaymentManager is
 
         emit RecurringPaymentsTriggered(currentEpoch);
     }
-
-    event checker1(uint num);
     //--------------------------------------------------------------------------
     // {PaymentClient} Function Implementations
 
