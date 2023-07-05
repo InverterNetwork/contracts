@@ -108,7 +108,10 @@ contract ProposaFundManagementLowDecimals is E2eTest {
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
         // Note that we simulate fundingManager spending by just burning tokens.
-        token.burn(address(fundingManager), token.balanceOf(address(fundingManager)) / 2);
+        token.burn(
+            address(fundingManager),
+            token.balanceOf(address(fundingManager)) / 2
+        );
 
         // Alice is now able to withdraw half her funded tokens.
         vm.startPrank(alice);

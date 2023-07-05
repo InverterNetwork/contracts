@@ -75,7 +75,6 @@ contract ProposaFundManagementPauseable is E2eTest {
         {
             // Token can't be approved when on pause.
             try token.approve(address(fundingManager), 1000e18) {
-
                 // Deposit tokens, i.e. fund the fundingmanager.
                 fundingManager.deposit(1000e18);
 
@@ -142,7 +141,10 @@ contract ProposaFundManagementPauseable is E2eTest {
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
         // Note that we simulate fundingManager spending by just burning tokens.
-        token.burn(address(fundingManager), token.balanceOf(address(fundingManager)) / 2);
+        token.burn(
+            address(fundingManager),
+            token.balanceOf(address(fundingManager)) / 2
+        );
 
         // Token got Paused.
         token.stop();
