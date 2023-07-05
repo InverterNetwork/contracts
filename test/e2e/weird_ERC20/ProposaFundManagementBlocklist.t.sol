@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {E2eTest} from "test/e2e/E2eTest.sol";
 
 import {IProposalFactory} from "src/factories/ProposalFactory.sol";
-import {Proposal} from "src/proposal/Proposal.sol";
+import {IProposal} from "src/proposal/Proposal.sol";
 
 // Mocks
 import {BlockableToken} from "test/utils/mocks/weird_ERC20/BlockableToken.sol";
@@ -38,7 +38,7 @@ contract ProposaFundManagementBlocklist is E2eTest {
         IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
             .ProposalConfig({owner: address(this), token: token});
 
-        Proposal proposal = _createNewProposalWithAllModules(proposalConfig);
+        IProposal proposal = _createNewProposalWithAllModules(proposalConfig);
 
         // IMPORTANT
         // =========
