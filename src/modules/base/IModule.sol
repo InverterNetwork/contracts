@@ -69,12 +69,4 @@ interface IModule {
     /// @notice Returns the module's {IProposal} proposal instance.
     /// @return The module's proposal.
     function proposal() external view returns (IProposal);
-
-    /// @notice Pauses the module.
-    /// @dev Only callable by authorized addresses.
-    function pause() external;
-
-    /// @notice Unpauses the module.
-    /// @dev Only callable by authorized addresses.
-    function unpause() external;
 }

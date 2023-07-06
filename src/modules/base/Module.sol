@@ -2,10 +2,8 @@
 pragma solidity 0.8.19;
 
 // External Dependencies
-import {
-    PausableUpgradeable,
-    ContextUpgradeable
-} from "@oz-up/security/PausableUpgradeable.sol";
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -32,7 +30,7 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
  *
  * @author Inverter Network
  */
-abstract contract Module is IModule, PausableUpgradeable {
+abstract contract Module is IModule, Initializable, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Storage
     //
@@ -112,8 +110,6 @@ abstract contract Module is IModule, PausableUpgradeable {
         internal
         onlyInitializing
     {
-        __Pausable_init();
-
         // Write proposal to storage.
         if (address(proposal_) == address(0)) {
             revert Module__InvalidProposalAddress();
@@ -125,21 +121,6 @@ abstract contract Module is IModule, PausableUpgradeable {
             revert Module__InvalidMetadata();
         }
         __Module_metadata = metadata;
-    }
-
-    //--------------------------------------------------------------------------
-    // onlyAuthorized Functions
-    //
-    // API functions for authenticated users.
-
-    /// @inheritdoc IModule
-    function pause() external override(IModule) onlyAuthorizedOrManager {
-        _pause();
-    }
-
-    /// @inheritdoc IModule
-    function unpause() external override(IModule) onlyAuthorizedOrManager {
-        _unpause();
     }
 
     //--------------------------------------------------------------------------

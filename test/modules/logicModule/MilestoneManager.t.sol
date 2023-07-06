@@ -1248,7 +1248,7 @@ contract MilestoneManagerTest is ModuleTest {
         //Cant move a milestone that already started
         vm.expectRevert(
             IMilestoneManager
-                .Module__MilestoneManager__InvalidIntermediatePosition
+                .Module__MilestoneManager__InvalidMilestonePositionShift
                 .selector
         );
         milestoneManager.moveMilestoneInList(1, prevId, 2);
@@ -1257,7 +1257,7 @@ contract MilestoneManagerTest is ModuleTest {
         //In this case id 1
         vm.expectRevert(
             IMilestoneManager
-                .Module__MilestoneManager__InvalidIntermediatePosition
+                .Module__MilestoneManager__InvalidMilestonePositionShift
                 .selector
         );
         milestoneManager.moveMilestoneInList(id, prevId, type(uint).max);
