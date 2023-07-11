@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
+import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 
 /**
  * @title ListAuthorizer Deployment Script
@@ -13,30 +13,30 @@ import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
  * @author Inverter Network
  */
 
-contract DeployListAuthorizer is Script {
+contract DeployRoleAuthorizer is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    ListAuthorizer listAuthorizer;
+    RoleAuthorizer roleAuthorizer;
 
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the listAuthorizer.
 
-            listAuthorizer = new ListAuthorizer();
+            roleAuthorizer = new RoleAuthorizer();
         }
 
         vm.stopBroadcast();
 
-        // Log the deployed ListAuthorizer contract address.
+        // Log the deployed RoleAuthorizer contract address.
         console2.log(
-            "Deployment of ListAuthorizer Implementation at address",
-            address(listAuthorizer)
+            "Deployment of RoleAuthorizer Implementation at address",
+            address(roleAuthorizer)
         );
 
-        return address(listAuthorizer);
+        return address(roleAuthorizer);
     }
 }
