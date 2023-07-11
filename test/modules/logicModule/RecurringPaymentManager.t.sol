@@ -330,6 +330,86 @@ contract RecurringPaymentManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Trigger
 
+    function testTriggerBenchmarkLowCount() public {
+        uint seed = 100_000_000_000;
+        address[] memory receivers = new address[](4);
+
+        for (uint i; i < receivers.length; i++) {
+            receivers[i] = address(0xBEEF);
+        }
+
+        receivers = convertToValidRecipients(receivers);
+
+        uint timejumps = 3;
+
+        reasonableWarpAndInit(seed);
+
+        //Generate appropriate Payment Orders
+        createRecurringPaymentOrders(seed, receivers);
+
+        //Mint enough tokens based on the payment order
+
+        //Quick estimate: 1 token per payment Max receivers 100, max jumps 20, max epochs used in jump 4 -> 8000 tokens needed (lets go with 10k)
+        //note to 1 token: im not testing if the paymentProcessor works just if it creates payment orders accordingly
+        _token.mint(address(_fundingManager), 10_000);
+
+        recurringPaymentManager.trigger();
+
+        //Do a timejump and check again
+        for (uint i = 0; i < timejumps; i++) {
+            vm.warp(
+                block.timestamp
+                    + bound(
+                        seed, //Introduce some randomness for the jump
+                        recurringPaymentManager.getEpochLength(),
+                        recurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
+                    )
+            );
+
+            recurringPaymentManager.trigger();
+        }
+    }
+
+    function testTriggerBenchmarkHighCount() public {
+        uint seed = 100_000_000_000;
+        address[] memory receivers = new address[](100);
+
+        for (uint i; i < receivers.length; i++) {
+            receivers[i] = address(0xBEEF);
+        }
+
+        receivers = convertToValidRecipients(receivers);
+
+        uint timejumps = 20;
+
+        reasonableWarpAndInit(seed);
+
+        //Generate appropriate Payment Orders
+        createRecurringPaymentOrders(seed, receivers);
+
+        //Mint enough tokens based on the payment order
+
+        //Quick estimate: 1 token per payment Max receivers 100, max jumps 20, max epochs used in jump 4 -> 8000 tokens needed (lets go with 10k)
+        //note to 1 token: im not testing if the paymentProcessor works just if it creates payment orders accordingly
+        _token.mint(address(_fundingManager), 10_000);
+
+        recurringPaymentManager.trigger();
+
+        //Do a timejump and check again
+        for (uint i = 0; i < timejumps; i++) {
+            vm.warp(
+                block.timestamp
+                    + bound(
+                        seed, //Introduce some randomness for the jump
+                        recurringPaymentManager.getEpochLength(),
+                        recurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
+                    )
+            );
+
+            recurringPaymentManager.trigger();
+        }
+    }
+
     function testTrigger(uint seed, address[] memory receivers) public {
         vm.assume(receivers.length < 100 && receivers.length >= 3); //Reasonable amount
 
