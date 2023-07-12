@@ -249,13 +249,18 @@ contract RecurringPaymentManager is
             currentId = _paymentList.list[currentId];
         }
 
-        //
+        //Create arrays with length that is equal to the amount of ids in the given id section
+        //notTriggeredThisEpoch marks which ids have not been triggered this epoch
+        //notTriggeredPastEpoch marks which ids have not been triggered in the past epochs
+        //If a value in here is true, that means we have to create a payment order for it
+        //This is later used to get the exact length of a paymentorder array needed to contain all the payment orders
         bool[] memory notTriggeredThisEpoch = new bool[](length);
         bool[] memory notTriggeredPastEpoch = new bool[](length);
 
-        //Reset currentId
+        //Reset currentId to later iterate through the ids again
         currentId = startId;
 
+        //index to match the given id to the array positions of the notTriggered arrays
         uint index;
 
         //CurrentRecurringPayment
@@ -294,9 +299,9 @@ contract RecurringPaymentManager is
             if (notTriggeredPastEpoch[i]) ++amountOfOrders;
         }
         PaymentOrder[] memory orders = new PaymentOrder[](amountOfOrders);
-        //Reset currentId
+        //Reset currentId to later iterate through the ids again
         currentId = startId;
-        //Reset index
+        //Reset index to to later iterate through the notTriggered arrays again
         index = 0;
 
         //Because PaymentOrders and the notTriggeredBool Arrays have different lengths and positions we have to iterate through them independently
@@ -344,7 +349,7 @@ contract RecurringPaymentManager is
             currentId = _paymentList.list[currentId];
             ++index;
         }
-        //Add Payment orders
+        //Finnally add all Payment orders in a single swoop so ensureTokenBalance isnt called repeatedly
         _addPaymentOrders(orders);
 
         //when done process the Payments correctly
