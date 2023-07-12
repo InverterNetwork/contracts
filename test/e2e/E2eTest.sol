@@ -19,7 +19,11 @@ import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
+import {StreamingPaymentProcessor} from
+    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
+import {RecurringPaymentManager} from
+    "src/modules/logicModule/RecurringPaymentManager.sol";
 
 //Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -65,6 +69,8 @@ contract E2eTest is Test {
         .ModuleConfig(authorizerMetadata, abi.encode(address(this)));
 
     SimplePaymentProcessor paymentProcessorImpl;
+    StreamingPaymentProcessor streamingPaymentProcessorImpl;
+
     Beacon paymentProcessorBeacon;
     address paymentProcessorBeaconOwner = address(0x1BEAC0);
     IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
@@ -75,6 +81,18 @@ contract E2eTest is Test {
     );
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
         IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
+
+    Beacon streamingPaymentProcessorBeacon;
+    address streamingPaymentProcessorBeaconOwner =
+        makeAddr("streaming payment processor beacon owner");
+    IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/streaming-payment-processor",
+        "StreamingPaymentProcessor"
+    );
+    IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
+    IProposalFactory.ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
 
     MilestoneManager milestoneManagerImpl;
     Beacon milestoneManagerBeacon;
@@ -91,6 +109,22 @@ contract E2eTest is Test {
         abi.encode(100_000_000, 1_000_000, makeAddr("treasury"))
     );
 
+    RecurringPaymentManager recurringPaymentManagerImpl;
+
+    Beacon recurringPaymentManagerBeacon;
+    address recurringPaymentManagerBeaconOwner =
+        makeAddr("recurring payment manager beacon owner");
+    IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/recurring-payment-manager",
+        "RecurringPaymentManager"
+    );
+    IProposalFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
+    IProposalFactory.ModuleConfig(
+        recurringPaymentManagerMetadata, abi.encode(1 weeks)
+    );
+
     function setUp() public {
         // Deploy Proposal implementation.
         proposalImpl = new Proposal();
@@ -98,7 +132,9 @@ contract E2eTest is Test {
         // Deploy module implementations.
         rebasingFundingManagerImpl = new RebasingFundingManager();
         paymentProcessorImpl = new SimplePaymentProcessor();
+        streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
+        recurringPaymentManagerImpl = new RecurringPaymentManager();
         authorizerImpl = new AuthorizerMock();
 
         // Deploy module beacons.
@@ -106,8 +142,12 @@ contract E2eTest is Test {
         rebasingFundingManagerBeacon = new Beacon();
         vm.prank(paymentProcessorBeaconOwner);
         paymentProcessorBeacon = new Beacon();
+        vm.prank(streamingPaymentProcessorBeaconOwner);
+        streamingPaymentProcessorBeacon = new Beacon();
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon = new Beacon();
+        vm.prank(recurringPaymentManagerBeaconOwner);
+        recurringPaymentManagerBeacon = new Beacon();
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon = new Beacon();
 
@@ -118,8 +158,16 @@ contract E2eTest is Test {
         );
         vm.prank(paymentProcessorBeaconOwner);
         paymentProcessorBeacon.upgradeTo(address(paymentProcessorImpl));
+        vm.prank(streamingPaymentProcessorBeaconOwner);
+        streamingPaymentProcessorBeacon.upgradeTo(
+            address(streamingPaymentProcessorImpl)
+        );
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
+        vm.prank(recurringPaymentManagerBeaconOwner);
+        recurringPaymentManagerBeacon.upgradeTo(
+            address(recurringPaymentManagerImpl)
+        );
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon.upgradeTo(address(authorizerImpl));
 
@@ -137,7 +185,15 @@ contract E2eTest is Test {
             paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
         );
         moduleFactory.registerMetadata(
+            streamingPaymentProcessorMetadata,
+            IBeacon(streamingPaymentProcessorBeacon)
+        );
+        moduleFactory.registerMetadata(
             milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
+        );
+        moduleFactory.registerMetadata(
+            recurringPaymentManagerMetadata,
+            IBeacon(recurringPaymentManagerBeacon)
         );
         moduleFactory.registerMetadata(
             authorizerMetadata, IBeacon(authorizerBeacon)
@@ -161,6 +217,27 @@ contract E2eTest is Test {
             rebasingFundingManagerFactoryConfig,
             authorizerFactoryConfig,
             paymentProcessorFactoryConfig,
+            optionalModules
+        );
+    }
+
+    function _createNewProposalWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
+        IProposalFactory.ProposalConfig memory config
+    ) internal returns (IProposal) {
+        IProposalFactory.ModuleConfig[] memory optionalModules =
+            new IProposalFactory.ModuleConfig[](1);
+        optionalModules[0] = recurringPaymentManagerFactoryConfig;
+
+        IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
+        IProposalFactory.ModuleConfig(
+            rebasingFundingManagerMetadata, abi.encode(address(config.token))
+        );
+
+        return proposalFactory.createProposal(
+            config,
+            rebasingFundingManagerFactoryConfig,
+            authorizerFactoryConfig,
+            streamingPaymentProcessorFactoryConfig,
             optionalModules
         );
     }
