@@ -209,7 +209,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         address contributor
     ) external onlyAuthorized {
         if (
-            _findAddressInActivePayments(address(client), contributor)
+            _findAddressInActiveVestings(address(client), contributor)
                 == type(uint).max
         ) {
             revert Module__PaymentProcessor__InvalidContributor(
@@ -367,7 +367,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         // 3. activeContributors and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
         //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
         if (activeVestingWallets[client][contributor].length == 0) {
-            _removeContributorFromActivePayments(client, contributor);
+            _removeContributorFromActiveVestings(client, contributor);
         }
 
         // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
@@ -383,7 +383,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param client address of the payment client
     /// @param contributor address of the contributor
     /// @return the index of the contributor in the activeContributors[client] array. Returns type(uint256).max otherwise.
-    function _findAddressInActivePayments(address client, address contributor)
+    function _findAddressInActiveVestings(address client, address contributor)
         internal
         view
         returns (uint)
@@ -529,13 +529,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ///      Also signals that the contributor is no longer an active contributor according to the payment client
     /// @param client address of the payment client
     /// @param contributor address of the contributor
-    function _removeContributorFromActivePayments(
+    function _removeContributorFromActiveVestings(
         address client,
         address contributor
     ) internal {
         // Find the contributor's index in the array of activeContributors mapping.
         uint contributorIndex =
-            _findAddressInActivePayments(client, contributor);
+            _findAddressInActiveVestings(client, contributor);
 
         if (contributorIndex == type(uint).max) {
             revert Module__PaymentProcessor__InvalidContributor(
@@ -585,7 +585,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             // We do not want activeContributors[client] to have duplicate contributor entries
             // So we avoid pushing the _contributor to activeContributors[client] if it already exists
             if (
-                _findAddressInActivePayments(client, _contributor)
+                _findAddressInActiveVestings(client, _contributor)
                     == type(uint).max
             ) {
                 activeContributors[client].push(_contributor);
