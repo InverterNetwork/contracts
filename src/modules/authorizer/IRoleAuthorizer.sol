@@ -32,9 +32,6 @@ interface IRoleAuthorizer is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /// @inheritdoc IAuthorizer
-    function isAuthorized(address who) external view returns (bool);
-
     /// @notice Overloads {isAuthorized} for a Module to ask whether an address holds the required role to execute
     ///         the current transaction.
     /// @param role The identifier of the role we want to check

@@ -725,35 +725,6 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
     }
 
-    /*function testOwnerCanStillModifyRoleIfAdminBurnedButInManagedState()
-        public
-    {
-        // First, we make BOB admin
-        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
-        vm.prank(ALBA);
-        _authorizer.grantRole(adminRole, BOB);
-        assertTrue(_authorizer.hasRole(adminRole, BOB));
-
-        //Then we set up a mock module and buffer the role with burned admin
-        address newModule = _setupMockSelfManagedModule();
-        bytes32 roleId =
-            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_1));
-
-        // We return the module to managed state.
-        vm.prank(newModule);
-        _authorizer.toggleModuleSelfManagement();
-
-        // As seen in the test above BOB can NOT grant and revoke roles even though he's admin
-        // BUT: ALBA, as an OWNER, can
-        assertEq(_authorizer.hasRole(roleId, BOB), false);
-        vm.startPrank(ALBA);
-        _authorizer.grantRole(roleId, BOB);
-        assertEq(_authorizer.hasRole(roleId, BOB), true);
-        _authorizer.revokeRole(roleId, BOB);
-        assertEq(_authorizer.hasRole(roleId, BOB), false);
-        vm.stopPrank();
-    }*/
-
     // Test toggleModuleSelfManagement
     // Test selfManagement gets recognized
     function testtoggleModuleSelfManagement() public {

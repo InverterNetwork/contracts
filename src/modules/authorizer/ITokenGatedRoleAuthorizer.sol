@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
 
-interface ITokenGatedRoleAuthorizer {
+interface ITokenGatedRoleAuthorizer is IRoleAuthorizer {
     //--------------------------------------------------------------------------
     // Events
 
@@ -51,6 +51,7 @@ interface ITokenGatedRoleAuthorizer {
     /// @notice Sets up a token-gated empty role.
     /// @param role The role to be made token-gated
     /// @dev This function is only callable by an active Module for itself. Admin should use setTokenGated().
+    /// @dev Calling this function does not specify WHICH token to use for gating. That has to be done with 'grantTokenFromModule()'
     function makeRoleTokenGatedFromModule(uint8 role) external;
 
     /// @notice One-step setup for Modules to create a token-gated role and set its threshold.

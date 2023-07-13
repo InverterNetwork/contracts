@@ -6,7 +6,7 @@ import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
 import {Module, IModule} from "src/modules/base/Module.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
-import {IRoleAuthorizer} from "./IRoleAuthorizer.sol";
+import {IRoleAuthorizer, IAuthorizer} from "./IRoleAuthorizer.sol";
 
 contract RoleAuthorizer is
     IRoleAuthorizer,
@@ -147,7 +147,7 @@ contract RoleAuthorizer is
 
     // View functions
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     /// @dev Implements the function of the IAuthorizer interface by defauling to check if the caller holds the OWNER role.
     function isAuthorized(address who) external view returns (bool) {
         // In case no role is specfied, we ask if the caller is an owner
