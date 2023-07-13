@@ -175,7 +175,7 @@ interface IStreamingPaymentProcessor {
     ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the paymentClient itself.
     /// @param client The {IPaymentClient} instance from which we will remove the payments
     /// @param contributor Contributor's address.
-    function removeAllPaymentForContributor(
+    function removeAllContributorPayments(
         IPaymentClient client,
         address contributor
     ) external;

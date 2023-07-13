@@ -200,7 +200,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
-    function removeAllPaymentForContributor(
+    function removeAllContributorPayments(
         IPaymentClient client,
         address contributor
     ) external onlyAuthorized {
