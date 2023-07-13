@@ -148,7 +148,7 @@ contract RecurringPayments is e2e {
         }
 
         // Checking whether we got the right address for streamingPaymentProcessor
-        IStreamingPaymentProcessor.StreamingWallet[] memory wallets =
+        IStreamingPaymentProcessor.VestingWallet[] memory wallets =
         streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), contributor1
         );
