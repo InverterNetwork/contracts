@@ -103,8 +103,6 @@ contract ProposalFactory is IProposalFactory {
             paymentProcessorConfig.configdata
         );
 
-        bool pendingDependency;
-
         // Deploy and cache optional modules.
         uint modulesLen = moduleConfigs.length;
         address[] memory modules = new address[](modulesLen);
@@ -114,9 +112,10 @@ contract ProposalFactory is IProposalFactory {
                 IProposal(clone),
                 moduleConfigs[i].configdata
             );
+        }
 
-            // Now that we have the current module address, check whether it has a pending dependency 
-            pendingDependency = requiresLateDependencyInjection(modules[i]);
+        for(uint i; i < modulesLen; i++) {
+            
         }
 
         // Initialize proposal.
@@ -139,12 +138,6 @@ contract ProposalFactory is IProposalFactory {
     // @note One solution could be to simply, do a loop of all the modules again in the modules array for the second init function 
     //       and whichever module requires the late dependency injection could implement that second init function and whichever module 
     //       does not require the dependency injection could simply leave that second init function blank
-    
-    // NOTE STATUS: TO BE IMPLEMENTED
-
-    function requiresLateDependencyInjection(address moduleAddress) public view returns(bool) {
-        // to check this, we must have a list of all modules that require a late dependency injection to check against.
-    } 
 
     /// @inheritdoc IProposalFactory
     function getProposalByID(uint id)
