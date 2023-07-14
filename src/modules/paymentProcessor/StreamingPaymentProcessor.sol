@@ -28,17 +28,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @notice tracks whether a specific contributor is active in a paymentClient
-    /// @dev paymentClient => contributor => isActive(bool)
-    mapping(address => mapping(address => bool)) public isActiveContributor;
-
     /// @notice provides a unique id for new payment orders added for a specific client & contributor combo
-    /// @dev paymentClient => contributor => walletId(uint256)
-    mapping(address => mapping(address => uint)) public numContributorWallets;
+    /// @dev paymentClient => contributor => walletId(uint)
+    mapping(address => mapping(address => uint)) public numVestingWallets;
 
     /// @notice tracks all vesting details for all payment orders of a contributor for a specific paymentClient
-    /// @dev paymentClient => contributor => streamingWalletID => Wallet
-    mapping(address => mapping(address => mapping(uint => StreamingWallet)))
+    /// @dev paymentClient => contributor => vestingWalletID => Wallet
+    mapping(address => mapping(address => mapping(uint => VestingWallet)))
         private vestings;
 
     /// @notice tracks all payments that could not be made to the contributor due to any reason
@@ -47,12 +43,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @notice list of addresses with open payment Orders per paymentClient
     /// @dev paymentClient => listOfContributors(address[]). Duplicates are not allowed.
-    mapping(address => address[]) private activePayments;
+    mapping(address => address[]) private activeContributors;
 
     /// @notice list of walletIDs of all payment orders of a particular contributor for a particular paymentClient
-    /// @dev client => contributor => arrayOfWalletIdsWithPendingPayment(uint256[])
-    mapping(address => mapping(address => uint[])) private
-        activeContributorPayments;
+    /// @dev client => contributor => arrayOfWalletIdsWithPendingPayment(uint[])
+    mapping(address => mapping(address => uint[])) private activeVestingWallets;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -74,7 +69,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     modifier activeContributor(address client, address contributor) {
-        if (!(isActiveContributor[client][contributor])) {
+        if (activeVestingWallets[client][contributor].length == 0) {
             revert Module__PaymentProcessor__InvalidContributor(
                 client, contributor
             );
@@ -98,8 +93,9 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function claimAll(IPaymentClient client) external {
         if (
             !(
-                isActiveContributor[address(client)][_msgSender()]
-                    || unclaimable(address(client), _msgSender()) > 0
+                unclaimable(address(client), _msgSender()) > 0
+                    || activeVestingWallets[address(client)][_msgSender()].length
+                        > 0
             )
         ) {
             revert Module__PaymentProcessor__NothingToClaim(
@@ -117,8 +113,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         bool retryForUnclaimableAmounts
     ) external {
         if (
-            !isActiveContributor[address(client)][_msgSender()]
-                || (walletId > numContributorWallets[address(client)][_msgSender()])
+            activeVestingWallets[address(client)][_msgSender()].length == 0
+                || walletId > numVestingWallets[address(client)][_msgSender()]
         ) {
             revert Module__PaymentProcessor__InvalidWallet(
                 address(client), _msgSender(), walletId
@@ -171,8 +167,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
                 _dueTo = orders[i].dueTo;
-                _walletId =
-                    numContributorWallets[address(client)][_recipient] + 1;
+                _walletId = numVestingWallets[address(client)][_recipient] + 1;
 
                 _addPayment(
                     address(client),
@@ -209,12 +204,12 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
-    function removePayment(IPaymentClient client, address contributor)
-        external
-        onlyAuthorized
-    {
+    function removeAllContributorPayments(
+        IPaymentClient client,
+        address contributor
+    ) external onlyAuthorized {
         if (
-            _findAddressInActivePayments(address(client), contributor)
+            _findAddressInActiveVestings(address(client), contributor)
                 == type(uint).max
         ) {
             revert Module__PaymentProcessor__InvalidContributor(
@@ -238,35 +233,25 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
         // We will delete the payment order in question, if it hasn't already reached the end of its duration.
-        uint dueToContributor =
-            dueToForSpecificWalletId(address(client), contributor, walletId);
-
-        if (block.timestamp < dueToContributor) {
-            // deletes activeContributorPayments
-            _removePaymentForSpecificWalletId(
-                address(client), contributor, walletId
-            );
-
-            // deletes vesting information
-            _removeVestingInformationForSpecificWalletId(
-                address(client), contributor, walletId
-            );
-
-            // deletes activePayments & isActiveContributor if it was the contributor's last paymentOrder
-            if (
-                activeContributorPayments[address(client)][contributor].length
-                    == 0
-            ) {
-                isActiveContributor[address(client)][contributor] = false;
-                _removeContributorFromActivePayments(
-                    address(client), contributor
-                );
-            }
+        if (
+            block.timestamp
+                < dueToForSpecificWalletId(address(client), contributor, walletId)
+        ) {
+            _afterClaimCleanup(address(client), contributor, walletId);
         }
     }
 
     //--------------------------------------------------------------------------
     // Public Functions
+
+    /// @inheritdoc IStreamingPaymentProcessor
+    function isActiveContributor(address client, address contributor)
+        public
+        view
+        returns (bool)
+    {
+        return activeVestingWallets[client][contributor].length > 0;
+    }
 
     /// @inheritdoc IStreamingPaymentProcessor
     function startForSpecificWalletId(
@@ -302,7 +287,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         uint timestamp,
         uint walletId
     ) public view returns (uint) {
-        return _vestingScheduleForSpecificWalletId(
+        return _vestingAmountForSpecificWalletId(
             client, contributor, timestamp, walletId
         );
     }
@@ -337,45 +322,75 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         external
         view
         activeContributor(client, contributor)
-        returns (StreamingWallet[] memory)
+        returns (VestingWallet[] memory)
     {
-        uint[] memory contributorWalletsArray =
-            activeContributorPayments[client][contributor];
-        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+        uint[] memory vestingWalletsArray =
+            activeVestingWallets[client][contributor];
+        uint vestingWalletsArrayLength = vestingWalletsArray.length;
 
         uint index;
-        StreamingWallet[] memory contributorStreamingWallets =
-            new StreamingWallet[](contributorWalletsArrayLength);
+        VestingWallet[] memory contributorVestingWallets =
+            new VestingWallet[](vestingWalletsArrayLength);
 
-        for (index; index < contributorWalletsArrayLength;) {
-            contributorStreamingWallets[index] =
-                vestings[client][contributor][contributorWalletsArray[index]];
+        for (index; index < vestingWalletsArrayLength;) {
+            contributorVestingWallets[index] =
+                vestings[client][contributor][vestingWalletsArray[index]];
 
             unchecked {
                 ++index;
             }
         }
 
-        return contributorStreamingWallets;
+        return contributorVestingWallets;
     }
 
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice used to find whether a particular contributor has pending payments with a client
-    /// @dev This function returns the first instance of the contributor address in the activePayments[client] array, but that
-    ///      is completely fine as the activePayments[client] array does not allow duplicates.
+    /// @notice common set of steps to be taken after everything has been claimed from a specific wallet
     /// @param client address of the payment client
     /// @param contributor address of the contributor
-    /// @return the index of the contributor in the activePayments[client] array. Returns type(uint256).max otherwise.
-    function _findAddressInActivePayments(address client, address contributor)
+    /// @param walletId ID of the wallet that was fully claimed
+    function _afterClaimCleanup(
+        address client,
+        address contributor,
+        uint walletId
+    ) internal {
+        // 1. remove walletId from the activeVestingWallets mapping
+        _removePaymentForSpecificWalletId(client, contributor, walletId);
+
+        // 2. delete the vesting information for this specific walletId
+        _removeVestingInformationForSpecificWalletId(
+            client, contributor, walletId
+        );
+
+        // 3. activeContributors and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
+        //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
+        if (activeVestingWallets[client][contributor].length == 0) {
+            _removeContributorFromActiveVestings(client, contributor);
+        }
+
+        // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
+        // Note Also, we do not need to update numVestingWallets, as claiming completely from a wallet does not affect this mapping.
+
+        // 4. emit an event broadcasting that a particular payment has been removed
+        emit StreamingPaymentRemoved(client, contributor, walletId);
+    }
+
+    /// @notice used to find whether a particular contributor has pending payments with a client
+    /// @dev This function returns the first instance of the contributor address in the activeContributors[client] array, but that
+    ///      is completely fine as the activeContributors[client] array does not allow duplicates.
+    /// @param client address of the payment client
+    /// @param contributor address of the contributor
+    /// @return the index of the contributor in the activeContributors[client] array. Returns type(uint256).max otherwise.
+    function _findAddressInActiveVestings(address client, address contributor)
         internal
         view
         returns (uint)
     {
-        address[] memory contribSearchArray = activePayments[client];
+        address[] memory contribSearchArray = activeContributors[client];
 
-        uint length = activePayments[client].length;
+        uint length = activeContributors[client].length;
         for (uint i; i < length;) {
             if (contribSearchArray[i] == contributor) {
                 return i;
@@ -389,23 +404,23 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @notice used to find whether a particular payment order associated with a contributor and paymentClient with id = walletId is active or not
     /// @dev active means that the particular payment order is still to be paid out/claimed. This function returns the first instance of the walletId
-    ///      in the activeContributorPayments[client][contributor] array, but that is fine as the array does not allow duplicates.
+    ///      in the activeVestingWallets[client][contributor] array, but that is fine as the array does not allow duplicates.
     /// @param client address of the payment client
     /// @param contributor address of the contributor
     /// @param walletId ID of the payment order that needs to be searched
-    /// @return the index of the contributor in the activeContributorPayments[client][contributor] array. Returns type(uint256).max otherwise.
+    /// @return the index of the contributor in the activeVestingWallets[client][contributor] array. Returns type(uint256).max otherwise.
     function _findActiveWalletId(
         address client,
         address contributor,
         uint walletId
     ) internal view returns (uint) {
-        uint[] memory contributorWalletsArray =
-            activeContributorPayments[client][contributor];
-        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+        uint[] memory vestingWalletsArray =
+            activeVestingWallets[client][contributor];
+        uint vestingWalletsArrayLength = vestingWalletsArray.length;
 
         uint index;
-        for (index; index < contributorWalletsArrayLength;) {
-            if (contributorWalletsArray[index] == walletId) {
+        for (index; index < vestingWalletsArrayLength;) {
+            if (vestingWalletsArray[index] == walletId) {
                 return index;
             }
             unchecked {
@@ -421,7 +436,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ///      their details are deleted
     /// @param client address of the payment client
     function _cancelRunningOrders(address client) internal {
-        address[] memory contributors = activePayments[client];
+        address[] memory contributors = activeContributors[client];
         uint contributorsLength = contributors.length;
 
         uint index;
@@ -441,36 +456,23 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param client address of the payment client
     /// @param contributor address of the contributor
     function _removePayment(address client, address contributor) internal {
-        uint[] memory contributorWalletsArray =
-            activeContributorPayments[client][contributor];
-        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+        uint[] memory vestingWalletsArray =
+            activeVestingWallets[client][contributor];
+        uint vestingWalletsArrayLength = vestingWalletsArray.length;
 
         uint index;
         uint walletId;
-        for (index; index < contributorWalletsArrayLength;) {
-            walletId = contributorWalletsArray[index];
+        for (index; index < vestingWalletsArrayLength;) {
+            walletId = vestingWalletsArray[index];
             _claimForSpecificWalletId(client, contributor, walletId, true);
 
             // If the paymentOrder being removed was already past its duration, then it would have been removed in the earlier _claimForSpecificWalletId call
             // Otherwise, we would remove that paymentOrder in the following lines.
             if (
                 block.timestamp
-                    < startForSpecificWalletId(client, contributor, walletId)
-                        + dueToForSpecificWalletId(client, contributor, walletId)
+                    < dueToForSpecificWalletId(client, contributor, walletId)
             ) {
-                _removePaymentForSpecificWalletId(client, contributor, walletId);
-
-                _removeVestingInformationForSpecificWalletId(
-                    client, contributor, walletId
-                );
-
-                if (activeContributorPayments[client][contributor].length == 0)
-                {
-                    isActiveContributor[client][contributor] = false;
-                    _removeContributorFromActivePayments(client, contributor);
-                }
-
-                emit StreamingPaymentRemoved(client, contributor, walletId);
+                _afterClaimCleanup(client, contributor, walletId);
             }
 
             unchecked {
@@ -479,7 +481,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
     }
 
-    /// @notice used to remove the payment order with id = walletId from the activeContributorPayments[client][contributor] array.
+    /// @notice used to remove the payment order with id = walletId from the activeVestingWallets[client][contributor] array.
     /// @dev This function simply removes a particular payment order from the earlier mentioned array. The implications of removing a payment order
     ///      from this array have to be handled outside of this function, such as checking whether the contributor is still active or not, etc.
     /// @param client Address of the payment client
@@ -501,11 +503,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         // Standard deletion process.
         // Unordered removal of Contributor payment with walletId WalletIdIndex
         // Move the last element to the index which is to be deleted and then pop the last element of the array.
-        activeContributorPayments[client][contributor][walletIdIndex] =
-        activeContributorPayments[client][contributor][activeContributorPayments[client][contributor]
+        activeVestingWallets[client][contributor][walletIdIndex] =
+        activeVestingWallets[client][contributor][activeVestingWallets[client][contributor]
             .length - 1];
 
-        activeContributorPayments[client][contributor].pop();
+        activeVestingWallets[client][contributor].pop();
     }
 
     /// @notice used to remove the vesting info of the payment order with id = walletId.
@@ -527,13 +529,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ///      Also signals that the contributor is no longer an active contributor according to the payment client
     /// @param client address of the payment client
     /// @param contributor address of the contributor
-    function _removeContributorFromActivePayments(
+    function _removeContributorFromActiveVestings(
         address client,
         address contributor
     ) internal {
-        // Find the contributor's index in the array of activePayments mapping.
+        // Find the contributor's index in the array of activeContributors mapping.
         uint contributorIndex =
-            _findAddressInActivePayments(client, contributor);
+            _findAddressInActiveVestings(client, contributor);
 
         if (contributorIndex == type(uint).max) {
             revert Module__PaymentProcessor__InvalidContributor(
@@ -542,12 +544,12 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
 
         // Replace the element to be deleted with the last element of the array
-        uint contributorsLength = activePayments[client].length;
-        activePayments[client][contributorIndex] =
-            activePayments[client][contributorsLength - 1];
+        uint contributorsLength = activeContributors[client].length;
+        activeContributors[client][contributorIndex] =
+            activeContributors[client][contributorsLength - 1];
 
         // pop the last element of the array
-        activePayments[client].pop();
+        activeContributors[client].pop();
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow
@@ -575,22 +577,21 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _contributor, _salary, _start, _dueTo
             );
         } else {
-            ++numContributorWallets[client][_contributor];
-            isActiveContributor[client][_contributor] = true;
+            ++numVestingWallets[client][_contributor];
 
             vestings[client][_contributor][_walletId] =
-                StreamingWallet(_salary, 0, _start, _dueTo, _walletId);
+                VestingWallet(_salary, 0, _start, _dueTo, _walletId);
 
-            // We do not want activePayments[client] to have duplicate contributor entries
-            // So we avoid pushing the _contributor to activePayments[client] if it already exists
+            // We do not want activeContributors[client] to have duplicate contributor entries
+            // So we avoid pushing the _contributor to activeContributors[client] if it already exists
             if (
-                _findAddressInActivePayments(client, _contributor)
+                _findAddressInActiveVestings(client, _contributor)
                     == type(uint).max
             ) {
-                activePayments[client].push(_contributor);
+                activeContributors[client].push(_contributor);
             }
 
-            activeContributorPayments[client][_contributor].push(_walletId);
+            activeVestingWallets[client][_contributor].push(_walletId);
 
             emit StreamingPaymentAdded(
                 client, _contributor, _salary, _start, _dueTo, _walletId
@@ -606,14 +607,14 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param client address of the payment client
     /// @param contributor address of the contributor for which every payment order will be claimed
     function _claimAll(address client, address contributor) internal {
-        uint[] memory contributorWalletsArray =
-            activeContributorPayments[client][contributor];
-        uint contributorWalletsArrayLength = contributorWalletsArray.length;
+        uint[] memory vestingWalletsArray =
+            activeVestingWallets[client][contributor];
+        uint vestingWalletsArrayLength = vestingWalletsArray.length;
 
         uint index;
-        for (index; index < contributorWalletsArrayLength;) {
+        for (index; index < vestingWalletsArrayLength;) {
             _claimForSpecificWalletId(
-                client, contributor, contributorWalletsArray[index], true
+                client, contributor, vestingWalletsArray[index], true
             );
 
             unchecked {
@@ -670,25 +671,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         // This if conditional block represents that nothing more remains to be vested from the specific walletId
         if (block.timestamp >= dueToContributor) {
-            // 1. remove walletId from the activeContributorPayments mapping
-            _removePaymentForSpecificWalletId(client, contributor, walletId);
-
-            // 2. delete the vesting information for this specific walletId
-            _removeVestingInformationForSpecificWalletId(
-                client, contributor, walletId
-            );
-
-            // 3. activePayments and isActive would be updated if this was the last wallet that was associated with the contributor was claimed.
-            //    This would also mean that, it is possible for a contributor to be inactive and still have money owed to them (unclaimableAmounts)
-            if (activeContributorPayments[client][contributor].length == 0) {
-                isActiveContributor[client][contributor] = false;
-                _removeContributorFromActivePayments(client, contributor);
-            }
-
-            // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
-            // Note Also, we do not need to update numContributorWallets, as claiming completely from a wallet does not affect this mapping.
-
-            emit StreamingPaymentRemoved(client, contributor, walletId);
+            _afterClaimCleanup(client, contributor, walletId);
         }
     }
 
@@ -696,9 +679,9 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ///         Returns the amount vested, as a function of time,
     ///         for an asset given its total historical allocation.
     /// @param contributor The contributor to check on.
-    /// @param timestamp Current block.timestamp
+    /// @param timestamp the time upto which we want the vested amount
     /// @param walletId ID of a particular contributor's wallet whose vesting schedule needs to be checked
-    function _vestingScheduleForSpecificWalletId(
+    function _vestingAmountForSpecificWalletId(
         address client,
         address contributor,
         uint timestamp,
