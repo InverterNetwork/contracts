@@ -475,7 +475,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Now, let's check whether all vesting informations exist or not
         // checking for contributor2
-        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets;
+        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets;
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), contributor2
         );
@@ -591,14 +591,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // This means, that when we call removePaymentForSpecificWalletId, that should increase the balance of the
         // contributor by 1/2 of the vested token amount
-        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets =
+        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets =
         paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), contributor1
         );
 
         // We are interested in finding the details of the 2nd wallet of contributor1
         uint expectedSalary = contributorWallets[1]._salary;
-        uint walletId = contributorWallets[1]._streamingWalletID;
+        uint walletId = contributorWallets[1]._vestingWalletID;
 
         initialNumWallets = contributorWallets.length;
         initialContributorBalance = _token.balanceOf(contributor1);
@@ -624,7 +624,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             (expectedSalary / 2)
         );
         assertTrue(
-            initialWalletIdAtIndex1 != contributorWallets[1]._streamingWalletID
+            initialWalletIdAtIndex1 != contributorWallets[1]._vestingWalletID
         );
     }
 
@@ -699,7 +699,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // Let's note down the current balance of the contributor1
         initialContributorBalance = _token.balanceOf(contributor1);
 
-        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets =
+        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets =
         paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), contributor1
         );
@@ -709,7 +709,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // Now we claim the entire salary from the first payment order
         vm.prank(contributor1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, contributorWallets[0]._streamingWalletID, false
+            paymentClient, contributorWallets[0]._vestingWalletID, false
         );
 
         // Now we note down the balance of the contributor1 again after claiming for the first wallet.
@@ -727,7 +727,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.removePaymentForSpecificWalletId(
             paymentClient,
             contributor1,
-            contributorWallets[1]._streamingWalletID,
+            contributorWallets[1]._vestingWalletID,
             false
         );
 
@@ -749,7 +749,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         vm.prank(contributor1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, contributorWallets[0]._streamingWalletID, false
+            paymentClient, contributorWallets[0]._vestingWalletID, false
         );
 
         finalContributorBalance = _token.balanceOf(contributor1);
