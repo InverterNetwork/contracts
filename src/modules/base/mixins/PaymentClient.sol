@@ -32,6 +32,11 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
         _;
     }
 
+    modifier validPaymentOrder(PaymentOrder memory order) {
+        _ensureValidPaymentOrder(order);
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // State
 
@@ -67,96 +72,49 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     // Internal Mutating Functions
 
     /// @dev Adds a new {PaymentOrder} to the list of outstanding orders.
-    /// @param recipient The recipient of the payment.
-    /// @param amount The amount to be paid out.
-    /// @param dueTo Timestamp at which the payment SHOULD be fulfilled.
-    function _addPaymentOrder(address recipient, uint amount, uint dueTo)
+    /// @param order The new payment order.
+    function _addPaymentOrder(PaymentOrder memory order)
         internal
         virtual
-        validRecipient(recipient)
-        validAmount(amount)
+        validPaymentOrder(order)
     {
         // Add order's token amount to current outstanding amount.
-        _outstandingTokenAmount += amount;
+        _outstandingTokenAmount += order.amount;
 
         // Add new order to list of oustanding orders.
-        _orders.push(PaymentOrder(recipient, amount, block.timestamp, dueTo));
+        _orders.push(order);
 
         // Ensure our token balance is sufficient.
         // Note that function is implemented in downstream contract.
         _ensureTokenBalance(_outstandingTokenAmount);
 
-        emit PaymentOrderAdded(recipient, amount);
+        emit PaymentOrderAdded(order.recipient, order.amount);
     }
 
     /// @dev Adds a set of new {PaymentOrder}s to the list of outstanding
     ///      orders.
-    /// @param recipients The list of recipients of the payments.
-    /// @param amounts The amounts to be paid out.
-    /// @param dueTos Timestamps at which the payments SHOULD be fulfilled.
-    function _addPaymentOrders(
-        address[] memory recipients,
-        uint[] memory amounts,
-        uint[] memory dueTos
-    ) internal virtual {
-        uint orderAmount = recipients.length;
+    /// @param orders The list of new Payment Orders.
+    function _addPaymentOrders(PaymentOrder[] memory orders) internal virtual {
+        uint orderAmount = orders.length;
 
-        // Revert if arrays' length mismatch.
-        if (orderAmount != amounts.length || orderAmount != dueTos.length) {
-            revert Module__PaymentClient__ArrayLengthMismatch();
-        }
+        PaymentOrder memory currentOrder;
 
         uint totalTokenAmount;
         for (uint i; i < orderAmount; ++i) {
-            _ensureValidRecipient(recipients[i]);
-            _ensureValidAmount(amounts[i]);
+            currentOrder = orders[i];
+            _ensureValidPaymentOrder(currentOrder);
 
             // Add order's amount to total amount of new orders.
-            totalTokenAmount += amounts[i];
+            totalTokenAmount += currentOrder.amount;
 
             // Add new order to list of oustanding orders.
-            _orders.push(
-                PaymentOrder(
-                    recipients[i], amounts[i], block.timestamp, dueTos[i]
-                )
-            );
+            _orders.push(currentOrder);
 
-            emit PaymentOrderAdded(recipients[i], amounts[i]);
+            emit PaymentOrderAdded(currentOrder.recipient, currentOrder.amount);
         }
 
         // Add total orders' amount to current outstanding amount.
         _outstandingTokenAmount += totalTokenAmount;
-
-        // Ensure our token balance is sufficient.
-        // Note that functions is implemented in downstream contract.
-        _ensureTokenBalance(_outstandingTokenAmount);
-    }
-
-    /// @dev Adds a set of new identical {PaymentOrder}s to the list of
-    ///      outstanding orders.
-    /// @param recipients The list of recipients of the payments.
-    /// @param amount The amount to be paid out in each order.
-    /// @param dueTo Timestamp at which the payments SHOULD be fulfilled.
-    function _addIdenticalPaymentOrders(
-        address[] memory recipients,
-        uint amount,
-        uint dueTo
-    ) internal virtual validAmount(amount) {
-        uint orderAmount = recipients.length;
-
-        for (uint i; i < orderAmount; ++i) {
-            _ensureValidRecipient(recipients[i]);
-
-            // Add new order to list of oustanding orders.
-            _orders.push(
-                PaymentOrder(recipients[i], amount, block.timestamp, dueTo)
-            );
-
-            emit PaymentOrderAdded(recipients[i], amount);
-        }
-
-        // Add total orders' amount to current outstanding amount.
-        _outstandingTokenAmount += amount * orderAmount;
 
         // Ensure our token balance is sufficient.
         // Note that functions is implemented in downstream contract.
@@ -236,8 +194,15 @@ abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     }
 
     function _ensureValidAmount(uint amount) private pure {
-        if (amount == 0) {
+        if (amount == 0) revert Module__PaymentClient__InvalidAmount();
+    }
+
+    function _ensureValidPaymentOrder(PaymentOrder memory order) private view {
+        if (order.amount == 0) {
             revert Module__PaymentClient__InvalidAmount();
+        }
+        if (order.recipient == address(0) || order.recipient == address(this)) {
+            revert Module__PaymentClient__InvalidRecipient();
         }
     }
 }

@@ -49,6 +49,8 @@ testFuzz: ## Run whole testsuite with a custom amount of fuzz runs
 	echo "Running tests with $${FOUNDRY_FUZZ_RUNS} fuzz runs and $${FOUNDRY_FUZZ_MAX_TEST_REJECTS} accepted test rejections..."; \
 	forge test -vvv
 
+
+ 
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
@@ -137,6 +139,7 @@ fmt-check: ## Check whether code formatted correctly
 pre-commit: ## Git pre-commit hook
 	@forge fmt
 	@make testScripts
+	@export FOUNDRY_FUZZ_RUNS=1024
 	@forge coverage --report lcov
 	@genhtml lcov.info --branch-coverage --output-dir coverage
 	@forge snapshot
