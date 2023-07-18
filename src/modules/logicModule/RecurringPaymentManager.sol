@@ -294,7 +294,7 @@ contract RecurringPaymentManager is
         uint amountOfOrders;
 
         //Get amount of orders needed
-        for (uint i; i < length; i++) {
+        for (uint i; i < length; ++i) {
             if (notTriggeredThisEpoch[i]) ++amountOfOrders;
             if (notTriggeredPastEpoch[i]) ++amountOfOrders;
         }
