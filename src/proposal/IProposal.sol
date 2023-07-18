@@ -68,9 +68,6 @@ interface IProposal is IModuleManager {
     ///         for payments.
     function token() external view returns (IERC20);
 
-    /// @notice The proposal's non-rebasing receipt token.
-    function receiptToken() external view returns (IERC20);
-
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);
 

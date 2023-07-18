@@ -67,10 +67,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     /// @dev this does not check if id is SENTINEL. This has to be checked seperately via validId()
-    modifier validIntermediateMilestonePosition(
-        uint id,
-        uint idToPositionAfter
-    ) {
+    modifier validMilestonePositionShift(uint id, uint idToPositionAfter) {
         if (
             _milestoneRegistry[id].startTimestamp != 0 //Milestone hasnt started
                 || (
@@ -78,7 +75,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
                         .startTimestamp != 0
                 ) //If the following milestone already started you cant move or add a new milestone here, because it could never be started
         ) {
-            revert Module__MilestoneManager__InvalidIntermediatePosition();
+            revert Module__MilestoneManager__InvalidMilestonePositionShift();
         }
         _;
     }
@@ -559,7 +556,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
         external
         onlyAuthorizedOrManager
-        validIntermediateMilestonePosition(id, idToPositionAfter)
+        validMilestonePositionShift(id, idToPositionAfter)
     {
         _milestoneList.moveIdInList(id, prevId, idToPositionAfter);
     }

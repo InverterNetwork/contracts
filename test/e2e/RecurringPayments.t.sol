@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {e2e} from "test/e2e/E2eTestRecurring.sol";
+import {E2eTest} from "test/e2e/E2eTest.sol";
 import "forge-std/console.sol";
 
 //Internal Dependencies
@@ -32,7 +32,7 @@ import {
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract RecurringPayments is e2e {
+contract RecurringPayments is E2eTest {
     // Let's create a list of contributors
     address contributor1 = makeAddr("contributor 1");
     address contributor2 = makeAddr("contributor 2");
@@ -68,7 +68,7 @@ contract RecurringPayments is e2e {
             .ProposalConfig({owner: address(this), token: token});
 
         IProposal proposal =
-        _createNewProposalWithAllModules_withStreamingPaymentProcessor(
+        _createNewProposalWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
             proposalConfig
         );
 
@@ -148,7 +148,7 @@ contract RecurringPayments is e2e {
         }
 
         // Checking whether we got the right address for streamingPaymentProcessor
-        IStreamingPaymentProcessor.StreamingWallet[] memory wallets =
+        IStreamingPaymentProcessor.VestingWallet[] memory wallets =
         streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), contributor1
         );

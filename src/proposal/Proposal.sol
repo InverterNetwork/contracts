@@ -74,8 +74,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
 
     IERC20 private _token;
 
-    IERC20 private _receiptToken;
-
     /// @inheritdoc IProposal
     uint public override(IProposal) proposalId;
 
@@ -116,7 +114,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         proposalId = proposalId_;
 
         _token = token_;
-        _receiptToken = IERC20(address(fundingManager_));
 
         fundingManager = fundingManager_;
         authorizer = authorizer_;
@@ -313,11 +310,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IProposal
     function token() public view override(IProposal) returns (IERC20) {
         return _token;
-    }
-
-    /// @inheritdoc IProposal
-    function receiptToken() public view override(IProposal) returns (IERC20) {
-        return _receiptToken;
     }
 
     /// @inheritdoc IProposal

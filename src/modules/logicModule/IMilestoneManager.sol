@@ -73,7 +73,7 @@ interface IMilestoneManager is IPaymentClient {
     error Module__MilestoneManager__InvalidPosition();
 
     /// @notice Given id is not a valid Intermediate Position in list.
-    error Module__MilestoneManager__InvalidIntermediatePosition();
+    error Module__MilestoneManager__InvalidMilestonePositionShift();
 
     /// @notice Given milestone id invalid.
     error Module__MilestoneManager__InvalidMilestoneId();

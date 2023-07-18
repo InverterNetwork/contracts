@@ -10,18 +10,18 @@ interface IStreamingPaymentProcessor {
     // Structs
 
     /// @notice This struct is used to store the payment order for a particular contributor by a particular payment client
-    /// @dev for _streamingWalletID, valid values will start from 1. 0 is not a valid streamingWalletID.
+    /// @dev for _vestingWalletID, valid values will start from 1. 0 is not a valid vestingWalletID.
     /// @param _salary: The total amount that the contributor should eventually get
     /// @param _released: The amount that has been claimed by the contributor till now
     /// @param _start: The start date of the vesting period
     /// @param _dueTo: The ending of the vesting period
-    /// @param _streamingWalletID: A unique identifier of a wallet for a specific paymentClient and contributor combination
-    struct StreamingWallet {
+    /// @param _vestingWalletID: A unique identifier of a wallet for a specific paymentClient and contributor combination
+    struct VestingWallet {
         uint _salary;
         uint _released;
         uint _start;
         uint _dueTo;
-        uint _streamingWalletID;
+        uint _vestingWalletID;
     }
 
     // Events
@@ -175,8 +175,10 @@ interface IStreamingPaymentProcessor {
     ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the paymentClient itself.
     /// @param client The {IPaymentClient} instance from which we will remove the payments
     /// @param contributor Contributor's address.
-    function removePayment(IPaymentClient client, address contributor)
-        external;
+    function removeAllContributorPayments(
+        IPaymentClient client,
+        address contributor
+    ) external;
 
     /// @notice Deletes a specific payment with id = walletId for a contributor & leaves unvested tokens in the PaymentClient.
     /// @dev the detail of the wallet that is being removed is either deleted in the _claimForSpecificWalletId or later down in this
@@ -260,7 +262,16 @@ interface IStreamingPaymentProcessor {
     function viewAllPaymentOrders(address client, address contributor)
         external
         view
-        returns (StreamingWallet[] memory);
+        returns (VestingWallet[] memory);
+
+    /// @notice tells whether a contributor has any pending payments for a particular client
+    /// @dev this function is for convenience and can be easily figured out by other means in the codebase.
+    /// @param client Address of the payment client
+    /// @param contributor Address of the contributor
+    function isActiveContributor(address client, address contributor)
+        external
+        view
+        returns (bool);
 
     /// @notice Returns the IERC20 token the payment processor can process.
     function token() external view returns (IERC20);
