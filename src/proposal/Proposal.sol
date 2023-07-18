@@ -11,11 +11,15 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
 import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
-import {RebasingFundingManager} from "src/modules/fundingManager/RebasingFundingManager.sol";
+import {RebasingFundingManager} from
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
-import {RecurringPaymentManager} from "src/modules/logicModule/RecurringPaymentManager.sol";
-import {SimplePaymentProcessor} from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
-import {StreamingPaymentProcessor} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
+import {RecurringPaymentManager} from
+    "src/modules/logicModule/RecurringPaymentManager.sol";
+import {SimplePaymentProcessor} from
+    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
+import {StreamingPaymentProcessor} from
+    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
@@ -139,17 +143,24 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @param moduleName Query string which is the title of the module to be searched in the proposal
     /// @return uint256 index of the module in the list of modules used in the proposal
     /// @return address address of the module with title `moduleName`
-    function _isModuleUsedInProposal(string calldata moduleName) private view returns (uint256, address) {
+    function _isModuleUsedInProposal(string calldata moduleName)
+        private
+        view
+        returns (uint, address)
+    {
         address[] memory moduleAddresses = listModules();
-        uint256 moduleAddressesLength = moduleAddresses.length;
+        uint moduleAddressesLength = moduleAddresses.length;
         string memory currentModuleName;
-        uint256 index;
+        uint index;
 
-        for(; index < moduleAddressesLength; ) {
+        for (; index < moduleAddressesLength;) {
             currentModuleName = IModule(moduleAddresses[index]).title();
-            
-            if(bytes(currentModuleName).length == bytes(moduleName).length){
-                if(keccak256(abi.encodePacked(currentModuleName)) == keccak256(abi.encodePacked(moduleName))) {
+
+            if (bytes(currentModuleName).length == bytes(moduleName).length) {
+                if (
+                    keccak256(abi.encodePacked(currentModuleName))
+                        == keccak256(abi.encodePacked(moduleName))
+                ) {
                     return (index, moduleAddresses[index]);
                 }
             }
@@ -159,13 +170,18 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
             }
         }
 
-        return (type(uint256).max, address(0));
+        return (type(uint).max, address(0));
     }
 
     /// @inheritdoc IProposal
-    function findModuleAddressInProposal(string calldata moduleName) external view returns (address) {
-        (uint256 moduleIndex, address moduleAddress) = _isModuleUsedInProposal(moduleName);
-        if( moduleIndex == type(uint256).max) {
+    function findModuleAddressInProposal(string calldata moduleName)
+        external
+        view
+        returns (address)
+    {
+        (uint moduleIndex, address moduleAddress) =
+            _isModuleUsedInProposal(moduleName);
+        if (moduleIndex == type(uint).max) {
             revert DependencyInjection__ModuleNotUsedInProposal();
         }
 
@@ -179,10 +195,14 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //      fully guarentee that the returned address is the address of the exact module the user was looking for
 
     /// @inheritdoc IProposal
-    function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress) external view returns (bool) {
+    function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress)
+        external
+        view
+        returns (bool)
+    {
         ListAuthorizer listAuthorizer = ListAuthorizer(listAuthorizerAddress);
 
-        try listAuthorizer.getAmountAuthorized() returns(uint256) {
+        try listAuthorizer.getAmountAuthorized() returns (uint) {
             return true;
         } catch {
             return false;
@@ -190,10 +210,15 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsSingleVoteGovernorModule(address singleVoteGovernorAddress) external view returns (bool) {
-        SingleVoteGovernor singleVoteGovernor = SingleVoteGovernor(singleVoteGovernorAddress);
+    function verifyAddressIsSingleVoteGovernorModule(
+        address singleVoteGovernorAddress
+    ) external view returns (bool) {
+        SingleVoteGovernor singleVoteGovernor =
+            SingleVoteGovernor(singleVoteGovernorAddress);
 
-        try singleVoteGovernor.getReceipt(type(uint256).max, address(0)) returns(SingleVoteGovernor.Receipt memory) {
+        try singleVoteGovernor.getReceipt(type(uint).max, address(0)) returns (
+            SingleVoteGovernor.Receipt memory
+        ) {
             return true;
         } catch {
             return false;
@@ -201,10 +226,14 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsPaymentClient(address paymentClientAddress) external view returns(bool) {
+    function verifyAddressIsPaymentClient(address paymentClientAddress)
+        external
+        view
+        returns (bool)
+    {
         PaymentClient paymentClient = PaymentClient(paymentClientAddress);
 
-        try paymentClient.outstandingTokenAmount() returns(uint256) {
+        try paymentClient.outstandingTokenAmount() returns (uint) {
             return true;
         } catch {
             return false;
@@ -212,10 +241,13 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsRebasingFundingManager(address rebasingFundingManagerAddress) external view returns(bool) {
-        RebasingFundingManager rebasingFundingManager = RebasingFundingManager(rebasingFundingManagerAddress);
+    function verifyAddressIsRebasingFundingManager(
+        address rebasingFundingManagerAddress
+    ) external view returns (bool) {
+        RebasingFundingManager rebasingFundingManager =
+            RebasingFundingManager(rebasingFundingManagerAddress);
 
-        try rebasingFundingManager.token() returns(IERC20) {
+        try rebasingFundingManager.token() returns (IERC20) {
             return true;
         } catch {
             return false;
@@ -223,13 +255,26 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsMilestoneManager(address milestoneManagerAddress) external returns (bool) {
-        MilestoneManager milestoneManager = MilestoneManager(milestoneManagerAddress);
+    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
+        external
+        returns (bool)
+    {
+        MilestoneManager milestoneManager =
+            MilestoneManager(milestoneManagerAddress);
 
         try milestoneManager.changeTreasuryAddress(address(0)) {
             return true;
         } catch (bytes memory reason) {
-            if(keccak256(reason) == keccak256(abi.encode(IMilestoneManager.Module__MilestoneManager__OnlyCallableByTreasury.selector))) {
+            if (
+                keccak256(reason)
+                    == keccak256(
+                        abi.encode(
+                            IMilestoneManager
+                                .Module__MilestoneManager__OnlyCallableByTreasury
+                                .selector
+                        )
+                    )
+            ) {
                 return true;
             } else {
                 return false;
@@ -238,10 +283,13 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsRecurringPaymentManager(address recurringPaymentManager) external view returns(bool) {
-        RecurringPaymentManager paymentManager = RecurringPaymentManager(recurringPaymentManager);
+    function verifyAddressIsRecurringPaymentManager(
+        address recurringPaymentManager
+    ) external view returns (bool) {
+        RecurringPaymentManager paymentManager =
+            RecurringPaymentManager(recurringPaymentManager);
 
-        try paymentManager.getEpochLength() returns(uint256) {
+        try paymentManager.getEpochLength() returns (uint) {
             return true;
         } catch {
             return false;
@@ -249,10 +297,13 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsSimplePaymentProcessor(address simplePaymentProcessorAddress) external view returns(bool) {
-        SimplePaymentProcessor simplePaymentProcessor = SimplePaymentProcessor(simplePaymentProcessorAddress);
+    function verifyAddressIsSimplePaymentProcessor(
+        address simplePaymentProcessorAddress
+    ) external view returns (bool) {
+        SimplePaymentProcessor simplePaymentProcessor =
+            SimplePaymentProcessor(simplePaymentProcessorAddress);
 
-        try simplePaymentProcessor.token() returns(IERC20) {
+        try simplePaymentProcessor.token() returns (IERC20) {
             return true;
         } catch {
             return false;
@@ -260,10 +311,15 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsStreamingPaymentProcessor(address streamingPaymentProcessorAddress) external view returns (bool) {
-        StreamingPaymentProcessor streamingPaymentProcessor = StreamingPaymentProcessor(streamingPaymentProcessorAddress);
+    function verifyAddressIsStreamingPaymentProcessor(
+        address streamingPaymentProcessorAddress
+    ) external view returns (bool) {
+        StreamingPaymentProcessor streamingPaymentProcessor =
+            StreamingPaymentProcessor(streamingPaymentProcessorAddress);
 
-        try streamingPaymentProcessor.unclaimable(address(uint160(345)), address(uint160(65))) returns(uint256) {
+        try streamingPaymentProcessor.unclaimable(
+            address(uint160(345)), address(uint160(65))
+        ) returns (uint) {
             return true;
         } catch {
             return false;

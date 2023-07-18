@@ -13,7 +13,10 @@ contract ModuleMock is Module {
         __Module_init(proposal_, metadata);
     }
 
-    function init2(IProposal proposal, bytes memory configdata) public initializer {}
+    function init2(IProposal proposal, bytes memory configdata)
+        public
+        initializer
+    {}
 
     // Note that the `initializer` modifier is missing.
     function initNoInitializer(

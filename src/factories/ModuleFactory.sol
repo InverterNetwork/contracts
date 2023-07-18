@@ -108,7 +108,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         return implementation;
     }
- 
+
     //--------------------------------------------------------------------------
     // Public View Functions
 

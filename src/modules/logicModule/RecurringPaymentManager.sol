@@ -91,7 +91,7 @@ contract RecurringPaymentManager is
         //Set empty list of RecurringPayment
         _paymentList.init();
 
-        (epochLength, , ) = abi.decode(configdata, (uint, bool, string[]));
+        (epochLength,,) = abi.decode(configdata, (uint, bool, string[]));
 
         //revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
@@ -99,10 +99,10 @@ contract RecurringPaymentManager is
         }
     }
 
-    function init2 (
-        IProposal proposal_,
-        bytes memory configdata
-    ) external initializer {
+    function init2(IProposal proposal_, bytes memory configdata)
+        external
+        initializer
+    {
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         (, bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (uint, bool, string[]));

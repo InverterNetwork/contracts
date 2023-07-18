@@ -204,7 +204,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _activeMilestone = _SENTINEL;
         _milestoneUpdateTimelock = 3 days;
 
-        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY, , ) =
+        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY,,) =
             abi.decode(configdata, (uint, uint, address, bool, string[]));
 
         if (FEE_PCT >= SALARY_PRECISION) {
@@ -212,10 +212,10 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
     }
 
-    function init2 (
-        IProposal proposal_,
-        bytes memory configdata
-    ) external initializer {
+    function init2(IProposal proposal_, bytes memory configdata)
+        external
+        initializer
+    {
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         (, , , bool hasDependency, string[] memory dependencies) =

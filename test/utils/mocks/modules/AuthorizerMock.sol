@@ -35,7 +35,10 @@ contract AuthorizerMock is IAuthorizer, Module {
         _authorized[authorized] = true;
     }
 
-    function init2(IProposal proposal, bytes memory configdata) public initializer {}
+    function init2(IProposal proposal, bytes memory configdata)
+        public
+        initializer
+    {}
 
     //--------------------------------------------------------------------------
     // IAuthorizer Functions

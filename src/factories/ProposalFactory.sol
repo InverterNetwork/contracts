@@ -129,15 +129,21 @@ contract ProposalFactory is IProposalFactory {
         // Second round of module initializations to satisfy cross-referencing between modules
         // This can be run post the proposal initialization. This ensures a few more variables are
         // available that are set during the proposal init function.
-        for(uint i; i < modulesLen; ++i) {
-            IModule(modules[i]).init2(IProposal(clone), moduleConfigs[i].configdata);
+        for (uint i; i < modulesLen; ++i) {
+            IModule(modules[i]).init2(
+                IProposal(clone), moduleConfigs[i].configdata
+            );
         }
-        
+
         // Also, running the init2 functionality on the compulsory modules excluded from the modules array
-        IModule(fundingManager).init2(IProposal(clone), fundingManagerConfig.configdata);
+        IModule(fundingManager).init2(
+            IProposal(clone), fundingManagerConfig.configdata
+        );
         IModule(authorizer).init2(IProposal(clone), authorizerConfig.configdata);
-        IModule(paymentProcessor).init2(IProposal(clone), paymentProcessorConfig.configdata);
-        
+        IModule(paymentProcessor).init2(
+            IProposal(clone), paymentProcessorConfig.configdata
+        );
+
         return IProposal(clone);
     }
 

@@ -63,7 +63,8 @@ contract RebasingFundingManager is
     ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
 
-        (address proposalTokenAddress, , ) = abi.decode(configdata, (address, bool, string[]));
+        (address proposalTokenAddress,,) =
+            abi.decode(configdata, (address, bool, string[]));
 
         string memory _id = proposal_.proposalId().toString();
         string memory _name =
@@ -77,10 +78,10 @@ contract RebasingFundingManager is
         );
     }
 
-    function init2 (
-        IProposal proposal_,
-        bytes memory configdata
-    ) external initializer {
+    function init2(IProposal proposal_, bytes memory configdata)
+        external
+        initializer
+    {
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         (, bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (address, bool, string[]));

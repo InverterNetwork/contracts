@@ -84,7 +84,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         address[] memory voters;
         uint threshold_;
         uint voteDuration_;
-        (voters, threshold_, voteDuration_, , ) =
+        (voters, threshold_, voteDuration_,,) =
             abi.decode(configdata, (address[], uint, uint, bool, string[]));
 
         uint votersLen = voters.length;
@@ -140,10 +140,10 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         emit VoteDurationUpdated(0, voteDuration_);
     }
 
-    function init2 (
-        IProposal proposal_,
-        bytes memory configdata
-    ) external initializer {
+    function init2(IProposal proposal_, bytes memory configdata)
+        external
+        initializer
+    {
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         ( , , , bool hasDependency, string[] memory dependencies) =

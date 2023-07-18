@@ -57,10 +57,10 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         __Module_init(proposal_, metadata);
     }
 
-    function init2 (
-        IProposal proposal_,
-        bytes memory configdata
-    ) external initializer {
+    function init2(IProposal proposal_, bytes memory configdata)
+        external
+        initializer
+    {
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         (bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (bool, string[]));

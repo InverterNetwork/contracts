@@ -24,7 +24,10 @@ contract FundingManagerMock is IFundingManager, Module {
         __Module_init(proposal_, metadata);
     }
 
-    function init2(IProposal proposal_, bytes memory configdata) public initializer {}
+    function init2(IProposal proposal_, bytes memory configdata)
+        public
+        initializer
+    {}
 
     function setToken(IERC20 newToken) public {
         _token = newToken;

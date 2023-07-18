@@ -77,7 +77,7 @@ contract ListAuthorizer is IAuthorizer, Module {
         Metadata memory metadata,
         bytes memory configdata
     ) external virtual override initializer {
-        (address[] memory initialAuthorizers, ,) =
+        (address[] memory initialAuthorizers,,) =
             abi.decode(configdata, (address[], bool, string[]));
         __ListAuthorizer_init(proposal_, metadata, initialAuthorizers);
     }
@@ -113,10 +113,10 @@ contract ListAuthorizer is IAuthorizer, Module {
         }
     }
 
-    function init2(
-        IProposal proposal_,
-        bytes memory configdata
-    ) external initializer {
+    function init2(IProposal proposal_, bytes memory configdata)
+        external
+        initializer
+    {
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         ( , bool hasDependency, string[] memory dependencies) =

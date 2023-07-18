@@ -33,7 +33,14 @@ contract MetadataManager is IMetadataManager, Module {
             MemberMetadata[] memory teamMetadata_,
             ,
         ) = abi.decode(
-            configdata, (ManagerMetadata, ProposalMetadata, MemberMetadata[], bool, string[])
+            configdata,
+            (
+                ManagerMetadata,
+                ProposalMetadata,
+                MemberMetadata[],
+                bool,
+                string[]
+            )
         );
 
         _setManagerMetadata(managerMetadata_);
@@ -43,10 +50,10 @@ contract MetadataManager is IMetadataManager, Module {
         _setTeamMetadata(teamMetadata_);
     }
 
-    function init2 (
-        IProposal proposal_,
-        bytes memory configdata
-    ) external initializer {
+    function init2(IProposal proposal_, bytes memory configdata)
+        external
+        initializer
+    {
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         (

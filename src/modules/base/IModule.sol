@@ -51,10 +51,7 @@ interface IModule {
     /// @param proposal The module's proposal instance.
     /// @param configdata Variable config data for specific module
     ///                   implementations.
-    function init2(
-        IProposal proposal,
-        bytes memory configdata
-    ) external;
+    function init2(IProposal proposal, bytes memory configdata) external;
 
     /// @notice Returns the module's identifier.
     /// @dev The identifier is defined as the keccak256 hash of the module's
