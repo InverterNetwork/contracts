@@ -101,7 +101,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipients[i], amount, (block.timestamp + time)
+                IPaymentClient.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + time
+                })
             );
 
             totalAmount += amount;
@@ -149,7 +154,6 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint totalAmount;
 
         for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
             uint amount = uint(amounts[i]);
             uint time = uint(durations[i]);
 
@@ -159,7 +163,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + time)
+                IPaymentClient.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + time
+                })
             );
 
             totalAmount += amount;
@@ -248,7 +257,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i; i < length; i++) {
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipients[i], payoutAmount, dueTimes[i]
+                IPaymentClient.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: payoutAmount,
+                    createdAt: block.timestamp,
+                    dueTo: dueTimes[i]
+                })
             );
         }
 
@@ -297,7 +311,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         //we don't mind about adding address(this)in this case
         for (uint i = 0; i < recipients.length - 1; ++i) {
             paymentClient.addPaymentOrderUnchecked(
-                recipients[i], 100, (block.timestamp + 100)
+                IPaymentClient.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: 100,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + 100
+                })
             );
         }
         //Expect the correct number and sequence of emits
@@ -312,7 +331,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.processPayments(paymentClient);
 
         paymentClient.addPaymentOrderUnchecked(
-            address(0xB0B), invalidAmt, (block.timestamp + 100)
+            IPaymentClient.PaymentOrder({
+                recipient: address(0xB0B),
+                amount: invalidAmt,
+                createdAt: block.timestamp,
+                dueTo: block.timestamp + 100
+            })
         );
         vm.expectEmit(true, true, true, true);
         emit InvalidStreamingOrderDiscarded(
@@ -395,7 +419,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + time)
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + time
+                })
             );
         }
 
@@ -431,7 +460,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + time)
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + time
+                })
             );
         }
 
@@ -441,7 +475,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Now, let's check whether all vesting informations exist or not
         // checking for contributor2
-        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets;
+        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets;
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), contributor2
         );
@@ -538,7 +572,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + time)
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + time
+                })
             );
         }
 
@@ -552,14 +591,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // This means, that when we call removePaymentForSpecificWalletId, that should increase the balance of the
         // contributor by 1/2 of the vested token amount
-        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets =
+        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets =
         paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), contributor1
         );
 
         // We are interested in finding the details of the 2nd wallet of contributor1
         uint expectedSalary = contributorWallets[1]._salary;
-        uint walletId = contributorWallets[1]._streamingWalletID;
+        uint walletId = contributorWallets[1]._vestingWalletID;
 
         initialNumWallets = contributorWallets.length;
         initialContributorBalance = _token.balanceOf(contributor1);
@@ -585,7 +624,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             (expectedSalary / 2)
         );
         assertTrue(
-            initialWalletIdAtIndex1 != contributorWallets[1]._streamingWalletID
+            initialWalletIdAtIndex1 != contributorWallets[1]._vestingWalletID
         );
     }
 
@@ -640,7 +679,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amount, (block.timestamp + time)
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + time
+                })
             );
         }
 
@@ -655,7 +699,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // Let's note down the current balance of the contributor1
         initialContributorBalance = _token.balanceOf(contributor1);
 
-        IStreamingPaymentProcessor.StreamingWallet[] memory contributorWallets =
+        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets =
         paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), contributor1
         );
@@ -665,7 +709,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // Now we claim the entire salary from the first payment order
         vm.prank(contributor1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, contributorWallets[0]._streamingWalletID, false
+            paymentClient, contributorWallets[0]._vestingWalletID, false
         );
 
         // Now we note down the balance of the contributor1 again after claiming for the first wallet.
@@ -683,7 +727,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.removePaymentForSpecificWalletId(
             paymentClient,
             contributor1,
-            contributorWallets[1]._streamingWalletID,
+            contributorWallets[1]._vestingWalletID,
             false
         );
 
@@ -705,7 +749,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         vm.prank(contributor1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, contributorWallets[0]._streamingWalletID, false
+            paymentClient, contributorWallets[0]._vestingWalletID, false
         );
 
         finalContributorBalance = _token.balanceOf(contributor1);
@@ -772,7 +816,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i = 0; i < length; ++i) {
             paymentClient.addPaymentOrder(
-                recipients[i], amounts[i], block.timestamp + duration
+                IPaymentClient.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: amounts[i],
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + duration
+                })
             );
         }
         //Expect the correct number and sequence of emits
@@ -919,7 +968,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipient, amounts[i], (block.timestamp + durations[i])
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: amounts[i],
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + durations[i]
+                })
             );
         }
 
@@ -995,7 +1049,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             uint amount = amounts[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(recipient, amount, (start + duration));
+            paymentClient.addPaymentOrder(
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: start + duration
+                })
+            );
         }
 
         vm.prank(address(paymentClient));
@@ -1072,7 +1133,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add payment order to client and call processPayments.
         paymentClient.addPaymentOrder(
-            recipient, amount, (block.timestamp + duration)
+            IPaymentClient.PaymentOrder({
+                recipient: recipient,
+                amount: amount,
+                createdAt: block.timestamp,
+                dueTo: block.timestamp + duration
+            })
         );
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
@@ -1130,7 +1196,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add payment order to client and call processPayments.
         paymentClient.addPaymentOrder(
-            recipient, amount, (block.timestamp + duration)
+            IPaymentClient.PaymentOrder({
+                recipient: recipient,
+                amount: amount,
+                createdAt: block.timestamp,
+                dueTo: block.timestamp + duration
+            })
         );
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
@@ -1200,7 +1271,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                recipients[i], amounts[i], (block.timestamp + time)
+                IPaymentClient.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: amounts[i],
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp + time
+                })
             );
         }
 

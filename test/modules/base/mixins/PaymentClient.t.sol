@@ -51,7 +51,14 @@ contract PaymentClientTest is Test {
         }
 
         for (uint i; i < orderAmount; ++i) {
-            paymentClient.addPaymentOrder(recipient, amount, dueTo);
+            paymentClient.addPaymentOrder(
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: dueTo
+                })
+            );
         }
 
         IPaymentClient.PaymentOrder[] memory orders =
@@ -76,7 +83,14 @@ contract PaymentClientTest is Test {
             vm.expectRevert(
                 IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
             );
-            paymentClient.addPaymentOrder(invalids[0], amount, dueTo);
+            paymentClient.addPaymentOrder(
+                IPaymentClient.PaymentOrder({
+                    recipient: invalids[0],
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: dueTo
+                })
+            );
         }
     }
 
@@ -89,7 +103,14 @@ contract PaymentClientTest is Test {
             vm.expectRevert(
                 IPaymentClient.Module__PaymentClient__InvalidAmount.selector
             );
-            paymentClient.addPaymentOrder(recipient, invalids[0], dueTo);
+            paymentClient.addPaymentOrder(
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: invalids[0],
+                    createdAt: block.timestamp,
+                    dueTo: dueTo
+                })
+            );
         }
     }
 
@@ -97,99 +118,40 @@ contract PaymentClientTest is Test {
     // Test: addPaymentOrders()
 
     function testAddPaymentOrders() public {
-        address[] memory recipients = new address[](3);
-        recipients[0] = address(0xCAFE1);
-        recipients[1] = address(0xCAFE2);
-        recipients[2] = address(0xCAFE3);
-        uint[] memory amounts = new uint[](3);
-        amounts[0] = 100e18;
-        amounts[1] = 100e18;
-        amounts[2] = 100e18;
-        uint[] memory dueTos = new uint[](3);
-        dueTos[0] = block.timestamp;
-        dueTos[1] = block.timestamp + 1;
-        dueTos[2] = block.timestamp + 2;
+        IPaymentClient.PaymentOrder[] memory ordersToAdd =
+            new IPaymentClient.PaymentOrder[](3);
+        ordersToAdd[0] = IPaymentClient.PaymentOrder({
+            recipient: address(0xCAFE1),
+            amount: 100e18,
+            createdAt: block.timestamp,
+            dueTo: block.timestamp
+        });
+        ordersToAdd[1] = IPaymentClient.PaymentOrder({
+            recipient: address(0xCAFE2),
+            amount: 100e18,
+            createdAt: block.timestamp,
+            dueTo: block.timestamp + 1
+        });
+        ordersToAdd[2] = IPaymentClient.PaymentOrder({
+            recipient: address(0xCAFE3),
+            amount: 100e18,
+            createdAt: block.timestamp,
+            dueTo: block.timestamp + 2
+        });
 
-        paymentClient.addPaymentOrders(recipients, amounts, dueTos);
-
-        IPaymentClient.PaymentOrder[] memory orders =
-            paymentClient.paymentOrders();
-
-        assertEq(orders.length, 3);
-        for (uint i; i < 3; ++i) {
-            assertEq(orders[i].recipient, recipients[i]);
-            assertEq(orders[i].amount, amounts[i]);
-            assertEq(orders[i].dueTo, dueTos[i]);
-        }
-
-        assertEq(paymentClient.outstandingTokenAmount(), 300e18);
-    }
-
-    function testAddPaymentOrdersFailsIfArraysLengthMismatch() public {
-        address[] memory recipients = new address[](1);
-        uint[] memory amounts = new uint[](2);
-        uint[] memory dueTos = new uint[](3);
-
-        vm.expectRevert(
-            IPaymentClient.Module__PaymentClient__ArrayLengthMismatch.selector
-        );
-        paymentClient.addPaymentOrders(recipients, amounts, dueTos);
-    }
-
-    //----------------------------------
-    // Test: addIdenticalPaymentOrders()
-
-    function testAddIdenticalPaymentOrders() public {
-        address[] memory recipients = new address[](3);
-        recipients[0] = address(0xCAFE1);
-        recipients[1] = address(0xCAFE2);
-        recipients[2] = address(0xCAFE3);
-
-        uint amount = 100e18;
-        uint dueTo = block.timestamp;
-
-        paymentClient.addIdenticalPaymentOrders(recipients, amount, dueTo);
+        paymentClient.addPaymentOrders(ordersToAdd);
 
         IPaymentClient.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
 
         assertEq(orders.length, 3);
         for (uint i; i < 3; ++i) {
-            assertEq(orders[i].recipient, recipients[i]);
-            assertEq(orders[i].amount, amount);
-            assertEq(orders[i].dueTo, dueTo);
+            assertEq(orders[i].recipient, ordersToAdd[i].recipient);
+            assertEq(orders[i].amount, ordersToAdd[i].amount);
+            assertEq(orders[i].dueTo, ordersToAdd[i].dueTo);
         }
 
         assertEq(paymentClient.outstandingTokenAmount(), 300e18);
-    }
-
-    function testAddIdenticalPaymentOrdersFailsForInvalidRecipient() public {
-        address[] memory invalids = _createInvalidRecipients();
-        uint amount = 1e18;
-        uint dueTo = block.timestamp;
-
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
-            );
-            paymentClient.addIdenticalPaymentOrders(invalids, amount, dueTo);
-        }
-    }
-
-    function testAddIdenticalPaymentOrdersFailsForInvalidAmount() public {
-        address[] memory recipients = new address[](1);
-        recipients[0] = address(0xCAFE);
-        uint[] memory invalids = _createInvalidAmounts();
-        uint dueTo = block.timestamp;
-
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IPaymentClient.Module__PaymentClient__InvalidAmount.selector
-            );
-            paymentClient.addIdenticalPaymentOrders(
-                recipients, invalids[0], dueTo
-            );
-        }
     }
 
     //----------------------------------
@@ -217,7 +179,14 @@ contract PaymentClientTest is Test {
         }
 
         for (uint i; i < orderAmount; ++i) {
-            paymentClient.addPaymentOrder(recipient, amount, dueTo);
+            paymentClient.addPaymentOrder(
+                IPaymentClient.PaymentOrder({
+                    recipient: recipient,
+                    amount: amount,
+                    createdAt: block.timestamp,
+                    dueTo: dueTo
+                })
+            );
         }
 
         IPaymentClient.PaymentOrder[] memory orders;

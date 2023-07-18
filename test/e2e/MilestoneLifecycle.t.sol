@@ -55,13 +55,22 @@ contract MilestoneLifecycle is E2eTest {
 
         // Now we add a few milestones.
         // For that, we need to access the proposal's milestone module.
-        // Note that we normally receive the proposal's module implementations
-        // from the emitted events during the proposal creation.
-        // However, in Solidity it is not possible to access events, so we
-        // copied the module's (deterministic in this test) address from the
-        // logs.
-        MilestoneManager milestoneManager =
-            MilestoneManager(0x06c5A9c5b19E69ba3D0A3F7e6d8273156B6fa0e5);
+        MilestoneManager milestoneManager;
+
+        address[] memory modulesList = proposal.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            try IMilestoneManager(modulesList[i]).hasActiveMilestone() returns (
+                bool
+            ) {
+                milestoneManager = MilestoneManager(modulesList[i]);
+                break;
+            } catch {
+                continue;
+            }
+        }
+
+        // making sure we got the correct address of milestoneManager
+        assertTrue(!(milestoneManager.hasActiveMilestone()));
 
         contributors.push(alice);
         contributors.push(bob);

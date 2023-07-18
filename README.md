@@ -3,7 +3,6 @@
 # Inverter Network Smart Contracts
 *Build, customize, and innovate with Inverter's modular logic and extensive web3 interoperability.*
 
-> A new funding primitive to enable multiple actors within a decentralized network to collaborate on proposals. You can find more information in the [GitBook](https://inverter-network.gitbook.io/inverter-network-docs/inverter-overview/introduction-to-inverter).
 
 ## Installation
 
@@ -12,7 +11,7 @@ The Inverter Network smart contracts are developed using the [foundry toolchain]
 1. Clone the repository
 2. `cd` into the repository
 3. Run `make install` to install contract dependencies
-4. (_Optional_) Run `source dev.env` to setup environment variables
+4. (_Optional_) Run `source dev.env` to set up environment variables
 
 ## Usage
 

@@ -23,8 +23,8 @@ import {DeployMilestoneManager} from
     "script/modules/DeployMilestoneManager.s.sol";
 import {DeployRebasingFundingManager} from
     "script/modules/DeployRebasingFundingManager.s.sol";
-import {DeployListAuthorizer} from
-    "script/modules/governance/DeployListAuthorizer.s.sol";
+import {DeployRoleAuthorizer} from
+    "script/modules/governance/DeployRoleAuthorizer.s.sol";
 
 contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
@@ -39,7 +39,7 @@ contract DeploymentScript is Script {
     DeployMilestoneManager deployMilestoneManager = new DeployMilestoneManager();
     DeployRebasingFundingManager deployRebasingFundingManager =
         new DeployRebasingFundingManager();
-    DeployListAuthorizer deployListAuthorizer = new DeployListAuthorizer();
+    DeployRoleAuthorizer deployRoleAuthorizer = new DeployRoleAuthorizer();
 
     DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
 
@@ -91,7 +91,7 @@ contract DeploymentScript is Script {
         proposal = deployProposal.run();
         streamingPaymentProcessor = deployStreamingPaymentProcessor.run();
         fundingManager = deployRebasingFundingManager.run();
-        authorizer = deployListAuthorizer.run();
+        authorizer = deployRoleAuthorizer.run();
         milestoneManager = deployMilestoneManager.run();
 
         moduleFactory = deployModuleFactory.run();

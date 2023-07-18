@@ -48,6 +48,9 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         _;
     }
 
+    // Once we merge the RoleAuthoirzer We can completely remove Ownable
+    // as import and rely on IAuthorizer to validate owners.
+
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address or manager.
     modifier onlyAuthorizedOrManager() {
@@ -62,8 +65,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     // Storage
 
     IERC20 private _token;
-
-    IERC20 private _receiptToken;
 
     /// @inheritdoc IProposal
     uint public override(IProposal) proposalId;
@@ -102,7 +103,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         proposalId = proposalId_;
 
         _token = token_;
-        _receiptToken = IERC20(address(fundingManager_));
 
         fundingManager = fundingManager_;
         authorizer = authorizer_;
@@ -159,11 +159,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IProposal
     function token() public view override(IProposal) returns (IERC20) {
         return _token;
-    }
-
-    /// @inheritdoc IProposal
-    function receiptToken() public view override(IProposal) returns (IERC20) {
-        return _receiptToken;
     }
 
     /// @inheritdoc IProposal

@@ -145,36 +145,4 @@ contract ModuleTest is Test {
             CONFIGDATA
         );
     }
-
-    //--------------------------------------------------------------------------
-    // Tests: (Un)Pause Functionality
-
-    function testPause() public {
-        module.pause();
-        assertTrue(module.paused());
-    }
-
-    function testUnpause() public {
-        module.pause();
-        module.unpause();
-        assertTrue(!module.paused());
-    }
-
-    function testPauseIsAuthenticated(address caller) public {
-        vm.assume(caller != proposal.manager());
-        authorizer.setAllAuthorized(false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        module.pause();
-    }
-
-    function testUnpauseIsAuthenticated(address caller) public {
-        vm.assume(caller != proposal.manager());
-        authorizer.setAllAuthorized(false);
-
-        vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-        module.unpause();
-    }
 }

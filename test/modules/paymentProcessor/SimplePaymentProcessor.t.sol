@@ -13,8 +13,10 @@ import {
 } from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 
 // Mocks
-import {PaymentClientMock} from
-    "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
+import {
+    IPaymentClient,
+    PaymentClientMock
+} from "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -63,7 +65,14 @@ contract SimplePaymentProcessorTest is ModuleTest {
         vm.assume(amount != 0);
 
         // Add payment order to client.
-        paymentClient.addPaymentOrder(recipient, amount, block.timestamp);
+        paymentClient.addPaymentOrder(
+            IPaymentClient.PaymentOrder({
+                recipient: recipient,
+                amount: amount,
+                createdAt: block.timestamp,
+                dueTo: block.timestamp
+            })
+        );
 
         // Call processPayments.
         vm.prank(address(paymentClient));
