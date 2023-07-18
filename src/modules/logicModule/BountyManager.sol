@@ -15,6 +15,7 @@ import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
+import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
 import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 
 import {
@@ -25,6 +26,8 @@ import {
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
+//@todo this has a direct dependency to the new RoleAuthorizer Module
+
 contract BountyManager is IBountyManager, Module, PaymentClient {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -32,6 +35,36 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
 
     //--------------------------------------------------------------------------
     // Modifiers
+
+    modifier onlyRole(uint8 roleId) {
+        //@todo test these
+        if (
+            !IRoleAuthorizer(address(__Module_proposal.authorizer()))
+                .isAuthorized(roleId, _msgSender())
+        ) {
+            revert Module__BountyManager__OnlyRole(roleId, address(this));
+        }
+        _;
+    }
+
+    modifier onlyClaimContributor(uint claimId) {
+        //@todo test these
+        address sender = _msgSender();
+        Contributor[] memory contribs = _claimRegistry[claimId].contributors;
+        uint length = contribs.length;
+        bool found;
+        for (uint i; i < length; i++) {
+            if (contribs[i].addr == sender) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            revert Module__BountyManager__OnlyClaimContributor();
+        }
+        _;
+    }
 
     modifier validPayoutAmounts(
         uint minimumPayoutAmount,
@@ -206,7 +239,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         view
         returns (uint[] memory)
     {
-        return contributorAddressToClaimIds[contributorAddrs].values(); //@note can view functions run out of gas?
+        return contributorAddressToClaimIds[contributorAddrs].values();
     }
 
     //--------------------------------------------------------------------------
@@ -219,7 +252,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         bytes calldata details
     )
         external
-        //@todo restrict to appropriate role
+        onlyRole(uint8(Roles.BountyAdmin))
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -245,7 +278,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        //@todo update access
+        onlyRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
     {
         _bountyRegistry[bountyId].details = details;
@@ -256,7 +289,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function lockBounty(uint bountyId)
         external
-        //@todo update access
+        onlyRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
         notClaimed(bountyId)
     {
@@ -272,7 +305,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         bytes calldata details
     )
         external
-        //@todo restrict to appropriate role
+        onlyRole(uint8(Roles.ClaimAdmin))
         validBountyId(bountyId)
         notClaimed(bountyId)
         returns (uint id)
@@ -310,8 +343,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         Contributor[] calldata contributors
     )
         external
-        //@todo update access
         validClaimId(claimId)
+        onlyClaimContributor(claimId)
         validBountyId(bountyId)
     {
         validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
@@ -339,8 +372,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
-        //@todo update access
         validClaimId(claimId)
+        onlyClaimContributor(claimId)
     {
         _claimRegistry[claimId].details = details;
 
@@ -350,11 +383,11 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function verifyClaim(uint claimId, uint bountyId)
         external
+        onlyRole(uint8(Roles.VerifyAdmin))
         validClaimId(claimId)
         validBountyId(bountyId)
         claimBelongingToBounty(claimId, bountyId)
         notClaimed(bountyId)
-    //@todo access
     {
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
 
@@ -372,9 +405,12 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
             totalAmount += contrib.claimAmount;
 
             _addPaymentOrder(
-                contrib.addr,
-                contrib.claimAmount,
-                block.timestamp //dueTo Date is now
+                PaymentOrder({
+                    recipient: contrib.addr,
+                    amount: contrib.claimAmount,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp //dueTo Date is now
+                })
             );
         }
 
@@ -390,6 +426,82 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         _bountyRegistry[bountyId].claimedBy = claimId;
 
         emit ClaimVerified(claimId, bountyId);
+    }
+
+    //----------------------------------
+    // Role Functions
+
+    /// @inheritdoc IBountyManager
+    function grantBountyAdminRole(address addr) external onlyAuthorized {
+        //@todo test this
+        IRoleAuthorizer roleAuthorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
+        roleAuthorizer.grantRole(
+            roleAuthorizer.generateRoleId(
+                address(this), uint8(Roles.BountyAdmin)
+            ),
+            addr
+        );
+    }
+
+    /// @inheritdoc IBountyManager
+    function grantClaimAdminRole(address addr) external onlyAuthorized {
+        IRoleAuthorizer roleAuthorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
+        roleAuthorizer.grantRole(
+            roleAuthorizer.generateRoleId(
+                address(this), uint8(Roles.ClaimAdmin)
+            ),
+            addr
+        );
+    }
+
+    /// @inheritdoc IBountyManager
+    function grantVerifyAdminRole(address addr) external onlyAuthorized {
+        IRoleAuthorizer roleAuthorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
+        roleAuthorizer.grantRole(
+            roleAuthorizer.generateRoleId(
+                address(this), uint8(Roles.VerifyAdmin)
+            ),
+            addr
+        );
+    }
+
+    /// @inheritdoc IBountyManager
+    function revokeBountyAdminRole(address addr) external onlyAuthorized {
+        IRoleAuthorizer roleAuthorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
+        roleAuthorizer.revokeRole(
+            roleAuthorizer.generateRoleId(
+                address(this), uint8(Roles.BountyAdmin)
+            ),
+            addr
+        );
+    }
+
+    /// @inheritdoc IBountyManager
+    function revokeClaimAdminRole(address addr) external onlyAuthorized {
+        IRoleAuthorizer roleAuthorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
+        roleAuthorizer.revokeRole(
+            roleAuthorizer.generateRoleId(
+                address(this), uint8(Roles.ClaimAdmin)
+            ),
+            addr
+        );
+    }
+
+    /// @inheritdoc IBountyManager
+    function revokeVerifyAdminRole(address addr) external onlyAuthorized {
+        IRoleAuthorizer roleAuthorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
+        roleAuthorizer.revokeRole(
+            roleAuthorizer.generateRoleId(
+                address(this), uint8(Roles.VerifyAdmin)
+            ),
+            addr
+        );
     }
 
     //--------------------------------------------------------------------------

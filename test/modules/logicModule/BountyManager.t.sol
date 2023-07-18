@@ -335,7 +335,15 @@ contract BountyManagerTest is ModuleTest {
     }
 
     function testAddBountyModifierInPosition() public {
-        //@todo onlyRole
+        //onlyBountyAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBountyManager.Module__BountyManager__OnlyRole.selector,
+                IBountyManager.Roles.BountyAdmin,
+                address(bountyManager)
+            )
+        );
+        bountyManager.addBounty(0, 0, bytes(""));
 
         //validPayoutAmounts
         vm.expectRevert(
@@ -387,7 +395,15 @@ contract BountyManagerTest is ModuleTest {
     function testAddClaimModifierInPosition() public {
         bountyManager.addBounty(1, 1, bytes(""));
 
-        //@todo onlyRole
+        //onlyClaimAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBountyManager.Module__BountyManager__OnlyRole.selector,
+                IBountyManager.Roles.ClaimAdmin,
+                address(bountyManager)
+            )
+        );
+        bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
 
         //validBountyId
         vm.expectRevert(
@@ -429,7 +445,15 @@ contract BountyManagerTest is ModuleTest {
     function testUpdateBountyModifierInPosition() public {
         bountyManager.addBounty(1, 1, bytes(""));
 
-        //@todo onlyRole
+        //onlyBountyAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBountyManager.Module__BountyManager__OnlyRole.selector,
+                IBountyManager.Roles.BountyAdmin,
+                address(bountyManager)
+            )
+        );
+        bountyManager.updateBounty(0, bytes(""));
 
         //validBountyId
         vm.expectRevert(
@@ -455,7 +479,15 @@ contract BountyManagerTest is ModuleTest {
     function testLockBountyModifierInPosition() public {
         bountyManager.addBounty(1, 1, bytes(""));
 
-        //@todo onlyRole
+        //onlyBountyAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBountyManager.Module__BountyManager__OnlyRole.selector,
+                IBountyManager.Roles.BountyAdmin,
+                address(bountyManager)
+            )
+        );
+        bountyManager.lockBounty(0);
 
         //validBountyId
         vm.expectRevert(
@@ -520,7 +552,16 @@ contract BountyManagerTest is ModuleTest {
     function testUpdateClaimContributorsModifierInPosition() public {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
-        //@todo onlyRole
+
+        //onlyClaimAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBountyManager.Module__BountyManager__OnlyRole.selector,
+                IBountyManager.Roles.ClaimAdmin,
+                address(bountyManager)
+            )
+        );
+        bountyManager.updateClaimContributors(0, 1, DEFAULT_CONTRIBUTORS);
 
         //validClaimId
         vm.expectRevert(
@@ -561,7 +602,16 @@ contract BountyManagerTest is ModuleTest {
     function testUpdateClaimDetailsModifierInPosition() public {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
-        //@todo onlyRole
+
+        //onlyClaimAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBountyManager.Module__BountyManager__OnlyRole.selector,
+                IBountyManager.Roles.ClaimAdmin,
+                address(bountyManager)
+            )
+        );
+        bountyManager.updateClaimDetails(0, bytes(""));
 
         //validClaimId
         vm.expectRevert(
@@ -635,7 +685,16 @@ contract BountyManagerTest is ModuleTest {
 
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); //Id 4
-        //@todo onlyRole
+
+        //onlyVerifyAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBountyManager.Module__BountyManager__OnlyRole.selector,
+                IBountyManager.Roles.VerifyAdmin,
+                address(bountyManager)
+            )
+        );
+        bountyManager.verifyClaim(0, 1);
 
         //validClaimId
         vm.expectRevert(

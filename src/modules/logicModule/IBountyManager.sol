@@ -5,6 +5,15 @@ import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
 interface IBountyManager is IPaymentClient {
     //--------------------------------------------------------------------------
+    // Enums
+
+    enum Roles {
+        BountyAdmin,
+        ClaimAdmin,
+        VerifyAdmin
+    }
+
+    //--------------------------------------------------------------------------
     // Types
 
     struct Bounty {
@@ -39,6 +48,12 @@ interface IBountyManager is IPaymentClient {
 
     //--------------------------------------------------------------------------
     // Errors
+
+    /// @notice Access only to addresses with the given role id of BountyAdmin
+    error Module__BountyManager__OnlyRole(uint8 id, address module);
+
+    /// @notice Access only to addresses that are listed as contributors in the according claim
+    error Module__BountyManager__OnlyClaimContributor();
 
     /// @notice Given payoutAmounts are either zero or maximumPayoutAmount is smaller than minimumPayoutAmount
     error Module__BountyManager__InvalidPayoutAmounts();
@@ -215,4 +230,37 @@ interface IBountyManager is IPaymentClient {
     /// @param claimId The id of the Claim that wants to claim the Bounty.
     /// @param bountyId The id of the Bounty that will be claimed.
     function verifyClaim(uint claimId, uint bountyId) external;
+
+    //----------------------------------
+    // Role Functions
+
+    /// @notice Grants the BountyAdmin Role to a specified address
+    /// @dev Only callable by authorized addresses.
+    /// @param addr Address that gets the role granted
+    function grantBountyAdminRole(address addr) external;
+
+    /// @notice Grants the ClaimAdmin Role to a specified address
+    /// @dev Only callable by authorized addresses.
+    /// @param addr Address that gets the role granted
+    function grantClaimAdminRole(address addr) external;
+
+    /// @notice Grants the VerifyAdmin Role to a specified address
+    /// @dev Only callable by authorized addresses.
+    /// @param addr Address that gets the role granted
+    function grantVerifyAdminRole(address addr) external;
+
+    /// @notice Revokes the BountyAdmin Role from a specified address
+    /// @dev Only callable by authorized addresses.
+    /// @param addr Address that gets their role revoked
+    function revokeBountyAdminRole(address addr) external;
+
+    /// @notice Revokes the ClaimAdmin Role from a specified address
+    /// @dev Only callable by authorized addresses.
+    /// @param addr Address that gets their role revoked
+    function revokeClaimAdminRole(address addr) external;
+
+    /// @notice Revokes the VerifyAdmin Role from a specified address
+    /// @dev Only callable by authorized addresses.
+    /// @param addr Address that gets their role revoked
+    function revokeVerifyAdminRole(address addr) external;
 }
