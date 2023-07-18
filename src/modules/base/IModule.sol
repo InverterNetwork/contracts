@@ -31,9 +31,6 @@ interface IModule {
     /// @param funcSig The signature of the function called.
     error Module_ProposalCallbackFailed(string funcSig);
 
-    /// @notice function initLateDependecyInjection already called
-    error Module__LateDependencyAlreadyInjected();
-
     //--------------------------------------------------------------------------
     // Functions
 
@@ -50,8 +47,14 @@ interface IModule {
         bytes memory configdata
     ) external;
 
-    /// @notice Module's initializer function which references other modules
-    function initLateDependecyInjection() external;
+    /// @notice Second initialization function of the module to take care of dependencies.
+    /// @param proposal The module's proposal instance.
+    /// @param configdata Variable config data for specific module
+    ///                   implementations.
+    function init2(
+        IProposal proposal,
+        bytes memory configdata
+    ) external;
 
     /// @notice Returns the module's identifier.
     /// @dev The identifier is defined as the keccak256 hash of the module's

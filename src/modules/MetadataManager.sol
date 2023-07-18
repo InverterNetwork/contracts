@@ -30,9 +30,10 @@ contract MetadataManager is IMetadataManager, Module {
         (
             ManagerMetadata memory managerMetadata_,
             ProposalMetadata memory proposalMetadata_,
-            MemberMetadata[] memory teamMetadata_
+            MemberMetadata[] memory teamMetadata_,
+            ,
         ) = abi.decode(
-            configdata, (ManagerMetadata, ProposalMetadata, MemberMetadata[])
+            configdata, (ManagerMetadata, ProposalMetadata, MemberMetadata[], bool, string[])
         );
 
         _setManagerMetadata(managerMetadata_);
@@ -40,6 +41,39 @@ contract MetadataManager is IMetadataManager, Module {
         _setProposalMetadata(proposalMetadata_);
 
         _setTeamMetadata(teamMetadata_);
+    }
+
+    function init2 (
+        IProposal proposal_,
+        bytes memory configdata
+    ) external initializer {
+        // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
+        /*
+        (
+            ,
+            ,
+            ,
+            bool hasDependency,
+            string[] memory dependencies
+        ) = abi.decode(
+            configdata, (ManagerMetadata, ProposalMetadata, MemberMetadata[], bool, string[])
+        );
+
+        if(hasDependency) {
+            uint256 dependenciesLength = dependencies.length;
+            
+            address module;
+            for(uint i; i < dependenciesLength; i++) {
+                module = proposal_.findModuleAddressInProposal(dependencies[i]);
+
+                if(verifyAddressIsMilestoneManager(module)) {
+                    milestoneManager = module;
+                } else {
+                    paymentManager = module;
+                }
+            }
+        }
+        */
     }
 
     //--------------------------------------------------------------------------

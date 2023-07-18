@@ -63,7 +63,7 @@ contract RebasingFundingManager is
     ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
 
-        address proposalTokenAddress = abi.decode(configdata, (address));
+        (address proposalTokenAddress, , ) = abi.decode(configdata, (address, bool, string[]));
 
         string memory _id = proposal_.proposalId().toString();
         string memory _name =
@@ -75,6 +75,31 @@ contract RebasingFundingManager is
             _symbol,
             IERC20MetadataUpgradeable(proposalTokenAddress).decimals()
         );
+    }
+
+    function init2 (
+        IProposal proposal_,
+        bytes memory configdata
+    ) external initializer {
+        // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
+        /*
+        (, bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (address, bool, string[]));
+
+        if(hasDependency) {
+            uint256 dependenciesLength = dependencies.length;
+            
+            address module;
+            for(uint i; i < dependenciesLength; i++) {
+                module = proposal_.findModuleAddressInProposal(dependencies[i]);
+
+                if(verifyAddressIsMilestoneManager(module)) {
+                    milestoneManager = module;
+                } else {
+                    paymentManager = module;
+                }
+            }
+        }
+        */
     }
 
     function token() public view returns (IERC20) {

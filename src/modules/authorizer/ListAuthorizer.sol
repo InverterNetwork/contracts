@@ -77,8 +77,8 @@ contract ListAuthorizer is IAuthorizer, Module {
         Metadata memory metadata,
         bytes memory configdata
     ) external virtual override initializer {
-        address[] memory initialAuthorizers =
-            abi.decode(configdata, (address[]));
+        (address[] memory initialAuthorizers, ,) =
+            abi.decode(configdata, (address[], bool, string[]));
         __ListAuthorizer_init(proposal_, metadata, initialAuthorizers);
     }
 
@@ -111,6 +111,32 @@ contract ListAuthorizer is IAuthorizer, Module {
             amountAuthorized++;
             emit AddedAuthorizedAddress(current);
         }
+    }
+
+    function init2(
+        IProposal proposal_,
+        bytes memory configdata
+    ) external initializer {
+        // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
+        /*
+        ( , bool hasDependency, string[] memory dependencies) =
+            abi.decode(configdata, (address[], bool, string[]));
+        
+        if(hasDependency) {
+            uint256 dependenciesLength = dependencies.length;
+            
+            address module;
+            for(uint i; i < dependenciesLength; i++) {
+                module = proposal_.findModuleAddressInProposal(dependencies[i]);
+
+                if(verifyAddressIsMilestoneManager(module)) {
+                    milestoneManager = module;
+                } else {
+                    paymentManager = module;
+                }
+            }
+        }
+        */
     }
 
     //--------------------------------------------------------------------------

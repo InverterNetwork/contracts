@@ -82,6 +82,7 @@ contract ProposalFactory is IProposalFactory {
         //Map proposal clone
         _proposals[++_proposalIdCounter] = clone;
 
+        // @audit wrong comment
         // Deploy and cache {IAuthorizer} module.
         address fundingManager = IModuleFactory(moduleFactory).createModule(
             fundingManagerConfig.metadata,
@@ -114,10 +115,6 @@ contract ProposalFactory is IProposalFactory {
             );
         }
 
-        for(uint i; i < modulesLen; i++) {
-            
-        }
-
         // Initialize proposal.
         IProposal(clone).init(
             _proposalIdCounter,
@@ -129,15 +126,20 @@ contract ProposalFactory is IProposalFactory {
             IPaymentProcessor(paymentProcessor)
         );
 
+        // Second round of module initializations to satisfy cross-referencing between modules
+        // This can be run post the proposal initialization. This ensures a few more variables are
+        // available that are set during the proposal init function.
+        for(uint i; i < modulesLen; ++i) {
+            IModule(modules[i]).init2(IProposal(clone), moduleConfigs[i].configdata);
+        }
+        
+        // Also, running the init2 functionality on the compulsory modules excluded from the modules array
+        IModule(fundingManager).init2(IProposal(clone), fundingManagerConfig.configdata);
+        IModule(authorizer).init2(IProposal(clone), authorizerConfig.configdata);
+        IModule(paymentProcessor).init2(IProposal(clone), paymentProcessorConfig.configdata);
+        
         return IProposal(clone);
     }
-
-    // @note the current idea is to make every module go through 2 init functions, where the 2nd one is the 
-    //       late dependency injection.
-    // @note However, the problem again would be, if A wants to reference B and B has not been created yet, there is no use running the second init function
-    // @note One solution could be to simply, do a loop of all the modules again in the modules array for the second init function 
-    //       and whichever module requires the late dependency injection could implement that second init function and whichever module 
-    //       does not require the dependency injection could simply leave that second init function blank
 
     /// @inheritdoc IProposalFactory
     function getProposalByID(uint id)

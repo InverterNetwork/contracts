@@ -57,13 +57,6 @@ contract RecurringPaymentManager is
         _;
     }
 
-    modifier customInitializer() {
-        if(customInitializer) {
-            revert Module__LateDependencyAlreadyInjected();
-        }
-        _;
-    }
-
     //--------------------------------------------------------------------------
     // Constants
 
@@ -85,8 +78,6 @@ contract RecurringPaymentManager is
     /// @dev List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
 
-    /// @dev defaults to false. Used in the same way as the initializer modifier.
-    bool customInitializer;
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -100,7 +91,7 @@ contract RecurringPaymentManager is
         //Set empty list of RecurringPayment
         _paymentList.init();
 
-        epochLength = abi.decode(configdata, (uint));
+        (epochLength, , ) = abi.decode(configdata, (uint, bool, string[]));
 
         //revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
@@ -108,9 +99,29 @@ contract RecurringPaymentManager is
         }
     }
 
-    /// @inheritdoc Module
-    function initLateDependencyInjection() external customInitializer{
-        customInitialization = true;
+    function init2 (
+        IProposal proposal_,
+        bytes memory configdata
+    ) external initializer {
+        // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
+        /*
+        (, bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (uint, bool, string[]));
+
+        if(hasDependency) {
+            uint256 dependenciesLength = dependencies.length;
+            
+            address module;
+            for(uint i; i < dependenciesLength; i++) {
+                module = proposal_.findModuleAddressInProposal(dependencies[i]);
+
+                if(verifyAddressIsMilestoneManager(module)) {
+                    milestoneManager = module;
+                } else {
+                    paymentManager = module;
+                }
+            }
+        }
+        */
     }
 
     //--------------------------------------------------------------------------

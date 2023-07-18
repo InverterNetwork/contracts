@@ -77,4 +77,31 @@ interface IProposal is IModuleManager {
     function owner() external view returns (address);
 
     function manager() external view returns (address);
+
+    /// @notice find the address of a given module using it's name in a proposal
+    function findModuleAddressInProposal(string calldata moduleName) external view returns (address);
+    
+    /// @notice Verify whether the given address is the streaming payment processor
+    function verifyAddressIsStreamingPaymentProcessor(address streamingPaymentProcessorAddress) external view returns (bool);
+
+    /// @notice Verify whether the given address is the simple payment processor
+    function verifyAddressIsSimplePaymentProcessor(address simplePaymentProcessorAddress) external view returns(bool);
+
+    /// @notice Verify whether the given address is the recurring payment manager
+    function verifyAddressIsRecurringPaymentManager(address recurringPaymentManager) external view returns(bool);
+
+    /// @notice Verify whether the given address is the milestone manager module
+    function verifyAddressIsMilestoneManager(address milestoneManagerAddress) external returns (bool);
+
+    /// @notice Verify whether the given address is the rebasing funding manager
+    function verifyAddressIsRebasingFundingManager(address rebasingFundingManagerAddress) external view returns(bool);
+
+    /// @notice Verify whether the given address is the payment client
+    function verifyAddressIsPaymentClient(address paymentClientAddress) external view returns(bool);
+
+    /// @notice Verify whether the given address is the single vote governor
+    function verifyAddressIsSingleVoteGovernorModule(address singleVoteGovernorAddress) external view returns (bool);
+
+    /// @notice Verify whether the given address is the list authorizer
+    function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress) external view returns (bool);
 }

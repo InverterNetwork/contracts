@@ -108,14 +108,6 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         return implementation;
     }
-
-    function injectModuleInformation(address moduleAddress) external returns(bool) {
-        try IModule(moduleAddress).initLateDependencyInjection() {
-            return true;
-        } catch {
-            return false;
-        }
-    }
  
     //--------------------------------------------------------------------------
     // Public View Functions

@@ -64,6 +64,7 @@ abstract contract ModuleManager is
     }
 
     modifier moduleLimitNotExceeded() {
+        // @audit susceptible to silent overflow
         if (uint8(_modules.length) >= MAX_MODULE_AMOUNT) {
             revert Proposal__ModuleManager__ModuleAmountOverLimits();
         }
