@@ -301,6 +301,10 @@ contract RecurringPaymentManagerTest is ModuleTest {
                 prevId = _SENTINEL;
             }
 
+            //Check if trigger was called
+            vm.expectEmit(true, true, true, true);
+            emit RecurringPaymentsTriggered(currentEpoch);
+
             vm.expectEmit(true, true, true, true);
             emit RecurringPaymentRemoved(id);
 
@@ -645,47 +649,69 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         for (uint i; i < length; i++) {
             currentRecurringPaymentToBeChecked = recurringPaymentsToBeChecked[i];
-
             //Orders are only created if lastTriggeredEpoch is smaller than currentEpoch
             if (
-                currentRecurringPaymentToBeChecked.lastTriggeredEpoch
-                    < currentEpoch
+                currentEpoch
+                    > currentRecurringPaymentToBeChecked.lastTriggeredEpoch
             ) {
                 epochsTriggered = currentEpoch
                     - currentRecurringPaymentToBeChecked.lastTriggeredEpoch;
 
-                orderAmount =
-                    currentRecurringPaymentToBeChecked.amount * epochsTriggered;
-
-                assertEq(
-                    orders[numberOfOrdersMade].recipient,
-                    currentRecurringPaymentToBeChecked.recipient
-                );
-
-                assertEq(orders[numberOfOrdersMade].amount, orderAmount);
-                assertEq(orders[numberOfOrdersMade].createdAt, block.timestamp);
-
-                assertEq(
-                    orders[numberOfOrdersMade].dueTo,
+                assertOrder(
+                    orders[numberOfOrdersMade],
+                    currentRecurringPaymentToBeChecked.recipient,
+                    currentRecurringPaymentToBeChecked.amount,
+                    block.timestamp,
                     (currentEpoch + 1)
                         * recurringPaymentManager.getEpochLength()
                 );
 
+                if (epochsTriggered > 1) {
+                    numberOfOrdersMade++;
+
+                    assertOrder(
+                        orders[numberOfOrdersMade],
+                        currentRecurringPaymentToBeChecked.recipient,
+                        currentRecurringPaymentToBeChecked.amount
+                            * (epochsTriggered - 1),
+                        block.timestamp,
+                        (currentEpoch)
+                            * recurringPaymentManager.getEpochLength()
+                    );
+
+                    orderAmount = currentRecurringPaymentToBeChecked.amount
+                        * epochsTriggered;
+                } else {
+                    orderAmount = currentRecurringPaymentToBeChecked.amount;
+                }
+
                 totalAmount += orderAmount;
-
                 numberOfOrdersMade++;
-
                 //Check if updated payment lastTriggeredEpoch is current epoch
                 assertEq(
                     currentRecurringPayments[i].lastTriggeredEpoch, currentEpoch
                 );
             }
         }
-
         // Check that recurringPaymentManager's token balance is sufficient for the
         // payment orders by comparing it with the total amount of orders made (numberOfOrdersMade)
         assertTrue(
             _token.balanceOf(address(recurringPaymentManager)) == totalAmount
         );
+    }
+
+    function assertOrder(
+        IPaymentClient.PaymentOrder memory order,
+        address recipient,
+        uint amount,
+        uint createdAt,
+        uint dueTo
+    ) internal {
+        assertEq(order.recipient, recipient);
+
+        assertEq(order.amount, amount);
+        assertEq(order.createdAt, createdAt);
+
+        assertEq(order.dueTo, dueTo);
     }
 }

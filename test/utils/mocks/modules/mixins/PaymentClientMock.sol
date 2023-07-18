@@ -33,45 +33,27 @@ contract PaymentClientMock is PaymentClient {
     //--------------------------------------------------------------------------
     // IPaymentClient Wrapper Functions
 
-    function addPaymentOrder(address recipient, uint amount, uint dueTo)
-        external
-    {
-        _addPaymentOrder(recipient, amount, dueTo);
+    function addPaymentOrder(PaymentOrder memory order) external {
+        _addPaymentOrder(order);
     }
 
     // add a payment order without checking the arguments
-    function addPaymentOrderUnchecked(
-        address recipient,
-        uint amount,
-        uint dueTo
-    ) external {
+    function addPaymentOrderUnchecked(PaymentOrder memory order) external {
         // Add order's token amount to current outstanding amount.
-        _outstandingTokenAmount += amount;
+        _outstandingTokenAmount += order.amount;
 
         // Add new order to list of oustanding orders.
-        _orders.push(PaymentOrder(recipient, amount, block.timestamp, dueTo));
+        _orders.push(order);
 
         // Ensure our token balance is sufficient.
         // Note that function is implemented in downstream contract.
         _ensureTokenBalance(_outstandingTokenAmount);
 
-        emit PaymentOrderAdded(recipient, amount);
+        emit PaymentOrderAdded(order.recipient, order.amount);
     }
 
-    function addPaymentOrders(
-        address[] memory recipients,
-        uint[] memory amounts,
-        uint[] memory dueTos
-    ) external {
-        _addPaymentOrders(recipients, amounts, dueTos);
-    }
-
-    function addIdenticalPaymentOrders(
-        address[] memory recipients,
-        uint amount,
-        uint dueTo
-    ) external {
-        _addIdenticalPaymentOrders(recipients, amount, dueTo);
+    function addPaymentOrders(PaymentOrder[] memory orders) external {
+        _addPaymentOrders(orders);
     }
 
     //--------------------------------------------------------------------------
