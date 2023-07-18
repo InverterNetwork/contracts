@@ -3,7 +3,6 @@
 # Inverter Network Smart Contracts
 *Build, customize, and innovate with Inverter's modular logic and extensive web3 interoperability.*
 
-> A new funding primitive to enable multiple actors within a decentralized network to collaborate on proposals. You can find more information in the [GitBook](https://inverter-network.gitbook.io/inverter-network-docs/inverter-overview/introduction-to-inverter).
 
 ## Installation
 
