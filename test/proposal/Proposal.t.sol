@@ -65,19 +65,41 @@ contract ProposalTest is Test {
         types.assumeValidProposalId(proposalId);
         types.assumeValidModules(modules);
 
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
+        address[] memory truncatedModules = new address[](125);
+        if(modules.length > 125) {
+            for(uint i; i < 125; i++) {
+                truncatedModules[i] = modules[i];
+            }
+            types.assumeValidModules(truncatedModules);
+            
+            // Make sure mock addresses are not in set of modules.
+            assumeMockAreNotInSet(truncatedModules);
 
-        // Initialize proposal.
-        proposal.init(
-            proposalId,
-            address(this),
-            token,
-            modules,
-            fundingManager,
-            authorizer,
-            paymentProcessor
-        );
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                truncatedModules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        } else {
+            // Make sure mock addresses are not in set of modules.
+            assumeMockAreNotInSet(modules);
+
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                modules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        }
 
         // Check that proposal's storage correctly initialized.
         assertEq(proposal.proposalId(), proposalId);
@@ -97,32 +119,65 @@ contract ProposalTest is Test {
         public
     {
         types.assumeValidProposalId(proposalId);
-        types.assumeValidModules(modules);
 
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
+        address[] memory truncatedModules = new address[](125);
+        if(modules.length > 125) {
+            for(uint i; i < 125; i++) {
+                truncatedModules[i] = modules[i];
+            }
 
-        // Initialize proposal.
-        proposal.init(
-            proposalId,
-            address(this),
-            token,
-            modules,
-            fundingManager,
-            authorizer,
-            paymentProcessor
-        );
+            types.assumeValidModules(truncatedModules);
+            // Make sure mock addresses are not in set of modules.
+            assumeMockAreNotInSet(truncatedModules);
 
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        proposal.init(
-            proposalId,
-            address(this),
-            token,
-            modules,
-            fundingManager,
-            authorizer,
-            paymentProcessor
-        );
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                truncatedModules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+
+            vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                truncatedModules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        } else {
+            types.assumeValidModules(modules);
+            // Make sure mock addresses are not in set of modules.
+            assumeMockAreNotInSet(modules);
+
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                modules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+
+            vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                modules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -130,22 +185,45 @@ contract ProposalTest is Test {
 
     function testExecuteTx(uint proposalId, address[] memory modules) public {
         types.assumeValidProposalId(proposalId);
-        types.assumeValidModules(modules);
 
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
+        address[] memory truncatedModules = new address[](125);
+        if(modules.length > 125) {
+            for(uint i; i < 125; i++) {
+                truncatedModules[i] = modules[i];
+            }
 
-        // Initialize proposal.
-        proposal.init(
-            proposalId,
-            address(this),
-            token,
-            modules,
-            fundingManager,
-            authorizer,
-            paymentProcessor
-        );
+            types.assumeValidModules(truncatedModules);
 
+            // Make sure mock addresses are not in set of truncatedModules.
+            assumeMockAreNotInSet(truncatedModules);
+
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                truncatedModules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        } else {
+            types.assumeValidModules(modules);
+
+            // Make sure mock addresses are not in set of modules.
+            assumeMockAreNotInSet(modules);
+
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                modules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        }
         authorizer.setIsAuthorized(address(this), true);
 
         bytes memory returnData =
@@ -158,21 +236,44 @@ contract ProposalTest is Test {
         address[] memory modules
     ) public {
         types.assumeValidProposalId(proposalId);
-        types.assumeValidModules(modules);
+        address[] memory truncatedModules = new address[](125);
+        if(modules.length > 125) {
+            for(uint i; i < 125; i++) {
+                truncatedModules[i] = modules[i];
+            }
 
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
+            types.assumeValidModules(truncatedModules);
 
-        // Initialize proposal.
-        proposal.init(
-            proposalId,
-            address(this),
-            token,
-            modules,
-            fundingManager,
-            authorizer,
-            paymentProcessor
-        );
+            // Make sure mock addresses are not in set of truncatedModules.
+            assumeMockAreNotInSet(truncatedModules);
+
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                truncatedModules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        } else {
+            types.assumeValidModules(modules);
+
+            // Make sure mock addresses are not in set of modules.
+            assumeMockAreNotInSet(modules);
+
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(this),
+                token,
+                modules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        }
 
         authorizer.setIsAuthorized(address(this), true);
 
@@ -185,22 +286,46 @@ contract ProposalTest is Test {
         address[] memory modules
     ) public {
         types.assumeValidProposalId(proposalId);
-        types.assumeValidModules(modules);
+        
+        address[] memory truncatedModules = new address[](125);
+        if(modules.length > 125) {
+            for(uint i; i < 125; i++) {
+                truncatedModules[i] = modules[i];
+            }
 
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
+            types.assumeValidModules(truncatedModules);
 
-        // Initialize proposal.
-        proposal.init(
-            proposalId,
-            address(0xCAFE), // Note to not be the owner
-            token,
-            modules,
-            fundingManager,
-            authorizer,
-            paymentProcessor
-        );
+            // Make sure mock addresses are not in set of truncatedModules.
+            assumeMockAreNotInSet(truncatedModules);
 
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(0xCAFE), // Note to not be the owner
+                token,
+                truncatedModules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        } else {
+            types.assumeValidModules(modules);
+
+            // Make sure mock addresses are not in set of modules.
+            assumeMockAreNotInSet(modules);
+
+            // Initialize proposal.
+            proposal.init(
+                proposalId,
+                address(0xCAFE), // Note to not be the owner
+                token,
+                modules,
+                fundingManager,
+                authorizer,
+                paymentProcessor
+            );
+        }
+        
         authorizer.setIsAuthorized(address(this), false);
 
         vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);
