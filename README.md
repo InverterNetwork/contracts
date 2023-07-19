@@ -11,7 +11,7 @@ The Inverter Network smart contracts are developed using the [foundry toolchain]
 1. Clone the repository
 2. `cd` into the repository
 3. Run `make install` to install contract dependencies
-4. (_Optional_) Run `source dev.env` to setup environment variables
+4. (_Optional_) Run `source dev.env` to set up environment variables
 
 ## Usage
 

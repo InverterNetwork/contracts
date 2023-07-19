@@ -49,6 +49,8 @@ testFuzz: ## Run whole testsuite with a custom amount of fuzz runs
 	echo "Running tests with $${FOUNDRY_FUZZ_RUNS} fuzz runs and $${FOUNDRY_FUZZ_MAX_TEST_REJECTS} accepted test rejections..."; \
 	forge test -vvv
 
+
+ 
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
@@ -76,7 +78,7 @@ testScripts: ## Run e2e test suite
 	@forge script script/factories/DeployModuleFactory.s.sol
 	@forge script script/factories/DeployProposalFactory.s.sol
 	
-	@forge script script/modules/governance/DeployListAuthorizer.s.sol
+	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol
 	@forge script script/modules/governance/DeploySingleVoteGovernor.s.sol
 	
 	@forge script script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol
@@ -137,6 +139,7 @@ fmt-check: ## Check whether code formatted correctly
 pre-commit: ## Git pre-commit hook
 	@forge fmt
 	@make testScripts
+	@export FOUNDRY_FUZZ_RUNS=1024
 	@forge coverage --report lcov
 	@genhtml lcov.info --branch-coverage --output-dir coverage
 	@forge snapshot

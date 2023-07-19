@@ -11,9 +11,9 @@ import {
 } from "src/modules/fundingManager/RebasingFundingManager.sol";
 
 import {
-    IAuthorizer,
-    ListAuthorizer
-} from "src/modules/authorizer/ListAuthorizer.sol";
+    IRoleAuthorizer,
+    RoleAuthorizer
+} from "src/modules/authorizer/RoleAuthorizer.sol";
 
 import {
     IPaymentProcessor,
@@ -57,7 +57,7 @@ import {IProposal, Proposal} from "src/proposal/Proposal.sol";
 contract ProposalCreation is Test {
     //Module Templates
     IFundingManager fundingManagerTemplate; //This is just the template thats referenced in the Factory later
-    IAuthorizer authorizerTemplate; //Just a template
+    IRoleAuthorizer authorizerTemplate; //Just a template
     IPaymentProcessor paymentProcessorTemplate; //Just a template
     IMilestoneManager milestoneManagerTemplate; //Just a template
     IMetadataManager metadataManagerTemplate; //Just a template
@@ -106,7 +106,7 @@ contract ProposalCreation is Test {
 
         //Create Module Templates
         fundingManagerTemplate = new RebasingFundingManager();
-        authorizerTemplate = new ListAuthorizer();
+        authorizerTemplate = new RoleAuthorizer();
         paymentProcessorTemplate = new SimplePaymentProcessor();
         milestoneManagerTemplate = new MilestoneManager();
         metadataManagerTemplate = new MetadataManager();
