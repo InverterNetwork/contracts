@@ -26,7 +26,11 @@ import {
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
-//@todo this has a direct dependency to the new RoleAuthorizer Module
+//@todo this has a direct dependency to the new RoleAuthorizer Module.
+//At the current state of the project the IRoleAuthorizer isnt the standardized Interface to use,
+//That means there is a possibility function calls will fail if the roleAuthorizer isnt implemented as the Authorizer
+//This will be changed in the coming future,
+//but till then the RoleAuthorizer has to be selected as the Authorizer Module of the proposal if the BountyManager is to be used
 
 contract BountyManager is IBountyManager, Module, PaymentClient {
     using SafeERC20 for IERC20;
