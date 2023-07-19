@@ -82,8 +82,7 @@ contract ProposalFactory is IProposalFactory {
         //Map proposal clone
         _proposals[++_proposalIdCounter] = clone;
 
-        // @audit wrong comment
-        // Deploy and cache {IAuthorizer} module.
+        // Deploy and cache {IFundingManager} module.
         address fundingManager = IModuleFactory(moduleFactory).createModule(
             fundingManagerConfig.metadata,
             IProposal(clone),
