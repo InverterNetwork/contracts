@@ -62,7 +62,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
         _authorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(initialAuth, initialManager)
+            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
         assertEq(
             _authorizer.hasRole(
@@ -83,6 +83,9 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
 }
 
 contract TokenGatedRoleAuthorizerTest is Test {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     // Mocks
     TokenGatedRoleAuthorizer _authorizer;
     Proposal internal _proposal = new Proposal();
@@ -141,7 +144,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
         _authorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(initialAuth, initialManager)
+            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
         assertEq(
             _authorizer.hasRole(
