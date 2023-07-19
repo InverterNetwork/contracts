@@ -64,7 +64,7 @@ abstract contract ModuleManager is
     }
 
     modifier moduleLimitNotExceeded() {
-        if (_modules.length >= uint256(MAX_MODULE_AMOUNT)) {
+        if (_modules.length >= uint(MAX_MODULE_AMOUNT)) {
             revert Proposal__ModuleManager__ModuleAmountOverLimits();
         }
         _;
@@ -107,8 +107,9 @@ abstract contract ModuleManager is
         address module;
         uint len = modules.length;
 
-        //Check that the initial list of Modules doesn't exceed the max amount
-        if (len > MAX_MODULE_AMOUNT) {
+        // Check that the initial list of Modules doesn't exceed the max amount
+        // The subtraction by 3 is to ensure enough space for the compulsory modules: fundingManager, authorizer and paymentProcessor
+        if (len > (MAX_MODULE_AMOUNT - 3)) {
             revert Proposal__ModuleManager__ModuleAmountOverLimits();
         }
 

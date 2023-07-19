@@ -109,9 +109,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     ) external override(IProposal) initializer {
         // Initialize upstream contracts.
         __Ownable_init();
-        // @audit this line ensures that the list of modules does not exceed MAX_MODULE_AMOUNT, which is fine
-        // @audit but what about the case where I pass a list of modules with MAX_MODULE_AMOUNT number of modules
-        // @audit and then towards the end of this function, 3 more modules are added without checking the MAX_MODULE_AMOUNT limit
         __ModuleManager_init(modules);
 
         // Set storage variables.
