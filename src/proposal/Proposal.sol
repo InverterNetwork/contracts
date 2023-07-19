@@ -275,28 +275,16 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IProposal
     function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
         external
+        view
         returns (bool)
     {
         MilestoneManager milestoneManager =
             MilestoneManager(milestoneManagerAddress);
 
-        try milestoneManager.changeTreasuryAddress(address(0)) {
+        try milestoneManager.hasActiveMilestone() returns (bool) {
             return true;
-        } catch (bytes memory reason) {
-            if (
-                keccak256(reason)
-                    == keccak256(
-                        abi.encode(
-                            IMilestoneManager
-                                .Module__MilestoneManager__OnlyCallableByTreasury
-                                .selector
-                        )
-                    )
-            ) {
-                return true;
-            } else {
-                return false;
-            }
+        } catch {
+            return false;
         }
     }
 

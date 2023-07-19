@@ -99,6 +99,7 @@ interface IProposal is IModuleManager {
     /// @notice Verify whether the given address is the milestone manager module
     function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
         external
+        view
         returns (bool);
 
     /// @notice Verify whether the given address is the rebasing funding manager
