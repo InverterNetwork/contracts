@@ -114,6 +114,10 @@ contract ProposalFactory is IProposalFactory {
             );
         }
 
+        if (proposalConfig.owner == address(0)) {
+            revert ProposalFactory__ProposalOwnerIsInvalid();
+        }
+        
         // Initialize proposal.
         IProposal(clone).init(
             _proposalIdCounter,

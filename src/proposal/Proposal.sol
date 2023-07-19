@@ -121,7 +121,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         paymentProcessor = paymentProcessor_;
 
         // Transfer ownerhsip of proposal to owner argument.
-        // @audit no zero-address checks on the owner_ address
         _transferOwnership(owner_);
 
         // Add necessary modules.
