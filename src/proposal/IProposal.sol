@@ -116,4 +116,15 @@ interface IProposal is IModuleManager {
     function verifyAddressIsSingleVoteGovernorModule(
         address singleVoteGovernorAddress
     ) external view returns (bool);
+
+    /// @notice Verify whether the given address is the role authorizer module
+    function verifyAddressIsRoleAuthorizerModule(address roleAuthAddress)
+        external
+        view
+        returns (bool);
+
+    /// @notice Verify whether the given address is the token gated role authorizer module
+    function verifyAddressIsTokenGatedRoleAuthorizerModule(
+        address tokenGatedRoleAuthAddress
+    ) external view returns (bool);
 }

@@ -8,6 +8,9 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
+import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {TokenGatedRoleAuthorizer} from
+    "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
 import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 import {RebasingFundingManager} from
@@ -191,6 +194,38 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     // Note These set of functions are not mandatory for the functioning of the protocol, however they
     //      are provided for the convenience of the users since matching the names of the modules does not
     //      fully guarentee that the returned address is the address of the exact module the user was looking for
+
+    /// @inheritdoc IProposal
+    function verifyAddressIsRoleAuthorizerModule(address roleAuthAddress)
+        external
+        view
+        returns (bool)
+    {
+        RoleAuthorizer roleAuthorizer = RoleAuthorizer(roleAuthAddress);
+
+        try roleAuthorizer.isAuthorized(address(uint160(35_423))) returns (bool)
+        {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /// @inheritdoc IProposal
+    function verifyAddressIsTokenGatedRoleAuthorizerModule(
+        address tokenGatedRoleAuthAddress
+    ) external view returns (bool) {
+        TokenGatedRoleAuthorizer tokenGatedRoleAuthorizer =
+            TokenGatedRoleAuthorizer(tokenGatedRoleAuthAddress);
+
+        try tokenGatedRoleAuthorizer.isAuthorized(
+            uint8(36), address(uint160(36))
+        ) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
 
     /// @inheritdoc IProposal
     function verifyAddressIsSingleVoteGovernorModule(
