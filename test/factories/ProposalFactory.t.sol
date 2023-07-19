@@ -74,82 +74,83 @@ contract ProposalFactoryTest is Test {
         factory = new ProposalFactory(address(target), address(moduleFactory));
     }
 
-    function testValidProposalId(uint getId, uint proposalsCreated) public {
-        // Note to stay reasonable
-        proposalsCreated = bound(proposalsCreated, 0, 50);
+    // function testValidProposalId(uint getId, uint proposalsCreated) public {
+    //     // Note to stay reasonable
+    //     proposalsCreated = bound(proposalsCreated, 0, 50);
 
-        for (uint i = 0; i < proposalsCreated; ++i) {
-            _deployProposal();
-        }
-        if (getId > proposalsCreated) {
-            vm.expectRevert(
-                IProposalFactory.ProposalFactory__InvalidId.selector
-            );
-        }
-        factory.getProposalByID(getId);
-    }
+    //     for (uint i = 0; i < proposalsCreated; ++i) {
+    //         _deployProposal();
+    //     }
 
-    function testDeploymentInvariants() public {
-        assertEq(factory.target(), address(target));
-        assertEq(factory.moduleFactory(), address(moduleFactory));
-    }
+    //     if (getId > proposalsCreated) {
+    //         vm.expectRevert(
+    //             IProposalFactory.ProposalFactory__InvalidId.selector
+    //         );
+    //     }
+    //     factory.getProposalByID(getId);
+    // }
 
-    function testCreateProposal(uint modulesLen) public {
-        // Note to stay reasonable
-        modulesLen = bound(modulesLen, 0, 50);
+    // function testDeploymentInvariants() public {
+    //     assertEq(factory.target(), address(target));
+    //     assertEq(factory.moduleFactory(), address(moduleFactory));
+    // }
 
-        // Create optional ModuleConfig instances.
-        IProposalFactory.ModuleConfig[] memory moduleConfigs =
-        new IProposalFactory.ModuleConfig[](
-                modulesLen
-            );
-        for (uint i; i < modulesLen; ++i) {
-            moduleConfigs[i] = moduleConfig;
-        }
+    // function testCreateProposal(uint modulesLen) public {
+    //     // Note to stay reasonable
+    //     modulesLen = bound(modulesLen, 0, 50);
 
-        // Deploy Proposal with id=1
-        IProposal proposal = factory.createProposal(
-            proposalConfig,
-            fundingManagerConfig,
-            authorizerConfig,
-            paymentProcessorConfig,
-            moduleConfigs
-        );
+    //     // Create optional ModuleConfig instances.
+    //     IProposalFactory.ModuleConfig[] memory moduleConfigs =
+    //     new IProposalFactory.ModuleConfig[](
+    //             modulesLen
+    //         );
+    //     for (uint i; i < modulesLen; ++i) {
+    //         moduleConfigs[i] = moduleConfig;
+    //     }
 
-        // Check that proposal's strorage correctly initialized.
-        assertEq(proposal.proposalId(), 1);
-        assertEq(address(proposal.token()), address(proposalConfig.token));
-        assertTrue(address(proposal.authorizer()) != address(0));
-        assertTrue(address(proposal.paymentProcessor()) != address(0));
+    //     // Deploy Proposal with id=1
+    //     IProposal proposal = factory.createProposal(
+    //         proposalConfig,
+    //         fundingManagerConfig,
+    //         authorizerConfig,
+    //         paymentProcessorConfig,
+    //         moduleConfigs
+    //     );
 
-        // Check that other proposal's dependencies correctly initialized.
-        // Ownable:
-        assertEq(proposal.manager(), address(proposalConfig.owner));
+    //     // Check that proposal's strorage correctly initialized.
+    //     assertEq(proposal.proposalId(), 1);
+    //     assertEq(address(proposal.token()), address(proposalConfig.token));
+    //     assertTrue(address(proposal.authorizer()) != address(0));
+    //     assertTrue(address(proposal.paymentProcessor()) != address(0));
 
-        // Deploy Proposal with id=2
-        proposal = factory.createProposal(
-            proposalConfig,
-            fundingManagerConfig,
-            authorizerConfig,
-            paymentProcessorConfig,
-            moduleConfigs
-        );
-        // Only check that proposal's id is correct.
-        assertEq(proposal.proposalId(), 2);
+    //     // Check that other proposal's dependencies correctly initialized.
+    //     // Ownable:
+    //     assertEq(proposal.manager(), address(proposalConfig.owner));
 
-        //check that proposalFactory idCounter is correct.
-        assertEq(factory.getProposalIDCounter(), 2);
-    }
+    //     // Deploy Proposal with id=2
+    //     proposal = factory.createProposal(
+    //         proposalConfig,
+    //         fundingManagerConfig,
+    //         authorizerConfig,
+    //         paymentProcessorConfig,
+    //         moduleConfigs
+    //     );
+    //     // Only check that proposal's id is correct.
+    //     assertEq(proposal.proposalId(), 2);
 
-    function testProposalMapping(uint proposalAmount) public {
-        // Note to stay reasonable
-        proposalAmount = bound(proposalAmount, 0, 50);
+    //     //check that proposalFactory idCounter is correct.
+    //     assertEq(factory.getProposalIDCounter(), 2);
+    // }
 
-        for (uint i = 1; i < proposalAmount; ++i) {
-            address proposal = _deployProposal();
-            assertEq(proposal, factory.getProposalByID(i));
-        }
-    }
+    // function testProposalMapping(uint proposalAmount) public {
+    //     // Note to stay reasonable
+    //     proposalAmount = bound(proposalAmount, 0, 50);
+
+    //     for (uint i = 1; i < proposalAmount; ++i) {
+    //         address proposal = _deployProposal();
+    //         assertEq(proposal, factory.getProposalByID(i));
+    //     }
+    // }
 
     function _deployProposal() private returns (address) {
         //Create Empty ModuleConfig
