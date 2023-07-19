@@ -246,7 +246,8 @@ contract ProposalCreation is Test {
 
         IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            fundingManagerMetadata, abi.encode(address(paymentToken), hasDependency, dependencies)
+            fundingManagerMetadata,
+            abi.encode(address(paymentToken), hasDependency, dependencies)
         );
 
         //Create ModuleConfig for Authorizer
@@ -256,12 +257,20 @@ contract ProposalCreation is Test {
 
         IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            authorizerMetadata, abi.encode(initialAuthorizedAddresses, initialManager, hasDependency, dependencies)
+            authorizerMetadata,
+            abi.encode(
+                initialAuthorizedAddresses,
+                initialManager,
+                hasDependency,
+                dependencies
+            )
         );
 
         //Create ModuleConfig for SimplePaymentProcessor
         IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-            IProposalFactory.ModuleConfig(paymentProcessorMetadata, abi.encode(hasDependency, dependencies));
+        IProposalFactory.ModuleConfig(
+            paymentProcessorMetadata, abi.encode(hasDependency, dependencies)
+        );
 
         //Create optionalModule array
 
@@ -274,7 +283,13 @@ contract ProposalCreation is Test {
         //Add MetadataManager as a optional Module
         optionalModules[0] = IProposalFactory.ModuleConfig(
             metadataManagerMetadata,
-            abi.encode(ownerMetadata, proposalMetadata, teamMetadata, hasDependency, dependencies)
+            abi.encode(
+                ownerMetadata,
+                proposalMetadata,
+                teamMetadata,
+                hasDependency,
+                dependencies
+            )
         );
 
         //Create proposal using the different needed configs
@@ -313,8 +328,13 @@ contract ProposalCreation is Test {
         bool hasDependency;
         string[] memory dependencies = new string[](0);
 
-        bytes memory milestoneManagerConfigdata =
-            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY, hasDependency, dependencies);
+        bytes memory milestoneManagerConfigdata = abi.encode(
+            SALARY_PRECISION,
+            FEE_PERCENTAGE,
+            FEE_TREASURY,
+            hasDependency,
+            dependencies
+        );
 
         //Create the module via the moduleFactory
         address milestoneManager = moduleFactory.createModule(

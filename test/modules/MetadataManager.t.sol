@@ -68,7 +68,13 @@ contract MetadataManagerTest is ModuleTest {
         metadataManager.init(
             _proposal,
             _METADATA,
-            abi.encode(MANAGER_METADATA, PROPOSAL_METADATA, TEAM_METADATA, hasDependency, dependencies)
+            abi.encode(
+                MANAGER_METADATA,
+                PROPOSAL_METADATA,
+                TEAM_METADATA,
+                hasDependency,
+                dependencies
+            )
         );
     }
 

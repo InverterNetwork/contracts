@@ -98,7 +98,13 @@ contract SingleVoteGovernorTest is Test {
         _authorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(initialVoters, _startingThreshold, _startingDuration, hasDependency, dependencies)
+            abi.encode(
+                initialVoters,
+                _startingThreshold,
+                _startingDuration,
+                hasDependency,
+                dependencies
+            )
         );
 
         assertEq(address(_authorizer.proposal()), address(_proposal));
@@ -277,7 +283,13 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION, hasDependency, dependencies)
+            abi.encode(
+                testVoters,
+                DEFAULT_QUORUM,
+                DEFAULT_DURATION,
+                hasDependency,
+                dependencies
+            )
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
@@ -323,7 +335,13 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION, hasDependency, dependencies)
+            abi.encode(
+                testVoters,
+                DEFAULT_QUORUM,
+                DEFAULT_DURATION,
+                hasDependency,
+                dependencies
+            )
         );
     }
 
@@ -338,7 +356,13 @@ contract SingleVoteGovernorTest is Test {
         _authorizer.init(
             IProposal(newProposal),
             _METADATA,
-            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION, hasDependency, dependencies)
+            abi.encode(
+                testVoters,
+                DEFAULT_QUORUM,
+                DEFAULT_DURATION,
+                hasDependency,
+                dependencies
+            )
         );
 
         assertEq(_authorizer.isAuthorized(address(_authorizer)), true);
@@ -366,7 +390,13 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION, hasDependency, dependencies)
+            abi.encode(
+                testVoters,
+                DEFAULT_QUORUM,
+                DEFAULT_DURATION,
+                hasDependency,
+                dependencies
+            )
         );
 
         //test faulty list (zero addresses)
@@ -382,7 +412,13 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION, hasDependency, dependencies)
+            abi.encode(
+                testVoters,
+                DEFAULT_QUORUM,
+                DEFAULT_DURATION,
+                hasDependency,
+                dependencies
+            )
         );
 
         testVoters[0] = address(testAuthorizer);
@@ -396,7 +432,13 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION, hasDependency, dependencies)
+            abi.encode(
+                testVoters,
+                DEFAULT_QUORUM,
+                DEFAULT_DURATION,
+                hasDependency,
+                dependencies
+            )
         );
 
         testVoters[0] = address(_proposal);
@@ -410,7 +452,13 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION, hasDependency, dependencies)
+            abi.encode(
+                testVoters,
+                DEFAULT_QUORUM,
+                DEFAULT_DURATION,
+                hasDependency,
+                dependencies
+            )
         );
 
         assertEq(address(testAuthorizer.proposal()), address(0));

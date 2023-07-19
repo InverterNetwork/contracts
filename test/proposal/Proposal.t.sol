@@ -66,12 +66,12 @@ contract ProposalTest is Test {
         types.assumeValidModules(modules);
 
         address[] memory truncatedModules = new address[](125);
-        if(modules.length > 125) {
-            for(uint i; i < 125; i++) {
+        if (modules.length > 125) {
+            for (uint i; i < 125; i++) {
                 truncatedModules[i] = modules[i];
             }
             types.assumeValidModules(truncatedModules);
-            
+
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(truncatedModules);
 
@@ -121,8 +121,8 @@ contract ProposalTest is Test {
         types.assumeValidProposalId(proposalId);
 
         address[] memory truncatedModules = new address[](125);
-        if(modules.length > 125) {
-            for(uint i; i < 125; i++) {
+        if (modules.length > 125) {
+            for (uint i; i < 125; i++) {
                 truncatedModules[i] = modules[i];
             }
 
@@ -187,8 +187,8 @@ contract ProposalTest is Test {
         types.assumeValidProposalId(proposalId);
 
         address[] memory truncatedModules = new address[](125);
-        if(modules.length > 125) {
-            for(uint i; i < 125; i++) {
+        if (modules.length > 125) {
+            for (uint i; i < 125; i++) {
                 truncatedModules[i] = modules[i];
             }
 
@@ -237,8 +237,8 @@ contract ProposalTest is Test {
     ) public {
         types.assumeValidProposalId(proposalId);
         address[] memory truncatedModules = new address[](125);
-        if(modules.length > 125) {
-            for(uint i; i < 125; i++) {
+        if (modules.length > 125) {
+            for (uint i; i < 125; i++) {
                 truncatedModules[i] = modules[i];
             }
 
@@ -286,10 +286,10 @@ contract ProposalTest is Test {
         address[] memory modules
     ) public {
         types.assumeValidProposalId(proposalId);
-        
+
         address[] memory truncatedModules = new address[](125);
-        if(modules.length > 125) {
-            for(uint i; i < 125; i++) {
+        if (modules.length > 125) {
+            for (uint i; i < 125; i++) {
                 truncatedModules[i] = modules[i];
             }
 
@@ -325,7 +325,7 @@ contract ProposalTest is Test {
                 paymentProcessor
             );
         }
-        
+
         authorizer.setIsAuthorized(address(this), false);
 
         vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);

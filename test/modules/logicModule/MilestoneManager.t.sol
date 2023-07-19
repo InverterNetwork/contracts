@@ -74,8 +74,13 @@ contract MilestoneManagerTest is ModuleTest {
 
         _setUpProposal(milestoneManager);
 
-        bytes memory configdata =
-            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY, hasDependency, dependencies);
+        bytes memory configdata = abi.encode(
+            SALARY_PRECISION,
+            FEE_PERCENTAGE,
+            FEE_TREASURY,
+            hasDependency,
+            dependencies
+        );
 
         milestoneManager.init(_proposal, _METADATA, configdata);
 

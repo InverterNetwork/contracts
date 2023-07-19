@@ -60,7 +60,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module wrongly
         recurringPaymentManager.init(
-            _proposal, _METADATA, abi.encode(1 weeks - 1, hasDependency, dependencies)
+            _proposal,
+            _METADATA,
+            abi.encode(1 weeks - 1, hasDependency, dependencies)
         );
 
         vm.expectRevert(
@@ -71,17 +73,27 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module wrongly
         recurringPaymentManager.init(
-            _proposal, _METADATA, abi.encode(52 weeks + 1, hasDependency, dependencies)
+            _proposal,
+            _METADATA,
+            abi.encode(52 weeks + 1, hasDependency, dependencies)
         );
 
         //Init Module correct
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks, hasDependency, dependencies));
+        recurringPaymentManager.init(
+            _proposal,
+            _METADATA,
+            abi.encode(1 weeks, hasDependency, dependencies)
+        );
 
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
     }
 
     function testReinitFails() public override(ModuleTest) {
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks, hasDependency, dependencies));
+        recurringPaymentManager.init(
+            _proposal,
+            _METADATA,
+            abi.encode(1 weeks, hasDependency, dependencies)
+        );
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         recurringPaymentManager.init(_proposal, _METADATA, bytes(""));
@@ -219,7 +231,11 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     function testAddRecurringPaymentModifierInPosition() public {
         //Init Module
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks, hasDependency, dependencies));
+        recurringPaymentManager.init(
+            _proposal,
+            _METADATA,
+            abi.encode(1 weeks, hasDependency, dependencies)
+        );
 
         //Warp to a reasonable time
         vm.warp(2 weeks);
@@ -321,7 +337,11 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     function testRemoveRecurringPaymentModifierInPosition() public {
         //Init Module
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks, hasDependency, dependencies));
+        recurringPaymentManager.init(
+            _proposal,
+            _METADATA,
+            abi.encode(1 weeks, hasDependency, dependencies)
+        );
 
         //onlyAuthorizedOrManager
         vm.prank(address(0xBEEF)); //Not Authorized
@@ -522,7 +542,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module
         recurringPaymentManager.init(
-            _proposal, _METADATA, abi.encode(epochLength, hasDependency, dependencies)
+            _proposal,
+            _METADATA,
+            abi.encode(epochLength, hasDependency, dependencies)
         );
     }
 

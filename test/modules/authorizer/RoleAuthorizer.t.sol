@@ -109,7 +109,9 @@ contract RoleAuthorizerTest is Test {
         _validateAuthorizedList(initialAuth);
 
         testAuthorizer.init(
-            IProposal(_proposal), _METADATA, abi.encode(initialAuth, initialManager, hasDependency, dependencies)
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
@@ -136,7 +138,9 @@ contract RoleAuthorizerTest is Test {
         address[] memory initialAuth = new address[](0);
 
         testAuthorizer.init(
-            IProposal(_proposal), _METADATA, abi.encode(initialAuth, initialManager, hasDependency, dependencies)
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
@@ -159,7 +163,9 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert();
         _authorizer.init(
-            IProposal(newProposal), _METADATA, abi.encode(initialAuth, initialManager, hasDependency, dependencies)
+            IProposal(newProposal),
+            _METADATA,
+            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
         assertEq(_authorizer.isAuthorized(0, address(this)), false);
         assertEq(address(_authorizer.proposal()), address(_proposal));

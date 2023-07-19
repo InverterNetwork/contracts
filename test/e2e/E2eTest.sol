@@ -69,7 +69,10 @@ contract E2eTest is Test {
     );
     // Note that the IAuthorizer's first authorized address is address(this).
     IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory
-        .ModuleConfig(authorizerMetadata, abi.encode(address(this), hasDependency, dependencies));
+        .ModuleConfig(
+        authorizerMetadata,
+        abi.encode(address(this), hasDependency, dependencies)
+    );
 
     SimplePaymentProcessor paymentProcessorImpl;
     StreamingPaymentProcessor streamingPaymentProcessorImpl;
@@ -83,7 +86,9 @@ contract E2eTest is Test {
         "SimplePaymentProcessor"
     );
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
-        IProposalFactory.ModuleConfig(paymentProcessorMetadata, abi.encode(hasDependency, dependencies));
+    IProposalFactory.ModuleConfig(
+        paymentProcessorMetadata, abi.encode(hasDependency, dependencies)
+    );
 
     Beacon streamingPaymentProcessorBeacon;
     address streamingPaymentProcessorBeaconOwner =
@@ -95,7 +100,10 @@ contract E2eTest is Test {
         "StreamingPaymentProcessor"
     );
     IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
-    IProposalFactory.ModuleConfig(streamingPaymentProcessorMetadata, abi.encode(hasDependency, dependencies));
+    IProposalFactory.ModuleConfig(
+        streamingPaymentProcessorMetadata,
+        abi.encode(hasDependency, dependencies)
+    );
 
     MilestoneManager milestoneManagerImpl;
     Beacon milestoneManagerBeacon;
@@ -109,7 +117,13 @@ contract E2eTest is Test {
     IProposalFactory.ModuleConfig milestoneManagerFactoryConfig =
     IProposalFactory.ModuleConfig(
         milestoneManagerMetadata,
-        abi.encode(100_000_000, 1_000_000, makeAddr("treasury"), hasDependency, dependencies)
+        abi.encode(
+            100_000_000,
+            1_000_000,
+            makeAddr("treasury"),
+            hasDependency,
+            dependencies
+        )
     );
 
     RecurringPaymentManager recurringPaymentManagerImpl;
@@ -125,7 +139,8 @@ contract E2eTest is Test {
     );
     IProposalFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
     IProposalFactory.ModuleConfig(
-        recurringPaymentManagerMetadata, abi.encode(1 weeks, hasDependency, dependencies)
+        recurringPaymentManagerMetadata,
+        abi.encode(1 weeks, hasDependency, dependencies)
     );
 
     function setUp() public {
@@ -212,7 +227,8 @@ contract E2eTest is Test {
 
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            rebasingFundingManagerMetadata, abi.encode(address(config.token), hasDependency, dependencies)
+            rebasingFundingManagerMetadata,
+            abi.encode(address(config.token), hasDependency, dependencies)
         );
 
         return proposalFactory.createProposal(
@@ -233,7 +249,8 @@ contract E2eTest is Test {
 
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            rebasingFundingManagerMetadata, abi.encode(address(config.token), hasDependency, dependencies)
+            rebasingFundingManagerMetadata,
+            abi.encode(address(config.token), hasDependency, dependencies)
         );
 
         return proposalFactory.createProposal(

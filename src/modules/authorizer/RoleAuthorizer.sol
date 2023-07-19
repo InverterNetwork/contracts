@@ -81,7 +81,7 @@ contract RoleAuthorizer is
     ) external override initializer {
         __Module_init(proposal_, metadata);
 
-        (address[] memory initialOwners, address initialManager, , ) =
+        (address[] memory initialOwners, address initialManager,,) =
             abi.decode(configdata, (address[], address, bool, string[]));
 
         __RoleAuthorizer_init(initialOwners, initialManager);

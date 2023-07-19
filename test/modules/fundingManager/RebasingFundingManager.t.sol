@@ -57,7 +57,11 @@ contract RebasingFundingManagerTest is ModuleTest {
         _setUpProposal(fundingManager);
 
         //Init Module
-        fundingManager.init(_proposal, _METADATA, abi.encode(address(_token), hasDependency, dependencies));
+        fundingManager.init(
+            _proposal,
+            _METADATA,
+            abi.encode(address(_token), hasDependency, dependencies)
+        );
     }
 
     //--------------------------------------------------------------------------
