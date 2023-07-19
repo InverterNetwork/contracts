@@ -23,6 +23,10 @@ import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 
 contract RoleAuthorizerTest is Test {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+    address initialManager = makeAddr("initial manager");
+
     // Mocks
     RoleAuthorizer _authorizer;
     Proposal internal _proposal = new Proposal();
@@ -73,7 +77,7 @@ contract RoleAuthorizerTest is Test {
         _authorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(initialAuth, initialManager)
+            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
         assertEq(
             _authorizer.hasRole(
@@ -105,7 +109,7 @@ contract RoleAuthorizerTest is Test {
         _validateAuthorizedList(initialAuth);
 
         testAuthorizer.init(
-            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+            IProposal(_proposal), _METADATA, abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
@@ -132,7 +136,7 @@ contract RoleAuthorizerTest is Test {
         address[] memory initialAuth = new address[](0);
 
         testAuthorizer.init(
-            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+            IProposal(_proposal), _METADATA, abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
@@ -155,7 +159,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert();
         _authorizer.init(
-            IProposal(newProposal), _METADATA, abi.encode(initialAuth)
+            IProposal(newProposal), _METADATA, abi.encode(initialAuth, initialManager, hasDependency, dependencies)
         );
         assertEq(_authorizer.isAuthorized(0, address(this)), false);
         assertEq(address(_authorizer.proposal()), address(_proposal));
