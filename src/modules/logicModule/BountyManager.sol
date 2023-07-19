@@ -40,8 +40,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Modifiers
 
+    //@todo Reminder that this will be moved into the Module Contract at a later point of time
     modifier onlyRole(uint8 roleId) {
-        //@todo test these
         if (
             !IRoleAuthorizer(address(__Module_proposal.authorizer()))
                 .isAuthorized(roleId, _msgSender())
@@ -436,75 +436,45 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
 
     /// @inheritdoc IBountyManager
     function grantBountyAdminRole(address addr) external onlyAuthorized {
-        //@todo test this
+        //@todo Will be removed in the future and moved to the authorizer directly
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
-        roleAuthorizer.grantRole(
-            roleAuthorizer.generateRoleId(
-                address(this), uint8(Roles.BountyAdmin)
-            ),
-            addr
-        );
+            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo Cast to IRoleAuthorizer wont be necessary as soon as the IAuthorizer Interface in Proposal is replaced by IRoleAuthorizer, this is the same for the other implementations
+        roleAuthorizer.grantRoleFromModule(uint8(Roles.BountyAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function grantClaimAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
-        roleAuthorizer.grantRole(
-            roleAuthorizer.generateRoleId(
-                address(this), uint8(Roles.ClaimAdmin)
-            ),
-            addr
-        );
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        roleAuthorizer.grantRoleFromModule(uint8(Roles.ClaimAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function grantVerifyAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
-        roleAuthorizer.grantRole(
-            roleAuthorizer.generateRoleId(
-                address(this), uint8(Roles.VerifyAdmin)
-            ),
-            addr
-        );
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        roleAuthorizer.grantRoleFromModule(uint8(Roles.VerifyAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function revokeBountyAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
-        roleAuthorizer.revokeRole(
-            roleAuthorizer.generateRoleId(
-                address(this), uint8(Roles.BountyAdmin)
-            ),
-            addr
-        );
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        roleAuthorizer.revokeRoleFromModule(uint8(Roles.BountyAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function revokeClaimAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
-        roleAuthorizer.revokeRole(
-            roleAuthorizer.generateRoleId(
-                address(this), uint8(Roles.ClaimAdmin)
-            ),
-            addr
-        );
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        roleAuthorizer.revokeRoleFromModule(uint8(Roles.ClaimAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function revokeVerifyAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo this can be changed to use the normal Authorizer later
-        roleAuthorizer.revokeRole(
-            roleAuthorizer.generateRoleId(
-                address(this), uint8(Roles.VerifyAdmin)
-            ),
-            addr
-        );
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        roleAuthorizer.revokeRoleFromModule(uint8(Roles.VerifyAdmin), addr);
     }
 
     //--------------------------------------------------------------------------
