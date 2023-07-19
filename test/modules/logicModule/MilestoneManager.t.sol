@@ -20,6 +20,9 @@ import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract MilestoneManagerTest is ModuleTest {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     // SuT
     MilestoneManager milestoneManager;
 
@@ -72,7 +75,7 @@ contract MilestoneManagerTest is ModuleTest {
         _setUpProposal(milestoneManager);
 
         bytes memory configdata =
-            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY);
+            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY, hasDependency, dependencies);
 
         milestoneManager.init(_proposal, _METADATA, configdata);
 
