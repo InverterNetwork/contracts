@@ -22,6 +22,9 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract StreamingPaymentProcessorTest is ModuleTest {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     // SuT
     StreamingPaymentProcessor paymentProcessor;
 
@@ -57,7 +60,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         _proposal.addModule(address(paymentClient));
 
-        paymentProcessor.init(_proposal, _METADATA, bytes(""));
+        paymentProcessor.init(_proposal, _METADATA, abi.encode(hasDependency, dependencies));
 
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
     }
@@ -71,7 +74,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        paymentProcessor.init(_proposal, _METADATA, bytes(""));
+        paymentProcessor.init(_proposal, _METADATA, abi.encode(hasDependency, dependencies));
     }
 
     //--------------------------------------------------------------------------
