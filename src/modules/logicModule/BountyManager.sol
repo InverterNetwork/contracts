@@ -48,7 +48,6 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     modifier onlyClaimContributor(uint claimId) {
-        //@todo test these
         address sender = _msgSender();
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
         uint length = contribs.length;
