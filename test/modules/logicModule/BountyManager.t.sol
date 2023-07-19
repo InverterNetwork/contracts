@@ -91,6 +91,23 @@ contract BountyManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Modifier
 
+    //@todo Reminder that this will be moved into the ModuleTest Contract at a later point of time
+    //note: if someone has a better idea to test this, it would be most welcome
+    function testOnlyRole(bool authorized) public {
+        if (!authorized) {
+            _authorizer.setIsAuthorized(address(this), false);
+            //onlyBountyAdmin
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IBountyManager.Module__BountyManager__OnlyRole.selector,
+                    IBountyManager.Roles.BountyAdmin,
+                    address(bountyManager)
+                )
+            );
+        }
+        bountyManager.addBounty(1, 2, bytes(""));
+    }
+
     function testOnlyClaimContributor(
         address[] memory addrs,
         uint[] memory amounts,
@@ -770,6 +787,31 @@ contract BountyManagerTest is ModuleTest {
             )
         );
         bountyManager.verifyClaim(0, 1);
+    }
+
+    //--------------------------------------------------------------------------
+    // Role Functions
+
+    //@todo trivial to be removed as soon as the functionality is moved to RoleAuthorizer
+    function testGrantBountyAdminRole(address addr) public {
+        bountyManager.grantBountyAdminRole(addr);
+
+        vm.prank(address(bountyManager));
+        bool isAuthorized = _authorizer.isAuthorized(
+            uint8(IBountyManager.Roles.BountyAdmin), addr
+        );
+        assertTrue(isAuthorized);
+    }
+
+    function testRevokeBountyAdminRole(address addr) public {
+        bountyManager.grantBountyAdminRole(addr);
+        bountyManager.revokeBountyAdminRole(addr);
+
+        vm.prank(address(bountyManager));
+        bool isAuthorized = _authorizer.isAuthorized(
+            uint8(IBountyManager.Roles.BountyAdmin), addr
+        );
+        assertFalse(isAuthorized);
     }
 
     //--------------------------------------------------------------------------
