@@ -22,6 +22,9 @@ import {
 } from "src/modules/fundingManager/RebasingFundingManager.sol";
 
 contract RebasingFundingManagerTest is ModuleTest {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     struct UserDeposits {
         address[] users;
         uint[] deposits;
@@ -54,7 +57,7 @@ contract RebasingFundingManagerTest is ModuleTest {
         _setUpProposal(fundingManager);
 
         //Init Module
-        fundingManager.init(_proposal, _METADATA, abi.encode(address(_token)));
+        fundingManager.init(_proposal, _METADATA, abi.encode(address(_token), hasDependency, dependencies));
     }
 
     //--------------------------------------------------------------------------
