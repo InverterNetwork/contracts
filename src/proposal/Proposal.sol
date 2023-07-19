@@ -8,7 +8,6 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {ListAuthorizer} from "src/modules/authorizer/ListAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
 import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 import {RebasingFundingManager} from
@@ -192,21 +191,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     // Note These set of functions are not mandatory for the functioning of the protocol, however they
     //      are provided for the convenience of the users since matching the names of the modules does not
     //      fully guarentee that the returned address is the address of the exact module the user was looking for
-
-    /// @inheritdoc IProposal
-    function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress)
-        external
-        view
-        returns (bool)
-    {
-        ListAuthorizer listAuthorizer = ListAuthorizer(listAuthorizerAddress);
-
-        try listAuthorizer.getAmountAuthorized() returns (uint) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
 
     /// @inheritdoc IProposal
     function verifyAddressIsSingleVoteGovernorModule(

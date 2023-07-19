@@ -116,10 +116,4 @@ interface IProposal is IModuleManager {
     function verifyAddressIsSingleVoteGovernorModule(
         address singleVoteGovernorAddress
     ) external view returns (bool);
-
-    /// @notice Verify whether the given address is the list authorizer
-    function verifyAddressIsListAuthorizerModule(address listAuthorizerAddress)
-        external
-        view
-        returns (bool);
 }
