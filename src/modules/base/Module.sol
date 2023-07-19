@@ -36,6 +36,11 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     //
     // Variables are prefixed with `__Module_`.
 
+    /// @dev same thing as the initializer modifier but for the init2 function
+    ///
+    /// @custom:invariant Not mutated after the init2 call
+    bool internal __Module_initialization;
+
     /// @dev The module's proposal instance.
     ///
     /// @custom:invariant Not mutated after initialization.
@@ -84,6 +89,14 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         if (_msgSender() != address(__Module_proposal)) {
             revert Module__OnlyCallableByProposal();
         }
+        _;
+    }
+
+    /// @dev same function as OZ initializer, but for the init2 function
+    modifier initializer2() {
+        if(__Module_initialization == true) {
+            revert Module__CannotCallInit2Again();
+        } 
         _;
     }
 

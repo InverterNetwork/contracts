@@ -101,8 +101,9 @@ contract RecurringPaymentManager is
 
     function init2(IProposal proposal_, bytes memory configdata)
         external
-        initializer
+        initializer2
     {
+        __Module_initialization = true;
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         (, bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (uint, bool, string[]));

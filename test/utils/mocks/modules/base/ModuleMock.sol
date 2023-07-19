@@ -15,8 +15,10 @@ contract ModuleMock is Module {
 
     function init2(IProposal proposal, bytes memory configdata)
         public
-        initializer
-    {}
+        initializer2
+    {
+        __Module_initialization = true;
+    }
 
     // Note that the `initializer` modifier is missing.
     function initNoInitializer(

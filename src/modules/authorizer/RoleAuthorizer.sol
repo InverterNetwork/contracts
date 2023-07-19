@@ -81,7 +81,7 @@ contract RoleAuthorizer is
     ) external override initializer {
         __Module_init(proposal_, metadata);
 
-        (address[] memory initialOwners, address initialManager,,) =
+        (address[] memory initialOwners, address initialManager, , ) =
             abi.decode(configdata, (address[], address, bool, string[]));
 
         __RoleAuthorizer_init(initialOwners, initialManager);
@@ -89,8 +89,9 @@ contract RoleAuthorizer is
 
     function init2(IProposal proposal_, bytes memory configdata)
         external
-        initializer
+        initializer2
     {
+        __Module_initialization = true;
         // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
         /*
         ( , , bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (address[], address, bool, string[]));

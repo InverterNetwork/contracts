@@ -31,6 +31,9 @@ interface IModule {
     /// @param funcSig The signature of the function called.
     error Module_ProposalCallbackFailed(string funcSig);
 
+    /// @notice init2 was called again for a module
+    error Module__CannotCallInit2Again();
+
     //--------------------------------------------------------------------------
     // Functions
 
