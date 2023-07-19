@@ -18,6 +18,9 @@ import {
 } from "src/modules/MetadataManager.sol";
 
 contract MetadataManagerTest is ModuleTest {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     // SuT
     MetadataManager metadataManager;
 
@@ -65,7 +68,7 @@ contract MetadataManagerTest is ModuleTest {
         metadataManager.init(
             _proposal,
             _METADATA,
-            abi.encode(MANAGER_METADATA, PROPOSAL_METADATA, TEAM_METADATA)
+            abi.encode(MANAGER_METADATA, PROPOSAL_METADATA, TEAM_METADATA, hasDependency, dependencies)
         );
     }
 
