@@ -22,6 +22,7 @@ import {SimplePaymentProcessor} from
 import {StreamingPaymentProcessor} from
     "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
+import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 
@@ -109,8 +110,16 @@ contract E2eTest is Test {
         abi.encode(100_000_000, 1_000_000, makeAddr("treasury"))
     );
 
-    RecurringPaymentManager recurringPaymentManagerImpl;
+    BountyManager bountyManagerImpl;
+    Beacon bountyManagerBeacon;
+    address bountyManagerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata bountyManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
+    );
+    IProposalFactory.ModuleConfig bountyManagerFactoryConfig =
+        IProposalFactory.ModuleConfig(bountyManagerMetadata, bytes(""));
 
+    RecurringPaymentManager recurringPaymentManagerImpl;
     Beacon recurringPaymentManagerBeacon;
     address recurringPaymentManagerBeaconOwner =
         makeAddr("recurring payment manager beacon owner");
@@ -134,6 +143,7 @@ contract E2eTest is Test {
         paymentProcessorImpl = new SimplePaymentProcessor();
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
+        bountyManagerImpl = new BountyManager();
         recurringPaymentManagerImpl = new RecurringPaymentManager();
         authorizerImpl = new AuthorizerMock();
 
@@ -146,6 +156,8 @@ contract E2eTest is Test {
         streamingPaymentProcessorBeacon = new Beacon();
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon = new Beacon();
+        vm.prank(bountyManagerBeaconOwner);
+        bountyManagerBeacon = new Beacon();
         vm.prank(recurringPaymentManagerBeaconOwner);
         recurringPaymentManagerBeacon = new Beacon();
         vm.prank(authorizerBeaconOwner);
@@ -164,6 +176,8 @@ contract E2eTest is Test {
         );
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
+        vm.prank(bountyManagerBeaconOwner);
+        bountyManagerBeacon.upgradeTo(address(bountyManagerImpl));
         vm.prank(recurringPaymentManagerBeaconOwner);
         recurringPaymentManagerBeacon.upgradeTo(
             address(recurringPaymentManagerImpl)
@@ -192,6 +206,9 @@ contract E2eTest is Test {
             milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
         );
         moduleFactory.registerMetadata(
+            bountyManagerMetadata, IBeacon(bountyManagerBeacon)
+        );
+        moduleFactory.registerMetadata(
             recurringPaymentManagerMetadata,
             IBeacon(recurringPaymentManagerBeacon)
         );
@@ -204,8 +221,9 @@ contract E2eTest is Test {
         IProposalFactory.ProposalConfig memory config
     ) internal returns (IProposal) {
         IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](1);
+            new IProposalFactory.ModuleConfig[](2);
         optionalModules[0] = milestoneManagerFactoryConfig;
+        optionalModules[1] = bountyManagerFactoryConfig;
 
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
