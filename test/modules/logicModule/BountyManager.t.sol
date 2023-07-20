@@ -593,15 +593,17 @@ contract BountyManagerTest is ModuleTest {
 
         assertEqualClaim(2, 1, contribs, bytes(""));
 
-        //If new contributors dont contain parts of DEFAULT_CONTRIBUTORS make sure the default are not part of the Set
-
-        bool notInSet = containsParts(contribs, DEFAULT_CONTRIBUTORS);
-        if (notInSet) {
-            for (uint i; i < DEFAULT_CONTRIBUTORS.length; i++) {
-                assertContributorAddressToClaimIdsContainsNot(
-                    DEFAULT_CONTRIBUTORS[i].addr, id
-                );
-            }
+        //Check if default contributors are in the set
+        //if not make sure their ClaimIds are removed
+        if (!contains(contribs, DEFAULT_CONTRIBUTORS[0].addr)) {
+            assertContributorAddressToClaimIdsContainsNot(
+                DEFAULT_CONTRIBUTORS[0].addr, id
+            );
+        }
+        if (!contains(contribs, DEFAULT_CONTRIBUTORS[1].addr)) {
+            assertContributorAddressToClaimIdsContainsNot(
+                DEFAULT_CONTRIBUTORS[0].addr, id
+            );
         }
 
         //Assert set is filled correctly
