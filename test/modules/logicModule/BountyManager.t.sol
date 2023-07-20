@@ -566,22 +566,29 @@ contract BountyManagerTest is ModuleTest {
     //-----------------------------------------
     //UpdateClaimContributors
 
+    event checker(uint);
+
     function testUpdateClaimContributors(
         address[] memory addrs,
         uint[] memory amounts
     ) public {
+        emit checker(1);
         addrs = cutArray(50, addrs); //cut to reasonable size
+        emit checker(2);
         uint length = addrs.length;
+        emit checker(3);
         vm.assume(length <= amounts.length);
+        emit checker(4);
 
         //Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
+        emit checker(5);
         //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
-
+        emit checker(6);
         IBountyManager.Contributor[] memory contribs =
             createValidContributors(addrs, amounts);
-
+        emit checker(7);
         bountyManager.addBounty(1, maxAmount, bytes(""));
         uint id = bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
