@@ -323,7 +323,7 @@ contract BountyManagerTest is ModuleTest {
             bountyManager.verifyClaim(claimId, bountyId);
             vm.expectRevert(
                 IBountyManager
-                    .Module__BountyManager__BountyAlreadyClaimed
+                    .Module__BountyManager__BountyAlreadyClaimedOrLocked
                     .selector
             );
         }
@@ -464,7 +464,9 @@ contract BountyManagerTest is ModuleTest {
 
         //notClaimed
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__BountyAlreadyClaimed.selector
+            IBountyManager
+                .Module__BountyManager__BountyAlreadyClaimedOrLocked
+                .selector
         );
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
@@ -545,7 +547,9 @@ contract BountyManagerTest is ModuleTest {
         //bountyAlreadyClaimed
         bountyManager.lockBounty(1);
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__BountyAlreadyClaimed.selector
+            IBountyManager
+                .Module__BountyManager__BountyAlreadyClaimedOrLocked
+                .selector
         );
         bountyManager.lockBounty(1);
 
@@ -773,7 +777,9 @@ contract BountyManagerTest is ModuleTest {
 
         //notClaimed
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__BountyAlreadyClaimed.selector
+            IBountyManager
+                .Module__BountyManager__BountyAlreadyClaimedOrLocked
+                .selector
         );
         bountyManager.verifyClaim(2, 1);
 

@@ -29,6 +29,13 @@ interface IBountyManager is IPaymentClient {
         uint claimedBy;
     }
 
+    struct Contributor {
+        /// @dev The contributor's address.
+        address addr;
+        /// @dev The amount of tokens the Contributor gets upon claimng the bounty
+        uint claimAmount;
+    }
+
     struct Claim {
         uint bountyId;
         /// @dev The contributors of the claim
@@ -37,13 +44,6 @@ interface IBountyManager is IPaymentClient {
         /// @dev Arbitrary data to store Claim details if necessary.
         ///      CAN be empty.
         bytes details;
-    }
-
-    struct Contributor {
-        /// @dev The contributor's address.
-        address addr;
-        /// @dev The amount of tokens the Contributor gets upon claimng the bounty
-        uint claimAmount;
     }
 
     //--------------------------------------------------------------------------
@@ -79,8 +79,8 @@ interface IBountyManager is IPaymentClient {
     /// @notice Claim is not trying to claim given bounty
     error Module__BountyManager__ClaimNotBelongingToBounty();
 
-    /// @notice Given Bounty id is already claimed
-    error Module__BountyManager__BountyAlreadyClaimed();
+    /// @notice Given Bounty id is already claimed or Locked
+    error Module__BountyManager__BountyAlreadyClaimedOrLocked();
 
     //--------------------------------------------------------------------------
     // Events

@@ -55,15 +55,20 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         address sender = _msgSender();
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
         uint length = contribs.length;
-        bool found;
-        for (uint i; i < length; i++) {
+        uint i;
+        for (i; i < length;) {
             if (contribs[i].addr == sender) {
-                found = true;
+                //sender was found in contrib list
                 break;
+            }
+
+            unchecked {
+                ++i;
             }
         }
 
-        if (!found) {
+        //If i is length or higher the sender wasnt found in the contib list
+        if (i >= length) {
             revert Module__BountyManager__OnlyClaimContributor();
         }
         _;
@@ -109,7 +114,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         uint totalAmount;
         uint currentAmount;
         address contrib;
-        for (uint i; i < length; i++) {
+        address proposalAddress = address(__Module_proposal);
+        for (uint i; i < length;) {
             currentAmount = contributors[i].claimAmount;
 
             //amount cant be zero
@@ -120,12 +126,15 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
             contrib = contributors[i].addr;
             if (
                 contrib == address(0) || contrib == address(this)
-                    || contrib == address(proposal())
+                    || contrib == proposalAddress
             ) {
                 revert Module__BountyManager__InvalidContributorAddress();
             }
 
             totalAmount += currentAmount;
+            unchecked {
+                ++i;
+            }
         }
 
         if (
@@ -137,7 +146,6 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     modifier claimBelongingToBounty(uint claimId, uint bountyId) {
-        //Its not claimed if claimedBy is still 0
         if (_claimRegistry[claimId].bountyId != bountyId) {
             revert Module__BountyManager__ClaimNotBelongingToBounty();
         }
@@ -147,7 +155,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     modifier notClaimed(uint bountyId) {
         //Its not claimed if claimedBy is still 0
         if (_bountyRegistry[bountyId].claimedBy != 0) {
-            revert Module__BountyManager__BountyAlreadyClaimed();
+            revert Module__BountyManager__BountyAlreadyClaimedOrLocked();
         }
         _;
     }
@@ -314,7 +322,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         returns (uint id)
     {
         validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
-        // Note ids start at 1.
+        // Count up shared nextId by one
         uint claimId = ++_nextId;
 
         // Add Claim id to the list.
@@ -326,10 +334,13 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         c.bountyId = bountyId;
 
         uint length = contributors.length;
-        for (uint i; i < length; ++i) {
+        for (uint i; i < length;) {
             c.contributors.push(contributors[i]);
             //add ClaimId to each contributor address accordingly
             contributorAddressToClaimIds[contributors[i].addr].add(claimId);
+            unchecked {
+                ++i;
+            }
         }
 
         c.details = details;
@@ -354,19 +365,25 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         Claim storage c = _claimRegistry[claimId];
 
         uint length = c.contributors.length;
-        for (uint i; i < length; ++i) {
+        for (uint i; i < length;) {
             //remove ClaimId for each contributor address
             contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId); //@note c.contributors[i].addr -> is there a more gas efficient alternative to this?
+            unchecked {
+                ++i;
+            }
         }
 
         delete c.contributors;
 
         length = contributors.length;
 
-        for (uint i; i < length; ++i) {
+        for (uint i; i < length;) {
             c.contributors.push(contributors[i]);
             //add ClaimId again to each contributor address
             contributorAddressToClaimIds[contributors[i].addr].add(claimId);
+            unchecked {
+                ++i;
+            }
         }
 
         emit ClaimContributorsUpdated(claimId, contributors);
@@ -403,7 +420,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         Contributor memory contrib;
 
         //For each Contributor add payments according to the claimAmount specified
-        for (uint i; i < length; i++) {
+        for (uint i; i < length;) {
             contrib = contribs[i];
             totalAmount += contrib.claimAmount;
 
@@ -415,6 +432,9 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
                     dueTo: block.timestamp //dueTo Date is now
                 })
             );
+            unchecked {
+                ++i;
+            }
         }
 
         //ensure that this contract has enough tokens to fulfill all payments
