@@ -11,6 +11,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {Proposal} from "src/proposal/Proposal.sol";
+import {IModule} from "src/modules/base/IModule.sol";
 
 // Internal Interfaces
 import {
@@ -126,6 +127,133 @@ contract ProposalTest is Test {
     }
 
     //--------------------------------------------------------------------------
+    // Tests: Replacing the three base modules: authorizer, funding manager,
+    //        payment processor
+
+    function testSetAuthorizer(uint proposalId, address[] memory modules)
+        public
+    {
+        // limit to 100, otherwise we could run into the max module limit
+        modules = cutArray(100, modules);
+
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        assumeMockAreNotInSet(modules);
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        // Create new authorizer module
+        AuthorizerMock newAuthorizer = new AuthorizerMock();
+        vm.assume(newAuthorizer != authorizer);
+        types.assumeElemNotInSet(modules, address(newAuthorizer));
+
+        newAuthorizer.mockInit(abi.encode(address(0xA11CE)));
+
+        // set the new authorizer module
+        proposal.setAuthorizer(newAuthorizer);
+        vm.assume(proposal.authorizer() == newAuthorizer);
+
+        // verify whether the init value is set and not the value from the old
+        // authorizer, to check whether the replacement is successful
+        vm.assume(
+            !IAuthorizer(proposal.authorizer()).isAuthorized(address(this))
+        );
+        vm.assume(
+            IAuthorizer(proposal.authorizer()).isAuthorized(address(0xA11CE))
+        );
+    }
+
+    function testSetFundingManager(uint proposalId, address[] memory modules)
+        public
+    {
+        // limit to 100, otherwise we could run into the max module limit
+        modules = cutArray(100, modules);
+
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        assumeMockAreNotInSet(modules);
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+        FundingManagerMock(address(proposal.fundingManager())).setToken(
+            IERC20(address(0xA11CE))
+        );
+
+        // Create new funding manager module
+        FundingManagerMock newFundingManager = new FundingManagerMock();
+        vm.assume(newFundingManager != fundingManager);
+        types.assumeElemNotInSet(modules, address(newFundingManager));
+
+        // set the new funding manager module
+        vm.assume(
+            address((proposal.fundingManager()).token()) == address(0xA11CE)
+        );
+        proposal.setFundingManager(newFundingManager);
+        vm.assume(proposal.fundingManager() == newFundingManager);
+        vm.assume(address((proposal.fundingManager()).token()) == address(0));
+    }
+
+    function testSetPaymentProcessor(uint proposalId, address[] memory modules)
+        public
+    {
+        // limit to 100, otherwise we could run into the max module limit
+        modules = cutArray(100, modules);
+
+        types.assumeValidProposalId(proposalId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        assumeMockAreNotInSet(modules);
+
+        // Initialize proposal.
+        proposal.init(
+            proposalId,
+            address(this),
+            token,
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        // Create new payment processor module
+        PaymentProcessorMock newPaymentProcessor = new PaymentProcessorMock();
+        vm.assume(newPaymentProcessor != paymentProcessor);
+        types.assumeElemNotInSet(modules, address(newPaymentProcessor));
+
+        // set the new payment processor module
+        proposal.setPaymentProcessor(newPaymentProcessor);
+        vm.assume(proposal.paymentProcessor() == newPaymentProcessor);
+    }
+
+    //--------------------------------------------------------------------------
     // Tests: Transaction Execution
 
     function testExecuteTx(uint proposalId, address[] memory modules) public {
@@ -230,5 +358,24 @@ contract ProposalTest is Test {
         types.assumeElemNotInSet(modules, address(authorizer));
         types.assumeElemNotInSet(modules, address(paymentProcessor));
         types.assumeElemNotInSet(modules, address(token));
+    }
+
+    function cutArray(uint size, address[] memory addrs)
+        internal
+        pure
+        returns (address[] memory)
+    {
+        uint length = addrs.length;
+        vm.assume(length > 0); //Array has to be at least 1
+
+        if (length <= size) {
+            return addrs;
+        }
+
+        address[] memory cutArry = new address[](size);
+        for (uint i = 0; i < size - 1; i++) {
+            cutArry[i] = addrs[i];
+        }
+        return cutArry;
     }
 }
