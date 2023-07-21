@@ -42,7 +42,7 @@ interface IModuleFactory {
     /// @notice Creates a module instance identified by given metadata.
     /// @param metadata The module's metadata.
     /// @param proposal The proposal's instance of the module.
-    /// @param configdata The configdata of the module.
+    /// @param configdata The configdata of the module
     function createModule(
         IModule.Metadata memory metadata,
         IProposal proposal,

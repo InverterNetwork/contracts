@@ -136,6 +136,13 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         __Module_metadata = metadata;
     }
 
+    function init2(
+        IProposal proposal_,
+        bytes memory dependencydata
+    ) external virtual initializer2 {
+
+    }
+
     //--------------------------------------------------------------------------
     // Public View Functions
 

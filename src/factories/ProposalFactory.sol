@@ -86,24 +86,21 @@ contract ProposalFactory is IProposalFactory {
         address fundingManager = IModuleFactory(moduleFactory).createModule(
             fundingManagerConfig.metadata,
             IProposal(clone),
-            fundingManagerConfig.configdata,
-            fundingManagerConfig.dependencydata
+            fundingManagerConfig.configdata
         );
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerConfig.metadata,
             IProposal(clone),
-            authorizerConfig.configdata,
-            authorizerConfig.dependencydata
+            authorizerConfig.configdata
         );
 
         // Deploy and cache {IPaymentProcessor} module.
         address paymentProcessor = IModuleFactory(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
             IProposal(clone),
-            paymentProcessorConfig.configdata,
-            paymentProcessorConfig.dependencydata
+            paymentProcessorConfig.configdata
         );
 
         // Deploy and cache optional modules.
@@ -113,8 +110,7 @@ contract ProposalFactory is IProposalFactory {
             modules[i] = IModuleFactory(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
                 IProposal(clone),
-                moduleConfigs[i].configdata,
-                moduleConfigs[i].dependencydata
+                moduleConfigs[i].configdata
             );
         }
 
@@ -177,11 +173,7 @@ contract ProposalFactory is IProposalFactory {
     }
 
     function _dependencyInjectionRequired(bytes memory dependencydata) internal view returns(bool) {
-        try abi.decode(dependencydata, (bool, string[])) returns(bool, string[]) {
-            (bool hasDependency, ) = abi.decode(dependencydata, (bool, string[]));
-            return hasDependency;    
-        } catch {
-            revert ProposalFactory__MalformedDependencyData();
-        }
+        (bool hasDependency, ) = abi.decode(dependencydata, (bool, string[]));
+        return hasDependency;    
     }
 }
