@@ -51,26 +51,28 @@ contract ModuleManagerTest is Test {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    /////////////////////////////////////////////////////////////////////////////////////////////
-    // Test passes apart from the cases where number of modules exceed ModuleLimit
-    /////////////////////////////////////////////////////////////////////////////////////////////
-    /*
     function testInit(address[] memory modules) public {
         types.assumeValidModules(modules);
 
         moduleManager = new ModuleManagerMock();
-        moduleManager.init(modules);
 
-        // List of modules should be size of modules array.
-        address[] memory modulesAdded = moduleManager.listModules();
-        assertEq(modulesAdded.length, modules.length);
+        if(modules.length > 125) {
+            vm.expectRevert(IModuleManager.Proposal__ModuleManager__ModuleAmountOverLimits.selector);
+            
+            moduleManager.init(modules);
+        } else {
+            moduleManager.init(modules);
 
-        // Each module should be added.
-        for (uint i; i < modules.length; ++i) {
-            assertTrue(moduleManager.isModule(modules[i]));
+            // List of modules should be size of modules array.
+            address[] memory modulesAdded = moduleManager.listModules();
+            assertEq(modulesAdded.length, modules.length);
+
+            // Each module should be added.
+            for (uint i; i < modules.length; ++i) {
+                assertTrue(moduleManager.isModule(modules[i]));
+            }
         }
     }
-    */
 
     function testReinitFails() public {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
