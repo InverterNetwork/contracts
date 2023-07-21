@@ -20,6 +20,9 @@ interface IProposalFactory {
     /// @notice The proposal owner is address(0)
     error ProposalFactory__ProposalOwnerIsInvalid();
 
+    /// @notice The dependency data of a particular module was not in the correct format
+    error ProposalFactory__MalformedDependencyData();
+
     //--------------------------------------------------------------------------
     // Structs
 
@@ -31,6 +34,7 @@ interface IProposalFactory {
     struct ModuleConfig {
         IModule.Metadata metadata;
         bytes configdata;
+        bytes dependencydata;
     }
 
     //--------------------------------------------------------------------------

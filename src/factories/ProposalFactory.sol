@@ -86,21 +86,24 @@ contract ProposalFactory is IProposalFactory {
         address fundingManager = IModuleFactory(moduleFactory).createModule(
             fundingManagerConfig.metadata,
             IProposal(clone),
-            fundingManagerConfig.configdata
+            fundingManagerConfig.configdata,
+            fundingManagerConfig.dependencydata
         );
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerConfig.metadata,
             IProposal(clone),
-            authorizerConfig.configdata
+            authorizerConfig.configdata,
+            authorizerConfig.dependencydata
         );
 
         // Deploy and cache {IPaymentProcessor} module.
         address paymentProcessor = IModuleFactory(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
             IProposal(clone),
-            paymentProcessorConfig.configdata
+            paymentProcessorConfig.configdata,
+            paymentProcessorConfig.dependencydata
         );
 
         // Deploy and cache optional modules.
@@ -110,7 +113,8 @@ contract ProposalFactory is IProposalFactory {
             modules[i] = IModuleFactory(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
                 IProposal(clone),
-                moduleConfigs[i].configdata
+                moduleConfigs[i].configdata,
+                moduleConfigs[i].dependencydata
             );
         }
 
@@ -133,19 +137,27 @@ contract ProposalFactory is IProposalFactory {
         // This can be run post the proposal initialization. This ensures a few more variables are
         // available that are set during the proposal init function.
         for (uint i; i < modulesLen; ++i) {
-            IModule(modules[i]).init2(
-                IProposal(clone), moduleConfigs[i].configdata
-            );
+            if(_dependencyInjectionRequired(moduleConfigs[i].dependencydata)) {
+                IModule(modules[i]).init2(
+                    IProposal(clone), moduleConfigs[i].dependencydata
+                );
+            }
         }
 
         // Also, running the init2 functionality on the compulsory modules excluded from the modules array
-        IModule(fundingManager).init2(
-            IProposal(clone), fundingManagerConfig.configdata
-        );
-        IModule(authorizer).init2(IProposal(clone), authorizerConfig.configdata);
-        IModule(paymentProcessor).init2(
-            IProposal(clone), paymentProcessorConfig.configdata
-        );
+        if(_dependencyInjectionRequired(fundingManagerConfig.dependencydata)) {
+            IModule(fundingManager).init2(
+                IProposal(clone), fundingManagerConfig.dependencydata
+            );
+        }
+        if(_dependencyInjectionRequired(authorizerConfig.dependencydata)) {
+            IModule(authorizer).init2(IProposal(clone), authorizerConfig.dependencydata);
+        }
+        if(_dependencyInjectionRequired(paymentProcessorConfig.dependencydata)) {
+            IModule(paymentProcessor).init2(
+                IProposal(clone), paymentProcessorConfig.dependencydata
+            );
+        }
 
         return IProposal(clone);
     }
@@ -162,5 +174,14 @@ contract ProposalFactory is IProposalFactory {
 
     function getProposalIDCounter() external view returns (uint) {
         return _proposalIdCounter;
+    }
+
+    function _dependencyInjectionRequired(bytes memory dependencydata) internal view returns(bool) {
+        try abi.decode(dependencydata, (bool, string[])) returns(bool, string[]) {
+            (bool hasDependency, ) = abi.decode(dependencydata, (bool, string[]));
+            return hasDependency;    
+        } catch {
+            revert ProposalFactory__MalformedDependencyData();
+        }
     }
 }
