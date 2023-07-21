@@ -193,7 +193,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     // Module address verification functions
     // Note These set of functions are not mandatory for the functioning of the protocol, however they
     //      are provided for the convenience of the users since matching the names of the modules does not
-    //      fully guarentee that the returned address is the address of the exact module the user was looking for
+    //      fully guarantee that the returned address is the address of the exact module the user was looking for
 
     /// @inheritdoc IProposal
     function verifyAddressIsRoleAuthorizerModule(address roleAuthAddress)
