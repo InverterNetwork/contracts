@@ -999,24 +999,6 @@ contract BountyManagerTest is ModuleTest {
         assertFalse(found);
     }
 
-    function containsParts(
-        BountyManager.Contributor[] memory searchThrough,
-        BountyManager.Contributor[] memory searchFor
-    ) internal pure returns (bool) {
-        uint lengthSearchThrough = searchThrough.length;
-        uint lengthSearchFor = searchFor.length;
-        address currentAddress;
-        for (uint i = 0; i < lengthSearchThrough; i++) {
-            currentAddress = searchThrough[i].addr;
-            for (uint j; j < lengthSearchFor; j++) {
-                if (searchFor[j].addr == currentAddress) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     function contains(
         BountyManager.Contributor[] memory searchThrough,
         address addr
