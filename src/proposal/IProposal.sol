@@ -35,6 +35,22 @@ interface IProposal is IModuleManager {
         IPaymentProcessor paymentProcessor
     ) external;
 
+    /// @notice Replaces the current authorizer with `_authorizer`
+    /// @dev Only callable by authorized caller.
+    /// @param authorizer_ The address of the new authorizer module.
+    function setAuthorizer(IAuthorizer authorizer_) external;
+
+    /// @notice Replaces the current funding manager with `fundingManager_`
+    /// @dev Only callable by authorized caller.
+    /// @param fundingManager_ The address of the new funding manager module.
+    function setFundingManager(IFundingManager fundingManager_) external;
+
+    /// @notice Replaces the current payment processor with `paymentProcessor_`
+    /// @dev Only callable by authorized caller.
+    /// @param paymentProcessor_ The address of the new payment processor module.
+    function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
+        external;
+
     /// @notice Executes a call on target `target` with call data `data`.
     /// @dev Only callable by authorized caller.
     /// @param target The address to call.
