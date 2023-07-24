@@ -104,25 +104,9 @@ interface IProposal is IModuleManager {
         address rebasingFundingManagerAddress
     ) external view returns (bool);
 
-    /// @notice Verify whether the given address is the payment client
-    function verifyAddressIsPaymentClient(address paymentClientAddress)
+    /// @notice Verify whether the given address is an IAuthorizer module
+    function verifyAddressIsAuthorizerModule(address authModule)
         external
         view
         returns (bool);
-
-    /// @notice Verify whether the given address is the single vote governor
-    function verifyAddressIsSingleVoteGovernorModule(
-        address singleVoteGovernorAddress
-    ) external view returns (bool);
-
-    /// @notice Verify whether the given address is the role authorizer module
-    function verifyAddressIsRoleAuthorizerModule(address roleAuthAddress)
-        external
-        view
-        returns (bool);
-
-    /// @notice Verify whether the given address is the token gated role authorizer module
-    function verifyAddressIsTokenGatedRoleAuthorizerModule(
-        address tokenGatedRoleAuthAddress
-    ) external view returns (bool);
 }

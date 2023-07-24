@@ -196,62 +196,10 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //      fully guarantee that the returned address is the address of the exact module the user was looking for
 
     /// @inheritdoc IProposal
-    function verifyAddressIsRoleAuthorizerModule(address roleAuthAddress)
-        external
-        view
-        returns (bool)
-    {
-        RoleAuthorizer roleAuthorizer = RoleAuthorizer(roleAuthAddress);
+    function verifyAddressIsAuthorizerModule(address authModule) {
+        IAuthorizer authorizerModule = IAuthorizer(authModule); 
 
-        try roleAuthorizer.isAuthorized(address(uint160(35_423))) returns (bool)
-        {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IProposal
-    function verifyAddressIsTokenGatedRoleAuthorizerModule(
-        address tokenGatedRoleAuthAddress
-    ) external view returns (bool) {
-        TokenGatedRoleAuthorizer tokenGatedRoleAuthorizer =
-            TokenGatedRoleAuthorizer(tokenGatedRoleAuthAddress);
-
-        try tokenGatedRoleAuthorizer.isAuthorized(
-            uint8(36), address(uint160(36))
-        ) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IProposal
-    function verifyAddressIsSingleVoteGovernorModule(
-        address singleVoteGovernorAddress
-    ) external view returns (bool) {
-        SingleVoteGovernor singleVoteGovernor =
-            SingleVoteGovernor(singleVoteGovernorAddress);
-
-        try singleVoteGovernor.getReceipt(type(uint).max, address(0)) returns (
-            SingleVoteGovernor.Receipt memory
-        ) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IProposal
-    function verifyAddressIsPaymentClient(address paymentClientAddress)
-        external
-        view
-        returns (bool)
-    {
-        PaymentClient paymentClient = PaymentClient(paymentClientAddress);
-
-        try paymentClient.outstandingTokenAmount() returns (uint) {
+        try authorizerModule.isAuthorized(address(uint160(1234))) returns(bool) {
             return true;
         } catch {
             return false;
