@@ -133,7 +133,7 @@ contract ProposalFactory is IProposalFactory {
         // This can be run post the proposal initialization. This ensures a few more variables are
         // available that are set during the proposal init function.
         for (uint i; i < modulesLen; ++i) {
-            if(_dependencyInjectionRequired(moduleConfigs[i].dependencydata)) {
+            if (_dependencyInjectionRequired(moduleConfigs[i].dependencydata)) {
                 IModule(modules[i]).init2(
                     IProposal(clone), moduleConfigs[i].dependencydata
                 );
@@ -141,15 +141,18 @@ contract ProposalFactory is IProposalFactory {
         }
 
         // Also, running the init2 functionality on the compulsory modules excluded from the modules array
-        if(_dependencyInjectionRequired(fundingManagerConfig.dependencydata)) {
+        if (_dependencyInjectionRequired(fundingManagerConfig.dependencydata)) {
             IModule(fundingManager).init2(
                 IProposal(clone), fundingManagerConfig.dependencydata
             );
         }
-        if(_dependencyInjectionRequired(authorizerConfig.dependencydata)) {
-            IModule(authorizer).init2(IProposal(clone), authorizerConfig.dependencydata);
+        if (_dependencyInjectionRequired(authorizerConfig.dependencydata)) {
+            IModule(authorizer).init2(
+                IProposal(clone), authorizerConfig.dependencydata
+            );
         }
-        if(_dependencyInjectionRequired(paymentProcessorConfig.dependencydata)) {
+        if (_dependencyInjectionRequired(paymentProcessorConfig.dependencydata))
+        {
             IModule(paymentProcessor).init2(
                 IProposal(clone), paymentProcessorConfig.dependencydata
             );
@@ -172,8 +175,12 @@ contract ProposalFactory is IProposalFactory {
         return _proposalIdCounter;
     }
 
-    function _dependencyInjectionRequired(bytes memory dependencydata) internal pure returns(bool) {
-        (bool hasDependency, ) = abi.decode(dependencydata, (bool, string[]));
-        return hasDependency;    
+    function _dependencyInjectionRequired(bytes memory dependencydata)
+        internal
+        pure
+        returns (bool)
+    {
+        (bool hasDependency,) = abi.decode(dependencydata, (bool, string[]));
+        return hasDependency;
     }
 }

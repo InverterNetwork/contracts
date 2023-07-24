@@ -29,8 +29,7 @@ contract AuthorizerMock is IAuthorizer, Module {
         __Module_init(proposal_, metadata);
 
         // Read first authorized address from configdata.
-        address authorized =
-            abi.decode(configdata, (address));
+        address authorized = abi.decode(configdata, (address));
         require(authorized != address(0), "Zero address can not be authorized");
 
         _authorized[authorized] = true;

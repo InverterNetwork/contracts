@@ -69,7 +69,8 @@ contract ProposalFactoryTest is Test {
     );
 
     IProposalFactory.ModuleConfig moduleConfig = IProposalFactory.ModuleConfig(
-        IModule.Metadata(1, 1, "https://module.com", "Module"), bytes(""),
+        IModule.Metadata(1, 1, "https://module.com", "Module"),
+        bytes(""),
         abi.encode(hasDependency, dependencies)
     );
 

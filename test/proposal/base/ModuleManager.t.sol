@@ -56,9 +56,13 @@ contract ModuleManagerTest is Test {
 
         moduleManager = new ModuleManagerMock();
 
-        if(modules.length > (MAX_MODULES - 3)) {
-            vm.expectRevert(IModuleManager.Proposal__ModuleManager__ModuleAmountOverLimits.selector);
-            
+        if (modules.length > (MAX_MODULES - 3)) {
+            vm.expectRevert(
+                IModuleManager
+                    .Proposal__ModuleManager__ModuleAmountOverLimits
+                    .selector
+            );
+
             moduleManager.init(modules);
         } else {
             moduleManager.init(modules);

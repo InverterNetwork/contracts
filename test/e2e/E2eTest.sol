@@ -88,7 +88,8 @@ contract E2eTest is Test {
     );
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
     IProposalFactory.ModuleConfig(
-        paymentProcessorMetadata, bytes(""),
+        paymentProcessorMetadata,
+        bytes(""),
         abi.encode(hasDependency, dependencies)
     );
 
@@ -120,11 +121,7 @@ contract E2eTest is Test {
     IProposalFactory.ModuleConfig milestoneManagerFactoryConfig =
     IProposalFactory.ModuleConfig(
         milestoneManagerMetadata,
-        abi.encode(
-            100_000_000,
-            1_000_000,
-            makeAddr("treasury")
-        ),
+        abi.encode(100_000_000, 1_000_000, makeAddr("treasury")),
         abi.encode(hasDependency, dependencies)
     );
 

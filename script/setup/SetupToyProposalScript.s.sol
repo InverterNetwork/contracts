@@ -71,25 +71,34 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         // Funding Manager: Metadata, token address
         IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            fundingManagerMetadata, abi.encode(address(token)), abi.encode(hasDependency, dependencies)
+            fundingManagerMetadata,
+            abi.encode(address(token)),
+            abi.encode(hasDependency, dependencies)
         );
 
         // Payment Processor: only Metadata
         IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-            IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""), abi.encode(hasDependency, dependencies));
+        IProposalFactory.ModuleConfig(
+            paymentProcessorMetadata,
+            bytes(""),
+            abi.encode(hasDependency, dependencies)
+        );
 
         // Authorizer: Metadata, initial authorized addresses
         initialAuthorizedAddresses.push(proposalOwner);
         IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            authorizerMetadata, abi.encode(initialAuthorizedAddresses), abi.encode(hasDependency, dependencies)
+            authorizerMetadata,
+            abi.encode(initialAuthorizedAddresses),
+            abi.encode(hasDependency, dependencies)
         );
 
         // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
         IProposalFactory.ModuleConfig memory milestoneManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
             milestoneManagerMetadata,
-            abi.encode(100_000_000, 1_000_000, proposalOwner), abi.encode(hasDependency, dependencies)
+            abi.encode(100_000_000, 1_000_000, proposalOwner),
+            abi.encode(hasDependency, dependencies)
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the Milestone Manager.
