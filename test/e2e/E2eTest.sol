@@ -71,7 +71,8 @@ contract E2eTest is Test {
     IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory
         .ModuleConfig(
         authorizerMetadata,
-        abi.encode(address(this), hasDependency, dependencies)
+        abi.encode(address(this)),
+        abi.encode(hasDependency, dependencies)
     );
 
     SimplePaymentProcessor paymentProcessorImpl;
@@ -87,7 +88,8 @@ contract E2eTest is Test {
     );
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
     IProposalFactory.ModuleConfig(
-        paymentProcessorMetadata, abi.encode(hasDependency, dependencies)
+        paymentProcessorMetadata, bytes(""),
+        abi.encode(hasDependency, dependencies)
     );
 
     Beacon streamingPaymentProcessorBeacon;
@@ -102,6 +104,7 @@ contract E2eTest is Test {
     IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
     IProposalFactory.ModuleConfig(
         streamingPaymentProcessorMetadata,
+        bytes(""),
         abi.encode(hasDependency, dependencies)
     );
 
@@ -120,10 +123,9 @@ contract E2eTest is Test {
         abi.encode(
             100_000_000,
             1_000_000,
-            makeAddr("treasury"),
-            hasDependency,
-            dependencies
-        )
+            makeAddr("treasury")
+        ),
+        abi.encode(hasDependency, dependencies)
     );
 
     RecurringPaymentManager recurringPaymentManagerImpl;
@@ -140,7 +142,8 @@ contract E2eTest is Test {
     IProposalFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
     IProposalFactory.ModuleConfig(
         recurringPaymentManagerMetadata,
-        abi.encode(1 weeks, hasDependency, dependencies)
+        abi.encode(1 weeks),
+        abi.encode(hasDependency, dependencies)
     );
 
     function setUp() public {
@@ -228,7 +231,8 @@ contract E2eTest is Test {
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
             rebasingFundingManagerMetadata,
-            abi.encode(address(config.token), hasDependency, dependencies)
+            abi.encode(address(config.token)),
+            abi.encode(hasDependency, dependencies)
         );
 
         return proposalFactory.createProposal(
@@ -250,7 +254,8 @@ contract E2eTest is Test {
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
             rebasingFundingManagerMetadata,
-            abi.encode(address(config.token), hasDependency, dependencies)
+            abi.encode(address(config.token)),
+            abi.encode(hasDependency, dependencies)
         );
 
         return proposalFactory.createProposal(

@@ -247,7 +247,8 @@ contract ProposalCreation is Test {
         IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
             fundingManagerMetadata,
-            abi.encode(address(paymentToken), hasDependency, dependencies)
+            abi.encode(address(paymentToken)),
+            abi.encode(hasDependency, dependencies)
         );
 
         //Create ModuleConfig for Authorizer
@@ -260,16 +261,15 @@ contract ProposalCreation is Test {
             authorizerMetadata,
             abi.encode(
                 initialAuthorizedAddresses,
-                initialManager,
-                hasDependency,
-                dependencies
-            )
+                initialManager
+            ),
+            abi.encode(hasDependency, dependencies)
         );
 
         //Create ModuleConfig for SimplePaymentProcessor
         IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
         IProposalFactory.ModuleConfig(
-            paymentProcessorMetadata, abi.encode(hasDependency, dependencies)
+            paymentProcessorMetadata, bytes(""), abi.encode(hasDependency, dependencies)
         );
 
         //Create optionalModule array
@@ -286,10 +286,9 @@ contract ProposalCreation is Test {
             abi.encode(
                 ownerMetadata,
                 proposalMetadata,
-                teamMetadata,
-                hasDependency,
-                dependencies
-            )
+                teamMetadata
+            ),
+            abi.encode(hasDependency, dependencies)
         );
 
         //Create proposal using the different needed configs
