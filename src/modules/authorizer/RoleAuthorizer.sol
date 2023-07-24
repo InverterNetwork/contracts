@@ -87,32 +87,6 @@ contract RoleAuthorizer is
         __RoleAuthorizer_init(initialOwners, initialManager);
     }
 
-    function init2(IProposal proposal_, bytes memory configdata)
-        external
-        initializer2
-    {
-        __Module_initialization = true;
-        // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
-        /*
-        ( , , bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (address[], address, bool, string[]));
-        
-        if(hasDependency) {
-            uint256 dependenciesLength = dependencies.length;
-            
-            address module;
-            for(uint i; i < dependenciesLength; i++) {
-                module = proposal_.findModuleAddressInProposal(dependencies[i]);
-
-                if(verifyAddressIsMilestoneManager(module)) {
-                    milestoneManager = module;
-                } else {
-                    paymentManager = module;
-                }
-            }
-        }
-        */
-    }
-
     function __RoleAuthorizer_init(
         address[] memory initialOwners,
         address initialManager

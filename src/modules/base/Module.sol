@@ -39,7 +39,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @dev same thing as the initializer modifier but for the init2 function
     ///
     /// @custom:invariant Not mutated after the init2 call
-    bool internal __Module_initialization;
+    bool private __Module_initialization;
 
     /// @dev The module's proposal instance.
     ///
@@ -97,6 +97,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         if (__Module_initialization == true) {
             revert Module__CannotCallInit2Again();
         }
+        __Module_initialization = true;
         _;
     }
 
@@ -139,9 +140,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     function init2(
         IProposal proposal_,
         bytes memory dependencydata
-    ) external virtual initializer2 {
-
-    }
+    ) external virtual initializer2 {}
 
     //--------------------------------------------------------------------------
     // Public View Functions

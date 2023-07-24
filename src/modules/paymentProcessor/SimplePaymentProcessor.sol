@@ -57,32 +57,6 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         __Module_init(proposal_, metadata);
     }
 
-    function init2(IProposal proposal_, bytes memory configdata)
-        external
-        initializer2
-    {
-        __Module_initialization = true;
-        // THIS IS A SAMPLE OF WHAT INIT2 FUNCTION IMPLEMENTATION COULD LOOK LIKE
-        /*
-        (bool hasDependency, string[] memory dependencies) = abi.decode(configdata, (bool, string[]));
-
-        if(hasDependency) {
-            uint256 dependenciesLength = dependencies.length;
-            
-            address module;
-            for(uint i; i < dependenciesLength; i++) {
-                module = proposal_.findModuleAddressInProposal(dependencies[i]);
-
-                if(verifyAddressIsMilestoneManager(module)) {
-                    milestoneManager = module;
-                } else {
-                    paymentManager = module;
-                }
-            }
-        }
-        */
-    }
-
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 
