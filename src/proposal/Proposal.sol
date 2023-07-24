@@ -8,11 +8,6 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
-import {TokenGatedRoleAuthorizer} from
-    "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
-import {SingleVoteGovernor} from "src/modules/authorizer/SingleVoteGovernor.sol";
-import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
@@ -196,15 +191,10 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //      fully guarantee that the returned address is the address of the exact module the user was looking for
 
     /// @inheritdoc IProposal
-    function verifyAddressIsAuthorizerModule(address authModule)
-        external
-        view
-        returns (bool)
-    {
-        IAuthorizer authorizerModule = IAuthorizer(authModule);
+    function verifyAddressIsAuthorizerModule(address authModule) external view returns(bool) {
+        IAuthorizer authorizerModule = IAuthorizer(authModule); 
 
-        try authorizerModule.isAuthorized(address(uint160(1234))) returns (bool)
-        {
+        try authorizerModule.isAuthorized(address(uint160(1234))) returns(bool) {
             return true;
         } catch {
             return false;
