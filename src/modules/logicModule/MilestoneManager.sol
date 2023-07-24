@@ -204,8 +204,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _activeMilestone = _SENTINEL;
         _milestoneUpdateTimelock = 3 days;
 
-        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY,,) =
-            abi.decode(configdata, (uint, uint, address, bool, string[]));
+        (SALARY_PRECISION, FEE_PCT, FEE_TREASURY) =
+            abi.decode(configdata, (uint, uint, address));
 
         if (FEE_PCT >= SALARY_PRECISION) {
             revert Module__MilestoneManager__FeeOverHundredPercent();

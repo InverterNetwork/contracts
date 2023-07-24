@@ -84,8 +84,8 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         address[] memory voters;
         uint threshold_;
         uint voteDuration_;
-        (voters, threshold_, voteDuration_,,) =
-            abi.decode(configdata, (address[], uint, uint, bool, string[]));
+        (voters, threshold_, voteDuration_) =
+            abi.decode(configdata, (address[], uint, uint));
 
         uint votersLen = voters.length;
 

@@ -63,8 +63,8 @@ contract RebasingFundingManager is
     ) external override(Module) initializer {
         __Module_init(proposal_, metadata);
 
-        (address proposalTokenAddress,,) =
-            abi.decode(configdata, (address, bool, string[]));
+        (address proposalTokenAddress) =
+            abi.decode(configdata, (address));
 
         string memory _id = proposal_.proposalId().toString();
         string memory _name =

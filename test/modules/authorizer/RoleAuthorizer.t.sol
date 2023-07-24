@@ -25,7 +25,7 @@ import {PaymentProcessorMock} from
 contract RoleAuthorizerTest is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
-    address initialManager = makeAddr("initial manager");
+    address initialManager = address(this);
 
     // Mocks
     RoleAuthorizer _authorizer;
@@ -72,7 +72,6 @@ contract RoleAuthorizerTest is Test {
 
         address[] memory initialAuth = new address[](1);
         initialAuth[0] = ALBA;
-        address initialManager = address(this);
 
         _authorizer.init(
             IProposal(_proposal),

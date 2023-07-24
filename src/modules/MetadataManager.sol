@@ -30,16 +30,13 @@ contract MetadataManager is IMetadataManager, Module {
         (
             ManagerMetadata memory managerMetadata_,
             ProposalMetadata memory proposalMetadata_,
-            MemberMetadata[] memory teamMetadata_,
-            ,
+            MemberMetadata[] memory teamMetadata_
         ) = abi.decode(
             configdata,
             (
                 ManagerMetadata,
                 ProposalMetadata,
-                MemberMetadata[],
-                bool,
-                string[]
+                MemberMetadata[]
             )
         );
 
