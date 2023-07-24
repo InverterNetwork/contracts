@@ -64,7 +64,7 @@ abstract contract ModuleManager is
     }
 
     modifier moduleLimitNotExceeded() {
-        if (_modules.length >= uint(MAX_MODULE_AMOUNT)) {
+        if (_modules.length >= MAX_MODULE_AMOUNT) {
             revert Proposal__ModuleManager__ModuleAmountOverLimits();
         }
         _;
@@ -74,7 +74,7 @@ abstract contract ModuleManager is
     // Constants
 
     /// @dev Marks the maximum amount of Modules a Proposal can have to avoid out-of-gas risk.
-    uint8 private constant MAX_MODULE_AMOUNT = 128;
+    uint256 private constant MAX_MODULE_AMOUNT = 128;
 
     //--------------------------------------------------------------------------
     // Storage
