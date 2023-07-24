@@ -191,10 +191,15 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //      fully guarantee that the returned address is the address of the exact module the user was looking for
 
     /// @inheritdoc IProposal
-    function verifyAddressIsAuthorizerModule(address authModule) external view returns(bool) {
-        IAuthorizer authorizerModule = IAuthorizer(authModule); 
+    function verifyAddressIsAuthorizerModule(address authModule)
+        external
+        view
+        returns (bool)
+    {
+        IAuthorizer authorizerModule = IAuthorizer(authModule);
 
-        try authorizerModule.isAuthorized(address(uint160(1234))) returns(bool) {
+        try authorizerModule.isAuthorized(address(uint160(1234))) returns (bool)
+        {
             return true;
         } catch {
             return false;
