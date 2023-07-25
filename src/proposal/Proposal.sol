@@ -8,8 +8,6 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
@@ -207,13 +205,15 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsRebasingFundingManager(
-        address rebasingFundingManagerAddress
-    ) external view returns (bool) {
-        RebasingFundingManager rebasingFundingManager =
-            RebasingFundingManager(rebasingFundingManagerAddress);
+    function verifyAddressIsFundingManager(address fundingManagerAddress)
+        external
+        view
+        returns (bool)
+    {
+        IFundingManager fundingManagerModule =
+            IFundingManager(fundingManagerAddress);
 
-        try rebasingFundingManager.token() returns (IERC20) {
+        try fundingManagerModule.token() returns (IERC20) {
             return true;
         } catch {
             return false;

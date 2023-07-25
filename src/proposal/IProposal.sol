@@ -99,10 +99,11 @@ interface IProposal is IModuleManager {
         view
         returns (bool);
 
-    /// @notice Verify whether the given address is the rebasing funding manager
-    function verifyAddressIsRebasingFundingManager(
-        address rebasingFundingManagerAddress
-    ) external view returns (bool);
+    /// @notice Verify whether the given address is a funding manager
+    function verifyAddressIsFundingManager(address fundingManagerAddress)
+        external
+        view
+        returns (bool);
 
     /// @notice Verify whether the given address is an IAuthorizer module
     function verifyAddressIsAuthorizerModule(address authModule)
