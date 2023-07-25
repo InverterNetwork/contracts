@@ -7,6 +7,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 // SuT
+import {IPaymentProcessor} from
+    "src/modules/paymentProcessor/IPaymentProcessor.sol";
+
 import {
     StreamingPaymentProcessor,
     IStreamingPaymentProcessor
@@ -778,7 +781,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStreamingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
@@ -802,7 +805,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStreamingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -917,7 +920,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStreamingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
@@ -941,7 +944,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStreamingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__CannotCallOnOtherClientsOrders
                     .selector
             )

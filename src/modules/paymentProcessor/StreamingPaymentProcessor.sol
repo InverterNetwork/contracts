@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 // Internal Dependencies
 import {
     IStreamingPaymentProcessor,
+    IPaymentProcessor,
     IPaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
@@ -135,7 +136,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         );
     }
 
-    /// @inheritdoc IStreamingPaymentProcessor
+    /// @inheritdoc IPaymentProcessor
     function processPayments(IPaymentClient client)
         external
         onlyModule
@@ -194,7 +195,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
     }
 
-    /// @inheritdoc IStreamingPaymentProcessor
+    /// @inheritdoc IPaymentProcessor
     function cancelRunningPayments(IPaymentClient client)
         external
         onlyModule
@@ -312,7 +313,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         return unclaimableAmounts[client][contributor];
     }
 
-    /// @inheritdoc IStreamingPaymentProcessor
+    /// @inheritdoc IPaymentProcessor
     function token() public view returns (IERC20) {
         return this.proposal().token();
     }
