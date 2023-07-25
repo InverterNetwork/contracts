@@ -606,7 +606,7 @@ contract BountyManagerTest is ModuleTest {
         }
         if (!contains(contribs, DEFAULT_CONTRIBUTORS[1].addr)) {
             assertContributorAddressToClaimIdsContainsNot(
-                DEFAULT_CONTRIBUTORS[0].addr, id
+                DEFAULT_CONTRIBUTORS[1].addr, id
             );
         }
 
