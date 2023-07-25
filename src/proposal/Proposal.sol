@@ -11,11 +11,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
-import {SimplePaymentProcessor} from
-    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
-import {StreamingPaymentProcessor} from
-    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
-
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
 import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
 
@@ -251,29 +246,15 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IProposal
-    function verifyAddressIsSimplePaymentProcessor(
-        address simplePaymentProcessorAddress
-    ) external view returns (bool) {
-        SimplePaymentProcessor simplePaymentProcessor =
-            SimplePaymentProcessor(simplePaymentProcessorAddress);
+    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
+        external
+        view
+        returns (bool)
+    {
+        IPaymentProcessor paymentProcessorModule =
+            IPaymentProcessor(paymentProcessorAddress);
 
-        try simplePaymentProcessor.token() returns (IERC20) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IProposal
-    function verifyAddressIsStreamingPaymentProcessor(
-        address streamingPaymentProcessorAddress
-    ) external view returns (bool) {
-        StreamingPaymentProcessor streamingPaymentProcessor =
-            StreamingPaymentProcessor(streamingPaymentProcessorAddress);
-
-        try streamingPaymentProcessor.unclaimable(
-            address(uint160(345)), address(uint160(65))
-        ) returns (uint) {
+        try paymentProcessorModule.token() returns (IERC20) {
             return true;
         } catch {
             return false;

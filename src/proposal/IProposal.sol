@@ -78,15 +78,11 @@ interface IProposal is IModuleManager {
         view
         returns (address);
 
-    /// @notice Verify whether the given address is the streaming payment processor
-    function verifyAddressIsStreamingPaymentProcessor(
-        address streamingPaymentProcessorAddress
-    ) external view returns (bool);
-
-    /// @notice Verify whether the given address is the simple payment processor
-    function verifyAddressIsSimplePaymentProcessor(
-        address simplePaymentProcessorAddress
-    ) external view returns (bool);
+    /// @notice Verify whether the given address is a payment processor
+    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
+        external
+        view
+        returns (bool);
 
     /// @notice Verify whether the given address is the recurring payment manager
     function verifyAddressIsRecurringPaymentManager(
