@@ -8,7 +8,11 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
+import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
+import {RecurringPaymentManager} from
+    "src/modules/logicModule/RecurringPaymentManager.sol";
 import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
+import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
 
 // Internal Interfaces
 import {
@@ -17,6 +21,7 @@ import {
     IPaymentProcessor,
     IAuthorizer
 } from "src/proposal/IProposal.sol";
+import {IModule} from "src/modules/base/IModule.sol";
 
 /**
  * @title Proposal
@@ -117,6 +122,143 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         __ModuleManager_addModule(address(fundingManager_));
         __ModuleManager_addModule(address(authorizer_));
         __ModuleManager_addModule(address(paymentProcessor_));
+    }
+
+    //--------------------------------------------------------------------------
+    // Module search functions
+
+    /// @notice verifies whether a proposal with the title `moduleName` has been used in this proposal
+    /// @dev The query string and the module title should be **exactly** same, as in same whitespaces, same capitalizations, etc.
+    /// @param moduleName Query string which is the title of the module to be searched in the proposal
+    /// @return uint256 index of the module in the list of modules used in the proposal
+    /// @return address address of the module with title `moduleName`
+    function _isModuleUsedInProposal(string calldata moduleName)
+        private
+        view
+        returns (uint, address)
+    {
+        address[] memory moduleAddresses = listModules();
+        uint moduleAddressesLength = moduleAddresses.length;
+        string memory currentModuleName;
+        uint index;
+
+        for (; index < moduleAddressesLength;) {
+            currentModuleName = IModule(moduleAddresses[index]).title();
+
+            if (bytes(currentModuleName).length == bytes(moduleName).length) {
+                if (
+                    keccak256(abi.encodePacked(currentModuleName))
+                        == keccak256(abi.encodePacked(moduleName))
+                ) {
+                    return (index, moduleAddresses[index]);
+                }
+            }
+
+            unchecked {
+                ++index;
+            }
+        }
+
+        return (type(uint).max, address(0));
+    }
+
+    /// @inheritdoc IProposal
+    function findModuleAddressInProposal(string calldata moduleName)
+        external
+        view
+        returns (address)
+    {
+        (uint moduleIndex, address moduleAddress) =
+            _isModuleUsedInProposal(moduleName);
+        if (moduleIndex == type(uint).max) {
+            revert DependencyInjection__ModuleNotUsedInProposal();
+        }
+
+        return moduleAddress;
+    }
+
+    //--------------------------------------------------------------------------
+    // Module address verification functions
+    // Note These set of functions are not mandatory for the functioning of the protocol, however they
+    //      are provided for the convenience of the users since matching the names of the modules does not
+    //      fully guarantee that the returned address is the address of the exact module the user was looking for
+
+    /// @inheritdoc IProposal
+    function verifyAddressIsAuthorizerModule(address authModule)
+        external
+        view
+        returns (bool)
+    {
+        IAuthorizer authorizerModule = IAuthorizer(authModule);
+
+        try authorizerModule.isAuthorized(address(uint160(1234))) returns (bool)
+        {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /// @inheritdoc IProposal
+    function verifyAddressIsFundingManager(address fundingManagerAddress)
+        external
+        view
+        returns (bool)
+    {
+        IFundingManager fundingManagerModule =
+            IFundingManager(fundingManagerAddress);
+
+        try fundingManagerModule.token() returns (IERC20) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /// @inheritdoc IProposal
+    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
+        external
+        view
+        returns (bool)
+    {
+        MilestoneManager milestoneManager =
+            MilestoneManager(milestoneManagerAddress);
+
+        try milestoneManager.hasActiveMilestone() returns (bool) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /// @inheritdoc IProposal
+    function verifyAddressIsRecurringPaymentManager(
+        address recurringPaymentManager
+    ) external view returns (bool) {
+        RecurringPaymentManager paymentManager =
+            RecurringPaymentManager(recurringPaymentManager);
+
+        try paymentManager.getEpochLength() returns (uint) {
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /// @inheritdoc IProposal
+    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
+        external
+        view
+        returns (bool)
+    {
+        IPaymentProcessor paymentProcessorModule =
+            IPaymentProcessor(paymentProcessorAddress);
+
+        try paymentProcessorModule.token() returns (IERC20) {
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     //--------------------------------------------------------------------------

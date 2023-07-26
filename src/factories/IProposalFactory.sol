@@ -17,6 +17,9 @@ interface IProposalFactory {
     /// @notice The module's data arrays length mismatch.
     error ProposalFactory__ModuleDataLengthMismatch();
 
+    /// @notice The proposal owner is address(0)
+    error ProposalFactory__ProposalOwnerIsInvalid();
+
     //--------------------------------------------------------------------------
     // Structs
 
@@ -28,6 +31,7 @@ interface IProposalFactory {
     struct ModuleConfig {
         IModule.Metadata metadata;
         bytes configdata;
+        bytes dependencydata;
     }
 
     //--------------------------------------------------------------------------

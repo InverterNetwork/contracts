@@ -7,6 +7,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
 
 // SuT
+import {IPaymentProcessor} from
+    "src/modules/paymentProcessor/IPaymentProcessor.sol";
+
 import {
     StreamingPaymentProcessor,
     IStreamingPaymentProcessor
@@ -22,6 +25,9 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract StreamingPaymentProcessorTest is ModuleTest {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     // SuT
     StreamingPaymentProcessor paymentProcessor;
 
@@ -72,6 +78,33 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
+    }
+
+    function testInit2StreamingPaymentProcessor() public {
+        // Attempting to call the init2 function with malformed data
+        // SHOULD FAIL
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
+        paymentProcessor.init2(_proposal, abi.encode(123));
+
+        // Calling init2 for the first time with no dependency
+        // SHOULD FAIL
+        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
+        paymentProcessor.init2(_proposal, dependencydata);
+
+        // Calling init2 for the first time with dependency = true
+        // SHOULD PASS
+        dependencydata = abi.encode(true, dependencies);
+        paymentProcessor.init2(_proposal, dependencydata);
+
+        // Attempting to call the init2 function again.
+        // SHOULD FAIL
+        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        paymentProcessor.init2(_proposal, dependencydata);
     }
 
     //--------------------------------------------------------------------------
@@ -771,7 +804,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStreamingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
@@ -795,7 +828,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStreamingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -910,7 +943,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStreamingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__OnlyCallableByModule
                     .selector
             )
@@ -934,7 +967,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStreamingPaymentProcessor
+                IPaymentProcessor
                     .Module__PaymentManager__CannotCallOnOtherClientsOrders
                     .selector
             )

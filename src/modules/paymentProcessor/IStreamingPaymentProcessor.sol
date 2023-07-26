@@ -3,8 +3,10 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
+import {IPaymentProcessor} from
+    "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
-interface IStreamingPaymentProcessor {
+interface IStreamingPaymentProcessor is IPaymentProcessor {
     //--------------------------------------------------------------------------
 
     // Structs
@@ -81,27 +83,6 @@ interface IStreamingPaymentProcessor {
         uint walletId
     );
 
-    /// @notice Emitted when an amount of ERC20 tokens gets sent out of the contract.
-    /// @param recipient The address that will receive the payment.
-    /// @param amount The amount of tokens the payment consists of.
-    event TokensReleased(
-        address indexed recipient, address indexed token, uint amount
-    );
-
-    /// @notice Emitted when a payment gets processed for execution.
-    /// @param paymentClient The payment client that originated the order.
-    /// @param recipient The address that will receive the payment.
-    /// @param amount The amount of tokens the payment consists of.
-    /// @param createdAt Timestamp at which the order was created.
-    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
-    event PaymentOrderProcessed(
-        address indexed paymentClient,
-        address indexed recipient,
-        uint amount,
-        uint createdAt,
-        uint dueTo
-    );
-
     //--------------------------------------------------------------------------
     // Errors
 
@@ -128,12 +109,6 @@ interface IStreamingPaymentProcessor {
         address paymentClient, address contributor
     );
 
-    /// @notice invalid caller
-    error Module__PaymentManager__OnlyCallableByModule();
-
-    /// @notice a client can only execute on its own orders
-    error Module__PaymentManager__CannotCallOnOtherClientsOrders();
-
     //--------------------------------------------------------------------------
     // Functions
 
@@ -154,20 +129,6 @@ interface IStreamingPaymentProcessor {
         uint walletId,
         bool retryForUnclaimableAmounts
     ) external;
-
-    /// @notice processes all payments from an {IPaymentClient} instance.
-    /// @dev in the concurrentStreamingPaymentProcessor, a payment client can have multiple payment orders for the same
-    ///      contributor and they will be processed separately without being overwritten by this function.
-    ///      The maximum number of payment orders that can be associated with a particular contributor by a
-    ///      particular paymentClient is (2**256 - 1).
-    /// @param client The {IPaymentClient} instance to process its to payments.
-    function processPayments(IPaymentClient client) external;
-
-    /// @notice Cancels all unfinished payments from an {IPaymentClient} instance.
-    /// @dev this function will try to force-pay the contributors for the salary that has been vested upto the point,
-    ///      this function was called. Either the salary goes to the contributor or gets accounted in unclaimableAmounts
-    /// @param client The {IPaymentClient} instance for which all unfinished payments will be cancelled.
-    function cancelRunningPayments(IPaymentClient client) external;
 
     /// @notice Deletes all payments related to a contributor & leaves unvested tokens in the PaymentClient.
     /// @dev this function calls _removePayment which goes through all the payment orders for a contributor. For the payment orders
@@ -272,7 +233,4 @@ interface IStreamingPaymentProcessor {
         external
         view
         returns (bool);
-
-    /// @notice Returns the IERC20 token the payment processor can process.
-    function token() external view returns (IERC20);
 }

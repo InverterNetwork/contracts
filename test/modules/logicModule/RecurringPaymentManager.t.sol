@@ -20,6 +20,9 @@ import {
 } from "src/modules/logicModule/RecurringPaymentManager.sol";
 
 contract RecurringPaymentManagerTest is ModuleTest {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     // SuT
     RecurringPaymentManager recurringPaymentManager;
 
@@ -82,6 +85,33 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         recurringPaymentManager.init(_proposal, _METADATA, bytes(""));
+    }
+
+    function testInit2RecurringPaymentManager() public {
+        // Attempting to call the init2 function with malformed data
+        // SHOULD FAIL
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
+        recurringPaymentManager.init2(_proposal, abi.encode(123));
+
+        // Calling init2 for the first time with no dependency
+        // SHOULD FAIL
+        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
+        recurringPaymentManager.init2(_proposal, dependencydata);
+
+        // Calling init2 for the first time with dependency = true
+        // SHOULD PASS
+        dependencydata = abi.encode(true, dependencies);
+        recurringPaymentManager.init2(_proposal, dependencydata);
+
+        // Attempting to call the init2 function again.
+        // SHOULD FAIL
+        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        recurringPaymentManager.init2(_proposal, dependencydata);
     }
 
     //--------------------------------------------------------------------------

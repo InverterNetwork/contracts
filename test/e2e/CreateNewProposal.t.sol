@@ -247,23 +247,35 @@ contract ProposalCreation is Test {
             token: paymentToken
         });
 
+        bool hasDependency;
+        string[] memory dependencies = new string[](0);
+
         IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            fundingManagerMetadata, abi.encode(address(paymentToken))
+            fundingManagerMetadata,
+            abi.encode(address(paymentToken)),
+            abi.encode(hasDependency, dependencies)
         );
 
         //Create ModuleConfig for Authorizer
         address[] memory initialAuthorizedAddresses = new address[](1);
         initialAuthorizedAddresses[0] = address(this);
+        address initialManager = makeAddr("initial manager address");
 
         IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            authorizerMetadata, abi.encode(initialAuthorizedAddresses)
+            authorizerMetadata,
+            abi.encode(initialAuthorizedAddresses, initialManager),
+            abi.encode(hasDependency, dependencies)
         );
 
         //Create ModuleConfig for SimplePaymentProcessor
         IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-            IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
+        IProposalFactory.ModuleConfig(
+            paymentProcessorMetadata,
+            bytes(""),
+            abi.encode(hasDependency, dependencies)
+        );
 
         //Create optionalModule array
 
@@ -276,7 +288,8 @@ contract ProposalCreation is Test {
         //Add MetadataManager as a optional Module
         optionalModules[0] = IProposalFactory.ModuleConfig(
             metadataManagerMetadata,
-            abi.encode(ownerMetadata, proposalMetadata, teamMetadata)
+            abi.encode(ownerMetadata, proposalMetadata, teamMetadata),
+            abi.encode(hasDependency, dependencies)
         );
 
         //Create proposal using the different needed configs
@@ -312,9 +325,16 @@ contract ProposalCreation is Test {
         uint SALARY_PRECISION = 100_000_000;
         uint FEE_PERCENTAGE = 1_000_000; //1%
         address FEE_TREASURY = makeAddr("treasury");
+        bool hasDependency;
+        string[] memory dependencies = new string[](0);
 
-        bytes memory milestoneManagerConfigdata =
-            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY);
+        bytes memory milestoneManagerConfigdata = abi.encode(
+            SALARY_PRECISION,
+            FEE_PERCENTAGE,
+            FEE_TREASURY,
+            hasDependency,
+            dependencies
+        );
 
         //Create the module via the moduleFactory
         address milestoneManager = moduleFactory.createModule(

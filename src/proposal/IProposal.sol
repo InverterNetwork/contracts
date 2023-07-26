@@ -21,6 +21,9 @@ interface IProposal is IModuleManager {
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
 
+    /// @notice The given module is not used in the proposal
+    error DependencyInjection__ModuleNotUsedInProposal();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -96,4 +99,39 @@ interface IProposal is IModuleManager {
     function owner() external view returns (address);
 
     function manager() external view returns (address);
+
+    /// @notice find the address of a given module using it's name in a proposal
+    function findModuleAddressInProposal(string calldata moduleName)
+        external
+        view
+        returns (address);
+
+    /// @notice Verify whether the given address is a payment processor
+    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
+        external
+        view
+        returns (bool);
+
+    /// @notice Verify whether the given address is the recurring payment manager
+    function verifyAddressIsRecurringPaymentManager(
+        address recurringPaymentManager
+    ) external view returns (bool);
+
+    /// @notice Verify whether the given address is the milestone manager module
+    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
+        external
+        view
+        returns (bool);
+
+    /// @notice Verify whether the given address is a funding manager
+    function verifyAddressIsFundingManager(address fundingManagerAddress)
+        external
+        view
+        returns (bool);
+
+    /// @notice Verify whether the given address is an IAuthorizer module
+    function verifyAddressIsAuthorizerModule(address authModule)
+        external
+        view
+        returns (bool);
 }
