@@ -81,16 +81,16 @@ contract RoleAuthorizer is
     ) external override initializer {
         __Module_init(proposal_, metadata);
 
-        (address[] memory initialOwners, address initialManager) =
-            abi.decode(configdata, (address[], address));
+        (address initialOwner, address initialManager) =
+            abi.decode(configdata, (address, address));
 
-        __RoleAuthorizer_init(initialOwners, initialManager);
+        __RoleAuthorizer_init(initialOwner, initialManager);
     }
 
-    function __RoleAuthorizer_init(
-        address[] memory initialOwners,
-        address initialManager
-    ) internal onlyInitializing {
+    function __RoleAuthorizer_init(address initialOwner, address initialManager)
+        internal
+        onlyInitializing
+    {
         // Note about DEFAULT_ADMIN_ROLE: The DEFAULT_ADMIN_ROLE has admin privileges on all roles in the contract. It starts out empty, but we set the proposal owners as "admins of the admin role",
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
@@ -108,16 +108,12 @@ contract RoleAuthorizer is
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
         _setRoleAdmin(DEFAULT_ADMIN_ROLE, PROPOSAL_OWNER_ROLE);
 
-        // grant OWNER role to users from configData.
-        // Note: If an initial ownerlist has been supplied, the deployer will not be an owner.
-        uint ownerLength = initialOwners.length;
-        if (ownerLength == 0) {
+        // grant OWNER role to user from configData.
+        // Note: If the initial owner is 0x0, it defaults to msgSender()
+        if (initialOwner == address(0)) {
             _grantRole(PROPOSAL_OWNER_ROLE, _msgSender());
         } else {
-            for (uint i; i < ownerLength; ++i) {
-                address current = initialOwners[i];
-                _grantRole(PROPOSAL_OWNER_ROLE, current);
-            }
+            _grantRole(PROPOSAL_OWNER_ROLE, initialOwner);
         }
 
         // Set up MANAGER role structure:

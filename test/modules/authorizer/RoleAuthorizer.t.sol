@@ -66,8 +66,7 @@ contract RoleAuthorizerTest is Test {
             _paymentProcessor
         );
 
-        address[] memory initialAuth = new address[](1);
-        initialAuth[0] = ALBA;
+        address initialAuth = ALBA;
         address initialManager = address(this);
 
         _authorizer.init(
@@ -95,30 +94,31 @@ contract RoleAuthorizerTest is Test {
     //--------------------------------------------------------------------------------------
     // Tests Initialization
 
-    function testInitWithInitialOwners(address[] memory initialAuth) public {
+    function testInitWithInitialOwner(address initialAuth) public {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
 
         address authImpl = address(new RoleAuthorizer());
         RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
 
-        _validateAuthorizedList(initialAuth);
+        assumeValidAuth(initialAuth);
 
         testAuthorizer.init(
-            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(initialAuth, address(this))
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
 
-        for (uint i; i < initialAuth.length; ++i) {
-            assertEq(testAuthorizer.isAuthorized(0, initialAuth[i]), true);
-        }
+        assertEq(testAuthorizer.isAuthorized(0, initialAuth), true);
+
         assertEq(testAuthorizer.isAuthorized(0, address(this)), false);
         assertEq(
             testAuthorizer.getRoleMemberCount(
                 testAuthorizer.PROPOSAL_OWNER_ROLE()
             ),
-            initialAuth.length
+            1
         );
     }
 
@@ -129,10 +129,12 @@ contract RoleAuthorizerTest is Test {
         address authImpl = address(new RoleAuthorizer());
         RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
 
-        address[] memory initialAuth = new address[](0);
+        address initialAuth = address(0);
 
         testAuthorizer.init(
-            IProposal(_proposal), _METADATA, abi.encode(initialAuth)
+            IProposal(_proposal),
+            _METADATA,
+            abi.encode(initialAuth, address(this))
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
