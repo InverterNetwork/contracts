@@ -257,15 +257,10 @@ contract ProposalCreation is Test {
             abi.encode(hasDependency, dependencies)
         );
 
-        //Create ModuleConfig for Authorizer
-        address[] memory initialAuthorizedAddresses = new address[](1);
-        initialAuthorizedAddresses[0] = address(this);
-        address initialManager = makeAddr("initial manager address");
-
         IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
         IProposalFactory.ModuleConfig(
             authorizerMetadata,
-            abi.encode(initialAuthorizedAddresses, initialManager),
+            abi.encode(address(this), address(this)),
             abi.encode(hasDependency, dependencies)
         );
 

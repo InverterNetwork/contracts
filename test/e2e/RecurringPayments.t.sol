@@ -49,12 +49,6 @@ contract RecurringPayments is E2eTest {
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
-    // Module Constants
-    uint constant _MAJOR_VERSION = 1;
-    uint constant _MINOR_VERSION = 1;
-    string constant _URL = "https://github.com/organization/module";
-    string constant _TITLE = "Module";
-
     uint contributor1InitialBalance;
     uint contributor2InitialBalance;
 
@@ -87,9 +81,6 @@ contract RecurringPayments is E2eTest {
                 continue;
             }
         }
-
-        AuthorizerMock _authorizer = new AuthorizerMock();
-        _authorizer.setIsAuthorized(address(this), true);
 
         // check if the recurringPaymentManager is initialized correctly or not.
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 // Factories
 import {ModuleFactory, IModuleFactory} from "src/factories/ModuleFactory.sol";
@@ -22,8 +23,10 @@ import {SimplePaymentProcessor} from
 import {StreamingPaymentProcessor} from
     "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
+import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
+import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 
 //Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -72,6 +75,20 @@ contract E2eTest is Test {
         .ModuleConfig(
         authorizerMetadata,
         abi.encode(address(this)),
+        abi.encode(hasDependency, dependencies)
+    );
+
+    RoleAuthorizer roleAuthorizerImpl;
+    Beacon roleAuthorizerBeacon;
+    address roleAuthorizerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
+    );
+    // Note that RoleAuthorizer owner and manager are the same
+    IProposalFactory.ModuleConfig roleAuthorizerFactoryConfig = IProposalFactory
+        .ModuleConfig(
+        roleAuthorizerMetadata,
+        abi.encode(address(this), address(this)),
         abi.encode(hasDependency, dependencies)
     );
 
@@ -125,8 +142,18 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
-    RecurringPaymentManager recurringPaymentManagerImpl;
+    BountyManager bountyManagerImpl;
+    Beacon bountyManagerBeacon;
+    address bountyManagerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata bountyManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
+    );
+    IProposalFactory.ModuleConfig bountyManagerFactoryConfig = IProposalFactory
+        .ModuleConfig(
+        bountyManagerMetadata, bytes(""), abi.encode(true, dependencies)
+    );
 
+    RecurringPaymentManager recurringPaymentManagerImpl;
     Beacon recurringPaymentManagerBeacon;
     address recurringPaymentManagerBeaconOwner =
         makeAddr("recurring payment manager beacon owner");
@@ -152,8 +179,10 @@ contract E2eTest is Test {
         paymentProcessorImpl = new SimplePaymentProcessor();
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
         milestoneManagerImpl = new MilestoneManager();
+        bountyManagerImpl = new BountyManager();
         recurringPaymentManagerImpl = new RecurringPaymentManager();
         authorizerImpl = new AuthorizerMock();
+        roleAuthorizerImpl = new RoleAuthorizer();
 
         // Deploy module beacons.
         vm.prank(rebasingFundingManagerBeaconOwner);
@@ -164,10 +193,14 @@ contract E2eTest is Test {
         streamingPaymentProcessorBeacon = new Beacon();
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon = new Beacon();
+        vm.prank(bountyManagerBeaconOwner);
+        bountyManagerBeacon = new Beacon();
         vm.prank(recurringPaymentManagerBeaconOwner);
         recurringPaymentManagerBeacon = new Beacon();
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon = new Beacon();
+        vm.prank(roleAuthorizerBeaconOwner);
+        roleAuthorizerBeacon = new Beacon();
 
         // Set beacon's implementations.
         vm.prank(rebasingFundingManagerBeaconOwner);
@@ -182,12 +215,16 @@ contract E2eTest is Test {
         );
         vm.prank(milestoneManagerBeaconOwner);
         milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
+        vm.prank(bountyManagerBeaconOwner);
+        bountyManagerBeacon.upgradeTo(address(bountyManagerImpl));
         vm.prank(recurringPaymentManagerBeaconOwner);
         recurringPaymentManagerBeacon.upgradeTo(
             address(recurringPaymentManagerImpl)
         );
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon.upgradeTo(address(authorizerImpl));
+        vm.prank(roleAuthorizerBeaconOwner);
+        roleAuthorizerBeacon.upgradeTo(address(roleAuthorizerImpl));
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
@@ -210,11 +247,17 @@ contract E2eTest is Test {
             milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
         );
         moduleFactory.registerMetadata(
+            bountyManagerMetadata, IBeacon(bountyManagerBeacon)
+        );
+        moduleFactory.registerMetadata(
             recurringPaymentManagerMetadata,
             IBeacon(recurringPaymentManagerBeacon)
         );
         moduleFactory.registerMetadata(
             authorizerMetadata, IBeacon(authorizerBeacon)
+        );
+        moduleFactory.registerMetadata(
+            roleAuthorizerMetadata, IBeacon(roleAuthorizerBeacon)
         );
     }
 
@@ -222,8 +265,9 @@ contract E2eTest is Test {
         IProposalFactory.ProposalConfig memory config
     ) internal returns (IProposal) {
         IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](1);
+            new IProposalFactory.ModuleConfig[](2);
         optionalModules[0] = milestoneManagerFactoryConfig;
+        optionalModules[1] = bountyManagerFactoryConfig;
 
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
@@ -260,6 +304,29 @@ contract E2eTest is Test {
             rebasingFundingManagerFactoryConfig,
             authorizerFactoryConfig,
             streamingPaymentProcessorFactoryConfig,
+            optionalModules
+        );
+    }
+
+    function _createNewProposalWithAllModules_withRoleBasedAuthorizerAndBountyManager(
+        IProposalFactory.ProposalConfig memory config
+    ) internal returns (IProposal) {
+        IProposalFactory.ModuleConfig[] memory optionalModules =
+            new IProposalFactory.ModuleConfig[](1);
+        optionalModules[0] = bountyManagerFactoryConfig;
+
+        IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
+        IProposalFactory.ModuleConfig(
+            rebasingFundingManagerMetadata,
+            abi.encode(address(config.token)),
+            abi.encode(hasDependency, dependencies)
+        );
+
+        return proposalFactory.createProposal(
+            config,
+            rebasingFundingManagerFactoryConfig,
+            roleAuthorizerFactoryConfig,
+            paymentProcessorFactoryConfig,
             optionalModules
         );
     }
