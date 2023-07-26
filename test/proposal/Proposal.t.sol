@@ -171,14 +171,14 @@ contract ProposalTest is Test {
         emit AuthorizerUpdated(address(newAuthorizer));
 
         proposal.setAuthorizer(newAuthorizer);
-        vm.assume(proposal.authorizer() == newAuthorizer);
+        assertTrue(proposal.authorizer() == newAuthorizer);
 
         // verify whether the init value is set and not the value from the old
         // authorizer, to check whether the replacement is successful
-        vm.assume(
-            !IAuthorizer(proposal.authorizer()).isAuthorized(address(this))
+        assertFalse(
+            IAuthorizer(proposal.authorizer()).isAuthorized(address(this))
         );
-        vm.assume(
+        assertTrue(
             IAuthorizer(proposal.authorizer()).isAuthorized(address(0xA11CE))
         );
     }
@@ -217,15 +217,12 @@ contract ProposalTest is Test {
         types.assumeElemNotInSet(modules, address(newFundingManager));
 
         // set the new funding manager module
-        vm.assume(
-            address((proposal.fundingManager()).token()) == address(0xA11CE)
-        );
         vm.expectEmit(true, true, true, true);
         emit FundingManagerUpdated(address(newFundingManager));
 
         proposal.setFundingManager(newFundingManager);
-        vm.assume(proposal.fundingManager() == newFundingManager);
-        vm.assume(address((proposal.fundingManager()).token()) == address(0));
+        assertTrue(proposal.fundingManager() == newFundingManager);
+        assertTrue(address((proposal.fundingManager()).token()) == address(0));
     }
 
     function testSetPaymentProcessor(uint proposalId, address[] memory modules)
@@ -263,7 +260,7 @@ contract ProposalTest is Test {
         emit PaymentProcessorUpdated(address(newPaymentProcessor));
 
         proposal.setPaymentProcessor(newPaymentProcessor);
-        vm.assume(proposal.paymentProcessor() == newPaymentProcessor);
+        assertTrue(proposal.paymentProcessor() == newPaymentProcessor);
     }
 
     //--------------------------------------------------------------------------
