@@ -246,13 +246,9 @@ contract ProposalCreation is Test {
             fundingManagerMetadata, abi.encode(address(paymentToken))
         );
 
-        //Create ModuleConfig for Authorizer
-        address[] memory initialAuthorizedAddresses = new address[](1);
-        initialAuthorizedAddresses[0] = address(this);
-
         IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            authorizerMetadata, abi.encode(initialAuthorizedAddresses)
+            authorizerMetadata, abi.encode(address(this), address(this))
         );
 
         //Create ModuleConfig for SimplePaymentProcessor

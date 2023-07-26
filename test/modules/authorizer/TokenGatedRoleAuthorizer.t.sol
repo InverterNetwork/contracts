@@ -55,8 +55,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
             _paymentProcessor
         );
 
-        address[] memory initialAuth = new address[](1);
-        initialAuth[0] = ALBA;
+        address initialAuth = ALBA;
         address initialManager = address(this);
 
         _authorizer.init(
@@ -134,8 +133,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
             _paymentProcessor
         );
 
-        address[] memory initialAuth = new address[](1);
-        initialAuth[0] = ALBA;
+        address initialAuth = ALBA;
         address initialManager = address(this);
 
         _authorizer.init(

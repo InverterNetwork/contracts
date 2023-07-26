@@ -201,6 +201,13 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         _claimList.init();
     }
 
+    function toggleSelfManagement() public onlyAuthorized {
+        //Note: due to the authorizer still not being set during initialization,
+        // this function has to be called after.
+        IRoleAuthorizer(address(proposal().authorizer()))
+            .toggleModuleSelfManagement();
+    }
+
     //--------------------------------------------------------------------------
     // Getter Functions
 
