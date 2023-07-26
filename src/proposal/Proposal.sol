@@ -141,6 +141,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         addModule(address(authorizer_));
         removeModule(address(authorizer));
         authorizer = authorizer_;
+        emit AuthorizerUpdated(address(authorizer_));
     }
 
     /// @inheritdoc IProposal
@@ -151,6 +152,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         addModule(address(fundingManager_));
         removeModule(address(fundingManager));
         fundingManager = fundingManager_;
+        emit FundingManagerUpdated(address(fundingManager_));
     }
 
     /// @inheritdoc IProposal
@@ -161,6 +163,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         addModule(address(paymentProcessor_));
         removeModule(address(paymentProcessor));
         paymentProcessor = paymentProcessor_;
+        emit PaymentProcessorUpdated(address(paymentProcessor_));
     }
 
     /// @inheritdoc IProposal

@@ -47,6 +47,10 @@ contract ProposalTest is Test {
     PaymentProcessorMock paymentProcessor;
     ERC20Mock token;
 
+    event AuthorizerUpdated(address indexed _address);
+    event FundingManagerUpdated(address indexed _address);
+    event PaymentProcessorUpdated(address indexed _address);
+
     function setUp() public {
         fundingManager = new FundingManagerMock();
         authorizer = new AuthorizerMock();
@@ -163,6 +167,9 @@ contract ProposalTest is Test {
         newAuthorizer.mockInit(abi.encode(address(0xA11CE)));
 
         // set the new authorizer module
+        vm.expectEmit(true, true, true, true);
+        emit AuthorizerUpdated(address(newAuthorizer));
+
         proposal.setAuthorizer(newAuthorizer);
         vm.assume(proposal.authorizer() == newAuthorizer);
 
@@ -213,6 +220,9 @@ contract ProposalTest is Test {
         vm.assume(
             address((proposal.fundingManager()).token()) == address(0xA11CE)
         );
+        vm.expectEmit(true, true, true, true);
+        emit FundingManagerUpdated(address(newFundingManager));
+
         proposal.setFundingManager(newFundingManager);
         vm.assume(proposal.fundingManager() == newFundingManager);
         vm.assume(address((proposal.fundingManager()).token()) == address(0));
@@ -249,6 +259,9 @@ contract ProposalTest is Test {
         types.assumeElemNotInSet(modules, address(newPaymentProcessor));
 
         // set the new payment processor module
+        vm.expectEmit(true, true, true, true);
+        emit PaymentProcessorUpdated(address(newPaymentProcessor));
+
         proposal.setPaymentProcessor(newPaymentProcessor);
         vm.assume(proposal.paymentProcessor() == newPaymentProcessor);
     }
@@ -373,8 +386,11 @@ contract ProposalTest is Test {
         }
 
         address[] memory cutArry = new address[](size);
-        for (uint i = 0; i < size - 1; i++) {
+        for (uint i; i < size - 1;) {
             cutArry[i] = addrs[i];
+            unchecked {
+                ++i;
+            }
         }
         return cutArry;
     }

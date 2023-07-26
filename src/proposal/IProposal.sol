@@ -22,6 +22,18 @@ interface IProposal is IModuleManager {
     error Proposal__ExecuteTxFailed();
 
     //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Authorizer updated to new address.
+    event AuthorizerUpdated(address indexed _address);
+
+    /// @notice FundingManager updated to new address.
+    event FundingManagerUpdated(address indexed _address);
+
+    /// @notice PaymentProcessor updated to new address.
+    event PaymentProcessorUpdated(address indexed _address);
+
+    //--------------------------------------------------------------------------
     // Functions
 
     /// @notice Initialization function.
