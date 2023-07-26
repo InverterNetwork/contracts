@@ -62,7 +62,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         recurringPaymentManager.init(
             _proposal,
             _METADATA,
-            abi.encode(1 weeks - 1, hasDependency, dependencies)
+            abi.encode(1 weeks - 1)
         );
 
         vm.expectRevert(
@@ -75,14 +75,14 @@ contract RecurringPaymentManagerTest is ModuleTest {
         recurringPaymentManager.init(
             _proposal,
             _METADATA,
-            abi.encode(52 weeks + 1, hasDependency, dependencies)
+            abi.encode(52 weeks + 1)
         );
 
         //Init Module correct
         recurringPaymentManager.init(
             _proposal,
             _METADATA,
-            abi.encode(1 weeks, hasDependency, dependencies)
+            abi.encode(1 weeks)
         );
 
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
@@ -92,7 +92,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         recurringPaymentManager.init(
             _proposal,
             _METADATA,
-            abi.encode(1 weeks, hasDependency, dependencies)
+            abi.encode(1 weeks)
         );
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
@@ -234,7 +234,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         recurringPaymentManager.init(
             _proposal,
             _METADATA,
-            abi.encode(1 weeks, hasDependency, dependencies)
+            abi.encode(1 weeks)
         );
 
         //Warp to a reasonable time
@@ -340,7 +340,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         recurringPaymentManager.init(
             _proposal,
             _METADATA,
-            abi.encode(1 weeks, hasDependency, dependencies)
+            abi.encode(1 weeks)
         );
 
         //onlyAuthorizedOrManager
@@ -544,7 +544,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         recurringPaymentManager.init(
             _proposal,
             _METADATA,
-            abi.encode(epochLength, hasDependency, dependencies)
+            abi.encode(epochLength)
         );
     }
 

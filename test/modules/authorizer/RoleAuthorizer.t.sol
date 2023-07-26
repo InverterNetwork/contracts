@@ -76,7 +76,7 @@ contract RoleAuthorizerTest is Test {
         _authorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
+            abi.encode(initialAuth, initialManager)
         );
         assertEq(
             _authorizer.hasRole(
@@ -110,7 +110,7 @@ contract RoleAuthorizerTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
+            abi.encode(initialAuth, initialManager)
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
@@ -139,7 +139,7 @@ contract RoleAuthorizerTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
+            abi.encode(initialAuth, initialManager)
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
@@ -164,7 +164,7 @@ contract RoleAuthorizerTest is Test {
         _authorizer.init(
             IProposal(newProposal),
             _METADATA,
-            abi.encode(initialAuth, initialManager, hasDependency, dependencies)
+            abi.encode(initialAuth, initialManager)
         );
         assertEq(_authorizer.isAuthorized(0, address(this)), false);
         assertEq(address(_authorizer.proposal()), address(_proposal));

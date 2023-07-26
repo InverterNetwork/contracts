@@ -42,7 +42,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
         _proposal.addModule(address(paymentClient));
 
         paymentProcessor.init(
-            _proposal, _METADATA, abi.encode(hasDependency, dependencies)
+            _proposal, _METADATA, bytes("")
         );
 
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
@@ -58,7 +58,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         paymentProcessor.init(
-            _proposal, _METADATA, abi.encode(hasDependency, dependencies)
+            _proposal, _METADATA, bytes("")
         );
     }
 

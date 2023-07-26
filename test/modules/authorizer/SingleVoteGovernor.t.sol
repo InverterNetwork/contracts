@@ -101,9 +101,7 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(
                 initialVoters,
                 _startingThreshold,
-                _startingDuration,
-                hasDependency,
-                dependencies
+                _startingDuration
             )
         );
 
@@ -286,9 +284,7 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(
                 testVoters,
                 DEFAULT_QUORUM,
-                DEFAULT_DURATION,
-                hasDependency,
-                dependencies
+                DEFAULT_DURATION
             )
         );
 
@@ -338,9 +334,7 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(
                 testVoters,
                 DEFAULT_QUORUM,
-                DEFAULT_DURATION,
-                hasDependency,
-                dependencies
+                DEFAULT_DURATION
             )
         );
     }
@@ -393,9 +387,7 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(
                 testVoters,
                 DEFAULT_QUORUM,
-                DEFAULT_DURATION,
-                hasDependency,
-                dependencies
+                DEFAULT_DURATION
             )
         );
 
@@ -415,9 +407,7 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(
                 testVoters,
                 DEFAULT_QUORUM,
-                DEFAULT_DURATION,
-                hasDependency,
-                dependencies
+                DEFAULT_DURATION
             )
         );
 
@@ -435,9 +425,7 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(
                 testVoters,
                 DEFAULT_QUORUM,
-                DEFAULT_DURATION,
-                hasDependency,
-                dependencies
+                DEFAULT_DURATION
             )
         );
 
@@ -455,9 +443,7 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(
                 testVoters,
                 DEFAULT_QUORUM,
-                DEFAULT_DURATION,
-                hasDependency,
-                dependencies
+                DEFAULT_DURATION
             )
         );
 
