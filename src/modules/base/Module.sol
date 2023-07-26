@@ -94,7 +94,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
 
     /// @dev same function as OZ initializer, but for the init2 function
     modifier initializer2() {
-        if (__Module_initialization == true) {
+        if (__Module_initialization) {
             revert Module__CannotCallInit2Again();
         }
         __Module_initialization = true;
