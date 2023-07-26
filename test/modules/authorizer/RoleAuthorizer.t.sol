@@ -71,7 +71,6 @@ contract RoleAuthorizerTest is Test {
         );
 
         address initialAuth = ALBA;
-        address initialManager = address(this);
 
         _authorizer.init(
             IProposal(_proposal),

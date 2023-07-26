@@ -259,7 +259,9 @@ contract ProposalCreation is Test {
 
         IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            authorizerMetadata, abi.encode(address(this), address(this))
+            authorizerMetadata,
+            abi.encode(address(this), address(this)),
+            abi.encode(hasDependency, dependencies)
         );
 
         //Create ModuleConfig for SimplePaymentProcessor

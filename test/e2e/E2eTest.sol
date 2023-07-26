@@ -87,7 +87,9 @@ contract E2eTest is Test {
     // Note that RoleAuthorizer owner and manager are the same
     IProposalFactory.ModuleConfig roleAuthorizerFactoryConfig = IProposalFactory
         .ModuleConfig(
-        roleAuthorizerMetadata, abi.encode(address(this), address(this))
+        roleAuthorizerMetadata,
+        abi.encode(address(this), address(this)),
+        abi.encode(hasDependency, dependencies)
     );
 
     SimplePaymentProcessor paymentProcessorImpl;
@@ -146,8 +148,12 @@ contract E2eTest is Test {
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
-    IProposalFactory.ModuleConfig bountyManagerFactoryConfig =
-        IProposalFactory.ModuleConfig(bountyManagerMetadata, bytes(""));
+    IProposalFactory.ModuleConfig bountyManagerFactoryConfig = IProposalFactory
+        .ModuleConfig(
+        bountyManagerMetadata,
+        bytes(""),
+        abi.encode(hasDependency, dependencies)
+    );
 
     RecurringPaymentManager recurringPaymentManagerImpl;
     Beacon recurringPaymentManagerBeacon;
@@ -313,7 +319,9 @@ contract E2eTest is Test {
 
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            rebasingFundingManagerMetadata, abi.encode(address(config.token))
+            rebasingFundingManagerMetadata,
+            abi.encode(address(config.token)),
+            abi.encode(hasDependency, dependencies)
         );
 
         return proposalFactory.createProposal(
