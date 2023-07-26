@@ -150,9 +150,7 @@ contract E2eTest is Test {
     );
     IProposalFactory.ModuleConfig bountyManagerFactoryConfig = IProposalFactory
         .ModuleConfig(
-        bountyManagerMetadata,
-        bytes(""),
-        abi.encode(hasDependency, dependencies)
+        bountyManagerMetadata, bytes(""), abi.encode(true, dependencies)
     );
 
     RecurringPaymentManager recurringPaymentManagerImpl;

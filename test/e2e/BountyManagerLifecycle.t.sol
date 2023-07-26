@@ -76,8 +76,6 @@ contract BountyManagerLifecycle is E2eTest {
             }
         }
 
-        bountyManager.toggleSelfManagement();
-
         // we authorize the deployer of the proposal as the bounty admin
         bountyManager.grantBountyAdminRole(address(this));
         // Funders deposit funds
