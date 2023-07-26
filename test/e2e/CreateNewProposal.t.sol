@@ -51,6 +51,12 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 //Proposal
 import {IProposal, Proposal} from "src/proposal/Proposal.sol";
 
+//Base Modules
+import {IPaymentProcessor} from
+    "src/modules/paymentProcessor/IPaymentProcessor.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+
 /**
  * e2e PoC test to show how to create a new proposal via the {ProposalFactory}.
  */
@@ -341,5 +347,29 @@ contract ProposalCreation is Test {
         //--------------------------------------------------------------------------------
         // Removing Module
         proposal.removeModule(milestoneManager);
+
+        //In case there is a need to replace the  paymentProcessor / fundingManager / authorizer
+
+        //Create the modules via the moduleFactory
+        address newPaymentProcessor = moduleFactory.createModule(
+            paymentProcessorMetadata, proposal, bytes("")
+        );
+        address newFundingManager = moduleFactory.createModule(
+            fundingManagerMetadata,
+            proposal,
+            abi.encode(address(proposal.token()))
+        );
+
+        address[] memory initialAuthorizedAddresses = new address[](1);
+        initialAuthorizedAddresses[0] = address(this);
+
+        address newAuthorizer = moduleFactory.createModule(
+            authorizerMetadata, proposal, abi.encode(initialAuthorizedAddresses)
+        );
+
+        //Replace the old modules with the new ones
+        proposal.setPaymentProcessor(IPaymentProcessor(newPaymentProcessor));
+        proposal.setFundingManager(IFundingManager(newFundingManager));
+        proposal.setAuthorizer(IAuthorizer(newAuthorizer));
     }
 }

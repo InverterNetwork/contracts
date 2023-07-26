@@ -279,6 +279,36 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     // onlyAuthorized Functions
 
     /// @inheritdoc IProposal
+    function setAuthorizer(IAuthorizer authorizer_) external onlyAuthorized {
+        addModule(address(authorizer_));
+        removeModule(address(authorizer));
+        authorizer = authorizer_;
+        emit AuthorizerUpdated(address(authorizer_));
+    }
+
+    /// @inheritdoc IProposal
+    function setFundingManager(IFundingManager fundingManager_)
+        external
+        onlyAuthorized
+    {
+        addModule(address(fundingManager_));
+        removeModule(address(fundingManager));
+        fundingManager = fundingManager_;
+        emit FundingManagerUpdated(address(fundingManager_));
+    }
+
+    /// @inheritdoc IProposal
+    function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
+        external
+        onlyAuthorized
+    {
+        addModule(address(paymentProcessor_));
+        removeModule(address(paymentProcessor));
+        paymentProcessor = paymentProcessor_;
+        emit PaymentProcessorUpdated(address(paymentProcessor_));
+    }
+
+    /// @inheritdoc IProposal
     function executeTx(address target, bytes memory data)
         external
         onlyAuthorized
