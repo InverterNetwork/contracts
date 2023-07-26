@@ -34,6 +34,10 @@ interface IModule {
     /// @notice init2 was called again for a module
     error Module__CannotCallInit2Again();
 
+    /// @notice the dependency data passed to init2 was not in the correct format
+    ///         or there was no dependency for the particular module
+    error Module__NoDependencyOrMalformedDependencyData();
+
     //--------------------------------------------------------------------------
     // Functions
 

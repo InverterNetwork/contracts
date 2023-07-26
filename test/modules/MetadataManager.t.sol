@@ -124,6 +124,29 @@ contract MetadataManagerTest is ModuleTest {
         metadataManager.init(_proposal, _METADATA, bytes(""));
     }
 
+    function testInit2MetadataManager() public {
+        // Attempting to call the init2 function with malformed data
+        // SHOULD FAIL 
+        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        metadataManager.init2(_proposal, abi.encode(123));
+
+        // Calling init2 for the first time with no dependency
+        // SHOULD FAIL
+        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        metadataManager.init2(_proposal, dependencydata);
+
+        // Calling init2 for the first time with dependency = true
+        // SHOULD PASS
+        dependencydata = abi.encode(true, dependencies);
+        metadataManager.init2(_proposal, dependencydata);
+
+        // Attempting to call the init2 function again.
+        // SHOULD FAIL
+        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        metadataManager.init2(_proposal, dependencydata);
+    }
+
     function testSetter() public {
         //-----------------------
         // MANAGER_METADATA

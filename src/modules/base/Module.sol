@@ -101,6 +101,13 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         _;
     }
 
+    modifier validDependencyData(bytes memory dependencydata) {
+        if(! _dependencyInjectionRequired(dependencydata)) {
+            revert Module__NoDependencyOrMalformedDependencyData();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -141,6 +148,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         external
         virtual
         initializer2
+        validDependencyData(dependencydata)
     {}
 
     //--------------------------------------------------------------------------
@@ -194,5 +202,21 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         // failed proposal callbacks that can be used to prevent different
         // custom error types in each implementation.
         return (ok, returnData);
+    }
+
+    function decoder(bytes memory data) public pure returns (bool requirement) {
+        (requirement, ) = abi.decode(data, (bool, string[]));
+    }
+
+    function _dependencyInjectionRequired(bytes memory dependencydata)
+        internal
+        view
+        returns (bool)
+    {
+        try this.decoder(dependencydata) returns (bool) {
+            return this.decoder(dependencydata);
+        } catch {
+            return false;
+        }
     }
 }

@@ -175,12 +175,19 @@ contract ProposalFactory is IProposalFactory {
         return _proposalIdCounter;
     }
 
+    function decoder(bytes memory data) public pure returns (bool requirement) {
+        (requirement, ) = abi.decode(data, (bool, string[]));
+    }
+
     function _dependencyInjectionRequired(bytes memory dependencydata)
         internal
-        pure
+        view
         returns (bool)
     {
-        (bool hasDependency,) = abi.decode(dependencydata, (bool, string[]));
-        return hasDependency;
+        try this.decoder(dependencydata) returns (bool) {
+            return this.decoder(dependencydata);
+        } catch {
+            return false;
+        }
     }
 }

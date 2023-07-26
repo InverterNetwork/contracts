@@ -451,6 +451,29 @@ contract SingleVoteGovernorTest is Test {
         assertEq(testAuthorizer.voterCount(), 0);
     }
 
+    function testInit2SingleVoteGovernor() public {
+        // Attempting to call the init2 function with malformed data
+        // SHOULD FAIL 
+        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        _authorizer.init2(_proposal, abi.encode(123));
+
+        // Calling init2 for the first time with no dependency
+        // SHOULD FAIL
+        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        _authorizer.init2(_proposal, dependencydata);
+
+        // Calling init2 for the first time with dependency = true
+        // SHOULD PASS
+        dependencydata = abi.encode(true, dependencies);
+        _authorizer.init2(_proposal, dependencydata);
+
+        // Attempting to call the init2 function again.
+        // SHOULD FAIL
+        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        _authorizer.init2(_proposal, dependencydata);
+    }
+
     //--------------------------------------------------------------------------
     // TESTS: VOTE CREATION
 
