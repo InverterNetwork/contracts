@@ -102,7 +102,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     }
 
     modifier validDependencyData(bytes memory dependencydata) {
-        if(! _dependencyInjectionRequired(dependencydata)) {
+        if (!_dependencyInjectionRequired(dependencydata)) {
             revert Module__NoDependencyOrMalformedDependencyData();
         }
         _;
@@ -204,8 +204,12 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         return (ok, returnData);
     }
 
-    function decoder(bytes memory data) public pure returns (bool requirement) {
-        (requirement, ) = abi.decode(data, (bool, string[]));
+    function decoder(bytes memory data)
+        public
+        pure
+        returns (bool requirement)
+    {
+        (requirement,) = abi.decode(data, (bool, string[]));
     }
 
     function _dependencyInjectionRequired(bytes memory dependencydata)

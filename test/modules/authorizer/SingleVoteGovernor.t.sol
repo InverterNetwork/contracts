@@ -98,11 +98,7 @@ contract SingleVoteGovernorTest is Test {
         _authorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(
-                initialVoters,
-                _startingThreshold,
-                _startingDuration
-            )
+            abi.encode(initialVoters, _startingThreshold, _startingDuration)
         );
 
         assertEq(address(_authorizer.proposal()), address(_proposal));
@@ -281,11 +277,7 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(
-                testVoters,
-                DEFAULT_QUORUM,
-                DEFAULT_DURATION
-            )
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
         assertEq(address(testAuthorizer.proposal()), address(_proposal));
@@ -331,11 +323,7 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(
-                testVoters,
-                DEFAULT_QUORUM,
-                DEFAULT_DURATION
-            )
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
     }
 
@@ -384,11 +372,7 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(
-                testVoters,
-                DEFAULT_QUORUM,
-                DEFAULT_DURATION
-            )
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
         //test faulty list (zero addresses)
@@ -404,11 +388,7 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(
-                testVoters,
-                DEFAULT_QUORUM,
-                DEFAULT_DURATION
-            )
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
         testVoters[0] = address(testAuthorizer);
@@ -422,11 +402,7 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(
-                testVoters,
-                DEFAULT_QUORUM,
-                DEFAULT_DURATION
-            )
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
         testVoters[0] = address(_proposal);
@@ -440,11 +416,7 @@ contract SingleVoteGovernorTest is Test {
         testAuthorizer.init(
             IProposal(_proposal),
             _METADATA,
-            abi.encode(
-                testVoters,
-                DEFAULT_QUORUM,
-                DEFAULT_DURATION
-            )
+            abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
         assertEq(address(testAuthorizer.proposal()), address(0));
@@ -453,14 +425,18 @@ contract SingleVoteGovernorTest is Test {
 
     function testInit2SingleVoteGovernor() public {
         // Attempting to call the init2 function with malformed data
-        // SHOULD FAIL 
-        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        // SHOULD FAIL
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
         _authorizer.init2(_proposal, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
         bytes memory dependencydata = abi.encode(hasDependency, dependencies);
-        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
         _authorizer.init2(_proposal, dependencydata);
 
         // Calling init2 for the first time with dependency = true

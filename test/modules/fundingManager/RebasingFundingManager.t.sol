@@ -57,11 +57,7 @@ contract RebasingFundingManagerTest is ModuleTest {
         _setUpProposal(fundingManager);
 
         //Init Module
-        fundingManager.init(
-            _proposal,
-            _METADATA,
-            abi.encode(address(_token))
-        );
+        fundingManager.init(_proposal, _METADATA, abi.encode(address(_token)));
     }
 
     //--------------------------------------------------------------------------
@@ -87,14 +83,18 @@ contract RebasingFundingManagerTest is ModuleTest {
 
     function testInit2RebasingFundingManager() public {
         // Attempting to call the init2 function with malformed data
-        // SHOULD FAIL 
-        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        // SHOULD FAIL
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
         fundingManager.init2(_proposal, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
         bytes memory dependencydata = abi.encode(hasDependency, dependencies);
-        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
         fundingManager.init2(_proposal, dependencydata);
 
         // Calling init2 for the first time with dependency = true

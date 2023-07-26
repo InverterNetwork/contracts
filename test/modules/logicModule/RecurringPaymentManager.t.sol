@@ -60,9 +60,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module wrongly
         recurringPaymentManager.init(
-            _proposal,
-            _METADATA,
-            abi.encode(1 weeks - 1)
+            _proposal, _METADATA, abi.encode(1 weeks - 1)
         );
 
         vm.expectRevert(
@@ -73,27 +71,17 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module wrongly
         recurringPaymentManager.init(
-            _proposal,
-            _METADATA,
-            abi.encode(52 weeks + 1)
+            _proposal, _METADATA, abi.encode(52 weeks + 1)
         );
 
         //Init Module correct
-        recurringPaymentManager.init(
-            _proposal,
-            _METADATA,
-            abi.encode(1 weeks)
-        );
+        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
 
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
     }
 
     function testReinitFails() public override(ModuleTest) {
-        recurringPaymentManager.init(
-            _proposal,
-            _METADATA,
-            abi.encode(1 weeks)
-        );
+        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         recurringPaymentManager.init(_proposal, _METADATA, bytes(""));
@@ -101,14 +89,18 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     function testInit2RecurringPaymentManager() public {
         // Attempting to call the init2 function with malformed data
-        // SHOULD FAIL 
-        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        // SHOULD FAIL
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
         recurringPaymentManager.init2(_proposal, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
         bytes memory dependencydata = abi.encode(hasDependency, dependencies);
-        vm.expectRevert(IModule.Module__NoDependencyOrMalformedDependencyData.selector);
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
         recurringPaymentManager.init2(_proposal, dependencydata);
 
         // Calling init2 for the first time with dependency = true
@@ -254,11 +246,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     function testAddRecurringPaymentModifierInPosition() public {
         //Init Module
-        recurringPaymentManager.init(
-            _proposal,
-            _METADATA,
-            abi.encode(1 weeks)
-        );
+        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
 
         //Warp to a reasonable time
         vm.warp(2 weeks);
@@ -360,11 +348,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     function testRemoveRecurringPaymentModifierInPosition() public {
         //Init Module
-        recurringPaymentManager.init(
-            _proposal,
-            _METADATA,
-            abi.encode(1 weeks)
-        );
+        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
 
         //onlyAuthorizedOrManager
         vm.prank(address(0xBEEF)); //Not Authorized
@@ -565,9 +549,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module
         recurringPaymentManager.init(
-            _proposal,
-            _METADATA,
-            abi.encode(epochLength)
+            _proposal, _METADATA, abi.encode(epochLength)
         );
     }
 
