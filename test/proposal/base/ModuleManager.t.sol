@@ -55,15 +55,26 @@ contract ModuleManagerTest is Test {
         types.assumeValidModules(modules);
 
         moduleManager = new ModuleManagerMock();
-        moduleManager.init(modules);
 
-        // List of modules should be size of modules array.
-        address[] memory modulesAdded = moduleManager.listModules();
-        assertEq(modulesAdded.length, modules.length);
+        if (modules.length > (MAX_MODULES - 3)) {
+            vm.expectRevert(
+                IModuleManager
+                    .Proposal__ModuleManager__ModuleAmountOverLimits
+                    .selector
+            );
 
-        // Each module should be added.
-        for (uint i; i < modules.length; ++i) {
-            assertTrue(moduleManager.isModule(modules[i]));
+            moduleManager.init(modules);
+        } else {
+            moduleManager.init(modules);
+
+            // List of modules should be size of modules array.
+            address[] memory modulesAdded = moduleManager.listModules();
+            assertEq(modulesAdded.length, modules.length);
+
+            // Each module should be added.
+            for (uint i; i < modules.length; ++i) {
+                assertTrue(moduleManager.isModule(modules[i]));
+            }
         }
     }
 

@@ -51,6 +51,12 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 //Proposal
 import {IProposal, Proposal} from "src/proposal/Proposal.sol";
 
+//Base Modules
+import {IPaymentProcessor} from
+    "src/modules/paymentProcessor/IPaymentProcessor.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+
 /**
  * e2e PoC test to show how to create a new proposal via the {ProposalFactory}.
  */
@@ -241,9 +247,14 @@ contract ProposalCreation is Test {
             token: paymentToken
         });
 
+        bool hasDependency;
+        string[] memory dependencies = new string[](0);
+
         IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            fundingManagerMetadata, abi.encode(address(paymentToken))
+            fundingManagerMetadata,
+            abi.encode(address(paymentToken)),
+            abi.encode(hasDependency, dependencies)
         );
 
         IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
@@ -253,7 +264,11 @@ contract ProposalCreation is Test {
 
         //Create ModuleConfig for SimplePaymentProcessor
         IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-            IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
+        IProposalFactory.ModuleConfig(
+            paymentProcessorMetadata,
+            bytes(""),
+            abi.encode(hasDependency, dependencies)
+        );
 
         //Create optionalModule array
 
@@ -266,7 +281,8 @@ contract ProposalCreation is Test {
         //Add MetadataManager as a optional Module
         optionalModules[0] = IProposalFactory.ModuleConfig(
             metadataManagerMetadata,
-            abi.encode(ownerMetadata, proposalMetadata, teamMetadata)
+            abi.encode(ownerMetadata, proposalMetadata, teamMetadata),
+            abi.encode(hasDependency, dependencies)
         );
 
         //Create proposal using the different needed configs
@@ -302,9 +318,16 @@ contract ProposalCreation is Test {
         uint SALARY_PRECISION = 100_000_000;
         uint FEE_PERCENTAGE = 1_000_000; //1%
         address FEE_TREASURY = makeAddr("treasury");
+        bool hasDependency;
+        string[] memory dependencies = new string[](0);
 
-        bytes memory milestoneManagerConfigdata =
-            abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY);
+        bytes memory milestoneManagerConfigdata = abi.encode(
+            SALARY_PRECISION,
+            FEE_PERCENTAGE,
+            FEE_TREASURY,
+            hasDependency,
+            dependencies
+        );
 
         //Create the module via the moduleFactory
         address milestoneManager = moduleFactory.createModule(
@@ -317,5 +340,29 @@ contract ProposalCreation is Test {
         //--------------------------------------------------------------------------------
         // Removing Module
         proposal.removeModule(milestoneManager);
+
+        //In case there is a need to replace the  paymentProcessor / fundingManager / authorizer
+
+        //Create the modules via the moduleFactory
+        address newPaymentProcessor = moduleFactory.createModule(
+            paymentProcessorMetadata, proposal, bytes("")
+        );
+        address newFundingManager = moduleFactory.createModule(
+            fundingManagerMetadata,
+            proposal,
+            abi.encode(address(proposal.token()))
+        );
+
+        address[] memory initialAuthorizedAddresses = new address[](1);
+        initialAuthorizedAddresses[0] = address(this);
+
+        address newAuthorizer = moduleFactory.createModule(
+            authorizerMetadata, proposal, abi.encode(initialAuthorizedAddresses)
+        );
+
+        //Replace the old modules with the new ones
+        proposal.setPaymentProcessor(IPaymentProcessor(newPaymentProcessor));
+        proposal.setFundingManager(IFundingManager(newFundingManager));
+        proposal.setAuthorizer(IAuthorizer(newAuthorizer));
     }
 }

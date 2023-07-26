@@ -77,6 +77,7 @@ contract RecurringPaymentManager is
 
     /// @dev List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
+
     //--------------------------------------------------------------------------
     // Initialization
 

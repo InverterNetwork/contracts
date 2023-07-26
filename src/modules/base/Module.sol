@@ -36,6 +36,11 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     //
     // Variables are prefixed with `__Module_`.
 
+    /// @dev same thing as the initializer modifier but for the init2 function
+    ///
+    /// @custom:invariant Not mutated after the init2 call
+    bool private __Module_initialization;
+
     /// @dev The module's proposal instance.
     ///
     /// @custom:invariant Not mutated after initialization.
@@ -87,6 +92,22 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         _;
     }
 
+    /// @dev same function as OZ initializer, but for the init2 function
+    modifier initializer2() {
+        if (__Module_initialization) {
+            revert Module__CannotCallInit2Again();
+        }
+        __Module_initialization = true;
+        _;
+    }
+
+    modifier validDependencyData(bytes memory dependencydata) {
+        if (!_dependencyInjectionRequired(dependencydata)) {
+            revert Module__NoDependencyOrMalformedDependencyData();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -122,6 +143,13 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         }
         __Module_metadata = metadata;
     }
+
+    function init2(IProposal proposal_, bytes memory dependencydata)
+        external
+        virtual
+        initializer2
+        validDependencyData(dependencydata)
+    {}
 
     //--------------------------------------------------------------------------
     // Public View Functions
@@ -174,5 +202,25 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         // failed proposal callbacks that can be used to prevent different
         // custom error types in each implementation.
         return (ok, returnData);
+    }
+
+    function decoder(bytes memory data)
+        public
+        pure
+        returns (bool requirement)
+    {
+        (requirement,) = abi.decode(data, (bool, string[]));
+    }
+
+    function _dependencyInjectionRequired(bytes memory dependencydata)
+        internal
+        view
+        returns (bool)
+    {
+        try this.decoder(dependencydata) returns (bool) {
+            return this.decoder(dependencydata);
+        } catch {
+            return false;
+        }
     }
 }

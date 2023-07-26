@@ -41,6 +41,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  */
 
 contract E2eTest is Test {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     // Factory instances.
     ModuleFactory moduleFactory;
     ProposalFactory proposalFactory;
@@ -69,7 +72,11 @@ contract E2eTest is Test {
     );
     // Note that the IAuthorizer's first authorized address is address(this).
     IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory
-        .ModuleConfig(authorizerMetadata, abi.encode(address(this)));
+        .ModuleConfig(
+        authorizerMetadata,
+        abi.encode(address(this)),
+        abi.encode(hasDependency, dependencies)
+    );
 
     RoleAuthorizer roleAuthorizerImpl;
     Beacon roleAuthorizerBeacon;
@@ -95,7 +102,11 @@ contract E2eTest is Test {
         "SimplePaymentProcessor"
     );
     IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
-        IProposalFactory.ModuleConfig(paymentProcessorMetadata, bytes(""));
+    IProposalFactory.ModuleConfig(
+        paymentProcessorMetadata,
+        bytes(""),
+        abi.encode(hasDependency, dependencies)
+    );
 
     Beacon streamingPaymentProcessorBeacon;
     address streamingPaymentProcessorBeaconOwner =
@@ -107,7 +118,11 @@ contract E2eTest is Test {
         "StreamingPaymentProcessor"
     );
     IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
-    IProposalFactory.ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
+    IProposalFactory.ModuleConfig(
+        streamingPaymentProcessorMetadata,
+        bytes(""),
+        abi.encode(hasDependency, dependencies)
+    );
 
     MilestoneManager milestoneManagerImpl;
     Beacon milestoneManagerBeacon;
@@ -121,7 +136,8 @@ contract E2eTest is Test {
     IProposalFactory.ModuleConfig milestoneManagerFactoryConfig =
     IProposalFactory.ModuleConfig(
         milestoneManagerMetadata,
-        abi.encode(100_000_000, 1_000_000, makeAddr("treasury"))
+        abi.encode(100_000_000, 1_000_000, makeAddr("treasury")),
+        abi.encode(hasDependency, dependencies)
     );
 
     BountyManager bountyManagerImpl;
@@ -145,7 +161,9 @@ contract E2eTest is Test {
     );
     IProposalFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
     IProposalFactory.ModuleConfig(
-        recurringPaymentManagerMetadata, abi.encode(1 weeks)
+        recurringPaymentManagerMetadata,
+        abi.encode(1 weeks),
+        abi.encode(hasDependency, dependencies)
     );
 
     function setUp() public {
@@ -249,7 +267,9 @@ contract E2eTest is Test {
 
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            rebasingFundingManagerMetadata, abi.encode(address(config.token))
+            rebasingFundingManagerMetadata,
+            abi.encode(address(config.token)),
+            abi.encode(hasDependency, dependencies)
         );
 
         return proposalFactory.createProposal(
@@ -270,7 +290,9 @@ contract E2eTest is Test {
 
         IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
         IProposalFactory.ModuleConfig(
-            rebasingFundingManagerMetadata, abi.encode(address(config.token))
+            rebasingFundingManagerMetadata,
+            abi.encode(address(config.token)),
+            abi.encode(hasDependency, dependencies)
         );
 
         return proposalFactory.createProposal(

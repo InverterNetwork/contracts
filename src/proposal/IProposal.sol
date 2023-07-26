@@ -21,6 +21,21 @@ interface IProposal is IModuleManager {
     /// @notice Execution of transaction failed.
     error Proposal__ExecuteTxFailed();
 
+    /// @notice The given module is not used in the proposal
+    error DependencyInjection__ModuleNotUsedInProposal();
+
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Authorizer updated to new address.
+    event AuthorizerUpdated(address indexed _address);
+
+    /// @notice FundingManager updated to new address.
+    event FundingManagerUpdated(address indexed _address);
+
+    /// @notice PaymentProcessor updated to new address.
+    event PaymentProcessorUpdated(address indexed _address);
+
     //--------------------------------------------------------------------------
     // Functions
 
@@ -34,6 +49,22 @@ interface IProposal is IModuleManager {
         IAuthorizer authorizer,
         IPaymentProcessor paymentProcessor
     ) external;
+
+    /// @notice Replaces the current authorizer with `_authorizer`
+    /// @dev Only callable by authorized caller.
+    /// @param authorizer_ The address of the new authorizer module.
+    function setAuthorizer(IAuthorizer authorizer_) external;
+
+    /// @notice Replaces the current funding manager with `fundingManager_`
+    /// @dev Only callable by authorized caller.
+    /// @param fundingManager_ The address of the new funding manager module.
+    function setFundingManager(IFundingManager fundingManager_) external;
+
+    /// @notice Replaces the current payment processor with `paymentProcessor_`
+    /// @dev Only callable by authorized caller.
+    /// @param paymentProcessor_ The address of the new payment processor module.
+    function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
+        external;
 
     /// @notice Executes a call on target `target` with call data `data`.
     /// @dev Only callable by authorized caller.
@@ -68,4 +99,39 @@ interface IProposal is IModuleManager {
     function owner() external view returns (address);
 
     function manager() external view returns (address);
+
+    /// @notice find the address of a given module using it's name in a proposal
+    function findModuleAddressInProposal(string calldata moduleName)
+        external
+        view
+        returns (address);
+
+    /// @notice Verify whether the given address is a payment processor
+    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
+        external
+        view
+        returns (bool);
+
+    /// @notice Verify whether the given address is the recurring payment manager
+    function verifyAddressIsRecurringPaymentManager(
+        address recurringPaymentManager
+    ) external view returns (bool);
+
+    /// @notice Verify whether the given address is the milestone manager module
+    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
+        external
+        view
+        returns (bool);
+
+    /// @notice Verify whether the given address is a funding manager
+    function verifyAddressIsFundingManager(address fundingManagerAddress)
+        external
+        view
+        returns (bool);
+
+    /// @notice Verify whether the given address is an IAuthorizer module
+    function verifyAddressIsAuthorizerModule(address authModule)
+        external
+        view
+        returns (bool);
 }

@@ -23,6 +23,10 @@ import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 
 contract RoleAuthorizerTest is Test {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+    address initialManager = address(this);
+
     // Mocks
     RoleAuthorizer _authorizer;
     Proposal internal _proposal = new Proposal();
@@ -157,7 +161,9 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert();
         _authorizer.init(
-            IProposal(newProposal), _METADATA, abi.encode(initialAuth)
+            IProposal(newProposal),
+            _METADATA,
+            abi.encode(initialAuth, initialManager)
         );
         assertEq(_authorizer.isAuthorized(0, address(this)), false);
         assertEq(address(_authorizer.proposal()), address(_proposal));
@@ -165,6 +171,33 @@ contract RoleAuthorizerTest is Test {
         assertEq(
             _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()), 1
         );
+    }
+
+    function testInit2RoleAuthorizer() public {
+        // Attempting to call the init2 function with malformed data
+        // SHOULD FAIL
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
+        _authorizer.init2(_proposal, abi.encode(123));
+
+        // Calling init2 for the first time with no dependency
+        // SHOULD FAIL
+        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
+        _authorizer.init2(_proposal, dependencydata);
+
+        // Calling init2 for the first time with dependency = true
+        // SHOULD PASS
+        dependencydata = abi.encode(true, dependencies);
+        _authorizer.init2(_proposal, dependencydata);
+
+        // Attempting to call the init2 function again.
+        // SHOULD FAIL
+        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        _authorizer.init2(_proposal, dependencydata);
     }
 
     // Test Register Roles

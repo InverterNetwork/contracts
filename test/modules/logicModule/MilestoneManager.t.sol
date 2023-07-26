@@ -20,6 +20,9 @@ import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract MilestoneManagerTest is ModuleTest {
+    bool hasDependency;
+    string[] dependencies = new string[](0);
+
     // SuT
     MilestoneManager milestoneManager;
 
@@ -103,6 +106,33 @@ contract MilestoneManagerTest is ModuleTest {
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         milestoneManager.init(_proposal, _METADATA, bytes(""));
+    }
+
+    function testInit2MilestoneManager() public {
+        // Attempting to call the init2 function with malformed data
+        // SHOULD FAIL
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
+        milestoneManager.init2(_proposal, abi.encode(123));
+
+        // Calling init2 for the first time with no dependency
+        // SHOULD FAIL
+        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        vm.expectRevert(
+            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+        );
+        milestoneManager.init2(_proposal, dependencydata);
+
+        // Calling init2 for the first time with dependency = true
+        // SHOULD PASS
+        dependencydata = abi.encode(true, dependencies);
+        milestoneManager.init2(_proposal, dependencydata);
+
+        // Attempting to call the init2 function again.
+        // SHOULD FAIL
+        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        milestoneManager.init2(_proposal, dependencydata);
     }
 
     //--------------------------------------------------------------------------

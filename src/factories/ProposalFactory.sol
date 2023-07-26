@@ -82,7 +82,7 @@ contract ProposalFactory is IProposalFactory {
         //Map proposal clone
         _proposals[++_proposalIdCounter] = clone;
 
-        // Deploy and cache {IAuthorizer} module.
+        // Deploy and cache {IFundingManager} module.
         address fundingManager = IModuleFactory(moduleFactory).createModule(
             fundingManagerConfig.metadata,
             IProposal(clone),
@@ -114,6 +114,10 @@ contract ProposalFactory is IProposalFactory {
             );
         }
 
+        if (proposalConfig.owner == address(0)) {
+            revert ProposalFactory__ProposalOwnerIsInvalid();
+        }
+
         // Initialize proposal.
         IProposal(clone).init(
             _proposalIdCounter,
@@ -124,6 +128,35 @@ contract ProposalFactory is IProposalFactory {
             IAuthorizer(authorizer),
             IPaymentProcessor(paymentProcessor)
         );
+
+        // Second round of module initializations to satisfy cross-referencing between modules
+        // This can be run post the proposal initialization. This ensures a few more variables are
+        // available that are set during the proposal init function.
+        for (uint i; i < modulesLen; ++i) {
+            if (_dependencyInjectionRequired(moduleConfigs[i].dependencydata)) {
+                IModule(modules[i]).init2(
+                    IProposal(clone), moduleConfigs[i].dependencydata
+                );
+            }
+        }
+
+        // Also, running the init2 functionality on the compulsory modules excluded from the modules array
+        if (_dependencyInjectionRequired(fundingManagerConfig.dependencydata)) {
+            IModule(fundingManager).init2(
+                IProposal(clone), fundingManagerConfig.dependencydata
+            );
+        }
+        if (_dependencyInjectionRequired(authorizerConfig.dependencydata)) {
+            IModule(authorizer).init2(
+                IProposal(clone), authorizerConfig.dependencydata
+            );
+        }
+        if (_dependencyInjectionRequired(paymentProcessorConfig.dependencydata))
+        {
+            IModule(paymentProcessor).init2(
+                IProposal(clone), paymentProcessorConfig.dependencydata
+            );
+        }
 
         return IProposal(clone);
     }
@@ -140,5 +173,25 @@ contract ProposalFactory is IProposalFactory {
 
     function getProposalIDCounter() external view returns (uint) {
         return _proposalIdCounter;
+    }
+
+    function decoder(bytes memory data)
+        public
+        pure
+        returns (bool requirement)
+    {
+        (requirement,) = abi.decode(data, (bool, string[]));
+    }
+
+    function _dependencyInjectionRequired(bytes memory dependencydata)
+        internal
+        view
+        returns (bool)
+    {
+        try this.decoder(dependencydata) returns (bool) {
+            return this.decoder(dependencydata);
+        } catch {
+            return false;
+        }
     }
 }
