@@ -76,7 +76,7 @@ contract ProposalFactory is IProposalFactory {
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
-    ) external returns (IProposal) {
+    ) public returns (IProposal) {
         address clone = Clones.clone(target);
 
         //Map proposal clone

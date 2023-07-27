@@ -70,6 +70,9 @@ testE2e: ## Run e2e test suite
 
 .PHONY: testScripts
 testScripts: ## Run e2e test suite
+
+	@forge script script/demoDeployment/DeploymentScript.s.sol
+
 	@forge script script/deployment/DeploymentScript.s.sol
 
 	@forge script script/factories/DeployModuleFactory.s.sol
