@@ -52,9 +52,10 @@ contract ModuleManagerTest is Test {
     // Tests: Initialization
 
     function testInit(address[] memory modules) public {
-        types.assumeValidModules(modules);
-
         moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
+
+        types.assumeValidModules(modules);
 
         if (modules.length > (MAX_MODULES - 3)) {
             vm.expectRevert(
@@ -110,6 +111,7 @@ contract ModuleManagerTest is Test {
 
     function testInitFailsIfModuleAddedTwice() public {
         moduleManager = new ModuleManagerMock();
+        types = new TypeSanityHelper(address(moduleManager));
 
         address[] memory modules = new address[](2);
         modules[0] = address(0xCAFE);

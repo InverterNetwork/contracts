@@ -3,7 +3,6 @@
 # Inverter Network Smart Contracts
 *Build, customize, and innovate with Inverter's modular logic and extensive web3 interoperability.*
 
-
 ## Installation
 
 The Inverter Network smart contracts are developed using the [foundry toolchain](https://getfoundry.sh)
@@ -27,6 +26,9 @@ $ make help
 > update                   Update dependencies
 > [...]
 ```
+
+## Documentation
+A technical documentation can be found in our **[GitHub Wiki](https://github.com/InverterNetwork/inverter-contracts/wiki)**.
 
 ## Dependencies
 
