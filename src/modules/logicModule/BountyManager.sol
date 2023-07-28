@@ -40,17 +40,6 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    //@todo Reminder that this will be moved into the Module Contract at a later point of time
-    modifier onlyRole(uint8 roleId) {
-        if (
-            !IRoleAuthorizer(address(__Module_proposal.authorizer()))
-                .isAuthorized(roleId, _msgSender())
-        ) {
-            revert Module__BountyManager__OnlyRole(roleId, address(this));
-        }
-        _;
-    }
-
     modifier onlyClaimContributor(uint claimId) {
         address sender = _msgSender();
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
@@ -274,7 +263,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         bytes calldata details
     )
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(uint8(Roles.BountyAdmin))
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -300,7 +289,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
     {
         _bountyRegistry[bountyId].details = details;
@@ -311,7 +300,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function lockBounty(uint bountyId)
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
         notClaimed(bountyId)
     {
@@ -327,7 +316,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         bytes calldata details
     )
         external
-        onlyRole(uint8(Roles.ClaimAdmin))
+        onlyModuleRole(uint8(Roles.ClaimAdmin))
         validBountyId(bountyId)
         notClaimed(bountyId)
         returns (uint id)
@@ -414,7 +403,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function verifyClaim(uint claimId, uint bountyId)
         external
-        onlyRole(uint8(Roles.VerifyAdmin))
+        onlyModuleRole(uint8(Roles.VerifyAdmin))
         validClaimId(claimId)
         validBountyId(bountyId)
         claimBelongingToBounty(claimId, bountyId)
@@ -466,7 +455,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     // Role Functions
 
     /// @inheritdoc IBountyManager
-    function grantBountyAdminRole(address addr) external onlyAuthorized {
+    function grantBountyAdminRole(address addr) external onlyProposalOwner {
         //@todo Will be removed in the future and moved to the authorizer directly
         IRoleAuthorizer roleAuthorizer =
             IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo Cast to IRoleAuthorizer wont be necessary as soon as the IAuthorizer Interface in Proposal is replaced by IRoleAuthorizer, this is the same for the other implementations
@@ -474,35 +463,35 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function grantClaimAdminRole(address addr) external onlyAuthorized {
+    function grantClaimAdminRole(address addr) external onlyProposalOwner {
         IRoleAuthorizer roleAuthorizer =
             IRoleAuthorizer(address(__Module_proposal.authorizer()));
         roleAuthorizer.grantRoleFromModule(uint8(Roles.ClaimAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
-    function grantVerifyAdminRole(address addr) external onlyAuthorized {
+    function grantVerifyAdminRole(address addr) external onlyProposalOwner {
         IRoleAuthorizer roleAuthorizer =
             IRoleAuthorizer(address(__Module_proposal.authorizer()));
         roleAuthorizer.grantRoleFromModule(uint8(Roles.VerifyAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
-    function revokeBountyAdminRole(address addr) external onlyAuthorized {
+    function revokeBountyAdminRole(address addr) external onlyProposalOwner {
         IRoleAuthorizer roleAuthorizer =
             IRoleAuthorizer(address(__Module_proposal.authorizer()));
         roleAuthorizer.revokeRoleFromModule(uint8(Roles.BountyAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
-    function revokeClaimAdminRole(address addr) external onlyAuthorized {
+    function revokeClaimAdminRole(address addr) external onlyProposalOwner {
         IRoleAuthorizer roleAuthorizer =
             IRoleAuthorizer(address(__Module_proposal.authorizer()));
         roleAuthorizer.revokeRoleFromModule(uint8(Roles.ClaimAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
-    function revokeVerifyAdminRole(address addr) external onlyAuthorized {
+    function revokeVerifyAdminRole(address addr) external onlyProposalOwner {
         IRoleAuthorizer roleAuthorizer =
             IRoleAuthorizer(address(__Module_proposal.authorizer()));
         roleAuthorizer.revokeRoleFromModule(uint8(Roles.VerifyAdmin), addr);

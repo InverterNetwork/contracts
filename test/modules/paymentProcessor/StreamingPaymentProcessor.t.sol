@@ -639,7 +639,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         assertTrue(expectedSalary != 0);
 
-        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyProposalOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
             paymentClient, contributor1, walletId, false
         );
@@ -756,7 +756,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         assertTrue(salary2 != 0);
 
-        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyProposalOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
             paymentClient,
             contributor1,

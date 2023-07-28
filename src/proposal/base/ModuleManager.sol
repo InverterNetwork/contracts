@@ -173,7 +173,7 @@ abstract contract ModuleManager is
     }
 
     //--------------------------------------------------------------------------
-    // onlyAuthorized Functions
+    // onlyProposalOwner Functions
 
     /// @inheritdoc IModuleManager
     function addModule(address module)

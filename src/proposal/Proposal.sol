@@ -46,7 +46,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
-    modifier onlyAuthorized() {
+    modifier onlyProposalOwner() {
         if (!authorizer.isAuthorized(_msgSender())) {
             revert Proposal__CallerNotAuthorized();
         }
@@ -58,7 +58,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address or manager.
-    modifier onlyAuthorizedOrManager() {
+    modifier onlyProposalOwnerOrManager() {
         if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != manager())
         {
             revert Proposal__CallerNotAuthorized();
@@ -276,10 +276,10 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     }
 
     //--------------------------------------------------------------------------
-    // onlyAuthorized Functions
+    // onlyProposalOwner Functions
 
     /// @inheritdoc IProposal
-    function setAuthorizer(IAuthorizer authorizer_) external onlyAuthorized {
+    function setAuthorizer(IAuthorizer authorizer_) external onlyProposalOwner {
         addModule(address(authorizer_));
         removeModule(address(authorizer));
         authorizer = authorizer_;
@@ -289,7 +289,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IProposal
     function setFundingManager(IFundingManager fundingManager_)
         external
-        onlyAuthorized
+        onlyProposalOwner
     {
         addModule(address(fundingManager_));
         removeModule(address(fundingManager));
@@ -300,7 +300,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IProposal
     function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
         external
-        onlyAuthorized
+        onlyProposalOwner
     {
         addModule(address(paymentProcessor_));
         removeModule(address(paymentProcessor));
@@ -311,7 +311,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IProposal
     function executeTx(address target, bytes memory data)
         external
-        onlyAuthorized
+        onlyProposalOwner
         returns (bytes memory)
     {
         bool ok;

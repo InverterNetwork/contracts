@@ -229,7 +229,7 @@ contract ProposalCreation is Test {
     // This function creates a new Proposal
     // For this we create a few config files, that we'll later use in the Proposalfactory:
     // -proposalFactoryConfig: Contains the owner and paymentToken address
-    // -authorizerFactoryConfig: Contains initially Authorized Addresses, that can use onlyAuthorized functions in the proposal
+    // -authorizerFactoryConfig: Contains initially Authorized Addresses, that can use onlyProposalOwner functions in the proposal
     //                           Notice that we have to decrypt the initialAuthorizedAddresses into a bytes format for correct
     //                           creation of the module in the ModuleFactory
     // -paymentProcessorFactoryConfig: Just signals the Factory, that we want to integrate the SimplePaymentProcessor here

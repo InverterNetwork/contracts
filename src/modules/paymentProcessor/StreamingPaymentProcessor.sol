@@ -208,7 +208,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function removeAllContributorPayments(
         IPaymentClient client,
         address contributor
-    ) external onlyAuthorized {
+    ) external onlyProposalOwner {
         if (
             _findAddressInActiveVestings(address(client), contributor)
                 == type(uint).max
@@ -226,7 +226,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         address contributor,
         uint walletId,
         bool retryForUnclaimableAmounts
-    ) external onlyAuthorized {
+    ) external onlyProposalOwner {
         // First, we give the vested funds from this specific walletId to the beneficiary
         _claimForSpecificWalletId(
             address(client), contributor, walletId, retryForUnclaimableAmounts

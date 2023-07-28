@@ -145,6 +145,5 @@ contract BountyManagerLifecycle is E2eTest {
         assertEq(token.balanceOf(contrib1.addr), 150e18);
         assertEq(token.balanceOf(contrib2.addr), 150e18);
 
-        // TODO: Update with real roleAuthorizer
     }
 }

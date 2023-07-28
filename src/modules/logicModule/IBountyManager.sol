@@ -49,9 +49,6 @@ interface IBountyManager is IPaymentClient {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Access only to addresses with the given role id of BountyAdmin
-    error Module__BountyManager__OnlyRole(uint8 id, address module);
-
     /// @notice Access only to addresses that are listed as contributors in the according claim
     error Module__BountyManager__OnlyClaimContributor();
 

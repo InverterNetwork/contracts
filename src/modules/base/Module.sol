@@ -11,6 +11,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
 
 /**
  * @title Module
@@ -60,7 +61,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
 
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
-    modifier onlyAuthorized() {
+    modifier onlyProposalOwner() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (!authorizer.isAuthorized(_msgSender())) {
             revert Module__CallerNotAuthorized();
@@ -70,12 +71,24 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
 
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Proposal or the Proposal's manager.
-    modifier onlyAuthorizedOrManager() {
+    modifier onlyProposalOwnerOrManager() {
         IAuthorizer authorizer = __Module_proposal.authorizer();
         if (
             !authorizer.isAuthorized(_msgSender())
                 && __Module_proposal.manager() != _msgSender()
         ) {
+            revert Module__CallerNotAuthorized();
+        }
+        _;
+    }
+
+    //@todo Reminder that this will be moved into the Module Contract at a later point of time
+    modifier onlyModuleRole(uint8 roleId) {
+        if (
+            !IRoleAuthorizer(address(__Module_proposal.authorizer()))
+                .isAuthorized(roleId, _msgSender())
+        ) {
+            //revert Module__BountyManager__OnlyRole(roleId, address(this));
             revert Module__CallerNotAuthorized();
         }
         _;
