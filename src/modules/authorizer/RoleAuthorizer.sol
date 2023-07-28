@@ -29,8 +29,8 @@ contract RoleAuthorizer is
     mapping(address => bool) public selfManagedModules;
 
     // Stored for easy public reference. Other Modules can assume the following roles to exist
-    bytes32 public PROPOSAL_OWNER_ROLE;
-    bytes32 public PROPOSAL_MANAGER_ROLE;
+    bytes32 internal PROPOSAL_OWNER_ROLE;
+    bytes32 internal PROPOSAL_MANAGER_ROLE;
 
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -228,5 +228,13 @@ contract RoleAuthorizer is
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
+    }
+
+    function getOwnerRole() public returns(bytes32) {
+        return PROPOSAL_OWNER_ROLE;
+    }
+
+    function getManagerRole() public returns(bytes32) {
+        return PROPOSAL_MANAGER_ROLE;
     }
 }

@@ -62,8 +62,11 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
     modifier onlyProposalOwner() {
-        IAuthorizer authorizer = __Module_proposal.authorizer();
-        if (!authorizer.isAuthorized(_msgSender())) {
+        IRoleAuthorizer authorizer = IRoleAuthorizer(address(__Module_proposal.authorizer()));
+
+        bytes32 ownerRole = authorizer.getOwnerRole();
+
+        if ( !authorizer.hasRole(ownerRole, _msgSender())) {
             revert Module__CallerNotAuthorized();
         }
         _;
@@ -72,10 +75,14 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Proposal or the Proposal's manager.
     modifier onlyProposalOwnerOrManager() {
-        IAuthorizer authorizer = __Module_proposal.authorizer();
+        IRoleAuthorizer authorizer = IRoleAuthorizer(address(__Module_proposal.authorizer()));
+
+        bytes32 ownerRole = authorizer.getOwnerRole();
+        bytes32 managerRole = authorizer.getManagerRole();
+        
         if (
-            !authorizer.isAuthorized(_msgSender())
-                && __Module_proposal.manager() != _msgSender()
+            !authorizer.hasRole(ownerRole, _msgSender())
+                && !authorizer.hasRole(managerRole, _msgSender())
         ) {
             revert Module__CallerNotAuthorized();
         }
@@ -190,6 +197,27 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @inheritdoc IModule
     function proposal() public view returns (IProposal) {
         return __Module_proposal;
+    }
+
+    //--------------------------------------------------------------------------
+    // Role Management
+
+    function grantModuleRole(uint8 role, address addr)
+        external
+        onlyProposalOwner
+    {
+        IRoleAuthorizer roleAuthorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        roleAuthorizer.grantRoleFromModule(uint8(role), addr);
+    }
+
+    function revokeModuleRole(uint8 role, address addr)
+        external
+        onlyProposalOwner
+    {
+        IRoleAuthorizer roleAuthorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        roleAuthorizer.revokeRoleFromModule(uint8(role), addr);
     }
 
     //--------------------------------------------------------------------------

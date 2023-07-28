@@ -230,7 +230,7 @@ interface IBountyManager is IPaymentClient {
 
     //----------------------------------
     // Role Functions
-
+    /*
     /// @notice Grants the BountyAdmin Role to a specified address
     /// @dev Only callable by authorized addresses.
     /// @param addr Address that gets the role granted
@@ -260,4 +260,6 @@ interface IBountyManager is IPaymentClient {
     /// @dev Only callable by authorized addresses.
     /// @param addr Address that gets their role revoked
     function revokeVerifyAdminRole(address addr) external;
+
+    */
 }

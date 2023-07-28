@@ -451,52 +451,6 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         emit ClaimVerified(claimId, bountyId);
     }
 
-    //----------------------------------
-    // Role Functions
-
-    /// @inheritdoc IBountyManager
-    function grantBountyAdminRole(address addr) external onlyProposalOwner {
-        //@todo Will be removed in the future and moved to the authorizer directly
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo Cast to IRoleAuthorizer wont be necessary as soon as the IAuthorizer Interface in Proposal is replaced by IRoleAuthorizer, this is the same for the other implementations
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.BountyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function grantClaimAdminRole(address addr) external onlyProposalOwner {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.ClaimAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function grantVerifyAdminRole(address addr) external onlyProposalOwner {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.VerifyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeBountyAdminRole(address addr) external onlyProposalOwner {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.BountyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeClaimAdminRole(address addr) external onlyProposalOwner {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.ClaimAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeVerifyAdminRole(address addr) external onlyProposalOwner {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.VerifyAdmin), addr);
-    }
-
     //--------------------------------------------------------------------------
     // {PaymentClient} Function Implementations
 

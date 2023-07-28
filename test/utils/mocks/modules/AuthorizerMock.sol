@@ -102,11 +102,21 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
 
     function grantRole(bytes32, address) external {}
 
-    function hasRole(bytes32, address) external pure returns (bool) {
-        return false;
+    function hasRole(bytes32 role, address who) external view returns (bool) {
+        return _authorized[who]
+            || _roleAuthorized[role][who]
+            || _allAuthorized;
     }
 
     function revokeRole(bytes32, address) external pure {}
 
     function renounceRole(bytes32, address) external pure {}
+
+    function getOwnerRole() external pure returns(bytes32) {
+         return 0;
+    }
+
+    function getManagerRole() external pure returns(bytes32){
+         return 0;
+    }
 }

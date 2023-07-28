@@ -99,9 +99,9 @@ contract BountyManagerTest is ModuleTest {
             //onlyBountyAdmin
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector//,
-                    //IBountyManager.Roles.BountyAdmin,
-                    //address(bountyManager)
+                    IModule.Module__CallerNotAuthorized.selector //,
+                        //IBountyManager.Roles.BountyAdmin,
+                        //address(bountyManager)
                 )
             );
         }
@@ -395,7 +395,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector/*,
+                IModule.Module__CallerNotAuthorized.selector /*,
                 IBountyManager.Roles.BountyAdmin,
                 address(bountyManager)*/
             )
@@ -476,7 +476,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyClaimAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector/*,
+                IModule.Module__CallerNotAuthorized.selector /*,
                 IBountyManager.Roles.ClaimAdmin,
                 address(bountyManager)*/
             )
@@ -513,7 +513,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector/*,
+                IModule.Module__CallerNotAuthorized.selector /*,
                 IBountyManager.Roles.BountyAdmin,
                 address(bountyManager)*/
             )
@@ -559,7 +559,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector/*,
+                IModule.Module__CallerNotAuthorized.selector /*,
                 IBountyManager.Roles.BountyAdmin,
                 address(bountyManager)*/
             )
@@ -789,7 +789,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyVerifyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector/*,
+                IModule.Module__CallerNotAuthorized.selector /*,
                 IBountyManager.Roles.BountyAdmin,
                 address(bountyManager)*/
             )
@@ -801,24 +801,23 @@ contract BountyManagerTest is ModuleTest {
     // Role Functions
 
     //@todo trivial to be removed as soon as the functionality is moved to RoleAuthorizer
-    function testGrantBountyAdminRole(address addr) public {
-        bountyManager.grantBountyAdminRole(addr);
+    function testGrantBountyAdminRole(uint8 role, address addr) public {
+        vm.assume(role <= uint8(type(IBountyManager.Roles).max));
+        bountyManager.grantModuleRole(role, addr);
 
         vm.prank(address(bountyManager));
-        bool isAuthorized = _authorizer.isAuthorized(
-            uint8(IBountyManager.Roles.BountyAdmin), addr
-        );
+        bool isAuthorized = _authorizer.isAuthorized(role, addr);
         assertTrue(isAuthorized);
     }
 
-    function testRevokeBountyAdminRole(address addr) public {
-        bountyManager.grantBountyAdminRole(addr);
-        bountyManager.revokeBountyAdminRole(addr);
+    function testRevokeBountyAdminRole(uint8 role, address addr) public {
+        vm.assume(role <= uint8(type(IBountyManager.Roles).max));
+
+        bountyManager.grantModuleRole(role, addr);
+        bountyManager.revokeModuleRole(role, addr);
 
         vm.prank(address(bountyManager));
-        bool isAuthorized = _authorizer.isAuthorized(
-            uint8(IBountyManager.Roles.BountyAdmin), addr
-        );
+        bool isAuthorized = _authorizer.isAuthorized(role, addr);
         assertFalse(isAuthorized);
     }
 

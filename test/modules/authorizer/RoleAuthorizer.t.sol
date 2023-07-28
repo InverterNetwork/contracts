@@ -79,16 +79,16 @@ contract RoleAuthorizerTest is Test {
         );
         assertEq(
             _authorizer.hasRole(
-                _authorizer.PROPOSAL_MANAGER_ROLE(), address(this)
+                _authorizer.getManagerRole(), address(this)
             ),
             true
         );
         assertEq(
-            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA), true
+            _authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true
         );
         assertEq(
             _authorizer.hasRole(
-                _authorizer.PROPOSAL_OWNER_ROLE(), address(this)
+                _authorizer.getOwnerRole(), address(this)
             ),
             false
         );
@@ -119,7 +119,7 @@ contract RoleAuthorizerTest is Test {
         assertEq(testAuthorizer.isAuthorized(0, address(this)), false);
         assertEq(
             testAuthorizer.getRoleMemberCount(
-                testAuthorizer.PROPOSAL_OWNER_ROLE()
+                testAuthorizer.getOwnerRole()
             ),
             1
         );
@@ -145,7 +145,7 @@ contract RoleAuthorizerTest is Test {
         assertEq(testAuthorizer.isAuthorized(0, address(this)), true);
         assertEq(
             testAuthorizer.getRoleMemberCount(
-                testAuthorizer.PROPOSAL_OWNER_ROLE()
+                testAuthorizer.getOwnerRole()
             ),
             1
         );
@@ -168,7 +168,7 @@ contract RoleAuthorizerTest is Test {
         assertEq(address(_authorizer.proposal()), address(_proposal));
         assertEq(_authorizer.isAuthorized(0, ALBA), true);
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()), 1
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1
         );
     }
 
@@ -206,14 +206,14 @@ contract RoleAuthorizerTest is Test {
 
     function testGrantOwnerRole(address[] memory newAuthorized) public {
         uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE());
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
 
         _validateAuthorizedList(newAuthorized);
 
         vm.startPrank(address(ALBA));
         for (uint i; i < newAuthorized.length; ++i) {
             _authorizer.grantRole(
-                _authorizer.PROPOSAL_OWNER_ROLE(), newAuthorized[i]
+                _authorizer.getOwnerRole(), newAuthorized[i]
             );
         }
         vm.stopPrank();
@@ -221,13 +221,13 @@ contract RoleAuthorizerTest is Test {
         for (uint i; i < newAuthorized.length; ++i) {
             assertEq(
                 _authorizer.hasRole(
-                    _authorizer.PROPOSAL_OWNER_ROLE(), newAuthorized[i]
+                    _authorizer.getOwnerRole(), newAuthorized[i]
                 ),
                 true
             );
         }
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()),
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
             (amountAuth + newAuthorized.length)
         );
     }
@@ -235,32 +235,32 @@ contract RoleAuthorizerTest is Test {
     function testRevokeOwnerRole() public {
         //Add Bob as owner
         vm.startPrank(address(ALBA));
-        _authorizer.grantRole(_authorizer.PROPOSAL_OWNER_ROLE(), BOB); //Meet your new Manager
+        _authorizer.grantRole(_authorizer.getOwnerRole(), BOB); //Meet your new Manager
         vm.stopPrank();
         assertEq(
-            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), BOB), true
+            _authorizer.hasRole(_authorizer.getOwnerRole(), BOB), true
         );
 
         uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE());
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
 
         vm.startPrank(address(ALBA));
-        _authorizer.revokeRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA);
+        _authorizer.revokeRole(_authorizer.getOwnerRole(), ALBA);
         vm.stopPrank();
 
         assertEq(
-            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA), false
+            _authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), false
         );
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()),
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
             amountAuth - 1
         );
     }
 
     function testRemoveLastOwnerFails() public {
         uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE());
-        bytes32 ownerRole = _authorizer.PROPOSAL_OWNER_ROLE(); //To correctly time the vm.expectRevert
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
+        bytes32 ownerRole = _authorizer.getOwnerRole(); //To correctly time the vm.expectRevert
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -274,7 +274,7 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()),
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
             amountAuth
         );
     }
@@ -672,7 +672,7 @@ contract RoleAuthorizerTest is Test {
 
         // Now we set the OWNER as Role admin
         vm.startPrank(BOB);
-        _authorizer.transferAdminRole(roleId, _authorizer.PROPOSAL_OWNER_ROLE());
+        _authorizer.transferAdminRole(roleId, _authorizer.getOwnerRole());
         vm.stopPrank();
 
         // ALBA can now freely grant and revoke roles
@@ -690,7 +690,7 @@ contract RoleAuthorizerTest is Test {
 
         bytes32 roleId =
             _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
-        bytes32 ownerRole = _authorizer.PROPOSAL_OWNER_ROLE(); //Buffer this to time revert
+        bytes32 ownerRole = _authorizer.getOwnerRole(); //Buffer this to time revert
 
         // BOB is not allowed to do this
         vm.startPrank(BOB);

@@ -279,7 +279,10 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     // onlyProposalOwner Functions
 
     /// @inheritdoc IProposal
-    function setAuthorizer(IAuthorizer authorizer_) external onlyProposalOwner {
+    function setAuthorizer(IAuthorizer authorizer_)
+        external
+        onlyProposalOwner
+    {
         addModule(address(authorizer_));
         removeModule(address(authorizer));
         authorizer = authorizer_;

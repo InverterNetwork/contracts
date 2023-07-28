@@ -82,4 +82,8 @@ interface IModule {
     /// @notice Returns the module's {IProposal} proposal instance.
     /// @return The module's proposal.
     function proposal() external view returns (IProposal);
+
+    function grantModuleRole(uint8 role, address addr) external;
+
+    function revokeModuleRole(uint8 role, address addr) external;
 }

@@ -77,7 +77,9 @@ contract BountyManagerLifecycle is E2eTest {
         }
 
         // we authorize the deployer of the proposal as the bounty admin
-        bountyManager.grantBountyAdminRole(address(this));
+        bountyManager.grantModuleRole(
+            uint8(IBountyManager.Roles.BountyAdmin), address(this)
+        );
         // Funders deposit funds
 
         // IMPORTANT
@@ -119,7 +121,9 @@ contract BountyManagerLifecycle is E2eTest {
             IBountyManager.Contributor(address(0xb0b), 150e18);
 
         //auth.setIsAuthorized(address(0xA11CE), true);
-        bountyManager.grantClaimAdminRole(address(0xA11CE));
+        bountyManager.grantModuleRole(
+            uint8(IBountyManager.Roles.ClaimAdmin), address(0xA11CE)
+        );
 
         IBountyManager.Contributor[] memory contribs =
             new IBountyManager.Contributor[](2);
@@ -136,7 +140,9 @@ contract BountyManagerLifecycle is E2eTest {
         address verifier1 = makeAddr("verifier 1");
 
         //auth.setIsAuthorized(verifier1, true);
-        bountyManager.grantVerifyAdminRole(verifier1);
+        bountyManager.grantModuleRole(
+            uint8(IBountyManager.Roles.VerifyAdmin), verifier1
+        );
 
         vm.prank(verifier1);
         bountyManager.verifyClaim(claimId, bountyId);
@@ -144,6 +150,5 @@ contract BountyManagerLifecycle is E2eTest {
         // Bounty has been paid out
         assertEq(token.balanceOf(contrib1.addr), 150e18);
         assertEq(token.balanceOf(contrib2.addr), 150e18);
-
     }
 }

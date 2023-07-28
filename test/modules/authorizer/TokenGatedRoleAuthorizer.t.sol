@@ -65,16 +65,16 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
         );
         assertEq(
             _authorizer.hasRole(
-                _authorizer.PROPOSAL_MANAGER_ROLE(), address(this)
+                _authorizer.getManagerRole(), address(this)
             ),
             true
         );
         assertEq(
-            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA), true
+            _authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true
         );
         assertEq(
             _authorizer.hasRole(
-                _authorizer.PROPOSAL_OWNER_ROLE(), address(this)
+                _authorizer.getOwnerRole(), address(this)
             ),
             false
         );
@@ -146,16 +146,16 @@ contract TokenGatedRoleAuthorizerTest is Test {
         );
         assertEq(
             _authorizer.hasRole(
-                _authorizer.PROPOSAL_MANAGER_ROLE(), address(this)
+                _authorizer.getManagerRole(), address(this)
             ),
             true
         );
         assertEq(
-            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA), true
+            _authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true
         );
         assertEq(
             _authorizer.hasRole(
-                _authorizer.PROPOSAL_OWNER_ROLE(), address(this)
+                _authorizer.getOwnerRole(), address(this)
             ),
             false
         );

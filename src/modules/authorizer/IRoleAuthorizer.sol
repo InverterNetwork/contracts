@@ -75,4 +75,8 @@ interface IRoleAuthorizer is
     /// @param role The role to remove admin access from
     /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
     function burnAdminRole(uint8 role) external;
+
+    function getOwnerRole() external returns(bytes32);
+
+    function getManagerRole() external returns(bytes32);
 }
