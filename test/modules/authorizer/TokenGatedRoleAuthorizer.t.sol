@@ -64,18 +64,12 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
             abi.encode(initialAuth, initialManager)
         );
         assertEq(
-            _authorizer.hasRole(
-                _authorizer.getManagerRole(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
         assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true
-        );
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.getOwnerRole(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
             false
         );
     }
@@ -145,18 +139,12 @@ contract TokenGatedRoleAuthorizerTest is Test {
             abi.encode(initialAuth, initialManager)
         );
         assertEq(
-            _authorizer.hasRole(
-                _authorizer.getManagerRole(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
         assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true
-        );
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.getOwnerRole(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
             false
         );
 

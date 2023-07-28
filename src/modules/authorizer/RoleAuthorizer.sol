@@ -230,11 +230,11 @@ contract RoleAuthorizer is
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
 
-    function getOwnerRole() public returns(bytes32) {
+    function getOwnerRole() public returns (bytes32) {
         return PROPOSAL_OWNER_ROLE;
     }
 
-    function getManagerRole() public returns(bytes32) {
+    function getManagerRole() public returns (bytes32) {
         return PROPOSAL_MANAGER_ROLE;
     }
 }

@@ -62,11 +62,12 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
     modifier onlyProposalOwner() {
-        IRoleAuthorizer authorizer = IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        IRoleAuthorizer authorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
 
         bytes32 ownerRole = authorizer.getOwnerRole();
 
-        if ( !authorizer.hasRole(ownerRole, _msgSender())) {
+        if (!authorizer.hasRole(ownerRole, _msgSender())) {
             revert Module__CallerNotAuthorized();
         }
         _;
@@ -75,11 +76,12 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Proposal or the Proposal's manager.
     modifier onlyProposalOwnerOrManager() {
-        IRoleAuthorizer authorizer = IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        IRoleAuthorizer authorizer =
+            IRoleAuthorizer(address(__Module_proposal.authorizer()));
 
         bytes32 ownerRole = authorizer.getOwnerRole();
         bytes32 managerRole = authorizer.getManagerRole();
-        
+
         if (
             !authorizer.hasRole(ownerRole, _msgSender())
                 && !authorizer.hasRole(managerRole, _msgSender())

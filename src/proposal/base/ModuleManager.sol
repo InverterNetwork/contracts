@@ -144,15 +144,6 @@ abstract contract ModuleManager is
     // Public View Functions
 
     /// @inheritdoc IModuleManager
-    function hasRole(address module, bytes32 role, address account)
-        public
-        view
-        returns (bool)
-    {
-        return isModule(module) && _moduleRoles[module][role][account];
-    }
-
-    /// @inheritdoc IModuleManager
     function isModule(address module)
         public
         view
@@ -211,33 +202,6 @@ abstract contract ModuleManager is
         (ok, returnData) = to.call(data);
 
         return (ok, returnData);
-    }
-
-    /// @inheritdoc IModuleManager
-    function grantRole(bytes32 role, address account) external onlyModule {
-        if (!hasRole(_msgSender(), role, account)) {
-            _moduleRoles[_msgSender()][role][account] = true;
-            emit ModuleRoleGranted(_msgSender(), role, account);
-        }
-    }
-
-    /// @inheritdoc IModuleManager
-    function revokeRole(bytes32 role, address account) external onlyModule {
-        if (hasRole(_msgSender(), role, account)) {
-            _moduleRoles[_msgSender()][role][account] = false;
-            emit ModuleRoleRevoked(_msgSender(), role, account);
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    // Public Mutating Functions
-
-    /// @inheritdoc IModuleManager
-    function renounceRole(address module, bytes32 role) external {
-        if (hasRole(module, role, _msgSender())) {
-            _moduleRoles[module][role][_msgSender()] = false;
-            emit ModuleRoleRevoked(module, role, _msgSender());
-        }
     }
 
     //--------------------------------------------------------------------------

@@ -78,18 +78,12 @@ contract RoleAuthorizerTest is Test {
             abi.encode(initialAuth, initialManager)
         );
         assertEq(
-            _authorizer.hasRole(
-                _authorizer.getManagerRole(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
         assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true
-        );
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.getOwnerRole(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
             false
         );
     }
@@ -118,10 +112,7 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(testAuthorizer.isAuthorized(0, address(this)), false);
         assertEq(
-            testAuthorizer.getRoleMemberCount(
-                testAuthorizer.getOwnerRole()
-            ),
-            1
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
     }
 
@@ -144,10 +135,7 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(testAuthorizer.isAuthorized(0, address(this)), true);
         assertEq(
-            testAuthorizer.getRoleMemberCount(
-                testAuthorizer.getOwnerRole()
-            ),
-            1
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
     }
 
@@ -167,9 +155,7 @@ contract RoleAuthorizerTest is Test {
         assertEq(_authorizer.isAuthorized(0, address(this)), false);
         assertEq(address(_authorizer.proposal()), address(_proposal));
         assertEq(_authorizer.isAuthorized(0, ALBA), true);
-        assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1
-        );
+        assertEq(_authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1);
     }
 
     function testInit2RoleAuthorizer() public {
@@ -212,9 +198,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(address(ALBA));
         for (uint i; i < newAuthorized.length; ++i) {
-            _authorizer.grantRole(
-                _authorizer.getOwnerRole(), newAuthorized[i]
-            );
+            _authorizer.grantRole(_authorizer.getOwnerRole(), newAuthorized[i]);
         }
         vm.stopPrank();
 
@@ -237,9 +221,7 @@ contract RoleAuthorizerTest is Test {
         vm.startPrank(address(ALBA));
         _authorizer.grantRole(_authorizer.getOwnerRole(), BOB); //Meet your new Manager
         vm.stopPrank();
-        assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), BOB), true
-        );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), BOB), true);
 
         uint amountAuth =
             _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
@@ -248,9 +230,7 @@ contract RoleAuthorizerTest is Test {
         _authorizer.revokeRole(_authorizer.getOwnerRole(), ALBA);
         vm.stopPrank();
 
-        assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), false
-        );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), false);
         assertEq(
             _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
             amountAuth - 1

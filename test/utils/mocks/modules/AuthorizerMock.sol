@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
+
 import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
@@ -35,6 +37,13 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
         require(authorized != address(0), "Zero address can not be authorized");
 
         _authorized[authorized] = true;
+
+        _roleAuthorized[generateRoleId(address(proposal()), uint8(0))][msg
+            .sender] = true;
+        _roleAuthorized[generateRoleId(address(proposal()), uint8(1))][msg
+            .sender] = true;
+
+        console.log(msg.sender);
     }
 
     function mockInit(bytes memory configdata) public {
@@ -61,6 +70,8 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
     {
         return _authorized[who]
             || _roleAuthorized[generateRoleId(msg.sender, role)][who]
+            || _roleAuthorized[generateRoleId(address(proposal()), uint8(0))][who]
+            || _roleAuthorized[generateRoleId(address(proposal()), uint8(1))][who]
             || _allAuthorized;
     }
 
@@ -103,20 +114,18 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
     function grantRole(bytes32, address) external {}
 
     function hasRole(bytes32 role, address who) external view returns (bool) {
-        return _authorized[who]
-            || _roleAuthorized[role][who]
-            || _allAuthorized;
+        return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
     }
 
     function revokeRole(bytes32, address) external pure {}
 
     function renounceRole(bytes32, address) external pure {}
 
-    function getOwnerRole() external pure returns(bytes32) {
-         return 0;
+    function getOwnerRole() external view returns (bytes32) {
+        return generateRoleId(address(proposal()), uint8(0));
     }
 
-    function getManagerRole() external pure returns(bytes32){
-         return 0;
+    function getManagerRole() external view returns (bytes32) {
+        return generateRoleId(address(proposal()), uint8(1));
     }
 }
