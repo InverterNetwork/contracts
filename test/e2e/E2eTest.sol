@@ -297,26 +297,21 @@ contract E2eTest is Test {
         // Deploy module implementations.
         recurringPaymentManagerImpl = new RecurringPaymentManager();
 
-        console.log(2);
         // Deploy module beacons.
         vm.prank(recurringPaymentManagerBeaconOwner);
         recurringPaymentManagerBeacon = new Beacon();
 
-        console.log(3);
         // Set beacon's implementations.
         vm.prank(recurringPaymentManagerBeaconOwner);
         recurringPaymentManagerBeacon.upgradeTo(
             address(recurringPaymentManagerImpl)
         );
 
-        console.log(4);
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             recurringPaymentManagerMetadata,
             IBeacon(recurringPaymentManagerBeacon)
         );
-
-        console.log(5);
     }
 
     // BountyManager
@@ -374,7 +369,6 @@ contract E2eTest is Test {
 
         //LogicModule
         setUpMilestoneManager();
-        console.log(1);
         setUpRecurringPaymentManager();
         setUpBountyManager();
     }
