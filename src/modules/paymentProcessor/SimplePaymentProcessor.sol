@@ -10,7 +10,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // Internal Dependencies
 import {
     IPaymentProcessor,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/paymentProcessor/IPaymentProcessor.sol";
 import {Module} from "src/modules/base/Module.sol";
 
@@ -22,7 +22,7 @@ import {IProposal} from "src/proposal/IProposal.sol";
  *
  * @dev The SimplePaymentProcessor is a module to process payment orders from other
  *      modules. In order to process a module's payment orders, the module must
- *      implement the {IPaymentClient} interface.
+ *      implement the {IERC20PaymentClient} interface.
  *
  * @author Inverter Network
  */
@@ -41,7 +41,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @notice checks that the client is calling for itself
-    modifier validClient(IPaymentClient client) {
+    modifier validClient(IERC20PaymentClient client) {
         if (_msgSender() != address(client)) {
             revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
         }
@@ -66,20 +66,20 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client)
+    function processPayments(IERC20PaymentClient client)
         external
         onlyModule
         validClient(client)
     {
         // Collect outstanding orders and their total token amount.
-        IPaymentClient.PaymentOrder[] memory orders;
+        IERC20PaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
         (orders, totalAmount) = client.collectPaymentOrders();
 
         // Cache token.
         IERC20 token_ = token();
 
-        // Transfer tokens from {IPaymentClient} to order recipients.
+        // Transfer tokens from {IERC20PaymentClient} to order recipients.
         address recipient;
         uint amount;
         uint len = orders.length;
@@ -101,7 +101,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    function cancelRunningPayments(IPaymentClient client)
+    function cancelRunningPayments(IERC20PaymentClient client)
         external
         onlyModule
         validClient(client)

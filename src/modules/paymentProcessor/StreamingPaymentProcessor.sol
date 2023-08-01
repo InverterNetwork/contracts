@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {
     IStreamingPaymentProcessor,
     IPaymentProcessor,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
 import {Module} from "src/modules/base/Module.sol";
@@ -30,23 +30,23 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     // Storage
 
     /// @notice provides a unique id for new payment orders added for a specific client & contributor combo
-    /// @dev paymentClient => contributor => walletId(uint)
+    /// @dev ERC20PaymentClient => contributor => walletId(uint)
     mapping(address => mapping(address => uint)) public numVestingWallets;
 
-    /// @notice tracks all vesting details for all payment orders of a contributor for a specific paymentClient
-    /// @dev paymentClient => contributor => vestingWalletID => Wallet
+    /// @notice tracks all vesting details for all payment orders of a contributor for a specific ERC20PaymentClient
+    /// @dev ERC20PaymentClient => contributor => vestingWalletID => Wallet
     mapping(address => mapping(address => mapping(uint => VestingWallet)))
         private vestings;
 
     /// @notice tracks all payments that could not be made to the contributor due to any reason
-    /// @dev paymentClient => contributor => unclaimableAmount
+    /// @dev ERC20PaymentClient => contributor => unclaimableAmount
     mapping(address => mapping(address => uint)) private unclaimableAmounts;
 
-    /// @notice list of addresses with open payment Orders per paymentClient
-    /// @dev paymentClient => listOfContributors(address[]). Duplicates are not allowed.
+    /// @notice list of addresses with open payment Orders per ERC20PaymentClient
+    /// @dev ERC20PaymentClient => listOfContributors(address[]). Duplicates are not allowed.
     mapping(address => address[]) private activeContributors;
 
-    /// @notice list of walletIDs of all payment orders of a particular contributor for a particular paymentClient
+    /// @notice list of walletIDs of all payment orders of a particular contributor for a particular ERC20PaymentClient
     /// @dev client => contributor => arrayOfWalletIdsWithPendingPayment(uint[])
     mapping(address => mapping(address => uint[])) private activeVestingWallets;
 
@@ -62,7 +62,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @notice checks that the client is calling for itself
-    modifier validClient(IPaymentClient client) {
+    modifier validClient(IERC20PaymentClient client) {
         if (_msgSender() != address(client)) {
             revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
         }
@@ -91,7 +91,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
-    function claimAll(IPaymentClient client) external {
+    function claimAll(IERC20PaymentClient client) external {
         if (
             !(
                 unclaimable(address(client), _msgSender()) > 0
@@ -109,7 +109,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IStreamingPaymentProcessor
     function claimForSpecificWalletId(
-        IPaymentClient client,
+        IERC20PaymentClient client,
         uint walletId,
         bool retryForUnclaimableAmounts
     ) external {
@@ -137,7 +137,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client)
+    function processPayments(IERC20PaymentClient client)
         external
         onlyModule
         validClient(client)
@@ -145,7 +145,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // Collect outstanding orders and their total token amount.
-            IPaymentClient.PaymentOrder[] memory orders;
+            IERC20PaymentClient.PaymentOrder[] memory orders;
             uint totalAmount;
             (orders, totalAmount) = client.collectPaymentOrders();
 
@@ -196,7 +196,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function cancelRunningPayments(IPaymentClient client)
+    function cancelRunningPayments(IERC20PaymentClient client)
         external
         onlyModule
         validClient(client)
@@ -206,7 +206,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IStreamingPaymentProcessor
     function removeAllContributorPayments(
-        IPaymentClient client,
+        IERC20PaymentClient client,
         address contributor
     ) external onlyAuthorized {
         if (
@@ -222,7 +222,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IStreamingPaymentProcessor
     function removePaymentForSpecificWalletId(
-        IPaymentClient client,
+        IERC20PaymentClient client,
         address contributor,
         uint walletId,
         bool retryForUnclaimableAmounts
@@ -403,7 +403,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         return type(uint).max;
     }
 
-    /// @notice used to find whether a particular payment order associated with a contributor and paymentClient with id = walletId is active or not
+    /// @notice used to find whether a particular payment order associated with a contributor and ERC20PaymentClient with id = walletId is active or not
     /// @dev active means that the particular payment order is still to be paid out/claimed. This function returns the first instance of the walletId
     ///      in the activeVestingWallets[client][contributor] array, but that is fine as the array does not allow duplicates.
     /// @param client address of the payment client
@@ -450,10 +450,10 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
     }
 
-    /// @notice Deletes all payments related to a contributor & leaves unvested tokens in the PaymentClient.
+    /// @notice Deletes all payments related to a contributor & leaves unvested tokens in the ERC20PaymentClient.
     /// @dev this function calls _removePayment which goes through all the payment orders for a contributor. For the payment orders
     ///      that are completely vested, their details are deleted in the _claimForSpecificWalletId function and for others it is
-    ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the paymentClient itself.
+    ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the ERC20PaymentClient itself.
     /// @param client address of the payment client
     /// @param contributor address of the contributor
     function _removePayment(address client, address contributor) internal {

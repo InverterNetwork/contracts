@@ -17,9 +17,9 @@ import {
 
 // Mocks
 import {
-    IPaymentClient,
-    PaymentClientMock
-} from "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
+    IERC20PaymentClient,
+    ERC20PaymentClientMock
+} from "test/utils/mocks/modules/mixins/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -32,14 +32,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     StreamingPaymentProcessor paymentProcessor;
 
     // Mocks
-    PaymentClientMock paymentClient = new PaymentClientMock(_token);
+    ERC20PaymentClientMock ERC20PaymentClient = new ERC20PaymentClientMock(_token);
 
     event InvalidStreamingOrderDiscarded(
         address indexed recipient, uint amount, uint start, uint dueTo
     );
 
     event StreamingPaymentAdded(
-        address indexed paymentClient,
+        address indexed ERC20PaymentClient,
         address indexed recipient,
         uint amount,
         uint start,
@@ -48,7 +48,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     );
 
     event StreamingPaymentRemoved(
-        address indexed paymentClient,
+        address indexed ERC20PaymentClient,
         address indexed recipient,
         uint indexed walletId
     );
@@ -61,11 +61,11 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        _proposal.addModule(address(paymentClient));
+        _proposal.addModule(address(ERC20PaymentClient));
 
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
 
-        paymentClient.setIsAuthorized(address(paymentProcessor), true);
+        ERC20PaymentClient.setIsAuthorized(address(paymentProcessor), true);
     }
 
     //--------------------------------------------------------------------------
@@ -133,8 +133,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
@@ -146,18 +146,18 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         for (uint i; i < recipients.length;) {
             assertTrue(
                 paymentProcessor.isActiveContributor(
-                    address(paymentClient), recipients[i]
+                    address(ERC20PaymentClient), recipients[i]
                 )
             );
             assertEq(
                 paymentProcessor.releasableForSpecificWalletId(
-                    address(paymentClient),
+                    address(ERC20PaymentClient),
                     recipients[i],
                     1 // 1 is the first default wallet ID for all unique recepients
                 ),
@@ -169,7 +169,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             }
         }
 
-        assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
+        assertEq(totalAmount, _token.balanceOf(address(ERC20PaymentClient)));
     }
 
     function test_claimVestedAmounts_fullVesting(
@@ -195,8 +195,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
@@ -208,18 +208,18 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         for (uint i; i < recipients.length;) {
             assertTrue(
                 paymentProcessor.isActiveContributor(
-                    address(paymentClient), recipients[i]
+                    address(ERC20PaymentClient), recipients[i]
                 )
             );
             assertEq(
                 paymentProcessor.releasableForSpecificWalletId(
-                    address(paymentClient),
+                    address(ERC20PaymentClient),
                     recipients[i],
                     1 // 1 is the first default wallet ID for all unique recepients
                 ),
@@ -231,7 +231,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             }
         }
 
-        assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
+        assertEq(totalAmount, _token.balanceOf(address(ERC20PaymentClient)));
 
         // Moving ahead in time, past the longest vesting period
         vm.warp(block.timestamp + (max_time + 1));
@@ -239,7 +239,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // All recepients try to claim their vested tokens
         for (uint i; i < recipients.length;) {
             vm.prank(recipients[i]);
-            paymentProcessor.claimAll(paymentClient);
+            paymentProcessor.claimAll(ERC20PaymentClient);
             unchecked {
                 ++i;
             }
@@ -256,7 +256,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             assertEq(
                 paymentProcessor.releasableForSpecificWalletId(
-                    address(paymentClient),
+                    address(ERC20PaymentClient),
                     recipients[i],
                     1 // 1 is the first default wallet ID for all unique recepients
                 ),
@@ -289,8 +289,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < length; i++) {
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: payoutAmount,
                     createdAt: block.timestamp,
@@ -299,34 +299,34 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             );
         }
 
-        IPaymentClient.PaymentOrder[] memory orders =
-            paymentClient.paymentOrders();
+        IERC20PaymentClient.PaymentOrder[] memory orders =
+            ERC20PaymentClient.paymentOrders();
 
         // Call processPayments
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         for (uint i; i < length; i++) {
             address recipient = recipients[i];
-            IPaymentClient.PaymentOrder memory order = orders[i];
+            IERC20PaymentClient.PaymentOrder memory order = orders[i];
 
             //If dueTo is before currentTimestamp evereything should be releasable
             if (order.dueTo <= block.timestamp) {
                 assertEq(
                     paymentProcessor.releasableForSpecificWalletId(
-                        address(paymentClient), address(recipient), 1
+                        address(ERC20PaymentClient), address(recipient), 1
                     ),
                     payoutAmount
                 );
 
                 vm.prank(recipient);
-                paymentProcessor.claimAll(paymentClient);
+                paymentProcessor.claimAll(ERC20PaymentClient);
 
                 // Check correct balances.
                 assertEq(_token.balanceOf(recipient), payoutAmount);
                 assertEq(
                     paymentProcessor.releasableForSpecificWalletId(
-                        address(paymentClient), recipient, 1
+                        address(ERC20PaymentClient), recipient, 1
                     ),
                     0
                 );
@@ -340,11 +340,11 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint invalidAmt = 0;
 
         vm.warp(1000);
-        vm.startPrank(address(paymentClient));
+        vm.startPrank(address(ERC20PaymentClient));
         //we don't mind about adding address(this)in this case
         for (uint i = 0; i < recipients.length - 1; ++i) {
-            paymentClient.addPaymentOrderUnchecked(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrderUnchecked(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: 100,
                     createdAt: block.timestamp,
@@ -361,10 +361,10 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments and expect emits
-        paymentProcessor.processPayments(paymentClient);
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
-        paymentClient.addPaymentOrderUnchecked(
-            IPaymentClient.PaymentOrder({
+        ERC20PaymentClient.addPaymentOrderUnchecked(
+            IERC20PaymentClient.PaymentOrder({
                 recipient: address(0xB0B),
                 amount: invalidAmt,
                 createdAt: block.timestamp,
@@ -375,7 +375,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         emit InvalidStreamingOrderDiscarded(
             address(0xB0B), invalidAmt, block.timestamp, block.timestamp + 100
         );
-        paymentProcessor.processPayments(paymentClient);
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         vm.stopPrank();
     }
@@ -394,8 +394,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         speedRunStreamingAndClaim(recipients, amounts, durations);
 
         //We run process payments again, but since there are no new orders, nothing should happen.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
@@ -403,7 +403,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             // Check that the vesting information is deleted once vested tokens are claimed after total vesting duration
             assertEq(
                 paymentProcessor.vestedAmountForSpecificWalletId(
-                    address(paymentClient),
+                    address(ERC20PaymentClient),
                     address(recipient),
                     block.timestamp,
                     1
@@ -451,8 +451,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             uint time = durations_1[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -462,8 +462,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // Let's travel in time, to the point after contributor1's tokens are fully vested.
         // Also, remember, nothing is claimed yet
@@ -492,8 +492,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             uint time = durations_2[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -503,14 +503,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // Now, let's check whether all vesting informations exist or not
         // checking for contributor2
         IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets;
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor2
+            address(ERC20PaymentClient), contributor2
         );
 
         assertTrue(contributorWallets.length == 2);
@@ -522,7 +522,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // checking for contributor3
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor3
+            address(ERC20PaymentClient), contributor3
         );
 
         assertTrue(contributorWallets.length == 2);
@@ -534,7 +534,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // checking for contributor 4
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor4
+            address(ERC20PaymentClient), contributor4
         );
 
         assertTrue(contributorWallets.length == 1);
@@ -546,7 +546,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // checking for contributor 1
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+            address(ERC20PaymentClient), contributor1
         );
 
         assertTrue(contributorWallets.length == 1);
@@ -604,8 +604,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             uint time = durations[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -615,8 +615,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // Let's travel in time, to the point after contributor1's tokens for the second payment order
         // are 1/2 vested.
@@ -626,7 +626,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // contributor by 1/2 of the vested token amount
         IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets =
         paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+            address(ERC20PaymentClient), contributor1
         );
 
         // We are interested in finding the details of the 2nd wallet of contributor1
@@ -641,11 +641,11 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
-            paymentClient, contributor1, walletId, false
+            ERC20PaymentClient, contributor1, walletId, false
         );
 
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+            address(ERC20PaymentClient), contributor1
         );
 
         finalNumWallets = contributorWallets.length;
@@ -711,8 +711,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             uint time = durations[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -722,8 +722,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // Let's travel in time, to the point after contributor1's tokens for the second payment order
         // are 1/2 vested, or the complete vesting of duration of the first payment order
@@ -734,7 +734,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets =
         paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+            address(ERC20PaymentClient), contributor1
         );
 
         salary1 = contributorWallets[0]._salary;
@@ -742,7 +742,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // Now we claim the entire salary from the first payment order
         vm.prank(contributor1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, contributorWallets[0]._vestingWalletID, false
+            ERC20PaymentClient, contributorWallets[0]._vestingWalletID, false
         );
 
         // Now we note down the balance of the contributor1 again after claiming for the first wallet.
@@ -758,14 +758,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
-            paymentClient,
+            ERC20PaymentClient,
             contributor1,
             contributorWallets[1]._vestingWalletID,
             false
         );
 
         contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+            address(ERC20PaymentClient), contributor1
         );
 
         finalNumWallets = contributorWallets.length;
@@ -782,7 +782,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         vm.prank(contributor1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, contributorWallets[0]._vestingWalletID, false
+            ERC20PaymentClient, contributorWallets[0]._vestingWalletID, false
         );
 
         finalContributorBalance = _token.balanceOf(contributor1);
@@ -794,7 +794,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(ERC20PaymentClient));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
@@ -809,23 +809,23 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.processPayments(paymentClient);
+        paymentProcessor.processPayments(ERC20PaymentClient);
     }
 
     function testProcessPaymentsFailsWhenCalledOnOtherClient(address nonModule)
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(ERC20PaymentClient));
         vm.assume(nonModule != address(_authorizer));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+        ERC20PaymentClientMock otherERC20PaymentClient = new ERC20PaymentClientMock(_token);
 
-        vm.prank(address(paymentClient));
+        vm.prank(address(ERC20PaymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPaymentProcessor
@@ -833,7 +833,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.processPayments(otherPaymentClient);
+        paymentProcessor.processPayments(otherERC20PaymentClient);
     }
 
     function test_cancelRunningPayments_allCreatedOrdersGetCancelled(
@@ -848,8 +848,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint duration = 4 weeks;
 
         for (uint i = 0; i < length; ++i) {
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
@@ -861,7 +861,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i = 0; i < length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
-                address(paymentClient),
+                address(ERC20PaymentClient),
                 recipients[i],
                 amounts[i],
                 block.timestamp,
@@ -871,8 +871,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments and expect emits
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // FF to half the max_duration
         vm.warp(block.timestamp + 2 weeks);
@@ -883,13 +883,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             // we can expect all recipient to be unique due to the call to assumeValidRecipients.
             // Therefore, the walletId of all these contributors would be 1.
             emit StreamingPaymentRemoved(
-                address(paymentClient), recipients[i], 1
+                address(ERC20PaymentClient), recipients[i], 1
             );
         }
 
         // calling cancelRunningPayments
-        vm.prank(address(paymentClient));
-        paymentProcessor.cancelRunningPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.cancelRunningPayments(ERC20PaymentClient);
 
         // make sure the payments have been reset
 
@@ -898,31 +898,31 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             assertEq(
                 paymentProcessor.startForSpecificWalletId(
-                    address(paymentClient), recipient, 1
+                    address(ERC20PaymentClient), recipient, 1
                 ),
                 0
             );
             assertEq(
                 paymentProcessor.dueToForSpecificWalletId(
-                    address(paymentClient), recipient, 1
+                    address(ERC20PaymentClient), recipient, 1
                 ),
                 0
             );
             assertEq(
                 paymentProcessor.releasedForSpecificWalletId(
-                    address(paymentClient), recipient, 1
+                    address(ERC20PaymentClient), recipient, 1
                 ),
                 0
             );
             assertEq(
                 paymentProcessor.vestedAmountForSpecificWalletId(
-                    address(paymentClient), recipient, block.timestamp, 1
+                    address(ERC20PaymentClient), recipient, block.timestamp, 1
                 ),
                 0
             );
             assertEq(
                 paymentProcessor.releasableForSpecificWalletId(
-                    address(paymentClient), recipient, 1
+                    address(ERC20PaymentClient), recipient, 1
                 ),
                 0
             );
@@ -933,7 +933,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(ERC20PaymentClient));
         vm.assume(nonModule != address(_authorizer));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
@@ -948,23 +948,23 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.cancelRunningPayments(paymentClient);
+        paymentProcessor.cancelRunningPayments(ERC20PaymentClient);
     }
 
     function testCancelPaymentsFailsWhenCalledOnOtherClient(address nonModule)
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(ERC20PaymentClient));
         vm.assume(nonModule != address(_authorizer));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+        ERC20PaymentClientMock otherERC20PaymentClient = new ERC20PaymentClientMock(_token);
 
-        vm.prank(address(paymentClient));
+        vm.prank(address(ERC20PaymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPaymentProcessor
@@ -972,7 +972,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.cancelRunningPayments(otherPaymentClient);
+        paymentProcessor.cancelRunningPayments(otherERC20PaymentClient);
     }
 
     //This test creates a new set of payments in a client which finished all running payments.
@@ -1000,8 +1000,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amounts[i],
                     createdAt: block.timestamp,
@@ -1010,19 +1010,19 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             );
         }
 
-        // make sure all the balances are transfered to paymentClient
-        assertTrue(_token.balanceOf(address(paymentClient)) == total_amount);
+        // make sure all the balances are transfered to ERC20PaymentClient
+        assertTrue(_token.balanceOf(address(ERC20PaymentClient)) == total_amount);
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // FF to half the max_duration
         vm.warp(max_duration / 2);
 
         // calling cancelRunningPayments also calls claim() so no need to repeat?
-        vm.prank(address(paymentClient));
-        paymentProcessor.cancelRunningPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.cancelRunningPayments(ERC20PaymentClient);
 
         // measure recipients balances before attempting second claim.
         uint[] memory balancesBefore = new uint256[](recipients.length);
@@ -1044,11 +1044,11 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     IStreamingPaymentProcessor
                         .Module__PaymentProcessor__NothingToClaim
                         .selector,
-                    address(paymentClient),
+                    address(ERC20PaymentClient),
                     recipient
                 )
             );
-            paymentProcessor.claimAll(paymentClient);
+            paymentProcessor.claimAll(ERC20PaymentClient);
             vm.stopPrank();
 
             uint balanceAfter = _token.balanceOf(recipient);
@@ -1056,7 +1056,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             assertEq(balancesBefore[i], balanceAfter);
             assertEq(
                 paymentProcessor.releasableForSpecificWalletId(
-                    address(paymentClient), recipient, 1
+                    address(ERC20PaymentClient), recipient, 1
                 ),
                 0
             );
@@ -1082,8 +1082,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             uint amount = amounts[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -1092,8 +1092,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             );
         }
 
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         for (uint z = 0; z <= duration; z += 1 hours) {
             //we check each hour
@@ -1106,7 +1106,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 assertEq(
                     claimableAmt,
                     paymentProcessor.releasableForSpecificWalletId(
-                        address(paymentClient), recipient, 1
+                        address(ERC20PaymentClient), recipient, 1
                     )
                 );
             }
@@ -1138,14 +1138,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             assertEq(_token.balanceOf(address(recipient)), amount);
             assertEq(
                 paymentProcessor.releasableForSpecificWalletId(
-                    address(paymentClient), address(recipient), 1
+                    address(ERC20PaymentClient), address(recipient), 1
                 ),
                 0
             );
         }
 
-        // No funds left in the PaymentClient
-        assertEq(_token.balanceOf(address(paymentClient)), 0);
+        // No funds left in the ERC20PaymentClient
+        assertEq(_token.balanceOf(address(ERC20PaymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
@@ -1165,33 +1165,33 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         blockAddress(recipient);
 
         // Add payment order to client and call processPayments.
-        paymentClient.addPaymentOrder(
-            IPaymentClient.PaymentOrder({
+        ERC20PaymentClient.addPaymentOrder(
+            IERC20PaymentClient.PaymentOrder({
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp + duration
             })
         );
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claimAll(paymentClient);
+        paymentProcessor.claimAll(ERC20PaymentClient);
 
         // after failed claim attempt receiver should receive 0 token,
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
         assertEq(
             paymentProcessor.releasableForSpecificWalletId(
-                address(paymentClient), recipient, 1
+                address(ERC20PaymentClient), recipient, 1
             ),
             0
         );
         assertEq(
-            paymentProcessor.unclaimable(address(paymentClient), recipient),
+            paymentProcessor.unclaimable(address(ERC20PaymentClient), recipient),
             amount / 4
         );
 
@@ -1201,19 +1201,19 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claimAll(paymentClient);
+        paymentProcessor.claimAll(ERC20PaymentClient);
 
         // after successful claim attempt receiver should 50% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 2);
         assertEq(
             paymentProcessor.releasableForSpecificWalletId(
-                address(paymentClient), recipient, 1
+                address(ERC20PaymentClient), recipient, 1
             ),
             0
         );
         assertEq(
-            paymentProcessor.unclaimable(address(paymentClient), recipient), 0
+            paymentProcessor.unclaimable(address(ERC20PaymentClient), recipient), 0
         );
     }
 
@@ -1228,16 +1228,16 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint duration = 10 days;
 
         // Add payment order to client and call processPayments.
-        paymentClient.addPaymentOrder(
-            IPaymentClient.PaymentOrder({
+        ERC20PaymentClient.addPaymentOrder(
+            IERC20PaymentClient.PaymentOrder({
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp + duration
             })
         );
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // transfers will fail by returning false now
         _token.toggleReturnFalse();
@@ -1245,19 +1245,19 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claimAll(paymentClient);
+        paymentProcessor.claimAll(ERC20PaymentClient);
 
         // after failed claim attempt receiver should receive 0 token,
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
         assertEq(
             paymentProcessor.releasableForSpecificWalletId(
-                address(paymentClient), recipient, 1
+                address(ERC20PaymentClient), recipient, 1
             ),
             0
         );
         assertEq(
-            paymentProcessor.unclaimable(address(paymentClient), recipient),
+            paymentProcessor.unclaimable(address(ERC20PaymentClient), recipient),
             amount / 4
         );
 
@@ -1267,19 +1267,19 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claimAll(paymentClient);
+        paymentProcessor.claimAll(ERC20PaymentClient);
 
         // after successful claim attempt receiver should 50% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 2);
         assertEq(
             paymentProcessor.releasableForSpecificWalletId(
-                address(paymentClient), recipient, 1
+                address(ERC20PaymentClient), recipient, 1
             ),
             0
         );
         assertEq(
-            paymentProcessor.unclaimable(address(paymentClient), recipient), 0
+            paymentProcessor.unclaimable(address(ERC20PaymentClient), recipient), 0
         );
     }
 
@@ -1303,8 +1303,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+            ERC20PaymentClient.addPaymentOrder(
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
@@ -1314,14 +1314,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         vm.warp(block.timestamp + max_time + 1);
 
         for (uint i; i < recipients.length; i++) {
             vm.prank(address(recipients[i]));
-            paymentProcessor.claimAll(paymentClient);
+            paymentProcessor.claimAll(ERC20PaymentClient);
         }
     }
 
@@ -1369,7 +1369,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         invalids[0] = address(0);
         invalids[1] = address(_proposal);
         invalids[2] = address(paymentProcessor);
-        invalids[3] = address(paymentClient);
+        invalids[3] = address(ERC20PaymentClient);
         invalids[4] = address(this);
 
         return invalids;

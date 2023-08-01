@@ -14,9 +14,9 @@ import {
 
 // Mocks
 import {
-    IPaymentClient,
-    PaymentClientMock
-} from "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
+    IERC20PaymentClient,
+    ERC20PaymentClientMock
+} from "test/utils/mocks/modules/mixins/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -29,7 +29,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
     SimplePaymentProcessor paymentProcessor;
 
     // Mocks
-    PaymentClientMock paymentClient = new PaymentClientMock(_token);
+    ERC20PaymentClientMock ERC20PaymentClient = new ERC20PaymentClientMock(_token);
 
     function setUp() public {
         address impl = address(new SimplePaymentProcessor());
@@ -39,11 +39,11 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        _proposal.addModule(address(paymentClient));
+        _proposal.addModule(address(ERC20PaymentClient));
 
         paymentProcessor.init(_proposal, _METADATA, bytes(""));
 
-        paymentClient.setIsAuthorized(address(paymentProcessor), true);
+        ERC20PaymentClient.setIsAuthorized(address(paymentProcessor), true);
     }
 
     //--------------------------------------------------------------------------
@@ -90,13 +90,13 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
     function testProcessPayments(address recipient, uint amount) public {
         vm.assume(recipient != address(paymentProcessor));
-        vm.assume(recipient != address(paymentClient));
+        vm.assume(recipient != address(ERC20PaymentClient));
         vm.assume(recipient != address(0));
         vm.assume(amount != 0);
 
         // Add payment order to client.
-        paymentClient.addPaymentOrder(
-            IPaymentClient.PaymentOrder({
+        ERC20PaymentClient.addPaymentOrder(
+            IERC20PaymentClient.PaymentOrder({
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
@@ -105,12 +105,12 @@ contract SimplePaymentProcessorTest is ModuleTest {
         );
 
         // Call processPayments.
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(paymentClient);
+        vm.prank(address(ERC20PaymentClient));
+        paymentProcessor.processPayments(ERC20PaymentClient);
 
         // Check correct balances.
         assertEq(_token.balanceOf(address(recipient)), amount);
-        assertEq(_token.balanceOf(address(paymentClient)), 0);
+        assertEq(_token.balanceOf(address(ERC20PaymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
@@ -120,7 +120,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(ERC20PaymentClient));
         vm.assume(nonModule != address(_authorizer));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
@@ -135,23 +135,23 @@ contract SimplePaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.processPayments(paymentClient);
+        paymentProcessor.processPayments(ERC20PaymentClient);
     }
 
     function testProcessPaymentsFailsWhenCalledOnOtherClient(address nonModule)
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(ERC20PaymentClient));
         vm.assume(nonModule != address(_authorizer));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+        ERC20PaymentClientMock otherERC20PaymentClient = new ERC20PaymentClientMock(_token);
 
-        vm.prank(address(paymentClient));
+        vm.prank(address(ERC20PaymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPaymentProcessor
@@ -159,14 +159,14 @@ contract SimplePaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.processPayments(otherPaymentClient);
+        paymentProcessor.processPayments(otherERC20PaymentClient);
     }
 
     function testCancelPaymentsFailsWhenCalledByNonModule(address nonModule)
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(ERC20PaymentClient));
         vm.assume(nonModule != address(_authorizer));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
@@ -181,23 +181,23 @@ contract SimplePaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.cancelRunningPayments(paymentClient);
+        paymentProcessor.cancelRunningPayments(ERC20PaymentClient);
     }
 
     function testCancelPaymentsFailsWhenCalledOnOtherClient(address nonModule)
         public
     {
         vm.assume(nonModule != address(paymentProcessor));
-        vm.assume(nonModule != address(paymentClient));
+        vm.assume(nonModule != address(ERC20PaymentClient));
         vm.assume(nonModule != address(_authorizer));
         // PaymentProcessorMock gets deployed and initialized in ModuleTest,
         // if deployed address is same as nonModule, this test will fail.
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+        ERC20PaymentClientMock otherERC20PaymentClient = new ERC20PaymentClientMock(_token);
 
-        vm.prank(address(paymentClient));
+        vm.prank(address(ERC20PaymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPaymentProcessor
@@ -205,6 +205,6 @@ contract SimplePaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.cancelRunningPayments(otherPaymentClient);
+        paymentProcessor.cancelRunningPayments(otherERC20PaymentClient);
     }
 }
