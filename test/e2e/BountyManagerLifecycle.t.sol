@@ -18,7 +18,7 @@ import {RebasingFundingManager} from
 import {
     BountyManager,
     IBountyManager,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/logicModule/BountyManager.sol";
 
 import {StreamingPaymentProcessor} from
@@ -26,7 +26,7 @@ import {StreamingPaymentProcessor} from
 
 import {
     IStreamingPaymentProcessor,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
 // Mocks

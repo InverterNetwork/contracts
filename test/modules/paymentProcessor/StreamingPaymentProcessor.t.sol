@@ -17,9 +17,9 @@ import {
 
 // Mocks
 import {
-    IPaymentClient,
-    PaymentClientMock
-} from "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
+    IERC20PaymentClient,
+    ERC20PaymentClientMock
+} from "test/utils/mocks/modules/mixins/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -32,7 +32,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     StreamingPaymentProcessor paymentProcessor;
 
     // Mocks
-    PaymentClientMock paymentClient = new PaymentClientMock(_token);
+    ERC20PaymentClientMock paymentClient = new ERC20PaymentClientMock(_token);
 
     event InvalidStreamingOrderDiscarded(
         address indexed recipient, uint amount, uint start, uint dueTo
@@ -134,7 +134,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
@@ -196,7 +196,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
@@ -290,7 +290,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i; i < length; i++) {
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: payoutAmount,
                     createdAt: block.timestamp,
@@ -299,7 +299,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             );
         }
 
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
 
         // Call processPayments
@@ -308,7 +308,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < length; i++) {
             address recipient = recipients[i];
-            IPaymentClient.PaymentOrder memory order = orders[i];
+            IERC20PaymentClient.PaymentOrder memory order = orders[i];
 
             //If dueTo is before currentTimestamp evereything should be releasable
             if (order.dueTo <= block.timestamp) {
@@ -344,7 +344,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         //we don't mind about adding address(this)in this case
         for (uint i = 0; i < recipients.length - 1; ++i) {
             paymentClient.addPaymentOrderUnchecked(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: 100,
                     createdAt: block.timestamp,
@@ -364,7 +364,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.processPayments(paymentClient);
 
         paymentClient.addPaymentOrderUnchecked(
-            IPaymentClient.PaymentOrder({
+            IERC20PaymentClient.PaymentOrder({
                 recipient: address(0xB0B),
                 amount: invalidAmt,
                 createdAt: block.timestamp,
@@ -452,7 +452,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -493,7 +493,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -611,7 +611,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -719,7 +719,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -839,7 +839,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+        ERC20PaymentClientMock otherERC20PaymentClient =
+            new ERC20PaymentClientMock(_token);
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
@@ -849,7 +850,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.processPayments(otherPaymentClient);
+        paymentProcessor.processPayments(otherERC20PaymentClient);
     }
 
     function test_cancelRunningPayments_allCreatedOrdersGetCancelled(
@@ -865,7 +866,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i = 0; i < length; ++i) {
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
@@ -978,7 +979,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+        ERC20PaymentClientMock otherERC20PaymentClient =
+            new ERC20PaymentClientMock(_token);
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
@@ -988,7 +990,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.cancelRunningPayments(otherPaymentClient);
+        paymentProcessor.cancelRunningPayments(otherERC20PaymentClient);
     }
 
     //This test creates a new set of payments in a client which finished all running payments.
@@ -1017,7 +1019,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amounts[i],
                     createdAt: block.timestamp,
@@ -1099,7 +1101,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -1160,7 +1162,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             );
         }
 
-        // No funds left in the PaymentClient
+        // No funds left in the ERC20PaymentClient
         assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
@@ -1182,7 +1184,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add payment order to client and call processPayments.
         paymentClient.addPaymentOrder(
-            IPaymentClient.PaymentOrder({
+            IERC20PaymentClient.PaymentOrder({
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
@@ -1245,7 +1247,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add payment order to client and call processPayments.
         paymentClient.addPaymentOrder(
-            IPaymentClient.PaymentOrder({
+            IERC20PaymentClient.PaymentOrder({
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
@@ -1320,7 +1322,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,

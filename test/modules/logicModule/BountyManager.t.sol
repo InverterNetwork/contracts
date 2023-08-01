@@ -16,7 +16,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     BountyManager,
     IBountyManager,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/logicModule/BountyManager.sol";
 
 contract BountyManagerTest is ModuleTest {
@@ -715,7 +715,7 @@ contract BountyManagerTest is ModuleTest {
 
         bountyManager.verifyClaim(claimId, bountyId);
 
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             bountyManager.paymentOrders();
 
         assertEq(length, orders.length);

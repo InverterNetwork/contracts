@@ -10,10 +10,10 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // Internal Dependencies
 import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
 import {
-    IPaymentClient,
-    PaymentClient,
+    IERC20PaymentClient,
+    ERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/PaymentClient.sol";
+} from "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
@@ -45,7 +45,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
  *
  * @author Inverter Network
  */
-contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
+contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     using SafeERC20 for IERC20;
     using LinkedIdList for LinkedIdList.List;
 
@@ -376,7 +376,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
         // stop all currently running payments
         __Module_proposal.paymentProcessor().cancelRunningPayments(
-            IPaymentClient(address(this))
+            IERC20PaymentClient(address(this))
         );
 
         emit MilestoneStopped(id);
@@ -468,7 +468,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         }
 
         __Module_proposal.paymentProcessor().processPayments(
-            IPaymentClient(address(this))
+            IERC20PaymentClient(address(this))
         );
 
         emit MilestoneStarted(_last);
@@ -690,11 +690,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     //--------------------------------------------------------------------------
-    // {PaymentClient} Function Implementations
+    // {ERC20PaymentClient} Function Implementations
 
     function _ensureTokenBalance(uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
         uint balance = __Module_proposal.token().balanceOf(address(this));
 
@@ -712,14 +712,14 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             );
 
             if (!ok) {
-                revert Module__PaymentClient__TokenTransferFailed();
+                revert Module__ERC20PaymentClient__TokenTransferFailed();
             }
         }
     }
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
         IERC20 token = __Module_proposal.token();
         uint allowance = token.allowance(address(this), address(spender));
@@ -732,7 +732,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
         view
-        override(PaymentClient)
+        override(ERC20PaymentClient)
         returns (bool)
     {
         return __Module_proposal.paymentProcessor() == who;
