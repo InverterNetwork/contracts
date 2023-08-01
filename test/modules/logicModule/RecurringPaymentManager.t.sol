@@ -101,21 +101,21 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        recurringPaymentManager.init2(_orchestrator, dependencydata);
+        recurringPaymentManager.init2(_orchestrator, dependencyData);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencydata = abi.encode(true, dependencies);
-        recurringPaymentManager.init2(_orchestrator, dependencydata);
+        dependencyData = abi.encode(true, dependencies);
+        recurringPaymentManager.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        recurringPaymentManager.init2(_orchestrator, dependencydata);
+        recurringPaymentManager.init2(_orchestrator, dependencyData);
     }
 
     //--------------------------------------------------------------------------

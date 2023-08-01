@@ -101,8 +101,8 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         _;
     }
 
-    modifier validDependencyData(bytes memory dependencydata) {
-        if (!_dependencyInjectionRequired(dependencydata)) {
+    modifier validDependencyData(bytes memory dependencyData) {
+        if (!_dependencyInjectionRequired(dependencyData)) {
             revert Module__NoDependencyOrMalformedDependencyData();
         }
         _;
@@ -144,11 +144,11 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         __Module_metadata = metadata;
     }
 
-    function init2(IOrchestrator orchestrator_, bytes memory dependencydata)
+    function init2(IOrchestrator orchestrator_, bytes memory dependencyData)
         external
         virtual
         initializer2
-        validDependencyData(dependencydata)
+        validDependencyData(dependencyData)
     {}
 
     //--------------------------------------------------------------------------
@@ -212,13 +212,13 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         (requirement,) = abi.decode(data, (bool, string[]));
     }
 
-    function _dependencyInjectionRequired(bytes memory dependencydata)
+    function _dependencyInjectionRequired(bytes memory dependencyData)
         internal
         view
         returns (bool)
     {
-        try this.decoder(dependencydata) returns (bool) {
-            return this.decoder(dependencydata);
+        try this.decoder(dependencyData) returns (bool) {
+            return this.decoder(dependencyData);
         } catch {
             return false;
         }

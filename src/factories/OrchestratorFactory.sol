@@ -133,28 +133,28 @@ contract OrchestratorFactory is IOrchestratorFactory {
         // This can be run post the orchestrator initialization. This ensures a few more variables are
         // available that are set during the orchestrator init function.
         for (uint i; i < modulesLen; ++i) {
-            if (_dependencyInjectionRequired(moduleConfigs[i].dependencydata)) {
+            if (_dependencyInjectionRequired(moduleConfigs[i].dependencyData)) {
                 IModule(modules[i]).init2(
-                    IOrchestrator(clone), moduleConfigs[i].dependencydata
+                    IOrchestrator(clone), moduleConfigs[i].dependencyData
                 );
             }
         }
 
         // Also, running the init2 functionality on the compulsory modules excluded from the modules array
-        if (_dependencyInjectionRequired(fundingManagerConfig.dependencydata)) {
+        if (_dependencyInjectionRequired(fundingManagerConfig.dependencyData)) {
             IModule(fundingManager).init2(
-                IOrchestrator(clone), fundingManagerConfig.dependencydata
+                IOrchestrator(clone), fundingManagerConfig.dependencyData
             );
         }
-        if (_dependencyInjectionRequired(authorizerConfig.dependencydata)) {
+        if (_dependencyInjectionRequired(authorizerConfig.dependencyData)) {
             IModule(authorizer).init2(
-                IOrchestrator(clone), authorizerConfig.dependencydata
+                IOrchestrator(clone), authorizerConfig.dependencyData
             );
         }
-        if (_dependencyInjectionRequired(paymentProcessorConfig.dependencydata))
+        if (_dependencyInjectionRequired(paymentProcessorConfig.dependencyData))
         {
             IModule(paymentProcessor).init2(
-                IOrchestrator(clone), paymentProcessorConfig.dependencydata
+                IOrchestrator(clone), paymentProcessorConfig.dependencyData
             );
         }
 
@@ -183,13 +183,13 @@ contract OrchestratorFactory is IOrchestratorFactory {
         (requirement,) = abi.decode(data, (bool, string[]));
     }
 
-    function _dependencyInjectionRequired(bytes memory dependencydata)
+    function _dependencyInjectionRequired(bytes memory dependencyData)
         internal
         view
         returns (bool)
     {
-        try this.decoder(dependencydata) returns (bool) {
-            return this.decoder(dependencydata);
+        try this.decoder(dependencyData) returns (bool) {
+            return this.decoder(dependencyData);
         } catch {
             return false;
         }
