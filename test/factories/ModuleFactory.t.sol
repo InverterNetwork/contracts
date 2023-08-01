@@ -121,7 +121,7 @@ contract ModuleFactoryTest is Test {
     function testCreateModule(
         IModule.Metadata memory metadata,
         address orchestrator,
-        bytes memory configdata
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
         _assumeValidOrchestrator(orchestrator);
@@ -134,7 +134,7 @@ contract ModuleFactoryTest is Test {
         // Create new module instance.
         IModule newModule = IModule(
             factory.createModule(
-                metadata, IOrchestrator(orchestrator), configdata
+                metadata, IOrchestrator(orchestrator), configData
             )
         );
 
@@ -145,7 +145,7 @@ contract ModuleFactoryTest is Test {
     function testCreateModuleFailsIfMetadataUnregistered(
         IModule.Metadata memory metadata,
         address orchestrator,
-        bytes memory configdata
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
         _assumeValidOrchestrator(orchestrator);
@@ -153,13 +153,13 @@ contract ModuleFactoryTest is Test {
         vm.expectRevert(
             IModuleFactory.ModuleFactory__UnregisteredMetadata.selector
         );
-        factory.createModule(metadata, IOrchestrator(orchestrator), configdata);
+        factory.createModule(metadata, IOrchestrator(orchestrator), configData);
     }
 
     function testCreateModuleFailsIfBeaconsImplementationIsZero(
         IModule.Metadata memory metadata,
         address orchestrator,
-        bytes memory configdata
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
         _assumeValidOrchestrator(orchestrator);
@@ -173,7 +173,7 @@ contract ModuleFactoryTest is Test {
 
         // Note that an `assert()` statement fails.
         vm.expectRevert();
-        factory.createModule(metadata, IOrchestrator(orchestrator), configdata);
+        factory.createModule(metadata, IOrchestrator(orchestrator), configData);
     }
 
     //--------------------------------------------------------------------------

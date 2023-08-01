@@ -86,21 +86,21 @@ contract OrchestratorFactory is IOrchestratorFactory {
         address fundingManager = IModuleFactory(moduleFactory).createModule(
             fundingManagerConfig.metadata,
             IOrchestrator(clone),
-            fundingManagerConfig.configdata
+            fundingManagerConfig.configData
         );
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerConfig.metadata,
             IOrchestrator(clone),
-            authorizerConfig.configdata
+            authorizerConfig.configData
         );
 
         // Deploy and cache {IPaymentProcessor} module.
         address paymentProcessor = IModuleFactory(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
             IOrchestrator(clone),
-            paymentProcessorConfig.configdata
+            paymentProcessorConfig.configData
         );
 
         // Deploy and cache optional modules.
@@ -110,7 +110,7 @@ contract OrchestratorFactory is IOrchestratorFactory {
             modules[i] = IModuleFactory(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
                 IOrchestrator(clone),
-                moduleConfigs[i].configdata
+                moduleConfigs[i].configData
             );
         }
 

@@ -76,7 +76,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     function createModule(
         IModule.Metadata memory metadata,
         IOrchestrator orchestrator,
-        bytes memory configdata
+        bytes memory configData
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
@@ -102,7 +102,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         address implementation = address(new BeaconProxy(beacon));
 
-        IModule(implementation).init(orchestrator, metadata, configdata);
+        IModule(implementation).init(orchestrator, metadata, configData);
 
         emit ModuleCreated(
             address(orchestrator), implementation, metadata.title

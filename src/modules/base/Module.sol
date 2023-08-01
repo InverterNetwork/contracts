@@ -119,7 +119,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory /*configdata*/
+        bytes memory /*configData*/
     ) external virtual initializer {
         __Module_init(orchestrator_, metadata);
     }

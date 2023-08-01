@@ -85,7 +85,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory /*configdata*/
+        bytes memory /*configData*/
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
     }

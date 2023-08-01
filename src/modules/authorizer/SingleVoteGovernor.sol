@@ -75,17 +75,17 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override initializer {
         __Module_init(orchestrator_, metadata);
 
-        // Decode configdata to list of voters, the required threshold, and the
+        // Decode configData to list of voters, the required threshold, and the
         // voting duration.
         address[] memory voters;
         uint threshold_;
         uint voteDuration_;
         (voters, threshold_, voteDuration_) =
-            abi.decode(configdata, (address[], uint, uint));
+            abi.decode(configData, (address[], uint, uint));
 
         uint votersLen = voters.length;
 

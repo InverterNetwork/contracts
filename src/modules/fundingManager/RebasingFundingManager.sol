@@ -59,11 +59,11 @@ contract RebasingFundingManager is
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
-        address orchestratorTokenAddress = abi.decode(configdata, (address));
+        address orchestratorTokenAddress = abi.decode(configData, (address));
 
         string memory _id = orchestrator_.orchestratorId().toString();
         string memory _name = string(

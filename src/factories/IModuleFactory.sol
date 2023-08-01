@@ -42,11 +42,11 @@ interface IModuleFactory {
     /// @notice Creates a module instance identified by given metadata.
     /// @param metadata The module's metadata.
     /// @param orchestrator The orchestrator's instance of the module.
-    /// @param configdata The configdata of the module
+    /// @param configData The configData of the module
     function createModule(
         IModule.Metadata memory metadata,
         IOrchestrator orchestrator,
-        bytes memory configdata
+        bytes memory configData
     ) external returns (address);
 
     /// @notice Returns the {IBeacon} instance registered and the id for given

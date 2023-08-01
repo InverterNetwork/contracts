@@ -46,19 +46,19 @@ interface IModule {
     /// @dev MUST call `__Module_init()`.
     /// @param orchestrator The module's orchestrator instance.
     /// @param metadata The module's metadata.
-    /// @param configdata Variable config data for specific module
+    /// @param configData Variable config data for specific module
     ///                   implementations.
     function init(
         IOrchestrator orchestrator,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external;
 
     /// @notice Second initialization function of the module to take care of dependencies.
     /// @param orchestrator The module's orchestrator instance.
-    /// @param configdata Variable config data for specific module
+    /// @param configData Variable config data for specific module
     ///                   implementations.
-    function init2(IOrchestrator orchestrator, bytes memory configdata)
+    function init2(IOrchestrator orchestrator, bytes memory configData)
         external;
 
     /// @notice Returns the module's identifier.

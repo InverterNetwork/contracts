@@ -86,13 +86,13 @@ contract RecurringPaymentManager is
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
         //Set empty list of RecurringPayment
         _paymentList.init();
 
-        epochLength = abi.decode(configdata, (uint));
+        epochLength = abi.decode(configData, (uint));
 
         //revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {

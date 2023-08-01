@@ -23,7 +23,7 @@ contract MetadataManager is IMetadataManager, Module {
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
@@ -32,7 +32,7 @@ contract MetadataManager is IMetadataManager, Module {
             OrchestratorMetadata memory orchestratorMetadata_,
             MemberMetadata[] memory teamMetadata_
         ) = abi.decode(
-            configdata,
+            configData,
             (ManagerMetadata, OrchestratorMetadata, MemberMetadata[])
         );
 

@@ -66,7 +66,7 @@ contract ModuleUpdateTest is Test {
     function testBeaconUpgrade(
         IModule.Metadata memory metadata,
         address orchestrator,
-        bytes memory configdata
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
         _assumeValidOrchestrator(orchestrator);
@@ -81,7 +81,7 @@ contract ModuleUpdateTest is Test {
 
         //Create Module Proxy in Factory
         address proxyImplementationAddress1 = factory.createModule(
-            metadata, IOrchestrator(orchestrator), configdata
+            metadata, IOrchestrator(orchestrator), configData
         );
 
         assertEq(

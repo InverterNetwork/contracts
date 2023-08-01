@@ -75,10 +75,10 @@ contract MilestoneManagerTest is ModuleTest {
 
         _setUpOrchestrator(milestoneManager);
 
-        bytes memory configdata =
+        bytes memory configData =
             abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY);
 
-        milestoneManager.init(_orchestrator, _METADATA, configdata);
+        milestoneManager.init(_orchestrator, _METADATA, configData);
 
         _authorizer.setIsAuthorized(address(this), true);
 

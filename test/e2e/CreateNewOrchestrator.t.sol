@@ -313,7 +313,7 @@ contract OrchestratorCreation is Test {
         //--------------------------------------------------------------------------------
         // Adding Module
 
-        //Create milestoneManagerConfigdata
+        //Create milestoneManagerConfigData
         //Note: This bytes array is used for transmitting data in a generalized way
         //      to the modules during they initilization via the modulefactory
         //      Some Modules might need additional Deployment/Configuration data
@@ -323,7 +323,7 @@ contract OrchestratorCreation is Test {
         bool hasDependency;
         string[] memory dependencies = new string[](0);
 
-        bytes memory milestoneManagerConfigdata = abi.encode(
+        bytes memory milestoneManagerConfigData = abi.encode(
             SALARY_PRECISION,
             FEE_PERCENTAGE,
             FEE_TREASURY,
@@ -333,7 +333,7 @@ contract OrchestratorCreation is Test {
 
         //Create the module via the moduleFactory
         address milestoneManager = moduleFactory.createModule(
-            milestoneManagerMetadata, orchestrator, milestoneManagerConfigdata
+            milestoneManagerMetadata, orchestrator, milestoneManagerConfigData
         );
 
         //Add Module to the orchestrator

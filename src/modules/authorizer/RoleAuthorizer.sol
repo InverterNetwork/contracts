@@ -77,12 +77,12 @@ contract RoleAuthorizer is
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override initializer {
         __Module_init(orchestrator_, metadata);
 
         (address initialOwner, address initialManager) =
-            abi.decode(configdata, (address, address));
+            abi.decode(configData, (address, address));
 
         __RoleAuthorizer_init(initialOwner, initialManager);
     }

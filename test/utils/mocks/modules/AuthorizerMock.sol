@@ -26,20 +26,20 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) public override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
-        // Read first authorized address from configdata.
-        address authorized = abi.decode(configdata, (address));
+        // Read first authorized address from configData.
+        address authorized = abi.decode(configData, (address));
         require(authorized != address(0), "Zero address can not be authorized");
 
         _authorized[authorized] = true;
     }
 
-    function mockInit(bytes memory configdata) public {
-        // Read first authorized address from configdata.
-        address authorized = abi.decode(configdata, (address));
+    function mockInit(bytes memory configData) public {
+        // Read first authorized address from configData.
+        address authorized = abi.decode(configData, (address));
         require(authorized != address(0), "Zero address can not be authorized");
 
         _authorized[authorized] = true;

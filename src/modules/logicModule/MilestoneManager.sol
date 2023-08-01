@@ -192,7 +192,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
@@ -205,7 +205,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
         _milestoneUpdateTimelock = 3 days;
 
         (SALARY_PRECISION, FEE_PCT, FEE_TREASURY) =
-            abi.decode(configdata, (uint, uint, address));
+            abi.decode(configData, (uint, uint, address));
 
         if (FEE_PCT >= SALARY_PRECISION) {
             revert Module__MilestoneManager__FeeOverHundredPercent();
