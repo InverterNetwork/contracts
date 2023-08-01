@@ -56,8 +56,10 @@ contract AuthorizerMock is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // IAuthorizer Functions
 
+    // Also accepts the owner role as authorized.
     function isAuthorized(address who) external view returns (bool) {
-        return _authorized[who] || _allAuthorized;
+        return _authorized[who] || _allAuthorized
+            || _roleAuthorized[generateRoleId(address(proposal()), uint8(0))][who];
     }
 
     //IRoleAuthorizer

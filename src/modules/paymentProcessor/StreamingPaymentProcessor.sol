@@ -207,7 +207,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @inheritdoc IStreamingPaymentProcessor
     function removeAllPaymentReceiverPayments(
         IPaymentClient client,
-        address contributor
+        address paymentReceiver
     ) external onlyProposalOwner {
         if (
             _findAddressInActiveVestings(address(client), paymentReceiver)

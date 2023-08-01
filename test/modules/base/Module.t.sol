@@ -145,4 +145,25 @@ contract ModuleTest is Test {
             CONFIGDATA
         );
     }
+
+    //--------------------------------------------------------------------------
+    // Access control tests
+    // TODO: write tests for the modifiers
+
+    /* //note: if someone has a better idea to test this, it would be most welcome
+    function testOnlyRole(bool authorized) public {
+        if (!authorized) {
+            authorizer.setIsAuthorized(address(this), false);
+            //onlyBountyAdmin
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector //,
+                        //IBountyManager.Roles.BountyAdmin,
+                        //address(bountyManager)
+                )
+            );
+        }
+        bountyManager.addBounty(1, 2, bytes(""));
+    }
+    */
 }

@@ -91,23 +91,6 @@ contract BountyManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Modifier
 
-    //@todo Reminder that this will be moved into the ModuleTest Contract at a later point of time
-    //note: if someone has a better idea to test this, it would be most welcome
-    function testOnlyRole(bool authorized) public {
-        if (!authorized) {
-            _authorizer.setIsAuthorized(address(this), false);
-            //onlyBountyAdmin
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector //,
-                        //IBountyManager.Roles.BountyAdmin,
-                        //address(bountyManager)
-                )
-            );
-        }
-        bountyManager.addBounty(1, 2, bytes(""));
-    }
-
     function testOnlyClaimContributor(
         address[] memory addrs,
         uint[] memory amounts,
