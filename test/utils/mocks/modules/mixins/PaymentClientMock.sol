@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 // SuT
 import {
-    ERC20PaymentClient,
-    IERC20PaymentClient
-} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+    PaymentClient,
+    IPaymentClient
+} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Interfaces
 import {IPaymentProcessor} from
@@ -14,7 +14,7 @@ import {IPaymentProcessor} from
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract ERC20PaymentClientMock is ERC20PaymentClient {
+contract PaymentClientMock is PaymentClient {
     ERC20Mock token;
 
     mapping(address => bool) authorized;
@@ -31,7 +31,7 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
     }
 
     //--------------------------------------------------------------------------
-    // IERC20PaymentClient Wrapper Functions
+    // IPaymentClient Wrapper Functions
 
     function addPaymentOrder(PaymentOrder memory order) external {
         _addPaymentOrder(order);
@@ -57,11 +57,11 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
     }
 
     //--------------------------------------------------------------------------
-    // IERC20PaymentClient Overriden Functions
+    // IPaymentClient Overriden Functions
 
     function _ensureTokenBalance(uint amount)
         internal
-        override(ERC20PaymentClient)
+        override(PaymentClient)
     {
         if (token.balanceOf(address(this)) >= amount) {
             return;
@@ -73,7 +73,7 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override(ERC20PaymentClient)
+        override(PaymentClient)
     {
         token.approve(address(spender), amount);
     }
@@ -81,7 +81,7 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor)
         internal
         view
-        override(ERC20PaymentClient)
+        override(PaymentClient)
         returns (bool)
     {
         return authorized[_msgSender()];

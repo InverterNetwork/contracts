@@ -18,7 +18,7 @@ import {RebasingFundingManager} from
 import {
     RecurringPaymentManager,
     IRecurringPaymentManager,
-    IERC20PaymentClient
+    IPaymentClient
 } from "src/modules/logicModule/RecurringPaymentManager.sol";
 
 import {StreamingPaymentProcessor} from
@@ -26,7 +26,7 @@ import {StreamingPaymentProcessor} from
 
 import {
     IStreamingPaymentProcessor,
-    IERC20PaymentClient
+    IPaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
 // Mocks

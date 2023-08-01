@@ -10,7 +10,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
 
-import {ERC20PaymentClient} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
@@ -18,9 +18,9 @@ import {IRecurringPaymentManager} from
     "src/modules/logicModule/IRecurringPaymentManager.sol";
 
 import {
-    IERC20PaymentClient,
+    IPaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
@@ -28,7 +28,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
 contract RecurringPaymentManager is
     IRecurringPaymentManager,
     Module,
-    ERC20PaymentClient
+    PaymentClient
 {
     using SafeERC20 for IERC20;
     using LinkedIdList for LinkedIdList.List;
@@ -355,17 +355,17 @@ contract RecurringPaymentManager is
 
         //when done process the Payments correctly
         __Module_proposal.paymentProcessor().processPayments(
-            IERC20PaymentClient(address(this))
+            IPaymentClient(address(this))
         );
 
         emit RecurringPaymentsTriggered(currentEpoch);
     }
     //--------------------------------------------------------------------------
-    // {ERC20PaymentClient} Function Implementations
+    // {PaymentClient} Function Implementations
 
     function _ensureTokenBalance(uint amount)
         internal
-        override(ERC20PaymentClient)
+        override(PaymentClient)
     {
         uint balance = __Module_proposal.token().balanceOf(address(this));
 
@@ -383,14 +383,14 @@ contract RecurringPaymentManager is
             );
 
             if (!ok) {
-                revert Module__ERC20PaymentClient__TokenTransferFailed();
+                revert Module__PaymentClient__TokenTransferFailed();
             }
         }
     }
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override(ERC20PaymentClient)
+        override(PaymentClient)
     {
         IERC20 token = __Module_proposal.token();
         uint allowance = token.allowance(address(this), address(spender));
@@ -403,7 +403,7 @@ contract RecurringPaymentManager is
     function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
         view
-        override(ERC20PaymentClient)
+        override(PaymentClient)
         returns (bool)
     {
         return __Module_proposal.paymentProcessor() == who;

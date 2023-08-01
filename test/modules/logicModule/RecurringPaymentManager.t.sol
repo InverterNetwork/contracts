@@ -16,7 +16,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     RecurringPaymentManager,
     IRecurringPaymentManager,
-    IERC20PaymentClient
+    IPaymentClient
 } from "src/modules/logicModule/RecurringPaymentManager.sol";
 
 contract RecurringPaymentManagerTest is ModuleTest {
@@ -259,7 +259,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //validAmount
         vm.expectRevert(
-            IERC20PaymentClient.Module__ERC20PaymentClient__InvalidAmount.selector
+            IPaymentClient.Module__PaymentClient__InvalidAmount.selector
         );
         recurringPaymentManager.addRecurringPayment(0, 2 weeks, address(0xBEEF));
 
@@ -275,7 +275,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         //validRecipient
 
         vm.expectRevert(
-            IERC20PaymentClient.Module__ERC20PaymentClient__InvalidRecipient.selector
+            IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
         );
         recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0));
     }
@@ -399,7 +399,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //remove tokens and orders from recurringPaymentManager for easier testing
         _paymentProcessor.deleteAllPayments(
-            IERC20PaymentClient(address(recurringPaymentManager))
+            IPaymentClient(address(recurringPaymentManager))
         );
         _token.burn(
             address(recurringPaymentManager),
@@ -435,7 +435,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
             //remove tokens and orders from recurringPaymentManager for easier testing
             _paymentProcessor.deleteAllPayments(
-                IERC20PaymentClient(address(recurringPaymentManager))
+                IPaymentClient(address(recurringPaymentManager))
             );
             _token.burn(
                 address(recurringPaymentManager),
@@ -657,7 +657,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
     ) internal {
         uint length = recurringPaymentsToBeChecked.length;
 
-        IERC20PaymentClient.PaymentOrder[] memory orders =
+        IPaymentClient.PaymentOrder[] memory orders =
             recurringPaymentManager.paymentOrders();
 
         assertEq(length, currentRecurringPayments.length);
@@ -731,7 +731,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
     }
 
     function assertOrder(
-        IERC20PaymentClient.PaymentOrder memory order,
+        IPaymentClient.PaymentOrder memory order,
         address recipient,
         uint amount,
         uint createdAt,

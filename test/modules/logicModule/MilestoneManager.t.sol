@@ -14,7 +14,7 @@ import {
     IMilestoneManager
 } from "src/modules/logicModule/MilestoneManager.sol";
 
-import {IERC20PaymentClient} from "src/modules/base/mixins/IERC20PaymentClient.sol";
+import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -905,7 +905,7 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         // Check that payment orders were added correctly.
-        IERC20PaymentClient.PaymentOrder[] memory orders =
+        IPaymentClient.PaymentOrder[] memory orders =
             milestoneManager.paymentOrders();
 
         assertEq(orders.length, contributors.length);
@@ -984,7 +984,7 @@ contract MilestoneManagerTest is ModuleTest {
         vm.warp(block.timestamp + TIMELOCK + 1);
 
         vm.expectRevert(
-            IERC20PaymentClient.Module__ERC20PaymentClient__TokenTransferFailed.selector
+            IPaymentClient.Module__PaymentClient__TokenTransferFailed.selector
         );
         milestoneManager.startNextMilestone();
     }
@@ -1847,7 +1847,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         //Make sure the values in the payment orders are the same
         // Check that payment orders were added correctly.
-        IERC20PaymentClient.PaymentOrder[] memory orders =
+        IPaymentClient.PaymentOrder[] memory orders =
             milestoneManager.paymentOrders();
 
         for (uint i = 1; i < orders.length; ++i) {
@@ -1895,7 +1895,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         //Make sure the values in the payment orders are the same
         // Check that payment orders were added correctly.
-        IERC20PaymentClient.PaymentOrder[] memory orders =
+        IPaymentClient.PaymentOrder[] memory orders =
             milestoneManager.paymentOrders();
 
         for (uint i = 1; i < orders.length; ++i) {

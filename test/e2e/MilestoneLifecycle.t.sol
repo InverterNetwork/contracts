@@ -16,7 +16,7 @@ import {RebasingFundingManager} from
 
 import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
-import {IERC20PaymentClient} from "src/modules/base/mixins/IERC20PaymentClient.sol";
+import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

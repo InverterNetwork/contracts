@@ -6,19 +6,19 @@ import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // Internal Dependencies
 import {
-    IERC20PaymentClient,
+    IPaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/IERC20PaymentClient.sol";
+} from "src/modules/base/mixins/IPaymentClient.sol";
 
 /**
- * @title ERC20PaymentClient
+ * @title PaymentClient
  *
- * @dev The ERC20PaymentClient mixin enables modules to create payment orders that
+ * @dev The PaymentClient mixin enables modules to create payment orders that
  *      are processable by a proposal's {IPaymentProcessor} module.
  *
  * @author Inverter Network
  */
-abstract contract ERC20PaymentClient is IERC20PaymentClient, ContextUpgradeable {
+abstract contract PaymentClient is IPaymentClient, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -122,9 +122,9 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, ContextUpgradeable 
     }
 
     //--------------------------------------------------------------------------
-    // IERC20PaymentClient Functions
+    // IPaymentClient Functions
 
-    /// @inheritdoc IERC20PaymentClient
+    /// @inheritdoc IPaymentClient
     function collectPaymentOrders()
         external
         virtual
@@ -133,7 +133,7 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, ContextUpgradeable 
         // Ensure caller is authorized to act as payment processor.
         // Note that function is implemented in downstream contract.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(_msgSender()))) {
-            revert Module__ERC20PaymentClient__CallerNotAuthorized();
+            revert Module__PaymentClient__CallerNotAuthorized();
         }
 
         // Ensure payment processor is able to fetch the tokens from
@@ -169,7 +169,7 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, ContextUpgradeable 
         return (copy, outstandingTokenAmountCache);
     }
 
-    /// @inheritdoc IERC20PaymentClient
+    /// @inheritdoc IPaymentClient
     function paymentOrders()
         external
         view
@@ -179,7 +179,7 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, ContextUpgradeable 
         return _orders;
     }
 
-    /// @inheritdoc IERC20PaymentClient
+    /// @inheritdoc IPaymentClient
     function outstandingTokenAmount() external view virtual returns (uint) {
         return _outstandingTokenAmount;
     }
@@ -189,20 +189,20 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, ContextUpgradeable 
 
     function _ensureValidRecipient(address recipient) private view {
         if (recipient == address(0) || recipient == address(this)) {
-            revert Module__ERC20PaymentClient__InvalidRecipient();
+            revert Module__PaymentClient__InvalidRecipient();
         }
     }
 
     function _ensureValidAmount(uint amount) private pure {
-        if (amount == 0) revert Module__ERC20PaymentClient__InvalidAmount();
+        if (amount == 0) revert Module__PaymentClient__InvalidAmount();
     }
 
     function _ensureValidPaymentOrder(PaymentOrder memory order) private view {
         if (order.amount == 0) {
-            revert Module__ERC20PaymentClient__InvalidAmount();
+            revert Module__PaymentClient__InvalidAmount();
         }
         if (order.recipient == address(0) || order.recipient == address(this)) {
-            revert Module__ERC20PaymentClient__InvalidRecipient();
+            revert Module__PaymentClient__InvalidRecipient();
         }
     }
 }

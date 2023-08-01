@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
-interface IERC20PaymentClient {
+interface IPaymentClient {
     struct PaymentOrder {
         /// @dev The recipient of the payment.
         address recipient;
@@ -21,22 +21,22 @@ interface IERC20PaymentClient {
     // Errors
 
     /// @notice Function is only callable by authorized address.
-    error Module__ERC20PaymentClient__CallerNotAuthorized();
+    error Module__PaymentClient__CallerNotAuthorized();
 
     /// @notice ERC20 token transfer failed.
-    error Module__ERC20PaymentClient__TokenTransferFailed();
+    error Module__PaymentClient__TokenTransferFailed();
 
     /// @notice Given recipient invalid.
-    error Module__ERC20PaymentClient__InvalidRecipient();
+    error Module__PaymentClient__InvalidRecipient();
 
     /// @notice Given amount invalid.
-    error Module__ERC20PaymentClient__InvalidAmount();
+    error Module__PaymentClient__InvalidAmount();
 
     /// @notice Given dueTo invalid.
-    error Module__ERC20PaymentClient__InvalidDueTo();
+    error Module__PaymentClient__InvalidDueTo();
 
     /// @notice Given arrays' length mismatch.
-    error Module__ERC20PaymentClient__ArrayLengthMismatch();
+    error Module__PaymentClient__ArrayLengthMismatch();
 
     //--------------------------------------------------------------------------
     // Events
