@@ -33,11 +33,11 @@ import {
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract RecurringPayments is E2eTest {
-    // Let's create a list of contributors
-    address contributor1 = makeAddr("contributor 1");
-    address contributor2 = makeAddr("contributor 2");
-    address contributor3 = makeAddr("contributor 3");
-    address contributor4 = makeAddr("contributor 4");
+    // Let's create a list of paymentReceivers
+    address paymentReceiver1 = makeAddr("paymentReceiver 1");
+    address paymentReceiver2 = makeAddr("paymentReceiver 2");
+    address paymentReceiver3 = makeAddr("paymentReceiver 3");
+    address paymentReceiver4 = makeAddr("paymentReceiver 4");
 
     // Parameters for recurring payments
     uint startEpoch;
@@ -49,8 +49,8 @@ contract RecurringPayments is E2eTest {
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
-    uint contributor1InitialBalance;
-    uint contributor2InitialBalance;
+    uint paymentReceiver1InitialBalance;
+    uint paymentReceiver2InitialBalance;
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {
         paymentAmount = bound(paymentAmount, 1, 1e18);
@@ -96,18 +96,18 @@ contract RecurringPayments is E2eTest {
         // 2. create recurringPayments: 2 for alice, 1 for bob
         startEpoch = recurringPaymentManager.getCurrentEpoch();
 
-        contributor1InitialBalance = token.balanceOf(contributor1);
-        contributor2InitialBalance = token.balanceOf(contributor2);
+        paymentReceiver1InitialBalance = token.balanceOf(paymentReceiver1);
+        paymentReceiver2InitialBalance = token.balanceOf(paymentReceiver2);
 
         // paymentAmount => amount that has to be paid out each epoch
         recurringPaymentManager.addRecurringPayment(
-            paymentAmount, startEpoch + 1, contributor1
+            paymentAmount, startEpoch + 1, paymentReceiver1
         );
         recurringPaymentManager.addRecurringPayment(
-            paymentAmount, startEpoch + 1, contributor2
+            paymentAmount, startEpoch + 1, paymentReceiver2
         );
         recurringPaymentManager.addRecurringPayment(
-            (paymentAmount * 2), startEpoch + 1, contributor2
+            (paymentAmount * 2), startEpoch + 1, paymentReceiver2
         );
 
         // 3. warp forward, they both withdraw
@@ -123,12 +123,12 @@ contract RecurringPayments is E2eTest {
                 + (recurringPaymentManager.getFutureEpoch(1) * epochLength)
         );
 
-        // 4. Let the contributors claim their vested tokens
+        // 4. Let the paymentReceivers claim their vested tokens
         /// Let's first find the address of the streamingPaymentProcessor
         StreamingPaymentProcessor streamingPaymentProcessor;
         for (uint i; i < modulesList.length; ++i) {
             try IStreamingPaymentProcessor(modulesList[i]).unclaimable(
-                contributor1, contributor2
+                paymentReceiver1, paymentReceiver2
             ) returns (uint) {
                 streamingPaymentProcessor =
                     StreamingPaymentProcessor(modulesList[i]);
@@ -141,42 +141,42 @@ contract RecurringPayments is E2eTest {
         // Checking whether we got the right address for streamingPaymentProcessor
         IStreamingPaymentProcessor.VestingWallet[] memory wallets =
         streamingPaymentProcessor.viewAllPaymentOrders(
-            address(recurringPaymentManager), contributor1
+            address(recurringPaymentManager), paymentReceiver1
         );
         //One Paymentorder for the current epoch and one for all past payment orders -> 2 orders
         assertEq(wallets.length, 2);
         wallets = streamingPaymentProcessor.viewAllPaymentOrders(
-            address(recurringPaymentManager), contributor2
+            address(recurringPaymentManager), paymentReceiver2
         );
         assertEq(wallets.length, 4);
 
-        vm.prank(contributor2);
+        vm.prank(paymentReceiver2);
         streamingPaymentProcessor.claimAll(recurringPaymentManager);
 
-        vm.prank(contributor1);
+        vm.prank(paymentReceiver1);
         streamingPaymentProcessor.claimAll(recurringPaymentManager);
 
-        // Contributor2 should have got payments from both of their payment orders
-        // Contributor1 should have got payment from one of their payment order
+        // PaymentReceiver2 should have got payments from both of their payment orders
+        // PaymentReceiver1 should have got payment from one of their payment order
         assertEq(
-            (token.balanceOf(contributor1) - contributor1InitialBalance),
+            (token.balanceOf(paymentReceiver1) - paymentReceiver1InitialBalance),
             (paymentAmount * epochsAmount)
         );
         assertEq(
-            (token.balanceOf(contributor2) - contributor2InitialBalance),
+            (token.balanceOf(paymentReceiver2) - paymentReceiver2InitialBalance),
             ((paymentAmount * 2 + paymentAmount) * epochsAmount)
         );
 
-        // Now since the entire vested amount was claimed by the contributors, their payment orders should no longer exist.
+        // Now since the entire vested amount was claimed by the paymentReceivers, their payment orders should no longer exist.
         // Let's check that
         assertTrue(
-            !streamingPaymentProcessor.isActiveContributor(
-                address(recurringPaymentManager), contributor1
+            !streamingPaymentProcessor.isActivePaymentReceiver(
+                address(recurringPaymentManager), paymentReceiver1
             )
         );
         assertTrue(
-            !streamingPaymentProcessor.isActiveContributor(
-                address(recurringPaymentManager), contributor2
+            !streamingPaymentProcessor.isActivePaymentReceiver(
+                address(recurringPaymentManager), paymentReceiver2
             )
         );
     }
