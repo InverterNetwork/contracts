@@ -13,10 +13,10 @@ import {
 import {Clones} from "@oz/proxy/Clones.sol";
 
 // Internal Dependencies
-import {Proposal} from "src/proposal/Proposal.sol";
+import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
 // Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 // Mocks
@@ -34,15 +34,15 @@ contract SingleVoteGovernorTest is Test {
     // SuT
     SingleVoteGovernor _authorizer;
 
-    Proposal _proposal;
+    Orchestrator _orchestrator;
     address[] initialVoters;
     address[] currentVoters;
 
     // Constants and other data structures
     uint internal constant DEFAULT_QUORUM = 2;
     uint internal constant DEFAULT_DURATION = 4 days;
-    // For the proposal
-    uint internal constant _PROPOSAL_ID = 1;
+    // For the orchestrator
+    uint internal constant _ORCHESTRATOR_ID = 1;
     // For the metadata
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 1;
@@ -65,18 +65,18 @@ contract SingleVoteGovernorTest is Test {
     ISingleVoteGovernor.Motion _bufMotion;
 
     function setUp() public {
-        // Set up a proposal
+        // Set up a orchestrator
         address authImpl = address(new SingleVoteGovernor());
         _authorizer = SingleVoteGovernor(Clones.clone(authImpl));
 
-        address impl = address(new Proposal());
-        _proposal = Proposal(Clones.clone(impl));
+        address impl = address(new Orchestrator());
+        _orchestrator = Orchestrator(Clones.clone(impl));
 
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        _proposal.init(
-            _PROPOSAL_ID,
+        _orchestrator.init(
+            _ORCHESTRATOR_ID,
             address(this),
             _token,
             modules,
@@ -96,13 +96,13 @@ contract SingleVoteGovernorTest is Test {
         uint _startingDuration = DEFAULT_DURATION;
 
         _authorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(initialVoters, _startingThreshold, _startingDuration)
         );
 
-        assertEq(address(_authorizer.proposal()), address(_proposal));
-        assertEq(_proposal.isModule(address(_authorizer)), true);
+        assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
+        assertEq(_orchestrator.isModule(address(_authorizer)), true);
 
         assertEq(_authorizer.isAuthorized(address(_authorizer)), true);
         assertEq(_authorizer.isVoter(ALBA), true);
@@ -115,9 +115,9 @@ contract SingleVoteGovernorTest is Test {
 
         // The deployer may be owner, but not authorized by default
         assertEq(_authorizer.isAuthorized(address(this)), false);
-        assertEq(_authorizer.isAuthorized(address(_proposal)), false);
+        assertEq(_authorizer.isAuthorized(address(_orchestrator)), false);
         assertEq(_authorizer.isVoter(address(this)), false);
-        assertEq(_authorizer.isVoter(address(_proposal)), false);
+        assertEq(_authorizer.isVoter(address(_orchestrator)), false);
 
         assertEq(_authorizer.voterCount(), 3);
     }
@@ -259,7 +259,7 @@ contract SingleVoteGovernorTest is Test {
 
     function testInitWithInitialVoters(address[] memory testVoters) public {
         //Checks that address list gets correctly stored on initialization
-        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+        // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         vm.assume(testVoters.length >= 2);
         _validateUserList(testVoters);
@@ -275,12 +275,12 @@ contract SingleVoteGovernorTest is Test {
         }
 
         testAuthorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
-        assertEq(address(testAuthorizer.proposal()), address(_proposal));
+        assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
         for (uint i; i < testVoters.length; ++i) {
             assertEq(testAuthorizer.isVoter(testVoters[i]), true);
@@ -294,7 +294,7 @@ contract SingleVoteGovernorTest is Test {
         uint8 position
     ) public {
         //Checks that address list gets correctly stored on initialization
-        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+        // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         vm.assume(testVoters.length >= 2);
         position = uint8(bound(position, 1, testVoters.length - 1));
@@ -321,22 +321,23 @@ contract SingleVoteGovernorTest is Test {
             )
         );
         testAuthorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
     }
 
     function testReinitFails() public {
-        //Create a mock new proposal
-        Proposal newProposal = Proposal(Clones.clone(address(new Proposal())));
+        //Create a mock new orchestrator
+        Orchestrator newOrchestrator =
+            Orchestrator(Clones.clone(address(new Orchestrator())));
 
         address[] memory testVoters = new address[](1);
         testVoters[0] = address(this);
 
         vm.expectRevert();
         _authorizer.init(
-            IProposal(newProposal),
+            IOrchestrator(newOrchestrator),
             _METADATA,
             abi.encode(
                 testVoters,
@@ -355,7 +356,7 @@ contract SingleVoteGovernorTest is Test {
     }
 
     function testInitWithInvalidInitialVotersFails() public {
-        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+        // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         address authImpl = address(new SingleVoteGovernor());
         SingleVoteGovernor testAuthorizer =
@@ -370,7 +371,7 @@ contract SingleVoteGovernorTest is Test {
             )
         );
         testAuthorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -386,7 +387,7 @@ contract SingleVoteGovernorTest is Test {
             )
         );
         testAuthorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -400,12 +401,12 @@ contract SingleVoteGovernorTest is Test {
             )
         );
         testAuthorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
-        testVoters[0] = address(_proposal);
+        testVoters[0] = address(_orchestrator);
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
@@ -414,12 +415,12 @@ contract SingleVoteGovernorTest is Test {
             )
         );
         testAuthorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
-        assertEq(address(testAuthorizer.proposal()), address(0));
+        assertEq(address(testAuthorizer.orchestrator()), address(0));
         assertEq(testAuthorizer.voterCount(), 0);
     }
 
@@ -429,7 +430,7 @@ contract SingleVoteGovernorTest is Test {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        _authorizer.init2(_proposal, abi.encode(123));
+        _authorizer.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
@@ -437,17 +438,17 @@ contract SingleVoteGovernorTest is Test {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        _authorizer.init2(_proposal, dependencydata);
+        _authorizer.init2(_orchestrator, dependencydata);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
         dependencydata = abi.encode(true, dependencies);
-        _authorizer.init2(_proposal, dependencydata);
+        _authorizer.init2(_orchestrator, dependencydata);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        _authorizer.init2(_proposal, dependencydata);
+        _authorizer.init2(_orchestrator, dependencydata);
     }
 
     //--------------------------------------------------------------------------
@@ -977,9 +978,11 @@ contract SingleVoteGovernorTest is Test {
     function testOnlyGovernanceIsAuthorized(address _other) public {
         vm.assume(_other != address(_authorizer));
 
-        vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);
+        vm.expectRevert(
+            IOrchestrator.Orchestrator__CallerNotAuthorized.selector
+        );
         vm.prank(_other);
-        _proposal.executeTx(address(0), "");
+        _orchestrator.executeTx(address(0), "");
     }
 
     //--------------------------------------------------------------------------
@@ -1033,7 +1036,7 @@ contract SingleVoteGovernorTest is Test {
 
     // Fail to remove Authorized addresses until threshold is unreachble
     function testRemoveTooManyVoters() public {
-        assertEq(address(_proposal), address(_authorizer.proposal()));
+        assertEq(address(_orchestrator), address(_authorizer.orchestrator()));
 
         vm.startPrank(address(_authorizer));
         _authorizer.removeVoter(COBIE);
@@ -1051,7 +1054,7 @@ contract SingleVoteGovernorTest is Test {
 
     // Fail to remove Authorized addresses until the voterlist is empty
     function testRemoveUntilVoterListEmpty() public {
-        assertEq(address(_proposal), address(_authorizer.proposal()));
+        assertEq(address(_orchestrator), address(_authorizer.orchestrator()));
 
         vm.startPrank(address(_authorizer));
         _authorizer.setThreshold(0);
@@ -1107,7 +1110,7 @@ contract SingleVoteGovernorTest is Test {
         uint _newQ = 1;
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-            vm.prank(users[i]); //authorized, but not Proposal
+            vm.prank(users[i]); //authorized, but not Orchestrator
             _authorizer.setThreshold(_newQ);
         }
     }
@@ -1126,7 +1129,7 @@ contract SingleVoteGovernorTest is Test {
         // 2) The vote gets executed by anybody
         _authorizer.executeMotion(_voteID);
 
-        // 3) The proposal state has changed
+        // 3) The orchestrator state has changed
         assertEq(_authorizer.threshold(), _newThreshold);
     }
 
@@ -1194,7 +1197,7 @@ contract SingleVoteGovernorTest is Test {
         uint _newDuration = 5 days;
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-            vm.prank(users[i]); //authorized, but not Proposal
+            vm.prank(users[i]); //authorized, but not Orchestrator
             _authorizer.setVotingDuration(_newDuration);
         }
     }
@@ -1212,7 +1215,7 @@ contract SingleVoteGovernorTest is Test {
 
         return contribs;
     }
-    // Adapted from proposal/helper/TypeSanityHelper.sol
+    // Adapted from orchestrator/helper/TypeSanityHelper.sol
 
     mapping(address => bool) userCache;
 
@@ -1240,7 +1243,7 @@ contract SingleVoteGovernorTest is Test {
         address[] memory invalids = new address[](10);
 
         invalids[0] = address(0);
-        invalids[1] = address(_proposal);
+        invalids[1] = address(_orchestrator);
         invalids[2] = address(_authorizer);
         invalids[3] = address(_paymentProcessor);
         invalids[4] = address(_token);

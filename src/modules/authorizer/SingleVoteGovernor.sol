@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import {Module, IModule} from "src/modules/base/Module.sol";
 
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 import {
     ISingleVoteGovernor,
@@ -31,7 +31,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     modifier isValidVoterAddress(address voter) {
         if (
             voter == address(0) || voter == address(this)
-                || voter == address(proposal())
+                || voter == address(orchestrator())
         ) {
             revert Module__SingleVoteGovernor__InvalidVoterAddress();
         }
@@ -73,11 +73,11 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configdata
     ) external override initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
 
         // Decode configdata to list of voters, the required threshold, and the
         // voting duration.
@@ -115,7 +115,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
             if (
                 voter == address(0) || voter == address(this)
-                    || voter == address(proposal())
+                    || voter == address(orchestrator())
             ) {
                 revert Module__SingleVoteGovernor__InvalidVoterAddress();
             }
@@ -176,7 +176,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             revert Module__SingleVoteGovernor__UnreachableThreshold();
         }
 
-        // Note that a threshold of zero is valid because a proposal can only be
+        // Note that a threshold of zero is valid because a orchestrator can only be
         // created by a voter anyway.
 
         emit ThresholdUpdated(threshold, newThreshold);

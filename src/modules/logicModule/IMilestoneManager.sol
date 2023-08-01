@@ -274,7 +274,7 @@ interface IMilestoneManager is IERC20PaymentClient {
 
     /// @notice Starts the next milestones.
     /// @dev Creates the payment orders to pay contributors.
-    /// @dev Reverts if next milestone not activatable or proposal's contributor
+    /// @dev Reverts if next milestone not activatable or orchestrator's contributor
     ///      list empty.
     /// @dev Only callable by authorized addresses.
     function startNextMilestone() external;
@@ -311,7 +311,7 @@ interface IMilestoneManager is IERC20PaymentClient {
     /// @dev Only callable by addresses holding the contributor role.
     /// @dev Reverts if id invalid, milestone not yet started, or milestone
     ///      already completed.
-    /// @dev Relay function that routes the function call via the proposal.
+    /// @dev Relay function that routes the function call via the orchestrator.
     /// @param id The milestone's id.
     function submitMilestone(uint id, bytes calldata submissionData) external;
 

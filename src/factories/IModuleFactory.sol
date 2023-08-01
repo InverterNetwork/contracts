@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
 // Internal Interfaces
-import {IModule, IProposal} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
 interface IModuleFactory {
     //--------------------------------------------------------------------------
@@ -31,9 +31,9 @@ interface IModuleFactory {
         IModule.Metadata indexed metadata, IBeacon indexed beacon
     );
 
-    /// @notice Event emitted when new module created for a proposal.
+    /// @notice Event emitted when new module created for a orchestrator.
     event ModuleCreated(
-        address indexed proposal, address indexed module, string moduleTitle
+        address indexed orchestrator, address indexed module, string moduleTitle
     );
 
     //--------------------------------------------------------------------------
@@ -41,11 +41,11 @@ interface IModuleFactory {
 
     /// @notice Creates a module instance identified by given metadata.
     /// @param metadata The module's metadata.
-    /// @param proposal The proposal's instance of the module.
+    /// @param orchestrator The orchestrator's instance of the module.
     /// @param configdata The configdata of the module
     function createModule(
         IModule.Metadata memory metadata,
-        IProposal proposal,
+        IOrchestrator orchestrator,
         bytes memory configdata
     ) external returns (address);
 

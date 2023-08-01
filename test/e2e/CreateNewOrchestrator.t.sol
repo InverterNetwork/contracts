@@ -38,18 +38,18 @@ import {IModule} from "src/modules/base/IModule.sol";
 //Module Factory
 import {IModuleFactory, ModuleFactory} from "src/factories/ModuleFactory.sol";
 
-//Proposal Factory
+//Orchestrator Factory
 import {
-    IProposalFactory,
-    ProposalFactory
-} from "src/factories/ProposalFactory.sol";
+    IOrchestratorFactory,
+    OrchestratorFactory
+} from "src/factories/OrchestratorFactory.sol";
 
 //Token import
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-//Proposal
-import {IProposal, Proposal} from "src/proposal/Proposal.sol";
+//Orchestrator
+import {IOrchestrator, Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
 //Base Modules
 import {IPaymentProcessor} from
@@ -58,9 +58,9 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
 /**
- * e2e PoC test to show how to create a new proposal via the {ProposalFactory}.
+ * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory}.
  */
-contract ProposalCreation is Test {
+contract OrchestratorCreation is Test {
     //Module Templates
     IFundingManager fundingManagerTemplate; //This is just the template thats referenced in the Factory later
     IRoleAuthorizer authorizerTemplate; //Just a template
@@ -82,29 +82,29 @@ contract ProposalCreation is Test {
     IModule.Metadata milestoneManagerMetadata;
     IModule.Metadata metadataManagerMetadata;
 
-    //Proposal Metadata
+    //Orchestrator Metadata
     IMetadataManager.ManagerMetadata ownerMetadata;
-    IMetadataManager.ProposalMetadata proposalMetadata;
+    IMetadataManager.OrchestratorMetadata orchestratorMetadata;
     IMetadataManager.MemberMetadata[] teamMetadata;
 
     //Module Factory
     IModuleFactory moduleFactory;
 
-    //Proposal Template
-    IProposal proposalTemplate; //Just a template
+    //Orchestrator Template
+    IOrchestrator orchestratorTemplate; //Just a template
 
-    //Proposal Factory
-    IProposalFactory proposalFactory;
+    //Orchestrator Factory
+    IOrchestratorFactory orchestratorFactory;
 
-    // This function sets up all necessary components needed for the creation of a proposal.
+    // This function sets up all necessary components needed for the creation of a orchestrator.
     // Components are:
-    // -Authorizer: A Module that declares who can access the main functionalities of the proposal
+    // -Authorizer: A Module that declares who can access the main functionalities of the orchestrator
     // -SimplePaymentProcessor: A Module that enables Token distribution
     // -MilestoneManager: A Module that enables Declaration of Milestones and upon fullfillment, uses the Payment Processor for salary distributions
-    // -MetadataManager: A Module contains metadata for the proposal
+    // -MetadataManager: A Module contains metadata for the orchestrator
     // -Beacons: A Proxy Contract structure that enables to update all proxy contracts at the same time (EIP-1967)
     // -ModuleFactory: A factory that creates Modules. Modules have to be registered with Metadata and the intended beacon, which contains the module template, for it to be used
-    // -ProposalFactory: A Factory that creates Proposals. Needs to have a Proposal Template and a module factory as a reference.
+    // -OrchestratorFactory: A Factory that creates Orchestrators. Needs to have a Orchestrator Template and a module factory as a reference.
 
     function setUp() public {
         //==========================================
@@ -185,13 +185,13 @@ contract ProposalCreation is Test {
         );
 
         //==========================================
-        //Set up Proposal Metadata
+        //Set up Orchestrator Metadata
 
         ownerMetadata = IMetadataManager.ManagerMetadata(
             "Name", address(0xBEEF), "TwitterHandle"
         );
 
-        proposalMetadata = IMetadataManager.ProposalMetadata(
+        orchestratorMetadata = IMetadataManager.OrchestratorMetadata(
             "Title",
             "DescriptionShort",
             "DescriptionLong",
@@ -199,13 +199,13 @@ contract ProposalCreation is Test {
             new string[](0)
         );
 
-        proposalMetadata.externalMedias.push("externalMedia1");
-        proposalMetadata.externalMedias.push("externalMedia2");
-        proposalMetadata.externalMedias.push("externalMedia3");
+        orchestratorMetadata.externalMedias.push("externalMedia1");
+        orchestratorMetadata.externalMedias.push("externalMedia2");
+        orchestratorMetadata.externalMedias.push("externalMedia3");
 
-        proposalMetadata.categories.push("category1");
-        proposalMetadata.categories.push("category2");
-        proposalMetadata.categories.push("category3");
+        orchestratorMetadata.categories.push("category1");
+        orchestratorMetadata.categories.push("category2");
+        orchestratorMetadata.categories.push("category3");
 
         teamMetadata.push(
             IMetadataManager.MemberMetadata(
@@ -214,35 +214,35 @@ contract ProposalCreation is Test {
         );
 
         //==========================================
-        //Set up Proposal Factory
+        //Set up Orchestrator Factory
 
-        //Create proposal template
-        proposalTemplate = new Proposal();
+        //Create orchestrator template
+        orchestratorTemplate = new Orchestrator();
 
-        //Create ProposalFactory
-        proposalFactory = new ProposalFactory(
-            address(proposalTemplate),
+        //Create OrchestratorFactory
+        orchestratorFactory = new OrchestratorFactory(
+            address(orchestratorTemplate),
             address(moduleFactory)
         );
     }
 
-    // This function creates a new Proposal
-    // For this we create a few config files, that we'll later use in the Proposalfactory:
-    // -proposalFactoryConfig: Contains the owner and paymentToken address
-    // -authorizerFactoryConfig: Contains initially Authorized Addresses, that can use onlyAuthorized functions in the proposal
+    // This function creates a new Orchestrator
+    // For this we create a few config files, that we'll later use in the Orchestratorfactory:
+    // -orchestratorFactoryConfig: Contains the owner and paymentToken address
+    // -authorizerFactoryConfig: Contains initially Authorized Addresses, that can use onlyAuthorized functions in the orchestrator
     //                           Notice that we have to decrypt the initialAuthorizedAddresses into a bytes format for correct
     //                           creation of the module in the ModuleFactory
     // -paymentProcessorFactoryConfig: Just signals the Factory, that we want to integrate the SimplePaymentProcessor here
     // -optionalModules: This array contains further moduleConfigs in the same styling like before to signal
-    //                   the proposalFactory that we want to integrate the defined modules.
-    function createNewProposal() public returns (IProposal) {
-        //The Token used for Payment processes in the proposal
+    //                   the orchestratorFactory that we want to integrate the defined modules.
+    function createNewOrchestrator() public returns (IOrchestrator) {
+        //The Token used for Payment processes in the orchestrator
         // Could be WEI or USDC or other ERC20.
         IERC20 paymentToken = new ERC20Mock("Mock Token", "MOCK");
 
-        // Create ProposalConfig instance.
-        IProposalFactory.ProposalConfig memory proposalFactoryConfig =
-        IProposalFactory.ProposalConfig({
+        // Create OrchestratorConfig instance.
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorFactoryConfig =
+        IOrchestratorFactory.OrchestratorConfig({
             owner: address(this),
             token: paymentToken
         });
@@ -250,23 +250,23 @@ contract ProposalCreation is Test {
         bool hasDependency;
         string[] memory dependencies = new string[](0);
 
-        IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
-        IProposalFactory.ModuleConfig(
+        IOrchestratorFactory.ModuleConfig memory fundingManagerFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
             fundingManagerMetadata,
             abi.encode(address(paymentToken)),
             abi.encode(hasDependency, dependencies)
         );
 
-        IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
-        IProposalFactory.ModuleConfig(
+        IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
             authorizerMetadata,
             abi.encode(address(this), address(this)),
             abi.encode(hasDependency, dependencies)
         );
 
         //Create ModuleConfig for SimplePaymentProcessor
-        IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-        IProposalFactory.ModuleConfig(
+        IOrchestratorFactory.ModuleConfig memory paymentProcessorFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
             paymentProcessorMetadata,
             bytes(""),
             abi.encode(hasDependency, dependencies)
@@ -277,38 +277,38 @@ contract ProposalCreation is Test {
         //Technically Authorizer and SimplePaymentProcessor are the only necessary Modules, but we'll inlcude the metadata manager as an example
 
         //Note: Its possible to submit a zero size array too
-        IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](1);
+        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory.ModuleConfig[](1);
 
         //Add MetadataManager as a optional Module
-        optionalModules[0] = IProposalFactory.ModuleConfig(
+        optionalModules[0] = IOrchestratorFactory.ModuleConfig(
             metadataManagerMetadata,
-            abi.encode(ownerMetadata, proposalMetadata, teamMetadata),
+            abi.encode(ownerMetadata, orchestratorMetadata, teamMetadata),
             abi.encode(hasDependency, dependencies)
         );
 
-        //Create proposal using the different needed configs
-        IProposal proposal = proposalFactory.createProposal(
-            proposalFactoryConfig,
+        //Create orchestrator using the different needed configs
+        IOrchestrator orchestrator = orchestratorFactory.createOrchestrator(
+            orchestratorFactoryConfig,
             fundingManagerFactoryConfig,
             authorizerFactoryConfig,
             paymentProcessorFactoryConfig,
             optionalModules
         );
 
-        return proposal;
+        return orchestrator;
     }
 
-    //Just a formal test to see the use case of creating a new Proposal
-    function testCreateNewProposal() public {
-        //See createNewProposal()
-        createNewProposal();
+    //Just a formal test to see the use case of creating a new Orchestrator
+    function testCreateNewOrchestrator() public {
+        //See createNewOrchestrator()
+        createNewOrchestrator();
     }
 
-    //We're adding and removing a Module during the lifetime of the proposal
+    //We're adding and removing a Module during the lifetime of the orchestrator
     function testManageModulesLiveOnPorposal() public {
-        //Create Proposal
-        IProposal proposal = createNewProposal();
+        //Create Orchestrator
+        IOrchestrator orchestrator = createNewOrchestrator();
 
         //--------------------------------------------------------------------------------
         // Adding Module
@@ -333,38 +333,40 @@ contract ProposalCreation is Test {
 
         //Create the module via the moduleFactory
         address milestoneManager = moduleFactory.createModule(
-            milestoneManagerMetadata, proposal, milestoneManagerConfigdata
+            milestoneManagerMetadata, orchestrator, milestoneManagerConfigdata
         );
 
-        //Add Module to the proposal
-        proposal.addModule(milestoneManager);
+        //Add Module to the orchestrator
+        orchestrator.addModule(milestoneManager);
 
         //--------------------------------------------------------------------------------
         // Removing Module
-        proposal.removeModule(milestoneManager);
+        orchestrator.removeModule(milestoneManager);
 
         //In case there is a need to replace the  paymentProcessor / fundingManager / authorizer
 
         //Create the modules via the moduleFactory
         address newPaymentProcessor = moduleFactory.createModule(
-            paymentProcessorMetadata, proposal, bytes("")
+            paymentProcessorMetadata, orchestrator, bytes("")
         );
         address newFundingManager = moduleFactory.createModule(
             fundingManagerMetadata,
-            proposal,
-            abi.encode(address(proposal.token()))
+            orchestrator,
+            abi.encode(address(orchestrator.token()))
         );
 
         address[] memory initialAuthorizedAddresses = new address[](1);
         initialAuthorizedAddresses[0] = address(this);
 
         address newAuthorizer = moduleFactory.createModule(
-            authorizerMetadata, proposal, abi.encode(initialAuthorizedAddresses)
+            authorizerMetadata,
+            orchestrator,
+            abi.encode(initialAuthorizedAddresses)
         );
 
         //Replace the old modules with the new ones
-        proposal.setPaymentProcessor(IPaymentProcessor(newPaymentProcessor));
-        proposal.setFundingManager(IFundingManager(newFundingManager));
-        proposal.setAuthorizer(IAuthorizer(newAuthorizer));
+        orchestrator.setPaymentProcessor(IPaymentProcessor(newPaymentProcessor));
+        orchestrator.setFundingManager(IFundingManager(newFundingManager));
+        orchestrator.setAuthorizer(IAuthorizer(newAuthorizer));
     }
 }

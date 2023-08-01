@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {
@@ -35,13 +35,13 @@ contract SimplePaymentProcessorTest is ModuleTest {
         address impl = address(new SimplePaymentProcessor());
         paymentProcessor = SimplePaymentProcessor(Clones.clone(impl));
 
-        _setUpProposal(paymentProcessor);
+        _setUpOrchestrator(paymentProcessor);
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        _proposal.addModule(address(paymentClient));
+        _orchestrator.addModule(address(paymentClient));
 
-        paymentProcessor.init(_proposal, _METADATA, bytes(""));
+        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
 
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
     }
@@ -55,7 +55,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        paymentProcessor.init(_proposal, _METADATA, bytes(""));
+        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testInit2SimplePaymentProcessor() public {
@@ -64,7 +64,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        paymentProcessor.init2(_proposal, abi.encode(123));
+        paymentProcessor.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
@@ -72,17 +72,17 @@ contract SimplePaymentProcessorTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        paymentProcessor.init2(_proposal, dependencydata);
+        paymentProcessor.init2(_orchestrator, dependencydata);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
         dependencydata = abi.encode(true, dependencies);
-        paymentProcessor.init2(_proposal, dependencydata);
+        paymentProcessor.init2(_orchestrator, dependencydata);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        paymentProcessor.init2(_proposal, dependencydata);
+        paymentProcessor.init2(_orchestrator, dependencydata);
     }
 
     //--------------------------------------------------------------------------

@@ -6,14 +6,14 @@ import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
 import {IMetadataManager} from "src/modules/IMetadataManager.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract MetadataManager is IMetadataManager, Module {
     //--------------------------------------------------------------------------
     // Storage
 
     ManagerMetadata private _managerMetadata;
-    ProposalMetadata private _proposalMetadata;
+    OrchestratorMetadata private _orchestratorMetadata;
     MemberMetadata[] private _teamMetadata;
 
     //--------------------------------------------------------------------------
@@ -21,23 +21,24 @@ contract MetadataManager is IMetadataManager, Module {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configdata
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
 
         (
             ManagerMetadata memory managerMetadata_,
-            ProposalMetadata memory proposalMetadata_,
+            OrchestratorMetadata memory orchestratorMetadata_,
             MemberMetadata[] memory teamMetadata_
         ) = abi.decode(
-            configdata, (ManagerMetadata, ProposalMetadata, MemberMetadata[])
+            configdata,
+            (ManagerMetadata, OrchestratorMetadata, MemberMetadata[])
         );
 
         _setManagerMetadata(managerMetadata_);
 
-        _setProposalMetadata(proposalMetadata_);
+        _setOrchestratorMetadata(orchestratorMetadata_);
 
         _setTeamMetadata(teamMetadata_);
     }
@@ -53,12 +54,12 @@ contract MetadataManager is IMetadataManager, Module {
         return _managerMetadata;
     }
 
-    function getProposalMetadata()
+    function getOrchestratorMetadata()
         external
         view
-        returns (ProposalMetadata memory)
+        returns (OrchestratorMetadata memory)
     {
-        return _proposalMetadata;
+        return _orchestratorMetadata;
     }
 
     function getTeamMetadata()
@@ -90,23 +91,22 @@ contract MetadataManager is IMetadataManager, Module {
         );
     }
 
-    function setProposalMetadata(ProposalMetadata calldata proposalMetadata_)
-        public
-        onlyAuthorizedOrManager
-    {
-        _setProposalMetadata(proposalMetadata_);
+    function setOrchestratorMetadata(
+        OrchestratorMetadata calldata orchestratorMetadata_
+    ) public onlyAuthorizedOrManager {
+        _setOrchestratorMetadata(orchestratorMetadata_);
     }
 
-    function _setProposalMetadata(ProposalMetadata memory proposalMetadata_)
-        private
-    {
-        _proposalMetadata = proposalMetadata_;
-        emit ProposalMetadataUpdated(
-            proposalMetadata_.title,
-            proposalMetadata_.descriptionShort,
-            proposalMetadata_.descriptionLong,
-            proposalMetadata_.externalMedias,
-            proposalMetadata_.categories
+    function _setOrchestratorMetadata(
+        OrchestratorMetadata memory orchestratorMetadata_
+    ) private {
+        _orchestratorMetadata = orchestratorMetadata_;
+        emit OrchestratorMetadataUpdated(
+            orchestratorMetadata_.title,
+            orchestratorMetadata_.descriptionShort,
+            orchestratorMetadata_.descriptionLong,
+            orchestratorMetadata_.externalMedias,
+            orchestratorMetadata_.categories
         );
     }
 

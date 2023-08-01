@@ -23,10 +23,10 @@ contract TypeSanityHelper is Test {
     }
 
     //--------------------------------------------------------------------------------
-    // Types for Proposal
-    // Contract: Proposal.sol
+    // Types for Orchestrator
+    // Contract: Orchestrator.sol
 
-    function assumeValidProposalId(uint id) public pure {
+    function assumeValidOrchestratorId(uint id) public pure {
         vm.assume(id != 0);
     }
 

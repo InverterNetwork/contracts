@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {IPaymentProcessor} from
@@ -57,13 +57,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address impl = address(new StreamingPaymentProcessor());
         paymentProcessor = StreamingPaymentProcessor(Clones.clone(impl));
 
-        _setUpProposal(paymentProcessor);
+        _setUpOrchestrator(paymentProcessor);
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        _proposal.addModule(address(paymentClient));
+        _orchestrator.addModule(address(paymentClient));
 
-        paymentProcessor.init(_proposal, _METADATA, bytes(""));
+        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
 
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
     }
@@ -77,7 +77,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        paymentProcessor.init(_proposal, _METADATA, bytes(""));
+        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testInit2StreamingPaymentProcessor() public {
@@ -86,7 +86,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        paymentProcessor.init2(_proposal, abi.encode(123));
+        paymentProcessor.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
@@ -94,17 +94,17 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        paymentProcessor.init2(_proposal, dependencydata);
+        paymentProcessor.init2(_orchestrator, dependencydata);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
         dependencydata = abi.encode(true, dependencies);
-        paymentProcessor.init2(_proposal, dependencydata);
+        paymentProcessor.init2(_orchestrator, dependencydata);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        paymentProcessor.init2(_proposal, dependencydata);
+        paymentProcessor.init2(_orchestrator, dependencydata);
     }
 
     //--------------------------------------------------------------------------
@@ -994,7 +994,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     }
 
     //This test creates a new set of payments in a client which finished all running payments.
-    //one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
+    //one possible case would be a orchestrator that finishes all milestones succesfully and then gets "restarted" some time later
     function testCancelRunningPayments(
         address[] memory recipients,
         uint128[] memory amounts,
@@ -1131,7 +1131,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
     }
 
-    //This test creates a new set of payments in a client which finished all running payments. one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
+    //This test creates a new set of payments in a client which finished all running payments. one possible case would be a orchestrator that finishes all milestones succesfully and then gets "restarted" some time later
     function testUpdateFinishedPayments(
         address[] memory recipients,
         uint128[] memory amounts,
@@ -1385,7 +1385,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address[] memory invalids = new address[](5);
 
         invalids[0] = address(0);
-        invalids[1] = address(_proposal);
+        invalids[1] = address(_orchestrator);
         invalids[2] = address(paymentProcessor);
         invalids[3] = address(paymentClient);
         invalids[4] = address(this);

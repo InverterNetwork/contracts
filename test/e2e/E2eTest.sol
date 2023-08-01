@@ -7,12 +7,12 @@ import "forge-std/console.sol";
 // Factories
 import {ModuleFactory, IModuleFactory} from "src/factories/ModuleFactory.sol";
 import {
-    ProposalFactory,
-    IProposalFactory
-} from "src/factories/ProposalFactory.sol";
+    OrchestratorFactory,
+    IOrchestratorFactory
+} from "src/factories/OrchestratorFactory.sol";
 
-// Proposal
-import {Proposal, IProposal} from "src/proposal/Proposal.sol";
+// Orchestrator
+import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
@@ -46,10 +46,10 @@ contract E2eTest is Test {
 
     // Factory instances.
     ModuleFactory moduleFactory;
-    ProposalFactory proposalFactory;
+    OrchestratorFactory orchestratorFactory;
 
-    // Proposal implementation.
-    Proposal proposalImpl;
+    // Orchestrator implementation.
+    Orchestrator orchestratorImpl;
 
     //-- Module implementations, beacons, config for factory, and metadata.
 
@@ -62,7 +62,7 @@ contract E2eTest is Test {
         "https://github.com/inverter/funding-manager",
         "RebasingFundingManager"
     );
-    //IProposalFactory.ModuleConfig has to be set with token address, so needs a later Injection -> see _createNewProposalWithAllModules()
+    //IOrchestratorFactory.ModuleConfig has to be set with token address, so needs a later Injection -> see _createNewOrchestratorWithAllModules()
 
     AuthorizerMock authorizerImpl;
     Beacon authorizerBeacon;
@@ -71,8 +71,8 @@ contract E2eTest is Test {
         1, 1, "https://github.com/inverter/authorizer", "Authorizer"
     );
     // Note that the IAuthorizer's first authorized address is address(this).
-    IProposalFactory.ModuleConfig authorizerFactoryConfig = IProposalFactory
-        .ModuleConfig(
+    IOrchestratorFactory.ModuleConfig authorizerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
         authorizerMetadata,
         abi.encode(address(this)),
         abi.encode(hasDependency, dependencies)
@@ -85,8 +85,8 @@ contract E2eTest is Test {
         1, 1, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
     );
     // Note that RoleAuthorizer owner and manager are the same
-    IProposalFactory.ModuleConfig roleAuthorizerFactoryConfig = IProposalFactory
-        .ModuleConfig(
+    IOrchestratorFactory.ModuleConfig roleAuthorizerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
         roleAuthorizerMetadata,
         abi.encode(address(this), address(this)),
         abi.encode(hasDependency, dependencies)
@@ -103,8 +103,8 @@ contract E2eTest is Test {
         "https://github.com/inverter/payment-processor",
         "SimplePaymentProcessor"
     );
-    IProposalFactory.ModuleConfig paymentProcessorFactoryConfig =
-    IProposalFactory.ModuleConfig(
+    IOrchestratorFactory.ModuleConfig paymentProcessorFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
         paymentProcessorMetadata,
         bytes(""),
         abi.encode(hasDependency, dependencies)
@@ -119,8 +119,8 @@ contract E2eTest is Test {
         "https://github.com/inverter/streaming-payment-processor",
         "StreamingPaymentProcessor"
     );
-    IProposalFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
-    IProposalFactory.ModuleConfig(
+    IOrchestratorFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
         streamingPaymentProcessorMetadata,
         bytes(""),
         abi.encode(hasDependency, dependencies)
@@ -135,8 +135,8 @@ contract E2eTest is Test {
         "https://github.com/inverter/milestone-manager",
         "MilestoneManager"
     );
-    IProposalFactory.ModuleConfig milestoneManagerFactoryConfig =
-    IProposalFactory.ModuleConfig(
+    IOrchestratorFactory.ModuleConfig milestoneManagerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
         milestoneManagerMetadata,
         abi.encode(100_000_000, 1_000_000, makeAddr("treasury")),
         abi.encode(hasDependency, dependencies)
@@ -148,8 +148,8 @@ contract E2eTest is Test {
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
-    IProposalFactory.ModuleConfig bountyManagerFactoryConfig = IProposalFactory
-        .ModuleConfig(
+    IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
         bountyManagerMetadata, bytes(""), abi.encode(true, dependencies)
     );
 
@@ -163,16 +163,16 @@ contract E2eTest is Test {
         "https://github.com/inverter/recurring-payment-manager",
         "RecurringPaymentManager"
     );
-    IProposalFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
-    IProposalFactory.ModuleConfig(
+    IOrchestratorFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
         recurringPaymentManagerMetadata,
         abi.encode(1 weeks),
         abi.encode(hasDependency, dependencies)
     );
 
     function setUp() public {
-        // Deploy Proposal implementation.
-        proposalImpl = new Proposal();
+        // Deploy Orchestrator implementation.
+        orchestratorImpl = new Orchestrator();
 
         // Deploy module implementations.
         rebasingFundingManagerImpl = new RebasingFundingManager();
@@ -228,8 +228,8 @@ contract E2eTest is Test {
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
-        proposalFactory =
-            new ProposalFactory(address(proposalImpl), address(moduleFactory));
+        orchestratorFactory =
+        new OrchestratorFactory(address(orchestratorImpl), address(moduleFactory));
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
@@ -261,22 +261,23 @@ contract E2eTest is Test {
         );
     }
 
-    function _createNewProposalWithAllModules(
-        IProposalFactory.ProposalConfig memory config
-    ) internal returns (IProposal) {
-        IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](2);
+    function _createNewOrchestratorWithAllModules(
+        IOrchestratorFactory.OrchestratorConfig memory config
+    ) internal returns (IOrchestrator) {
+        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory.ModuleConfig[](2);
         optionalModules[0] = milestoneManagerFactoryConfig;
         optionalModules[1] = bountyManagerFactoryConfig;
 
-        IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
-        IProposalFactory.ModuleConfig(
-            rebasingFundingManagerMetadata,
-            abi.encode(address(config.token)),
-            abi.encode(hasDependency, dependencies)
-        );
+        IOrchestratorFactory.ModuleConfig memory
+            rebasingFundingManagerFactoryConfig = IOrchestratorFactory
+                .ModuleConfig(
+                rebasingFundingManagerMetadata,
+                abi.encode(address(config.token)),
+                abi.encode(hasDependency, dependencies)
+            );
 
-        return proposalFactory.createProposal(
+        return orchestratorFactory.createOrchestrator(
             config,
             rebasingFundingManagerFactoryConfig,
             authorizerFactoryConfig,
@@ -285,21 +286,22 @@ contract E2eTest is Test {
         );
     }
 
-    function _createNewProposalWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
-        IProposalFactory.ProposalConfig memory config
-    ) internal returns (IProposal) {
-        IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](1);
+    function _createNewOrchestratorWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
+        IOrchestratorFactory.OrchestratorConfig memory config
+    ) internal returns (IOrchestrator) {
+        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory.ModuleConfig[](1);
         optionalModules[0] = recurringPaymentManagerFactoryConfig;
 
-        IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
-        IProposalFactory.ModuleConfig(
-            rebasingFundingManagerMetadata,
-            abi.encode(address(config.token)),
-            abi.encode(hasDependency, dependencies)
-        );
+        IOrchestratorFactory.ModuleConfig memory
+            rebasingFundingManagerFactoryConfig = IOrchestratorFactory
+                .ModuleConfig(
+                rebasingFundingManagerMetadata,
+                abi.encode(address(config.token)),
+                abi.encode(hasDependency, dependencies)
+            );
 
-        return proposalFactory.createProposal(
+        return orchestratorFactory.createOrchestrator(
             config,
             rebasingFundingManagerFactoryConfig,
             authorizerFactoryConfig,
@@ -308,21 +310,22 @@ contract E2eTest is Test {
         );
     }
 
-    function _createNewProposalWithAllModules_withRoleBasedAuthorizerAndBountyManager(
-        IProposalFactory.ProposalConfig memory config
-    ) internal returns (IProposal) {
-        IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](1);
+    function _createNewOrchestratorWithAllModules_withRoleBasedAuthorizerAndBountyManager(
+        IOrchestratorFactory.OrchestratorConfig memory config
+    ) internal returns (IOrchestrator) {
+        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory.ModuleConfig[](1);
         optionalModules[0] = bountyManagerFactoryConfig;
 
-        IProposalFactory.ModuleConfig memory rebasingFundingManagerFactoryConfig =
-        IProposalFactory.ModuleConfig(
-            rebasingFundingManagerMetadata,
-            abi.encode(address(config.token)),
-            abi.encode(hasDependency, dependencies)
-        );
+        IOrchestratorFactory.ModuleConfig memory
+            rebasingFundingManagerFactoryConfig = IOrchestratorFactory
+                .ModuleConfig(
+                rebasingFundingManagerMetadata,
+                abi.encode(address(config.token)),
+                abi.encode(hasDependency, dependencies)
+            );
 
-        return proposalFactory.createProposal(
+        return orchestratorFactory.createOrchestrator(
             config,
             rebasingFundingManagerFactoryConfig,
             roleAuthorizerFactoryConfig,

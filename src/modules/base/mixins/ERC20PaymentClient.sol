@@ -14,7 +14,7 @@ import {
  * @title ERC20PaymentClient
  *
  * @dev The ERC20PaymentClient mixin enables modules to create payment orders that
- *      are processable by a proposal's {IPaymentProcessor} module.
+ *      are processable by a orchestrator's {IPaymentProcessor} module.
  *
  * @author Inverter Network
  */

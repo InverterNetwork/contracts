@@ -15,7 +15,7 @@ import {
 import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 /**
  * @title SimplePaymentProcessor
@@ -34,7 +34,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice checks that the caller is an active module
     modifier onlyModule() {
-        if (!proposal().isModule(_msgSender())) {
+        if (!orchestrator().isModule(_msgSender())) {
             revert Module__PaymentManager__OnlyCallableByModule();
         }
         _;
@@ -50,11 +50,11 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory /*configdata*/
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
     }
 
     //--------------------------------------------------------------------------
@@ -62,7 +62,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     /// @inheritdoc IPaymentProcessor
     function token() public view returns (IERC20) {
-        return __Module_proposal.token();
+        return __Module_orchestrator.token();
     }
 
     /// @inheritdoc IPaymentProcessor

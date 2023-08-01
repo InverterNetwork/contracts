@@ -14,7 +14,7 @@ import {ERC20PaymentClient} from
     "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {IRecurringPaymentManager} from
     "src/modules/logicModule/IRecurringPaymentManager.sol";
 
@@ -84,11 +84,11 @@ contract RecurringPaymentManager is
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configdata
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
         //Set empty list of RecurringPayment
         _paymentList.init();
 
@@ -355,7 +355,7 @@ contract RecurringPaymentManager is
         _addPaymentOrders(orders);
 
         //when done process the Payments correctly
-        __Module_proposal.paymentProcessor().processPayments(
+        __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))
         );
 
@@ -368,16 +368,16 @@ contract RecurringPaymentManager is
         internal
         override(ERC20PaymentClient)
     {
-        uint balance = __Module_proposal.token().balanceOf(address(this));
+        uint balance = __Module_orchestrator.token().balanceOf(address(this));
 
         if (balance < amount) {
-            // Trigger callback from proposal to transfer tokens
+            // Trigger callback from orchestrator to transfer tokens
             // to address(this).
             bool ok;
-            (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.fundingManager()),
+            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+                address(__Module_orchestrator.fundingManager()),
                 abi.encodeWithSignature(
-                    "transferProposalToken(address,uint256)",
+                    "transferOrchestratorToken(address,uint256)",
                     address(this),
                     amount - balance
                 )
@@ -393,7 +393,7 @@ contract RecurringPaymentManager is
         internal
         override(ERC20PaymentClient)
     {
-        IERC20 token = __Module_proposal.token();
+        IERC20 token = __Module_orchestrator.token();
         uint allowance = token.allowance(address(this), address(spender));
 
         if (allowance < amount) {
@@ -407,6 +407,6 @@ contract RecurringPaymentManager is
         override(ERC20PaymentClient)
         returns (bool)
     {
-        return __Module_proposal.paymentProcessor() == who;
+        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

@@ -76,9 +76,9 @@ contract TokenGatedRoleAuthorizer is
             } else {
                 return hasRole(roleId, who);
             }
-            // If not, check the account against the proposal roles
+            // If not, check the account against the orchestrator roles
         } else {
-            roleId = generateRoleId(address(proposal()), role);
+            roleId = generateRoleId(address(orchestrator()), role);
             return hasRole(roleId, who);
         }
     }

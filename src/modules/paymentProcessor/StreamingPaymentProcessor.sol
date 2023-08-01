@@ -13,7 +13,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 /**
  * @title Payment processor module implementation #2: Linear vesting curve.
@@ -55,7 +55,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @notice checks that the caller is an active module
     modifier onlyModule() {
-        if (!proposal().isModule(_msgSender())) {
+        if (!orchestrator().isModule(_msgSender())) {
             revert Module__PaymentManager__OnlyCallableByModule();
         }
         _;
@@ -83,11 +83,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory /*configdata*/
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
@@ -320,7 +320,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IPaymentProcessor
     function token() public view returns (IERC20) {
-        return this.proposal().token();
+        return this.orchestrator().token();
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
@@ -716,7 +716,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function validAddress(address addr) internal view returns (bool) {
         return !(
             addr == address(0) || addr == _msgSender() || addr == address(this)
-                || addr == address(proposal())
+                || addr == address(orchestrator())
         );
     }
 

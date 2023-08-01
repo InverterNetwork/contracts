@@ -9,51 +9,51 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
 import {
-    IProposalFactory,
-    IProposal,
+    IOrchestratorFactory,
+    IOrchestrator,
     IModule
-} from "src/factories/IProposalFactory.sol";
+} from "src/factories/IOrchestratorFactory.sol";
 import {
     IFundingManager,
     IAuthorizer,
     IPaymentProcessor
-} from "src/proposal/IProposal.sol";
+} from "src/orchestrator/IOrchestrator.sol";
 import {IModuleFactory} from "src/factories/IModuleFactory.sol";
 
 /**
- * @title Proposal Factory
+ * @title Orchestrator Factory
  *
- * @dev An immutable factory for deploying proposals.
+ * @dev An immutable factory for deploying orchestrators.
  *
  * @author Inverter Network
  */
-contract ProposalFactory is IProposalFactory {
+contract OrchestratorFactory is IOrchestratorFactory {
     //--------------------------------------------------------------------------
     // Immutables
 
-    /// @inheritdoc IProposalFactory
+    /// @inheritdoc IOrchestratorFactory
     address public immutable override target;
 
-    /// @inheritdoc IProposalFactory
+    /// @inheritdoc IOrchestratorFactory
     address public immutable override moduleFactory;
 
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Maps the id to the proposals
-    mapping(uint => address) private _proposals;
+    /// @dev Maps the id to the orchestrators
+    mapping(uint => address) private _orchestrators;
 
-    /// @dev The counter of the current proposal id.
+    /// @dev The counter of the current orchestrator id.
     /// @dev Starts counting from 1.
-    uint private _proposalIdCounter;
+    uint private _orchestratorIdCounter;
 
     //--------------------------------------------------------------------------------
     // Modifier
 
     /// @notice Modifier to guarantee that the given id is valid
-    modifier validProposalId(uint id) {
-        if (id > _proposalIdCounter) {
-            revert ProposalFactory__InvalidId();
+    modifier validOrchestratorId(uint id) {
+        if (id > _orchestratorIdCounter) {
+            revert OrchestratorFactory__InvalidId();
         }
         _;
     }
@@ -69,37 +69,37 @@ contract ProposalFactory is IProposalFactory {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IProposalFactory
-    function createProposal(
-        ProposalConfig memory proposalConfig,
+    /// @inheritdoc IOrchestratorFactory
+    function createOrchestrator(
+        OrchestratorConfig memory orchestratorConfig,
         ModuleConfig memory fundingManagerConfig,
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
-    ) external returns (IProposal) {
+    ) external returns (IOrchestrator) {
         address clone = Clones.clone(target);
 
-        //Map proposal clone
-        _proposals[++_proposalIdCounter] = clone;
+        //Map orchestrator clone
+        _orchestrators[++_orchestratorIdCounter] = clone;
 
         // Deploy and cache {IFundingManager} module.
         address fundingManager = IModuleFactory(moduleFactory).createModule(
             fundingManagerConfig.metadata,
-            IProposal(clone),
+            IOrchestrator(clone),
             fundingManagerConfig.configdata
         );
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory(moduleFactory).createModule(
             authorizerConfig.metadata,
-            IProposal(clone),
+            IOrchestrator(clone),
             authorizerConfig.configdata
         );
 
         // Deploy and cache {IPaymentProcessor} module.
         address paymentProcessor = IModuleFactory(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
-            IProposal(clone),
+            IOrchestrator(clone),
             paymentProcessorConfig.configdata
         );
 
@@ -109,20 +109,20 @@ contract ProposalFactory is IProposalFactory {
         for (uint i; i < modulesLen; ++i) {
             modules[i] = IModuleFactory(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
-                IProposal(clone),
+                IOrchestrator(clone),
                 moduleConfigs[i].configdata
             );
         }
 
-        if (proposalConfig.owner == address(0)) {
-            revert ProposalFactory__ProposalOwnerIsInvalid();
+        if (orchestratorConfig.owner == address(0)) {
+            revert OrchestratorFactory__OrchestratorOwnerIsInvalid();
         }
 
-        // Initialize proposal.
-        IProposal(clone).init(
-            _proposalIdCounter,
-            proposalConfig.owner,
-            proposalConfig.token,
+        // Initialize orchestrator.
+        IOrchestrator(clone).init(
+            _orchestratorIdCounter,
+            orchestratorConfig.owner,
+            orchestratorConfig.token,
             modules,
             IFundingManager(fundingManager),
             IAuthorizer(authorizer),
@@ -130,12 +130,12 @@ contract ProposalFactory is IProposalFactory {
         );
 
         // Second round of module initializations to satisfy cross-referencing between modules
-        // This can be run post the proposal initialization. This ensures a few more variables are
-        // available that are set during the proposal init function.
+        // This can be run post the orchestrator initialization. This ensures a few more variables are
+        // available that are set during the orchestrator init function.
         for (uint i; i < modulesLen; ++i) {
             if (_dependencyInjectionRequired(moduleConfigs[i].dependencydata)) {
                 IModule(modules[i]).init2(
-                    IProposal(clone), moduleConfigs[i].dependencydata
+                    IOrchestrator(clone), moduleConfigs[i].dependencydata
                 );
             }
         }
@@ -143,36 +143,36 @@ contract ProposalFactory is IProposalFactory {
         // Also, running the init2 functionality on the compulsory modules excluded from the modules array
         if (_dependencyInjectionRequired(fundingManagerConfig.dependencydata)) {
             IModule(fundingManager).init2(
-                IProposal(clone), fundingManagerConfig.dependencydata
+                IOrchestrator(clone), fundingManagerConfig.dependencydata
             );
         }
         if (_dependencyInjectionRequired(authorizerConfig.dependencydata)) {
             IModule(authorizer).init2(
-                IProposal(clone), authorizerConfig.dependencydata
+                IOrchestrator(clone), authorizerConfig.dependencydata
             );
         }
         if (_dependencyInjectionRequired(paymentProcessorConfig.dependencydata))
         {
             IModule(paymentProcessor).init2(
-                IProposal(clone), paymentProcessorConfig.dependencydata
+                IOrchestrator(clone), paymentProcessorConfig.dependencydata
             );
         }
 
-        return IProposal(clone);
+        return IOrchestrator(clone);
     }
 
-    /// @inheritdoc IProposalFactory
-    function getProposalByID(uint id)
+    /// @inheritdoc IOrchestratorFactory
+    function getOrchestratorByID(uint id)
         external
         view
-        validProposalId(id)
+        validOrchestratorId(id)
         returns (address)
     {
-        return _proposals[id];
+        return _orchestrators[id];
     }
 
-    function getProposalIDCounter() external view returns (uint) {
-        return _proposalIdCounter;
+    function getOrchestratorIDCounter() external view returns (uint) {
+        return _orchestratorIdCounter;
     }
 
     function decoder(bytes memory data)

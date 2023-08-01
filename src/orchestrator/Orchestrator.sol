@@ -11,36 +11,36 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
-import {ModuleManager} from "src/proposal/base/ModuleManager.sol";
+import {ModuleManager} from "src/orchestrator/base/ModuleManager.sol";
 import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
 
 // Internal Interfaces
 import {
-    IProposal,
+    IOrchestrator,
     IFundingManager,
     IPaymentProcessor,
     IAuthorizer
-} from "src/proposal/IProposal.sol";
+} from "src/orchestrator/IOrchestrator.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 /**
- * @title Proposal
+ * @title Orchestrator
  *
  * @dev A new funding primitive to enable multiple actors within a decentralized
- *      network to collaborate on proposals.
+ *      network to collaborate on orchestrators.
  *
- *      A proposal is composed of a [funding mechanism](./base/FundingVault) *      and a set of [modules](./base/ModuleManager).
+ *      A orchestrator is composed of a [funding mechanism](./base/FundingVault) *      and a set of [modules](./base/ModuleManager).
  *
  *      The token being accepted for funding is non-changeable and set during
  *      initialization. Authorization is performed via calling a non-changeable
  *      {IAuthorizer} instance. Payments, initiated by modules, are processed
  *      via a non-changeable {IPaymentProcessor} instance.
  *
- *      Each proposal has a unique id set during initialization.
+ *      Each orchestrator has a unique id set during initialization.
  *
  * @author Inverter Network
  */
-contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
+contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -48,7 +48,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     ///         address.
     modifier onlyAuthorized() {
         if (!authorizer.isAuthorized(_msgSender())) {
-            revert Proposal__CallerNotAuthorized();
+            revert Orchestrator__CallerNotAuthorized();
         }
         _;
     }
@@ -61,7 +61,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     modifier onlyAuthorizedOrManager() {
         if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != manager())
         {
-            revert Proposal__CallerNotAuthorized();
+            revert Orchestrator__CallerNotAuthorized();
         }
         _;
     }
@@ -71,17 +71,17 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
 
     IERC20 private _token;
 
-    /// @inheritdoc IProposal
-    uint public override(IProposal) proposalId;
+    /// @inheritdoc IOrchestrator
+    uint public override(IOrchestrator) orchestratorId;
 
-    /// @inheritdoc IProposal
-    IFundingManager public override(IProposal) fundingManager;
+    /// @inheritdoc IOrchestrator
+    IFundingManager public override(IOrchestrator) fundingManager;
 
-    /// @inheritdoc IProposal
-    IAuthorizer public override(IProposal) authorizer;
+    /// @inheritdoc IOrchestrator
+    IAuthorizer public override(IOrchestrator) authorizer;
 
-    /// @inheritdoc IProposal
-    IPaymentProcessor public override(IProposal) paymentProcessor;
+    /// @inheritdoc IOrchestrator
+    IPaymentProcessor public override(IOrchestrator) paymentProcessor;
 
     //--------------------------------------------------------------------------
     // Initializer
@@ -90,22 +90,22 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         _disableInitializers();
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function init(
-        uint proposalId_,
+        uint orchestratorId_,
         address owner_,
         IERC20 token_,
         address[] calldata modules,
         IFundingManager fundingManager_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
-    ) external override(IProposal) initializer {
+    ) external override(IOrchestrator) initializer {
         // Initialize upstream contracts.
         __Ownable_init();
         __ModuleManager_init(modules);
 
         // Set storage variables.
-        proposalId = proposalId_;
+        orchestratorId = orchestratorId_;
 
         _token = token_;
 
@@ -113,7 +113,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
 
-        // Transfer ownerhsip of proposal to owner argument.
+        // Transfer ownerhsip of orchestrator to owner argument.
         _transferOwnership(owner_);
 
         // Add necessary modules.
@@ -127,12 +127,12 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //--------------------------------------------------------------------------
     // Module search functions
 
-    /// @notice verifies whether a proposal with the title `moduleName` has been used in this proposal
+    /// @notice verifies whether a orchestrator with the title `moduleName` has been used in this orchestrator
     /// @dev The query string and the module title should be **exactly** same, as in same whitespaces, same capitalizations, etc.
-    /// @param moduleName Query string which is the title of the module to be searched in the proposal
-    /// @return uint256 index of the module in the list of modules used in the proposal
+    /// @param moduleName Query string which is the title of the module to be searched in the orchestrator
+    /// @return uint256 index of the module in the list of modules used in the orchestrator
     /// @return address address of the module with title `moduleName`
-    function _isModuleUsedInProposal(string calldata moduleName)
+    function _isModuleUsedInOrchestrator(string calldata moduleName)
         private
         view
         returns (uint, address)
@@ -162,16 +162,16 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         return (type(uint).max, address(0));
     }
 
-    /// @inheritdoc IProposal
-    function findModuleAddressInProposal(string calldata moduleName)
+    /// @inheritdoc IOrchestrator
+    function findModuleAddressInOrchestrator(string calldata moduleName)
         external
         view
         returns (address)
     {
         (uint moduleIndex, address moduleAddress) =
-            _isModuleUsedInProposal(moduleName);
+            _isModuleUsedInOrchestrator(moduleName);
         if (moduleIndex == type(uint).max) {
-            revert DependencyInjection__ModuleNotUsedInProposal();
+            revert DependencyInjection__ModuleNotUsedInOrchestrator();
         }
 
         return moduleAddress;
@@ -183,7 +183,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //      are provided for the convenience of the users since matching the names of the modules does not
     //      fully guarantee that the returned address is the address of the exact module the user was looking for
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function verifyAddressIsAuthorizerModule(address authModule)
         external
         view
@@ -199,7 +199,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function verifyAddressIsFundingManager(address fundingManagerAddress)
         external
         view
@@ -215,7 +215,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
         external
         view
@@ -231,7 +231,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function verifyAddressIsRecurringPaymentManager(
         address recurringPaymentManager
     ) external view returns (bool) {
@@ -245,7 +245,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         }
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
         external
         view
@@ -278,7 +278,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     //--------------------------------------------------------------------------
     // onlyAuthorized Functions
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function setAuthorizer(IAuthorizer authorizer_) external onlyAuthorized {
         addModule(address(authorizer_));
         removeModule(address(authorizer));
@@ -286,7 +286,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         emit AuthorizerUpdated(address(authorizer_));
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function setFundingManager(IFundingManager fundingManager_)
         external
         onlyAuthorized
@@ -297,7 +297,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         emit FundingManagerUpdated(address(fundingManager_));
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
         external
         onlyAuthorized
@@ -308,7 +308,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         emit PaymentProcessorUpdated(address(paymentProcessor_));
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function executeTx(address target, bytes memory data)
         external
         onlyAuthorized
@@ -321,19 +321,19 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         if (ok) {
             return returnData;
         } else {
-            revert Proposal__ExecuteTxFailed();
+            revert Orchestrator__ExecuteTxFailed();
         }
     }
 
     //--------------------------------------------------------------------------
     // View Functions
 
-    /// @inheritdoc IProposal
-    function token() public view override(IProposal) returns (IERC20) {
+    /// @inheritdoc IOrchestrator
+    function token() public view override(IOrchestrator) returns (IERC20) {
         return _token;
     }
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function version() external pure returns (string memory) {
         return "1";
     }
@@ -341,7 +341,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     function owner()
         public
         view
-        override(OwnableUpgradeable, IProposal)
+        override(OwnableUpgradeable, IOrchestrator)
         returns (address)
     {
         return super.owner();

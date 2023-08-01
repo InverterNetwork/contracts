@@ -6,25 +6,25 @@ interface IModuleManager {
     // Errors
 
     /// @notice Function is only callable by authorized address.
-    error Proposal__ModuleManager__CallerNotAuthorized();
+    error Orchestrator__ModuleManager__CallerNotAuthorized();
 
     /// @notice Function is only callable by modules.
-    error Proposal__ModuleManager__OnlyCallableByModule();
+    error Orchestrator__ModuleManager__OnlyCallableByModule();
 
     /// @notice Given module address invalid.
-    error Proposal__ModuleManager__InvalidModuleAddress();
+    error Orchestrator__ModuleManager__InvalidModuleAddress();
 
     /// @notice Given address is a module.
-    error Proposal__ModuleManager__IsModule();
+    error Orchestrator__ModuleManager__IsModule();
 
     /// @notice Given address is not a module.
-    error Proposal__ModuleManager__IsNotModule();
+    error Orchestrator__ModuleManager__IsNotModule();
 
     /// @notice The supplied modules are not consecutive.
-    error Proposal__ModuleManager__ModulesNotConsecutive();
+    error Orchestrator__ModuleManager__ModulesNotConsecutive();
 
     /// @notice The Manager has reached the maximum amount of modules.
-    error Proposal__ModuleManager__ModuleAmountOverLimits();
+    error Orchestrator__ModuleManager__ModuleAmountOverLimits();
 
     //--------------------------------------------------------------------------
     // Events

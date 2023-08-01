@@ -17,7 +17,7 @@ import {
 
 // Internal Interfaces
 import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
@@ -25,18 +25,18 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
 /**
  * @title MilestoneManager
  *
- * @dev Module to manage milestones for a proposal.
+ * @dev Module to manage milestones for a orchestrator.
  *
  *      A milestone can exists in 4 different states:
  *        - added
  *              The milestone got added to the contract.
  *        - active
  *              When a milestone is started, it initias payment orders to pay
- *              the proposal's contributors.
+ *              the orchestrator's contributors.
  *              A milestone is active, until either its duration is over or it's
  *              marked as completed.
  *        - submitted
- *              A proposal contributor marks a milestone as submitted by
+ *              A orchestrator contributor marks a milestone as submitted by
  *              submitting non-empty data that can be interpreted and evaluated
  *              by off-chain systems.
  *        - completed
@@ -111,7 +111,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
             if (
                 contributorAddr == address(0)
                     || contributorAddr == address(this)
-                    || contributorAddr == address(proposal())
+                    || contributorAddr == address(orchestrator())
             ) {
                 revert Module__MilestoneManager__InvalidContributorAddress();
             }
@@ -190,11 +190,11 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configdata
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
 
         // Set up empty list of milestones.
         _milestoneList.init();
@@ -375,7 +375,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
         _milestoneList.removeId(prevId, id);
 
         // stop all currently running payments
-        __Module_proposal.paymentProcessor().cancelRunningPayments(
+        __Module_orchestrator.paymentProcessor().cancelRunningPayments(
             IERC20PaymentClient(address(this))
         );
 
@@ -430,7 +430,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
             m.budget -= feePayout;
 
             _ensureTokenBalance(feePayout);
-            proposal().token().safeTransfer(FEE_TREASURY, feePayout);
+            orchestrator().token().safeTransfer(FEE_TREASURY, feePayout);
 
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
@@ -467,7 +467,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
             }
         }
 
-        __Module_proposal.paymentProcessor().processPayments(
+        __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))
         );
 
@@ -696,16 +696,16 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
         internal
         override(ERC20PaymentClient)
     {
-        uint balance = __Module_proposal.token().balanceOf(address(this));
+        uint balance = __Module_orchestrator.token().balanceOf(address(this));
 
         if (balance < amount) {
-            // Trigger callback from proposal to transfer tokens
+            // Trigger callback from orchestrator to transfer tokens
             // to address(this).
             bool ok;
-            (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.fundingManager()),
+            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+                address(__Module_orchestrator.fundingManager()),
                 abi.encodeWithSignature(
-                    "transferProposalToken(address,uint256)",
+                    "transferOrchestratorToken(address,uint256)",
                     address(this),
                     amount - balance
                 )
@@ -721,7 +721,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
         internal
         override(ERC20PaymentClient)
     {
-        IERC20 token = __Module_proposal.token();
+        IERC20 token = __Module_orchestrator.token();
         uint allowance = token.allowance(address(this), address(spender));
 
         if (allowance < amount) {
@@ -735,6 +735,6 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
         override(ERC20PaymentClient)
         returns (bool)
     {
-        return __Module_proposal.paymentProcessor() == who;
+        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

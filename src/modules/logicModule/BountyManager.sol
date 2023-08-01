@@ -15,7 +15,7 @@ import {ERC20PaymentClient} from
     "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
 import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 
@@ -31,7 +31,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
 //At the current state of the project the IRoleAuthorizer isnt the standardized Interface to use,
 //That means there is a possibility function calls will fail if the roleAuthorizer isnt implemented as the Authorizer
 //This will be changed in the coming future,
-//but till then the RoleAuthorizer has to be selected as the Authorizer Module of the proposal if the BountyManager is to be used
+//but till then the RoleAuthorizer has to be selected as the Authorizer Module of the orchestrator if the BountyManager is to be used
 
 contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     using SafeERC20 for IERC20;
@@ -44,7 +44,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     //@todo Reminder that this will be moved into the Module Contract at a later point of time
     modifier onlyRole(uint8 roleId) {
         if (
-            !IRoleAuthorizer(address(__Module_proposal.authorizer()))
+            !IRoleAuthorizer(address(__Module_orchestrator.authorizer()))
                 .isAuthorized(roleId, _msgSender())
         ) {
             revert Module__BountyManager__OnlyRole(roleId, address(this));
@@ -115,7 +115,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         uint totalAmount;
         uint currentAmount;
         address contrib;
-        address proposalAddress = address(__Module_proposal);
+        address orchestratorAddress = address(__Module_orchestrator);
         for (uint i; i < length;) {
             currentAmount = contributors[i].claimAmount;
 
@@ -127,7 +127,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
             contrib = contributors[i].addr;
             if (
                 contrib == address(0) || contrib == address(this)
-                    || contrib == proposalAddress
+                    || contrib == orchestratorAddress
             ) {
                 revert Module__BountyManager__InvalidContributorAddress();
             }
@@ -191,25 +191,25 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     // Initialization
 
     /// @inheritdoc Module
-    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
-        external
-        override(Module)
-        initializer
-    {
-        __Module_init(proposal_, metadata);
+    function init(
+        IOrchestrator orchestrator_,
+        Metadata memory metadata,
+        bytes memory
+    ) external override(Module) initializer {
+        __Module_init(orchestrator_, metadata);
         //init empty list of bounties and claims
         _bountyList.init();
         _claimList.init();
     }
 
-    function init2(IProposal, bytes memory)
+    function init2(IOrchestrator, bytes memory)
         external
         override(Module)
         initializer2
     {
         //Note: due to the authorizer still not being set during initialization,
         // this function has to be called after.
-        IRoleAuthorizer(address(proposal().authorizer()))
+        IRoleAuthorizer(address(orchestrator().authorizer()))
             .toggleModuleSelfManagement();
     }
 
@@ -453,7 +453,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         _ensureTokenBalance(totalAmount);
 
         //when done process the Payments correctly
-        __Module_proposal.paymentProcessor().processPayments(
+        __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))
         );
 
@@ -470,42 +470,42 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     function grantBountyAdminRole(address addr) external onlyAuthorized {
         //@todo Will be removed in the future and moved to the authorizer directly
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo Cast to IRoleAuthorizer wont be necessary as soon as the IAuthorizer Interface in Proposal is replaced by IRoleAuthorizer, this is the same for the other implementations
+            IRoleAuthorizer(address(__Module_orchestrator.authorizer())); //@todo Cast to IRoleAuthorizer wont be necessary as soon as the IAuthorizer Interface in Orchestrator is replaced by IRoleAuthorizer, this is the same for the other implementations
         roleAuthorizer.grantRoleFromModule(uint8(Roles.BountyAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function grantClaimAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
         roleAuthorizer.grantRoleFromModule(uint8(Roles.ClaimAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function grantVerifyAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
         roleAuthorizer.grantRoleFromModule(uint8(Roles.VerifyAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function revokeBountyAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
         roleAuthorizer.revokeRoleFromModule(uint8(Roles.BountyAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function revokeClaimAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
         roleAuthorizer.revokeRoleFromModule(uint8(Roles.ClaimAdmin), addr);
     }
 
     /// @inheritdoc IBountyManager
     function revokeVerifyAdminRole(address addr) external onlyAuthorized {
         IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
         roleAuthorizer.revokeRoleFromModule(uint8(Roles.VerifyAdmin), addr);
     }
 
@@ -516,16 +516,16 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         internal
         override(ERC20PaymentClient)
     {
-        uint balance = __Module_proposal.token().balanceOf(address(this));
+        uint balance = __Module_orchestrator.token().balanceOf(address(this));
 
         if (balance < amount) {
-            // Trigger callback from proposal to transfer tokens
+            // Trigger callback from orchestrator to transfer tokens
             // to address(this).
             bool ok;
-            (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.fundingManager()),
+            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+                address(__Module_orchestrator.fundingManager()),
                 abi.encodeWithSignature(
-                    "transferProposalToken(address,uint256)",
+                    "transferOrchestratorToken(address,uint256)",
                     address(this),
                     amount - balance
                 )
@@ -541,7 +541,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         internal
         override(ERC20PaymentClient)
     {
-        IERC20 token = __Module_proposal.token();
+        IERC20 token = __Module_orchestrator.token();
         uint allowance = token.allowance(address(this), address(spender));
 
         if (allowance < amount) {
@@ -555,6 +555,6 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         override(ERC20PaymentClient)
         returns (bool)
     {
-        return __Module_proposal.paymentProcessor() == who;
+        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

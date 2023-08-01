@@ -36,10 +36,10 @@ interface IFundingManager {
         address indexed from, address indexed to, uint indexed amount
     );
 
-    /// @notice Event emitted when a transferal of proposal tokens takes place.
+    /// @notice Event emitted when a transferal of orchestrator tokens takes place.
     /// @param to The address that will receive the underlying tokens.
     /// @param amount The amount of underlying tokens transfered.
-    event TransferProposalToken(address indexed to, uint indexed amount);
+    event TransferOrchestratorToken(address indexed to, uint indexed amount);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -52,5 +52,5 @@ interface IFundingManager {
     function withdraw(uint amount) external;
     function withdrawTo(address to, uint amount) external;
 
-    function transferProposalToken(address to, uint amount) external;
+    function transferOrchestratorToken(address to, uint amount) external;
 }
