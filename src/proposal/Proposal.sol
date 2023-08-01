@@ -40,7 +40,7 @@ import {IModule} from "src/modules/base/IModule.sol";
  *
  * @author Inverter Network
  */
-contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
+contract Proposal is IProposal, ModuleManager {
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -59,8 +59,10 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address or manager.
     modifier onlyProposalOwnerOrManager() {
-        if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != manager())
-        {
+        if (
+            !authorizer.isAuthorized(_msgSender())
+                && !authorizer.hasRole(authorizer.getManagerRole(), _msgSender())
+        ) {
             revert Proposal__CallerNotAuthorized();
         }
         _;
@@ -93,7 +95,7 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IProposal
     function init(
         uint proposalId_,
-        address owner_,
+        /*address manager_, //we need to remove this*/
         IERC20 token_,
         address[] calldata modules,
         IFundingManager fundingManager_,
@@ -101,7 +103,6 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         IPaymentProcessor paymentProcessor_
     ) external override(IProposal) initializer {
         // Initialize upstream contracts.
-        __Ownable_init();
         __ModuleManager_init(modules);
 
         // Set storage variables.
@@ -114,7 +115,8 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
         paymentProcessor = paymentProcessor_;
 
         // Transfer ownerhsip of proposal to owner argument.
-        _transferOwnership(owner_);
+        //_transferOwnership(manager_);
+        //authorizer.grantRole(authorizer.getManagerRole(), manager_);
 
         // Add necessary modules.
         // Note to not use the public addModule function as the factory
@@ -339,18 +341,5 @@ contract Proposal is IProposal, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IProposal
     function version() external pure returns (string memory) {
         return "1";
-    }
-
-    function owner()
-        public
-        view
-        override(OwnableUpgradeable, IProposal)
-        returns (address)
-    {
-        return super.owner();
-    }
-
-    function manager() public view returns (address) {
-        return owner();
     }
 }

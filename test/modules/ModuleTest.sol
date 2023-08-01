@@ -59,7 +59,7 @@ abstract contract ModuleTest is Test {
 
         _proposal.init(
             _PROPOSAL_ID,
-            address(this),
+            // address(this),
             _token,
             modules,
             _fundingManager,

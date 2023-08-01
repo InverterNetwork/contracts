@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {
     RoleAuthorizer,
-    IRoleAuthorizer
+    IAuthorizer
 } from "src/modules/authorizer/RoleAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -62,7 +62,7 @@ contract RoleAuthorizerTest is Test {
         modules[0] = address(module);
         _proposal.init(
             _PROPOSAL_ID,
-            address(this),
+            // address(this),
             _token,
             modules,
             _fundingManager,
@@ -244,7 +244,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer
+                IAuthorizer
                     .Module__RoleAuthorizer__OwnerRoleCannotBeEmpty
                     .selector
             )
@@ -432,7 +432,7 @@ contract RoleAuthorizerTest is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
+                IAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
                 newModule
             )
         );
@@ -454,7 +454,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer
+                IAuthorizer
                     .Module__RoleAuthorizer__ModuleNotSelfManaged
                     .selector
             )
@@ -558,7 +558,7 @@ contract RoleAuthorizerTest is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
+                IAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
                 newModule
             )
         );
@@ -580,7 +580,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer
+                IAuthorizer
                     .Module__RoleAuthorizer__ModuleNotSelfManaged
                     .selector
             )

@@ -6,10 +6,10 @@ import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
 import {Module, IModule} from "src/modules/base/Module.sol";
 import {IProposal} from "src/proposal/IProposal.sol";
-import {IRoleAuthorizer, IAuthorizer} from "./IRoleAuthorizer.sol";
+import {IAuthorizer} from "./IAuthorizer.sol";
 
 contract RoleAuthorizer is
-    IRoleAuthorizer,
+    IAuthorizer,
     AccessControlEnumerableUpgradeable,
     Module
 {
@@ -101,6 +101,9 @@ contract RoleAuthorizer is
         PROPOSAL_MANAGER_ROLE =
             generateRoleId(address(proposal()), uint8(CoreRoles.MANAGER));
 
+        //We preliminarily grant admin role to the deployer
+        _grantRole(PROPOSAL_OWNER_ROLE, _msgSender());
+
         // Set up OWNER role structure:
 
         // -> set OWNER as admin of itself
@@ -108,19 +111,18 @@ contract RoleAuthorizer is
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
         _setRoleAdmin(DEFAULT_ADMIN_ROLE, PROPOSAL_OWNER_ROLE);
 
-        // grant OWNER role to user from configData.
-        // Note: If the initial owner is 0x0, it defaults to msgSender()
-        if (initialOwner == address(0)) {
-            _grantRole(PROPOSAL_OWNER_ROLE, _msgSender());
-        } else {
-            _grantRole(PROPOSAL_OWNER_ROLE, initialOwner);
-        }
-
         // Set up MANAGER role structure:
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
         _setRoleAdmin(PROPOSAL_MANAGER_ROLE, PROPOSAL_OWNER_ROLE);
         // grant MANAGER Role to specified address
         _grantRole(PROPOSAL_MANAGER_ROLE, initialManager);
+
+        // If there is an initial owner specified, we set it as owner and remove the deployer
+        // Note: If the initial owner is 0x0, it stays as msgSender()
+        if (initialOwner != address(0)) {
+            _grantRole(PROPOSAL_OWNER_ROLE, initialOwner);
+            renounceRole(PROPOSAL_OWNER_ROLE, _msgSender());
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -150,7 +152,7 @@ contract RoleAuthorizer is
         return hasRole(PROPOSAL_OWNER_ROLE, who);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function isAuthorized(uint8 role, address who)
         external
         view
@@ -169,7 +171,7 @@ contract RoleAuthorizer is
         return hasRole(roleId, who);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function generateRoleId(address module, uint8 role)
         public
         pure
@@ -181,7 +183,7 @@ contract RoleAuthorizer is
 
     // State-altering functions
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function toggleModuleSelfManagement() external onlyModule(_msgSender()) {
         if (selfManagedModules[_msgSender()]) {
             selfManagedModules[_msgSender()] = false;
@@ -192,7 +194,7 @@ contract RoleAuthorizer is
         }
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function grantRoleFromModule(uint8 role, address target)
         external
         onlyModule(_msgSender())
@@ -202,7 +204,7 @@ contract RoleAuthorizer is
         _grantRole(roleId, target);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function revokeRoleFromModule(uint8 role, address target)
         external
         onlyModule(_msgSender())
@@ -212,7 +214,7 @@ contract RoleAuthorizer is
         _revokeRole(roleId, target);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function transferAdminRole(bytes32 roleId, bytes32 newAdmin)
         external
         onlyRole(getRoleAdmin(roleId))
@@ -220,7 +222,7 @@ contract RoleAuthorizer is
         _setRoleAdmin(roleId, newAdmin);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function burnAdminRole(uint8 role)
         external
         onlyModule(_msgSender())

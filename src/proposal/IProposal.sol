@@ -42,7 +42,7 @@ interface IProposal is IModuleManager {
     /// @notice Initialization function.
     function init(
         uint proposalId,
-        address owner,
+        /*address owner, */
         IERC20 token,
         address[] calldata modules,
         IFundingManager fundingManager,
@@ -95,10 +95,6 @@ interface IProposal is IModuleManager {
 
     /// @notice The version of the proposal instance.
     function version() external pure returns (string memory);
-
-    function owner() external view returns (address);
-
-    function manager() external view returns (address);
 
     /// @notice find the address of a given module using it's name in a proposal
     function findModuleAddressInProposal(string calldata moduleName)

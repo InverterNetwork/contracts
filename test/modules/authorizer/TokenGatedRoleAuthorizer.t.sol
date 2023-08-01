@@ -14,7 +14,7 @@ import {
 
 import {
     RoleAuthorizer,
-    IRoleAuthorizer
+    IAuthorizer
 } from "src/modules/authorizer/RoleAuthorizer.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 // External Libraries
@@ -47,7 +47,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
         modules[0] = address(module);
         _proposal.init(
             _PROPOSAL_ID,
-            address(this),
+            // address(this),
             _token,
             modules,
             _fundingManager,
@@ -122,7 +122,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
         modules[0] = address(mockModule);
         _proposal.init(
             _PROPOSAL_ID,
-            address(this),
+            // address(this),
             _token,
             modules,
             _fundingManager,

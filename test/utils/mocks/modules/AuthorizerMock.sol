@@ -6,9 +6,8 @@ import "forge-std/console.sol";
 import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
 
-contract AuthorizerMock is IRoleAuthorizer, Module {
+contract AuthorizerMock is IAuthorizer, Module {
     mapping(address => bool) private _authorized;
     mapping(bytes32 => mapping(address => bool)) private _roleAuthorized;
 
@@ -111,7 +110,9 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
         return 0;
     }
 
-    function grantRole(bytes32, address) external {}
+    function grantRole(bytes32 role, address who) external {
+        _roleAuthorized[role][who] = true;
+    }
 
     function hasRole(bytes32 role, address who) external view returns (bool) {
         return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;

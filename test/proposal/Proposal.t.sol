@@ -68,6 +68,7 @@ contract ProposalTest is Test {
 
     function testInit(uint proposalId, address[] memory modules) public {
         types.assumeValidProposalId(proposalId);
+
         types.assumeValidModules(modules);
 
         address[] memory truncatedModules = new address[](125);
@@ -83,7 +84,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(this),
+                //address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -97,7 +98,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(this),
+                //address(this),
                 token,
                 modules,
                 fundingManager,
@@ -108,16 +109,13 @@ contract ProposalTest is Test {
 
         // Check that proposal's storage correctly initialized.
         assertEq(proposal.proposalId(), proposalId);
-        assertEq(address(proposal.manager()), address(this));
+        //bytes32 managerRole = proposal.authorizer().getManagerRole(); TODO
+        //assertTrue(proposal.authorizer().hasRole(managerRole, address(this)));
         assertEq(address(proposal.token()), address(token));
         assertEq(address(proposal.authorizer()), address(authorizer));
         assertEq(
             address(proposal.paymentProcessor()), address(paymentProcessor)
         );
-
-        // Check that proposal's dependencies correctly initialized.
-        // Ownable:
-        assertEq(proposal.manager(), address(this));
     }
 
     function testReinitFails(uint proposalId, address[] memory modules)
@@ -138,7 +136,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(this),
+                //address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -149,7 +147,7 @@ contract ProposalTest is Test {
             vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
             proposal.init(
                 proposalId,
-                address(this),
+                //address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -164,7 +162,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(this),
+                //address(this),
                 token,
                 modules,
                 fundingManager,
@@ -175,7 +173,7 @@ contract ProposalTest is Test {
             vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
             proposal.init(
                 proposalId,
-                address(this),
+                // address(this),
                 token,
                 modules,
                 fundingManager,
@@ -204,7 +202,7 @@ contract ProposalTest is Test {
         // Initialize proposal.
         proposal.init(
             proposalId,
-            address(this),
+            // address(this),
             token,
             modules,
             fundingManager,
@@ -253,7 +251,7 @@ contract ProposalTest is Test {
         // Initialize proposal.
         proposal.init(
             proposalId,
-            address(this),
+            // address(this),
             token,
             modules,
             fundingManager,
@@ -295,7 +293,7 @@ contract ProposalTest is Test {
         // Initialize proposal.
         proposal.init(
             proposalId,
-            address(this),
+            // address(this),
             token,
             modules,
             fundingManager,
@@ -338,7 +336,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(this),
+                // address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -354,7 +352,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(this),
+                //address(this),
                 token,
                 modules,
                 fundingManager,
@@ -388,7 +386,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(this),
+                //address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -404,7 +402,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(this),
+                //address(this),
                 token,
                 modules,
                 fundingManager,
@@ -439,7 +437,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(0xCAFE), // Note to not be the owner
+                //address(0xCAFE), // Note to not be the owner -> change in authmetadata?
                 token,
                 truncatedModules,
                 fundingManager,
@@ -455,7 +453,7 @@ contract ProposalTest is Test {
             // Initialize proposal.
             proposal.init(
                 proposalId,
-                address(0xCAFE), // Note to not be the owner
+                //address(0xCAFE), // Note to not be the owner -> change in auth metadata?
                 token,
                 modules,
                 fundingManager,

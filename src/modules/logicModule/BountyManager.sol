@@ -15,7 +15,7 @@ import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
 
 // Internal Interfaces
 import {IProposal} from "src/proposal/IProposal.sol";
-import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
+import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 
 import {
@@ -197,8 +197,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     {
         //Note: due to the authorizer still not being set during initialization,
         // this function has to be called after.
-        IRoleAuthorizer(address(proposal().authorizer()))
-            .toggleModuleSelfManagement();
+        IAuthorizer(address(proposal().authorizer())).toggleModuleSelfManagement(
+        );
     }
 
     //--------------------------------------------------------------------------

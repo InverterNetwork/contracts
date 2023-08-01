@@ -474,7 +474,8 @@ contract MilestoneManagerTest is ModuleTest {
         public
     {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        bytes32 managerRole = _proposal.authorizer().getManagerRole();
+        vm.assume(!_proposal.authorizer().hasRole(managerRole, address(caller)));
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -654,7 +655,8 @@ contract MilestoneManagerTest is ModuleTest {
         uint id = 1; // Note that id's start at 1.
 
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        bytes32 managerRole = _proposal.authorizer().getManagerRole();
+        vm.assume(!_proposal.authorizer().hasRole(managerRole, address(caller)));
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -827,7 +829,8 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        bytes32 managerRole = _proposal.authorizer().getManagerRole();
+        vm.assume(!_proposal.authorizer().hasRole(managerRole, address(caller)));
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -946,7 +949,8 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        bytes32 managerRole = _proposal.authorizer().getManagerRole();
+        vm.assume(!_proposal.authorizer().hasRole(managerRole, address(caller)));
 
         milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1093,7 +1097,8 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        bytes32 managerRole = _proposal.authorizer().getManagerRole();
+        vm.assume(!_proposal.authorizer().hasRole(managerRole, address(caller)));
 
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1566,7 +1571,8 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        bytes32 managerRole = _proposal.authorizer().getManagerRole();
+        vm.assume(!_proposal.authorizer().hasRole(managerRole, address(caller)));
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
@@ -1689,7 +1695,8 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        bytes32 managerRole = _proposal.authorizer().getManagerRole();
+        vm.assume(!_proposal.authorizer().hasRole(managerRole, address(caller)));
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);

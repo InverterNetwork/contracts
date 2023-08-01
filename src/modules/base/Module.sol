@@ -11,7 +11,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {IModule, IProposal} from "src/modules/base/IModule.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
+import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
 /**
  * @title Module
@@ -62,8 +62,8 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Proposal.
     modifier onlyProposalOwner() {
-        IRoleAuthorizer authorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        IAuthorizer authorizer =
+            IAuthorizer(address(__Module_proposal.authorizer()));
 
         bytes32 ownerRole = authorizer.getOwnerRole();
 
@@ -76,8 +76,8 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Proposal or the Proposal's manager.
     modifier onlyProposalOwnerOrManager() {
-        IRoleAuthorizer authorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        IAuthorizer authorizer =
+            IAuthorizer(address(__Module_proposal.authorizer()));
 
         bytes32 ownerRole = authorizer.getOwnerRole();
         bytes32 managerRole = authorizer.getManagerRole();
@@ -94,8 +94,9 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     //@todo Reminder that this will be moved into the Module Contract at a later point of time
     modifier onlyModuleRole(uint8 roleId) {
         if (
-            !IRoleAuthorizer(address(__Module_proposal.authorizer()))
-                .isAuthorized(roleId, _msgSender())
+            !IAuthorizer(address(__Module_proposal.authorizer())).isAuthorized(
+                roleId, _msgSender()
+            )
         ) {
             //revert Module__BountyManager__OnlyRole(roleId, address(this));
             revert Module__CallerNotAuthorized();
@@ -208,8 +209,8 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         external
         onlyProposalOwner
     {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        IAuthorizer roleAuthorizer =
+            IAuthorizer(address(__Module_proposal.authorizer()));
         roleAuthorizer.grantRoleFromModule(uint8(role), addr);
     }
 
@@ -217,8 +218,8 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         external
         onlyProposalOwner
     {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
+        IAuthorizer roleAuthorizer =
+            IAuthorizer(address(__Module_proposal.authorizer()));
         roleAuthorizer.revokeRoleFromModule(uint8(role), addr);
     }
 

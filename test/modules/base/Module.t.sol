@@ -71,7 +71,7 @@ contract ModuleTest is Test {
         modules[0] = address(module);
         proposal.init(
             1,
-            address(this),
+            // address(this),
             IERC20(new ERC20Mock("Mock", "MOCK")),
             modules,
             fundingManager,

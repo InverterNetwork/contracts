@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 // External Libraries
 
 import {ITokenGatedRoleAuthorizer} from "./ITokenGatedRoleAuthorizer.sol";
-import {IRoleAuthorizer, RoleAuthorizer} from "./RoleAuthorizer.sol";
+import {IAuthorizer, RoleAuthorizer} from "./RoleAuthorizer.sol";
 
 interface TokenInterface {
     function balanceOf(address _owner) external view returns (uint balance);
@@ -62,7 +62,7 @@ contract TokenGatedRoleAuthorizer is
     function isAuthorized(uint8 role, address who)
         public
         view
-        override(RoleAuthorizer, IRoleAuthorizer)
+        override(RoleAuthorizer, IAuthorizer)
         returns (bool)
     {
         //Note: since it uses msgSender to generate ID, this should only be used by modules. Users should call hasRole()

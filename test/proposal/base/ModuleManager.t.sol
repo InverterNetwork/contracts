@@ -346,6 +346,4 @@ contract ModuleManagerTest is Test {
         );
         moduleManager.removeModule(who);
     }
-
-  
 }

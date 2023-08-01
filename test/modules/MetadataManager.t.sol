@@ -64,6 +64,9 @@ contract MetadataManagerTest is ModuleTest {
 
         _setUpProposal(metadataManager);
 
+        // Authorize this contract for the tests
+        _authorizer.setIsAuthorized(address(this), true);
+
         //Init Module
         metadataManager.init(
             _proposal,
