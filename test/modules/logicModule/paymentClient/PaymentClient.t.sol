@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import {
     ERC20PaymentClientMock,
     IERC20PaymentClient
-} from "test/utils/mocks/modules/mixins/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
