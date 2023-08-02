@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import {E2eTest} from "test/e2e/E2eTest.sol";
 
-import {IProposalFactory} from "src/factories/ProposalFactory.sol";
-import {IProposal} from "src/proposal/Proposal.sol";
+import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 
 import {
     MilestoneManager,
@@ -16,7 +16,8 @@ import {RebasingFundingManager} from
 
 import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
-import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
+import {IERC20PaymentClient} from
+    "src/modules/base/mixins/IERC20PaymentClient.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -29,7 +30,7 @@ contract MilestoneLifecycle is E2eTest {
     // 1. A non-empty list of contributors for it
     // 2. The percentage of milestone funding to pay the contributors for the milestone.
 
-    // So lets add Alice and Bob as contributors to the proposal.
+    // So lets add Alice and Bob as contributors to the orchestrator.
     // Note the salary is specified in relation to the SALARY_PRECISION variable in the MilestoneManager.
     IMilestoneManager.Contributor alice = IMilestoneManager.Contributor(
         address(0xA11CE), 50_000_000, "AliceIdHash"
@@ -44,20 +45,24 @@ contract MilestoneLifecycle is E2eTest {
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
     function test_e2e_MilestoneLifecycle() public {
-        // First, we create a new proposal.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig({owner: address(this), token: token});
+        // First, we create a new orchestrator.
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: token
+        });
 
-        IProposal proposal = _createNewProposalWithAllModules(proposalConfig);
+        IOrchestrator orchestrator =
+            _createNewOrchestratorWithAllModules(orchestratorConfig);
 
         RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(proposal.fundingManager()));
+            RebasingFundingManager(address(orchestrator.fundingManager()));
 
         // Now we add a few milestones.
-        // For that, we need to access the proposal's milestone module.
+        // For that, we need to access the orchestrator's milestone module.
         MilestoneManager milestoneManager;
 
-        address[] memory modulesList = proposal.listModules();
+        address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             try IMilestoneManager(modulesList[i]).hasActiveMilestone() returns (
                 bool
@@ -91,7 +96,7 @@ contract MilestoneLifecycle is E2eTest {
         // IMPORTANT
         // =========
         // Due to how the underlying rebase mechanism works, it is necessary
-        // to always have some amount of tokens in the proposal.
+        // to always have some amount of tokens in the orchestrator.
         // It's best, if the owner deposits them right after deployment.
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
@@ -104,8 +109,8 @@ contract MilestoneLifecycle is E2eTest {
         assertTrue(milestoneManager.isContributor(1, alice.addr));
         assertTrue(milestoneManager.isContributor(1, bob.addr));
 
-        // Seeing this great working on the proposal, funder1 decides to fund
-        // the proposal with 1k of tokens.
+        // Seeing this great working on the orchestrator, funder1 decides to fund
+        // the orchestrator with 1k of tokens.
         token.mint(funder1, 1000e18);
 
         vm.startPrank(funder1);
@@ -115,7 +120,7 @@ contract MilestoneLifecycle is E2eTest {
         }
         vm.stopPrank();
 
-        // The proposal now has 1k tokens of funding. Exactly the amount needed
+        // The orchestrator now has 1k tokens of funding. Exactly the amount needed
         // for the first milestone.
         assertEq(
             token.balanceOf(address(fundingManager)), 1000e18 + initialDeposit
@@ -132,7 +137,7 @@ contract MilestoneLifecycle is E2eTest {
         // creates set set of payment orders inside the module and calls
         // the SimplePaymentProcessor module to process them. Note however, that the
         // orders are guaranteed to be payable, i.e. the tokens are already
-        // fetched from the proposal on creation of the order.
+        // fetched from the orchestrator on creation of the order.
 
         // since we take 1% fee, the expected balance is 990e18/2
 
@@ -180,9 +185,9 @@ contract MilestoneLifecycle is E2eTest {
         // This is independent whether the milestone is completed or not.
         vm.warp(block.timestamp + 1 weeks);
 
-        // Now start the next proposal...
+        // Now start the next orchestrator...
         milestoneManager.startNextMilestone();
-        // ...which leaves 5k of tokens left in the proposal.
+        // ...which leaves 5k of tokens left in the orchestrator.
         assertEq(
             token.balanceOf(address(fundingManager)), 5000e18 + initialDeposit
         );

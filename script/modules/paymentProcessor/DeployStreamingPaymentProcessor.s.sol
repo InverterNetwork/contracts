@@ -16,7 +16,7 @@ import {StreamingPaymentProcessor} from
 contract DeployStreamingPaymentProcessor is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     StreamingPaymentProcessor paymentProcessor;

@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import {E2eTest} from "test/e2e/E2eTest.sol";
 
-import {IProposalFactory} from "src/factories/ProposalFactory.sol";
-import {IProposal} from "src/proposal/Proposal.sol";
+import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
@@ -12,9 +12,9 @@ import {RebasingFundingManager} from
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 /**
- * E2e test demonstrating a proposal's fund management.
+ * E2e test demonstrating a orchestrator's fund management.
  *
- * Funding of a proposal is managed via a fundingmanager.
+ * Funding of a orchestrator is managed via a fundingmanager.
  *
  * Upon deposit of funds, users receive receipt token.
  * The withdrawal amount of funds is _always_ in relation of the amount of
@@ -27,15 +27,19 @@ contract FundManagement is E2eTest {
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
-    function test_e2e_ProposalFundManagement() public {
-        // address(this) creates a new proposal.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig({owner: address(this), token: token});
+    function test_e2e_OrchestratorFundManagement() public {
+        // address(this) creates a new orchestrator.
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: token
+        });
 
-        IProposal proposal = _createNewProposalWithAllModules(proposalConfig);
+        IOrchestrator orchestrator =
+            _createNewOrchestratorWithAllModules(orchestratorConfig);
 
         RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(proposal.fundingManager()));
+            RebasingFundingManager(address(orchestrator.fundingManager()));
 
         // IMPORTANT
         // =========
@@ -54,7 +58,7 @@ contract FundManagement is E2eTest {
         // Alice funds the fundingmanager with 1k tokens.
         vm.startPrank(alice);
         {
-            // Approve tokens to proposal.
+            // Approve tokens to orchestrator.
             token.approve(address(fundingManager), 1000e18);
 
             // Deposit tokens, i.e. fund the fundingmanager.
@@ -81,10 +85,10 @@ contract FundManagement is E2eTest {
         }
         vm.stopPrank();
 
-        // If the proposal spends half of the deposited tokens in the fundingmanager, i.e. for a milestone,
+        // If the orchestrator spends half of the deposited tokens in the fundingmanager, i.e. for a milestone,
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
-        // Note that we simulate proposal spending by just burning tokens.
+        // Note that we simulate orchestrator spending by just burning tokens.
         token.burn(
             address(fundingManager),
             token.balanceOf(address(fundingManager)) / 2

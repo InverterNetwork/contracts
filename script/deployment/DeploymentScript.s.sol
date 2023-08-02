@@ -13,10 +13,10 @@ import {IModuleFactory} from "src/factories/ModuleFactory.sol";
 
 import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
 import {DeployModuleFactory} from "script/factories/DeployModuleFactory.s.sol";
-import {DeployProposalFactory} from
-    "script/factories/DeployProposalFactory.s.sol";
+import {DeployOrchestratorFactory} from
+    "script/factories/DeployOrchestratorFactory.s.sol";
 
-import {DeployProposal} from "script/proposal/DeployProposal.s.sol";
+import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
 import {DeployStreamingPaymentProcessor} from
     "script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol";
 import {DeployMilestoneManager} from
@@ -31,9 +31,10 @@ contract DeploymentScript is Script {
     // Instances of Deployer Contracts
 
     DeployModuleFactory deployModuleFactory = new DeployModuleFactory();
-    DeployProposalFactory deployProposalFactory = new DeployProposalFactory();
+    DeployOrchestratorFactory deployOrchestratorFactory =
+        new DeployOrchestratorFactory();
 
-    DeployProposal deployProposal = new DeployProposal();
+    DeployOrchestrator deployOrchestrator = new DeployOrchestrator();
     DeployStreamingPaymentProcessor deployStreamingPaymentProcessor =
         new DeployStreamingPaymentProcessor();
     DeployMilestoneManager deployMilestoneManager = new DeployMilestoneManager();
@@ -46,14 +47,14 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Deployed Contracts
 
-    address proposal;
+    address orchestrator;
     address streamingPaymentProcessor;
     address milestoneManager;
     address fundingManager;
     address authorizer;
 
     address moduleFactory;
-    address proposalFactory;
+    address orchestratorFactory;
 
     address paymentProcessorBeacon;
     address milestoneManagerBeacon;
@@ -85,17 +86,18 @@ contract DeploymentScript is Script {
     );
 
     /// @notice Deploys all necessary factories, beacons and iplementations
-    /// @return factory The addresses of the fully deployed proposal factory. All other addresses should be accessible from this.
+    /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
         // Deploy implementation contracts.
-        proposal = deployProposal.run();
+        orchestrator = deployOrchestrator.run();
         streamingPaymentProcessor = deployStreamingPaymentProcessor.run();
         fundingManager = deployRebasingFundingManager.run();
         authorizer = deployRoleAuthorizer.run();
         milestoneManager = deployMilestoneManager.run();
 
         moduleFactory = deployModuleFactory.run();
-        proposalFactory = deployProposalFactory.run(proposal, moduleFactory);
+        orchestratorFactory =
+            deployOrchestratorFactory.run(orchestrator, moduleFactory);
 
         // Create beacons, set implementations and set metadata.
         paymentProcessorBeacon = deployAndSetUpBeacon.run(
@@ -111,6 +113,6 @@ contract DeploymentScript is Script {
             milestoneManager, moduleFactory, milestoneManagerMetadata
         );
 
-        return (proposalFactory);
+        return (orchestratorFactory);
     }
 }

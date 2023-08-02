@@ -6,7 +6,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import "forge-std/console.sol";
 
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {
@@ -14,7 +14,8 @@ import {
     IMilestoneManager
 } from "src/modules/logicModule/MilestoneManager.sol";
 
-import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
+import {IERC20PaymentClient} from
+    "src/modules/base/mixins/IERC20PaymentClient.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -72,12 +73,12 @@ contract MilestoneManagerTest is ModuleTest {
         address impl = address(new MilestoneManager());
         milestoneManager = MilestoneManager(Clones.clone(impl));
 
-        _setUpProposal(milestoneManager);
+        _setUpOrchestrator(milestoneManager);
 
-        bytes memory configdata =
+        bytes memory configData =
             abi.encode(SALARY_PRECISION, FEE_PERCENTAGE, FEE_TREASURY);
 
-        milestoneManager.init(_proposal, _METADATA, configdata);
+        milestoneManager.init(_orchestrator, _METADATA, configData);
 
         _authorizer.setIsAuthorized(address(this), true);
 
@@ -105,7 +106,7 @@ contract MilestoneManagerTest is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        milestoneManager.init(_proposal, _METADATA, bytes(""));
+        milestoneManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testInit2MilestoneManager() public {
@@ -114,25 +115,25 @@ contract MilestoneManagerTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        milestoneManager.init2(_proposal, abi.encode(123));
+        milestoneManager.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        milestoneManager.init2(_proposal, dependencydata);
+        milestoneManager.init2(_orchestrator, dependencyData);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencydata = abi.encode(true, dependencies);
-        milestoneManager.init2(_proposal, dependencydata);
+        dependencyData = abi.encode(true, dependencies);
+        milestoneManager.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        milestoneManager.init2(_proposal, dependencydata);
+        milestoneManager.init2(_orchestrator, dependencyData);
     }
 
     //--------------------------------------------------------------------------
@@ -474,7 +475,7 @@ contract MilestoneManagerTest is ModuleTest {
         public
     {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        vm.assume(caller != _orchestrator.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -506,7 +507,7 @@ contract MilestoneManagerTest is ModuleTest {
     //function testAddMilesteonFailsForInvalidBudget() public {
     //    uint[] memory invalids = _createInvalidBudgets();
     //
-    //    vm.startPrank(address(_proposal));
+    //    vm.startPrank(address(_orchestrator));
     //
     //    for (uint i; i < invalids.length; ++i) {
     //        vm.expectRevert(
@@ -590,7 +591,7 @@ contract MilestoneManagerTest is ModuleTest {
         contribs[0] = ALICE;
         contribs[1] = BOB;
         contribs[2] = ALICE;
-        contribs[2].addr = address(_proposal);
+        contribs[2].addr = address(_orchestrator);
 
         vm.expectRevert(
             IMilestoneManager
@@ -654,7 +655,7 @@ contract MilestoneManagerTest is ModuleTest {
         uint id = 1; // Note that id's start at 1.
 
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        vm.assume(caller != _orchestrator.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -827,7 +828,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        vm.assume(caller != _orchestrator.manager());
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -905,7 +906,7 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         // Check that payment orders were added correctly.
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             milestoneManager.paymentOrders();
 
         assertEq(orders.length, contributors.length);
@@ -946,7 +947,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        vm.assume(caller != _orchestrator.manager());
 
         milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -972,7 +973,7 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.startNextMilestone();
     }
 
-    function testStartNextMilestoneFailsIfTransferOfTokensFromProposalFailed(
+    function testStartNextMilestoneFailsIfTransferOfTokensFromOrchestratorFailed(
         address[] memory contributors
     ) public {
         IMilestoneManager.Contributor[] memory contribs =
@@ -984,7 +985,9 @@ contract MilestoneManagerTest is ModuleTest {
         vm.warp(block.timestamp + TIMELOCK + 1);
 
         vm.expectRevert(
-            IPaymentClient.Module__PaymentClient__TokenTransferFailed.selector
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__TokenTransferFailed
+                .selector
         );
         milestoneManager.startNextMilestone();
     }
@@ -1093,7 +1096,7 @@ contract MilestoneManagerTest is ModuleTest {
         address caller
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        vm.assume(caller != _orchestrator.manager());
 
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1566,7 +1569,7 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        vm.assume(caller != _orchestrator.manager());
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
@@ -1689,7 +1692,7 @@ contract MilestoneManagerTest is ModuleTest {
         address[] memory contributors
     ) public {
         _authorizer.setIsAuthorized(caller, false);
-        vm.assume(caller != _proposal.manager());
+        vm.assume(caller != _orchestrator.manager());
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
@@ -1847,7 +1850,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         //Make sure the values in the payment orders are the same
         // Check that payment orders were added correctly.
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             milestoneManager.paymentOrders();
 
         for (uint i = 1; i < orders.length; ++i) {
@@ -1895,7 +1898,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         //Make sure the values in the payment orders are the same
         // Check that payment orders were added correctly.
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             milestoneManager.paymentOrders();
 
         for (uint i = 1; i < orders.length; ++i) {
@@ -2121,7 +2124,7 @@ contract MilestoneManagerTest is ModuleTest {
 
         invalids[0] = address(0);
         invalids[1] = _SENTINEL_CONTRIBUTOR;
-        invalids[2] = address(_proposal);
+        invalids[2] = address(_orchestrator);
         invalids[3] = address(milestoneManager);
 
         return invalids;

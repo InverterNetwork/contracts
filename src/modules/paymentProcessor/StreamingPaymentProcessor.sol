@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {
     IStreamingPaymentProcessor,
     IPaymentProcessor,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
 import {Module} from "src/modules/base/Module.sol";
@@ -13,7 +13,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 /**
  * @title Payment processor module implementation #2: Linear vesting curve.
@@ -55,14 +55,14 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @notice checks that the caller is an active module
     modifier onlyModule() {
-        if (!proposal().isModule(_msgSender())) {
+        if (!orchestrator().isModule(_msgSender())) {
             revert Module__PaymentManager__OnlyCallableByModule();
         }
         _;
     }
 
     /// @notice checks that the client is calling for itself
-    modifier validClient(IPaymentClient client) {
+    modifier validClient(IERC20PaymentClient client) {
         if (_msgSender() != address(client)) {
             revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
         }
@@ -83,15 +83,15 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory /*configdata*/
+        bytes memory /*configData*/
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
-    function claimAll(IPaymentClient client) external {
+    function claimAll(IERC20PaymentClient client) external {
         if (
             !(
                 unclaimable(address(client), _msgSender()) > 0
@@ -109,7 +109,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IStreamingPaymentProcessor
     function claimForSpecificWalletId(
-        IPaymentClient client,
+        IERC20PaymentClient client,
         uint walletId,
         bool retryForUnclaimableAmounts
     ) external {
@@ -137,7 +137,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client)
+    function processPayments(IERC20PaymentClient client)
         external
         onlyModule
         validClient(client)
@@ -145,7 +145,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // Collect outstanding orders and their total token amount.
-            IPaymentClient.PaymentOrder[] memory orders;
+            IERC20PaymentClient.PaymentOrder[] memory orders;
             uint totalAmount;
             (orders, totalAmount) = client.collectPaymentOrders();
 
@@ -196,7 +196,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IPaymentProcessor
-    function cancelRunningPayments(IPaymentClient client)
+    function cancelRunningPayments(IERC20PaymentClient client)
         external
         onlyModule
         validClient(client)
@@ -206,7 +206,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IStreamingPaymentProcessor
     function removeAllPaymentReceiverPayments(
-        IPaymentClient client,
+        IERC20PaymentClient client,
         address paymentReceiver
     ) external onlyAuthorized {
         if (
@@ -222,7 +222,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IStreamingPaymentProcessor
     function removePaymentForSpecificWalletId(
-        IPaymentClient client,
+        IERC20PaymentClient client,
         address paymentReceiver,
         uint walletId,
         bool retryForUnclaimableAmounts
@@ -320,7 +320,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IPaymentProcessor
     function token() public view returns (IERC20) {
-        return this.proposal().token();
+        return this.orchestrator().token();
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
@@ -454,7 +454,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         }
     }
 
-    /// @notice Deletes all payments related to a paymentReceiver & leaves unvested tokens in the PaymentClient.
+    /// @notice Deletes all payments related to a paymentReceiver & leaves unvested tokens in the ERC20PaymentClient.
     /// @dev this function calls _removePayment which goes through all the payment orders for a paymentReceiver. For the payment orders
     ///      that are completely vested, their details are deleted in the _claimForSpecificWalletId function and for others it is
     ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the paymentClient itself.
@@ -716,7 +716,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function validAddress(address addr) internal view returns (bool) {
         return !(
             addr == address(0) || addr == _msgSender() || addr == address(this)
-                || addr == address(proposal())
+                || addr == address(orchestrator())
         );
     }
 

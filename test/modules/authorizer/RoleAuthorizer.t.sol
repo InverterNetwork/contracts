@@ -11,9 +11,9 @@ import {
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 // Internal Dependencies
-import {Proposal} from "src/proposal/Proposal.sol";
+import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 // Interfaces
-import {IModule, IProposal} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -29,7 +29,7 @@ contract RoleAuthorizerTest is Test {
 
     // Mocks
     RoleAuthorizer _authorizer;
-    Proposal internal _proposal = new Proposal();
+    Orchestrator internal _orchestrator = new Orchestrator();
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
@@ -41,8 +41,8 @@ contract RoleAuthorizerTest is Test {
         ROLE_1
     }
 
-    // Proposal Constants
-    uint internal constant _PROPOSAL_ID = 1;
+    // Orchestrator Constants
+    uint internal constant _ORCHESTRATOR_ID = 1;
     // Module Constants
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 1;
@@ -55,13 +55,13 @@ contract RoleAuthorizerTest is Test {
     function setUp() public virtual {
         address authImpl = address(new RoleAuthorizer());
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
-        address propImpl = address(new Proposal());
-        _proposal = Proposal(Clones.clone(propImpl));
+        address propImpl = address(new Orchestrator());
+        _orchestrator = Orchestrator(Clones.clone(propImpl));
         ModuleMock module = new  ModuleMock();
         address[] memory modules = new address[](1);
         modules[0] = address(module);
-        _proposal.init(
-            _PROPOSAL_ID,
+        _orchestrator.init(
+            _ORCHESTRATOR_ID,
             address(this),
             _token,
             modules,
@@ -73,22 +73,23 @@ contract RoleAuthorizerTest is Test {
         address initialAuth = ALBA;
 
         _authorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );
         assertEq(
             _authorizer.hasRole(
-                _authorizer.PROPOSAL_MANAGER_ROLE(), address(this)
+                _authorizer.ORCHESTRATOR_MANAGER_ROLE(), address(this)
             ),
             true
         );
         assertEq(
-            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA), true
+            _authorizer.hasRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), ALBA),
+            true
         );
         assertEq(
             _authorizer.hasRole(
-                _authorizer.PROPOSAL_OWNER_ROLE(), address(this)
+                _authorizer.ORCHESTRATOR_OWNER_ROLE(), address(this)
             ),
             false
         );
@@ -99,7 +100,7 @@ contract RoleAuthorizerTest is Test {
 
     function testInitWithInitialOwner(address initialAuth) public {
         //Checks that address list gets correctly stored on initialization
-        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+        // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         address authImpl = address(new RoleAuthorizer());
         RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
@@ -107,19 +108,19 @@ contract RoleAuthorizerTest is Test {
         assumeValidAuth(initialAuth);
 
         testAuthorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, address(this))
         );
 
-        assertEq(address(testAuthorizer.proposal()), address(_proposal));
+        assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
         assertEq(testAuthorizer.isAuthorized(0, initialAuth), true);
 
         assertEq(testAuthorizer.isAuthorized(0, address(this)), false);
         assertEq(
             testAuthorizer.getRoleMemberCount(
-                testAuthorizer.PROPOSAL_OWNER_ROLE()
+                testAuthorizer.ORCHESTRATOR_OWNER_ROLE()
             ),
             1
         );
@@ -127,7 +128,7 @@ contract RoleAuthorizerTest is Test {
 
     function testInitWithoutInitialOwners() public {
         //Checks that address list gets correctly stored on initialization if there are no owners given
-        // We "reuse" the proposal created in the setup, but the proposal doesn't know about this new authorizer.
+        // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         address authImpl = address(new RoleAuthorizer());
         RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
@@ -135,40 +136,44 @@ contract RoleAuthorizerTest is Test {
         address initialAuth = address(0);
 
         testAuthorizer.init(
-            IProposal(_proposal),
+            IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, address(this))
         );
 
-        assertEq(address(testAuthorizer.proposal()), address(_proposal));
+        assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
         assertEq(testAuthorizer.isAuthorized(0, address(this)), true);
         assertEq(
             testAuthorizer.getRoleMemberCount(
-                testAuthorizer.PROPOSAL_OWNER_ROLE()
+                testAuthorizer.ORCHESTRATOR_OWNER_ROLE()
             ),
             1
         );
     }
 
     function testReinitFails() public {
-        //Create a mock new proposal
-        Proposal newProposal = Proposal(Clones.clone(address(new Proposal())));
+        //Create a mock new orchestrator
+        Orchestrator newOrchestrator =
+            Orchestrator(Clones.clone(address(new Orchestrator())));
 
         address[] memory initialAuth = new address[](1);
         initialAuth[0] = address(this);
 
         vm.expectRevert();
         _authorizer.init(
-            IProposal(newProposal),
+            IOrchestrator(newOrchestrator),
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );
         assertEq(_authorizer.isAuthorized(0, address(this)), false);
-        assertEq(address(_authorizer.proposal()), address(_proposal));
+        assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
         assertEq(_authorizer.isAuthorized(0, ALBA), true);
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()), 1
+            _authorizer.getRoleMemberCount(
+                _authorizer.ORCHESTRATOR_OWNER_ROLE()
+            ),
+            1
         );
     }
 
@@ -178,42 +183,43 @@ contract RoleAuthorizerTest is Test {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        _authorizer.init2(_proposal, abi.encode(123));
+        _authorizer.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        _authorizer.init2(_proposal, dependencydata);
+        _authorizer.init2(_orchestrator, dependencyData);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencydata = abi.encode(true, dependencies);
-        _authorizer.init2(_proposal, dependencydata);
+        dependencyData = abi.encode(true, dependencies);
+        _authorizer.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        _authorizer.init2(_proposal, dependencydata);
+        _authorizer.init2(_orchestrator, dependencyData);
     }
 
     // Test Register Roles
 
     //--------------------------------------------------------------------------------------
-    // Test manually granting and revoking roles as proposal-defined Owner
+    // Test manually granting and revoking roles as orchestrator-defined Owner
 
     function testGrantOwnerRole(address[] memory newAuthorized) public {
-        uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE());
+        uint amountAuth = _authorizer.getRoleMemberCount(
+            _authorizer.ORCHESTRATOR_OWNER_ROLE()
+        );
 
         _validateAuthorizedList(newAuthorized);
 
         vm.startPrank(address(ALBA));
         for (uint i; i < newAuthorized.length; ++i) {
             _authorizer.grantRole(
-                _authorizer.PROPOSAL_OWNER_ROLE(), newAuthorized[i]
+                _authorizer.ORCHESTRATOR_OWNER_ROLE(), newAuthorized[i]
             );
         }
         vm.stopPrank();
@@ -221,13 +227,15 @@ contract RoleAuthorizerTest is Test {
         for (uint i; i < newAuthorized.length; ++i) {
             assertEq(
                 _authorizer.hasRole(
-                    _authorizer.PROPOSAL_OWNER_ROLE(), newAuthorized[i]
+                    _authorizer.ORCHESTRATOR_OWNER_ROLE(), newAuthorized[i]
                 ),
                 true
             );
         }
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()),
+            _authorizer.getRoleMemberCount(
+                _authorizer.ORCHESTRATOR_OWNER_ROLE()
+            ),
             (amountAuth + newAuthorized.length)
         );
     }
@@ -235,32 +243,38 @@ contract RoleAuthorizerTest is Test {
     function testRevokeOwnerRole() public {
         //Add Bob as owner
         vm.startPrank(address(ALBA));
-        _authorizer.grantRole(_authorizer.PROPOSAL_OWNER_ROLE(), BOB); //Meet your new Manager
+        _authorizer.grantRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), BOB); //Meet your new Manager
         vm.stopPrank();
         assertEq(
-            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), BOB), true
+            _authorizer.hasRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), BOB),
+            true
         );
 
-        uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE());
+        uint amountAuth = _authorizer.getRoleMemberCount(
+            _authorizer.ORCHESTRATOR_OWNER_ROLE()
+        );
 
         vm.startPrank(address(ALBA));
-        _authorizer.revokeRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA);
+        _authorizer.revokeRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), ALBA);
         vm.stopPrank();
 
         assertEq(
-            _authorizer.hasRole(_authorizer.PROPOSAL_OWNER_ROLE(), ALBA), false
+            _authorizer.hasRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), ALBA),
+            false
         );
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()),
+            _authorizer.getRoleMemberCount(
+                _authorizer.ORCHESTRATOR_OWNER_ROLE()
+            ),
             amountAuth - 1
         );
     }
 
     function testRemoveLastOwnerFails() public {
-        uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE());
-        bytes32 ownerRole = _authorizer.PROPOSAL_OWNER_ROLE(); //To correctly time the vm.expectRevert
+        uint amountAuth = _authorizer.getRoleMemberCount(
+            _authorizer.ORCHESTRATOR_OWNER_ROLE()
+        );
+        bytes32 ownerRole = _authorizer.ORCHESTRATOR_OWNER_ROLE(); //To correctly time the vm.expectRevert
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -274,7 +288,9 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.PROPOSAL_OWNER_ROLE()),
+            _authorizer.getRoleMemberCount(
+                _authorizer.ORCHESTRATOR_OWNER_ROLE()
+            ),
             amountAuth
         );
     }
@@ -282,7 +298,8 @@ contract RoleAuthorizerTest is Test {
     function testGrantManagerRole(address[] memory newAuthorized) public {
         // Here we test adding to a role with OWNER as admin
 
-        bytes32 managerRole = _authorizer.generateRoleId(address(_proposal), 1);
+        bytes32 managerRole =
+            _authorizer.generateRoleId(address(_orchestrator), 1);
         uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
 
         _validateAuthorizedList(newAuthorized);
@@ -306,13 +323,14 @@ contract RoleAuthorizerTest is Test {
         public
     {
         // Here we test adding to a role that has OWNER as admin while not being OWNER
-        bytes32 managerRole = _authorizer.generateRoleId(address(_proposal), 1);
+        bytes32 managerRole =
+            _authorizer.generateRoleId(address(_orchestrator), 1);
 
         vm.startPrank(address(ALBA));
         _authorizer.grantRole(managerRole, BOB); //Meet your new Manager
         vm.stopPrank();
 
-        //assertEq(_authorizer.hasRole(address(_proposal), 1, BOB), true);
+        //assertEq(_authorizer.hasRole(address(_orchestrator), 1, BOB), true);
         assertEq(_authorizer.hasRole(managerRole, BOB), true);
 
         uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
@@ -335,7 +353,8 @@ contract RoleAuthorizerTest is Test {
     function testRevokeManagerRole(address[] memory newAuthorized) public {
         // Here we test adding to a role with OWNER as admin
 
-        bytes32 managerRole = _authorizer.generateRoleId(address(_proposal), 1);
+        bytes32 managerRole =
+            _authorizer.generateRoleId(address(_orchestrator), 1);
         uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
 
         _validateAuthorizedList(newAuthorized);
@@ -364,7 +383,7 @@ contract RoleAuthorizerTest is Test {
 
         for (uint i; i < newAuthorized.length; ++i) {
             /* assertEq(
-                _authorizer.hasRole(address(_proposal), 1, newAuthorized[i]),
+                _authorizer.hasRole(address(_orchestrator), 1, newAuthorized[i]),
                 false
             );*/
             assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), false);
@@ -376,7 +395,8 @@ contract RoleAuthorizerTest is Test {
         address[] memory newAuthorized
     ) public {
         // Here we test adding to a role that has OWNER as admin while not being OWNER
-        bytes32 managerRole = _authorizer.generateRoleId(address(_proposal), 1);
+        bytes32 managerRole =
+            _authorizer.generateRoleId(address(_orchestrator), 1);
 
         vm.startPrank(address(ALBA));
         _authorizer.grantRole(managerRole, BOB); //Meet your new Manager
@@ -443,11 +463,11 @@ contract RoleAuthorizerTest is Test {
         );
     }
 
-    function testGrantRoleFromModuleFailsIfModuleNotInProposal() public {
+    function testGrantRoleFromModuleFailsIfModuleNotInOrchestrator() public {
         address newModule = _setupMockSelfManagedModule();
 
         vm.prank(ALBA);
-        _proposal.removeModule(newModule);
+        _orchestrator.removeModule(newModule);
 
         vm.prank(newModule);
         vm.expectRevert(
@@ -569,11 +589,11 @@ contract RoleAuthorizerTest is Test {
         );
     }
 
-    function testRevokeRoleFromModuleFailsIfModuleNotInProposal() public {
+    function testRevokeRoleFromModuleFailsIfModuleNotInOrchestrator() public {
         address newModule = _setupMockSelfManagedModule();
 
         vm.prank(ALBA);
-        _proposal.removeModule(newModule);
+        _orchestrator.removeModule(newModule);
 
         vm.prank(newModule);
         vm.expectRevert(
@@ -672,7 +692,9 @@ contract RoleAuthorizerTest is Test {
 
         // Now we set the OWNER as Role admin
         vm.startPrank(BOB);
-        _authorizer.transferAdminRole(roleId, _authorizer.PROPOSAL_OWNER_ROLE());
+        _authorizer.transferAdminRole(
+            roleId, _authorizer.ORCHESTRATOR_OWNER_ROLE()
+        );
         vm.stopPrank();
 
         // ALBA can now freely grant and revoke roles
@@ -690,7 +712,7 @@ contract RoleAuthorizerTest is Test {
 
         bytes32 roleId =
             _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
-        bytes32 ownerRole = _authorizer.PROPOSAL_OWNER_ROLE(); //Buffer this to time revert
+        bytes32 ownerRole = _authorizer.ORCHESTRATOR_OWNER_ROLE(); //Buffer this to time revert
 
         // BOB is not allowed to do this
         vm.startPrank(BOB);
@@ -792,7 +814,7 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
     }
 
-    function testModuleOnlyUsesProposalRolesWhenNotSelfManaged() public {
+    function testModuleOnlyUsesOrchestratorRolesWhenNotSelfManaged() public {
         // First, we  set up a module and authorize BOB
         address newModule = _setupMockSelfManagedModule();
 
@@ -816,7 +838,7 @@ contract RoleAuthorizerTest is Test {
     // Test module can correctly return to managed mode
 
     function testModuleReturnToManagedMode() public {
-        //testModuleOnlyUsesProposalRolesWhenNotSelfManaged implicitly tests this
+        //testModuleOnlyUsesOrchestratorRolesWhenNotSelfManaged implicitly tests this
     }
 
     // Test the burnAdminRole
@@ -861,7 +883,7 @@ contract RoleAuthorizerTest is Test {
 
     // -> Modules with burnt admin CAN return to managed state
     function testBurnedModuleCorrectlyReturnToManagedState() public {
-        // Same as testModuleOnlyUsesProposalRolesWhenNotSelfManaged but with ROLE_1
+        // Same as testModuleOnlyUsesOrchestratorRolesWhenNotSelfManaged but with ROLE_1
 
         // First, we  set up a module and authorize BOB
         address newModule = _setupMockSelfManagedModule();
@@ -878,7 +900,7 @@ contract RoleAuthorizerTest is Test {
         // BOB is not authorized anymore
         assertFalse(_authorizer.isAuthorized(uint8(1), BOB));
 
-        // But ALBA, as owner, is (uint8(0) because we are querying her owner role, not the proposal manager role)
+        // But ALBA, as owner, is (uint8(0) because we are querying her owner role, not the orchestrator manager role)
         assertTrue(_authorizer.isAuthorized(uint8(0), ALBA));
 
         vm.stopPrank();
@@ -888,7 +910,7 @@ contract RoleAuthorizerTest is Test {
     // Test Helper Functions
 
     // SetUp ModuleWith Roles.
-    // Creates a Mock module and adds it to the proposal with 2 roles:
+    // Creates a Mock module and adds it to the orchestrator with 2 roles:
     // - 1 with default Admin
     // - 1 with burnt admin
     // BOB is member of both roles.
@@ -896,7 +918,7 @@ contract RoleAuthorizerTest is Test {
         ModuleMock mockModule = new ModuleMock();
 
         vm.prank(ALBA); //We assume ALBA is owner
-        _proposal.addModule(address(mockModule));
+        _orchestrator.addModule(address(mockModule));
 
         vm.startPrank(address(mockModule));
         _authorizer.toggleModuleSelfManagement();
@@ -925,7 +947,7 @@ contract RoleAuthorizerTest is Test {
 
         return auths;
     }
-    // Adapted from proposal/helper/TypeSanityHelper.sol
+    // Adapted from orchestrator/helper/TypeSanityHelper.sol
 
     mapping(address => bool) authorizedCache;
 
@@ -953,7 +975,7 @@ contract RoleAuthorizerTest is Test {
         address[] memory invalids = new address[](8);
 
         invalids[0] = address(0);
-        invalids[1] = address(_proposal);
+        invalids[1] = address(_orchestrator);
         invalids[2] = address(_authorizer);
         invalids[3] = address(_paymentProcessor);
         invalids[4] = address(_token);

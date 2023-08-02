@@ -17,7 +17,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {
     IModuleFactory,
-    IProposal,
+    IOrchestrator,
     IModule
 } from "src/factories/IModuleFactory.sol";
 
@@ -75,8 +75,8 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     /// @inheritdoc IModuleFactory
     function createModule(
         IModule.Metadata memory metadata,
-        IProposal proposal,
-        bytes memory configdata
+        IOrchestrator orchestrator,
+        bytes memory configData
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
@@ -102,9 +102,11 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         address implementation = address(new BeaconProxy(beacon));
 
-        IModule(implementation).init(proposal, metadata, configdata);
+        IModule(implementation).init(orchestrator, metadata, configData);
 
-        emit ModuleCreated(address(proposal), implementation, metadata.title);
+        emit ModuleCreated(
+            address(orchestrator), implementation, metadata.title
+        );
 
         return implementation;
     }

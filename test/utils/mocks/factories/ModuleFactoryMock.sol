@@ -7,7 +7,7 @@ import {
     IModuleFactory,
     IBeacon,
     IModule,
-    IProposal
+    IOrchestrator
 } from "src/factories/IModuleFactory.sol";
 
 contract ModuleFactoryMock is IModuleFactory {
@@ -17,7 +17,7 @@ contract ModuleFactoryMock is IModuleFactory {
     // address(0x1).
     uint public addressCounter = 10;
 
-    function createModule(IModule.Metadata memory, IProposal, bytes memory)
+    function createModule(IModule.Metadata memory, IOrchestrator, bytes memory)
         external
         returns (address)
     {
