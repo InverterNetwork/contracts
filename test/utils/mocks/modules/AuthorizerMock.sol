@@ -39,7 +39,6 @@ contract AuthorizerMock is IAuthorizer, Module {
             .sender] = true;
         _roleAuthorized[generateRoleId(address(orchestrator()), uint8(1))][msg
             .sender] = true;
-
     }
 
     function mockInit(bytes memory configData) public {

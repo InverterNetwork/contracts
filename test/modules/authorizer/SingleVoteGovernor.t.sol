@@ -12,6 +12,7 @@ import {
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
@@ -29,38 +30,22 @@ import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
-contract SingleVoteGovernorTest is Test {
+contract SingleVoteGovernorTest is ModuleTest {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT
     SingleVoteGovernor _governor;
 
-    Orchestrator _orchestrator;
+    //Orchestrator _orchestrator;
     address[] initialVoters;
     address[] currentVoters;
 
     // Constants and other data structures
     uint internal constant DEFAULT_QUORUM = 2;
     uint internal constant DEFAULT_DURATION = 4 days;
-    // For the orchestrator
-    uint internal constant _ORCHESTRATOR_ID = 1;
-    // For the metadata
-    uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 1;
-    string constant URL = "https://github.com/organization/module";
-    string constant TITLE = "Module";
 
-    IModule.Metadata _METADATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
-    // Mocks
-    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
-    FundingManagerMock _fundingManager = new FundingManagerMock();
-    PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
-    AuthorizerMock _authorizer = new AuthorizerMock();
-    ModuleMock module = new  ModuleMock();
-    // Mock users
     // intial authorizd users
     address internal constant ALBA = address(0xa1ba);
     address internal constant BOB = address(0xb0b);
@@ -72,27 +57,14 @@ contract SingleVoteGovernorTest is Test {
         address authImpl = address(new SingleVoteGovernor());
         _governor = SingleVoteGovernor(Clones.clone(authImpl));
 
-        address impl = address(new Orchestrator());
-        _orchestrator = Orchestrator(Clones.clone(impl));
-
-        address[] memory modules = new address[](1);
-        modules[0] = address(_governor);
-
-        _orchestrator.init(
-            _ORCHESTRATOR_ID,
-            _token,
-            modules,
-            _fundingManager,
-            _authorizer,
-            _paymentProcessor
-        );
+        _setUpOrchestrator(_governor);
 
         //we give the governor the ownwer role
         bytes32 ownerRole = _authorizer.getOwnerRole();
         _authorizer.grantRole(ownerRole, address(_governor));
         //_authorizer.setIsAuthorized(address(_governor), true);
 
-        // Initialize the authorizer with 3 users
+        // Initialize the governor with 3 users
 
         initialVoters = new address[](3);
         initialVoters[0] = ALBA;
@@ -108,32 +80,12 @@ contract SingleVoteGovernorTest is Test {
             abi.encode(initialVoters, _startingThreshold, _startingDuration)
         );
 
-        _authorizer.init2(_orchestrator, dependencyData);
-
-        
-
-        console.log(address(_authorizer.orchestrator()));
-        console.log(address(_orchestrator));
-
-        assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
-        assertEq(_orchestrator.isModule(address(_governor)), true);
-
-        assertEq(_authorizer.isAuthorized(address(_governor)), true);
-        assertEq(_governor.isVoter(ALBA), true);
-        assertEq(_governor.isVoter(BOB), true);
-        assertEq(_governor.isVoter(COBIE), true);
-
         currentVoters.push(ALBA);
         currentVoters.push(BOB);
         currentVoters.push(COBIE);
 
-        // The deployer may be owner, but not authorized by default
-        assertEq(_authorizer.isAuthorized(address(this)), false);
-        assertEq(_authorizer.isAuthorized(address(_orchestrator)), false);
-        assertEq(_governor.isVoter(address(this)), false);
-        assertEq(_governor.isVoter(address(_orchestrator)), false);
+        //validation of the initial state happens in testInit()
 
-        assertEq(_governor.voterCount(), 3);
     }
 
     //--------------------------------------------------------------------------
@@ -271,6 +223,22 @@ contract SingleVoteGovernorTest is Test {
     //--------------------------------------------------------------------------
     // TESTS: INITIALIZATION
 
+    function testInit() public override(ModuleTest) {
+        assertEq(_orchestrator.isModule(address(_governor)), true);
+
+        assertEq(_authorizer.isAuthorized(address(_governor)), true);
+        assertEq(_governor.isVoter(ALBA), true);
+        assertEq(_governor.isVoter(BOB), true);
+        assertEq(_governor.isVoter(COBIE), true);
+
+        assertEq(_authorizer.isAuthorized(address(this)), false);
+        assertEq(_authorizer.isAuthorized(address(_orchestrator)), false);
+        assertEq(_governor.isVoter(address(this)), false);
+        assertEq(_governor.isVoter(address(_orchestrator)), false);
+
+        assertEq(_governor.voterCount(), 3);
+    }
+
     function testInitWithInitialVoters(address[] memory testVoters) public {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
@@ -341,7 +309,7 @@ contract SingleVoteGovernorTest is Test {
         );
     }
 
-    function testReinitFails() public {
+    function testReinitFails() public override {
         //Create a mock new orchestrator
         Orchestrator newOrchestrator =
             Orchestrator(Clones.clone(address(new Orchestrator())));
@@ -1050,8 +1018,6 @@ contract SingleVoteGovernorTest is Test {
 
     // Fail to remove Authorized addresses until threshold is unreachble
     function testRemoveTooManyVoters() public {
-        assertEq(address(_orchestrator), address(_authorizer.orchestrator()));
-
         vm.startPrank(address(_governor));
         _governor.removeVoter(COBIE);
 
@@ -1068,8 +1034,6 @@ contract SingleVoteGovernorTest is Test {
 
     // Fail to remove Authorized addresses until the voterlist is empty
     function testRemoveUntilVoterListEmpty() public {
-        assertEq(address(_orchestrator), address(_authorizer.orchestrator()));
-
         vm.startPrank(address(_governor));
         _governor.setThreshold(0);
 
@@ -1261,7 +1225,7 @@ contract SingleVoteGovernorTest is Test {
         invalids[2] = address(_governor);
         invalids[3] = address(_paymentProcessor);
         invalids[4] = address(_token);
-        invalids[5] = address(module);
+        invalids[5] = address(_authorizer);
         invalids[6] = address(this);
         invalids[7] = ALBA;
         invalids[8] = BOB;
