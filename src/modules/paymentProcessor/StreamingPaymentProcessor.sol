@@ -208,7 +208,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function removeAllPaymentReceiverPayments(
         IERC20PaymentClient client,
         address paymentReceiver
-    ) external onlyProposalOwner {
+    ) external onlyOrchestratorOwner {
         if (
             _findAddressInActiveVestings(address(client), paymentReceiver)
                 == type(uint).max
@@ -226,7 +226,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         address paymentReceiver,
         uint walletId,
         bool retryForUnclaimableAmounts
-    ) external onlyProposalOwner {
+    ) external onlyOrchestratorOwner {
         // First, we give the vested funds from this specific walletId to the beneficiary
         _claimForSpecificWalletId(
             address(client),

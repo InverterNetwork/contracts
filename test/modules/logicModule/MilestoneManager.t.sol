@@ -476,7 +476,9 @@ contract MilestoneManagerTest is ModuleTest {
     {
         _authorizer.setIsAuthorized(caller, false);
         bytes32 managerRole = _orchestrator.authorizer().getManagerRole();
-        vm.assume(!_orchestrator.authorizer().hasRole(managerRole, address(caller)));
+        vm.assume(
+            !_orchestrator.authorizer().hasRole(managerRole, address(caller))
+        );
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -657,7 +659,9 @@ contract MilestoneManagerTest is ModuleTest {
 
         _authorizer.setIsAuthorized(caller, false);
         bytes32 managerRole = _orchestrator.authorizer().getManagerRole();
-        vm.assume(!_orchestrator.authorizer().hasRole(managerRole, address(caller)));
+        vm.assume(
+            !_orchestrator.authorizer().hasRole(managerRole, address(caller))
+        );
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -831,7 +835,9 @@ contract MilestoneManagerTest is ModuleTest {
     ) public {
         _authorizer.setIsAuthorized(caller, false);
         bytes32 managerRole = _orchestrator.authorizer().getManagerRole();
-        vm.assume(!_orchestrator.authorizer().hasRole(managerRole, address(caller)));
+        vm.assume(
+            !_orchestrator.authorizer().hasRole(managerRole, address(caller))
+        );
 
         vm.prank(caller);
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -951,7 +957,9 @@ contract MilestoneManagerTest is ModuleTest {
     ) public {
         _authorizer.setIsAuthorized(caller, false);
         bytes32 managerRole = _orchestrator.authorizer().getManagerRole();
-        vm.assume(!_orchestrator.authorizer().hasRole(managerRole, address(caller)));
+        vm.assume(
+            !_orchestrator.authorizer().hasRole(managerRole, address(caller))
+        );
 
         milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1101,7 +1109,9 @@ contract MilestoneManagerTest is ModuleTest {
     ) public {
         _authorizer.setIsAuthorized(caller, false);
         bytes32 managerRole = _orchestrator.authorizer().getManagerRole();
-        vm.assume(!_orchestrator.authorizer().hasRole(managerRole, address(caller)));
+        vm.assume(
+            !_orchestrator.authorizer().hasRole(managerRole, address(caller))
+        );
 
         uint id = milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
@@ -1575,7 +1585,9 @@ contract MilestoneManagerTest is ModuleTest {
     ) public {
         _authorizer.setIsAuthorized(caller, false);
         bytes32 managerRole = _orchestrator.authorizer().getManagerRole();
-        vm.assume(!_orchestrator.authorizer().hasRole(managerRole, address(caller)));
+        vm.assume(
+            !_orchestrator.authorizer().hasRole(managerRole, address(caller))
+        );
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);
@@ -1699,7 +1711,9 @@ contract MilestoneManagerTest is ModuleTest {
     ) public {
         _authorizer.setIsAuthorized(caller, false);
         bytes32 managerRole = _orchestrator.authorizer().getManagerRole();
-        vm.assume(!_orchestrator.authorizer().hasRole(managerRole, address(caller)));
+        vm.assume(
+            !_orchestrator.authorizer().hasRole(managerRole, address(caller))
+        );
 
         IMilestoneManager.Contributor[] memory contribs =
             _generateEqualContributors(contributors);

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 // SuT
 import {
@@ -101,14 +102,21 @@ contract SingleVoteGovernorTest is Test {
         uint _startingThreshold = DEFAULT_QUORUM;
         uint _startingDuration = DEFAULT_DURATION;
 
-        _authorizer.init(
+        _governor.init(
             IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(initialVoters, _startingThreshold, _startingDuration)
         );
 
+        _authorizer.init2(_orchestrator, dependencyData);
+
+        
+
+        console.log(address(_authorizer.orchestrator()));
+        console.log(address(_orchestrator));
+
         assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
-        assertEq(_proposal.isModule(address(_governor)), true);
+        assertEq(_orchestrator.isModule(address(_governor)), true);
 
         assertEq(_authorizer.isAuthorized(address(_governor)), true);
         assertEq(_governor.isVoter(ALBA), true);
@@ -122,8 +130,8 @@ contract SingleVoteGovernorTest is Test {
         // The deployer may be owner, but not authorized by default
         assertEq(_authorizer.isAuthorized(address(this)), false);
         assertEq(_authorizer.isAuthorized(address(_orchestrator)), false);
-        assertEq(_authorizer.isVoter(address(this)), false);
-        assertEq(_authorizer.isVoter(address(_orchestrator)), false);
+        assertEq(_governor.isVoter(address(this)), false);
+        assertEq(_governor.isVoter(address(_orchestrator)), false);
 
         assertEq(_governor.voterCount(), 3);
     }
@@ -454,7 +462,7 @@ contract SingleVoteGovernorTest is Test {
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        _governor.init2(_orchestrator, dependencydata);
+        _governor.init2(_orchestrator, dependencyData);
     }
 
     //--------------------------------------------------------------------------
@@ -1116,7 +1124,7 @@ contract SingleVoteGovernorTest is Test {
         uint _newQ = 1;
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-            vm.prank(users[i]); //authorized, but not Proposal
+            vm.prank(users[i]); //authorized, but not orchestrator
             _governor.setThreshold(_newQ);
         }
     }
@@ -1135,7 +1143,7 @@ contract SingleVoteGovernorTest is Test {
         // 2) The vote gets executed by anybody
         _governor.executeMotion(_voteID);
 
-        // 3) The proposal state has changed
+        // 3) The orchestrator state has changed
         assertEq(_governor.threshold(), _newThreshold);
     }
 
@@ -1203,7 +1211,7 @@ contract SingleVoteGovernorTest is Test {
         uint _newDuration = 5 days;
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-            vm.prank(users[i]); //authorized, but not Proposal
+            vm.prank(users[i]); //authorized, but not orchestrator
             _governor.setVotingDuration(_newDuration);
         }
     }

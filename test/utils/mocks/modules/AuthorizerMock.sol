@@ -35,12 +35,11 @@ contract AuthorizerMock is IAuthorizer, Module {
 
         _authorized[authorized] = true;
 
-        _roleAuthorized[generateRoleId(address(proposal()), uint8(0))][msg
+        _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][msg
             .sender] = true;
-        _roleAuthorized[generateRoleId(address(proposal()), uint8(1))][msg
+        _roleAuthorized[generateRoleId(address(orchestrator()), uint8(1))][msg
             .sender] = true;
 
-        console.log(msg.sender);
     }
 
     function mockInit(bytes memory configData) public {
@@ -57,7 +56,7 @@ contract AuthorizerMock is IAuthorizer, Module {
     // Also accepts the owner role as authorized.
     function isAuthorized(address who) external view returns (bool) {
         return _authorized[who] || _allAuthorized
-            || _roleAuthorized[generateRoleId(address(proposal()), uint8(0))][who];
+            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][who];
     }
 
     //IRoleAuthorizer
@@ -69,8 +68,8 @@ contract AuthorizerMock is IAuthorizer, Module {
     {
         return _authorized[who]
             || _roleAuthorized[generateRoleId(msg.sender, role)][who]
-            || _roleAuthorized[generateRoleId(address(proposal()), uint8(0))][who]
-            || _roleAuthorized[generateRoleId(address(proposal()), uint8(1))][who]
+            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][who]
+            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(1))][who]
             || _allAuthorized;
     }
 
@@ -123,10 +122,10 @@ contract AuthorizerMock is IAuthorizer, Module {
     function renounceRole(bytes32, address) external pure {}
 
     function getOwnerRole() external view returns (bytes32) {
-        return generateRoleId(address(proposal()), uint8(0));
+        return generateRoleId(address(orchestrator()), uint8(0));
     }
 
     function getManagerRole() external view returns (bytes32) {
-        return generateRoleId(address(proposal()), uint8(1));
+        return generateRoleId(address(orchestrator()), uint8(1));
     }
 }

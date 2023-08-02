@@ -16,8 +16,8 @@ contract RoleAuthorizer is
     //--------------------------------------------------------------------------
     // Storage
 
-    // Core roles for a proposal. They correspond to uint8(0) and uint(1)
-    // NOTE that proposal owner can register more global roles using numbers from 2 onward. They'l need to go through the DEFAULT_ADMIN_ROLE for this.
+    // Core roles for a orchestrator. They correspond to uint8(0) and uint(1)
+    // NOTE that orchestrator owner can register more global roles using numbers from 2 onward. They'l need to go through the DEFAULT_ADMIN_ROLE for this.
     enum CoreRoles {
         OWNER, // Partial Access to Protected Functions
         MANAGER // Full Access to Protected Functions
@@ -101,7 +101,7 @@ contract RoleAuthorizer is
             generateRoleId(address(orchestrator()), uint8(CoreRoles.MANAGER));
 
         //We preliminarily grant admin role to the deployer
-        _grantRole(PROPOSAL_OWNER_ROLE, _msgSender());
+        _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
 
         // Set up OWNER role structure:
 
@@ -235,25 +235,25 @@ contract RoleAuthorizer is
 
     function grantGlobalRole(uint8 role, address target)
         external
-        onlyRole(PROPOSAL_OWNER_ROLE)
+        onlyRole(ORCHESTRATOR_OWNER_ROLE)
     {
-        bytes32 roleId = generateRoleId(address(proposal()), role);
+        bytes32 roleId = generateRoleId(address(orchestrator()), role);
         _grantRole(roleId, target);
     }
 
     function revokeGlobalRole(uint8 role, address target)
         external
-        onlyRole(PROPOSAL_OWNER_ROLE)
+        onlyRole(ORCHESTRATOR_OWNER_ROLE)
     {
-        bytes32 roleId = generateRoleId(address(proposal()), role);
+        bytes32 roleId = generateRoleId(address(orchestrator()), role);
         _revokeRole(roleId, target);
     }
 
     function getOwnerRole() public view returns (bytes32) {
-        return PROPOSAL_OWNER_ROLE;
+        return ORCHESTRATOR_OWNER_ROLE;
     }
 
     function getManagerRole() public view returns (bytes32) {
-        return PROPOSAL_MANAGER_ROLE;
+        return ORCHESTRATOR_MANAGER_ROLE;
     }
 }

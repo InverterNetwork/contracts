@@ -94,9 +94,8 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(uint8 roleId) {
         if (
-            !IAuthorizer(address(__Module_orchestrator.authorizer())).isAuthorized(
-                roleId, _msgSender()
-            )
+            !IAuthorizer(address(__Module_orchestrator.authorizer()))
+                .isAuthorized(roleId, _msgSender())
         ) {
             //revert Module__BountyManager__OnlyRole(roleId, address(this));
             revert Module__CallerNotAuthorized();
@@ -207,19 +206,19 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
 
     function grantModuleRole(uint8 role, address addr)
         external
-        onlyProposalOwner
+        onlyOrchestratorOwner
     {
         IAuthorizer roleAuthorizer =
-            IAuthorizer(address(__Module_proposal.authorizer()));
+            IAuthorizer(address(__Module_orchestrator.authorizer()));
         roleAuthorizer.grantRoleFromModule(uint8(role), addr);
     }
 
     function revokeModuleRole(uint8 role, address addr)
         external
-        onlyProposalOwner
+        onlyOrchestratorOwner
     {
         IAuthorizer roleAuthorizer =
-            IAuthorizer(address(__Module_proposal.authorizer()));
+            IAuthorizer(address(__Module_orchestrator.authorizer()));
         roleAuthorizer.revokeRoleFromModule(uint8(role), addr);
     }
 

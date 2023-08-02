@@ -46,7 +46,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
-    modifier onlyProposalOwner() {
+    modifier onlyOrchestratorOwner() {
         if (!authorizer.isAuthorized(_msgSender())) {
             revert Orchestrator__CallerNotAuthorized();
         }
@@ -277,9 +277,9 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     }
 
     //--------------------------------------------------------------------------
-    // onlyProposalOwner Functions
+    // onlyOrchestratorOwner Functions
 
-    /// @inheritdoc IProposal
+    /// @inheritdoc IOrchestrator
     function setAuthorizer(IAuthorizer authorizer_)
         external
         onlyOrchestratorOwner
@@ -293,7 +293,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function setFundingManager(IFundingManager fundingManager_)
         external
-        onlyProposalOwner
+        onlyOrchestratorOwner
     {
         addModule(address(fundingManager_));
         removeModule(address(fundingManager));
@@ -304,7 +304,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
         external
-        onlyProposalOwner
+        onlyOrchestratorOwner
     {
         addModule(address(paymentProcessor_));
         removeModule(address(paymentProcessor));
@@ -315,7 +315,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function executeTx(address target, bytes memory data)
         external
-        onlyProposalOwner
+        onlyOrchestratorOwner
         returns (bytes memory)
     {
         bool ok;

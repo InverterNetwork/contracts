@@ -345,7 +345,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    ) external onlyProposalOwnerOrManager returns (uint) {
+    ) external onlyOrchestratorOwnerOrManager returns (uint) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
         return _addMilestone(duration, budget, contributors, details);
@@ -354,7 +354,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     /// @inheritdoc IMilestoneManager
     function stopMilestone(uint prevId, uint id)
         external
-        onlyProposalOwnerOrManager
+        onlyOrchestratorOwnerOrManager
         validId(id)
     {
         Milestone storage m = _milestoneRegistry[id];
@@ -385,7 +385,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     /// @inheritdoc IMilestoneManager
     function removeMilestone(uint prevId, uint id)
         external
-        onlyProposalOwnerOrManager
+        onlyOrchestratorOwnerOrManager
         validId(id)
     {
         Milestone storage m = _milestoneRegistry[id];
@@ -406,7 +406,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     }
 
     /// @inheritdoc IMilestoneManager
-    function startNextMilestone() external onlyProposalOwnerOrManager {
+    function startNextMilestone() external onlyOrchestratorOwnerOrManager {
         if (!isNextMilestoneActivatable()) {
             revert Module__MilestoneManager__MilestoneNotActivateable();
         }
@@ -481,7 +481,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
         uint budget,
         Contributor[] calldata contributors,
         bytes calldata details
-    ) external onlyProposalOwnerOrManager validId(id) {
+    ) external onlyOrchestratorOwnerOrManager validId(id) {
         _validateMilestoneDetails(duration, budget, contributors, details);
 
         Milestone storage m = _milestoneRegistry[id];
@@ -530,7 +530,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     /// @inheritdoc IMilestoneManager
     function moveMilestoneInList(uint id, uint prevId, uint idToPositionAfter)
         external
-        onlyProposalOwnerOrManager
+        onlyOrchestratorOwnerOrManager
         validMilestonePositionShift(id, idToPositionAfter)
     {
         _milestoneList.moveIdInList(id, prevId, idToPositionAfter);
@@ -559,7 +559,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     /// @inheritdoc IMilestoneManager
     function completeMilestone(uint milestoneId)
         external
-        onlyProposalOwnerOrManager
+        onlyOrchestratorOwnerOrManager
         validId(milestoneId)
     {
         Milestone storage m = _milestoneRegistry[milestoneId];
@@ -578,7 +578,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     /// @inheritdoc IMilestoneManager
     function declineMilestone(uint milestoneId)
         external
-        onlyProposalOwnerOrManager
+        onlyOrchestratorOwnerOrManager
         validId(milestoneId)
     {
         Milestone storage m = _milestoneRegistry[milestoneId];
@@ -683,7 +683,7 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
 
     function updateMilestoneUpdateTimelock(uint _newTimelock)
         external
-        onlyProposalOwner
+        onlyOrchestratorOwner
     {
         _milestoneUpdateTimelock = _newTimelock;
         emit MilestoneUpdateTimelockUpdated(_milestoneUpdateTimelock);
