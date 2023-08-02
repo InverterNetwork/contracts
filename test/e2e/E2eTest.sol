@@ -46,10 +46,10 @@ contract E2eTest is Test {
 
     // Factory instances.
     ModuleFactory moduleFactory;
-    ProposalFactory proposalFactory;
+    OrchestratorFactory orchestratorFactory;
 
-    // Proposal implementation.
-    Proposal proposalImpl;
+    // Orchestrator implementation.
+    Orchestrator orchestratorImpl;
 
     //--------------------------------------------------------------------------
     // fundingManager
@@ -322,8 +322,8 @@ contract E2eTest is Test {
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
-    IProposalFactory.ModuleConfig bountyManagerFactoryConfig = IProposalFactory
-        .ModuleConfig(
+    IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
         bountyManagerMetadata, bytes(""), abi.encode(true, dependencies)
     );
 
@@ -348,14 +348,14 @@ contract E2eTest is Test {
     event checker(uint);
 
     function setUp() public {
-        // Deploy Proposal implementation.
-        proposalImpl = new Proposal();
+        // Deploy Orchestrator implementation.
+        orchestratorImpl = new Orchestrator();
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
 
-        proposalFactory =
-            new ProposalFactory(address(proposalImpl), address(moduleFactory));
+        orchestratorFactory =
+        new OrchestratorFactory(address(orchestratorImpl), address(moduleFactory));
 
         //FundingManager
         setUpRebasingFundingManager();
@@ -373,11 +373,11 @@ contract E2eTest is Test {
         setUpBountyManager();
     }
 
-    function _createNewProposalWithAllModules(
-        IProposalFactory.ProposalConfig memory config
-    ) internal returns (IProposal) {
-        IProposalFactory.ModuleConfig[] memory optionalModules =
-            new IProposalFactory.ModuleConfig[](2);
+    function _createNewOrchestratorWithAllModules(
+        IOrchestratorFactory.OrchestratorConfig memory config
+    ) internal returns (IOrchestrator) {
+        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory.ModuleConfig[](2);
         optionalModules[0] = milestoneManagerFactoryConfig;
         optionalModules[1] = bountyManagerFactoryConfig;
 

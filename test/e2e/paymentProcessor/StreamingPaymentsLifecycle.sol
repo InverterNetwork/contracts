@@ -5,8 +5,8 @@ import {E2eTest} from "test/e2e/E2eTest.sol";
 import "forge-std/console.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
-import {IProposalFactory} from "src/factories/ProposalFactory.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
 // External Libraries
@@ -17,8 +17,7 @@ import {RebasingFundingManager} from
 // SuT
 import {
     RecurringPaymentManager,
-    IRecurringPaymentManager,
-    IPaymentClient
+    IRecurringPaymentManager
 } from "src/modules/logicModule/RecurringPaymentManager.sol";
 
 import {StreamingPaymentProcessor} from
@@ -26,14 +25,14 @@ import {StreamingPaymentProcessor} from
 
 import {
     IStreamingPaymentProcessor,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract StreamingPaymentsLifecycle is E2eTest {
-    // Let's create a list of contributors
+    // Let's create a list of PaymentReceivers
     address alice = makeAddr("Alice");
     address bob = makeAddr("Bob");
     address charlie = makeAddr("Charlie");
@@ -44,38 +43,45 @@ contract StreamingPaymentsLifecycle is E2eTest {
     uint epochsAmount = 10;
 
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
-    IProposal proposal;
+    IOrchestrator orchestrator;
     RebasingFundingManager fundingManager;
     RecurringPaymentManager recurringPaymentManager;
     StreamingPaymentProcessor streamingPaymentProcessor;
 
-    uint contributor1InitialBalance;
-    uint contributor2InitialBalance;
+    uint paymentReceiver1InitialBalance;
+    uint paymentReceiver2InitialBalance;
 
     function fetchReferences() private {}
 
     function init() private {
         // -----------INIT
-        // address(this) creates a new proposal.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig({owner: address(this), token: token});
+        // address(this) creates a new orchestrator.
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: token
+        });
 
-        proposal =
-        _createNewProposalWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
-            proposalConfig
+        orchestrator =
+        _createNewOrchestratorWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
+            orchestratorConfig
         );
 
         fundingManager =
-            RebasingFundingManager(address(proposal.fundingManager()));
+            RebasingFundingManager(address(orchestrator.fundingManager()));
 
         recurringPaymentManager = RecurringPaymentManager(
-            proposal.findModuleAddressInProposal("RecurringPaymentManager")
+            orchestrator.findModuleAddressInOrchestrator(
+                "RecurringPaymentManager"
+            )
         );
         // check if the recurringPaymentManager is initialized correctly or not.
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
 
         streamingPaymentProcessor = StreamingPaymentProcessor(
-            proposal.findModuleAddressInProposal("StreamingPaymentProcessor")
+            orchestrator.findModuleAddressInOrchestrator(
+                "StreamingPaymentProcessor"
+            )
         );
 
         //deposit some funds to fundingManager
@@ -253,12 +259,12 @@ contract StreamingPaymentsLifecycle is E2eTest {
         assertTrue(vestings.length == 3);
 
         assertTrue(
-            streamingPaymentProcessor.isActiveContributor(
+            streamingPaymentProcessor.isActivePaymentReceiver(
                 address(recurringPaymentManager), bob
             )
         );
         assertTrue(
-            streamingPaymentProcessor.isActiveContributor(
+            streamingPaymentProcessor.isActivePaymentReceiver(
                 address(recurringPaymentManager), charlie
             )
         );
@@ -278,13 +284,13 @@ contract StreamingPaymentsLifecycle is E2eTest {
         assertTrue(vestings.length == 2);
 
         //remove all Payments from Alice
-        streamingPaymentProcessor.removeAllContributorPayments(
+        streamingPaymentProcessor.removeAllPaymentReceiverPayments(
             recurringPaymentManager, alice
         );
 
         //Make sure alice has no payments left
         assertFalse(
-            streamingPaymentProcessor.isActiveContributor(
+            streamingPaymentProcessor.isActivePaymentReceiver(
                 address(recurringPaymentManager), alice
             )
         );
@@ -297,59 +303,14 @@ contract StreamingPaymentsLifecycle is E2eTest {
 
         //Make sure the others are also removed
         assertFalse(
-            streamingPaymentProcessor.isActiveContributor(
+            streamingPaymentProcessor.isActivePaymentReceiver(
                 address(recurringPaymentManager), bob
             )
         );
         assertFalse(
-            streamingPaymentProcessor.isActiveContributor(
+            streamingPaymentProcessor.isActivePaymentReceiver(
                 address(recurringPaymentManager), charlie
             )
         );
     }
-
-    //User
-
-    //3 Payments
-
-    //Check Payments
-    //viewAllPaymentOrders
-    //startForSpecificWalletId
-    //dueToForSpecificWalletId
-    //vestedAmountForSpecificWalletId
-    //releasedForSpecificWalletId
-    //releasableForSpecificWalletId
-
-    //unclaimable //Note in case transfer should fail this can be checked here
-
-    //First jum to half time
-    //releasableForSpecificWalletId
-
-    //claim 1
-    //claimForSpecificWalletId
-    //releasedForSpecificWalletId
-
-    //claim rest up to point
-    //claimAll
-
-    //Time Jump
-
-    //Claim all
-    //claimAll
-
-    //Admin Func
-
-    //5 Payments
-    //3 Alice
-    //1 Bob
-    //1 Charlie
-
-    //remove 1 Alice
-    //removePaymentForSpecificWalletId
-
-    //remove all Alice
-    //removeAllContributorPayments
-
-    //remove All
-    //cancelRunningPayments
 }
