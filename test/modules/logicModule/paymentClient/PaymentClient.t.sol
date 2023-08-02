@@ -9,12 +9,21 @@ import {
     IERC20PaymentClient
 } from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
 
+import {OrchestratorMock} from
+    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
+
+import {
+    PaymentProcessorMock,
+    IPaymentProcessor
+} from "test/utils/mocks/modules/PaymentProcessorMock.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ERC20PaymentClientTest is Test {
     // SuT
     ERC20PaymentClientMock paymentClient;
+    OrchestratorMock orchestrator;
+    PaymentProcessorMock paymentProcessor;
 
     // Mocks
     ERC20Mock token;
@@ -235,6 +244,79 @@ contract ERC20PaymentClientTest is Test {
     }
 
     //--------------------------------------------------------------------------
+    // Test internal functions
+
+    function testEnsureTokenBalance(uint initialAmount, uint amountRequired)
+        public
+    {
+        setupInternalFunctionTest();
+        token.mint(address(paymentClient), initialAmount);
+
+        if (initialAmount < amountRequired) {
+            //Check that Error works correctly
+            vm.expectRevert(
+                IERC20PaymentClient
+                    .Module__ERC20PaymentClient__TokenTransferFailed
+                    .selector
+            );
+            paymentClient.originalEnsureTokenBalance(amountRequired);
+
+            orchestrator.setExecuteTxBoolReturn(true);
+
+            paymentClient.originalEnsureTokenBalance(amountRequired);
+
+            assertEq(
+                abi.encodeWithSignature(
+                    "transferOrchestratorToken(address,uint256)",
+                    address(paymentClient),
+                    amountRequired - initialAmount
+                ),
+                orchestrator.executeTxData()
+            );
+        } else {
+            //If initialAmount already higher than amountRequired the data field of the mock should be empty
+            paymentClient.originalEnsureTokenBalance(amountRequired);
+            assertEq(bytes(""), orchestrator.executeTxData());
+        }
+    }
+
+    function testEnsureTokenAllowance(uint initialAllowance, uint postAllowance)
+        public
+    {
+        setupInternalFunctionTest();
+
+        //Set up initial allowance
+        vm.prank(address(paymentClient));
+        token.approve(address(paymentProcessor), initialAllowance);
+
+        paymentClient.originalEnsureTokenAllowance(
+            paymentProcessor, postAllowance
+        );
+
+        uint currentAllowance =
+            token.allowance(address(paymentClient), address(paymentProcessor));
+
+        if (initialAllowance > postAllowance) {
+            assertEq(currentAllowance, initialAllowance);
+        } else {
+            assertEq(currentAllowance, postAllowance);
+        }
+    }
+
+    function testIsAuthorizedPaymentProcessor(address addr) public {
+        setupInternalFunctionTest();
+        bool isAuthorized = paymentClient.originalIsAuthorizedPaymentProcessor(
+            IPaymentProcessor(addr)
+        );
+
+        if (addr == address(paymentProcessor)) {
+            assertTrue(isAuthorized);
+        } else {
+            assertFalse(isAuthorized);
+        }
+    }
+
+    //--------------------------------------------------------------------------
     // Assume Helper Functions
 
     function _assumeValidRecipient(address recipient) internal view {
@@ -249,6 +331,14 @@ contract ERC20PaymentClientTest is Test {
         for (uint i; i < invalids.length; ++i) {
             vm.assume(amount != invalids[i]);
         }
+    }
+
+    function setupInternalFunctionTest() internal {
+        paymentProcessor = new PaymentProcessorMock();
+        orchestrator = new OrchestratorMock();
+        orchestrator.setToken(token);
+        orchestrator.setPaymentProcessor(paymentProcessor);
+        paymentClient.setOrchestrator(orchestrator);
     }
 
     //--------------------------------------------------------------------------
