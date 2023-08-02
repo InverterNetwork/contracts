@@ -8,25 +8,26 @@ import "../deployment/DeploymentScript.s.sol";
 
 import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IProposalFactory} from "src/factories/IProposalFactory.sol";
-import {IProposal} from "src/proposal/Proposal.sol";
+import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
+import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract SetupToyProposalScript is Test, DeploymentScript {
+contract SetupToyOrchestratorScript is Test, DeploymentScript {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint proposalOwnerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
-    address proposalOwner = vm.addr(proposalOwnerPrivateKey);
+    uint orchestratorOwnerPrivateKey =
+        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
     //-------------------------------------------------------------------------
     // Mock Funder and Contributor information
 
     //Since this is a demo deployment, we will use the same address for the owner and the funder.
-    uint funder1PrivateKey = proposalOwnerPrivateKey;
-    address funder1 = proposalOwner;
+    uint funder1PrivateKey = orchestratorOwnerPrivateKey;
+    address funder1 = orchestratorOwner;
 
     // Every Milestone needs some contributors
     IMilestoneManager.Contributor alice = IMilestoneManager.Contributor(
@@ -39,7 +40,7 @@ contract SetupToyProposalScript is Test, DeploymentScript {
     // Storage
 
     ERC20Mock token;
-    IProposal test_proposal;
+    IOrchestrator test_orchestrator;
 
     IMilestoneManager.Contributor[] contributors;
     address[] initialAuthorizedAddresses;
@@ -47,72 +48,76 @@ contract SetupToyProposalScript is Test, DeploymentScript {
     //-------------------------------------------------------------------------
     // Script
 
-    function run() public override returns (address deployedProposal) {
+    function run() public override returns (address deployedOrchestrator) {
         // ------------------------------------------------------------------------
         // Setup
 
-        // First we deploy a mock ERC20 to act as funding token for the proposal. It has a public mint function.
-        vm.startBroadcast(proposalOwnerPrivateKey);
+        // First we deploy a mock ERC20 to act as funding token for the orchestrator. It has a public mint function.
+        vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
             token = new ERC20Mock("Mock", "MOCK");
         }
         vm.stopBroadcast();
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
-        address proposalFactory = DeploymentScript.run();
+        address orchestratorFactory = DeploymentScript.run();
 
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
-        // Proposal: Owner, funding token
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig({owner: proposalOwner, token: token});
+        // Orchestrator: Owner, funding token
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: orchestratorOwner,
+            token: token
+        });
 
         // Funding Manager: Metadata, token address
-        IProposalFactory.ModuleConfig memory fundingManagerFactoryConfig =
-        IProposalFactory.ModuleConfig(
+        IOrchestratorFactory.ModuleConfig memory fundingManagerFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
             fundingManagerMetadata,
             abi.encode(address(token)),
             abi.encode(hasDependency, dependencies)
         );
 
         // Payment Processor: only Metadata
-        IProposalFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-        IProposalFactory.ModuleConfig(
+        IOrchestratorFactory.ModuleConfig memory paymentProcessorFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
             paymentProcessorMetadata,
             bytes(""),
             abi.encode(hasDependency, dependencies)
         );
 
         // Authorizer: Metadata, initial authorized addresses
-        initialAuthorizedAddresses.push(proposalOwner);
-        IProposalFactory.ModuleConfig memory authorizerFactoryConfig =
-        IProposalFactory.ModuleConfig(
+        initialAuthorizedAddresses.push(orchestratorOwner);
+        IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
             authorizerMetadata,
             abi.encode(initialAuthorizedAddresses),
             abi.encode(hasDependency, dependencies)
         );
 
         // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
-        IProposalFactory.ModuleConfig memory milestoneManagerFactoryConfig =
-        IProposalFactory.ModuleConfig(
+        IOrchestratorFactory.ModuleConfig memory milestoneManagerFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
             milestoneManagerMetadata,
-            abi.encode(100_000_000, 1_000_000, proposalOwner),
+            abi.encode(100_000_000, 1_000_000, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the Milestone Manager.
-        IProposalFactory.ModuleConfig[] memory additionalModuleConfig =
-            new IProposalFactory.ModuleConfig[](1);
+        IOrchestratorFactory.ModuleConfig[] memory additionalModuleConfig =
+            new IOrchestratorFactory.ModuleConfig[](1);
         additionalModuleConfig[0] = milestoneManagerFactoryConfig;
 
         // ------------------------------------------------------------------------
-        // Proposal Creation
+        // Orchestrator Creation
 
-        vm.startBroadcast(proposalOwnerPrivateKey);
+        vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            test_proposal = IProposalFactory(proposalFactory).createProposal(
-                proposalConfig,
+            test_orchestrator = IOrchestratorFactory(orchestratorFactory)
+                .createOrchestrator(
+                orchestratorConfig,
                 fundingManagerFactoryConfig,
                 authorizerFactoryConfig,
                 paymentProcessorFactoryConfig,
@@ -121,12 +126,13 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         }
         vm.stopBroadcast();
 
-        // Check if the proposal has been created correctly.
+        // Check if the orchestrator has been created correctly.
 
-        assert(address(test_proposal) != address(0));
+        assert(address(test_orchestrator) != address(0));
 
-        address proposalToken = address(IProposal(test_proposal).token());
-        assertEq(proposalToken, address(token));
+        address orchestratorToken =
+            address(IOrchestrator(test_orchestrator).token());
+        assertEq(orchestratorToken, address(token));
 
         // Now we need to find the MilestoneManager. ModuleManager has a function called `listModules` that returns a list of
         // active modules, let's use that to get the address of the MilestoneManager.
@@ -134,35 +140,35 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         // TODO: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
 
         address[] memory moduleAddresses =
-            IProposal(test_proposal).listModules();
+            IOrchestrator(test_orchestrator).listModules();
         uint lenModules = moduleAddresses.length;
-        address proposalCreatedMilestoneManagerAddress;
+        address orchestratorCreatedMilestoneManagerAddress;
 
         for (uint i; i < lenModules;) {
             try IMilestoneManager(moduleAddresses[i]).hasActiveMilestone()
             returns (bool) {
-                proposalCreatedMilestoneManagerAddress = moduleAddresses[i];
+                orchestratorCreatedMilestoneManagerAddress = moduleAddresses[i];
                 break;
             } catch {
                 i++;
             }
         }
 
-        IMilestoneManager proposalCreatedMilestoneManager =
-            IMilestoneManager(proposalCreatedMilestoneManagerAddress);
+        IMilestoneManager orchestratorCreatedMilestoneManager =
+            IMilestoneManager(orchestratorCreatedMilestoneManagerAddress);
 
         assertFalse(
-            proposalCreatedMilestoneManager.hasActiveMilestone(),
+            orchestratorCreatedMilestoneManager.hasActiveMilestone(),
             "Error in the MilestoneManager"
         );
         assertFalse(
-            proposalCreatedMilestoneManager.isExistingMilestoneId(
+            orchestratorCreatedMilestoneManager.isExistingMilestoneId(
                 type(uint).max
             ),
             "Error in the MilestoneManager"
         );
         assertEq(
-            proposalCreatedMilestoneManager.getMaximumContributors(),
+            orchestratorCreatedMilestoneManager.getMaximumContributors(),
             50,
             "Error in the MilestoneManager"
         );
@@ -172,9 +178,9 @@ contract SetupToyProposalScript is Test, DeploymentScript {
             "=================================================================================="
         );
         console2.log(
-            "Proposal with Id %s created at address: %s ",
-            test_proposal.proposalId(),
-            address(test_proposal)
+            "Orchestrator with Id %s created at address: %s ",
+            test_orchestrator.orchestratorId(),
+            address(test_orchestrator)
         );
 
         // ------------------------------------------------------------------------
@@ -183,16 +189,16 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         // IMPORTANT
         // =========
         // Due to how the underlying rebase mechanism works, it is necessary
-        // to always have some amount of tokens in the proposal.
+        // to always have some amount of tokens in the orchestrator.
         // It's best, if the owner deposits them right after deployment.
 
         uint initialDeposit = 10e18;
         IFundingManager fundingManager =
-            IFundingManager(address(test_proposal.fundingManager()));
+            IFundingManager(address(test_orchestrator.fundingManager()));
 
-        vm.startBroadcast(proposalOwnerPrivateKey);
+        vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            token.mint(address(proposalOwner), initialDeposit);
+            token.mint(address(orchestratorOwner), initialDeposit);
 
             token.approve(address(fundingManager), initialDeposit);
 
@@ -217,16 +223,16 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         contributors.push(alice);
         contributors.push(bob);
 
-        vm.startBroadcast(proposalOwnerPrivateKey);
+        vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            proposalCreatedMilestoneManager.addMilestone(
+            orchestratorCreatedMilestoneManager.addMilestone(
                 1 weeks,
                 1000e18,
                 contributors,
                 bytes("Here could be a more detailed description")
             );
 
-            proposalCreatedMilestoneManager.addMilestone(
+            orchestratorCreatedMilestoneManager.addMilestone(
                 2 weeks,
                 5000e18,
                 contributors,
@@ -239,17 +245,23 @@ contract SetupToyProposalScript is Test, DeploymentScript {
         // Check if the Milestones have has been added correctly
 
         // milestoneId 1 should exist and 0 shouldn't, since IDs start from 1.
-        assertTrue(!(proposalCreatedMilestoneManager.isExistingMilestoneId(0)));
-        assertTrue(proposalCreatedMilestoneManager.isExistingMilestoneId(1));
+        assertTrue(
+            !(orchestratorCreatedMilestoneManager.isExistingMilestoneId(0))
+        );
+        assertTrue(orchestratorCreatedMilestoneManager.isExistingMilestoneId(1));
 
-        assertTrue(proposalCreatedMilestoneManager.isContributor(1, alice.addr));
-        assertTrue(proposalCreatedMilestoneManager.isContributor(2, alice.addr));
+        assertTrue(
+            orchestratorCreatedMilestoneManager.isContributor(1, alice.addr)
+        );
+        assertTrue(
+            orchestratorCreatedMilestoneManager.isContributor(2, alice.addr)
+        );
 
         console2.log(
             "=================================================================================="
         );
         console2.log("\n\n");
 
-        return address(test_proposal);
+        return address(test_orchestrator);
     }
 }

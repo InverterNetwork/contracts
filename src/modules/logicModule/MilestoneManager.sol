@@ -10,14 +10,14 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // Internal Dependencies
 import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
 import {
-    IPaymentClient,
-    PaymentClient,
+    IERC20PaymentClient,
+    ERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/PaymentClient.sol";
+} from "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
@@ -25,18 +25,18 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
 /**
  * @title MilestoneManager
  *
- * @dev Module to manage milestones for a proposal.
+ * @dev Module to manage milestones for a orchestrator.
  *
  *      A milestone can exists in 4 different states:
  *        - added
  *              The milestone got added to the contract.
  *        - active
  *              When a milestone is started, it initias payment orders to pay
- *              the proposal's contributors.
+ *              the orchestrator's contributors.
  *              A milestone is active, until either its duration is over or it's
  *              marked as completed.
  *        - submitted
- *              A proposal contributor marks a milestone as submitted by
+ *              A orchestrator contributor marks a milestone as submitted by
  *              submitting non-empty data that can be interpreted and evaluated
  *              by off-chain systems.
  *        - completed
@@ -45,7 +45,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
  *
  * @author Inverter Network
  */
-contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
+contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     using SafeERC20 for IERC20;
     using LinkedIdList for LinkedIdList.List;
 
@@ -111,7 +111,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             if (
                 contributorAddr == address(0)
                     || contributorAddr == address(this)
-                    || contributorAddr == address(proposal())
+                    || contributorAddr == address(orchestrator())
             ) {
                 revert Module__MilestoneManager__InvalidContributorAddress();
             }
@@ -190,11 +190,11 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
 
         // Set up empty list of milestones.
         _milestoneList.init();
@@ -205,7 +205,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneUpdateTimelock = 3 days;
 
         (SALARY_PRECISION, FEE_PCT, FEE_TREASURY) =
-            abi.decode(configdata, (uint, uint, address));
+            abi.decode(configData, (uint, uint, address));
 
         if (FEE_PCT >= SALARY_PRECISION) {
             revert Module__MilestoneManager__FeeOverHundredPercent();
@@ -375,8 +375,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
         _milestoneList.removeId(prevId, id);
 
         // stop all currently running payments
-        __Module_proposal.paymentProcessor().cancelRunningPayments(
-            IPaymentClient(address(this))
+        __Module_orchestrator.paymentProcessor().cancelRunningPayments(
+            IERC20PaymentClient(address(this))
         );
 
         emit MilestoneStopped(id);
@@ -430,7 +430,7 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             m.budget -= feePayout;
 
             _ensureTokenBalance(feePayout);
-            proposal().token().safeTransfer(FEE_TREASURY, feePayout);
+            orchestrator().token().safeTransfer(FEE_TREASURY, feePayout);
 
             // Create payment order for each contributor of the new  milestone.
             uint len = contribCache.length;
@@ -467,8 +467,8 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
             }
         }
 
-        __Module_proposal.paymentProcessor().processPayments(
-            IPaymentClient(address(this))
+        __Module_orchestrator.paymentProcessor().processPayments(
+            IERC20PaymentClient(address(this))
         );
 
         emit MilestoneStarted(_last);
@@ -690,38 +690,38 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     }
 
     //--------------------------------------------------------------------------
-    // {PaymentClient} Function Implementations
+    // {ERC20PaymentClient} Function Implementations
 
     function _ensureTokenBalance(uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
-        uint balance = __Module_proposal.token().balanceOf(address(this));
+        uint balance = __Module_orchestrator.token().balanceOf(address(this));
 
         if (balance < amount) {
-            // Trigger callback from proposal to transfer tokens
+            // Trigger callback from orchestrator to transfer tokens
             // to address(this).
             bool ok;
-            (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.fundingManager()),
+            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+                address(__Module_orchestrator.fundingManager()),
                 abi.encodeWithSignature(
-                    "transferProposalToken(address,uint256)",
+                    "transferOrchestratorToken(address,uint256)",
                     address(this),
                     amount - balance
                 )
             );
 
             if (!ok) {
-                revert Module__PaymentClient__TokenTransferFailed();
+                revert Module__ERC20PaymentClient__TokenTransferFailed();
             }
         }
     }
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
-        IERC20 token = __Module_proposal.token();
+        IERC20 token = __Module_orchestrator.token();
         uint allowance = token.allowance(address(this), address(spender));
 
         if (allowance < amount) {
@@ -732,9 +732,9 @@ contract MilestoneManager is IMilestoneManager, Module, PaymentClient {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
         view
-        override(PaymentClient)
+        override(ERC20PaymentClient)
         returns (bool)
     {
-        return __Module_proposal.paymentProcessor() == who;
+        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

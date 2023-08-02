@@ -3,8 +3,9 @@ pragma solidity ^0.8.0;
 
 // Internal Dependencies
 import {
-    ModuleManager, IModuleManager
-} from "src/proposal/base/ModuleManager.sol";
+    ModuleManager,
+    IModuleManager
+} from "src/orchestrator/base/ModuleManager.sol";
 
 contract ModuleManagerMock is ModuleManager {
     mapping(address => bool) private _authorized;

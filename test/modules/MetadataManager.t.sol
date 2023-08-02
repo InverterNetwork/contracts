@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -26,7 +26,7 @@ contract MetadataManagerTest is ModuleTest {
 
     // Constants
     IMetadataManager.ManagerMetadata MANAGER_METADATA;
-    IMetadataManager.ProposalMetadata PROPOSAL_METADATA;
+    IMetadataManager.OrchestratorMetadata ORCHESTRATOR_METADATA;
     IMetadataManager.MemberMetadata[] TEAM_METADATA;
 
     function setUp() public {
@@ -35,7 +35,7 @@ contract MetadataManagerTest is ModuleTest {
             "Name", address(0xBEEF), "TwitterHandle"
         );
 
-        PROPOSAL_METADATA = IMetadataManager.ProposalMetadata(
+        ORCHESTRATOR_METADATA = IMetadataManager.OrchestratorMetadata(
             "Title",
             "DescriptionShort",
             "DescriptionLong",
@@ -43,13 +43,13 @@ contract MetadataManagerTest is ModuleTest {
             new string[](0)
         );
 
-        PROPOSAL_METADATA.externalMedias.push("externalMedia1");
-        PROPOSAL_METADATA.externalMedias.push("externalMedia2");
-        PROPOSAL_METADATA.externalMedias.push("externalMedia3");
+        ORCHESTRATOR_METADATA.externalMedias.push("externalMedia1");
+        ORCHESTRATOR_METADATA.externalMedias.push("externalMedia2");
+        ORCHESTRATOR_METADATA.externalMedias.push("externalMedia3");
 
-        PROPOSAL_METADATA.categories.push("category1");
-        PROPOSAL_METADATA.categories.push("category2");
-        PROPOSAL_METADATA.categories.push("category3");
+        ORCHESTRATOR_METADATA.categories.push("category1");
+        ORCHESTRATOR_METADATA.categories.push("category2");
+        ORCHESTRATOR_METADATA.categories.push("category3");
 
         TEAM_METADATA.push(
             IMetadataManager.MemberMetadata(
@@ -57,21 +57,21 @@ contract MetadataManagerTest is ModuleTest {
             )
         );
 
-        //Add Module to Mock Proposal
+        //Add Module to Mock Orchestrator
 
         address impl = address(new MetadataManager());
         metadataManager = MetadataManager(Clones.clone(impl));
 
-        _setUpProposal(metadataManager);
+        _setUpOrchestrator(metadataManager);
 
         // Authorize this contract for the tests
         _authorizer.setIsAuthorized(address(this), true);
 
         //Init Module
         metadataManager.init(
-            _proposal,
+            _orchestrator,
             _METADATA,
-            abi.encode(MANAGER_METADATA, PROPOSAL_METADATA, TEAM_METADATA)
+            abi.encode(MANAGER_METADATA, ORCHESTRATOR_METADATA, TEAM_METADATA)
         );
     }
 
@@ -84,7 +84,7 @@ contract MetadataManagerTest is ModuleTest {
             "newName", address(0x606), "newTwitterHandle"
         );
 
-        PROPOSAL_METADATA = IMetadataManager.ProposalMetadata(
+        ORCHESTRATOR_METADATA = IMetadataManager.OrchestratorMetadata(
             "newTitle",
             "newDescriptionShort",
             "newDescriptionLong",
@@ -92,9 +92,9 @@ contract MetadataManagerTest is ModuleTest {
             new string[](0)
         );
 
-        PROPOSAL_METADATA.externalMedias.push("newExternalMedia");
+        ORCHESTRATOR_METADATA.externalMedias.push("newExternalMedia");
 
-        PROPOSAL_METADATA.categories.push("newCategory1");
+        ORCHESTRATOR_METADATA.categories.push("newCategory1");
 
         TEAM_METADATA.push(
             IMetadataManager.MemberMetadata(
@@ -108,9 +108,9 @@ contract MetadataManagerTest is ModuleTest {
         assertMetadataManagerManagerMetadataEqualTo(MANAGER_METADATA);
 
         //-----------------------
-        // PROPOSAL_METADATA
-        metadataManager.setProposalMetadata(PROPOSAL_METADATA);
-        assertMetadataManagerProposalMetadataEqualTo(PROPOSAL_METADATA);
+        // ORCHESTRATOR_METADATA
+        metadataManager.setOrchestratorMetadata(ORCHESTRATOR_METADATA);
+        assertMetadataManagerOrchestratorMetadataEqualTo(ORCHESTRATOR_METADATA);
 
         //-----------------------
         // TEAM_METADATA
@@ -120,7 +120,7 @@ contract MetadataManagerTest is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        metadataManager.init(_proposal, _METADATA, bytes(""));
+        metadataManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testInit2MetadataManager() public {
@@ -129,25 +129,25 @@ contract MetadataManagerTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        metadataManager.init2(_proposal, abi.encode(123));
+        metadataManager.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        metadataManager.init2(_proposal, dependencydata);
+        metadataManager.init2(_orchestrator, dependencyData);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencydata = abi.encode(true, dependencies);
-        metadataManager.init2(_proposal, dependencydata);
+        dependencyData = abi.encode(true, dependencies);
+        metadataManager.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        metadataManager.init2(_proposal, dependencydata);
+        metadataManager.init2(_orchestrator, dependencyData);
     }
 
     function testSetter() public {
@@ -159,10 +159,10 @@ contract MetadataManagerTest is ModuleTest {
         );
 
         //-----------------------
-        // PROPOSAL_METADATA
+        // ORCHESTRATOR_METADATA
 
-        assertMetadataManagerProposalMetadataEqualTo(
-            metadataManager.getProposalMetadata()
+        assertMetadataManagerOrchestratorMetadataEqualTo(
+            metadataManager.getOrchestratorMetadata()
         );
 
         //-----------------------
@@ -189,46 +189,47 @@ contract MetadataManagerTest is ModuleTest {
         );
     }
 
-    function assertMetadataManagerProposalMetadataEqualTo(
-        IMetadataManager.ProposalMetadata memory proposalMetadata_
+    function assertMetadataManagerOrchestratorMetadataEqualTo(
+        IMetadataManager.OrchestratorMetadata memory orchestratorMetadata_
     ) private {
         assertEq(
-            metadataManager.getProposalMetadata().title, proposalMetadata_.title
+            metadataManager.getOrchestratorMetadata().title,
+            orchestratorMetadata_.title
         );
         assertEq(
-            metadataManager.getProposalMetadata().descriptionShort,
-            proposalMetadata_.descriptionShort
+            metadataManager.getOrchestratorMetadata().descriptionShort,
+            orchestratorMetadata_.descriptionShort
         );
         assertEq(
-            metadataManager.getProposalMetadata().descriptionLong,
-            proposalMetadata_.descriptionLong
+            metadataManager.getOrchestratorMetadata().descriptionLong,
+            orchestratorMetadata_.descriptionLong
         );
 
         assertEq(
-            metadataManager.getProposalMetadata().externalMedias.length,
-            proposalMetadata_.externalMedias.length
+            metadataManager.getOrchestratorMetadata().externalMedias.length,
+            orchestratorMetadata_.externalMedias.length
         );
 
         //asserted Length is equal
-        uint len = proposalMetadata_.externalMedias.length;
+        uint len = orchestratorMetadata_.externalMedias.length;
         for (uint i = 0; i < len; ++i) {
             assertEq(
-                proposalMetadata_.externalMedias[i],
-                metadataManager.getProposalMetadata().externalMedias[i]
+                orchestratorMetadata_.externalMedias[i],
+                metadataManager.getOrchestratorMetadata().externalMedias[i]
             );
         }
 
         assertEq(
-            metadataManager.getProposalMetadata().categories.length,
-            proposalMetadata_.categories.length
+            metadataManager.getOrchestratorMetadata().categories.length,
+            orchestratorMetadata_.categories.length
         );
 
         //asserted Length is equal
-        len = proposalMetadata_.categories.length;
+        len = orchestratorMetadata_.categories.length;
         for (uint i = 0; i < len; ++i) {
             assertEq(
-                proposalMetadata_.categories[i],
-                metadataManager.getProposalMetadata().categories[i]
+                orchestratorMetadata_.categories[i],
+                metadataManager.getOrchestratorMetadata().categories[i]
             );
         }
     }

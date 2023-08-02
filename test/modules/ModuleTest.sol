@@ -10,10 +10,10 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Proposal} from "src/proposal/Proposal.sol";
+import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
 // Internal Interfaces
-import {IModule, IProposal} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
 // Mocks
 import {FundingManagerMock} from
@@ -27,7 +27,7 @@ import {PaymentProcessorMock} from
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
-    Proposal _proposal;
+    Orchestrator _orchestrator;
 
     // Mocks
     FundingManagerMock _fundingManager = new FundingManagerMock();
@@ -35,8 +35,8 @@ abstract contract ModuleTest is Test {
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
 
-    // Proposal Constants
-    uint constant _PROPOSAL_ID = 1;
+    // Orchestrator Constants
+    uint constant _ORCHESTRATOR_ID = 1;
 
     // Module Constants
     uint constant _MAJOR_VERSION = 1;
@@ -50,16 +50,15 @@ abstract contract ModuleTest is Test {
     //--------------------------------------------------------------------------------
     // Setup
 
-    function _setUpProposal(IModule module) internal virtual {
+    function _setUpOrchestrator(IModule module) internal virtual {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        address impl = address(new Proposal());
-        _proposal = Proposal(Clones.clone(impl));
+        address impl = address(new Orchestrator());
+        _orchestrator = Orchestrator(Clones.clone(impl));
 
-        _proposal.init(
-            _PROPOSAL_ID,
-            // address(this),
+        _orchestrator.init(
+            _ORCHESTRATOR_ID,
             _token,
             modules,
             _fundingManager,
@@ -83,10 +82,12 @@ abstract contract ModuleTest is Test {
     //
     // Prefixed with `_expect`.
 
-    function _expectProposalCallbackFailure(string memory funcSig) internal {
+    function _expectOrchestratorCallbackFailure(string memory funcSig)
+        internal
+    {
         vm.expectRevert(
             abi.encodeWithSignature(
-                "Module_ProposalCallbackFailed(string)", funcSig
+                "Module_OrchestratorCallbackFailed(string)", funcSig
             )
         );
     }

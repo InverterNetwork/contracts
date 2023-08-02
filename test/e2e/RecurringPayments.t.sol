@@ -5,8 +5,8 @@ import {E2eTest} from "test/e2e/E2eTest.sol";
 import "forge-std/console.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
-import {IProposalFactory} from "src/factories/ProposalFactory.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
 // External Libraries
@@ -18,7 +18,7 @@ import {RebasingFundingManager} from
 import {
     RecurringPaymentManager,
     IRecurringPaymentManager,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/logicModule/RecurringPaymentManager.sol";
 
 import {StreamingPaymentProcessor} from
@@ -26,7 +26,7 @@ import {StreamingPaymentProcessor} from
 
 import {
     IStreamingPaymentProcessor,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
 // Mocks
@@ -57,20 +57,23 @@ contract RecurringPayments is E2eTest {
         RecurringPaymentManager recurringPaymentManager;
 
         // -----------INIT
-        // address(this) creates a new proposal.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig({owner: address(this), token: token});
+        // address(this) creates a new orchestrator.
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: token
+        });
 
-        IProposal proposal =
-        _createNewProposalWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
-            proposalConfig
+        IOrchestrator orchestrator =
+        _createNewOrchestratorWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
+            orchestratorConfig
         );
 
         RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(proposal.fundingManager()));
+            RebasingFundingManager(address(orchestrator.fundingManager()));
 
         // ------------------ FROM ModuleTest.sol
-        address[] memory modulesList = proposal.listModules();
+        address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             try IRecurringPaymentManager(modulesList[i]).getCurrentEpoch()
             returns (uint) {

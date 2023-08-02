@@ -5,24 +5,24 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
-import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
+import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
-interface IProposal is IModuleManager {
+interface IOrchestrator is IModuleManager {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Proposal__CallerNotAuthorized();
+    error Orchestrator__CallerNotAuthorized();
 
     /// @notice Execution of transaction failed.
-    error Proposal__ExecuteTxFailed();
+    error Orchestrator__ExecuteTxFailed();
 
-    /// @notice The given module is not used in the proposal
-    error DependencyInjection__ModuleNotUsedInProposal();
+    /// @notice The given module is not used in the orchestrator
+    error DependencyInjection__ModuleNotUsedInOrchestrator();
 
     //--------------------------------------------------------------------------
     // Events
@@ -41,8 +41,7 @@ interface IProposal is IModuleManager {
 
     /// @notice Initialization function.
     function init(
-        uint proposalId,
-        /*address owner, */
+        uint orchestratorId,
         IERC20 token,
         address[] calldata modules,
         IFundingManager fundingManager,
@@ -75,9 +74,9 @@ interface IProposal is IModuleManager {
         external
         returns (bytes memory);
 
-    /// @notice Returns the proposal's id.
-    /// @dev Unique id set by the {ProposalFactory} during initialization.
-    function proposalId() external view returns (uint);
+    /// @notice Returns the orchestrator's id.
+    /// @dev Unique id set by the {OrchestratorFactory} during initialization.
+    function orchestratorId() external view returns (uint);
 
     /// @notice The {IFundingManager} implementation used to hold and distribute Funds.
     function fundingManager() external view returns (IFundingManager);
@@ -89,15 +88,15 @@ interface IProposal is IModuleManager {
     ///         payments.
     function paymentProcessor() external view returns (IPaymentProcessor);
 
-    /// @notice The proposal's {IERC20} token accepted for fundings and used
+    /// @notice The orchestrator's {IERC20} token accepted for fundings and used
     ///         for payments.
     function token() external view returns (IERC20);
 
-    /// @notice The version of the proposal instance.
+    /// @notice The version of the orchestrator instance.
     function version() external pure returns (string memory);
 
     /// @notice find the address of a given module using it's name in a proposal
-    function findModuleAddressInProposal(string calldata moduleName)
+    function findModuleAddressInOrchestrator(string calldata moduleName)
         external
         view
         returns (address);

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
+import {IERC20PaymentClient} from
+    "src/modules/base/mixins/IERC20PaymentClient.sol";
 
-interface IMilestoneManager is IPaymentClient {
+interface IMilestoneManager is IERC20PaymentClient {
     //--------------------------------------------------------------------------
     // Types
 
@@ -273,7 +274,7 @@ interface IMilestoneManager is IPaymentClient {
 
     /// @notice Starts the next milestones.
     /// @dev Creates the payment orders to pay contributors.
-    /// @dev Reverts if next milestone not activatable or proposal's contributor
+    /// @dev Reverts if next milestone not activatable or orchestrator's contributor
     ///      list empty.
     /// @dev Only callable by authorized addresses.
     function startNextMilestone() external;
@@ -310,7 +311,7 @@ interface IMilestoneManager is IPaymentClient {
     /// @dev Only callable by addresses holding the contributor role.
     /// @dev Reverts if id invalid, milestone not yet started, or milestone
     ///      already completed.
-    /// @dev Relay function that routes the function call via the proposal.
+    /// @dev Relay function that routes the function call via the orchestrator.
     /// @param id The milestone's id.
     function submitMilestone(uint id, bytes calldata submissionData) external;
 

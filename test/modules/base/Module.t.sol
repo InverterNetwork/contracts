@@ -12,9 +12,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule, IProposal} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
-import {Proposal} from "src/proposal/Proposal.sol";
+import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -32,7 +32,7 @@ contract ModuleTest is Test {
     // SuT
     ModuleMock module;
 
-    Proposal proposal;
+    Orchestrator orchestrator;
 
     // Mocks
     FundingManagerMock fundingManager;
@@ -58,18 +58,18 @@ contract ModuleTest is Test {
 
         paymentProcessor = new PaymentProcessorMock();
 
-        address proposalImpl = address(new Proposal());
-        proposal = Proposal(Clones.clone(proposalImpl));
+        address orchestratorImpl = address(new Orchestrator());
+        orchestrator = Orchestrator(Clones.clone(orchestratorImpl));
 
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        module.init(proposal, METADATA, CONFIGDATA);
+        module.init(orchestrator, METADATA, CONFIGDATA);
 
-        // Initialize proposal to enable module.
+        // Initialize orchestrator to enable module.
         address[] memory modules = new address[](1);
         modules[0] = address(module);
-        proposal.init(
+        orchestrator.init(
             1,
             // address(this),
             IERC20(new ERC20Mock("Mock", "MOCK")),
@@ -84,8 +84,8 @@ contract ModuleTest is Test {
     // Tests: Initialization
 
     function testInit() public {
-        // Proposal correctly written to storage.
-        assertEq(address(module.proposal()), address(proposal));
+        // Orchestrator correctly written to storage.
+        assertEq(address(module.orchestrator()), address(orchestrator));
 
         // Identifier correctly computed.
         assertEq(module.identifier(), LibMetadata.identifier(METADATA));
@@ -109,20 +109,20 @@ contract ModuleTest is Test {
         module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        module.initNoInitializer(proposal, METADATA, CONFIGDATA);
+        module.initNoInitializer(orchestrator, METADATA, CONFIGDATA);
     }
 
     function testReinitFails() public {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        module.init(proposal, METADATA, CONFIGDATA);
+        module.init(orchestrator, METADATA, CONFIGDATA);
     }
 
-    function testInitFailsForInvalidProposal() public {
+    function testInitFailsForInvalidOrchestrator() public {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        vm.expectRevert(IModule.Module__InvalidProposalAddress.selector);
-        module.init(IProposal(address(0)), METADATA, CONFIGDATA);
+        vm.expectRevert(IModule.Module__InvalidOrchestratorAddress.selector);
+        module.init(IOrchestrator(address(0)), METADATA, CONFIGDATA);
     }
 
     function testInitFailsIfMetadataInvalid() public {
@@ -132,7 +132,7 @@ contract ModuleTest is Test {
         // Invalid if url empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(
-            proposal,
+            orchestrator,
             IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE),
             CONFIGDATA
         );
@@ -140,7 +140,7 @@ contract ModuleTest is Test {
         // Invalid if title empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(
-            proposal,
+            orchestrator,
             IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""),
             CONFIGDATA
         );

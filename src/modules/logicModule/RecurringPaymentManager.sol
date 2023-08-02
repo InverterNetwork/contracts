@@ -10,17 +10,18 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
 
-import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
+import {ERC20PaymentClient} from
+    "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {IRecurringPaymentManager} from
     "src/modules/logicModule/IRecurringPaymentManager.sol";
 
 import {
-    IPaymentClient,
+    IERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/PaymentClient.sol";
+} from "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
@@ -28,7 +29,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
 contract RecurringPaymentManager is
     IRecurringPaymentManager,
     Module,
-    PaymentClient
+    ERC20PaymentClient
 {
     using SafeERC20 for IERC20;
     using LinkedIdList for LinkedIdList.List;
@@ -83,15 +84,15 @@ contract RecurringPaymentManager is
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
         //Set empty list of RecurringPayment
         _paymentList.init();
 
-        epochLength = abi.decode(configdata, (uint));
+        epochLength = abi.decode(configData, (uint));
 
         //revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
@@ -354,45 +355,45 @@ contract RecurringPaymentManager is
         _addPaymentOrders(orders);
 
         //when done process the Payments correctly
-        __Module_proposal.paymentProcessor().processPayments(
-            IPaymentClient(address(this))
+        __Module_orchestrator.paymentProcessor().processPayments(
+            IERC20PaymentClient(address(this))
         );
 
         emit RecurringPaymentsTriggered(currentEpoch);
     }
     //--------------------------------------------------------------------------
-    // {PaymentClient} Function Implementations
+    // {ERC20PaymentClient} Function Implementations
 
     function _ensureTokenBalance(uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
-        uint balance = __Module_proposal.token().balanceOf(address(this));
+        uint balance = __Module_orchestrator.token().balanceOf(address(this));
 
         if (balance < amount) {
-            // Trigger callback from proposal to transfer tokens
+            // Trigger callback from orchestrator to transfer tokens
             // to address(this).
             bool ok;
-            (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.fundingManager()),
+            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+                address(__Module_orchestrator.fundingManager()),
                 abi.encodeWithSignature(
-                    "transferProposalToken(address,uint256)",
+                    "transferOrchestratorToken(address,uint256)",
                     address(this),
                     amount - balance
                 )
             );
 
             if (!ok) {
-                revert Module__PaymentClient__TokenTransferFailed();
+                revert Module__ERC20PaymentClient__TokenTransferFailed();
             }
         }
     }
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
-        IERC20 token = __Module_proposal.token();
+        IERC20 token = __Module_orchestrator.token();
         uint allowance = token.allowance(address(this), address(spender));
 
         if (allowance < amount) {
@@ -403,9 +404,9 @@ contract RecurringPaymentManager is
     function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
         view
-        override(PaymentClient)
+        override(ERC20PaymentClient)
         returns (bool)
     {
-        return __Module_proposal.paymentProcessor() == who;
+        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

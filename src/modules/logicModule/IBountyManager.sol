@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
+import {IERC20PaymentClient} from
+    "src/modules/base/mixins/IERC20PaymentClient.sol";
 
-interface IBountyManager is IPaymentClient {
+interface IBountyManager is IERC20PaymentClient {
     //--------------------------------------------------------------------------
     // Enums
 

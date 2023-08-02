@@ -10,15 +10,15 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Proposal} from "src/proposal/Proposal.sol";
+import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 // Internal Interfaces
 import {
-    IProposal,
+    IOrchestrator,
     IAuthorizer,
     IPaymentProcessor
-} from "src/proposal/IProposal.sol";
+} from "src/orchestrator/IOrchestrator.sol";
 
 // Mocks
 import {FundingManagerMock} from
@@ -32,11 +32,11 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // Helper
-import {TypeSanityHelper} from "test/proposal/helper/TypeSanityHelper.sol";
+import {TypeSanityHelper} from "test/orchestrator/helper/TypeSanityHelper.sol";
 
-contract ProposalTest is Test {
+contract OrchestratorTest is Test {
     // SuT
-    Proposal proposal;
+    Orchestrator orchestrator;
 
     // Helper
     TypeSanityHelper types;
@@ -57,18 +57,17 @@ contract ProposalTest is Test {
         paymentProcessor = new PaymentProcessorMock();
         token = new ERC20Mock("TestToken", "TST");
 
-        address impl = address(new Proposal());
-        proposal = Proposal(Clones.clone(impl));
+        address impl = address(new Orchestrator());
+        orchestrator = Orchestrator(Clones.clone(impl));
 
-        types = new TypeSanityHelper(address(proposal));
+        types = new TypeSanityHelper(address(orchestrator));
     }
 
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInit(uint proposalId, address[] memory modules) public {
-        types.assumeValidProposalId(proposalId);
-
+    function testInit(uint orchestratorId, address[] memory modules) public {
+        types.assumeValidOrchestratorId(orchestratorId);
         types.assumeValidModules(modules);
 
         address[] memory truncatedModules = new address[](125);
@@ -81,9 +80,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(truncatedModules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 truncatedModules,
                 fundingManager,
@@ -94,9 +93,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(modules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 modules,
                 fundingManager,
@@ -106,18 +105,18 @@ contract ProposalTest is Test {
         }
 
         // Check that proposal's storage correctly initialized.
-        assertEq(proposal.proposalId(), proposalId);
-        assertEq(address(proposal.token()), address(token));
-        assertEq(address(proposal.authorizer()), address(authorizer));
+        assertEq(orchestrator.orchestratorId(), orchestratorId);
+        assertEq(address(orchestrator.token()), address(token));
+        assertEq(address(orchestrator.authorizer()), address(authorizer));
         assertEq(
-            address(proposal.paymentProcessor()), address(paymentProcessor)
+            address(orchestrator.paymentProcessor()), address(paymentProcessor)
         );
     }
 
-    function testReinitFails(uint proposalId, address[] memory modules)
+    function testReinitFails(uint orchestratorId, address[] memory modules)
         public
     {
-        types.assumeValidProposalId(proposalId);
+        types.assumeValidOrchestratorId(orchestratorId);
 
         address[] memory truncatedModules = new address[](125);
         if (modules.length > 125) {
@@ -129,9 +128,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(truncatedModules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 truncatedModules,
                 fundingManager,
@@ -140,8 +139,8 @@ contract ProposalTest is Test {
             );
 
             vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-            proposal.init(
-                proposalId,
+            orchestrator.init(
+                orchestratorId,
                 token,
                 truncatedModules,
                 fundingManager,
@@ -153,9 +152,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(modules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 modules,
                 fundingManager,
@@ -164,8 +163,8 @@ contract ProposalTest is Test {
             );
 
             vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-            proposal.init(
-                proposalId,
+            orchestrator.init(
+                orchestratorId,
                 token,
                 modules,
                 fundingManager,
@@ -179,21 +178,21 @@ contract ProposalTest is Test {
     // Tests: Replacing the three base modules: authorizer, funding manager,
     //        payment processor
 
-    function testSetAuthorizer(uint proposalId, address[] memory modules)
+    function testSetAuthorizer(uint orchestratorId, address[] memory modules)
         public
     {
         // limit to 100, otherwise we could run into the max module limit
         modules = cutArray(100, modules);
 
-        types.assumeValidProposalId(proposalId);
+        types.assumeValidOrchestratorId(orchestratorId);
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
         assumeMockAreNotInSet(modules);
 
-        // Initialize proposal.
-        proposal.init(
-            proposalId,
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
             token,
             modules,
             fundingManager,
@@ -214,34 +213,37 @@ contract ProposalTest is Test {
         vm.expectEmit(true, true, true, true);
         emit AuthorizerUpdated(address(newAuthorizer));
 
-        proposal.setAuthorizer(newAuthorizer);
-        assertTrue(proposal.authorizer() == newAuthorizer);
+        orchestrator.setAuthorizer(newAuthorizer);
+        assertTrue(orchestrator.authorizer() == newAuthorizer);
 
         // verify whether the init value is set and not the value from the old
         // authorizer, to check whether the replacement is successful
         assertFalse(
-            IAuthorizer(proposal.authorizer()).isAuthorized(address(this))
+            IAuthorizer(orchestrator.authorizer()).isAuthorized(address(this))
         );
         assertTrue(
-            IAuthorizer(proposal.authorizer()).isAuthorized(address(0xA11CE))
+            IAuthorizer(orchestrator.authorizer()).isAuthorized(
+                address(0xA11CE)
+            )
         );
     }
 
-    function testSetFundingManager(uint proposalId, address[] memory modules)
-        public
-    {
+    function testSetFundingManager(
+        uint orchestratorId,
+        address[] memory modules
+    ) public {
         // limit to 100, otherwise we could run into the max module limit
         modules = cutArray(100, modules);
 
-        types.assumeValidProposalId(proposalId);
+        types.assumeValidOrchestratorId(orchestratorId);
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
         assumeMockAreNotInSet(modules);
 
-        // Initialize proposal.
-        proposal.init(
-            proposalId,
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
             token,
             modules,
             fundingManager,
@@ -250,7 +252,7 @@ contract ProposalTest is Test {
         );
 
         authorizer.setIsAuthorized(address(this), true);
-        FundingManagerMock(address(proposal.fundingManager())).setToken(
+        FundingManagerMock(address(orchestrator.fundingManager())).setToken(
             IERC20(address(0xA11CE))
         );
 
@@ -263,26 +265,29 @@ contract ProposalTest is Test {
         vm.expectEmit(true, true, true, true);
         emit FundingManagerUpdated(address(newFundingManager));
 
-        proposal.setFundingManager(newFundingManager);
-        assertTrue(proposal.fundingManager() == newFundingManager);
-        assertTrue(address((proposal.fundingManager()).token()) == address(0));
+        orchestrator.setFundingManager(newFundingManager);
+        assertTrue(orchestrator.fundingManager() == newFundingManager);
+        assertTrue(
+            address((orchestrator.fundingManager()).token()) == address(0)
+        );
     }
 
-    function testSetPaymentProcessor(uint proposalId, address[] memory modules)
-        public
-    {
+    function testSetPaymentProcessor(
+        uint orchestratorId,
+        address[] memory modules
+    ) public {
         // limit to 100, otherwise we could run into the max module limit
         modules = cutArray(100, modules);
 
-        types.assumeValidProposalId(proposalId);
+        types.assumeValidOrchestratorId(orchestratorId);
         types.assumeValidModules(modules);
 
         // Make sure mock addresses are not in set of modules.
         assumeMockAreNotInSet(modules);
 
-        // Initialize proposal.
-        proposal.init(
-            proposalId,
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
             token,
             modules,
             fundingManager,
@@ -301,15 +306,17 @@ contract ProposalTest is Test {
         vm.expectEmit(true, true, true, true);
         emit PaymentProcessorUpdated(address(newPaymentProcessor));
 
-        proposal.setPaymentProcessor(newPaymentProcessor);
-        assertTrue(proposal.paymentProcessor() == newPaymentProcessor);
+        orchestrator.setPaymentProcessor(newPaymentProcessor);
+        assertTrue(orchestrator.paymentProcessor() == newPaymentProcessor);
     }
 
     //--------------------------------------------------------------------------
     // Tests: Transaction Execution
 
-    function testExecuteTx(uint proposalId, address[] memory modules) public {
-        types.assumeValidProposalId(proposalId);
+    function testExecuteTx(uint orchestratorId, address[] memory modules)
+        public
+    {
+        types.assumeValidOrchestratorId(orchestratorId);
 
         address[] memory truncatedModules = new address[](125);
         if (modules.length > 125) {
@@ -322,9 +329,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of truncatedModules.
             assumeMockAreNotInSet(truncatedModules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 truncatedModules,
                 fundingManager,
@@ -337,9 +344,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(modules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 modules,
                 fundingManager,
@@ -349,16 +356,17 @@ contract ProposalTest is Test {
         }
         authorizer.setIsAuthorized(address(this), true);
 
-        bytes memory returnData =
-            proposal.executeTx(address(this), abi.encodeWithSignature("ok()"));
+        bytes memory returnData = orchestrator.executeTx(
+            address(this), abi.encodeWithSignature("ok()")
+        );
         assertTrue(abi.decode(returnData, (bool)));
     }
 
     function testExecuteTxFailsIfCallFails(
-        uint proposalId,
+        uint orchestratorId,
         address[] memory modules
     ) public {
-        types.assumeValidProposalId(proposalId);
+        types.assumeValidOrchestratorId(orchestratorId);
         address[] memory truncatedModules = new address[](125);
         if (modules.length > 125) {
             for (uint i; i < 125; i++) {
@@ -370,9 +378,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of truncatedModules.
             assumeMockAreNotInSet(truncatedModules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 truncatedModules,
                 fundingManager,
@@ -385,9 +393,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(modules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 modules,
                 fundingManager,
@@ -398,15 +406,17 @@ contract ProposalTest is Test {
 
         authorizer.setIsAuthorized(address(this), true);
 
-        vm.expectRevert(IProposal.Proposal__ExecuteTxFailed.selector);
-        proposal.executeTx(address(this), abi.encodeWithSignature("fails()"));
+        vm.expectRevert(IOrchestrator.Orchestrator__ExecuteTxFailed.selector);
+        orchestrator.executeTx(
+            address(this), abi.encodeWithSignature("fails()")
+        );
     }
 
     function testExecuteTxFailsIfCallerNotAuthorized(
-        uint proposalId,
+        uint orchestratorId,
         address[] memory modules
     ) public {
-        types.assumeValidProposalId(proposalId);
+        types.assumeValidOrchestratorId(orchestratorId);
 
         address[] memory truncatedModules = new address[](125);
         if (modules.length > 125) {
@@ -419,9 +429,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of truncatedModules.
             assumeMockAreNotInSet(truncatedModules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 truncatedModules,
                 fundingManager,
@@ -434,9 +444,9 @@ contract ProposalTest is Test {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(modules);
 
-            // Initialize proposal.
-            proposal.init(
-                proposalId,
+            // Initialize orchestrator.
+            orchestrator.init(
+                orchestratorId,
                 token,
                 modules,
                 fundingManager,
@@ -447,8 +457,10 @@ contract ProposalTest is Test {
 
         authorizer.setIsAuthorized(address(this), false);
 
-        vm.expectRevert(IProposal.Proposal__CallerNotAuthorized.selector);
-        proposal.executeTx(address(this), abi.encodeWithSignature("ok()"));
+        vm.expectRevert(
+            IOrchestrator.Orchestrator__CallerNotAuthorized.selector
+        );
+        orchestrator.executeTx(address(this), abi.encodeWithSignature("ok()"));
     }
 
     function ok() public pure returns (bool) {
@@ -463,7 +475,7 @@ contract ProposalTest is Test {
     // Tests: Other
 
     function testVersion() public {
-        assertEq(proposal.version(), "1");
+        assertEq(orchestrator.version(), "1");
     }
 
     //--------------------------------------------------------------------------

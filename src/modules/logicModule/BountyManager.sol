@@ -11,22 +11,23 @@ import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
 
-import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
+import {ERC20PaymentClient} from
+    "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 
 import {
-    IPaymentClient,
+    IERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/PaymentClient.sol";
+} from "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
-contract BountyManager is IBountyManager, Module, PaymentClient {
+contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
     using LinkedIdList for LinkedIdList.List;
@@ -97,7 +98,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         uint totalAmount;
         uint currentAmount;
         address contrib;
-        address proposalAddress = address(__Module_proposal);
+        address orchestratorAddress = address(__Module_orchestrator);
         for (uint i; i < length;) {
             currentAmount = contributors[i].claimAmount;
 
@@ -109,7 +110,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
             contrib = contributors[i].addr;
             if (
                 contrib == address(0) || contrib == address(this)
-                    || contrib == proposalAddress
+                    || contrib == orchestratorAddress
             ) {
                 revert Module__BountyManager__InvalidContributorAddress();
             }
@@ -173,25 +174,25 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     // Initialization
 
     /// @inheritdoc Module
-    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
-        external
-        override(Module)
-        initializer
-    {
-        __Module_init(proposal_, metadata);
+    function init(
+        IOrchestrator orchestrator_,
+        Metadata memory metadata,
+        bytes memory
+    ) external override(Module) initializer {
+        __Module_init(orchestrator_, metadata);
         //init empty list of bounties and claims
         _bountyList.init();
         _claimList.init();
     }
 
-    function init2(IProposal, bytes memory)
+    function init2(IOrchestrator, bytes memory)
         external
         override(Module)
         initializer2
     {
         //Note: due to the authorizer still not being set during initialization,
         // this function has to be called after.
-        IAuthorizer(address(proposal().authorizer())).toggleModuleSelfManagement(
+        IAuthorizer(address(orchestrator().authorizer())).toggleModuleSelfManagement(
         );
     }
 
@@ -435,8 +436,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         _ensureTokenBalance(totalAmount);
 
         //when done process the Payments correctly
-        __Module_proposal.paymentProcessor().processPayments(
-            IPaymentClient(address(this))
+        __Module_orchestrator.paymentProcessor().processPayments(
+            IERC20PaymentClient(address(this))
         );
 
         //Set completed to true
@@ -446,38 +447,38 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     //--------------------------------------------------------------------------
-    // {PaymentClient} Function Implementations
+    // {ERC20PaymentClient} Function Implementations
 
     function _ensureTokenBalance(uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
-        uint balance = __Module_proposal.token().balanceOf(address(this));
+        uint balance = __Module_orchestrator.token().balanceOf(address(this));
 
         if (balance < amount) {
-            // Trigger callback from proposal to transfer tokens
+            // Trigger callback from orchestrator to transfer tokens
             // to address(this).
             bool ok;
-            (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.fundingManager()),
+            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+                address(__Module_orchestrator.fundingManager()),
                 abi.encodeWithSignature(
-                    "transferProposalToken(address,uint256)",
+                    "transferOrchestratorToken(address,uint256)",
                     address(this),
                     amount - balance
                 )
             );
 
             if (!ok) {
-                revert Module__PaymentClient__TokenTransferFailed();
+                revert Module__ERC20PaymentClient__TokenTransferFailed();
             }
         }
     }
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
-        IERC20 token = __Module_proposal.token();
+        IERC20 token = __Module_orchestrator.token();
         uint allowance = token.allowance(address(this), address(spender));
 
         if (allowance < amount) {
@@ -488,9 +489,9 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
         internal
         view
-        override(PaymentClient)
+        override(ERC20PaymentClient)
         returns (bool)
     {
-        return __Module_proposal.paymentProcessor() == who;
+        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

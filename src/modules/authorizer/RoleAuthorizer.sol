@@ -5,8 +5,8 @@ pragma solidity 0.8.19;
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
 import {Module, IModule} from "src/modules/base/Module.sol";
-import {IProposal} from "src/proposal/IProposal.sol";
 import {IAuthorizer} from "./IAuthorizer.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract RoleAuthorizer is
     IAuthorizer,
@@ -24,12 +24,12 @@ contract RoleAuthorizer is
     }
 
     // Stores the if a module wants to use it's own roles
-    // If false it uses the proposal's  core roles.
+    // If false it uses the orchestrator's  core roles.
     mapping(address => bool) public selfManagedModules;
 
     // Stored for easy public reference. Other Modules can assume the following roles to exist
-    bytes32 internal PROPOSAL_OWNER_ROLE;
-    bytes32 internal PROPOSAL_MANAGER_ROLE;
+    bytes32 public ORCHESTRATOR_OWNER_ROLE;
+    bytes32 public ORCHESTRATOR_MANAGER_ROLE;
 
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -39,7 +39,7 @@ contract RoleAuthorizer is
 
     /// @notice Verifies that the caller is an active module
     modifier onlyModule(address module) {
-        if (!proposal().isModule(module)) {
+        if (!orchestrator().isModule(module)) {
             revert Module__RoleAuthorizer__NotActiveModule(module);
         }
         _;
@@ -56,8 +56,8 @@ contract RoleAuthorizer is
     /// @notice Verifies that the owner being removed is not the last one
     modifier notLastOwner(bytes32 role) {
         if (
-            role == PROPOSAL_OWNER_ROLE
-                && getRoleMemberCount(PROPOSAL_OWNER_ROLE) <= 1
+            role == ORCHESTRATOR_OWNER_ROLE
+                && getRoleMemberCount(ORCHESTRATOR_OWNER_ROLE) <= 1
         ) {
             revert Module__RoleAuthorizer__OwnerRoleCannotBeEmpty();
         }
@@ -74,14 +74,14 @@ contract RoleAuthorizer is
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
 
         (address initialOwner, address initialManager) =
-            abi.decode(configdata, (address, address));
+            abi.decode(configData, (address, address));
 
         __RoleAuthorizer_init(initialOwner, initialManager);
     }
@@ -90,15 +90,15 @@ contract RoleAuthorizer is
         internal
         onlyInitializing
     {
-        // Note about DEFAULT_ADMIN_ROLE: The DEFAULT_ADMIN_ROLE has admin privileges on all roles in the contract. It starts out empty, but we set the proposal owners as "admins of the admin role",
+        // Note about DEFAULT_ADMIN_ROLE: The DEFAULT_ADMIN_ROLE has admin privileges on all roles in the contract. It starts out empty, but we set the orchestrator owners as "admins of the admin role",
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        // Store RoleIDs for the Proposal roles:
-        PROPOSAL_OWNER_ROLE =
-            generateRoleId(address(proposal()), uint8(CoreRoles.OWNER));
-        PROPOSAL_MANAGER_ROLE =
-            generateRoleId(address(proposal()), uint8(CoreRoles.MANAGER));
+        // Store RoleIDs for the Orchestrator roles:
+        ORCHESTRATOR_OWNER_ROLE =
+            generateRoleId(address(orchestrator()), uint8(CoreRoles.OWNER));
+        ORCHESTRATOR_MANAGER_ROLE =
+            generateRoleId(address(orchestrator()), uint8(CoreRoles.MANAGER));
 
         //We preliminarily grant admin role to the deployer
         _grantRole(PROPOSAL_OWNER_ROLE, _msgSender());
@@ -106,21 +106,21 @@ contract RoleAuthorizer is
         // Set up OWNER role structure:
 
         // -> set OWNER as admin of itself
-        _setRoleAdmin(PROPOSAL_OWNER_ROLE, PROPOSAL_OWNER_ROLE);
+        _setRoleAdmin(ORCHESTRATOR_OWNER_ROLE, ORCHESTRATOR_OWNER_ROLE);
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
-        _setRoleAdmin(DEFAULT_ADMIN_ROLE, PROPOSAL_OWNER_ROLE);
+        _setRoleAdmin(DEFAULT_ADMIN_ROLE, ORCHESTRATOR_OWNER_ROLE);
 
         // Set up MANAGER role structure:
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
-        _setRoleAdmin(PROPOSAL_MANAGER_ROLE, PROPOSAL_OWNER_ROLE);
+        _setRoleAdmin(ORCHESTRATOR_MANAGER_ROLE, ORCHESTRATOR_OWNER_ROLE);
         // grant MANAGER Role to specified address
-        _grantRole(PROPOSAL_MANAGER_ROLE, initialManager);
+        _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
         // If there is an initial owner specified, we set it as owner and remove the deployer
         // Note: If the initial owner is 0x0, it stays as msgSender()
         if (initialOwner != address(0)) {
-            _grantRole(PROPOSAL_OWNER_ROLE, initialOwner);
-            renounceRole(PROPOSAL_OWNER_ROLE, _msgSender());
+            _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
+            renounceRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
         }
     }
 
@@ -148,7 +148,7 @@ contract RoleAuthorizer is
     /// @dev Implements the function of the IAuthorizer interface by defauling to check if the caller holds the OWNER role.
     function isAuthorized(address who) external view returns (bool) {
         // In case no role is specfied, we ask if the caller is an owner
-        return hasRole(PROPOSAL_OWNER_ROLE, who);
+        return hasRole(ORCHESTRATOR_OWNER_ROLE, who);
     }
 
     /// @inheritdoc IAuthorizer
@@ -161,11 +161,11 @@ contract RoleAuthorizer is
         //Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()
         bytes32 roleId;
         // If the module uses its own roles, check if account has the role.
-        // else check if account has role in proposal
+        // else check if account has role in orchestrator
         if (selfManagedModules[_msgSender()]) {
             roleId = generateRoleId(_msgSender(), role);
         } else {
-            roleId = generateRoleId(address(proposal()), role);
+            roleId = generateRoleId(address(orchestrator()), role);
         }
         return hasRole(roleId, who);
     }

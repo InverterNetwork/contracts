@@ -6,7 +6,7 @@ import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Interfaces
-import {IModuleManager} from "src/proposal/base/IModuleManager.sol";
+import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 
 /**
  * @title Module Manager
@@ -34,14 +34,14 @@ abstract contract ModuleManager is
 
     modifier __ModuleManager_onlyAuthorized() {
         if (!__ModuleManager_isAuthorized(_msgSender())) {
-            revert Proposal__ModuleManager__CallerNotAuthorized();
+            revert Orchestrator__ModuleManager__CallerNotAuthorized();
         }
         _;
     }
 
     modifier onlyModule() {
         if (!isModule(_msgSender())) {
-            revert Proposal__ModuleManager__OnlyCallableByModule();
+            revert Orchestrator__ModuleManager__OnlyCallableByModule();
         }
         _;
     }
@@ -53,7 +53,7 @@ abstract contract ModuleManager is
 
     modifier isModule_(address module) {
         if (!isModule(module)) {
-            revert Proposal__ModuleManager__IsNotModule();
+            revert Orchestrator__ModuleManager__IsNotModule();
         }
         _;
     }
@@ -65,7 +65,7 @@ abstract contract ModuleManager is
 
     modifier moduleLimitNotExceeded() {
         if (_modules.length >= MAX_MODULE_AMOUNT) {
-            revert Proposal__ModuleManager__ModuleAmountOverLimits();
+            revert Orchestrator__ModuleManager__ModuleAmountOverLimits();
         }
         _;
     }
@@ -73,7 +73,7 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev Marks the maximum amount of Modules a Proposal can have to avoid out-of-gas risk.
+    /// @dev Marks the maximum amount of Modules a Orchestrator can have to avoid out-of-gas risk.
     uint private constant MAX_MODULE_AMOUNT = 128;
 
     //--------------------------------------------------------------------------
@@ -110,7 +110,7 @@ abstract contract ModuleManager is
         // Check that the initial list of Modules doesn't exceed the max amount
         // The subtraction by 3 is to ensure enough space for the compulsory modules: fundingManager, authorizer and paymentProcessor
         if (len > (MAX_MODULE_AMOUNT - 3)) {
-            revert Proposal__ModuleManager__ModuleAmountOverLimits();
+            revert Orchestrator__ModuleManager__ModuleAmountOverLimits();
         }
 
         for (uint i; i < len; ++i) {
@@ -249,13 +249,13 @@ abstract contract ModuleManager is
 
     function _ensureValidModule(address module) private view {
         if (module == address(0) || module == address(this)) {
-            revert Proposal__ModuleManager__InvalidModuleAddress();
+            revert Orchestrator__ModuleManager__InvalidModuleAddress();
         }
     }
 
     function _ensureNotModule(address module) private view {
         if (isModule(module)) {
-            revert Proposal__ModuleManager__IsModule();
+            revert Orchestrator__ModuleManager__IsModule();
         }
     }
 }

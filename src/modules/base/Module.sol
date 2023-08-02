@@ -9,7 +9,7 @@ import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule, IProposal} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
@@ -18,9 +18,9 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
  *
  * @dev The base contract for modules.
  *
- *      This contract provides a framework for triggering and receiving proposal
+ *      This contract provides a framework for triggering and receiving orchestrator
  *      callbacks (via `call`) and a modifier to authenticate
- *      callers via the module's proposal.
+ *      callers via the module's orchestrator.
  *
  *      Each module is identified via a unique identifier based on its major
  *      version, title, and url given in the metadata.
@@ -42,10 +42,10 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @custom:invariant Not mutated after the init2 call
     bool private __Module_initialization;
 
-    /// @dev The module's proposal instance.
+    /// @dev The module's orchestrator instance.
     ///
     /// @custom:invariant Not mutated after initialization.
-    IProposal internal __Module_proposal;
+    IOrchestrator internal __Module_orchestrator;
 
     /// @dev The module's metadata.
     ///
@@ -60,10 +60,10 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     // inlines argument validations not needed in downstream contracts.
 
     /// @notice Modifier to guarantee function is only callable by addresses
-    ///         authorized via Proposal.
-    modifier onlyProposalOwner() {
+    ///         authorized via Orchestrator.
+    modifier onlyOrchestratorOwner() {
         IAuthorizer authorizer =
-            IAuthorizer(address(__Module_proposal.authorizer()));
+            IAuthorizer(address(__Module_orchestrator.authorizer()));
 
         bytes32 ownerRole = authorizer.getOwnerRole();
 
@@ -74,10 +74,10 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     }
 
     /// @notice Modifier to guarantee function is only callable by either
-    ///         addresses authorized via Proposal or the Proposal's manager.
-    modifier onlyProposalOwnerOrManager() {
+    ///         addresses authorized via Orchestrator or the Orchestrator's manager.
+    modifier onlyOrchestratorOwnerOrManager() {
         IAuthorizer authorizer =
-            IAuthorizer(address(__Module_proposal.authorizer()));
+            IAuthorizer(address(__Module_orchestrator.authorizer()));
 
         bytes32 ownerRole = authorizer.getOwnerRole();
         bytes32 managerRole = authorizer.getManagerRole();
@@ -94,7 +94,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(uint8 roleId) {
         if (
-            !IAuthorizer(address(__Module_proposal.authorizer())).isAuthorized(
+            !IAuthorizer(address(__Module_orchestrator.authorizer())).isAuthorized(
                 roleId, _msgSender()
             )
         ) {
@@ -104,13 +104,13 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable by the proposal.
-    /// @dev onlyProposal functions MUST only access the module's storage, i.e.
+    /// @notice Modifier to guarantee function is only callable by the orchestrator.
+    /// @dev onlyOrchestrator functions MUST only access the module's storage, i.e.
     ///      `__Module_` variables.
     /// @dev Note to use function prefix `__Module_`.
-    modifier onlyProposal() {
-        if (_msgSender() != address(__Module_proposal)) {
-            revert Module__OnlyCallableByProposal();
+    modifier onlyOrchestrator() {
+        if (_msgSender() != address(__Module_orchestrator)) {
+            revert Module__OnlyCallableByOrchestrator();
         }
         _;
     }
@@ -124,8 +124,8 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         _;
     }
 
-    modifier validDependencyData(bytes memory dependencydata) {
-        if (!_dependencyInjectionRequired(dependencydata)) {
+    modifier validDependencyData(bytes memory dependencyData) {
+        if (!_dependencyInjectionRequired(dependencyData)) {
             revert Module__NoDependencyOrMalformedDependencyData();
         }
         _;
@@ -140,25 +140,25 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
 
     /// @inheritdoc IModule
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory /*configdata*/
+        bytes memory /*configData*/
     ) external virtual initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
     }
 
     /// @dev The initialization function MUST be called by the upstream
     ///      contract in their overriden `init()` function.
-    /// @param proposal_ The module's proposal.
-    function __Module_init(IProposal proposal_, Metadata memory metadata)
-        internal
-        onlyInitializing
-    {
-        // Write proposal to storage.
-        if (address(proposal_) == address(0)) {
-            revert Module__InvalidProposalAddress();
+    /// @param orchestrator_ The module's orchestrator.
+    function __Module_init(
+        IOrchestrator orchestrator_,
+        Metadata memory metadata
+    ) internal onlyInitializing {
+        // Write orchestrator to storage.
+        if (address(orchestrator_) == address(0)) {
+            revert Module__InvalidOrchestratorAddress();
         }
-        __Module_proposal = proposal_;
+        __Module_orchestrator = orchestrator_;
 
         // Write metadata to storage.
         if (!LibMetadata.isValid(metadata)) {
@@ -167,11 +167,11 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         __Module_metadata = metadata;
     }
 
-    function init2(IProposal proposal_, bytes memory dependencydata)
+    function init2(IOrchestrator orchestrator_, bytes memory dependencyData)
         external
         virtual
         initializer2
-        validDependencyData(dependencydata)
+        validDependencyData(dependencyData)
     {}
 
     //--------------------------------------------------------------------------
@@ -198,8 +198,8 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     }
 
     /// @inheritdoc IModule
-    function proposal() public view returns (IProposal) {
-        return __Module_proposal;
+    function orchestrator() public view returns (IOrchestrator) {
+        return __Module_orchestrator;
     }
 
     //--------------------------------------------------------------------------
@@ -226,24 +226,24 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Internal function to trigger a callback from the proposal.
-    /// @param data The call data for the proposal to call.
+    /// @dev Internal function to trigger a callback from the orchestrator.
+    /// @param data The call data for the orchestrator to call.
     /// @return Whether the callback succeeded.
     /// @return The return data of the callback.
-    function _triggerProposalCallback(bytes memory data)
+    function _triggerOrchestratorCallback(bytes memory data)
         internal
         returns (bool, bytes memory)
     {
         bool ok;
         bytes memory returnData;
         (ok, returnData) =
-            __Module_proposal.executeTxFromModule(address(this), data);
+            __Module_orchestrator.executeTxFromModule(address(this), data);
 
-        // Note that there is no check whether the proposal callback succeeded.
+        // Note that there is no check whether the orchestrator callback succeeded.
         // This responsibility is delegated to the caller, i.e. downstream
         // module implementation.
         // However, the {IModule} interface defines a generic error type for
-        // failed proposal callbacks that can be used to prevent different
+        // failed orchestrator callbacks that can be used to prevent different
         // custom error types in each implementation.
         return (ok, returnData);
     }
@@ -256,13 +256,13 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         (requirement,) = abi.decode(data, (bool, string[]));
     }
 
-    function _dependencyInjectionRequired(bytes memory dependencydata)
+    function _dependencyInjectionRequired(bytes memory dependencyData)
         internal
         view
         returns (bool)
     {
-        try this.decoder(dependencydata) returns (bool) {
-            return this.decoder(dependencydata);
+        try this.decoder(dependencyData) returns (bool) {
+            return this.decoder(dependencyData);
         } catch {
             return false;
         }

@@ -5,16 +5,16 @@ import "forge-std/Test.sol";
 
 // SuT
 import {
-    PaymentClientMock,
-    IPaymentClient
-} from "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
+    ERC20PaymentClientMock,
+    IERC20PaymentClient
+} from "test/utils/mocks/modules/mixins/ERC20PaymentClientMock.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract PaymentClientTest is Test {
+contract ERC20PaymentClientTest is Test {
     // SuT
-    PaymentClientMock paymentClient;
+    ERC20PaymentClientMock paymentClient;
 
     // Mocks
     ERC20Mock token;
@@ -22,7 +22,7 @@ contract PaymentClientTest is Test {
     function setUp() public {
         token = new ERC20Mock("Mock", "MOCK");
 
-        paymentClient = new PaymentClientMock(token);
+        paymentClient = new ERC20PaymentClientMock(token);
         paymentClient.setIsAuthorized(address(this), true);
     }
 
@@ -52,7 +52,7 @@ contract PaymentClientTest is Test {
 
         for (uint i; i < orderAmount; ++i) {
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -61,7 +61,7 @@ contract PaymentClientTest is Test {
             );
         }
 
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
 
         assertEq(orders.length, orderAmount);
@@ -81,10 +81,12 @@ contract PaymentClientTest is Test {
 
         for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
-                IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
+                IERC20PaymentClient
+                    .Module__ERC20PaymentClient__InvalidRecipient
+                    .selector
             );
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: invalids[0],
                     amount: amount,
                     createdAt: block.timestamp,
@@ -101,10 +103,12 @@ contract PaymentClientTest is Test {
 
         for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
-                IPaymentClient.Module__PaymentClient__InvalidAmount.selector
+                IERC20PaymentClient
+                    .Module__ERC20PaymentClient__InvalidAmount
+                    .selector
             );
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: invalids[0],
                     createdAt: block.timestamp,
@@ -118,21 +122,21 @@ contract PaymentClientTest is Test {
     // Test: addPaymentOrders()
 
     function testAddPaymentOrders() public {
-        IPaymentClient.PaymentOrder[] memory ordersToAdd =
-            new IPaymentClient.PaymentOrder[](3);
-        ordersToAdd[0] = IPaymentClient.PaymentOrder({
+        IERC20PaymentClient.PaymentOrder[] memory ordersToAdd =
+            new IERC20PaymentClient.PaymentOrder[](3);
+        ordersToAdd[0] = IERC20PaymentClient.PaymentOrder({
             recipient: address(0xCAFE1),
             amount: 100e18,
             createdAt: block.timestamp,
             dueTo: block.timestamp
         });
-        ordersToAdd[1] = IPaymentClient.PaymentOrder({
+        ordersToAdd[1] = IERC20PaymentClient.PaymentOrder({
             recipient: address(0xCAFE2),
             amount: 100e18,
             createdAt: block.timestamp,
             dueTo: block.timestamp + 1
         });
-        ordersToAdd[2] = IPaymentClient.PaymentOrder({
+        ordersToAdd[2] = IERC20PaymentClient.PaymentOrder({
             recipient: address(0xCAFE3),
             amount: 100e18,
             createdAt: block.timestamp,
@@ -141,7 +145,7 @@ contract PaymentClientTest is Test {
 
         paymentClient.addPaymentOrders(ordersToAdd);
 
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
 
         assertEq(orders.length, 3);
@@ -180,7 +184,7 @@ contract PaymentClientTest is Test {
 
         for (uint i; i < orderAmount; ++i) {
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -189,7 +193,7 @@ contract PaymentClientTest is Test {
             );
         }
 
-        IPaymentClient.PaymentOrder[] memory orders;
+        IERC20PaymentClient.PaymentOrder[] memory orders;
         uint totalOutstandingAmount;
         (orders, totalOutstandingAmount) = paymentClient.collectPaymentOrders();
 
@@ -204,15 +208,15 @@ contract PaymentClientTest is Test {
         // Check that total outstanding token amount is correct.
         assertEq(totalOutstandingAmount, orderAmount * amount);
 
-        // Check that orders in PaymentClient got reset.
-        IPaymentClient.PaymentOrder[] memory updatedOrders;
+        // Check that orders in ERC20PaymentClient got reset.
+        IERC20PaymentClient.PaymentOrder[] memory updatedOrders;
         updatedOrders = paymentClient.paymentOrders();
         assertEq(updatedOrders.length, 0);
 
-        // Check that outstanding token amount in PaymentClient got reset.
+        // Check that outstanding token amount in ERC20PaymentClient got reset.
         assertEq(paymentClient.outstandingTokenAmount(), 0);
 
-        // Check that we received allowance to fetch tokens from PaymentClient.
+        // Check that we received allowance to fetch tokens from ERC20PaymentClient.
         assertTrue(
             token.allowance(address(paymentClient), address(this))
                 >= totalOutstandingAmount
@@ -223,7 +227,9 @@ contract PaymentClientTest is Test {
         paymentClient.setIsAuthorized(address(this), false);
 
         vm.expectRevert(
-            IPaymentClient.Module__PaymentClient__CallerNotAuthorized.selector
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__CallerNotAuthorized
+                .selector
         );
         paymentClient.collectPaymentOrders();
     }

@@ -16,7 +16,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleFactory,
     IModule,
-    IProposal
+    IOrchestrator
 } from "src/factories/IModuleFactory.sol";
 
 // Mocks
@@ -65,11 +65,11 @@ contract ModuleUpdateTest is Test {
 
     function testBeaconUpgrade(
         IModule.Metadata memory metadata,
-        address proposal,
-        bytes memory configdata
+        address orchestrator,
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
-        _assumeValidProposal(proposal);
+        _assumeValidOrchestrator(orchestrator);
 
         // Create implementation V1 and upgrade beacon to it.
         ModuleImplementationV1Mock implementationV1 =
@@ -80,8 +80,9 @@ contract ModuleUpdateTest is Test {
         factory.registerMetadata(metadata, beacon);
 
         //Create Module Proxy in Factory
-        address proxyImplementationAddress1 =
-            factory.createModule(metadata, IProposal(proposal), configdata);
+        address proxyImplementationAddress1 = factory.createModule(
+            metadata, IOrchestrator(orchestrator), configData
+        );
 
         assertEq(
             ModuleImplementationV1Mock(proxyImplementationAddress1).getVersion(),
@@ -109,7 +110,7 @@ contract ModuleUpdateTest is Test {
         vm.assume(LibMetadata.isValid(metadata));
     }
 
-    function _assumeValidProposal(address proposal) internal pure {
-        vm.assume(proposal != address(0));
+    function _assumeValidOrchestrator(address orchestrator) internal pure {
+        vm.assume(orchestrator != address(0));
     }
 }
