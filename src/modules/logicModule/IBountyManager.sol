@@ -229,38 +229,4 @@ interface IBountyManager is IERC20PaymentClient {
     /// @param bountyId The id of the Bounty that will be claimed.
     function verifyClaim(uint claimId, uint bountyId) external;
 
-    //----------------------------------
-    // Role Functions
-    /*
-    /// @notice Grants the BountyAdmin Role to a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets the role granted
-    function grantBountyAdminRole(address addr) external;
-
-    /// @notice Grants the ClaimAdmin Role to a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets the role granted
-    function grantClaimAdminRole(address addr) external;
-
-    /// @notice Grants the VerifyAdmin Role to a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets the role granted
-    function grantVerifyAdminRole(address addr) external;
-
-    /// @notice Revokes the BountyAdmin Role from a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets their role revoked
-    function revokeBountyAdminRole(address addr) external;
-
-    /// @notice Revokes the ClaimAdmin Role from a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets their role revoked
-    function revokeClaimAdminRole(address addr) external;
-
-    /// @notice Revokes the VerifyAdmin Role from a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets their role revoked
-    function revokeVerifyAdminRole(address addr) external;
-
-    */
 }

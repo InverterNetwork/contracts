@@ -141,20 +141,6 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     }
 
     //--------------------------------------------------------------------------
-    // IAuthorizer Functions
-
-    /* /// @inheritdoc IAuthorizer
-    function isAuthorized(address who)
-        public
-        view
-        override(IAuthorizer)
-        returns (bool)
-    {
-        // Note that only the governance itself is authorized.
-        return who == address(this);
-    } */
-
-    //--------------------------------------------------------------------------
     // Data Retrieval Functions
 
     function getReceipt(uint _ID, address voter)
