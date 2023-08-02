@@ -619,6 +619,9 @@ contract RoleAuthorizerTest is Test {
         );
     }
 
+    // Test grant and revoke global roles
+    // TODO
+
     // =========================================================================
     // Test granting and revoking ADMIN control, and test admin control over module roles
 

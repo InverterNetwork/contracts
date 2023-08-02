@@ -18,7 +18,6 @@ contract RoleAuthorizer is
 
     // Core roles for a proposal. They correspond to uint8(0) and uint(1)
     // NOTE that proposal owner can register more global roles using numbers from 2 onward. They'l need to go through the DEFAULT_ADMIN_ROLE for this.
-    // TODO Maybe it would be worth it to create an extra function that bypasses DEFAULT_ADMIN_ROLE, but only for global roles and by the PROPOSAL_OWNER_ROLE? This would streamline the process of creating roles for all modules
     enum CoreRoles {
         OWNER, // Partial Access to Protected Functions
         MANAGER // Full Access to Protected Functions
@@ -230,6 +229,24 @@ contract RoleAuthorizer is
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
+    }
+
+    //TODO: Add to interface and natspec
+
+    function grantGlobalRole(uint8 role, address target)
+        external
+        onlyRole(PROPOSAL_OWNER_ROLE)
+    {
+        bytes32 roleId = generateRoleId(address(proposal()), role);
+        _grantRole(roleId, target);
+    }
+
+    function revokeGlobalRole(uint8 role, address target)
+        external
+        onlyRole(PROPOSAL_OWNER_ROLE)
+    {
+        bytes32 roleId = generateRoleId(address(proposal()), role);
+        _revokeRole(roleId, target);
     }
 
     function getOwnerRole() public view returns (bytes32) {

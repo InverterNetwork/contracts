@@ -783,8 +783,7 @@ contract BountyManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Role Functions
 
-    //@todo trivial to be removed as soon as the functionality is moved to RoleAuthorizer
-    function testGrantBountyAdminRole(uint8 role, address addr) public {
+    function testGrantModuleRole(uint8 role, address addr) public {
         vm.assume(role <= uint8(type(IBountyManager.Roles).max));
         bountyManager.grantModuleRole(role, addr);
 
@@ -793,7 +792,7 @@ contract BountyManagerTest is ModuleTest {
         assertTrue(isAuthorized);
     }
 
-    function testRevokeBountyAdminRole(uint8 role, address addr) public {
+    function testRevokeModuleRole(uint8 role, address addr) public {
         vm.assume(role <= uint8(type(IBountyManager.Roles).max));
 
         bountyManager.grantModuleRole(role, addr);
