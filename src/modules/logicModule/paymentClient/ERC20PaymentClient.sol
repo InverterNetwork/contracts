@@ -69,7 +69,6 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         _orders.push(order);
 
         // Ensure our token balance is sufficient.
-        // Note that function is implemented in downstream contract.
         _ensureTokenBalance(_outstandingTokenAmount);
 
         emit PaymentOrderAdded(order.recipient, order.amount);
@@ -101,7 +100,6 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         _outstandingTokenAmount += totalTokenAmount;
 
         // Ensure our token balance is sufficient.
-        // Note that functions is implemented in downstream contract.
         _ensureTokenBalance(_outstandingTokenAmount);
     }
 
@@ -115,14 +113,12 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         returns (PaymentOrder[] memory, uint)
     {
         // Ensure caller is authorized to act as payment processor.
-        // Note that function is implemented in downstream contract.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(_msgSender()))) {
             revert Module__ERC20PaymentClient__CallerNotAuthorized();
         }
 
         // Ensure payment processor is able to fetch the tokens from
         // address(this).
-        // Note that function is implemented in downstream contract.
         _ensureTokenAllowance(
             IPaymentProcessor(_msgSender()), _outstandingTokenAmount
         );
@@ -144,7 +140,6 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         _outstandingTokenAmount = 0;
 
         //Ensure that the Client will have sufficient funds.
-        // Note that function is implemented in downstream contract.
         // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
         _ensureTokenBalance(outstandingTokenAmountCache);
 
