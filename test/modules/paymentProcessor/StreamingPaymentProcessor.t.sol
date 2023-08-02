@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {IPaymentProcessor} from
@@ -17,9 +17,9 @@ import {
 
 // Mocks
 import {
-    IPaymentClient,
-    PaymentClientMock
-} from "test/utils/mocks/modules/mixins/PaymentClientMock.sol";
+    IERC20PaymentClient,
+    ERC20PaymentClientMock
+} from "test/utils/mocks/modules/mixins/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -32,7 +32,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     StreamingPaymentProcessor paymentProcessor;
 
     // Mocks
-    PaymentClientMock paymentClient = new PaymentClientMock(_token);
+    ERC20PaymentClientMock paymentClient = new ERC20PaymentClientMock(_token);
 
     event InvalidStreamingOrderDiscarded(
         address indexed recipient, uint amount, uint start, uint dueTo
@@ -57,13 +57,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address impl = address(new StreamingPaymentProcessor());
         paymentProcessor = StreamingPaymentProcessor(Clones.clone(impl));
 
-        _setUpProposal(paymentProcessor);
+        _setUpOrchestrator(paymentProcessor);
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        _proposal.addModule(address(paymentClient));
+        _orchestrator.addModule(address(paymentClient));
 
-        paymentProcessor.init(_proposal, _METADATA, bytes(""));
+        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
 
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
     }
@@ -77,7 +77,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        paymentProcessor.init(_proposal, _METADATA, bytes(""));
+        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testInit2StreamingPaymentProcessor() public {
@@ -86,25 +86,25 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        paymentProcessor.init2(_proposal, abi.encode(123));
+        paymentProcessor.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        paymentProcessor.init2(_proposal, dependencydata);
+        paymentProcessor.init2(_orchestrator, dependencyData);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencydata = abi.encode(true, dependencies);
-        paymentProcessor.init2(_proposal, dependencydata);
+        dependencyData = abi.encode(true, dependencies);
+        paymentProcessor.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        paymentProcessor.init2(_proposal, dependencydata);
+        paymentProcessor.init2(_orchestrator, dependencyData);
     }
 
     //--------------------------------------------------------------------------
@@ -134,7 +134,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
@@ -151,7 +151,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < recipients.length;) {
             assertTrue(
-                paymentProcessor.isActiveContributor(
+                paymentProcessor.isActivePaymentReceiver(
                     address(paymentClient), recipients[i]
                 )
             );
@@ -196,7 +196,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
@@ -213,7 +213,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < recipients.length;) {
             assertTrue(
-                paymentProcessor.isActiveContributor(
+                paymentProcessor.isActivePaymentReceiver(
                     address(paymentClient), recipients[i]
                 )
             );
@@ -251,7 +251,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             assertEq(
                 _token.balanceOf(recipients[i]),
                 uint(amounts[i]),
-                "Vested tokens not received by the contributor"
+                "Vested tokens not received by the paymentReceiver"
             );
 
             assertEq(
@@ -290,7 +290,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i; i < length; i++) {
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: payoutAmount,
                     createdAt: block.timestamp,
@@ -299,7 +299,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             );
         }
 
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
 
         // Call processPayments
@@ -308,7 +308,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < length; i++) {
             address recipient = recipients[i];
-            IPaymentClient.PaymentOrder memory order = orders[i];
+            IERC20PaymentClient.PaymentOrder memory order = orders[i];
 
             //If dueTo is before currentTimestamp evereything should be releasable
             if (order.dueTo <= block.timestamp) {
@@ -344,7 +344,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         //we don't mind about adding address(this)in this case
         for (uint i = 0; i < recipients.length - 1; ++i) {
             paymentClient.addPaymentOrderUnchecked(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: 100,
                     createdAt: block.timestamp,
@@ -364,7 +364,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.processPayments(paymentClient);
 
         paymentClient.addPaymentOrderUnchecked(
-            IPaymentClient.PaymentOrder({
+            IERC20PaymentClient.PaymentOrder({
                 recipient: address(0xB0B),
                 amount: invalidAmt,
                 createdAt: block.timestamp,
@@ -424,15 +424,15 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
         randomAmount_2 = bound(randomAmount_2, 100, 10_000);
 
-        address contributor1 = makeAddr("contributor1");
-        address contributor2 = makeAddr("contributor2");
-        address contributor3 = makeAddr("contributor3");
-        address contributor4 = makeAddr("contributor4");
+        address paymentReceiver1 = makeAddr("paymentReceiver1");
+        address paymentReceiver2 = makeAddr("paymentReceiver2");
+        address paymentReceiver3 = makeAddr("paymentReceiver3");
+        address paymentReceiver4 = makeAddr("paymentReceiver4");
 
-        address[3] memory contributorArray_1;
-        contributorArray_1[0] = contributor1;
-        contributorArray_1[1] = contributor2;
-        contributorArray_1[2] = contributor3;
+        address[3] memory paymentReceiverArray_1;
+        paymentReceiverArray_1[0] = paymentReceiver1;
+        paymentReceiverArray_1[1] = paymentReceiver2;
+        paymentReceiverArray_1[2] = paymentReceiver3;
 
         uint[3] memory durations_1;
         for (uint i; i < 3; i++) {
@@ -446,13 +446,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add these payment orders to the payment client
         for (uint i; i < 3; i++) {
-            address recipient = contributorArray_1[i];
+            address recipient = paymentReceiverArray_1[i];
             uint amount = amounts_1[i];
             uint time = durations_1[i];
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -465,15 +465,15 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
-        // Let's travel in time, to the point after contributor1's tokens are fully vested.
+        // Let's travel in time, to the point after paymentReceiver1's tokens are fully vested.
         // Also, remember, nothing is claimed yet
         vm.warp(block.timestamp + durations_1[0]);
 
         // Now, the payment client decided to add a few more payment orders (with a few beneficiaries overlapping)
-        address[3] memory contributorArray_2;
-        contributorArray_2[0] = contributor2;
-        contributorArray_2[1] = contributor3;
-        contributorArray_2[2] = contributor4;
+        address[3] memory paymentReceiverArray_2;
+        paymentReceiverArray_2[0] = paymentReceiver2;
+        paymentReceiverArray_2[1] = paymentReceiver3;
+        paymentReceiverArray_2[2] = paymentReceiver4;
 
         uint[3] memory durations_2;
         for (uint i; i < 3; i++) {
@@ -487,13 +487,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add these payment orders to the payment client
         for (uint i; i < 3; i++) {
-            address recipient = contributorArray_2[i];
+            address recipient = paymentReceiverArray_2[i];
             uint amount = amounts_2[i];
             uint time = durations_2[i];
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -507,61 +507,67 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.processPayments(paymentClient);
 
         // Now, let's check whether all vesting informations exist or not
-        // checking for contributor2
-        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets;
-        contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor2
+        // checking for paymentReceiver2
+        IStreamingPaymentProcessor.VestingWallet[] memory paymentReceiverWallets;
+        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), paymentReceiver2
         );
 
-        assertTrue(contributorWallets.length == 2);
+        assertTrue(paymentReceiverWallets.length == 2);
         assertEq(
-            (contributorWallets[0]._salary + contributorWallets[1]._salary),
+            (
+                paymentReceiverWallets[0]._salary
+                    + paymentReceiverWallets[1]._salary
+            ),
             (amounts_1[1] + amounts_2[0]),
             "Improper accounting of orders"
         );
 
-        // checking for contributor3
-        contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor3
+        // checking for paymentReceiver3
+        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), paymentReceiver3
         );
 
-        assertTrue(contributorWallets.length == 2);
+        assertTrue(paymentReceiverWallets.length == 2);
         assertEq(
-            (contributorWallets[0]._salary + contributorWallets[1]._salary),
+            (
+                paymentReceiverWallets[0]._salary
+                    + paymentReceiverWallets[1]._salary
+            ),
             (amounts_1[2] + amounts_2[1]),
             "Improper accounting of orders"
         );
 
-        // checking for contributor 4
-        contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor4
+        // checking for paymentReceiver 4
+        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), paymentReceiver4
         );
 
-        assertTrue(contributorWallets.length == 1);
+        assertTrue(paymentReceiverWallets.length == 1);
         assertEq(
-            (contributorWallets[0]._salary),
+            (paymentReceiverWallets[0]._salary),
             (amounts_2[2]),
             "Improper accounting of orders"
         );
 
-        // checking for contributor 1
-        contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+        // checking for paymentReceiver 1
+        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), paymentReceiver1
         );
 
-        assertTrue(contributorWallets.length == 1);
+        assertTrue(paymentReceiverWallets.length == 1);
         assertEq(
-            (contributorWallets[0]._salary),
+            (paymentReceiverWallets[0]._salary),
             (amounts_1[0]),
             "Improper accounting of orders"
         );
     }
 
     uint initialNumWallets;
-    uint initialContributorBalance;
+    uint initialPaymentReceiverBalance;
     uint initialWalletIdAtIndex1;
     uint finalNumWallets;
-    uint finalContributorBalance;
+    uint finalPaymentReceiverBalance;
 
     function test_removePaymentForSpecificWalletId_halfVestingDoneMultipleOrdersForSingleBeneficiary(
         uint randomDuration,
@@ -574,18 +580,18 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
         randomAmount_2 = bound(randomAmount_2, 100, 10_000);
 
-        address contributor1 = makeAddr("contributor1");
-        address contributor2 = makeAddr("contributor2");
-        address contributor3 = makeAddr("contributor3");
-        address contributor4 = makeAddr("contributor4");
+        address paymentReceiver1 = makeAddr("paymentReceiver1");
+        address paymentReceiver2 = makeAddr("paymentReceiver2");
+        address paymentReceiver3 = makeAddr("paymentReceiver3");
+        address paymentReceiver4 = makeAddr("paymentReceiver4");
 
-        address[6] memory contributorArray;
-        contributorArray[0] = contributor1;
-        contributorArray[1] = contributor2;
-        contributorArray[2] = contributor3;
-        contributorArray[3] = contributor1;
-        contributorArray[4] = contributor4;
-        contributorArray[5] = contributor1;
+        address[6] memory paymentReceiverArray;
+        paymentReceiverArray[0] = paymentReceiver1;
+        paymentReceiverArray[1] = paymentReceiver2;
+        paymentReceiverArray[2] = paymentReceiver3;
+        paymentReceiverArray[3] = paymentReceiver1;
+        paymentReceiverArray[4] = paymentReceiver4;
+        paymentReceiverArray[5] = paymentReceiver1;
 
         uint[6] memory durations;
         for (uint i; i < 6; i++) {
@@ -599,13 +605,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add these payment orders to the payment client
         for (uint i; i < 6; i++) {
-            address recipient = contributorArray[i];
+            address recipient = paymentReceiverArray[i];
             uint amount = amounts[i];
             uint time = durations[i];
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -618,46 +624,47 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
-        // Let's travel in time, to the point after contributor1's tokens for the second payment order
+        // Let's travel in time, to the point after paymentReceiver1's tokens for the second payment order
         // are 1/2 vested.
         vm.warp(block.timestamp + (durations[3] / 2));
 
         // This means, that when we call removePaymentForSpecificWalletId, that should increase the balance of the
-        // contributor by 1/2 of the vested token amount
-        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets =
+        // paymentReceiver by 1/2 of the vested token amount
+        IStreamingPaymentProcessor.VestingWallet[] memory paymentReceiverWallets =
         paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+            address(paymentClient), paymentReceiver1
         );
 
-        // We are interested in finding the details of the 2nd wallet of contributor1
-        uint expectedSalary = contributorWallets[1]._salary;
-        uint walletId = contributorWallets[1]._vestingWalletID;
+        // We are interested in finding the details of the 2nd wallet of paymentReceiver1
+        uint expectedSalary = paymentReceiverWallets[1]._salary;
+        uint walletId = paymentReceiverWallets[1]._vestingWalletID;
 
-        initialNumWallets = contributorWallets.length;
-        initialContributorBalance = _token.balanceOf(contributor1);
+        initialNumWallets = paymentReceiverWallets.length;
+        initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
         initialWalletIdAtIndex1 = walletId;
 
         assertTrue(expectedSalary != 0);
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
-            paymentClient, contributor1, walletId, false
+            paymentClient, paymentReceiver1, walletId, false
         );
 
-        contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), paymentReceiver1
         );
 
-        finalNumWallets = contributorWallets.length;
-        finalContributorBalance = _token.balanceOf(contributor1);
+        finalNumWallets = paymentReceiverWallets.length;
+        finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         assertEq(finalNumWallets + 1, initialNumWallets);
         assertEq(
-            (finalContributorBalance - initialContributorBalance),
+            (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
             (expectedSalary / 2)
         );
         assertTrue(
-            initialWalletIdAtIndex1 != contributorWallets[1]._vestingWalletID
+            initialWalletIdAtIndex1
+                != paymentReceiverWallets[1]._vestingWalletID
         );
     }
 
@@ -676,25 +683,25 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         randomDuration_2 = bound(randomDuration_2, 1000, 100_000_000);
         randomAmount_2 = bound(randomAmount_2, 100, 10_000);
 
-        address contributor1 = makeAddr("contributor1");
-        address contributor2 = makeAddr("contributor2");
-        address contributor3 = makeAddr("contributor3");
-        address contributor4 = makeAddr("contributor4");
+        address paymentReceiver1 = makeAddr("paymentReceiver1");
+        address paymentReceiver2 = makeAddr("paymentReceiver2");
+        address paymentReceiver3 = makeAddr("paymentReceiver3");
+        address paymentReceiver4 = makeAddr("paymentReceiver4");
 
-        address[6] memory contributorArray;
-        contributorArray[0] = contributor1;
-        contributorArray[1] = contributor2;
-        contributorArray[2] = contributor3;
-        contributorArray[3] = contributor1;
-        contributorArray[4] = contributor4;
-        contributorArray[5] = contributor1;
+        address[6] memory paymentReceiverArray;
+        paymentReceiverArray[0] = paymentReceiver1;
+        paymentReceiverArray[1] = paymentReceiver2;
+        paymentReceiverArray[2] = paymentReceiver3;
+        paymentReceiverArray[3] = paymentReceiver1;
+        paymentReceiverArray[4] = paymentReceiver4;
+        paymentReceiverArray[5] = paymentReceiver1;
 
         uint[6] memory durations;
         for (uint i; i < 6; i++) {
             durations[i] = (randomDuration * (i + 1));
         }
 
-        // we want the durations of vesting for contributor 1 to be double of the initial one
+        // we want the durations of vesting for paymentReceiver 1 to be double of the initial one
         // and the last payment order to have the same duration as the middle one
         durations[3] = durations[0] * 2;
         durations[5] = durations[3];
@@ -706,13 +713,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add these payment orders to the payment client
         for (uint i; i < 6; i++) {
-            address recipient = contributorArray[i];
+            address recipient = paymentReceiverArray[i];
             uint amount = amounts[i];
             uint time = durations[i];
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -725,69 +732,78 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
-        // Let's travel in time, to the point after contributor1's tokens for the second payment order
+        // Let's travel in time, to the point after paymentReceiver1's tokens for the second payment order
         // are 1/2 vested, or the complete vesting of duration of the first payment order
         vm.warp(block.timestamp + durations[0]);
 
-        // Let's note down the current balance of the contributor1
-        initialContributorBalance = _token.balanceOf(contributor1);
+        // Let's note down the current balance of the paymentReceiver1
+        initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        IStreamingPaymentProcessor.VestingWallet[] memory contributorWallets =
+        IStreamingPaymentProcessor.VestingWallet[] memory paymentReceiverWallets =
         paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+            address(paymentClient), paymentReceiver1
         );
 
-        salary1 = contributorWallets[0]._salary;
+        salary1 = paymentReceiverWallets[0]._salary;
 
         // Now we claim the entire salary from the first payment order
-        vm.prank(contributor1);
+        vm.prank(paymentReceiver1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, contributorWallets[0]._vestingWalletID, false
+            paymentClient, paymentReceiverWallets[0]._vestingWalletID, false
         );
 
-        // Now we note down the balance of the contributor1 again after claiming for the first wallet.
-        finalContributorBalance = _token.balanceOf(contributor1);
+        // Now we note down the balance of the paymentReceiver1 again after claiming for the first wallet.
+        finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        assertEq((finalContributorBalance - initialContributorBalance), salary1);
+        assertEq(
+            (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
+            salary1
+        );
 
-        // Now we are interested in finding the details of the 2nd wallet of contributor1
-        salary2 = (contributorWallets[1]._salary) / 2; // since we are at half the vesting duration
-        initialContributorBalance += _token.balanceOf(contributor1);
+        // Now we are interested in finding the details of the 2nd wallet of paymentReceiver1
+        salary2 = (paymentReceiverWallets[1]._salary) / 2; // since we are at half the vesting duration
+        initialPaymentReceiverBalance += _token.balanceOf(paymentReceiver1);
 
         assertTrue(salary2 != 0);
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
             paymentClient,
-            contributor1,
-            contributorWallets[1]._vestingWalletID,
+            paymentReceiver1,
+            paymentReceiverWallets[1]._vestingWalletID,
             false
         );
 
-        contributorWallets = paymentProcessor.viewAllPaymentOrders(
-            address(paymentClient), contributor1
+        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+            address(paymentClient), paymentReceiver1
         );
 
-        finalNumWallets = contributorWallets.length;
-        finalContributorBalance = _token.balanceOf(contributor1);
+        finalNumWallets = paymentReceiverWallets.length;
+        finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         assertEq(finalNumWallets, 1); // One was deleted because the vesting was completed and claimed. The other was deleted because of removePayment
-        assertEq((finalContributorBalance - initialContributorBalance), salary2);
-
-        // Now we try and claim the 3rd payment order for contributor1
-        // we are at half it's vesting period, so the salary3 should be half of the total salary
-        // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete vesting.
-        salary3 = (contributorWallets[0]._salary) / 2;
-        initialContributorBalance = _token.balanceOf(contributor1);
-
-        vm.prank(contributor1);
-        paymentProcessor.claimForSpecificWalletId(
-            paymentClient, contributorWallets[0]._vestingWalletID, false
+        assertEq(
+            (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
+            salary2
         );
 
-        finalContributorBalance = _token.balanceOf(contributor1);
+        // Now we try and claim the 3rd payment order for paymentReceiver1
+        // we are at half it's vesting period, so the salary3 should be half of the total salary
+        // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete vesting.
+        salary3 = (paymentReceiverWallets[0]._salary) / 2;
+        initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        assertEq((finalContributorBalance - initialContributorBalance), salary3);
+        vm.prank(paymentReceiver1);
+        paymentProcessor.claimForSpecificWalletId(
+            paymentClient, paymentReceiverWallets[0]._vestingWalletID, false
+        );
+
+        finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
+
+        assertEq(
+            (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
+            salary3
+        );
     }
 
     function test_processPayments_failsWhenCalledByNonModule(address nonModule)
@@ -823,7 +839,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+        ERC20PaymentClientMock otherERC20PaymentClient =
+            new ERC20PaymentClientMock(_token);
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
@@ -833,7 +850,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.processPayments(otherPaymentClient);
+        paymentProcessor.processPayments(otherERC20PaymentClient);
     }
 
     function test_cancelRunningPayments_allCreatedOrdersGetCancelled(
@@ -849,7 +866,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i = 0; i < length; ++i) {
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
@@ -881,7 +898,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i = 0; i < length; ++i) {
             vm.expectEmit(true, true, true, true);
             // we can expect all recipient to be unique due to the call to assumeValidRecipients.
-            // Therefore, the walletId of all these contributors would be 1.
+            // Therefore, the walletId of all these paymentReceivers would be 1.
             emit StreamingPaymentRemoved(
                 address(paymentClient), recipients[i], 1
             );
@@ -962,7 +979,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        PaymentClientMock otherPaymentClient = new PaymentClientMock(_token);
+        ERC20PaymentClientMock otherERC20PaymentClient =
+            new ERC20PaymentClientMock(_token);
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
@@ -972,11 +990,11 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     .selector
             )
         );
-        paymentProcessor.cancelRunningPayments(otherPaymentClient);
+        paymentProcessor.cancelRunningPayments(otherERC20PaymentClient);
     }
 
     //This test creates a new set of payments in a client which finished all running payments.
-    //one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
+    //one possible case would be a orchestrator that finishes all milestones succesfully and then gets "restarted" some time later
     function testCancelRunningPayments(
         address[] memory recipients,
         uint128[] memory amounts,
@@ -1001,7 +1019,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amounts[i],
                     createdAt: block.timestamp,
@@ -1083,7 +1101,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
@@ -1113,7 +1131,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         }
     }
 
-    //This test creates a new set of payments in a client which finished all running payments. one possible case would be a proposal that finishes all milestones succesfully and then gets "restarted" some time later
+    //This test creates a new set of payments in a client which finished all running payments. one possible case would be a orchestrator that finishes all milestones succesfully and then gets "restarted" some time later
     function testUpdateFinishedPayments(
         address[] memory recipients,
         uint128[] memory amounts,
@@ -1144,7 +1162,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             );
         }
 
-        // No funds left in the PaymentClient
+        // No funds left in the ERC20PaymentClient
         assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
@@ -1166,7 +1184,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add payment order to client and call processPayments.
         paymentClient.addPaymentOrder(
-            IPaymentClient.PaymentOrder({
+            IERC20PaymentClient.PaymentOrder({
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
@@ -1229,7 +1247,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Add payment order to client and call processPayments.
         paymentClient.addPaymentOrder(
-            IPaymentClient.PaymentOrder({
+            IERC20PaymentClient.PaymentOrder({
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
@@ -1304,7 +1322,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
             // Add payment order to client.
             paymentClient.addPaymentOrder(
-                IPaymentClient.PaymentOrder({
+                IERC20PaymentClient.PaymentOrder({
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
@@ -1347,10 +1365,10 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i; i < addrs.length; i++) {
             assumeValidRecipient(addrs[i]);
 
-            // Assume contributor address unique.
+            // Assume paymentReceiver address unique.
             vm.assume(!recipientCache[addrs[i]]);
 
-            // Add contributor address to cache.
+            // Add paymentReceiver address to cache.
             recipientCache[addrs[i]] = true;
         }
     }
@@ -1367,7 +1385,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address[] memory invalids = new address[](5);
 
         invalids[0] = address(0);
-        invalids[1] = address(_proposal);
+        invalids[1] = address(_orchestrator);
         invalids[2] = address(paymentProcessor);
         invalids[3] = address(paymentClient);
         invalids[4] = address(this);

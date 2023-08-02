@@ -11,7 +11,7 @@ interface IMetadataManager {
         string twitterHandle;
     }
 
-    struct ProposalMetadata {
+    struct OrchestratorMetadata {
         string title;
         string descriptionShort;
         string descriptionLong;
@@ -33,8 +33,8 @@ interface IMetadataManager {
         string name, address account, string twitterHandle
     );
 
-    /// @notice Event emitted when the proposal metadata changed.
-    event ProposalMetadataUpdated(
+    /// @notice Event emitted when the orchestrator metadata changed.
+    event OrchestratorMetadataUpdated(
         string title,
         string descriptionShort,
         string descriptionLong,

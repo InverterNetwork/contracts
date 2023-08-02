@@ -5,8 +5,8 @@ import {E2eTest} from "test/e2e/E2eTest.sol";
 import "forge-std/console.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
-import {IProposalFactory} from "src/factories/ProposalFactory.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
 // External Libraries
@@ -18,7 +18,7 @@ import {RebasingFundingManager} from
 import {
     BountyManager,
     IBountyManager,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/logicModule/BountyManager.sol";
 
 import {StreamingPaymentProcessor} from
@@ -26,7 +26,7 @@ import {StreamingPaymentProcessor} from
 
 import {
     IStreamingPaymentProcessor,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
 // Mocks
@@ -49,22 +49,25 @@ contract BountyManagerLifecycle is E2eTest {
 
     function test_e2e_BountyManagerLifecycle() public {
         // -----------INIT
-        // address(this) creates a new proposal.
-        IProposalFactory.ProposalConfig memory proposalConfig = IProposalFactory
-            .ProposalConfig({owner: address(this), token: token});
+        // address(this) creates a new orchestrator.
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: token
+        });
 
-        IProposal proposal =
-        _createNewProposalWithAllModules_withRoleBasedAuthorizerAndBountyManager(
-            proposalConfig
+        IOrchestrator orchestrator =
+        _createNewOrchestratorWithAllModules_withRoleBasedAuthorizerAndBountyManager(
+            orchestratorConfig
         );
 
         RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(proposal.fundingManager()));
+            RebasingFundingManager(address(orchestrator.fundingManager()));
 
         BountyManager bountyManager;
 
         // Find BountyManager
-        address[] memory modulesList = proposal.listModules();
+        address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
                 bool
@@ -76,22 +79,22 @@ contract BountyManagerLifecycle is E2eTest {
             }
         }
 
-        // we authorize the deployer of the proposal as the bounty admin
+        // we authorize the deployer of the orchestrator as the bounty admin
         bountyManager.grantBountyAdminRole(address(this));
         // Funders deposit funds
 
         // IMPORTANT
         // =========
         // Due to how the underlying rebase mechanism works, it is necessary
-        // to always have some amount of tokens in the proposal.
+        // to always have some amount of tokens in the orchestrator.
         // It's best, if the owner deposits them right after deployment.
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
         token.approve(address(fundingManager), initialDeposit);
         fundingManager.deposit(initialDeposit);
 
-        // Seeing this great working on the proposal, funder1 decides to fund
-        // the proposal with 1k of tokens.
+        // Seeing this great working on the orchestrator, funder1 decides to fund
+        // the orchestrator with 1k of tokens.
         address funder1 = makeAddr("funder1");
 
         token.mint(funder1, 1000e18);

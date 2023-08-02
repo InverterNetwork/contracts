@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -16,7 +16,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     BountyManager,
     IBountyManager,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/logicModule/BountyManager.sol";
 
 contract BountyManagerTest is ModuleTest {
@@ -61,11 +61,11 @@ contract BountyManagerTest is ModuleTest {
     event ClaimVerified(uint indexed BountyId, uint indexed ClaimId);
 
     function setUp() public {
-        //Add Module to Mock Proposal
+        //Add Module to Mock Orchestrator
         address impl = address(new BountyManager());
         bountyManager = BountyManager(Clones.clone(impl));
 
-        _setUpProposal(bountyManager);
+        _setUpOrchestrator(bountyManager);
 
         _authorizer.setIsAuthorized(address(this), true);
 
@@ -74,7 +74,7 @@ contract BountyManagerTest is ModuleTest {
 
         INVALID_CONTRIBUTORS.push(BEEF);
 
-        bountyManager.init(_proposal, _METADATA, bytes(""));
+        bountyManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
     //--------------------------------------------------------------------------
@@ -85,7 +85,7 @@ contract BountyManagerTest is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        bountyManager.init(_proposal, _METADATA, bytes(""));
+        bountyManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
     //--------------------------------------------------------------------------
@@ -256,7 +256,7 @@ contract BountyManagerTest is ModuleTest {
                 if (
                     currentContrib.addr == address(0)
                         || currentContrib.addr == address(bountyManager)
-                        || currentContrib.addr == address(_proposal)
+                        || currentContrib.addr == address(_orchestrator)
                 ) {
                     vm.expectRevert(
                         IBountyManager
@@ -715,7 +715,7 @@ contract BountyManagerTest is ModuleTest {
 
         bountyManager.verifyClaim(claimId, bountyId);
 
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             bountyManager.paymentOrders();
 
         assertEq(length, orders.length);
@@ -873,7 +873,7 @@ contract BountyManagerTest is ModuleTest {
             a = addrs[i];
             if (
                 a == address(0) || a == address(bountyManager)
-                    || a == address(_proposal)
+                    || a == address(_orchestrator)
             ) addrs[i] = address(0x1);
 
             //Convert amount 0 to 1
@@ -910,7 +910,7 @@ contract BountyManagerTest is ModuleTest {
             a = addrs[i];
             if (
                 a == address(0) || a == address(bountyManager)
-                    || a == address(_proposal)
+                    || a == address(_orchestrator)
             ) addrs[i] = address(0x1);
 
             //Convert amount 0 to 1

@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 // SuT
 import {
-    PaymentClient,
-    IPaymentClient
-} from "src/modules/base/mixins/PaymentClient.sol";
+    ERC20PaymentClient,
+    IERC20PaymentClient
+} from "src/modules/base/mixins/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IPaymentProcessor} from
@@ -14,7 +14,7 @@ import {IPaymentProcessor} from
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract PaymentClientMock is PaymentClient {
+contract ERC20PaymentClientMock is ERC20PaymentClient {
     ERC20Mock token;
 
     mapping(address => bool) authorized;
@@ -31,7 +31,7 @@ contract PaymentClientMock is PaymentClient {
     }
 
     //--------------------------------------------------------------------------
-    // IPaymentClient Wrapper Functions
+    // IERC20PaymentClient Wrapper Functions
 
     function addPaymentOrder(PaymentOrder memory order) external {
         _addPaymentOrder(order);
@@ -57,11 +57,11 @@ contract PaymentClientMock is PaymentClient {
     }
 
     //--------------------------------------------------------------------------
-    // IPaymentClient Overriden Functions
+    // IERC20PaymentClient Overriden Functions
 
     function _ensureTokenBalance(uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
         if (token.balanceOf(address(this)) >= amount) {
             return;
@@ -73,7 +73,7 @@ contract PaymentClientMock is PaymentClient {
 
     function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
         internal
-        override(PaymentClient)
+        override(ERC20PaymentClient)
     {
         token.approve(address(spender), amount);
     }
@@ -81,7 +81,7 @@ contract PaymentClientMock is PaymentClient {
     function _isAuthorizedPaymentProcessor(IPaymentProcessor)
         internal
         view
-        override(PaymentClient)
+        override(ERC20PaymentClient)
         returns (bool)
     {
         return authorized[_msgSender()];

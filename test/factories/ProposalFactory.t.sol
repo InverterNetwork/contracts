@@ -4,19 +4,19 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Internal Dependencies
-import {ProposalFactory} from "src/factories/ProposalFactory.sol";
+import {OrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
 import {
-    IProposalFactory,
+    IOrchestratorFactory,
     IModule,
-    IProposal
-} from "src/factories/IProposalFactory.sol";
+    IOrchestrator
+} from "src/factories/IOrchestratorFactory.sol";
 
-import {Proposal} from "src/proposal/Proposal.sol";
+import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
 // Mocks
 import {ModuleFactoryMock} from
@@ -26,41 +26,41 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract ProposalFactoryTest is Test {
+contract OrchestratorFactoryTest is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT
-    ProposalFactory factory;
+    OrchestratorFactory factory;
 
-    Proposal target;
+    Orchestrator target;
 
     // Mocks
     ModuleFactoryMock moduleFactory;
 
     // Metadata
-    IProposalFactory.ProposalConfig proposalConfig = IProposalFactory
-        .ProposalConfig({
+    IOrchestratorFactory.OrchestratorConfig orchestratorConfig =
+    IOrchestratorFactory.OrchestratorConfig({
         owner: address(this),
         token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
     });
 
-    IProposalFactory.ModuleConfig fundingManagerConfig = IProposalFactory
-        .ModuleConfig(
+    IOrchestratorFactory.ModuleConfig fundingManagerConfig =
+    IOrchestratorFactory.ModuleConfig(
         IModule.Metadata(1, 1, "https://fundingmanager.com", "FundingManager"),
         bytes("data"),
         abi.encode(hasDependency, dependencies)
     );
 
-    IProposalFactory.ModuleConfig authorizerConfig = IProposalFactory
+    IOrchestratorFactory.ModuleConfig authorizerConfig = IOrchestratorFactory
         .ModuleConfig(
         IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
         bytes("data"),
         abi.encode(hasDependency, dependencies)
     );
 
-    IProposalFactory.ModuleConfig paymentProcessorConfig = IProposalFactory
-        .ModuleConfig(
+    IOrchestratorFactory.ModuleConfig paymentProcessorConfig =
+    IOrchestratorFactory.ModuleConfig(
         IModule.Metadata(
             1, 1, "https://paymentprocessor.com", "SimplePaymentProcessor"
         ),
@@ -68,7 +68,8 @@ contract ProposalFactoryTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
-    IProposalFactory.ModuleConfig moduleConfig = IProposalFactory.ModuleConfig(
+    IOrchestratorFactory.ModuleConfig moduleConfig = IOrchestratorFactory
+        .ModuleConfig(
         IModule.Metadata(1, 1, "https://module.com", "Module"),
         bytes(""),
         abi.encode(hasDependency, dependencies)
@@ -77,25 +78,28 @@ contract ProposalFactoryTest is Test {
     function setUp() public {
         moduleFactory = new ModuleFactoryMock();
 
-        target = new Proposal();
+        target = new Orchestrator();
 
-        factory = new ProposalFactory(address(target), address(moduleFactory));
+        factory =
+            new OrchestratorFactory(address(target), address(moduleFactory));
     }
 
-    function testValidProposalId(uint getId, uint proposalsCreated) public {
+    function testValidOrchestratorId(uint getId, uint orchestratorsCreated)
+        public
+    {
         // Note to stay reasonable
-        proposalsCreated = bound(proposalsCreated, 0, 50);
+        orchestratorsCreated = bound(orchestratorsCreated, 0, 50);
 
-        for (uint i = 0; i < proposalsCreated; ++i) {
-            _deployProposal();
+        for (uint i = 0; i < orchestratorsCreated; ++i) {
+            _deployOrchestrator();
         }
 
-        if (getId > proposalsCreated) {
+        if (getId > orchestratorsCreated) {
             vm.expectRevert(
-                IProposalFactory.ProposalFactory__InvalidId.selector
+                IOrchestratorFactory.OrchestratorFactory__InvalidId.selector
             );
         }
-        factory.getProposalByID(getId);
+        factory.getOrchestratorByID(getId);
     }
 
     function testDeploymentInvariants() public {
@@ -103,77 +107,79 @@ contract ProposalFactoryTest is Test {
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
 
-    function testCreateProposal(uint modulesLen) public {
+    function testCreateOrchestrator(uint modulesLen) public {
         // Note to stay reasonable
         modulesLen = bound(modulesLen, 0, 50);
 
         // Create optional ModuleConfig instances.
-        IProposalFactory.ModuleConfig[] memory moduleConfigs =
-        new IProposalFactory.ModuleConfig[](
+        IOrchestratorFactory.ModuleConfig[] memory moduleConfigs =
+        new IOrchestratorFactory.ModuleConfig[](
                 modulesLen
             );
         for (uint i; i < modulesLen; ++i) {
             moduleConfigs[i] = moduleConfig;
         }
 
-        // Deploy Proposal with id=1
-        IProposal proposal = factory.createProposal(
-            proposalConfig,
+        // Deploy Orchestrator with id=1
+        IOrchestrator orchestrator = factory.createOrchestrator(
+            orchestratorConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
             moduleConfigs
         );
 
-        // Check that proposal's strorage correctly initialized.
-        assertEq(proposal.proposalId(), 1);
-        assertEq(address(proposal.token()), address(proposalConfig.token));
-        assertTrue(address(proposal.authorizer()) != address(0));
-        assertTrue(address(proposal.paymentProcessor()) != address(0));
+        // Check that orchestrator's strorage correctly initialized.
+        assertEq(orchestrator.orchestratorId(), 1);
+        assertEq(
+            address(orchestrator.token()), address(orchestratorConfig.token)
+        );
+        assertTrue(address(orchestrator.authorizer()) != address(0));
+        assertTrue(address(orchestrator.paymentProcessor()) != address(0));
 
-        // Check that other proposal's dependencies correctly initialized.
+        // Check that other orchestrator's dependencies correctly initialized.
         // Ownable:
-        assertEq(proposal.manager(), address(proposalConfig.owner));
+        assertEq(orchestrator.manager(), address(orchestratorConfig.owner));
 
-        // Deploy Proposal with id=2
-        proposal = factory.createProposal(
-            proposalConfig,
+        // Deploy Orchestrator with id=2
+        orchestrator = factory.createOrchestrator(
+            orchestratorConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
             moduleConfigs
         );
-        // Only check that proposal's id is correct.
-        assertEq(proposal.proposalId(), 2);
+        // Only check that orchestrator's id is correct.
+        assertEq(orchestrator.orchestratorId(), 2);
 
-        //check that proposalFactory idCounter is correct.
-        assertEq(factory.getProposalIDCounter(), 2);
+        //check that orchestratorFactory idCounter is correct.
+        assertEq(factory.getOrchestratorIDCounter(), 2);
     }
 
-    function testProposalMapping(uint proposalAmount) public {
+    function testOrchestratorMapping(uint orchestratorAmount) public {
         // Note to stay reasonable
-        proposalAmount = bound(proposalAmount, 0, 50);
+        orchestratorAmount = bound(orchestratorAmount, 0, 50);
 
-        for (uint i = 1; i < proposalAmount; ++i) {
-            address proposal = _deployProposal();
-            assertEq(proposal, factory.getProposalByID(i));
+        for (uint i = 1; i < orchestratorAmount; ++i) {
+            address orchestrator = _deployOrchestrator();
+            assertEq(orchestrator, factory.getOrchestratorByID(i));
         }
     }
 
-    function _deployProposal() private returns (address) {
+    function _deployOrchestrator() private returns (address) {
         //Create Empty ModuleConfig
-        IProposalFactory.ModuleConfig[] memory moduleConfigs =
-            new IProposalFactory.ModuleConfig[](0);
+        IOrchestratorFactory.ModuleConfig[] memory moduleConfigs =
+            new IOrchestratorFactory.ModuleConfig[](0);
 
-        // Deploy Proposal
-        IProposal proposal = factory.createProposal(
-            proposalConfig,
+        // Deploy Orchestrator
+        IOrchestrator orchestrator = factory.createOrchestrator(
+            orchestratorConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
             moduleConfigs
         );
 
-        return address(proposal);
+        return address(orchestrator);
     }
 }

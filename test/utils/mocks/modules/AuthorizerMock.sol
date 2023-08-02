@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
+import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
@@ -24,22 +24,22 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
     // IModule Functions
 
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) public override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
 
-        // Read first authorized address from configdata.
-        address authorized = abi.decode(configdata, (address));
+        // Read first authorized address from configData.
+        address authorized = abi.decode(configData, (address));
         require(authorized != address(0), "Zero address can not be authorized");
 
         _authorized[authorized] = true;
     }
 
-    function mockInit(bytes memory configdata) public {
-        // Read first authorized address from configdata.
-        address authorized = abi.decode(configdata, (address));
+    function mockInit(bytes memory configData) public {
+        // Read first authorized address from configData.
+        address authorized = abi.decode(configData, (address));
         require(authorized != address(0), "Zero address can not be authorized");
 
         _authorized[authorized] = true;

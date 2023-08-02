@@ -7,7 +7,7 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -16,7 +16,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     RecurringPaymentManager,
     IRecurringPaymentManager,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/logicModule/RecurringPaymentManager.sol";
 
 contract RecurringPaymentManagerTest is ModuleTest {
@@ -39,11 +39,11 @@ contract RecurringPaymentManagerTest is ModuleTest {
     event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
     function setUp() public {
-        //Add Module to Mock Proposal
+        //Add Module to Mock Orchestrator
         address impl = address(new RecurringPaymentManager());
         recurringPaymentManager = RecurringPaymentManager(Clones.clone(impl));
 
-        _setUpProposal(recurringPaymentManager);
+        _setUpOrchestrator(recurringPaymentManager);
         _authorizer.setIsAuthorized(address(this), true);
     }
 
@@ -60,7 +60,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module wrongly
         recurringPaymentManager.init(
-            _proposal, _METADATA, abi.encode(1 weeks - 1)
+            _orchestrator, _METADATA, abi.encode(1 weeks - 1)
         );
 
         vm.expectRevert(
@@ -71,20 +71,24 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module wrongly
         recurringPaymentManager.init(
-            _proposal, _METADATA, abi.encode(52 weeks + 1)
+            _orchestrator, _METADATA, abi.encode(52 weeks + 1)
         );
 
         //Init Module correct
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+        recurringPaymentManager.init(
+            _orchestrator, _METADATA, abi.encode(1 weeks)
+        );
 
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
     }
 
     function testReinitFails() public override(ModuleTest) {
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+        recurringPaymentManager.init(
+            _orchestrator, _METADATA, abi.encode(1 weeks)
+        );
 
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        recurringPaymentManager.init(_proposal, _METADATA, bytes(""));
+        recurringPaymentManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testInit2RecurringPaymentManager() public {
@@ -93,25 +97,25 @@ contract RecurringPaymentManagerTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        recurringPaymentManager.init2(_proposal, abi.encode(123));
+        recurringPaymentManager.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        recurringPaymentManager.init2(_proposal, dependencydata);
+        recurringPaymentManager.init2(_orchestrator, dependencyData);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencydata = abi.encode(true, dependencies);
-        recurringPaymentManager.init2(_proposal, dependencydata);
+        dependencyData = abi.encode(true, dependencies);
+        recurringPaymentManager.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        recurringPaymentManager.init2(_proposal, dependencydata);
+        recurringPaymentManager.init2(_orchestrator, dependencyData);
     }
 
     //--------------------------------------------------------------------------
@@ -246,7 +250,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     function testAddRecurringPaymentModifierInPosition() public {
         //Init Module
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+        recurringPaymentManager.init(
+            _orchestrator, _METADATA, abi.encode(1 weeks)
+        );
 
         //Warp to a reasonable time
         vm.warp(2 weeks);
@@ -259,7 +265,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //validAmount
         vm.expectRevert(
-            IPaymentClient.Module__PaymentClient__InvalidAmount.selector
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__InvalidAmount
+                .selector
         );
         recurringPaymentManager.addRecurringPayment(0, 2 weeks, address(0xBEEF));
 
@@ -275,7 +283,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
         //validRecipient
 
         vm.expectRevert(
-            IPaymentClient.Module__PaymentClient__InvalidRecipient.selector
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__InvalidRecipient
+                .selector
         );
         recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0));
     }
@@ -348,7 +358,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     function testRemoveRecurringPaymentModifierInPosition() public {
         //Init Module
-        recurringPaymentManager.init(_proposal, _METADATA, abi.encode(1 weeks));
+        recurringPaymentManager.init(
+            _orchestrator, _METADATA, abi.encode(1 weeks)
+        );
 
         //onlyAuthorizedOrManager
         vm.prank(address(0xBEEF)); //Not Authorized
@@ -399,7 +411,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //remove tokens and orders from recurringPaymentManager for easier testing
         _paymentProcessor.deleteAllPayments(
-            IPaymentClient(address(recurringPaymentManager))
+            IERC20PaymentClient(address(recurringPaymentManager))
         );
         _token.burn(
             address(recurringPaymentManager),
@@ -435,7 +447,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
             //remove tokens and orders from recurringPaymentManager for easier testing
             _paymentProcessor.deleteAllPayments(
-                IPaymentClient(address(recurringPaymentManager))
+                IERC20PaymentClient(address(recurringPaymentManager))
             );
             _token.burn(
                 address(recurringPaymentManager),
@@ -549,7 +561,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         //Init Module
         recurringPaymentManager.init(
-            _proposal, _METADATA, abi.encode(epochLength)
+            _orchestrator, _METADATA, abi.encode(epochLength)
         );
     }
 
@@ -657,7 +669,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
     ) internal {
         uint length = recurringPaymentsToBeChecked.length;
 
-        IPaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClient.PaymentOrder[] memory orders =
             recurringPaymentManager.paymentOrders();
 
         assertEq(length, currentRecurringPayments.length);
@@ -731,7 +743,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
     }
 
     function assertOrder(
-        IPaymentClient.PaymentOrder memory order,
+        IERC20PaymentClient.PaymentOrder memory order,
         address recipient,
         uint amount,
         uint createdAt,
