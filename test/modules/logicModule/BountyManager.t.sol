@@ -377,9 +377,7 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyBountyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector 
-            )
+            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
         );
         bountyManager.addBounty(0, 0, bytes(""));
     }
@@ -456,9 +454,7 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyClaimAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector 
-            )
+            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
         );
         bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
     }
@@ -491,9 +487,7 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyBountyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector 
-            )
+            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
         );
         bountyManager.updateBounty(0, bytes(""));
     }
@@ -535,9 +529,7 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyBountyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector 
-            )
+            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
         );
         bountyManager.lockBounty(0);
     }
@@ -763,9 +755,7 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyVerifyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector 
-            )
+            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
         );
         bountyManager.verifyClaim(0, 1);
     }

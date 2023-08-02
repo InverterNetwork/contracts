@@ -228,5 +228,4 @@ interface IBountyManager is IERC20PaymentClient {
     /// @param claimId The id of the Claim that wants to claim the Bounty.
     /// @param bountyId The id of the Bounty that will be claimed.
     function verifyClaim(uint claimId, uint bountyId) external;
-
 }
