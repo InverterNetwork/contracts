@@ -910,7 +910,7 @@ BRF:4
 BRH:4
 end_of_record
 TN:
-SF:src/modules/base/mixins/ERC20PaymentClient.sol
+SF:src/modules/logicModule/paymentClient/ERC20PaymentClient.sol
 FN:79,ERC20PaymentClient._addPaymentOrder
 FNDA:103475,ERC20PaymentClient._addPaymentOrder
 DA:85,103472

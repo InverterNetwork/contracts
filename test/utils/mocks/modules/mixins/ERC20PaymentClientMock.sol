@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {
     ERC20PaymentClient,
     IERC20PaymentClient
-} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IPaymentProcessor} from

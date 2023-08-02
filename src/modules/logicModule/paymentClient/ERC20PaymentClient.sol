@@ -8,7 +8,7 @@ import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {
     IERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/IERC20PaymentClient.sol";
+} from "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
 /**
  * @title ERC20PaymentClient

@@ -13,7 +13,7 @@ import {
     IERC20PaymentClient,
     ERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";

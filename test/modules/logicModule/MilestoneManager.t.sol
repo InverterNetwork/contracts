@@ -15,7 +15,7 @@ import {
 } from "src/modules/logicModule/MilestoneManager.sol";
 
 import {IERC20PaymentClient} from
-    "src/modules/base/mixins/IERC20PaymentClient.sol";
+    "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";

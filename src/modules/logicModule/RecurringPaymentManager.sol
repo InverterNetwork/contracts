@@ -11,7 +11,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 import {ERC20PaymentClient} from
-    "src/modules/base/mixins/ERC20PaymentClient.sol";
+    "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
@@ -21,7 +21,7 @@ import {IRecurringPaymentManager} from
 import {
     IERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
