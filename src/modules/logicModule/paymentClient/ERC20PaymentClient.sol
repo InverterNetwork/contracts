@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
-// External Dependencies
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+// External Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
+import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
 import {
     IERC20PaymentClient,
     IPaymentProcessor
@@ -18,10 +22,8 @@ import {
  *
  * @author Inverter Network
  */
-abstract contract ERC20PaymentClient is
-    IERC20PaymentClient,
-    ContextUpgradeable
-{
+abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
+    using SafeERC20 for IERC20;
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -49,27 +51,6 @@ abstract contract ERC20PaymentClient is
 
     /// @dev The current cumulative amount of tokens outstanding.
     uint internal _outstandingTokenAmount;
-
-    //--------------------------------------------------------------------------
-    // Internal Functions Implemented in Downstream Contract
-
-    /// @dev Ensures `amount` of payment tokens exist in address(this).
-    /// @dev MUST be overriden by downstream contract.
-    function _ensureTokenBalance(uint amount) internal virtual;
-
-    /// @dev Ensures `amount` of token allowance for payment processor(s).
-    /// @dev MUST be overriden by downstream contract.
-    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
-        internal
-        virtual;
-
-    /// @dev Returns whether address `who` is an authorized payment processor.
-    /// @dev MUST be overriden by downstream contract.
-    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
-        internal
-        view
-        virtual
-        returns (bool);
 
     //--------------------------------------------------------------------------
     // Internal Mutating Functions
@@ -207,5 +188,54 @@ abstract contract ERC20PaymentClient is
         if (order.recipient == address(0) || order.recipient == address(this)) {
             revert Module__ERC20PaymentClient__InvalidRecipient();
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // {ERC20PaymentClient} Function Implementations
+
+    /// @dev Ensures `amount` of payment tokens exist in address(this).
+    function _ensureTokenBalance(uint amount) internal virtual {
+        uint balance = __Module_orchestrator.token().balanceOf(address(this));
+
+        if (balance < amount) {
+            // Trigger callback from orchestrator to transfer tokens
+            // to address(this).
+            bool ok;
+            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+                address(__Module_orchestrator.fundingManager()),
+                abi.encodeWithSignature(
+                    "transferOrchestratorToken(address,uint256)",
+                    address(this),
+                    amount - balance
+                )
+            );
+
+            if (!ok) {
+                revert Module__ERC20PaymentClient__TokenTransferFailed();
+            }
+        }
+    }
+
+    /// @dev Ensures `amount` of token allowance for payment processor(s).
+    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
+        internal
+        virtual
+    {
+        IERC20 token = __Module_orchestrator.token();
+        uint allowance = token.allowance(address(this), address(spender));
+
+        if (allowance < amount) {
+            token.safeIncreaseAllowance(address(spender), amount - allowance);
+        }
+    }
+
+    /// @dev Returns whether address `who` is an authorized payment processor.
+    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
+        internal
+        view
+        virtual
+        returns (bool)
+    {
+        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

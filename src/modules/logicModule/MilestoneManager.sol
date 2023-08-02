@@ -8,10 +8,10 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Internal Dependencies
-import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
 import {
     IERC20PaymentClient,
     ERC20PaymentClient,
+    Module,
     IPaymentProcessor
 } from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
@@ -45,7 +45,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
  *
  * @author Inverter Network
  */
-contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
+contract MilestoneManager is IMilestoneManager, ERC20PaymentClient {
     using SafeERC20 for IERC20;
     using LinkedIdList for LinkedIdList.List;
 
@@ -687,54 +687,5 @@ contract MilestoneManager is IMilestoneManager, Module, ERC20PaymentClient {
     {
         _milestoneUpdateTimelock = _newTimelock;
         emit MilestoneUpdateTimelockUpdated(_milestoneUpdateTimelock);
-    }
-
-    //--------------------------------------------------------------------------
-    // {ERC20PaymentClient} Function Implementations
-
-    function _ensureTokenBalance(uint amount)
-        internal
-        override(ERC20PaymentClient)
-    {
-        uint balance = __Module_orchestrator.token().balanceOf(address(this));
-
-        if (balance < amount) {
-            // Trigger callback from orchestrator to transfer tokens
-            // to address(this).
-            bool ok;
-            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
-                address(__Module_orchestrator.fundingManager()),
-                abi.encodeWithSignature(
-                    "transferOrchestratorToken(address,uint256)",
-                    address(this),
-                    amount - balance
-                )
-            );
-
-            if (!ok) {
-                revert Module__ERC20PaymentClient__TokenTransferFailed();
-            }
-        }
-    }
-
-    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
-        internal
-        override(ERC20PaymentClient)
-    {
-        IERC20 token = __Module_orchestrator.token();
-        uint allowance = token.allowance(address(this), address(spender));
-
-        if (allowance < amount) {
-            token.safeIncreaseAllowance(address(spender), amount - allowance);
-        }
-    }
-
-    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
-        internal
-        view
-        override(ERC20PaymentClient)
-        returns (bool)
-    {
-        return __Module_orchestrator.paymentProcessor() == who;
     }
 }
