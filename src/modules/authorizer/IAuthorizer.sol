@@ -82,7 +82,6 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     /// @dev Only the addresses with the Owner role should be able to call this function
     function grantGlobalRole(uint8 role, address target) external;
 
-
     /// @notice Revokes a global role from a target
     /// @param role The role to grant
     /// @param target The address to grant the role to
@@ -90,11 +89,10 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     function revokeGlobalRole(uint8 role, address target) external;
 
     /// @notice Returns the role ID of the owner role
-    /// @return The role ID 
+    /// @return The role ID
     function getOwnerRole() external returns (bytes32);
 
-
     /// @notice Returns the role ID of the manager role
-    /// @return The role ID 
+    /// @return The role ID
     function getManagerRole() external returns (bytes32);
 }

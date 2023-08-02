@@ -108,7 +108,7 @@ contract AuthorizerMock is IAuthorizer, Module {
         return 0;
     }
 
-    function grantRole(bytes32 role, address who) external {
+    function grantRole(bytes32 role, address who) public {
         _roleAuthorized[role][who] = true;
     }
 
@@ -116,7 +116,9 @@ contract AuthorizerMock is IAuthorizer, Module {
         return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
     }
 
-    function revokeRole(bytes32, address) external pure {}
+    function revokeRole(bytes32 role, address who) public  {
+        _roleAuthorized[role][who] = false;
+    }
 
     function renounceRole(bytes32, address) external pure {}
 
@@ -126,5 +128,24 @@ contract AuthorizerMock is IAuthorizer, Module {
 
     function getManagerRole() external view returns (bytes32) {
         return generateRoleId(address(orchestrator()), uint8(1));
+    }
+
+        /// @notice Grants a global role to a target
+    /// @param role The role to grant
+    /// @param target The address to grant the role to
+    /// @dev Only the addresses with the Owner role should be able to call this function
+    function grantGlobalRole(uint8 role, address target) external{
+        bytes32 roleID = generateRoleId(address(orchestrator()), role);
+        grantRole(roleID, target);
+    }
+
+    /// @notice Revokes a global role from a target
+    /// @param role The role to grant
+    /// @param target The address to grant the role to
+    /// @dev Only the addresses with the Owner role should be able to call this function
+    function revokeGlobalRole(uint8 role, address target) external{
+        bytes32 roleID = generateRoleId(address(orchestrator()), role);
+        revokeRole(roleID, target);
+
     }
 }

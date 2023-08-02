@@ -626,6 +626,51 @@ contract RoleAuthorizerTest is Test {
     // Test grant and revoke global roles
     // TODO
 
+    // Grant global roles
+    function testGrantGlobalRole() public {
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+        vm.prank(ALBA);
+        _authorizer.grantGlobalRole(uint8(3), BOB);
+        assertTrue(_authorizer.hasRole(globalRole, BOB));
+    }
+
+    function testGrantGlobalRoleFailsIfNotOwner() public {
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+        vm.prank(BOB);
+        vm.expectRevert();
+        _authorizer.grantGlobalRole(uint8(3), ALBA);
+        assertFalse(_authorizer.hasRole(globalRole, ALBA));
+    }
+
+    // Revoke  global roles
+    function testRevokeGlobalRole() public {
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+        vm.startPrank(ALBA);
+        _authorizer.grantGlobalRole(uint8(3), BOB);
+        assertTrue(_authorizer.hasRole(globalRole, BOB));
+
+        _authorizer.revokeGlobalRole(uint8(3), BOB);
+        assertEq(_authorizer.hasRole(globalRole, BOB), false);
+
+        vm.stopPrank();
+    }
+
+    function testRevokeGlobalRoleFailsIfNotOwner() public {
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+        vm.prank(ALBA);
+        _authorizer.grantGlobalRole(uint8(3), BOB);
+        assertTrue(_authorizer.hasRole(globalRole, BOB));
+
+        vm.prank(BOB);
+        vm.expectRevert();
+        _authorizer.revokeGlobalRole(uint8(3), BOB);
+        assertTrue(_authorizer.hasRole(globalRole, BOB));
+    }
+
     // =========================================================================
     // Test granting and revoking ADMIN control, and test admin control over module roles
 
