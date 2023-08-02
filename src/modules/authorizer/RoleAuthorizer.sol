@@ -231,8 +231,7 @@ contract RoleAuthorizer is
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
 
-    //TODO: Add to interface and natspec
-
+    /// @inheritdoc IAuthorizer
     function grantGlobalRole(uint8 role, address target)
         external
         onlyRole(ORCHESTRATOR_OWNER_ROLE)
@@ -241,6 +240,7 @@ contract RoleAuthorizer is
         _grantRole(roleId, target);
     }
 
+    /// @inheritdoc IAuthorizer
     function revokeGlobalRole(uint8 role, address target)
         external
         onlyRole(ORCHESTRATOR_OWNER_ROLE)
@@ -249,10 +249,12 @@ contract RoleAuthorizer is
         _revokeRole(roleId, target);
     }
 
+    /// @inheritdoc IAuthorizer
     function getOwnerRole() public view returns (bytes32) {
         return ORCHESTRATOR_OWNER_ROLE;
     }
 
+    /// @inheritdoc IAuthorizer
     function getManagerRole() public view returns (bytes32) {
         return ORCHESTRATOR_MANAGER_ROLE;
     }

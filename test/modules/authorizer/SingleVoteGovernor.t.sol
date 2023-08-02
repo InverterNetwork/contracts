@@ -45,7 +45,6 @@ contract SingleVoteGovernorTest is ModuleTest {
     uint internal constant DEFAULT_QUORUM = 2;
     uint internal constant DEFAULT_DURATION = 4 days;
 
-
     // intial authorizd users
     address internal constant ALBA = address(0xa1ba);
     address internal constant BOB = address(0xb0b);
@@ -85,7 +84,6 @@ contract SingleVoteGovernorTest is ModuleTest {
         currentVoters.push(COBIE);
 
         //validation of the initial state happens in testInit()
-
     }
 
     //--------------------------------------------------------------------------

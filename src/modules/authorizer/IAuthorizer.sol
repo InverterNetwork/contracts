@@ -76,7 +76,25 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
     function burnAdminRole(uint8 role) external;
 
+    /// @notice Grants a global role to a target
+    /// @param role The role to grant
+    /// @param target The address to grant the role to
+    /// @dev Only the addresses with the Owner role should be able to call this function
+    function grantGlobalRole(uint8 role, address target) external;
+
+
+    /// @notice Revokes a global role from a target
+    /// @param role The role to grant
+    /// @param target The address to grant the role to
+    /// @dev Only the addresses with the Owner role should be able to call this function
+    function revokeGlobalRole(uint8 role, address target) external;
+
+    /// @notice Returns the role ID of the owner role
+    /// @return The role ID 
     function getOwnerRole() external returns (bytes32);
 
+
+    /// @notice Returns the role ID of the manager role
+    /// @return The role ID 
     function getManagerRole() external returns (bytes32);
 }
