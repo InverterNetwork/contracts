@@ -100,7 +100,7 @@ contract RoleAuthorizer is
         ORCHESTRATOR_MANAGER_ROLE =
             generateRoleId(address(orchestrator()), uint8(CoreRoles.MANAGER));
 
-        //We preliminarily grant admin role to the deployer
+        //We preliminarily grant admin role to the caller
         _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
 
         // Set up OWNER role structure:

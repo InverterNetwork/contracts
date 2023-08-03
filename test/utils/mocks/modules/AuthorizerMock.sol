@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
+
 import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
@@ -81,11 +83,12 @@ contract AuthorizerMock is IAuthorizer, Module {
     }
 
     function grantRoleFromModule(uint8 role, address target) external {
-        _roleAuthorized[generateRoleId(msg.sender, role)][target] = true;
+        console.log(_msgSender());
+        _roleAuthorized[generateRoleId(_msgSender(), role)][target] = true;
     }
 
     function revokeRoleFromModule(uint8 role, address target) external {
-        _roleAuthorized[generateRoleId(msg.sender, role)][target] = false;
+        _roleAuthorized[generateRoleId(_msgSender(), role)][target] = false;
     }
 
     function toggleModuleSelfManagement() external {}
@@ -114,6 +117,14 @@ contract AuthorizerMock is IAuthorizer, Module {
 
     function hasRole(bytes32 role, address who) external view returns (bool) {
         return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
+    }
+
+    function checkRoleMembership(bytes32 role, address who)
+        external
+        view
+        returns (bool)
+    {
+        return _roleAuthorized[role][who];
     }
 
     function revokeRole(bytes32 role, address who) public {

@@ -761,29 +761,6 @@ contract BountyManagerTest is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
-    // Role Functions
-
-    function testGrantModuleRole(uint8 role, address addr) public {
-        vm.assume(role <= uint8(type(IBountyManager.Roles).max));
-        bountyManager.grantModuleRole(role, addr);
-
-        vm.prank(address(bountyManager));
-        bool isAuthorized = _authorizer.isAuthorized(role, addr);
-        assertTrue(isAuthorized);
-    }
-
-    function testRevokeModuleRole(uint8 role, address addr) public {
-        vm.assume(role <= uint8(type(IBountyManager.Roles).max));
-
-        bountyManager.grantModuleRole(role, addr);
-        bountyManager.revokeModuleRole(role, addr);
-
-        vm.prank(address(bountyManager));
-        bool isAuthorized = _authorizer.isAuthorized(role, addr);
-        assertFalse(isAuthorized);
-    }
-
-    //--------------------------------------------------------------------------
     // Helper
 
     function cutArray(uint size, address[] memory addrs)

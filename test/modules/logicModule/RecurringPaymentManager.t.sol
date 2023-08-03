@@ -257,7 +257,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         //Warp to a reasonable time
         vm.warp(2 weeks);
 
-        //onlyProposalOwnerOrManager
+        //onlyOrchestratorOwnerOrManager
         vm.prank(address(0xBEEF)); //Not Authorized
 
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
@@ -362,7 +362,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        //onlyProposalOwnerOrManager
+        //onlyOrchestratorOwnerOrManager
         vm.prank(address(0xBEEF)); //Not Authorized
 
         vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);

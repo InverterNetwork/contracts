@@ -505,7 +505,7 @@ BRF:0
 BRH:0
 end_of_record
 TN:
-SF:src/modules/MetadataManager.sol
+SF:src/modules/utils/MetadataManager.sol
 FN:23,MetadataManager.init
 FNDA:3,MetadataManager.init
 DA:28,2
@@ -625,7 +625,7 @@ BRF:6
 BRH:6
 end_of_record
 TN:
-SF:src/modules/authorizer/SingleVoteGovernor.sol
+SF:src/modules/utils/SingleVoteGovernor.sol
 FN:75,SingleVoteGovernor.init
 FNDA:517,SingleVoteGovernor.init
 DA:80,516

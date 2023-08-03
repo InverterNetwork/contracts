@@ -113,10 +113,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
 
-        // Transfer ownerhsip of proposal to owner argument.
-        //_transferOwnership(manager_);
-        //authorizer.grantRole(authorizer.getManagerRole(), manager_);
-
         // Add necessary modules.
         // Note to not use the public addModule function as the factory
         // is (most probably) not authorized.

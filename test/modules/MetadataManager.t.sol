@@ -14,8 +14,9 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // SuT
 import {
-    MetadataManager, IMetadataManager
-} from "src/modules/MetadataManager.sol";
+    MetadataManager,
+    IMetadataManager
+} from "src/modules/utils/MetadataManager.sol";
 
 contract MetadataManagerTest is ModuleTest {
     bool hasDependency;

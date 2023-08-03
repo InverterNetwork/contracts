@@ -8,7 +8,7 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {
     ISingleVoteGovernor,
     IAuthorizer
-} from "src/modules/authorizer/ISingleVoteGovernor.sol";
+} from "src/modules/utils/ISingleVoteGovernor.sol";
 
 contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------

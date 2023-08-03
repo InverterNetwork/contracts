@@ -8,6 +8,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+//Internal Dependencies
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -28,35 +31,27 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract ModuleTest is Test {
+contract baseModuleTest is ModuleTest {
     // SuT
     ModuleMock module;
 
-    Orchestrator orchestrator;
+    enum mockRoles {
+        ROLE_1,
+        ROLE_2,
+        ROLE_3,
+        ROLE_4,
+        ROLE_5
+    }
 
-    // Mocks
-    FundingManagerMock fundingManager;
-    AuthorizerMock authorizer;
-    PaymentProcessorMock paymentProcessor;
-
-    // Constants
-    uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 1;
-    string constant URL = "https://github.com/organization/module";
-    string constant TITLE = "Payment Processor";
-
-    IModule.Metadata METADATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
-
-    bytes CONFIGDATA = bytes("");
+    bytes _CONFIGDATA = bytes("");
 
     function setUp() public {
-        fundingManager = new FundingManagerMock();
+        /*//fundingManager = new FundingManagerMock();
 
-        authorizer = new AuthorizerMock();
-        authorizer.setAllAuthorized(true);
+        //_authorizer = new AuthorizerMock();
+        //_authorizer.setAllAuthorized(true);
 
-        paymentProcessor = new PaymentProcessorMock();
+        //paymentProcessor = new PaymentProcessorMock();
 
         address orchestratorImpl = address(new Orchestrator());
         orchestrator = Orchestrator(Clones.clone(orchestratorImpl));
@@ -64,44 +59,52 @@ contract ModuleTest is Test {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        module.init(orchestrator, METADATA, CONFIGDATA);
+        module.init(orchestrator, _METADATA, _CONFIGDATA);
 
         // Initialize orchestrator to enable module.
         address[] memory modules = new address[](1);
         modules[0] = address(module);
         orchestrator.init(
             1,
-            // address(this),
             IERC20(new ERC20Mock("Mock", "MOCK")),
             modules,
             fundingManager,
-            authorizer,
+            _authorizer,
             paymentProcessor
-        );
+        );*/
+
+        address impl = address(new ModuleMock());
+        module = ModuleMock(Clones.clone(impl));
+
+        _setUpOrchestrator(module);
+
+        _authorizer.setIsAuthorized(address(this), true);
+
+        module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInit() public {
+    function testInit() public override {
         // Orchestrator correctly written to storage.
-        assertEq(address(module.orchestrator()), address(orchestrator));
+        assertEq(address(module.orchestrator()), address(_orchestrator));
 
         // Identifier correctly computed.
-        assertEq(module.identifier(), LibMetadata.identifier(METADATA));
+        assertEq(module.identifier(), LibMetadata.identifier(_METADATA));
 
         // Version correctly set.
         uint majorVersion;
         uint minorVersion;
         (majorVersion, minorVersion) = module.version();
-        assertEq(majorVersion, MAJOR_VERSION);
-        assertEq(minorVersion, MINOR_VERSION);
+        assertEq(majorVersion, _MAJOR_VERSION);
+        assertEq(minorVersion, _MINOR_VERSION);
 
-        // URL correctly set.
-        assertEq(module.url(), URL);
+        // _URL correctly set.
+        assertEq(module.url(), _URL);
 
-        // Title correctly set.
-        assertEq(module.title(), TITLE);
+        // _TITLE correctly set.
+        assertEq(module.title(), _TITLE);
     }
 
     function testInitFailsForNonInitializerFunction() public {
@@ -109,12 +112,12 @@ contract ModuleTest is Test {
         module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        module.initNoInitializer(orchestrator, METADATA, CONFIGDATA);
+        module.initNoInitializer(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
-    function testReinitFails() public {
+    function testReinitFails() public override {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        module.init(orchestrator, METADATA, CONFIGDATA);
+        module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
     function testInitFailsForInvalidOrchestrator() public {
@@ -122,27 +125,65 @@ contract ModuleTest is Test {
         module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(IModule.Module__InvalidOrchestratorAddress.selector);
-        module.init(IOrchestrator(address(0)), METADATA, CONFIGDATA);
+        module.init(IOrchestrator(address(0)), _METADATA, _CONFIGDATA);
     }
 
     function testInitFailsIfMetadataInvalid() public {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        // Invalid if url empty.
+        // Invalid if _URL empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(
-            orchestrator,
-            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE),
-            CONFIGDATA
+            _orchestrator,
+            IModule.Metadata(_MAJOR_VERSION, _MINOR_VERSION, "", _TITLE),
+            _CONFIGDATA
         );
 
-        // Invalid if title empty.
+        // Invalid if _TITLE empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(
-            orchestrator,
-            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""),
-            CONFIGDATA
+            _orchestrator,
+            IModule.Metadata(_MAJOR_VERSION, _MINOR_VERSION, _URL, ""),
+            _CONFIGDATA
         );
+    }
+
+    //--------------------------------------------------------------------------
+    // Role Functions
+
+    function testGrantModuleRole(uint8 role, address addr) public {
+        vm.assume(role <= uint8(type(mockRoles).max));
+        vm.assume(addr != address(0));
+
+        vm.startPrank(address(this));
+
+        _authorizer.toggleModuleSelfManagement();
+
+        module.grantModuleRole(role, addr);
+
+
+        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
+        bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
+        assertTrue(isAuthorized);
+
+        vm.stopPrank();
+    }
+
+    function testRevokeModuleRole(uint8 role, address addr) public {
+        vm.assume(role <= uint8(type(mockRoles).max));
+        vm.assume(addr != address(0));
+
+        vm.startPrank(address(this));
+        _authorizer.toggleModuleSelfManagement();
+
+        module.grantModuleRole(role, addr);
+        module.revokeModuleRole(role, addr);
+
+        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
+        bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
+        assertFalse(isAuthorized);
+
+        vm.stopPrank();
     }
 }

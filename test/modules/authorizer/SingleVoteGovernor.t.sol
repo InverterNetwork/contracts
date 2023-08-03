@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import {
     SingleVoteGovernor,
     ISingleVoteGovernor
-} from "src/modules/authorizer/SingleVoteGovernor.sol";
+} from "src/modules/utils/SingleVoteGovernor.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";

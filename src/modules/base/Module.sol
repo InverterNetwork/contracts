@@ -62,8 +62,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Orchestrator.
     modifier onlyOrchestratorOwner() {
-        IAuthorizer authorizer =
-            IAuthorizer(address(__Module_orchestrator.authorizer()));
+        IAuthorizer authorizer = __Module_orchestrator.authorizer();
 
         bytes32 ownerRole = authorizer.getOwnerRole();
 
@@ -76,8 +75,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Orchestrator or the Orchestrator's manager.
     modifier onlyOrchestratorOwnerOrManager() {
-        IAuthorizer authorizer =
-            IAuthorizer(address(__Module_orchestrator.authorizer()));
+        IAuthorizer authorizer = __Module_orchestrator.authorizer();
 
         bytes32 ownerRole = authorizer.getOwnerRole();
         bytes32 managerRole = authorizer.getManagerRole();
@@ -94,10 +92,10 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(uint8 roleId) {
         if (
-            !IAuthorizer(address(__Module_orchestrator.authorizer()))
-                .isAuthorized(roleId, _msgSender())
+            !__Module_orchestrator.authorizer().isAuthorized(
+                roleId, _msgSender()
+            )
         ) {
-            //revert Module__BountyManager__OnlyRole(roleId, address(this));
             revert Module__CallerNotAuthorized();
         }
         _;
@@ -208,8 +206,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer roleAuthorizer =
-            IAuthorizer(address(__Module_orchestrator.authorizer()));
+        IAuthorizer roleAuthorizer = __Module_orchestrator.authorizer();
         roleAuthorizer.grantRoleFromModule(uint8(role), addr);
     }
 
@@ -217,8 +214,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer roleAuthorizer =
-            IAuthorizer(address(__Module_orchestrator.authorizer()));
+        IAuthorizer roleAuthorizer = __Module_orchestrator.authorizer();
         roleAuthorizer.revokeRoleFromModule(uint8(role), addr);
     }
 

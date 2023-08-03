@@ -645,7 +645,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         assertTrue(expectedSalary != 0);
 
-        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyProposalOwner can call the next function
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
             paymentClient, paymentReceiver1, walletId, false
         );
@@ -766,7 +766,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         assertTrue(salary2 != 0);
 
-        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyProposalOwner can call the next function
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
             paymentClient,
             paymentReceiver1,

@@ -26,8 +26,9 @@ import {
 } from "src/modules/logicModule/MilestoneManager.sol";
 
 import {
-    IMetadataManager, MetadataManager
-} from "src/modules/MetadataManager.sol";
+    IMetadataManager,
+    MetadataManager
+} from "src/modules/utils/MetadataManager.sol";
 
 //Beacon
 import {IBeacon, Beacon} from "src/factories/beacon/Beacon.sol";

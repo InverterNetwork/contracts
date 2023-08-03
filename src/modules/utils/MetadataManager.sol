@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
-import {IMetadataManager} from "src/modules/IMetadataManager.sol";
+import {IMetadataManager} from "src/modules/utils/IMetadataManager.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract MetadataManager is IMetadataManager, Module {

@@ -79,7 +79,7 @@ contract BountyManagerLifecycle is E2eTest {
             }
         }
 
-        // we authorize the deployer of the proposal as the bounty admin
+        // we authorize the deployer of the orchestrator as the bounty admin
         bountyManager.grantModuleRole(
             uint8(IBountyManager.Roles.BountyAdmin), address(this)
         );

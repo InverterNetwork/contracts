@@ -104,7 +104,7 @@ contract OrchestratorTest is Test {
             );
         }
 
-        // Check that proposal's storage correctly initialized.
+        // Check that orchestrator's storage correctly initialized.
         assertEq(orchestrator.orchestratorId(), orchestratorId);
         assertEq(address(orchestrator.token()), address(token));
         assertEq(address(orchestrator.authorizer()), address(authorizer));
@@ -218,14 +218,8 @@ contract OrchestratorTest is Test {
 
         // verify whether the init value is set and not the value from the old
         // authorizer, to check whether the replacement is successful
-        assertFalse(
-            IAuthorizer(orchestrator.authorizer()).isAuthorized(address(this))
-        );
-        assertTrue(
-            IAuthorizer(orchestrator.authorizer()).isAuthorized(
-                address(0xA11CE)
-            )
-        );
+        assertFalse(orchestrator.authorizer().isAuthorized(address(this)));
+        assertTrue(orchestrator.authorizer().isAuthorized(address(0xA11CE)));
     }
 
     function testSetFundingManager(

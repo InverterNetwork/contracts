@@ -36,7 +36,7 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     ///         the current transaction.
     /// @param role The identifier of the role we want to check
     /// @param who  The address on which to perform the check.
-    /// @dev If the role is not self-managed, it will default to the proposal roles
+    /// @dev If the role is not self-managed, it will default to the orchestrator roles
     /// @dev If not, it will use the calling address to generate the role ID. Therefore, for checking on anything other than itself, hasRole() should be used
     function isAuthorized(uint8 role, address who)
         external
@@ -63,7 +63,7 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     /// @param target  The address to revoke the role from.
     function revokeRoleFromModule(uint8 role, address target) external;
 
-    /// @notice Toggles if a Module self-manages its roles or defaults to the proposal's roles.
+    /// @notice Toggles if a Module self-manages its roles or defaults to the orchestrator's roles.
     function toggleModuleSelfManagement() external;
 
     /// @notice Transfer the admin rights to a given role.
