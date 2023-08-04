@@ -46,33 +46,6 @@ contract baseModuleTest is ModuleTest {
     bytes _CONFIGDATA = bytes("");
 
     function setUp() public {
-        /*//fundingManager = new FundingManagerMock();
-
-        //_authorizer = new AuthorizerMock();
-        //_authorizer.setAllAuthorized(true);
-
-        //paymentProcessor = new PaymentProcessorMock();
-
-        address orchestratorImpl = address(new Orchestrator());
-        orchestrator = Orchestrator(Clones.clone(orchestratorImpl));
-
-        address impl = address(new ModuleMock());
-        module = ModuleMock(Clones.clone(impl));
-
-        module.init(orchestrator, _METADATA, _CONFIGDATA);
-
-        // Initialize orchestrator to enable module.
-        address[] memory modules = new address[](1);
-        modules[0] = address(module);
-        orchestrator.init(
-            1,
-            IERC20(new ERC20Mock("Mock", "MOCK")),
-            modules,
-            fundingManager,
-            _authorizer,
-            paymentProcessor
-        );*/
-
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
