@@ -29,13 +29,15 @@ import {
     IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
-import {SingleVoteGovernor, ISingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
+import {
+    SingleVoteGovernor,
+    ISingleVoteGovernor
+} from "src/modules/utils/SingleVoteGovernor.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract SingleVoteGovernorLifecycle is E2eTest {
-
     // voters
     address voter1 = makeAddr("voter1");
     address voter2 = makeAddr("voter2");
@@ -45,15 +47,6 @@ contract SingleVoteGovernorLifecycle is E2eTest {
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
     function test_e2e_SingleVoteGovernorLifecycle() public {
-
-        // Setup new orchestrator
-        // add voters
-        // create vote to create bounty
-        // pass that vote
-        // execute it
-        // check that the bounty was created
-
-
         // -----------INIT
         // address(this) creates a new orchestrator.
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
@@ -70,14 +63,11 @@ contract SingleVoteGovernorLifecycle is E2eTest {
         RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
 
-        RoleAuthorizer authorizer = RoleAuthorizer(
-            address(orchestrator.authorizer())
-        );
-
-
+        RoleAuthorizer authorizer =
+            RoleAuthorizer(address(orchestrator.authorizer()));
 
         // Find BountyManager
-                BountyManager bountyManager;
+        BountyManager bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
@@ -93,11 +83,10 @@ contract SingleVoteGovernorLifecycle is E2eTest {
 
         // Find SingleVoteGovernor
         SingleVoteGovernor singleVoteGovernor;
-                
+
         for (uint i; i < modulesList.length; ++i) {
-            try ISingleVoteGovernor(modulesList[i]).isVoter(address(0)) returns (
-                bool
-            ) {
+            try ISingleVoteGovernor(modulesList[i]).isVoter(address(0))
+            returns (bool) {
                 singleVoteGovernor = SingleVoteGovernor(modulesList[i]);
                 break;
             } catch {
@@ -105,13 +94,14 @@ contract SingleVoteGovernorLifecycle is E2eTest {
             }
         }
 
-
         // We make the governor the only owner
         bytes32 ownerRole = authorizer.getOwnerRole();
         authorizer.grantRole(ownerRole, address(singleVoteGovernor));
 
-        authorizer.renounceRole(ownerRole, address(this));
+        // we authorize governance to create  bounties
+        bountyManager.grantModuleRole(uint8(0), address(singleVoteGovernor));
 
+        authorizer.renounceRole(ownerRole, address(this));
 
         // Funders deposit funds
 
@@ -138,89 +128,75 @@ contract SingleVoteGovernorLifecycle is E2eTest {
         }
         vm.stopPrank();
 
-
-
-
         // Bounty details
         uint minimumPayoutAmount = 100e18;
         uint maximumPayoutAmount = 500e18;
         bytes memory details = "This is a test bounty";
 
-
         // voter 1 sets up vote to create bounty
         vm.prank(voter1);
-        uint motionId= singleVoteGovernor.createMotion(address(bountyManager), abi.encodeWithSignature(
-            "addBounty(uint,uint,bytes memory)",
-            minimumPayoutAmount,
-            maximumPayoutAmount,
-            details
-        ));
+        uint motionId = singleVoteGovernor.createMotion(
+            address(bountyManager),
+            abi.encodeWithSelector(
+                IBountyManager.addBounty.selector,
+                minimumPayoutAmount,
+                maximumPayoutAmount,
+                details
+            )
+        );
 
         vm.warp(block.timestamp + 2);
 
         // voters vote
-         vm.prank(voter1);
+        vm.prank(voter1);
         singleVoteGovernor.castVote(motionId, 0);
         vm.prank(voter2);
         singleVoteGovernor.castVote(motionId, 0);
         vm.prank(voter3);
         singleVoteGovernor.castVote(motionId, 0);
 
-        
         vm.warp(block.timestamp + 3 days);
 
         // execute vote
+        vm.prank(voter1);
         singleVoteGovernor.executeMotion(motionId);
+
+        // to avoid stack too deep
+        (bool _excRes, bytes memory _excData) =
+            _getMotionExecutionResult(singleVoteGovernor, motionId);
+
+        console.log(_excRes);
+        console.log(string(_excData));
 
         vm.warp(block.timestamp + 2);
 
-        console.log(bountyManager.listBountyIds()[0]);
-
         // check that the bounty was created
-        IBountyManager.Bounty memory bounty = bountyManager.getBountyInformation(2);
+        IBountyManager.Bounty memory bounty =
+            bountyManager.getBountyInformation(1);
         assertEq(bounty.minimumPayoutAmount, minimumPayoutAmount);
         assertEq(bounty.maximumPayoutAmount, maximumPayoutAmount);
         assertEq(bounty.details, details);
+    }
 
+    function _getMotionExecutionResult(
+        SingleVoteGovernor singleVoteGovernor,
+        uint motionId
+    ) internal returns (bool, bytes memory) {
+        (
+            address _addr,
+            bytes memory _act,
+            uint _start,
+            uint _end,
+            uint _threshold,
+            uint _for,
+            uint _against,
+            uint _abstain,
+            uint _excAt,
+            bool _excRes,
+            bytes memory _excData
+        ) = singleVoteGovernor.motions(motionId);
 
-/*
-
-        // Workers submit bounty
-        IBountyManager.Contributor memory contrib1 =
-            IBountyManager.Contributor(address(0xA11CE), 150e18);
-        IBountyManager.Contributor memory contrib2 =
-            IBountyManager.Contributor(address(0xb0b), 150e18);
-
-        //auth.setIsAuthorized(address(0xA11CE), true);
-        bountyManager.grantModuleRole(
-            uint8(IBountyManager.Roles.ClaimAdmin), address(0xA11CE)
-        );
-
-        IBountyManager.Contributor[] memory contribs =
-            new IBountyManager.Contributor[](2);
-        contribs[0] = contrib1;
-        contribs[1] = contrib2;
-
-        bytes memory claimDetails = "This is a test submission";
-
-        vm.prank(contrib1.addr);
-        uint claimId = bountyManager.addClaim(1, contribs, claimDetails);
-
-        // Verifiers approve bounty
-
-        address verifier1 = makeAddr("verifier 1");
-
-        //auth.setIsAuthorized(verifier1, true);
-        bountyManager.grantModuleRole(
-            uint8(IBountyManager.Roles.VerifyAdmin), verifier1
-        );
-
-        vm.prank(verifier1);
-        bountyManager.verifyClaim(claimId, bountyId);
-
-        // Bounty has been paid out
-        assertEq(token.balanceOf(contrib1.addr), 150e18);
-        assertEq(token.balanceOf(contrib2.addr), 150e18);*/
+        return (_excRes, _excData);
     }
 
     function _createNewOrchestratorWithAllModules_withBountyManagerAndSingleVoteGovernor(

@@ -171,7 +171,6 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
-
     SingleVoteGovernor singleVoteGovernorImpl;
     Beacon singleVoteGovernorBeacon;
     address singleVoteGovernorBeaconOwner =
@@ -183,7 +182,8 @@ contract E2eTest is Test {
         "SingleVoteGovernor"
     );
 
-    address[] initialVoters = [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
+    address[] initialVoters =
+        [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
 
     IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
@@ -191,8 +191,6 @@ contract E2eTest is Test {
         abi.encode(initialVoters, 2, 3 days),
         abi.encode(hasDependency, dependencies)
     );
-
-
 
     function setUp() public {
         // Deploy Orchestrator implementation.
@@ -256,7 +254,6 @@ contract E2eTest is Test {
 
         vm.prank(singleVoteGovernorBeaconOwner);
         singleVoteGovernorBeacon.upgradeTo(address(singleVoteGovernorImpl));
-
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();

@@ -162,7 +162,6 @@ contract baseModuleTest is ModuleTest {
 
         module.grantModuleRole(role, addr);
 
-
         bytes32 roleId = _authorizer.generateRoleId(address(module), role);
         bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
         assertTrue(isAuthorized);
