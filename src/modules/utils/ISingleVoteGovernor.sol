@@ -110,6 +110,10 @@ interface ISingleVoteGovernor {
 
     function isVoter(address who) external view returns (bool);
 
+
+    function addVoter(address who) external;
+    function removeVoter(address who) external;
+
     function motions(uint motionId)
         external
         view

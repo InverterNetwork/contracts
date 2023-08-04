@@ -27,6 +27,7 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
 
 //Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -170,6 +171,29 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
+
+    SingleVoteGovernor singleVoteGovernorImpl;
+    Beacon singleVoteGovernorBeacon;
+    address singleVoteGovernorBeaconOwner =
+        makeAddr("single vote governor manager beacon owner");
+    IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/single-vote-governor",
+        "SingleVoteGovernor"
+    );
+
+    address[] initialVoters = [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
+
+    IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
+        singleVoteGovernorMetadata,
+        abi.encode(initialVoters, 2, 3 days),
+        abi.encode(hasDependency, dependencies)
+    );
+
+
+
     function setUp() public {
         // Deploy Orchestrator implementation.
         orchestratorImpl = new Orchestrator();
@@ -183,6 +207,7 @@ contract E2eTest is Test {
         recurringPaymentManagerImpl = new RecurringPaymentManager();
         authorizerImpl = new AuthorizerMock();
         roleAuthorizerImpl = new RoleAuthorizer();
+        singleVoteGovernorImpl = new SingleVoteGovernor();
 
         // Deploy module beacons.
         vm.prank(rebasingFundingManagerBeaconOwner);
@@ -201,6 +226,8 @@ contract E2eTest is Test {
         authorizerBeacon = new Beacon();
         vm.prank(roleAuthorizerBeaconOwner);
         roleAuthorizerBeacon = new Beacon();
+        vm.prank(singleVoteGovernorBeaconOwner);
+        singleVoteGovernorBeacon = new Beacon();
 
         // Set beacon's implementations.
         vm.prank(rebasingFundingManagerBeaconOwner);
@@ -223,8 +250,13 @@ contract E2eTest is Test {
         );
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon.upgradeTo(address(authorizerImpl));
+
         vm.prank(roleAuthorizerBeaconOwner);
         roleAuthorizerBeacon.upgradeTo(address(roleAuthorizerImpl));
+
+        vm.prank(singleVoteGovernorBeaconOwner);
+        singleVoteGovernorBeacon.upgradeTo(address(singleVoteGovernorImpl));
+
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
@@ -258,6 +290,9 @@ contract E2eTest is Test {
         );
         moduleFactory.registerMetadata(
             roleAuthorizerMetadata, IBeacon(roleAuthorizerBeacon)
+        );
+        moduleFactory.registerMetadata(
+            singleVoteGovernorMetadata, IBeacon(singleVoteGovernorBeacon)
         );
     }
 

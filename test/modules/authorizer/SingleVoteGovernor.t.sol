@@ -933,7 +933,6 @@ contract SingleVoteGovernorTest is ModuleTest {
         uint _newDuration = 3 days;
         bytes memory _encodedAction =
             abi.encodeWithSignature("setVotingDuration(uint256)", _newDuration);
-
         uint _voteID = speedrunSuccessfulVote(
             address(_governor), _encodedAction, initialVoters
         );
