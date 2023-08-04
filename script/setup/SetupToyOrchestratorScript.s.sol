@@ -89,11 +89,10 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         );
 
         // Authorizer: Metadata, initial authorized addresses
-        initialAuthorizedAddresses.push(orchestratorOwner);
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
             authorizerMetadata,
-            abi.encode(initialAuthorizedAddresses),
+            abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
         );
 

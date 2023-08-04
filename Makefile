@@ -76,7 +76,7 @@ testScripts: ## Run e2e test suite
 	@forge script script/factories/DeployOrchestratorFactory.s.sol
 	
 	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol
-	@forge script script/modules/governance/DeploySingleVoteGovernor.s.sol
+	@forge script script/modules/DeploySingleVoteGovernor.s.sol
 	
 	@forge script script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol
 	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
