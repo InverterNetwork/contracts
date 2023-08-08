@@ -16,7 +16,7 @@ interface IModule {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Module__CallerNotAuthorized();
+    error Module__CallerNotAuthorized(bytes32 role, address caller);
 
     /// @notice Function is only callable by the orchestrator.
     error Module__OnlyCallableByOrchestrator();

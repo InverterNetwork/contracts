@@ -67,7 +67,7 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         bytes32 ownerRole = authorizer.getOwnerRole();
 
         if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Module__CallerNotAuthorized();
+            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
         }
         _;
     }
@@ -80,23 +80,24 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         bytes32 ownerRole = authorizer.getOwnerRole();
         bytes32 managerRole = authorizer.getManagerRole();
 
-        if (
-            !authorizer.hasRole(ownerRole, _msgSender())
-                && !authorizer.hasRole(managerRole, _msgSender())
-        ) {
-            revert Module__CallerNotAuthorized();
+        if (!authorizer.hasRole(ownerRole, _msgSender())) {
+            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
+        } else if (!authorizer.hasRole(managerRole, _msgSender())) {
+            revert Module__CallerNotAuthorized(managerRole, _msgSender());
         }
         _;
     }
 
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(uint8 roleId) {
+        bytes32 role = __Module_orchestrator.authorizer().generateRoleId(address(this), roleId);
         if (
-            !__Module_orchestrator.authorizer().isAuthorized(
-                roleId, _msgSender()
+            !__Module_orchestrator.authorizer().hasRole(
+                role, _msgSender()
             )
         ) {
-            revert Module__CallerNotAuthorized();
+            
+            revert Module__CallerNotAuthorized(role, _msgSender());
         }
         _;
     }
