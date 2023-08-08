@@ -377,7 +377,14 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyBountyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.BountyAdmin)
+                ),
+                address(this)
+            )
         );
         bountyManager.addBounty(0, 0, bytes(""));
     }
@@ -454,7 +461,14 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyClaimAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.ClaimAdmin)
+                ),
+                address(this)
+            )
         );
         bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
     }
@@ -487,7 +501,14 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyBountyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.BountyAdmin)
+                ),
+                address(this)
+            )
         );
         bountyManager.updateBounty(0, bytes(""));
     }
@@ -529,7 +550,14 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyBountyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.BountyAdmin)
+                ),
+                address(this)
+            )
         );
         bountyManager.lockBounty(0);
     }
@@ -755,7 +783,14 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyVerifyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(IModule.Module__CallerNotAuthorized.selector)
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.VerifyAdmin)
+                ),
+                address(this)
+            )
         );
         bountyManager.verifyClaim(0, 1);
     }

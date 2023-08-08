@@ -481,7 +481,13 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                managerRole,
+                caller
+            )
+        );
         milestoneManager.addMilestone(
             DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
         );
@@ -664,7 +670,13 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                managerRole,
+                caller
+            )
+        );
         milestoneManager.stopMilestone(_SENTINEL, id);
     }
 
@@ -840,7 +852,13 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                managerRole,
+                caller
+            )
+        );
         milestoneManager.removeMilestone(0, 1);
     }
 
@@ -969,7 +987,13 @@ contract MilestoneManagerTest is ModuleTest {
         vm.warp(block.timestamp + TIMELOCK + 1);
 
         vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                managerRole,
+                caller
+            )
+        );
         milestoneManager.startNextMilestone();
     }
 
@@ -1118,7 +1142,13 @@ contract MilestoneManagerTest is ModuleTest {
         );
 
         vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                managerRole,
+                caller
+            )
+        );
         milestoneManager.updateMilestone(
             id, DURATION, BUDGET, DEFAULT_CONTRIBUTORS, DETAILS
         );
@@ -1610,7 +1640,13 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                managerRole,
+                caller
+            )
+        );
         milestoneManager.completeMilestone(id);
     }
 
@@ -1736,7 +1772,13 @@ contract MilestoneManagerTest is ModuleTest {
         milestoneManager.submitMilestone(id, SUBMISSION_DATA);
 
         vm.prank(caller);
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                managerRole,
+                caller
+            )
+        );
         milestoneManager.declineMilestone(id);
     }
 
