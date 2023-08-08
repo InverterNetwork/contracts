@@ -19,8 +19,8 @@ contract RoleAuthorizer is
     // Core roles for a orchestrator. They correspond to uint8(0) and uint(1)
     // NOTE that orchestrator owner can register more global roles using numbers from 2 onward. They'l need to go through the DEFAULT_ADMIN_ROLE for this.
     enum CoreRoles {
-        OWNER, // Partial Access to Protected Functions
-        MANAGER // Full Access to Protected Functions
+        OWNER, // Full Access to Protected Functions
+        MANAGER // Partial Access to Protected Functions
     }
 
     // Stores the if a module wants to use it's own roles
