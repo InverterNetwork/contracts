@@ -16,6 +16,7 @@ import {IPaymentProcessor} from
 contract OrchestratorMock is IOrchestrator {
     IERC20 public token;
     IPaymentProcessor public paymentProcessor;
+    IFundingManager public fundingManager;
 
     bool public executeTxBoolReturn;
     bytes public executeTxData;
@@ -61,7 +62,9 @@ contract OrchestratorMock is IOrchestrator {
 
     function setAuthorizer(IAuthorizer authorizer_) external {}
 
-    function setFundingManager(IFundingManager fundingManager_) external {}
+    function setFundingManager(IFundingManager fundingManager_) external {
+        fundingManager = fundingManager_;
+    }
 
     function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
         external
@@ -75,8 +78,6 @@ contract OrchestratorMock is IOrchestrator {
     {}
 
     function orchestratorId() external view returns (uint) {}
-
-    function fundingManager() external view returns (IFundingManager) {}
 
     function authorizer() external view returns (IAuthorizer) {}
 

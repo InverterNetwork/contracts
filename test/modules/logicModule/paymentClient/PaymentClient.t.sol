@@ -16,6 +16,11 @@ import {
     PaymentProcessorMock,
     IPaymentProcessor
 } from "test/utils/mocks/modules/PaymentProcessorMock.sol";
+
+import {
+    IFundingManager,
+    FundingManagerMock
+} from "test/utils/mocks/modules/FundingManagerMock.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
@@ -24,6 +29,7 @@ contract ERC20PaymentClientTest is Test {
     ERC20PaymentClientMock paymentClient;
     OrchestratorMock orchestrator;
     PaymentProcessorMock paymentProcessor;
+    FundingManagerMock fundingManager;
 
     // Mocks
     ERC20Mock token;
@@ -266,10 +272,9 @@ contract ERC20PaymentClientTest is Test {
             paymentClient.originalEnsureTokenBalance(amountRequired);
 
             assertEq(
-                abi.encodeWithSignature(
-                    "transferOrchestratorToken(address,uint256)",
-                    address(paymentClient),
-                    amountRequired - initialAmount
+                abi.encodeCall(
+                    IFundingManager.transferOrchestratorToken,
+                    (address(paymentClient), amountRequired - initialAmount)
                 ),
                 orchestrator.executeTxData()
             );
@@ -335,10 +340,14 @@ contract ERC20PaymentClientTest is Test {
 
     function setupInternalFunctionTest() internal {
         paymentProcessor = new PaymentProcessorMock();
+        fundingManager = new FundingManagerMock();
         orchestrator = new OrchestratorMock();
-        orchestrator.setToken(token);
         orchestrator.setPaymentProcessor(paymentProcessor);
+        orchestrator.setFundingManager(fundingManager);
         paymentClient.setOrchestrator(orchestrator);
+
+        fundingManager.setToken(token);
+        orchestrator.setToken(token);
     }
 
     //--------------------------------------------------------------------------

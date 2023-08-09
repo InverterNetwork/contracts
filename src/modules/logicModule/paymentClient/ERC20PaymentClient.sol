@@ -14,6 +14,8 @@ import {
     IPaymentProcessor
 } from "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+
 /**
  * @title ERC20PaymentClient
  *
@@ -190,7 +192,9 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
 
     /// @dev Ensures `amount` of payment tokens exist in address(this).
     function _ensureTokenBalance(uint amount) internal virtual {
-        uint balance = __Module_orchestrator.token().balanceOf(address(this));
+        uint balance = __Module_orchestrator.fundingManager().token().balanceOf(
+            address(this)
+        );
 
         if (balance < amount) {
             // Trigger callback from orchestrator to transfer tokens
@@ -198,10 +202,9 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
             bool ok;
             (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
                 address(__Module_orchestrator.fundingManager()),
-                abi.encodeWithSignature(
-                    "transferOrchestratorToken(address,uint256)",
-                    address(this),
-                    amount - balance
+                abi.encodeCall(
+                    IFundingManager.transferOrchestratorToken,
+                    (address(this), amount - balance)
                 )
             );
 

@@ -79,21 +79,6 @@ abstract contract ModuleTest is Test {
     function testReinitFails() public virtual;
 
     //--------------------------------------------------------------------------------
-    // Error Helper Functions
-    //
-    // Prefixed with `_expect`.
-
-    function _expectOrchestratorCallbackFailure(string memory funcSig)
-        internal
-    {
-        vm.expectRevert(
-            abi.encodeWithSignature(
-                "Module_OrchestratorCallbackFailed(string)", funcSig
-            )
-        );
-    }
-
-    //--------------------------------------------------------------------------------
     // Assertion Helper Functions
     //
     // Prefixed with `_assert`.
