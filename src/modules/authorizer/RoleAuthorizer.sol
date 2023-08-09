@@ -45,13 +45,13 @@ contract RoleAuthorizer is
         _;
     }
 
-    /// @notice Verifies that the calling module has turned on self-management
+    /*     /// @notice Verifies that the calling module has turned on self-management
     modifier onlySelfManaged() {
         if (!selfManagedModules[_msgSender()]) {
             revert Module__RoleAuthorizer__ModuleNotSelfManaged();
         }
         _;
-    }
+    } */
 
     /// @notice Verifies that the owner being removed is not the last one
     modifier notLastOwner(bytes32 role) {
@@ -182,7 +182,7 @@ contract RoleAuthorizer is
 
     // State-altering functions
 
-    /// @inheritdoc IAuthorizer
+    /*     /// @inheritdoc IAuthorizer
     function toggleModuleSelfManagement() external onlyModule(_msgSender()) {
         if (selfManagedModules[_msgSender()]) {
             selfManagedModules[_msgSender()] = false;
@@ -191,14 +191,14 @@ contract RoleAuthorizer is
             selfManagedModules[_msgSender()] = true;
             emit setRoleSelfManagement(_msgSender(), true);
         }
-    }
+    } */
 
     /// @inheritdoc IAuthorizer
     function grantRoleFromModule(uint8 role, address target)
         external
         onlyModule(_msgSender())
-        onlySelfManaged
     {
+        selfManagedModules[_msgSender()] = true; // placeholder for in between removing uint8 role system
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _grantRole(roleId, target);
     }
@@ -207,7 +207,6 @@ contract RoleAuthorizer is
     function revokeRoleFromModule(uint8 role, address target)
         external
         onlyModule(_msgSender())
-        onlySelfManaged
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _revokeRole(roleId, target);
@@ -222,11 +221,7 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function burnAdminRole(uint8 role)
-        external
-        onlyModule(_msgSender())
-        onlySelfManaged
-    {
+    function burnAdminRole(uint8 role) external onlyModule(_msgSender()) {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }

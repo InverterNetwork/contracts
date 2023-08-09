@@ -131,8 +131,6 @@ contract baseModuleTest is ModuleTest {
 
         vm.startPrank(address(this));
 
-        _authorizer.toggleModuleSelfManagement();
-
         module.grantModuleRole(role, addr);
 
         bytes32 roleId = _authorizer.generateRoleId(address(module), role);
@@ -147,7 +145,6 @@ contract baseModuleTest is ModuleTest {
         vm.assume(addr != address(0));
 
         vm.startPrank(address(this));
-        _authorizer.toggleModuleSelfManagement();
 
         module.grantModuleRole(role, addr);
         module.revokeModuleRole(role, addr);

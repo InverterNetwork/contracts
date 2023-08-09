@@ -152,10 +152,6 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
         //Then, a ERC721 for BOB
         roleNft.mint(BOB);
-
-        // By default, the mockModule will have self-management ON
-        vm.prank(address(mockModule));
-        _authorizer.toggleModuleSelfManagement();
     }
 
     //-------------------------------------------------
@@ -170,9 +166,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
     ) internal returns (bytes32) {
         bytes32 roleId = _authorizer.generateRoleId(module, role);
         vm.startPrank(module);
-        if (!_authorizer.selfManagedModules(module)) {
-            _authorizer.toggleModuleSelfManagement();
-        }
+
         _authorizer.makeRoleTokenGatedFromModule(role);
         _authorizer.grantTokenRoleFromModule(role, address(token), threshold);
         vm.stopPrank();
@@ -186,9 +180,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
     {
         bytes32 roleId = _authorizer.generateRoleId(module, role);
         vm.startPrank(module);
-        if (!_authorizer.selfManagedModules(module)) {
-            _authorizer.toggleModuleSelfManagement();
-        }
+
         _authorizer.makeRoleTokenGatedFromModule(role);
         _authorizer.grantTokenRoleFromModule(role, address(nft), 1);
         vm.stopPrank();
@@ -228,10 +220,6 @@ contract TokenGatedRoleAuthorizerTest is Test {
         makeAddressDefaultAdmin(CLOE);
 
         //we set and unset on an empty role
-
-        // first we turn on self-management
-        vm.prank(address(mockModule));
-        _authorizer.toggleModuleSelfManagement();
 
         bytes32 roleId =
             _authorizer.generateRoleId(address(mockModule), uint8(0));

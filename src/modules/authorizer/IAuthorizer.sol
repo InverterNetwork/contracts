@@ -63,8 +63,8 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     /// @param target  The address to revoke the role from.
     function revokeRoleFromModule(uint8 role, address target) external;
 
-    /// @notice Toggles if a Module self-manages its roles or defaults to the orchestrator's roles.
-    function toggleModuleSelfManagement() external;
+    /*     /// @notice Toggles if a Module self-manages its roles or defaults to the orchestrator's roles.
+    function toggleModuleSelfManagement() external; */
 
     /// @notice Transfer the admin rights to a given role.
     /// @param roleId The role on which to peform the admin transfer

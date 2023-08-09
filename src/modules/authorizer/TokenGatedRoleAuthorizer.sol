@@ -159,7 +159,6 @@ contract TokenGatedRoleAuthorizer is
     function makeRoleTokenGatedFromModule(uint8 role)
         public
         onlyModule(_msgSender())
-        onlySelfManaged
         onlyEmptyRole(generateRoleId(_msgSender(), role))
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
@@ -172,8 +171,8 @@ contract TokenGatedRoleAuthorizer is
     function grantTokenRoleFromModule(uint8 role, address token, uint threshold)
         external
         onlyModule(_msgSender())
-        onlySelfManaged
     {
+        selfManagedModules[_msgSender()] = true; // placeholder for in between removing uint8 role system
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _grantRole(roleId, token);
         _setThreshold(roleId, token, threshold);
@@ -183,7 +182,6 @@ contract TokenGatedRoleAuthorizer is
     function setThresholdFromModule(uint8 role, address token, uint threshold)
         public
         onlyModule(_msgSender())
-        onlySelfManaged
     {
         //TODO write tests
         bytes32 roleId = generateRoleId(_msgSender(), role);

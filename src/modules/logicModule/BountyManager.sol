@@ -192,7 +192,6 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     {
         //Note: due to the authorizer still not being set during initialization,
         // this function has to be called after.
-        orchestrator().authorizer().toggleModuleSelfManagement();
     }
 
     //--------------------------------------------------------------------------

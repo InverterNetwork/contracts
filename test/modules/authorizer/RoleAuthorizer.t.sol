@@ -450,7 +450,7 @@ contract RoleAuthorizerTest is Test {
         );
     }
 
-    function testGrantRoleFromModuleFailsIfModuleNotSelfManaged() public {
+    /*     function testGrantRoleFromModuleFailsIfModuleNotSelfManaged() public {
         address newModule = _setupMockSelfManagedModule();
 
         vm.startPrank(newModule);
@@ -474,7 +474,7 @@ contract RoleAuthorizerTest is Test {
             ),
             false
         );
-    }
+    } */
 
     function testGrantRoleFromModuleIdempotence() public {
         address newModule = _setupMockSelfManagedModule();
@@ -576,7 +576,7 @@ contract RoleAuthorizerTest is Test {
         );
     }
 
-    function testRevokeRoleFromModuleFailsIfModuleNotSelfManaged() public {
+    /*    function testRevokeRoleFromModuleFailsIfModuleNotSelfManaged() public {
         address newModule = _setupMockSelfManagedModule();
 
         vm.startPrank(newModule);
@@ -601,7 +601,7 @@ contract RoleAuthorizerTest is Test {
             false
         );
     }
-
+    */
     function testRevokeRoleFromModuleIdempotence() public {
         address newModule = _setupMockSelfManagedModule();
 
@@ -791,7 +791,7 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
     }
 
-    // Test toggleModuleSelfManagement
+    /*     // Test toggleModuleSelfManagement
     // Test selfManagement gets recognized
     function testtoggleModuleSelfManagement() public {
         // we set up a mock module and buffer the role with burned admin
@@ -805,9 +805,9 @@ contract RoleAuthorizerTest is Test {
 
         //Now it isn't self-managed anymore
         assertFalse(_authorizer.selfManagedModules(newModule));
-    }
+    } */
     // Test module is using own roles when selfmanaged
-
+    /* 
     function testModuleOnlyUsesOwnRolesWhenSelfManaged() public {
         // First, we  set up a modul and authorize BOB
         address newModule = _setupMockSelfManagedModule();
@@ -822,9 +822,9 @@ contract RoleAuthorizerTest is Test {
         assertFalse(_authorizer.isAuthorized(uint8(0), ALBA));
 
         vm.stopPrank();
-    }
+    } */
 
-    function testModuleOnlyUsesOrchestratorRolesWhenNotSelfManaged() public {
+    /*     function testModuleOnlyUsesOrchestratorRolesWhenNotSelfManaged() public {
         // First, we  set up a module and authorize BOB
         address newModule = _setupMockSelfManagedModule();
 
@@ -844,7 +844,7 @@ contract RoleAuthorizerTest is Test {
         assertTrue(_authorizer.isAuthorized(uint8(0), ALBA));
 
         vm.stopPrank();
-    }
+    } */
     // Test module can correctly return to managed mode
 
     function testModuleReturnToManagedMode() public {
@@ -891,7 +891,7 @@ contract RoleAuthorizerTest is Test {
         vm.stopPrank();
     }
 
-    // -> Modules with burnt admin CAN return to managed state
+    /*     // -> Modules with burnt admin CAN return to managed state
     function testBurnedModuleCorrectlyReturnToManagedState() public {
         // Same as testModuleOnlyUsesOrchestratorRolesWhenNotSelfManaged but with ROLE_1
 
@@ -914,7 +914,7 @@ contract RoleAuthorizerTest is Test {
         assertTrue(_authorizer.isAuthorized(uint8(0), ALBA));
 
         vm.stopPrank();
-    }
+    } */
 
     // =========================================================================
     // Test Helper Functions
@@ -931,8 +931,6 @@ contract RoleAuthorizerTest is Test {
         _orchestrator.addModule(address(mockModule));
 
         vm.startPrank(address(mockModule));
-        _authorizer.toggleModuleSelfManagement();
-
         _authorizer.burnAdminRole(uint8(ModuleRoles.ROLE_1));
 
         vm.stopPrank();
