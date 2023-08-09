@@ -61,6 +61,13 @@ interface ITokenGatedRoleAuthorizer is IAuthorizer {
     function grantTokenRoleFromModule(uint8 role, address token, uint threshold)
         external;
 
+    /// @notice Allows a Module to set the Threshold of one of it's roles
+    /// @param role The token-gated role
+    /// @param token The token for which the threshold will be set.
+    /// @param threshold The new minimum balance of the token required to qualify for the role.
+    function setThresholdFromModule(uint8 role, address token, uint threshold)
+        external;
+
     /// @notice Sets if a role is token-gated or not.
     /// @param role The ID of the role to be modified
     /// @param to The new value to be set.

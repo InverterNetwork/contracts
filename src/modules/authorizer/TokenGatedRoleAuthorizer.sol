@@ -79,7 +79,13 @@ contract TokenGatedRoleAuthorizer is
             // If not, check the account against the orchestrator roles
         } else {
             roleId = generateRoleId(address(orchestrator()), role);
-            return hasRole(roleId, who);
+            //check if token gated:
+            if (isTokenGated[roleId]) {
+                //TODO add tests
+                return hasTokenRole(roleId, who);
+            } else {
+                return hasRole(roleId, who);
+            }
         }
     }
 
@@ -110,7 +116,7 @@ contract TokenGatedRoleAuthorizer is
         public
         view
         onlyTokenGated(role)
-        returns (bool) 
+        returns (bool)
     {
         uint numberOfAllowedTokens = getRoleMemberCount(role);
 
@@ -173,7 +179,7 @@ contract TokenGatedRoleAuthorizer is
         _setThreshold(roleId, token, threshold);
     }
 
-        /// @inheritdoc ITokenGatedRoleAuthorizer
+    /// @inheritdoc ITokenGatedRoleAuthorizer
     function setThresholdFromModule(uint8 role, address token, uint threshold)
         public
         onlyModule(_msgSender())
