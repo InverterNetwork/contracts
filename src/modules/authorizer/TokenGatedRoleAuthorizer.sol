@@ -109,7 +109,8 @@ contract TokenGatedRoleAuthorizer is
     function hasTokenRole(bytes32 role, address who)
         public
         view
-        returns (bool)
+        onlyTokenGated(role)
+        returns (bool) 
     {
         uint numberOfAllowedTokens = getRoleMemberCount(role);
 
@@ -169,6 +170,17 @@ contract TokenGatedRoleAuthorizer is
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _grantRole(roleId, token);
+        _setThreshold(roleId, token, threshold);
+    }
+
+        /// @inheritdoc ITokenGatedRoleAuthorizer
+    function setThresholdFromModule(uint8 role, address token, uint threshold)
+        public
+        onlyModule(_msgSender())
+        onlySelfManaged
+    {
+        //TODO write tests
+        bytes32 roleId = generateRoleId(_msgSender(), role);
         _setThreshold(roleId, token, threshold);
     }
 

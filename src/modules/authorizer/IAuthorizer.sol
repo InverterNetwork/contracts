@@ -28,7 +28,7 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /// @notice Returns if an address is authorized to perform a specific action
+    /// @notice Returns if an address has the Orchestrator Owner Role
     /// @param who The adress to be checked.
     function isAuthorized(address who) external view returns (bool);
 
