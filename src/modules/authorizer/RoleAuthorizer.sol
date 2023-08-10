@@ -16,20 +16,20 @@ contract RoleAuthorizer is
     //--------------------------------------------------------------------------
     // Storage
 
-    // Core roles for a orchestrator. They correspond to uint8(0) and uint(1)
+    /*   // Core roles for a orchestrator. They correspond to uint8(0) and uint(1)
     // NOTE that orchestrator owner can register more global roles using numbers from 2 onward. They'l need to go through the DEFAULT_ADMIN_ROLE for this.
     enum CoreRoles {
         OWNER, // Full Access to Protected Functions
         MANAGER // Partial Access to Protected Functions
     }
-
+    */
     // Stores the if a module wants to use it's own roles
     // If false it uses the orchestrator's  core roles.
     mapping(address => bool) public selfManagedModules;
 
     // Stored for easy public reference. Other Modules can assume the following roles to exist
-    bytes32 public ORCHESTRATOR_OWNER_ROLE;
-    bytes32 public ORCHESTRATOR_MANAGER_ROLE;
+    bytes32 public ORCHESTRATOR_OWNER_ROLE = "0x01";
+    bytes32 public ORCHESTRATOR_MANAGER_ROLE = "0x02";
 
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -95,10 +95,10 @@ contract RoleAuthorizer is
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
         // Store RoleIDs for the Orchestrator roles:
-        ORCHESTRATOR_OWNER_ROLE =
+        /*  ORCHESTRATOR_OWNER_ROLE =
             generateRoleId(address(orchestrator()), uint8(CoreRoles.OWNER));
         ORCHESTRATOR_MANAGER_ROLE =
-            generateRoleId(address(orchestrator()), uint8(CoreRoles.MANAGER));
+            generateRoleId(address(orchestrator()), uint8(CoreRoles.MANAGER)); */
 
         //We preliminarily grant admin role to the caller
         _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
@@ -167,6 +167,18 @@ contract RoleAuthorizer is
         } else {
             roleId = generateRoleId(address(orchestrator()), role);
         }
+        return hasRole(roleId, who);
+    }
+
+    /// @inheritdoc IAuthorizer
+    function hasModuleRole(bytes32 role, address who)
+        external
+        view
+        virtual
+        returns (bool)
+    {
+        //Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()
+        bytes32 roleId = generateRoleId(_msgSender(), role);
         return hasRole(roleId, who);
     }
 

@@ -90,9 +90,9 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     }
 
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
-    modifier onlyModuleRole(uint8 roleId) {
+    modifier onlyModuleRole(bytes32 roleId) {
         if (
-            !__Module_orchestrator.authorizer().isAuthorized(
+            !__Module_orchestrator.authorizer().hasModuleRole(
                 roleId, _msgSender()
             )
         ) {

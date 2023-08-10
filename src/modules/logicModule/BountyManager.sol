@@ -256,7 +256,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         bytes calldata details
     )
         external
-        onlyModuleRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(bytes32(Roles.BountyAdmin))
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -282,7 +282,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        onlyModuleRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(bytes32(Roles.BountyAdmin))
         validBountyId(bountyId)
     {
         _bountyRegistry[bountyId].details = details;
@@ -293,7 +293,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function lockBounty(uint bountyId)
         external
-        onlyModuleRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(bytes32(Roles.BountyAdmin))
         validBountyId(bountyId)
         notClaimed(bountyId)
     {
@@ -309,7 +309,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         bytes calldata details
     )
         external
-        onlyModuleRole(uint8(Roles.ClaimAdmin))
+        onlyModuleRole(bytes32(Roles.ClaimAdmin))
         validBountyId(bountyId)
         notClaimed(bountyId)
         returns (uint id)
@@ -396,7 +396,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function verifyClaim(uint claimId, uint bountyId)
         external
-        onlyModuleRole(uint8(Roles.VerifyAdmin))
+        onlyModuleRole(bytes32(Roles.VerifyAdmin))
         validClaimId(claimId)
         validBountyId(bountyId)
         claimBelongingToBounty(claimId, bountyId)

@@ -43,6 +43,17 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
         view
         returns (bool);
 
+    /// @notice Asks whether an address holds the required module role to execute
+    ///         the current transaction.
+    /// @param role The identifier of the role we want to check
+    /// @param who  The address on which to perform the check.
+    /// @dev It will use the calling address to generate the role ID. Therefore, for checking on anything other than itself, hasRole() should be used
+    function hasModuleRole(bytes32 role, address who)
+        external
+        view
+        virtual
+        returns (bool);
+
     //--------------------------------------------------------------------------
     // Functions
 
