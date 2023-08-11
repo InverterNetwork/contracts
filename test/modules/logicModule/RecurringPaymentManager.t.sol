@@ -304,6 +304,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
+        //Fund Fundingmanager
+        _token.mint(address(_fundingManager), amount);
+
         // Fill list with RecurringPayments.
         for (uint i; i < amount; ++i) {
             recurringPaymentManager.addRecurringPayment(
@@ -325,6 +328,17 @@ contract RecurringPaymentManagerTest is ModuleTest {
                 amount - i - 1
             );
         }
+
+        //Make sure that payments got triggered accordingly
+        assertEq(recurringPaymentManager.paymentOrders().length, amount);
+
+        //Delete all payments for easier testing
+        _paymentProcessor.deleteAllPayments(
+            IERC20PaymentClient(address(recurringPaymentManager))
+        );
+
+        //Fund Fundingmanager
+        _token.mint(address(_fundingManager), amount);
 
         // Fill list again with milestones.
         for (uint i; i < amount; ++i) {
@@ -359,6 +373,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
                 amount - i - 1
             );
         }
+
+        //Make sure that payments got triggered accordingly
+        assertEq(recurringPaymentManager.paymentOrders().length, amount);
     }
 
     function testRemoveRecurringPaymentModifierInPosition() public {
