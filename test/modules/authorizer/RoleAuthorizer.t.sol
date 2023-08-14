@@ -36,10 +36,8 @@ contract RoleAuthorizerTest is Test {
     address ALBA = address(0xa1ba); //default authorized person
     address BOB = address(0xb0b); // example person to add
 
-    enum ModuleRoles {
-        ROLE_0,
-        ROLE_1
-    }
+    bytes32 immutable ROLE_0 = "ROLE_0";
+    bytes32 immutable ROLE_1 = "ROLE_1";
 
     // Orchestrator Constants
     uint internal constant _ORCHESTRATOR_ID = 1;
@@ -107,9 +105,9 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
-        assertEq(testAuthorizer.isAuthorized(0, initialAuth), true);
+        assertEq(testAuthorizer.hasRole("0x01", initialAuth), true);
 
-        assertEq(testAuthorizer.isAuthorized(0, address(this)), false);
+        assertEq(testAuthorizer.hasRole("0x01", address(this)), false);
         assertEq(
             testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
@@ -132,7 +130,7 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
-        assertEq(testAuthorizer.isAuthorized(0, address(this)), true);
+        assertEq(testAuthorizer.hasRole("0x01", address(this)), true);
         assertEq(
             testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
@@ -152,9 +150,9 @@ contract RoleAuthorizerTest is Test {
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );
-        assertEq(_authorizer.isAuthorized(0, address(this)), false);
+        assertEq(_authorizer.hasRole("0x01", address(this)), false);
         assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
-        assertEq(_authorizer.isAuthorized(0, ALBA), true);
+        assertEq(_authorizer.hasRole("0x01", ALBA), true);
         assertEq(_authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1);
     }
 
@@ -252,7 +250,7 @@ contract RoleAuthorizerTest is Test {
         vm.prank(address(ALBA));
         _authorizer.revokeRole(ownerRole, ALBA);
 
-        assertEq(_authorizer.isAuthorized(ALBA), true);
+        assertEq(_authorizer.hasRole(ownerRole, ALBA), true);
         assertEq(
             _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
             amountAuth
@@ -262,8 +260,7 @@ contract RoleAuthorizerTest is Test {
     function testGrantManagerRole(address[] memory newAuthorized) public {
         // Here we test adding to a role with OWNER as admin
 
-        bytes32 managerRole =
-            _authorizer.generateRoleId(address(_orchestrator), 1);
+        bytes32 managerRole = _authorizer.getManagerRole();
         uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
 
         _validateAuthorizedList(newAuthorized);
@@ -287,8 +284,7 @@ contract RoleAuthorizerTest is Test {
         public
     {
         // Here we test adding to a role that has OWNER as admin while not being OWNER
-        bytes32 managerRole =
-            _authorizer.generateRoleId(address(_orchestrator), 1);
+        bytes32 managerRole = _authorizer.getManagerRole();
 
         vm.startPrank(address(ALBA));
         _authorizer.grantRole(managerRole, BOB); //Meet your new Manager
@@ -317,8 +313,7 @@ contract RoleAuthorizerTest is Test {
     function testRevokeManagerRole(address[] memory newAuthorized) public {
         // Here we test adding to a role with OWNER as admin
 
-        bytes32 managerRole =
-            _authorizer.generateRoleId(address(_orchestrator), 1);
+        bytes32 managerRole = _authorizer.getManagerRole();
         uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
 
         _validateAuthorizedList(newAuthorized);
@@ -359,8 +354,7 @@ contract RoleAuthorizerTest is Test {
         address[] memory newAuthorized
     ) public {
         // Here we test adding to a role that has OWNER as admin while not being OWNER
-        bytes32 managerRole =
-            _authorizer.generateRoleId(address(_orchestrator), 1);
+        bytes32 managerRole = _authorizer.getManagerRole();
 
         vm.startPrank(address(ALBA));
         _authorizer.grantRole(managerRole, BOB); //Meet your new Manager
@@ -394,19 +388,17 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                ALBA
+                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
             ),
             false
         );
 
         vm.prank(newModule);
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), ALBA);
+        _authorizer.grantRoleFromModule(ROLE_0, ALBA);
 
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                ALBA
+                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
             ),
             true
         );
@@ -417,11 +409,10 @@ contract RoleAuthorizerTest is Test {
 
         vm.prank(address(BOB));
         vm.expectRevert();
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), ALBA);
+        _authorizer.grantRoleFromModule(ROLE_0, ALBA);
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                ALBA
+                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
             ),
             false
         );
@@ -440,11 +431,10 @@ contract RoleAuthorizerTest is Test {
                 newModule
             )
         );
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), ALBA);
+        _authorizer.grantRoleFromModule(ROLE_0, ALBA);
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                ALBA
+                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
             ),
             false
         );
@@ -481,17 +471,16 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(newModule);
 
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), ALBA);
+        _authorizer.grantRoleFromModule(ROLE_0, ALBA);
 
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), ALBA);
+        _authorizer.grantRoleFromModule(ROLE_0, ALBA);
         // No reverts happen
 
         vm.stopPrank();
 
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                ALBA
+                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
             ),
             true
         );
@@ -507,32 +496,27 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                BOB
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
             ),
             false
         );
 
         vm.prank(newModule);
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), address(BOB));
+        _authorizer.grantRoleFromModule(ROLE_0, address(BOB));
 
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                BOB
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
             ),
             true
         );
 
         vm.prank(newModule);
-        _authorizer.revokeRoleFromModule(
-            uint8(ModuleRoles.ROLE_0), address(BOB)
-        );
+        _authorizer.revokeRoleFromModule(ROLE_0, address(BOB));
 
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                BOB
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
             ),
             false
         );
@@ -543,11 +527,10 @@ contract RoleAuthorizerTest is Test {
 
         vm.prank(address(BOB));
         vm.expectRevert();
-        _authorizer.revokeRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        _authorizer.revokeRoleFromModule(ROLE_0, BOB);
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                BOB
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
             ),
             false
         );
@@ -566,11 +549,10 @@ contract RoleAuthorizerTest is Test {
                 newModule
             )
         );
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        _authorizer.grantRoleFromModule(ROLE_0, BOB);
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                BOB
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
             ),
             false
         );
@@ -589,13 +571,13 @@ contract RoleAuthorizerTest is Test {
                     .selector
             )
         );
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        _authorizer.grantRoleFromModule(ROLE_0, BOB);
 
         vm.stopPrank();
 
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
+                _authorizer.generateRoleId(newModule, ROLE_0),
                 BOB
             ),
             false
@@ -607,17 +589,16 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(newModule);
 
-        _authorizer.revokeRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        _authorizer.revokeRoleFromModule(ROLE_0, BOB);
 
-        _authorizer.revokeRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        _authorizer.revokeRoleFromModule(ROLE_0, BOB);
         // No reverts happen
 
         vm.stopPrank();
 
         assertEq(
             _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0)),
-                BOB
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
             ),
             false
         );
@@ -629,30 +610,30 @@ contract RoleAuthorizerTest is Test {
     // Grant global roles
     function testGrantGlobalRole() public {
         bytes32 globalRole =
-            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
         vm.prank(ALBA);
-        _authorizer.grantGlobalRole(uint8(3), BOB);
+        _authorizer.grantGlobalRole(bytes32("0x03"), BOB);
         assertTrue(_authorizer.hasRole(globalRole, BOB));
     }
 
     function testGrantGlobalRoleFailsIfNotOwner() public {
         bytes32 globalRole =
-            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
         vm.prank(BOB);
         vm.expectRevert();
-        _authorizer.grantGlobalRole(uint8(3), ALBA);
+        _authorizer.grantGlobalRole(bytes32("0x03"), ALBA);
         assertFalse(_authorizer.hasRole(globalRole, ALBA));
     }
 
     // Revoke  global roles
     function testRevokeGlobalRole() public {
         bytes32 globalRole =
-            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
         vm.startPrank(ALBA);
-        _authorizer.grantGlobalRole(uint8(3), BOB);
+        _authorizer.grantGlobalRole(bytes32("0x03"), BOB);
         assertTrue(_authorizer.hasRole(globalRole, BOB));
 
-        _authorizer.revokeGlobalRole(uint8(3), BOB);
+        _authorizer.revokeGlobalRole(bytes32("0x03"), BOB);
         assertEq(_authorizer.hasRole(globalRole, BOB), false);
 
         vm.stopPrank();
@@ -660,14 +641,14 @@ contract RoleAuthorizerTest is Test {
 
     function testRevokeGlobalRoleFailsIfNotOwner() public {
         bytes32 globalRole =
-            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
         vm.prank(ALBA);
-        _authorizer.grantGlobalRole(uint8(3), BOB);
+        _authorizer.grantGlobalRole(bytes32("0x03"), BOB);
         assertTrue(_authorizer.hasRole(globalRole, BOB));
 
         vm.prank(BOB);
         vm.expectRevert();
-        _authorizer.revokeGlobalRole(uint8(3), BOB);
+        _authorizer.revokeGlobalRole(bytes32("0x03"), BOB);
         assertTrue(_authorizer.hasRole(globalRole, BOB));
     }
 
@@ -699,8 +680,7 @@ contract RoleAuthorizerTest is Test {
 
         //Then we set up a mock module
         address newModule = _setupMockSelfManagedModule();
-        bytes32 roleId =
-            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
+        bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_0);
 
         // Now we set the OWNER as Role admin
         vm.startPrank(BOB);
@@ -720,8 +700,7 @@ contract RoleAuthorizerTest is Test {
         //We set up a mock module
         address newModule = _setupMockSelfManagedModule();
 
-        bytes32 roleId =
-            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
+        bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_0);
         bytes32 ownerRole = _authorizer.getOwnerRole(); //Buffer this to time revert
 
         // BOB is not allowed to do this
@@ -741,8 +720,7 @@ contract RoleAuthorizerTest is Test {
 
         //Then we set up a mock module
         address newModule = _setupMockSelfManagedModule();
-        bytes32 roleId =
-            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
+        bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_0);
 
         // ALBA can now freely grant and revoke roles
         assertEq(_authorizer.hasRole(roleId, BOB), false);
@@ -776,8 +754,7 @@ contract RoleAuthorizerTest is Test {
 
         //Then we set up a mock module and buffer the role with burned admin
         address newModule = _setupMockSelfManagedModule();
-        bytes32 roleId =
-            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_1));
+        bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_0);
 
         // BOB can NOT grant and revoke roles even though he's admin
         assertEq(_authorizer.hasRole(roleId, BOB), false);
@@ -813,7 +790,7 @@ contract RoleAuthorizerTest is Test {
         address newModule = _setupMockSelfManagedModule();
 
         vm.startPrank(newModule);
-        _authorizer.grantRoleFromModule(uint8(ModuleRoles.ROLE_0), BOB);
+        _authorizer.grantRoleFromModule(ROLE_0, BOB);
 
         // BOB is authorized
         assertTrue(_authorizer.isAuthorized(uint8(ModuleRoles.ROLE_0), BOB));
@@ -847,11 +824,11 @@ contract RoleAuthorizerTest is Test {
     } */
     // Test module can correctly return to managed mode
 
-    function testModuleReturnToManagedMode() public {
+    /*     function testModuleReturnToManagedMode() public {
         //testModuleOnlyUsesOrchestratorRolesWhenNotSelfManaged implicitly tests this
-    }
+    } */
 
-    // Test the burnAdminRole
+    // Test the burnAdminFromModuleRole
     // -> Test burnAdmin changes state
     function testBurnAdminChangesRoleState() public {
         // _setupMockSelfManagedModule implicitly test this
@@ -867,10 +844,8 @@ contract RoleAuthorizerTest is Test {
 
         //Then we set up a mock module and buffer both roles
         address newModule = _setupMockSelfManagedModule();
-        bytes32 roleId_0 =
-            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
-        bytes32 roleId_1 =
-            _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_1));
+        bytes32 roleId_0 = _authorizer.generateRoleId(newModule, ROLE_0);
+        bytes32 roleId_1 = _authorizer.generateRoleId(newModule, ROLE_0);
 
         vm.startPrank(BOB);
 
@@ -931,14 +906,12 @@ contract RoleAuthorizerTest is Test {
         _orchestrator.addModule(address(mockModule));
 
         vm.startPrank(address(mockModule));
-        _authorizer.burnAdminRole(uint8(ModuleRoles.ROLE_1));
+        _authorizer.burnAdminFromModuleRole(ROLE_0);
 
         vm.stopPrank();
 
         bytes32 burntAdmin = _authorizer.getRoleAdmin(
-            _authorizer.generateRoleId(
-                address(mockModule), uint8(ModuleRoles.ROLE_1)
-            )
+            _authorizer.generateRoleId(address(mockModule), ROLE_0)
         );
         assertTrue(burntAdmin == _authorizer.BURN_ADMIN_ROLE());
 

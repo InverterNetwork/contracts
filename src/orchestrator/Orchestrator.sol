@@ -47,8 +47,10 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
     modifier onlyOrchestratorOwner() {
-        if (!authorizer.isAuthorized(_msgSender())) {
-            revert Orchestrator__CallerNotAuthorized();
+        bytes32 ownerRole = authorizer.getOwnerRole();
+
+        if (!authorizer.hasRole(ownerRole, _msgSender())) {
+            revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
         }
         _;
     }
@@ -59,11 +61,13 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address or manager.
     modifier onlyOrchestratorOwnerOrManager() {
-        if (
-            !authorizer.isAuthorized(_msgSender())
-                && !authorizer.hasRole(authorizer.getManagerRole(), _msgSender())
-        ) {
-            revert Orchestrator__CallerNotAuthorized();
+        bytes32 ownerRole = authorizer.getOwnerRole();
+        bytes32 managerRole = authorizer.getManagerRole();
+
+        if (!authorizer.hasRole(managerRole, _msgSender())) {
+            revert Orchestrator__CallerNotAuthorized(managerRole, _msgSender());
+        } else if (!authorizer.hasRole(ownerRole, _msgSender())) {
+            revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
         }
         _;
     }
@@ -188,8 +192,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     {
         IAuthorizer authorizerModule = IAuthorizer(authModule);
 
-        try authorizerModule.isAuthorized(address(uint160(1234))) returns (bool)
-        {
+        try authorizerModule.getOwnerRole() returns (bytes32) {
             return true;
         } catch {
             return false;
@@ -269,7 +272,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         override(ModuleManager)
         returns (bool)
     {
-        return authorizer.isAuthorized(who);
+        return authorizer.hasRole(authorizer.getOwnerRole(), who);
     }
 
     //--------------------------------------------------------------------------

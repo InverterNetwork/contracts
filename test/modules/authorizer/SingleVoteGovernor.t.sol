@@ -224,13 +224,13 @@ contract SingleVoteGovernorTest is ModuleTest {
     function testInit() public override(ModuleTest) {
         assertEq(_orchestrator.isModule(address(_governor)), true);
 
-        assertEq(_authorizer.isAuthorized(address(_governor)), true);
+        assertEq(_authorizer.hasRole("0x01", address(_governor)), true); // Owner role
         assertEq(_governor.isVoter(ALBA), true);
         assertEq(_governor.isVoter(BOB), true);
         assertEq(_governor.isVoter(COBIE), true);
 
-        assertEq(_authorizer.isAuthorized(address(this)), false);
-        assertEq(_authorizer.isAuthorized(address(_orchestrator)), false);
+        assertEq(_authorizer.hasRole("0x01", address(this)), false);
+        assertEq(_authorizer.hasRole("0x01", address(_orchestrator)), false);
         assertEq(_governor.isVoter(address(this)), false);
         assertEq(_governor.isVoter(address(_orchestrator)), false);
 
@@ -328,7 +328,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             )
         );
 
-        assertEq(_authorizer.isAuthorized(address(_governor)), true);
+        assertEq(_authorizer.hasRole("0x01", address(_governor)), true);
         assertEq(_governor.isVoter(ALBA), true);
         assertEq(_governor.isVoter(BOB), true);
         assertEq(_governor.isVoter(COBIE), true);

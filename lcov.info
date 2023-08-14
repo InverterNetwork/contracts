@@ -562,8 +562,8 @@ DA:213,7
 FN:217,RoleAuthorizer.transferAdminRole
 FNDA:4,RoleAuthorizer.transferAdminRole
 DA:221,2
-FN:225,RoleAuthorizer.burnAdminRole
-FNDA:38,RoleAuthorizer.burnAdminRole
+FN:225,RoleAuthorizer.burnAdminFromModuleRole
+FNDA:38,RoleAuthorizer.burnAdminFromModuleRole
 DA:230,38
 DA:231,38
 FN:235,RoleAuthorizer.grantGlobalRole
@@ -2803,8 +2803,8 @@ FN:94,AuthorizerMock.toggleModuleSelfManagement
 FNDA:514,AuthorizerMock.toggleModuleSelfManagement
 FN:96,AuthorizerMock.transferAdminRole
 FNDA:0,AuthorizerMock.transferAdminRole
-FN:98,AuthorizerMock.burnAdminRole
-FNDA:0,AuthorizerMock.burnAdminRole
+FN:98,AuthorizerMock.burnAdminFromModuleRole
+FNDA:0,AuthorizerMock.burnAdminFromModuleRole
 FN:102,AuthorizerMock.getRoleAdmin
 FNDA:0,AuthorizerMock.getRoleAdmin
 DA:103,0

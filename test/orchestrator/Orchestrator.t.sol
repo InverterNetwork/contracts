@@ -218,8 +218,11 @@ contract OrchestratorTest is Test {
 
         // verify whether the init value is set and not the value from the old
         // authorizer, to check whether the replacement is successful
-        assertFalse(orchestrator.authorizer().isAuthorized(address(this)));
-        assertTrue(orchestrator.authorizer().isAuthorized(address(0xA11CE)));
+        bytes32 ownerRole = orchestrator.authorizer().getOwnerRole();
+        assertFalse(orchestrator.authorizer().hasRole(ownerRole, address(this)));
+        assertTrue(
+            orchestrator.authorizer().hasRole(ownerRole, address(0xA11CE))
+        );
     }
 
     function testSetFundingManager(

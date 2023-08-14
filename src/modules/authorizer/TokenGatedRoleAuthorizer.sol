@@ -3,7 +3,15 @@ pragma solidity 0.8.19;
 // External Libraries
 
 import {ITokenGatedRoleAuthorizer} from "./ITokenGatedRoleAuthorizer.sol";
-import {IAuthorizer, RoleAuthorizer} from "./RoleAuthorizer.sol";
+import {
+    IAuthorizer,
+    RoleAuthorizer,
+    AccessControlEnumerableUpgradeable
+} from "./RoleAuthorizer.sol";
+import {
+    AccessControlUpgradeable,
+    IAccessControlUpgradeable
+} from "@oz-up/access/AccessControlUpgradeable.sol";
 
 interface TokenInterface {
     function balanceOf(address _owner) external view returns (uint balance);
@@ -57,7 +65,7 @@ contract TokenGatedRoleAuthorizer is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /// @inheritdoc RoleAuthorizer
+    /*     /// @inheritdoc RoleAuthorizer
     /// @dev We add a check to call a different function if the role is token-gated.
     function isAuthorized(uint8 role, address who)
         public
@@ -86,6 +94,20 @@ contract TokenGatedRoleAuthorizer is
             } else {
                 return hasRole(roleId, who);
             }
+        }
+    } */
+
+    function hasRole(bytes32 roleId, address account)
+        public
+        view
+        virtual
+        override(AccessControlUpgradeable, IAccessControlUpgradeable)
+        returns (bool)
+    {
+        if (isTokenGated[roleId]) {
+            return hasTokenRole(roleId, account);
+        } else {
+            return super.hasRole(roleId, account);
         }
     }
 
@@ -156,7 +178,7 @@ contract TokenGatedRoleAuthorizer is
     // State-altering functions
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
-    function makeRoleTokenGatedFromModule(uint8 role)
+    function makeRoleTokenGatedFromModule(bytes32 role)
         public
         onlyModule(_msgSender())
         onlyEmptyRole(generateRoleId(_msgSender(), role))
@@ -168,10 +190,11 @@ contract TokenGatedRoleAuthorizer is
     }
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
-    function grantTokenRoleFromModule(uint8 role, address token, uint threshold)
-        external
-        onlyModule(_msgSender())
-    {
+    function grantTokenRoleFromModule(
+        bytes32 role,
+        address token,
+        uint threshold
+    ) external onlyModule(_msgSender()) {
         selfManagedModules[_msgSender()] = true; // placeholder for in between removing uint8 role system
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _grantRole(roleId, token);
@@ -179,7 +202,7 @@ contract TokenGatedRoleAuthorizer is
     }
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
-    function setThresholdFromModule(uint8 role, address token, uint threshold)
+    function setThresholdFromModule(bytes32 role, address token, uint threshold)
         public
         onlyModule(_msgSender())
     {

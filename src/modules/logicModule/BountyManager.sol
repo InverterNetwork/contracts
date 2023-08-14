@@ -150,6 +150,10 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     /// @dev Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
 
+    bytes32 public constant BOUNTY_ADMIN_ROLE = "BOUNTY_ADMIN";
+    bytes32 public constant CLAIM_ADMIN_ROLE = "CLAIM_ADMIN";
+    bytes32 public constant VERIFY_ADMIN_ROLE = "VERIFY_ADMIN";
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -256,7 +260,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         bytes calldata details
     )
         external
-        onlyModuleRole(bytes32(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ADMIN_ROLE)
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -282,7 +286,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        onlyModuleRole(bytes32(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ADMIN_ROLE)
         validBountyId(bountyId)
     {
         _bountyRegistry[bountyId].details = details;
@@ -293,7 +297,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function lockBounty(uint bountyId)
         external
-        onlyModuleRole(bytes32(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ADMIN_ROLE)
         validBountyId(bountyId)
         notClaimed(bountyId)
     {
@@ -309,7 +313,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         bytes calldata details
     )
         external
-        onlyModuleRole(bytes32(Roles.ClaimAdmin))
+        onlyModuleRole(CLAIM_ADMIN_ROLE)
         validBountyId(bountyId)
         notClaimed(bountyId)
         returns (uint id)
@@ -396,7 +400,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function verifyClaim(uint claimId, uint bountyId)
         external
-        onlyModuleRole(bytes32(Roles.VerifyAdmin))
+        onlyModuleRole(VERIFY_ADMIN_ROLE)
         validClaimId(claimId)
         validBountyId(bountyId)
         claimBelongingToBounty(claimId, bountyId)

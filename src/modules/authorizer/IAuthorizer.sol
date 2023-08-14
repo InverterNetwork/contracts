@@ -28,7 +28,7 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /// @notice Returns if an address has the Orchestrator Owner Role
+    /*     /// @notice Returns if an address has the Orchestrator Owner Role
     /// @param who The adress to be checked.
     function isAuthorized(address who) external view returns (bool);
 
@@ -41,7 +41,7 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     function isAuthorized(uint8 role, address who)
         external
         view
-        returns (bool);
+        returns (bool); */
 
     /// @notice Asks whether an address holds the required module role to execute
     ///         the current transaction.
@@ -51,7 +51,6 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     function hasModuleRole(bytes32 role, address who)
         external
         view
-        virtual
         returns (bool);
 
     //--------------------------------------------------------------------------
@@ -60,19 +59,19 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     /// @notice Helper function to generate a bytes32 role hash for a module role
     /// @param module The address of the module to generate the hash for
     /// @param role  The ID number of the role to generate the hash for
-    function generateRoleId(address module, uint8 role)
+    function generateRoleId(address module, bytes32 role)
         external
         returns (bytes32);
 
     /// @notice Used by a Module to grant a role to a user.
     /// @param role The identifier of the role to grant
     /// @param target  The address to which to grant the role.
-    function grantRoleFromModule(uint8 role, address target) external;
+    function grantRoleFromModule(bytes32 role, address target) external;
 
     /// @notice Used by a Module to revoke a role from a user.
     /// @param role The identifier of the role to revoke
     /// @param target  The address to revoke the role from.
-    function revokeRoleFromModule(uint8 role, address target) external;
+    function revokeRoleFromModule(bytes32 role, address target) external;
 
     /*     /// @notice Toggles if a Module self-manages its roles or defaults to the orchestrator's roles.
     function toggleModuleSelfManagement() external; */
@@ -85,25 +84,25 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     /// @notice Irreversibly burns the admin of a given role.
     /// @param role The role to remove admin access from
     /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
-    function burnAdminRole(uint8 role) external;
+    function burnAdminFromModuleRole(bytes32 role) external;
 
     /// @notice Grants a global role to a target
     /// @param role The role to grant
     /// @param target The address to grant the role to
     /// @dev Only the addresses with the Owner role should be able to call this function
-    function grantGlobalRole(uint8 role, address target) external;
+    function grantGlobalRole(bytes32 role, address target) external;
 
     /// @notice Revokes a global role from a target
     /// @param role The role to grant
     /// @param target The address to grant the role to
     /// @dev Only the addresses with the Owner role should be able to call this function
-    function revokeGlobalRole(uint8 role, address target) external;
+    function revokeGlobalRole(bytes32 role, address target) external;
 
     /// @notice Returns the role ID of the owner role
     /// @return The role ID
-    function getOwnerRole() external returns (bytes32);
+    function getOwnerRole() external view returns (bytes32);
 
     /// @notice Returns the role ID of the manager role
     /// @return The role ID
-    function getManagerRole() external returns (bytes32);
+    function getManagerRole() external view returns (bytes32);
 }

@@ -143,7 +143,7 @@ contract RoleAuthorizer is
     // Public functions
 
     // View functions
-
+/* 
     /// @inheritdoc IAuthorizer
     /// @dev Implements the function of the IAuthorizer interface by defauling to check if the caller holds the OWNER role.
     function isAuthorized(address who) external view returns (bool) {
@@ -152,7 +152,7 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function isAuthorized(uint8 role, address who)
+    function isAuthorized(bytes32 role, address who)
         external
         view
         virtual
@@ -169,7 +169,7 @@ contract RoleAuthorizer is
         }
         return hasRole(roleId, who);
     }
-
+ */
     /// @inheritdoc IAuthorizer
     function hasModuleRole(bytes32 role, address who)
         external
@@ -183,7 +183,7 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function generateRoleId(address module, uint8 role)
+    function generateRoleId(address module, bytes32 role)
         public
         pure
         returns (bytes32)
@@ -206,7 +206,7 @@ contract RoleAuthorizer is
     } */
 
     /// @inheritdoc IAuthorizer
-    function grantRoleFromModule(uint8 role, address target)
+    function grantRoleFromModule(bytes32 role, address target)
         external
         onlyModule(_msgSender())
     {
@@ -216,7 +216,7 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function revokeRoleFromModule(uint8 role, address target)
+    function revokeRoleFromModule(bytes32 role, address target)
         external
         onlyModule(_msgSender())
     {
@@ -233,13 +233,16 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function burnAdminRole(uint8 role) external onlyModule(_msgSender()) {
+    function burnAdminFromModuleRole(bytes32 role)
+        external
+        onlyModule(_msgSender())
+    {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
 
     /// @inheritdoc IAuthorizer
-    function grantGlobalRole(uint8 role, address target)
+    function grantGlobalRole(bytes32 role, address target)
         external
         onlyRole(ORCHESTRATOR_OWNER_ROLE)
     {
@@ -248,7 +251,7 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function revokeGlobalRole(uint8 role, address target)
+    function revokeGlobalRole(bytes32 role, address target)
         external
         onlyRole(ORCHESTRATOR_OWNER_ROLE)
     {

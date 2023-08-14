@@ -202,20 +202,20 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Role Management
 
-    function grantModuleRole(uint8 role, address addr)
+    function grantModuleRole(bytes32 role, address addr)
         external
         onlyOrchestratorOwner
     {
         IAuthorizer roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.grantRoleFromModule(uint8(role), addr);
+        roleAuthorizer.grantRoleFromModule(role, addr);
     }
 
-    function revokeModuleRole(uint8 role, address addr)
+    function revokeModuleRole(bytes32 role, address addr)
         external
         onlyOrchestratorOwner
     {
         IAuthorizer roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.revokeRoleFromModule(uint8(role), addr);
+        roleAuthorizer.revokeRoleFromModule(role, addr);
     }
 
     //--------------------------------------------------------------------------
