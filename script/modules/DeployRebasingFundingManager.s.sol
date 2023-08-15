@@ -24,13 +24,13 @@ contract DeployRebasingFundingManager is Script {
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the milestoneManager.
+            // Deploy the RebasingFundingManager.
 
             fundingManager = new RebasingFundingManager();
         }
 
         vm.stopBroadcast();
-        // Log the deployed MilestoneManager contract address.
+        // Log the deployed RebasingFundingManager contract address.
         console2.log(
             "Deployment of RebasingFundingManager Implementation at address: ",
             address(fundingManager)

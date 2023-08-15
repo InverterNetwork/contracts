@@ -8,11 +8,9 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {ModuleManager} from "src/orchestrator/base/ModuleManager.sol";
-import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
 
 // Internal Interfaces
 import {
@@ -206,22 +204,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
             IFundingManager(fundingManagerAddress);
 
         try fundingManagerModule.token() returns (IERC20) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
-        external
-        view
-        returns (bool)
-    {
-        MilestoneManager milestoneManager =
-            MilestoneManager(milestoneManagerAddress);
-
-        try milestoneManager.hasActiveMilestone() returns (bool) {
             return true;
         } catch {
             return false;

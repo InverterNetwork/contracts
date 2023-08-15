@@ -81,7 +81,6 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol
 	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
 
-	@forge script script/modules/DeployMilestoneManager.s.sol
 	@forge script script/modules/DeployRebasingFundingManager.s.sol
 
 	@forge script script/orchestrator/DeployOrchestrator.s.sol
