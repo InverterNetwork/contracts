@@ -110,7 +110,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     function setVirtualTokenSupply(uint _virtualSupply)
         external
         override(VirtualTokenSupplyBase)
-        onlyAuthorizedOrManager
+        onlyOrchestratorOwnerOrManager
     {
         _setVirtualTokenSupply(_virtualSupply);
     }
@@ -118,7 +118,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     function setVirtualCollateralSupply(uint _virtualSupply)
         external
         override(VirtualCollateralSupplyBase)
-        onlyAuthorizedOrManager
+        onlyOrchestratorOwnerOrManager
     {
         _setVirtualCollateralSupply(_virtualSupply);
     }
