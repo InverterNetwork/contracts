@@ -199,7 +199,9 @@ contract StreamingPaymentsLifecycle is E2eTest {
         //Lets claim the releasable tokens for a single vestingwallet
         vm.prank(alice);
         streamingPaymentProcessor.claimForSpecificWalletId(
-            recurringPaymentManager, vestings[0]._vestingWalletID, false
+            address(recurringPaymentManager),
+            vestings[0]._vestingWalletID,
+            false
         );
         //check what got released
         released = streamingPaymentProcessor.releasedForSpecificWalletId(
@@ -215,7 +217,7 @@ contract StreamingPaymentsLifecycle is E2eTest {
         //claim rest up to point
         //claimAll
         vm.prank(alice);
-        streamingPaymentProcessor.claimAll(recurringPaymentManager);
+        streamingPaymentProcessor.claimAll(address(recurringPaymentManager));
         //Check token
         assertTrue(token.balanceOf(alice) == paymentAmount / 2 * 3);
 
@@ -224,7 +226,7 @@ contract StreamingPaymentsLifecycle is E2eTest {
 
         //Claim all
         vm.prank(alice);
-        streamingPaymentProcessor.claimAll(recurringPaymentManager);
+        streamingPaymentProcessor.claimAll(address(recurringPaymentManager));
         //Check token
         assertTrue(token.balanceOf(alice) == paymentAmount * 3);
     }
@@ -275,7 +277,10 @@ contract StreamingPaymentsLifecycle is E2eTest {
         //remove 1 Alice
         //removePaymentForSpecificWalletId
         streamingPaymentProcessor.removePaymentForSpecificWalletId(
-            recurringPaymentManager, alice, vestings[0]._vestingWalletID, false
+            address(recurringPaymentManager),
+            alice,
+            vestings[0]._vestingWalletID,
+            false
         );
 
         vestings = streamingPaymentProcessor.viewAllPaymentOrders(
@@ -285,7 +290,7 @@ contract StreamingPaymentsLifecycle is E2eTest {
 
         //remove all Payments from Alice
         streamingPaymentProcessor.removeAllPaymentReceiverPayments(
-            recurringPaymentManager, alice
+            address(recurringPaymentManager), alice
         );
 
         //Make sure alice has no payments left
