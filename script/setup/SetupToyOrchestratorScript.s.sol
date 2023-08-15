@@ -227,13 +227,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         }
         vm.stopBroadcast();
 
-        /*  IBountyManager.Bounty memory confirmBounty =
-            orchestratorCreatedBountyManager.getBountyInformation(bountyId);
+        console2.log("\t -Bounty Created.");
 
-        assertEq(confirmBounty.minimumPayoutAmount, 100e18);
-        assertEq(confirmBounty.maximumPayoutAmount, 250e18);
-        assertEq(confirmBounty.details, details);
-        */
         console2.log(
             "=================================================================================="
         );
