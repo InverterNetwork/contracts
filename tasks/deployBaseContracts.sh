@@ -35,13 +35,6 @@ forge script script/modules/governance/DeploySingleVoteGovernor.s.sol:DeploySing
     --private-key $WALLET_DEPLOYER_PK \
     --broadcast
 
-# - MilestoneManager
-forge script script/modules/DeployMilestoneManager.s.sol:DeployMilestoneManager \
-    --fork-url $RPC_URL \
-    --sender $WALLET_DEPLOYER \
-    --private-key $WALLET_DEPLOYER_PK \
-    --broadcast
-
 # - PaymentManager
 forge script script/modules/DeployPaymentProcessor.s.sol:DeployPaymentProcessor \
     --fork-url $RPC_URL \

@@ -59,7 +59,6 @@ abstract contract ModuleTest is Test {
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,
-            address(this),
             _token,
             modules,
             _fundingManager,

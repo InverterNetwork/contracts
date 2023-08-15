@@ -14,8 +14,9 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // SuT
 import {
-    MetadataManager, IMetadataManager
-} from "src/modules/MetadataManager.sol";
+    MetadataManager,
+    IMetadataManager
+} from "src/modules/utils/MetadataManager.sol";
 
 contract MetadataManagerTest is ModuleTest {
     bool hasDependency;
@@ -63,6 +64,9 @@ contract MetadataManagerTest is ModuleTest {
         metadataManager = MetadataManager(Clones.clone(impl));
 
         _setUpOrchestrator(metadataManager);
+
+        // Authorize this contract for the tests
+        _authorizer.setIsAuthorized(address(this), true);
 
         //Init Module
         metadataManager.init(

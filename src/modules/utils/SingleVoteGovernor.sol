@@ -8,7 +8,7 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {
     ISingleVoteGovernor,
     IAuthorizer
-} from "src/modules/authorizer/ISingleVoteGovernor.sol";
+} from "src/modules/utils/ISingleVoteGovernor.sol";
 
 contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
@@ -16,7 +16,9 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
     modifier onlySelf() {
         if (_msgSender() != address(this)) {
-            revert Module__CallerNotAuthorized();
+            revert Module__CallerNotAuthorized(
+                bytes32("onlySelf"), _msgSender()
+            );
         }
         _;
     }
@@ -138,20 +140,6 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         // Write voteDuration to storage.
         voteDuration = voteDuration_;
         emit VoteDurationUpdated(0, voteDuration_);
-    }
-
-    //--------------------------------------------------------------------------
-    // IAuthorizer Functions
-
-    /// @inheritdoc IAuthorizer
-    function isAuthorized(address who)
-        public
-        view
-        override(IAuthorizer)
-        returns (bool)
-    {
-        // Note that only the governance itself is authorized.
-        return who == address(this);
     }
 
     //--------------------------------------------------------------------------

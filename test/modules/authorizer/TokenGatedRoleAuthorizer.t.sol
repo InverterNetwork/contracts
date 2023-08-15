@@ -14,7 +14,7 @@ import {
 
 import {
     RoleAuthorizer,
-    IRoleAuthorizer
+    IAuthorizer
 } from "src/modules/authorizer/RoleAuthorizer.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 // External Libraries
@@ -47,7 +47,6 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
         modules[0] = address(module);
         _orchestrator.init(
             _ORCHESTRATOR_ID,
-            address(this),
             _token,
             modules,
             _fundingManager,
@@ -64,19 +63,12 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
             abi.encode(initialAuth, initialManager)
         );
         assertEq(
-            _authorizer.hasRole(
-                _authorizer.ORCHESTRATOR_MANAGER_ROLE(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
         assertEq(
-            _authorizer.hasRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), ALBA),
-            true
-        );
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.ORCHESTRATOR_OWNER_ROLE(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
             false
         );
     }
@@ -129,7 +121,6 @@ contract TokenGatedRoleAuthorizerTest is Test {
         modules[0] = address(mockModule);
         _orchestrator.init(
             _ORCHESTRATOR_ID,
-            address(this),
             _token,
             modules,
             _fundingManager,
@@ -146,19 +137,12 @@ contract TokenGatedRoleAuthorizerTest is Test {
             abi.encode(initialAuth, initialManager)
         );
         assertEq(
-            _authorizer.hasRole(
-                _authorizer.ORCHESTRATOR_MANAGER_ROLE(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
         assertEq(
-            _authorizer.hasRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), ALBA),
-            true
-        );
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.ORCHESTRATOR_OWNER_ROLE(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
             false
         );
 

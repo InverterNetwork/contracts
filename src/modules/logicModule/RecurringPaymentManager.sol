@@ -169,7 +169,7 @@ contract RecurringPaymentManager is
         address recipient
     )
         external
-        onlyAuthorizedOrManager
+        onlyOrchestratorOwnerOrManager
         validAmount(amount)
         validStartEpoch(startEpoch)
         validRecipient(recipient)
@@ -201,7 +201,7 @@ contract RecurringPaymentManager is
     /// @inheritdoc IRecurringPaymentManager
     function removeRecurringPayment(uint prevId, uint id)
         external
-        onlyAuthorizedOrManager
+        onlyOrchestratorOwnerOrManager
     {
         //trigger to resolve the given Payment
         _triggerFor(id, _paymentList.getNextId(id));
