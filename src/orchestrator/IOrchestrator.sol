@@ -100,11 +100,12 @@ interface IOrchestrator is IModuleManager {
 
     function manager() external view returns (address);
 
-    /// @notice find the address of a given module using it's name in a orchestrator
-    function findModuleAddressInOrchestrator(string calldata moduleName)
-        external
-        view
-        returns (address);
+    /// @notice find the address of a given module using either the module URL or it's identifier in an orchestrator
+    function findModuleAddressInOrchestrator(
+        string calldata moduleURL,
+        bytes32 moduleIdentifier,
+        bool useIdentifier
+    ) external view returns (address);
 
     /// @notice Verify whether the given address is a payment processor
     function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)

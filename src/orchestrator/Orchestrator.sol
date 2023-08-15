@@ -129,27 +129,39 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
 
     /// @notice verifies whether a orchestrator with the title `moduleName` has been used in this orchestrator
     /// @dev The query string and the module title should be **exactly** same, as in same whitespaces, same capitalizations, etc.
-    /// @param moduleName Query string which is the title of the module to be searched in the orchestrator
+    /// @param moduleURL Query URL string which is the URL of the module to be searched in the orchestrator
+    /// @param moduleIdentifier Query bytes32 identifier which can be used to decisively look for module addresses.
+    /// @param useIdentifier true if query is to be made on basis of identifier, false if on the basis of URL
     /// @return uint256 index of the module in the list of modules used in the orchestrator
     /// @return address address of the module with title `moduleName`
-    function _isModuleUsedInOrchestrator(string calldata moduleName)
-        private
-        view
-        returns (uint, address)
-    {
+    function _isModuleUsedInOrchestrator(
+        string calldata moduleURL,
+        bytes32 moduleIdentifier,
+        bool useIdentifier
+    ) private view returns (uint, address) {
         address[] memory moduleAddresses = listModules();
         uint moduleAddressesLength = moduleAddresses.length;
-        string memory currentModuleName;
+        bytes32 currentModuleIdentifier;
+        string memory currentModuleURL;
         uint index;
 
         for (; index < moduleAddressesLength;) {
-            currentModuleName = IModule(moduleAddresses[index]).title();
+            if (!useIdentifier) {
+                currentModuleURL = IModule(moduleAddresses[index]).url();
 
-            if (bytes(currentModuleName).length == bytes(moduleName).length) {
-                if (
-                    keccak256(abi.encodePacked(currentModuleName))
-                        == keccak256(abi.encodePacked(moduleName))
-                ) {
+                if (bytes(currentModuleURL).length == bytes(moduleURL).length) {
+                    if (
+                        keccak256(abi.encodePacked(currentModuleURL))
+                            == keccak256(abi.encodePacked(moduleURL))
+                    ) {
+                        return (index, moduleAddresses[index]);
+                    }
+                }
+            } else {
+                currentModuleIdentifier =
+                    IModule(moduleAddresses[index]).identifier();
+
+                if (currentModuleIdentifier == moduleIdentifier) {
                     return (index, moduleAddresses[index]);
                 }
             }
@@ -163,13 +175,14 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IOrchestrator
-    function findModuleAddressInOrchestrator(string calldata moduleName)
-        external
-        view
-        returns (address)
-    {
-        (uint moduleIndex, address moduleAddress) =
-            _isModuleUsedInOrchestrator(moduleName);
+    function findModuleAddressInOrchestrator(
+        string calldata moduleURL,
+        bytes32 moduleIdentifier,
+        bool useIdentifier
+    ) external view returns (address) {
+        (uint moduleIndex, address moduleAddress) = _isModuleUsedInOrchestrator(
+            moduleURL, moduleIdentifier, useIdentifier
+        );
         if (moduleIndex == type(uint).max) {
             revert DependencyInjection__ModuleNotUsedInOrchestrator();
         }
