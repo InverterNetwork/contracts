@@ -35,8 +35,6 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
 
 contract BancorVirtualSupplyBondingCurveFundingManager is
-    IVirtualCollateralSupply,
-    IVirtualTokenSupply,
     VirtualTokenSupplyBase,
     VirtualCollateralSupplyBase,
     RedeemingBondingCurveFundingManagerBase
@@ -111,6 +109,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     function setVirtualTokenSupply(uint _virtualSupply)
         external
+        override(VirtualTokenSupplyBase)
         onlyAuthorizedOrManager
     {
         _setVirtualTokenSupply(_virtualSupply);
@@ -118,6 +117,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     function setVirtualCollateralSupply(uint _virtualSupply)
         external
+        override(VirtualCollateralSupplyBase)
         onlyAuthorizedOrManager
     {
         _setVirtualCollateralSupply(_virtualSupply);
