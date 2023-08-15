@@ -352,7 +352,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     )
         external
         validClaimId(claimId)
-        onlyClaimContributor(claimId)
+        onlyModuleRole(uint8(Roles.ClaimAdmin))
         validBountyId(bountyId)
     {
         validContributorsForBounty(contributors, _bountyRegistry[bountyId]);

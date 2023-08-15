@@ -587,7 +587,6 @@ contract BountyManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true);
         emit ClaimContributorsUpdated(id, contribs);
 
-        vm.prank(DEFAULT_CONTRIBUTORS[0].addr);
         bountyManager.updateClaimContributors(id, 1, contribs);
 
         assertEqualClaim(2, 1, contribs, bytes(""));
@@ -615,8 +614,6 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        vm.startPrank(DEFAULT_CONTRIBUTORS[0].addr);
-
         //validClaimId
         vm.expectRevert(
             IBountyManager.Module__BountyManager__InvalidClaimId.selector
@@ -637,11 +634,17 @@ contract BountyManagerTest is ModuleTest {
         );
         bountyManager.updateClaimContributors(2, 1, INVALID_CONTRIBUTORS);
 
-        vm.stopPrank();
-
-        //onlyClaimContributor
+        //onlyClaimAdmin
+        _authorizer.setIsAuthorized(address(this), false); //No access address
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__OnlyClaimContributor.selector
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.ClaimAdmin)
+                ),
+                address(this)
+            )
         );
         bountyManager.updateClaimContributors(2, 1, DEFAULT_CONTRIBUTORS);
     }
