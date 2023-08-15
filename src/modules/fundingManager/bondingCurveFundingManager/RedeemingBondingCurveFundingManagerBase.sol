@@ -24,17 +24,17 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         _redeemTokens(_depositAmount, collateral);
     }
 
-    function openSell() external onlyAuthorizedOrManager {
+    function openSell() external onlyOrchestratorOwnerOrManager {
         // Function to set the PAMM Sell functionality to open
         _openSell();
     }
 
-    function closeSell() external onlyAuthorizedOrManager {
+    function closeSell() external onlyOrchestratorOwnerOrManager {
         // Function to set the PAMM Sell functionality to close
         _closeSell();
     }
 
-    function updateSellFee(uint _fee) external onlyAuthorizedOrManager {
+    function updateSellFee(uint _fee) external onlyOrchestratorOwnerOrManager {
         // Should update the Sell fee of the contract
         _updateSellFee(_fee);
     }

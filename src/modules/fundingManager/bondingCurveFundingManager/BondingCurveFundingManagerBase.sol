@@ -55,17 +55,17 @@ abstract contract BondingCurveFundingManagerBase is
         _issueTokens(_depositAmount, collateral);
     }
 
-    function openBuy() external onlyAuthorizedOrManager {
+    function openBuy() external onlyOrchestratorOwnerOrManager {
         // Function to set the PAMM buy functionality to open
         _openBuy();
     }
 
-    function closeBuy() external onlyAuthorizedOrManager {
+    function closeBuy() external onlyOrchestratorOwnerOrManager {
         // Function to set the PAMM buy functionality to close
         _closeBuy();
     }
 
-    function updateBuyFee(uint _fee) external onlyAuthorizedOrManager {
+    function updateBuyFee(uint _fee) external onlyOrchestratorOwnerOrManager {
         // Should update the buy fee of the contract
         _updateBuyFee(_fee);
     }
