@@ -647,6 +647,20 @@ contract BountyManagerTest is ModuleTest {
             )
         );
         bountyManager.updateClaimContributors(2, 1, DEFAULT_CONTRIBUTORS);
+
+        //Reset this address to be authorized to test correctly
+        _authorizer.setIsAuthorized(address(this), true);
+
+        bountyManager.lockBounty(1);
+
+        //notClaimed
+        vm.expectRevert(
+            IBountyManager
+                .Module__BountyManager__BountyAlreadyClaimedOrLocked
+                .selector
+        );
+
+        bountyManager.updateClaimContributors(2, 1, DEFAULT_CONTRIBUTORS);
     }
 
     //-----------------------------------------
@@ -674,13 +688,21 @@ contract BountyManagerTest is ModuleTest {
         );
         bountyManager.updateClaimDetails(0, bytes(""));
 
-        //Set this address to not authorized to test the roles correctly
-        _authorizer.setIsAuthorized(address(this), false);
-
         //onlyClaimContributor
         vm.expectRevert(
             IBountyManager.Module__BountyManager__OnlyClaimContributor.selector
         );
+        bountyManager.updateClaimDetails(2, bytes(""));
+
+        bountyManager.lockBounty(1);
+
+        //notClaimed
+        vm.expectRevert(
+            IBountyManager
+                .Module__BountyManager__BountyAlreadyClaimedOrLocked
+                .selector
+        );
+        vm.prank(DEFAULT_CONTRIBUTORS[0].addr);
         bountyManager.updateClaimDetails(2, bytes(""));
     }
 

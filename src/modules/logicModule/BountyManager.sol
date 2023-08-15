@@ -352,6 +352,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     )
         external
         validClaimId(claimId)
+        notClaimed(_claimRegistry[claimId].bountyId)
         onlyModuleRole(uint8(Roles.ClaimAdmin))
         validBountyId(bountyId)
     {
@@ -387,6 +388,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
         validClaimId(claimId)
+        notClaimed(_claimRegistry[claimId].bountyId)
         onlyClaimContributor(claimId)
     {
         _claimRegistry[claimId].details = details;
