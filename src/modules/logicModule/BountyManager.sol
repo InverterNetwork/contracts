@@ -409,16 +409,12 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
 
         uint length = contribs.length;
 
-        //total amount needed to verifyBounty
-        uint totalAmount;
-
         //current contributor in loop
         Contributor memory contrib;
 
         //For each Contributor add payments according to the claimAmount specified
         for (uint i; i < length;) {
             contrib = contribs[i];
-            totalAmount += contrib.claimAmount;
 
             _addPaymentOrder(
                 PaymentOrder({
@@ -432,9 +428,6 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
                 ++i;
             }
         }
-
-        //ensure that this contract has enough tokens to fulfill all payments
-        _ensureTokenBalance(totalAmount);
 
         //when done process the Payments correctly
         __Module_orchestrator.paymentProcessor().processPayments(
