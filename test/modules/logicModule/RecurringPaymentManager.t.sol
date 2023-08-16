@@ -258,9 +258,14 @@ contract RecurringPaymentManagerTest is ModuleTest {
         vm.warp(2 weeks);
 
         //onlyOrchestratorOwnerOrManager
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.getManagerRole(),
+                address(0xBEEF)
+            )
+        );
         vm.prank(address(0xBEEF)); //Not Authorized
-
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0xBEEF));
 
         //validAmount
@@ -299,6 +304,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
+        //Fund Fundingmanager
+        _token.mint(address(_fundingManager), amount);
+
         // Fill list with RecurringPayments.
         for (uint i; i < amount; ++i) {
             recurringPaymentManager.addRecurringPayment(
@@ -320,6 +328,17 @@ contract RecurringPaymentManagerTest is ModuleTest {
                 amount - i - 1
             );
         }
+
+        //Make sure that payments got triggered accordingly
+        assertEq(recurringPaymentManager.paymentOrders().length, amount);
+
+        //Delete all payments for easier testing
+        _paymentProcessor.deleteAllPayments(
+            IERC20PaymentClient(address(recurringPaymentManager))
+        );
+
+        //Fund Fundingmanager
+        _token.mint(address(_fundingManager), amount);
 
         // Fill list again with milestones.
         for (uint i; i < amount; ++i) {
@@ -354,6 +373,9 @@ contract RecurringPaymentManagerTest is ModuleTest {
                 amount - i - 1
             );
         }
+
+        //Make sure that payments got triggered accordingly
+        assertEq(recurringPaymentManager.paymentOrders().length, amount);
     }
 
     function testRemoveRecurringPaymentModifierInPosition() public {
@@ -363,9 +385,14 @@ contract RecurringPaymentManagerTest is ModuleTest {
         );
 
         //onlyOrchestratorOwnerOrManager
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.getManagerRole(),
+                address(0xBEEF)
+            )
+        );
         vm.prank(address(0xBEEF)); //Not Authorized
-
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         recurringPaymentManager.removeRecurringPayment(0, 1);
     }
 

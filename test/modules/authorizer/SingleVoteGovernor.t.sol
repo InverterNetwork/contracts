@@ -482,7 +482,13 @@ contract SingleVoteGovernorTest is ModuleTest {
         batchAddAuthorized(users);
 
         for (uint i; i < users.length; ++i) {
-            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector,
+                    bytes32("onlySelf"),
+                    users[i]
+                )
+            );
             vm.prank(users[i]); //authorized, but not Module
             _governor.addVoter(users[i]);
         }
@@ -493,7 +499,13 @@ contract SingleVoteGovernorTest is ModuleTest {
         batchAddAuthorized(users);
 
         for (uint i; i < users.length; ++i) {
-            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector,
+                    bytes32("onlySelf"),
+                    users[i]
+                )
+            );
             vm.prank(users[i]); //authorized, but not Module
             _governor.removeVoter(users[i]);
         }

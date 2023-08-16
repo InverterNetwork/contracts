@@ -16,7 +16,9 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
     modifier onlySelf() {
         if (_msgSender() != address(this)) {
-            revert Module__CallerNotAuthorized();
+            revert Module__CallerNotAuthorized(
+                bytes32("onlySelf"), _msgSender()
+            );
         }
         _;
     }

@@ -112,12 +112,6 @@ interface IOrchestrator is IModuleManager {
         address recurringPaymentManager
     ) external view returns (bool);
 
-    /// @notice Verify whether the given address is the milestone manager module
-    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
-        external
-        view
-        returns (bool);
-
     /// @notice Verify whether the given address is a funding manager
     function verifyAddressIsFundingManager(address fundingManagerAddress)
         external

@@ -24,13 +24,13 @@ contract DeployStreamingPaymentProcessor is Script {
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the milestoneManager.
+            // Deploy the StreamingPaymentProcessor.
 
             paymentProcessor = new StreamingPaymentProcessor();
         }
         vm.stopBroadcast();
 
-        // Log the deployed MilestoneManager contract address.
+        // Log the deployed StreamingPaymentProcessor contract address.
         console2.log(
             "Deployment of StreamingPaymentProcessor Implementation at address",
             address(paymentProcessor)

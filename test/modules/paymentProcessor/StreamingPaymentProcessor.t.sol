@@ -239,7 +239,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // All recepients try to claim their vested tokens
         for (uint i; i < recipients.length;) {
             vm.prank(recipients[i]);
-            paymentProcessor.claimAll(paymentClient);
+            paymentProcessor.claimAll(address(paymentClient));
             unchecked {
                 ++i;
             }
@@ -320,7 +320,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 );
 
                 vm.prank(recipient);
-                paymentProcessor.claimAll(paymentClient);
+                paymentProcessor.claimAll(address(paymentClient));
 
                 // Check correct balances.
                 assertEq(_token.balanceOf(recipient), payoutAmount);
@@ -647,7 +647,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
-            paymentClient, paymentReceiver1, walletId, false
+            address(paymentClient), paymentReceiver1, walletId, false
         );
 
         paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
@@ -749,7 +749,9 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // Now we claim the entire salary from the first payment order
         vm.prank(paymentReceiver1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, paymentReceiverWallets[0]._vestingWalletID, false
+            address(paymentClient),
+            paymentReceiverWallets[0]._vestingWalletID,
+            false
         );
 
         // Now we note down the balance of the paymentReceiver1 again after claiming for the first wallet.
@@ -768,7 +770,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
-            paymentClient,
+            address(paymentClient),
             paymentReceiver1,
             paymentReceiverWallets[1]._vestingWalletID,
             false
@@ -795,7 +797,9 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         vm.prank(paymentReceiver1);
         paymentProcessor.claimForSpecificWalletId(
-            paymentClient, paymentReceiverWallets[0]._vestingWalletID, false
+            address(paymentClient),
+            paymentReceiverWallets[0]._vestingWalletID,
+            false
         );
 
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
@@ -1066,7 +1070,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient
                 )
             );
-            paymentProcessor.claimAll(paymentClient);
+            paymentProcessor.claimAll(address(paymentClient));
             vm.stopPrank();
 
             uint balanceAfter = _token.balanceOf(recipient);
@@ -1197,7 +1201,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claimAll(paymentClient);
+        paymentProcessor.claimAll(address(paymentClient));
 
         // after failed claim attempt receiver should receive 0 token,
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
@@ -1219,7 +1223,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claimAll(paymentClient);
+        paymentProcessor.claimAll(address(paymentClient));
 
         // after successful claim attempt receiver should 50% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
@@ -1263,7 +1267,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claimAll(paymentClient);
+        paymentProcessor.claimAll(address(paymentClient));
 
         // after failed claim attempt receiver should receive 0 token,
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
@@ -1285,7 +1289,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
         vm.prank(recipient);
-        paymentProcessor.claimAll(paymentClient);
+        paymentProcessor.claimAll(address(paymentClient));
 
         // after successful claim attempt receiver should 50% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
@@ -1339,7 +1343,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         for (uint i; i < recipients.length; i++) {
             vm.prank(address(recipients[i]));
-            paymentProcessor.claimAll(paymentClient);
+            paymentProcessor.claimAll(address(paymentClient));
         }
     }
 

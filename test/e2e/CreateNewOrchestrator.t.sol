@@ -21,11 +21,6 @@ import {
 } from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 
 import {
-    IMilestoneManager,
-    MilestoneManager
-} from "src/modules/logicModule/MilestoneManager.sol";
-
-import {
     IMetadataManager,
     MetadataManager
 } from "src/modules/utils/MetadataManager.sol";
@@ -57,6 +52,10 @@ import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+import {
+    IBountyManager,
+    BountyManager
+} from "src/modules/logicModule/BountyManager.sol";
 
 /**
  * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory}.
@@ -66,21 +65,21 @@ contract OrchestratorCreation is Test {
     IFundingManager fundingManagerTemplate; //This is just the template thats referenced in the Factory later
     IAuthorizer authorizerTemplate; //Just a template
     IPaymentProcessor paymentProcessorTemplate; //Just a template
-    IMilestoneManager milestoneManagerTemplate; //Just a template
+    IBountyManager bountyManagerTemplate; //Just a template
     IMetadataManager metadataManagerTemplate; //Just a template
 
     //Module Beacons
     Beacon fundingManagerBeacon;
     Beacon authorizerBeacon;
     Beacon paymentProcessorBeacon;
-    Beacon milestoneManagerBeacon;
+    Beacon bountyManagerBeacon;
     Beacon metadataManagerBeacon;
 
     //Metadata for Modules
     IModule.Metadata fundingManagerMetadata;
     IModule.Metadata authorizerMetadata;
     IModule.Metadata paymentProcessorMetadata;
-    IModule.Metadata milestoneManagerMetadata;
+    IModule.Metadata bountyManagerMetadata;
     IModule.Metadata metadataManagerMetadata;
 
     //Orchestrator Metadata
@@ -101,7 +100,6 @@ contract OrchestratorCreation is Test {
     // Components are:
     // -Authorizer: A Module that declares who can access the main functionalities of the orchestrator
     // -SimplePaymentProcessor: A Module that enables Token distribution
-    // -MilestoneManager: A Module that enables Declaration of Milestones and upon fullfillment, uses the Payment Processor for salary distributions
     // -MetadataManager: A Module contains metadata for the orchestrator
     // -Beacons: A Proxy Contract structure that enables to update all proxy contracts at the same time (EIP-1967)
     // -ModuleFactory: A factory that creates Modules. Modules have to be registered with Metadata and the intended beacon, which contains the module template, for it to be used
@@ -115,21 +113,21 @@ contract OrchestratorCreation is Test {
         fundingManagerTemplate = new RebasingFundingManager();
         authorizerTemplate = new RoleAuthorizer();
         paymentProcessorTemplate = new SimplePaymentProcessor();
-        milestoneManagerTemplate = new MilestoneManager();
+        bountyManagerTemplate = new BountyManager();
         metadataManagerTemplate = new MetadataManager();
 
         //Create Beacons for every Module
         fundingManagerBeacon = new Beacon();
         authorizerBeacon = new Beacon();
         paymentProcessorBeacon = new Beacon();
-        milestoneManagerBeacon = new Beacon();
+        bountyManagerBeacon = new Beacon();
         metadataManagerBeacon = new Beacon();
 
         //Upgrade Beacons to correct implementation
         fundingManagerBeacon.upgradeTo(address(fundingManagerTemplate));
         authorizerBeacon.upgradeTo(address(authorizerTemplate));
         paymentProcessorBeacon.upgradeTo(address(paymentProcessorTemplate));
-        milestoneManagerBeacon.upgradeTo(address(milestoneManagerTemplate));
+        bountyManagerBeacon.upgradeTo(address(bountyManagerTemplate));
         metadataManagerBeacon.upgradeTo(address(metadataManagerTemplate));
 
         //==========================================
@@ -151,18 +149,16 @@ contract OrchestratorCreation is Test {
             "https://github.com/inverter/payment-processor",
             "SimplePaymentProcessor"
         );
-        milestoneManagerMetadata = IModule.Metadata(
-            1,
-            1,
-            "https://github.com/inverter/milestone-manager",
-            "MilestoneManager"
-        );
 
         metadataManagerMetadata = IModule.Metadata(
             1,
             1,
             "https://github.com/inverter/metadata-manager",
             "MetadataManager"
+        );
+
+        bountyManagerMetadata = IModule.Metadata(
+            1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
         );
 
         //Create Module Factory
@@ -179,7 +175,7 @@ contract OrchestratorCreation is Test {
             paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
         );
         moduleFactory.registerMetadata(
-            milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
+            bountyManagerMetadata, IBeacon(bountyManagerBeacon)
         );
         moduleFactory.registerMetadata(
             metadataManagerMetadata, IBeacon(metadataManagerBeacon)
@@ -273,6 +269,14 @@ contract OrchestratorCreation is Test {
             abi.encode(hasDependency, dependencies)
         );
 
+        //Create ModuleConfig for BountyManager
+        IOrchestratorFactory.ModuleConfig memory bountyManagerFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
+            bountyManagerMetadata,
+            bytes(""),
+            abi.encode(hasDependency, dependencies)
+        );
+
         //Create optionalModule array
 
         //Technically Authorizer and SimplePaymentProcessor are the only necessary Modules, but we'll inlcude the metadata manager as an example
@@ -314,35 +318,23 @@ contract OrchestratorCreation is Test {
         //--------------------------------------------------------------------------------
         // Adding Module
 
+        // TODO Substitute with BountyManager
         //Create milestoneManagerConfigData
         //Note: This bytes array is used for transmitting data in a generalized way
         //      to the modules during they initilization via the modulefactory
         //      Some Modules might need additional Deployment/Configuration data
-        uint SALARY_PRECISION = 100_000_000;
-        uint FEE_PERCENTAGE = 1_000_000; //1%
-        address FEE_TREASURY = makeAddr("treasury");
-        bool hasDependency;
-        string[] memory dependencies = new string[](0);
-
-        bytes memory milestoneManagerConfigData = abi.encode(
-            SALARY_PRECISION,
-            FEE_PERCENTAGE,
-            FEE_TREASURY,
-            hasDependency,
-            dependencies
-        );
 
         //Create the module via the moduleFactory
-        address milestoneManager = moduleFactory.createModule(
-            milestoneManagerMetadata, orchestrator, milestoneManagerConfigData
+        address bountyManager = moduleFactory.createModule(
+            bountyManagerMetadata, orchestrator, bytes("")
         );
 
         //Add Module to the orchestrator
-        orchestrator.addModule(milestoneManager);
+        orchestrator.addModule(bountyManager);
 
         //--------------------------------------------------------------------------------
         // Removing Module
-        orchestrator.removeModule(milestoneManager);
+        orchestrator.removeModule(bountyManager);
 
         //In case there is a need to replace the  paymentProcessor / fundingManager / authorizer
 

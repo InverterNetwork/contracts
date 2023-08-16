@@ -183,17 +183,17 @@ contract SingleVoteGovernorLifecycle is E2eTest {
     function _getMotionExecutionResult(
         SingleVoteGovernor singleVoteGovernor,
         uint motionId
-    ) internal returns (bool, bytes memory) {
+    ) internal view returns (bool, bytes memory) {
         (
-            address _addr,
-            bytes memory _act,
-            uint _start,
-            uint _end,
-            uint _threshold,
-            uint _for,
-            uint _against,
-            uint _abstain,
-            uint _excAt,
+            , //address _addr
+            , //bytes memory _act
+            , //uint _start
+            , //uint _end
+            , //uint _threshold
+            , //uint _for
+            , //uint _against
+            , //uint _abstain
+            , //uint _excAt
             bool _excRes,
             bytes memory _excData
         ) = singleVoteGovernor.motions(motionId);

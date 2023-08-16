@@ -103,6 +103,9 @@ contract RoleAuthorizer is
         //We preliminarily grant admin role to the caller
         _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
 
+        //We preliminarily grant admin role to the caller
+        _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
+
         // Set up OWNER role structure:
 
         // -> set OWNER as admin of itself
