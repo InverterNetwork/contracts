@@ -74,9 +74,6 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Given total claims of contributors exceed or are below the given payout amounts of the bounty
     error Module__BountyManager__ClaimExceedsGivenPayoutAmounts();
 
-    /// @notice Claim is not trying to claim given bounty
-    error Module__BountyManager__ClaimNotBelongingToBounty();
-
     /// @notice Given Bounty id is already claimed or Locked
     error Module__BountyManager__BountyAlreadyClaimedOrLocked();
 
@@ -211,11 +208,9 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Updates a Claim's contributor informations.
     /// @dev Reverts if an argument invalid.
     /// @param claimId The id of the Claim that will be updated.
-    /// @param bountyId The id of the bounty the Claim wants to claim.
     /// @param contributors The contributor information for the Claim.
     function updateClaimContributors(
         uint claimId,
-        uint bountyId,
         Contributor[] calldata contributors
     ) external;
 
@@ -230,11 +225,7 @@ interface IBountyManager is IERC20PaymentClient {
     /// @dev Reverts if id invalid.
     /// @dev contributors should be copied out of the given Claim. The parameter is used to prevent front running.
     /// @param claimId The id of the Claim that wants to claim the Bounty.
-    /// @param bountyId The id of the Bounty that will be claimed.
     /// @param contributors The contributor information for the Claim.
-    function verifyClaim(
-        uint claimId,
-        uint bountyId,
-        Contributor[] calldata contributors
-    ) external;
+    function verifyClaim(uint claimId, Contributor[] calldata contributors)
+        external;
 }
