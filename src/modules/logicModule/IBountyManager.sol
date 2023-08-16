@@ -116,7 +116,7 @@ interface IBountyManager is IERC20PaymentClient {
     event ClaimDetailsUpdated(uint indexed claimId, bytes details);
 
     /// @notice Event emitted when a Claim is verified.
-    event ClaimVerified(uint indexed BountyId, uint indexed ClaimId);
+    event ClaimVerified(uint indexed bountyId, uint indexed claimId);
 
     //--------------------------------------------------------------------------
     // Functions
