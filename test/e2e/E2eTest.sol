@@ -238,7 +238,6 @@ contract E2eTest is Test {
     //--------------------------------------------------------------------------
     // logicModules
 
-
     // RecurringPaymentManager
 
     RecurringPaymentManager recurringPaymentManagerImpl;
@@ -255,48 +254,6 @@ contract E2eTest is Test {
     IOrchestratorFactory.ModuleConfig(
         recurringPaymentManagerMetadata,
         abi.encode(1 weeks),
-        abi.encode(hasDependency, dependencies)
-    );
-
-    SingleVoteGovernor singleVoteGovernorImpl;
-    Beacon singleVoteGovernorBeacon;
-    address singleVoteGovernorBeaconOwner =
-        makeAddr("single vote governor manager beacon owner");
-    IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/single-vote-governor",
-        "SingleVoteGovernor"
-    );
-
-    address[] initialVoters =
-        [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
-
-    IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
-        singleVoteGovernorMetadata,
-        abi.encode(initialVoters, 2, 3 days),
-        abi.encode(hasDependency, dependencies)
-    );
-
-    SingleVoteGovernor singleVoteGovernorImpl;
-    Beacon singleVoteGovernorBeacon;
-    address singleVoteGovernorBeaconOwner =
-        makeAddr("single vote governor manager beacon owner");
-    IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/single-vote-governor",
-        "SingleVoteGovernor"
-    );
-
-    address[] initialVoters =
-        [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
-
-    IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
-        singleVoteGovernorMetadata,
-        abi.encode(initialVoters, 2, 3 days),
         abi.encode(hasDependency, dependencies)
     );
 
@@ -350,12 +307,51 @@ contract E2eTest is Test {
         moduleFactory.registerMetadata(
             bountyManagerMetadata, IBeacon(bountyManagerBeacon)
         );
+    }
+
+    //--------------------------------------------------------------------------
+    // utils
+
+    // SingleVoteGovernor
+
+    SingleVoteGovernor singleVoteGovernorImpl;
+    Beacon singleVoteGovernorBeacon;
+    address singleVoteGovernorBeaconOwner =
+        makeAddr("single vote governor manager beacon owner");
+    IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/single-vote-governor",
+        "SingleVoteGovernor"
+    );
+
+    address[] initialVoters =
+        [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
+
+    IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
+        singleVoteGovernorMetadata,
+        abi.encode(initialVoters, 2, 3 days),
+        abi.encode(hasDependency, dependencies)
+    );
+
+    function setSingleVoteGovernor() private {
+        // Deploy module implementations.
+        singleVoteGovernorImpl = new SingleVoteGovernor();
+
+        // Deploy module beacons.
+        vm.prank(singleVoteGovernorBeaconOwner);
+        singleVoteGovernorBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(singleVoteGovernorBeaconOwner);
+        singleVoteGovernorBeacon.upgradeTo(address(singleVoteGovernorImpl));
+
+        // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             singleVoteGovernorMetadata, IBeacon(singleVoteGovernorBeacon)
         );
     }
-
-    event checker(uint);
 
     function setUp() public {
         // Deploy Orchestrator implementation.
@@ -378,9 +374,11 @@ contract E2eTest is Test {
         setUpStreamingPaymentProcessor();
 
         //LogicModule
-        setUpMilestoneManager();
         setUpRecurringPaymentManager();
         setUpBountyManager();
+
+        //utils
+        setSingleVoteGovernor();
     }
 
     function _createNewOrchestratorWithAllModules(
