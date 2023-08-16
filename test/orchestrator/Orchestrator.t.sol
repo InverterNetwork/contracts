@@ -455,7 +455,11 @@ contract OrchestratorTest is Test {
         authorizer.setIsAuthorized(address(this), false);
 
         vm.expectRevert(
-            IOrchestrator.Orchestrator__CallerNotAuthorized.selector
+            abi.encodeWithSelector(
+                IOrchestrator.Orchestrator__CallerNotAuthorized.selector,
+                authorizer.getOwnerRole(),
+                address(this)
+            )
         );
         orchestrator.executeTx(address(this), abi.encodeWithSignature("ok()"));
     }

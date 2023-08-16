@@ -970,7 +970,11 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.assume(_other != address(_governor));
 
         vm.expectRevert(
-            IOrchestrator.Orchestrator__CallerNotAuthorized.selector
+            abi.encodeWithSelector(
+                IOrchestrator.Orchestrator__CallerNotAuthorized.selector,
+                _authorizer.getOwnerRole(),
+                _other
+            )
         );
         vm.prank(_other);
         _orchestrator.executeTx(address(0), "");
@@ -1096,7 +1100,13 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         uint _newQ = 1;
         for (uint i; i < users.length; ++i) {
-            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector,
+                    bytes32("onlySelf"),
+                    users[i]
+                )
+            );
             vm.prank(users[i]); //authorized, but not orchestrator
             _governor.setThreshold(_newQ);
         }
@@ -1183,7 +1193,13 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         uint _newDuration = 5 days;
         for (uint i; i < users.length; ++i) {
-            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector,
+                    bytes32("onlySelf"),
+                    users[i]
+                )
+            );
             vm.prank(users[i]); //authorized, but not orchestrator
             _governor.setVotingDuration(_newDuration);
         }
