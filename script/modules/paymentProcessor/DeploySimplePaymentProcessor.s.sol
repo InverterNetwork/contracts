@@ -24,14 +24,14 @@ contract DeployPaymentProcessor is Script {
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the milestoneManager.
+            // Deploy the SimplePaymentProcessor.
 
             paymentProcessor = new SimplePaymentProcessor();
         }
 
         vm.stopBroadcast();
 
-        // Log the deployed MilestoneManager contract address.
+        // Log the deployed SimplePaymentProcessor contract address.
         console2.log(
             "Deployment of SimplePaymentProcessor Implementation at address",
             address(paymentProcessor)

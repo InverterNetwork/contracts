@@ -91,23 +91,6 @@ contract BountyManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Modifier
 
-    //@todo Reminder that this will be moved into the ModuleTest Contract at a later point of time
-    //note: if someone has a better idea to test this, it would be most welcome
-    function testOnlyRole(bool authorized) public {
-        if (!authorized) {
-            _authorizer.setIsAuthorized(address(this), false);
-            //onlyBountyAdmin
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IBountyManager.Module__BountyManager__OnlyRole.selector,
-                    IBountyManager.Roles.BountyAdmin,
-                    address(bountyManager)
-                )
-            );
-        }
-        bountyManager.addBounty(1, 2, bytes(""));
-    }
-
     function testOnlyClaimContributor(
         address[] memory addrs,
         uint[] memory amounts,
@@ -395,9 +378,12 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBountyManager.Module__BountyManager__OnlyRole.selector,
-                IBountyManager.Roles.BountyAdmin,
-                address(bountyManager)
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.BountyAdmin)
+                ),
+                address(this)
             )
         );
         bountyManager.addBounty(0, 0, bytes(""));
@@ -476,9 +462,12 @@ contract BountyManagerTest is ModuleTest {
         //onlyClaimAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBountyManager.Module__BountyManager__OnlyRole.selector,
-                IBountyManager.Roles.ClaimAdmin,
-                address(bountyManager)
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.ClaimAdmin)
+                ),
+                address(this)
             )
         );
         bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
@@ -513,9 +502,12 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBountyManager.Module__BountyManager__OnlyRole.selector,
-                IBountyManager.Roles.BountyAdmin,
-                address(bountyManager)
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.BountyAdmin)
+                ),
+                address(this)
             )
         );
         bountyManager.updateBounty(0, bytes(""));
@@ -559,9 +551,12 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBountyManager.Module__BountyManager__OnlyRole.selector,
-                IBountyManager.Roles.BountyAdmin,
-                address(bountyManager)
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.BountyAdmin)
+                ),
+                address(this)
             )
         );
         bountyManager.lockBounty(0);
@@ -789,37 +784,15 @@ contract BountyManagerTest is ModuleTest {
         //onlyVerifyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IBountyManager.Module__BountyManager__OnlyRole.selector,
-                IBountyManager.Roles.VerifyAdmin,
-                address(bountyManager)
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.VerifyAdmin)
+                ),
+                address(this)
             )
         );
         bountyManager.verifyClaim(0, 1);
-    }
-
-    //--------------------------------------------------------------------------
-    // Role Functions
-
-    //@todo trivial to be removed as soon as the functionality is moved to RoleAuthorizer
-    function testGrantBountyAdminRole(address addr) public {
-        bountyManager.grantBountyAdminRole(addr);
-
-        vm.prank(address(bountyManager));
-        bool isAuthorized = _authorizer.isAuthorized(
-            uint8(IBountyManager.Roles.BountyAdmin), addr
-        );
-        assertTrue(isAuthorized);
-    }
-
-    function testRevokeBountyAdminRole(address addr) public {
-        bountyManager.grantBountyAdminRole(addr);
-        bountyManager.revokeBountyAdminRole(addr);
-
-        vm.prank(address(bountyManager));
-        bool isAuthorized = _authorizer.isAuthorized(
-            uint8(IBountyManager.Roles.BountyAdmin), addr
-        );
-        assertFalse(isAuthorized);
     }
 
     //--------------------------------------------------------------------------

@@ -83,7 +83,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -97,7 +96,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 modules,
                 fundingManager,
@@ -108,16 +106,11 @@ contract OrchestratorTest is Test {
 
         // Check that orchestrator's storage correctly initialized.
         assertEq(orchestrator.orchestratorId(), orchestratorId);
-        assertEq(address(orchestrator.manager()), address(this));
         assertEq(address(orchestrator.token()), address(token));
         assertEq(address(orchestrator.authorizer()), address(authorizer));
         assertEq(
             address(orchestrator.paymentProcessor()), address(paymentProcessor)
         );
-
-        // Check that orchestrator's dependencies correctly initialized.
-        // Ownable:
-        assertEq(orchestrator.manager(), address(this));
     }
 
     function testReinitFails(uint orchestratorId, address[] memory modules)
@@ -138,7 +131,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -149,7 +141,6 @@ contract OrchestratorTest is Test {
             vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -164,7 +155,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 modules,
                 fundingManager,
@@ -175,7 +165,6 @@ contract OrchestratorTest is Test {
             vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 modules,
                 fundingManager,
@@ -204,7 +193,6 @@ contract OrchestratorTest is Test {
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
-            address(this),
             token,
             modules,
             fundingManager,
@@ -230,14 +218,8 @@ contract OrchestratorTest is Test {
 
         // verify whether the init value is set and not the value from the old
         // authorizer, to check whether the replacement is successful
-        assertFalse(
-            IAuthorizer(orchestrator.authorizer()).isAuthorized(address(this))
-        );
-        assertTrue(
-            IAuthorizer(orchestrator.authorizer()).isAuthorized(
-                address(0xA11CE)
-            )
-        );
+        assertFalse(orchestrator.authorizer().isAuthorized(address(this)));
+        assertTrue(orchestrator.authorizer().isAuthorized(address(0xA11CE)));
     }
 
     function testSetFundingManager(
@@ -256,7 +238,6 @@ contract OrchestratorTest is Test {
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
-            address(this),
             token,
             modules,
             fundingManager,
@@ -301,7 +282,6 @@ contract OrchestratorTest is Test {
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
-            address(this),
             token,
             modules,
             fundingManager,
@@ -346,7 +326,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -362,7 +341,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 modules,
                 fundingManager,
@@ -397,7 +375,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 truncatedModules,
                 fundingManager,
@@ -413,7 +390,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(this),
                 token,
                 modules,
                 fundingManager,
@@ -450,7 +426,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(0xCAFE), // Note to not be the owner
                 token,
                 truncatedModules,
                 fundingManager,
@@ -466,7 +441,6 @@ contract OrchestratorTest is Test {
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
-                address(0xCAFE), // Note to not be the owner
                 token,
                 modules,
                 fundingManager,

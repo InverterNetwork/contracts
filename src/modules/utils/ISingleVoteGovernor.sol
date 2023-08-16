@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
-interface ISingleVoteGovernor is IAuthorizer {
+interface ISingleVoteGovernor {
     //--------------------------------------------------------------------------
     // Types
 
@@ -109,6 +109,9 @@ interface ISingleVoteGovernor is IAuthorizer {
     function MIN_VOTING_DURATION() external view returns (uint);
 
     function isVoter(address who) external view returns (bool);
+
+    function addVoter(address who) external;
+    function removeVoter(address who) external;
 
     function motions(uint motionId)
         external

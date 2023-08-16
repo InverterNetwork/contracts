@@ -8,11 +8,9 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {ModuleManager} from "src/orchestrator/base/ModuleManager.sol";
-import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
 
 // Internal Interfaces
 import {
@@ -40,13 +38,13 @@ import {IModule} from "src/modules/base/IModule.sol";
  *
  * @author Inverter Network
  */
-contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
+contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Modifiers
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address.
-    modifier onlyAuthorized() {
+    modifier onlyOrchestratorOwner() {
         if (!authorizer.isAuthorized(_msgSender())) {
             revert Orchestrator__CallerNotAuthorized();
         }
@@ -58,9 +56,11 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
 
     /// @notice Modifier to guarantee function is only callable by authorized
     ///         address or manager.
-    modifier onlyAuthorizedOrManager() {
-        if (!authorizer.isAuthorized(_msgSender()) && _msgSender() != manager())
-        {
+    modifier onlyOrchestratorOwnerOrManager() {
+        if (
+            !authorizer.isAuthorized(_msgSender())
+                && !authorizer.hasRole(authorizer.getManagerRole(), _msgSender())
+        ) {
             revert Orchestrator__CallerNotAuthorized();
         }
         _;
@@ -93,7 +93,6 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IOrchestrator
     function init(
         uint orchestratorId_,
-        address owner_,
         IERC20 token_,
         address[] calldata modules,
         IFundingManager fundingManager_,
@@ -101,7 +100,6 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
         IPaymentProcessor paymentProcessor_
     ) external override(IOrchestrator) initializer {
         // Initialize upstream contracts.
-        __Ownable_init();
         __ModuleManager_init(modules);
 
         // Set storage variables.
@@ -112,9 +110,6 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
         fundingManager = fundingManager_;
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
-
-        // Transfer ownerhsip of orchestrator to owner argument.
-        _transferOwnership(owner_);
 
         // Add necessary modules.
         // Note to not use the public addModule function as the factory
@@ -216,22 +211,6 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     }
 
     /// @inheritdoc IOrchestrator
-    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
-        external
-        view
-        returns (bool)
-    {
-        MilestoneManager milestoneManager =
-            MilestoneManager(milestoneManagerAddress);
-
-        try milestoneManager.hasActiveMilestone() returns (bool) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
     function verifyAddressIsRecurringPaymentManager(
         address recurringPaymentManager
     ) external view returns (bool) {
@@ -276,10 +255,13 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     }
 
     //--------------------------------------------------------------------------
-    // onlyAuthorized Functions
+    // onlyOrchestratorOwner Functions
 
     /// @inheritdoc IOrchestrator
-    function setAuthorizer(IAuthorizer authorizer_) external onlyAuthorized {
+    function setAuthorizer(IAuthorizer authorizer_)
+        external
+        onlyOrchestratorOwner
+    {
         addModule(address(authorizer_));
         removeModule(address(authorizer));
         authorizer = authorizer_;
@@ -289,7 +271,7 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IOrchestrator
     function setFundingManager(IFundingManager fundingManager_)
         external
-        onlyAuthorized
+        onlyOrchestratorOwner
     {
         addModule(address(fundingManager_));
         removeModule(address(fundingManager));
@@ -300,7 +282,7 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IOrchestrator
     function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
         external
-        onlyAuthorized
+        onlyOrchestratorOwner
     {
         addModule(address(paymentProcessor_));
         removeModule(address(paymentProcessor));
@@ -311,7 +293,7 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IOrchestrator
     function executeTx(address target, bytes memory data)
         external
-        onlyAuthorized
+        onlyOrchestratorOwner
         returns (bytes memory)
     {
         bool ok;
@@ -336,18 +318,5 @@ contract Orchestrator is IOrchestrator, OwnableUpgradeable, ModuleManager {
     /// @inheritdoc IOrchestrator
     function version() external pure returns (string memory) {
         return "1";
-    }
-
-    function owner()
-        public
-        view
-        override(OwnableUpgradeable, IOrchestrator)
-        returns (address)
-    {
-        return super.owner();
-    }
-
-    function manager() public view returns (address) {
-        return owner();
     }
 }

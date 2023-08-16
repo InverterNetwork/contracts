@@ -55,7 +55,7 @@ contract OrchestratorFactoryTest is Test {
     IOrchestratorFactory.ModuleConfig authorizerConfig = IOrchestratorFactory
         .ModuleConfig(
         IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
-        bytes("data"),
+        abi.encode(address(this), address(this)),
         abi.encode(hasDependency, dependencies)
     );
 
@@ -136,10 +136,6 @@ contract OrchestratorFactoryTest is Test {
         );
         assertTrue(address(orchestrator.authorizer()) != address(0));
         assertTrue(address(orchestrator.paymentProcessor()) != address(0));
-
-        // Check that other orchestrator's dependencies correctly initialized.
-        // Ownable:
-        assertEq(orchestrator.manager(), address(orchestratorConfig.owner));
 
         // Deploy Orchestrator with id=2
         orchestrator = factory.createOrchestrator(
