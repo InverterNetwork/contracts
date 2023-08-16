@@ -21,7 +21,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     // Public Functions
     function sellOrder(uint _depositAmount) external payable virtual {
         // Q: Deduct fee from token or collateral?
-        _redeemTokens(_depositAmount, collateral);
+        _redeemTokens(_depositAmount);
     }
 
     function openSell() external onlyOrchestratorOwnerOrManager {
@@ -41,10 +41,10 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
 
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
-    function _redeemTokensFormulaWrapper(
-        uint _depositAmount,
-        address _collateral
-    ) internal virtual returns (uint);
+    function _redeemTokensFormulaWrapper(uint _depositAmount)
+        internal
+        virtual
+        returns (uint);
 
     //--------------------------------------------------------------------------
     // Internal Functions
@@ -61,11 +61,11 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         sellFee = _fee;
     }
 
-    function _redeemTokens(uint _depositAmount, address _collateral)
+    function _redeemTokens(uint _depositAmount)
         internal
         returns (uint redeemAmount)
     {
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount, _collateral);
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
         // Transfer amount to msg.sender
     }
 }

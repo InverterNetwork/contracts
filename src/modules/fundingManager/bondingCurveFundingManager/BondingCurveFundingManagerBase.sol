@@ -52,7 +52,7 @@ abstract contract BondingCurveFundingManagerBase is
     function buyOrder(uint _depositAmount) external payable virtual {
         // WiP
         // Deduct fee from incoming value. Fee is paid in collateral token
-        _issueTokens(_depositAmount, collateral);
+        _issueTokens(_depositAmount);
     }
 
     function openBuy() external onlyOrchestratorOwnerOrManager {
@@ -91,10 +91,10 @@ abstract contract BondingCurveFundingManagerBase is
 
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
-    function _issueTokensFormulaWrapper(
-        uint _depositAmount,
-        address _collateral
-    ) internal virtual returns (uint);
+    function _issueTokensFormulaWrapper(uint _depositAmount)
+        internal
+        virtual
+        returns (uint);
 
     //--------------------------------------------------------------------------
     // Internal Functions
@@ -109,19 +109,15 @@ abstract contract BondingCurveFundingManagerBase is
         buyIsOpen = false;
     }
 
-    function _setCollateral(address _collateral) internal {
-        collateral = _collateral;
-    }
-
     function _updateBuyFee(uint _fee) internal {
         buyFee = _fee;
     }
 
-    function _issueTokens(uint _depositAmount, address _collateral)
+    function _issueTokens(uint _depositAmount)
         internal
         returns (uint mintAmount)
     {
-        mintAmount = _issueTokensFormulaWrapper(_depositAmount, _collateral);
+        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
         _mint(msg.sender, mintAmount);
     }
 

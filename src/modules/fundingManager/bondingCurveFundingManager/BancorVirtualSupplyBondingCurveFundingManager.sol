@@ -87,7 +87,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     {
         // WiP
         // Deduct fee from incoming value. Fee is paid in collateral token
-        uint amountIssued = _issueTokens(_depositAmount, collateral);
+        uint amountIssued = _issueTokens(_depositAmount);
         _addTokenAmount(amountIssued);
         _addCollateralAmount(_depositAmount);
     }
@@ -99,7 +99,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     {
         // WiP
         // Q: Deduct fee from token or collateral?
-        uint redeemAmount = _redeemTokens(_depositAmount, collateral);
+        uint redeemAmount = _redeemTokens(_depositAmount);
         _subTokenAmount(_depositAmount);
         _subCollateralAmount(redeemAmount);
     }
@@ -127,9 +127,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     // Internal Mutating Functions
 
     function _issueTokensFormulaWrapper(
-        uint _depositAmount,
-        address _collateral
-    ) internal override(BondingCurveFundingManagerBase) returns (uint) {
+        uint _depositAmount
+    ) internal view override(BondingCurveFundingManagerBase) returns (uint) {
         uint32 connectorWeight = 1000; // Mock value, needs to be calculated
         return formula.calculatePurchaseReturn(
             virtualTokenSupply,
@@ -140,10 +139,9 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     }
 
     function _redeemTokensFormulaWrapper(
-        uint _depositAmount,
-        address _collateral
+        uint _depositAmount
     )
-        internal
+        internal view
         override(RedeemingBondingCurveFundingManagerBase)
         returns (uint)
     {
