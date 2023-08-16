@@ -125,19 +125,31 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         }
     }
 
-    modifier claimBelongingToBounty(uint claimId, uint bountyId) {
-        if (_claimRegistry[claimId].bountyId != bountyId) {
-            revert Module__BountyManager__ClaimNotBelongingToBounty();
-        }
-        _;
-    }
-
     modifier notClaimed(uint bountyId) {
         //Its not claimed if claimedBy is still 0
         if (_bountyRegistry[bountyId].claimedBy != 0) {
             revert Module__BountyManager__BountyAlreadyClaimedOrLocked();
         }
         _;
+    }
+
+    function contributorsNotChanged(
+        uint claimId,
+        Contributor[] memory contributors
+    ) internal view {
+        Contributor[] memory claimContribs =
+            _claimRegistry[claimId].contributors;
+
+        uint length = contributors.length;
+        for (uint i; i < length;) {
+            if (
+                contributors[i].addr != claimContribs[i].addr
+                    || contributors[i].claimAmount != claimContribs[i].claimAmount
+            ) revert Module__BountyManager__ContributorsChanged();
+            unchecked {
+                i++;
+            }
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -343,21 +355,22 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function updateClaimContributors(
         uint claimId,
-        uint bountyId,
         Contributor[] calldata contributors
     )
         external
         validClaimId(claimId)
-        onlyClaimContributor(claimId)
-        validBountyId(bountyId)
+        notClaimed(_claimRegistry[claimId].bountyId)
+        onlyModuleRole(uint8(Roles.ClaimAdmin))
     {
-        validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
+        validContributorsForBounty(
+            contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
+        );
         Claim storage c = _claimRegistry[claimId];
 
         uint length = c.contributors.length;
         for (uint i; i < length;) {
             //remove ClaimId for each contributor address
-            contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId); //@note c.contributors[i].addr -> is there a more gas efficient alternative to this?
+            contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId);
             unchecked {
                 ++i;
             }
@@ -383,6 +396,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
         validClaimId(claimId)
+        notClaimed(_claimRegistry[claimId].bountyId)
         onlyClaimContributor(claimId)
     {
         _claimRegistry[claimId].details = details;
@@ -391,20 +405,17 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function verifyClaim(uint claimId, uint bountyId)
+    function verifyClaim(uint claimId, Contributor[] calldata contributors)
         external
         onlyModuleRole(uint8(Roles.VerifyAdmin))
         validClaimId(claimId)
-        validBountyId(bountyId)
-        claimBelongingToBounty(claimId, bountyId)
-        notClaimed(bountyId)
+        notClaimed(_claimRegistry[claimId].bountyId)
     {
+        contributorsNotChanged(claimId, contributors);
+
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
 
         uint length = contribs.length;
-
-        //total amount needed to verifyBounty
-        uint totalAmount;
 
         //current contributor in loop
         Contributor memory contrib;
@@ -412,7 +423,6 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         //For each Contributor add payments according to the claimAmount specified
         for (uint i; i < length;) {
             contrib = contribs[i];
-            totalAmount += contrib.claimAmount;
 
             _addPaymentOrder(
                 PaymentOrder({
@@ -427,17 +437,14 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
             }
         }
 
-        //ensure that this contract has enough tokens to fulfill all payments
-        _ensureTokenBalance(totalAmount);
-
         //when done process the Payments correctly
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))
         );
 
         //Set completed to true
-        _bountyRegistry[bountyId].claimedBy = claimId;
+        _bountyRegistry[_claimRegistry[claimId].bountyId].claimedBy = claimId;
 
-        emit ClaimVerified(claimId, bountyId);
+        emit ClaimVerified(claimId, _claimRegistry[claimId].bountyId);
     }
 }

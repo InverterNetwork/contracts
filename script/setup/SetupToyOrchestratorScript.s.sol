@@ -221,9 +221,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
             bytes memory details = "TEST BOUNTY";
 
-            uint bountyId = orchestratorCreatedBountyManager.addBounty(
-                100e18, 250e18, details
-            );
+            orchestratorCreatedBountyManager.addBounty(100e18, 250e18, details);
         }
         vm.stopBroadcast();
 
