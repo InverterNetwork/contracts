@@ -36,8 +36,8 @@ contract BountyManagerTest is ModuleTest {
 
     event BountyAdded(
         uint indexed bountyId,
-        uint indexed minimumPayoutAmount,
-        uint indexed maximumPayoutAmount,
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
         bytes details
     );
 
@@ -272,29 +272,6 @@ contract BountyManagerTest is ModuleTest {
         }
     }
 
-    function testAccordingClaimToBounty(uint usedIds, uint picker) public {
-        _token.mint(address(_fundingManager), 100_000_000);
-
-        usedIds = bound(usedIds, 1, 100);
-        uint bountyId1 = bountyManager.addBounty(1, 100_000_000, bytes("")); //id 1
-        uint bountyId2 = bountyManager.addBounty(1, 100_000_000, bytes("")); //id 2
-        for (uint i; i < usedIds; i++) {
-            bountyManager.addClaim(bountyId1, DEFAULT_CONTRIBUTORS, bytes("")); //ids should be odd numbers
-            bountyManager.addClaim(bountyId2, DEFAULT_CONTRIBUTORS, bytes("")); //ids should be even numbers
-        }
-
-        picker = bound(picker, 3, usedIds + 2);
-        if ((picker % 2) == 0) {
-            vm.expectRevert(
-                IBountyManager
-                    .Module__BountyManager__ClaimNotBelongingToBounty
-                    .selector
-            );
-        }
-
-        bountyManager.verifyClaim(picker, bountyId1);
-    }
-
     function testNotClaimed(bool isVerified) public {
         _token.mint(address(_fundingManager), 100_000_000);
 
@@ -303,14 +280,51 @@ contract BountyManagerTest is ModuleTest {
             bountyManager.addClaim(bountyId, DEFAULT_CONTRIBUTORS, bytes(""));
 
         if (isVerified) {
-            bountyManager.verifyClaim(claimId, bountyId);
+            bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
             vm.expectRevert(
                 IBountyManager
                     .Module__BountyManager__BountyAlreadyClaimedOrLocked
                     .selector
             );
         }
-        bountyManager.verifyClaim(claimId, bountyId);
+        bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
+    }
+
+    function testContributorsNotChanged(
+        bool isChanged,
+        address changeAddress,
+        uint changeAmount
+    ) public {
+        changeAmount = bound(changeAmount, 1, 50_000_000);
+        if (
+            changeAddress == address(0)
+                || changeAddress == address(bountyManager)
+                || changeAddress == address(_orchestrator)
+        ) {
+            changeAddress = address(1);
+        }
+        _token.mint(address(_fundingManager), 100_000_000);
+
+        uint bountyId = bountyManager.addBounty(1, 100_000_000, bytes(""));
+        uint claimId =
+            bountyManager.addClaim(bountyId, DEFAULT_CONTRIBUTORS, bytes(""));
+
+        if (isChanged) {
+            IBountyManager.Contributor[] memory changedContributors =
+                DEFAULT_CONTRIBUTORS;
+
+            changedContributors[0] = IBountyManager.Contributor({
+                addr: changeAddress,
+                claimAmount: changeAmount
+            });
+            bountyManager.updateClaimContributors(claimId, changedContributors);
+            vm.expectRevert(
+                IBountyManager
+                    .Module__BountyManager__ContributorsChanged
+                    .selector
+            );
+        }
+        bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
     }
 
     //--------------------------------------------------------------------------
@@ -587,8 +601,7 @@ contract BountyManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true);
         emit ClaimContributorsUpdated(id, contribs);
 
-        vm.prank(DEFAULT_CONTRIBUTORS[0].addr);
-        bountyManager.updateClaimContributors(id, 1, contribs);
+        bountyManager.updateClaimContributors(id, contribs);
 
         assertEqualClaim(2, 1, contribs, bytes(""));
 
@@ -615,19 +628,11 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        vm.startPrank(DEFAULT_CONTRIBUTORS[0].addr);
-
         //validClaimId
         vm.expectRevert(
             IBountyManager.Module__BountyManager__InvalidClaimId.selector
         );
-        bountyManager.updateClaimContributors(0, 1, DEFAULT_CONTRIBUTORS);
-
-        //validBountyId
-        vm.expectRevert(
-            IBountyManager.Module__BountyManager__InvalidBountyId.selector
-        );
-        bountyManager.updateClaimContributors(2, 0, DEFAULT_CONTRIBUTORS);
+        bountyManager.updateClaimContributors(0, DEFAULT_CONTRIBUTORS);
 
         //validContributorsForBounty
         vm.expectRevert(
@@ -635,15 +640,35 @@ contract BountyManagerTest is ModuleTest {
                 .Module__BountyManager__InvalidContributorAmount
                 .selector
         );
-        bountyManager.updateClaimContributors(2, 1, INVALID_CONTRIBUTORS);
+        bountyManager.updateClaimContributors(2, INVALID_CONTRIBUTORS);
 
-        vm.stopPrank();
-
-        //onlyClaimContributor
+        //onlyClaimAdmin
+        _authorizer.setIsAuthorized(address(this), false); //No access address
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__OnlyClaimContributor.selector
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager),
+                    uint8(IBountyManager.Roles.ClaimAdmin)
+                ),
+                address(this)
+            )
         );
-        bountyManager.updateClaimContributors(2, 1, DEFAULT_CONTRIBUTORS);
+        bountyManager.updateClaimContributors(2, DEFAULT_CONTRIBUTORS);
+
+        //Reset this address to be authorized to test correctly
+        _authorizer.setIsAuthorized(address(this), true);
+
+        bountyManager.lockBounty(1);
+
+        //notClaimed
+        vm.expectRevert(
+            IBountyManager
+                .Module__BountyManager__BountyAlreadyClaimedOrLocked
+                .selector
+        );
+
+        bountyManager.updateClaimContributors(2, DEFAULT_CONTRIBUTORS);
     }
 
     //-----------------------------------------
@@ -671,13 +696,21 @@ contract BountyManagerTest is ModuleTest {
         );
         bountyManager.updateClaimDetails(0, bytes(""));
 
-        //Set this address to not authorized to test the roles correctly
-        _authorizer.setIsAuthorized(address(this), false);
-
         //onlyClaimContributor
         vm.expectRevert(
             IBountyManager.Module__BountyManager__OnlyClaimContributor.selector
         );
+        bountyManager.updateClaimDetails(2, bytes(""));
+
+        bountyManager.lockBounty(1);
+
+        //notClaimed
+        vm.expectRevert(
+            IBountyManager
+                .Module__BountyManager__BountyAlreadyClaimedOrLocked
+                .selector
+        );
+        vm.prank(DEFAULT_CONTRIBUTORS[0].addr);
         bountyManager.updateClaimDetails(2, bytes(""));
     }
 
@@ -708,7 +741,7 @@ contract BountyManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true);
         emit ClaimVerified(claimId, bountyId);
 
-        bountyManager.verifyClaim(claimId, bountyId);
+        bountyManager.verifyClaim(claimId, contribs);
 
         IERC20PaymentClient.PaymentOrder[] memory orders =
             bountyManager.paymentOrders();
@@ -743,37 +776,6 @@ contract BountyManagerTest is ModuleTest {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); //Id 4
 
-        //validClaimId
-        vm.expectRevert(
-            IBountyManager.Module__BountyManager__InvalidClaimId.selector
-        );
-        bountyManager.verifyClaim(0, 1);
-
-        //validBountyId
-        vm.expectRevert(
-            IBountyManager.Module__BountyManager__InvalidBountyId.selector
-        );
-        bountyManager.verifyClaim(2, 0);
-
-        //accordingClaimToBounty
-        vm.expectRevert(
-            IBountyManager
-                .Module__BountyManager__ClaimNotBelongingToBounty
-                .selector
-        );
-        bountyManager.verifyClaim(2, 3);
-
-        _token.mint(address(_fundingManager), 100_000_000);
-        bountyManager.verifyClaim(2, 1);
-
-        //notClaimed
-        vm.expectRevert(
-            IBountyManager
-                .Module__BountyManager__BountyAlreadyClaimedOrLocked
-                .selector
-        );
-        bountyManager.verifyClaim(2, 1);
-
         //Set this address to not authorized to test the roles correctly
         _authorizer.setIsAuthorized(address(this), false);
 
@@ -788,7 +790,34 @@ contract BountyManagerTest is ModuleTest {
                 address(this)
             )
         );
-        bountyManager.verifyClaim(0, 1);
+        bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);
+
+        //Reset this address to authorized
+        _authorizer.setIsAuthorized(address(this), true);
+
+        //validClaimId
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__InvalidClaimId.selector
+        );
+        bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);
+
+        //contributorsNotChanged
+
+        vm.expectRevert(
+            IBountyManager.Module__BountyManager__ContributorsChanged.selector
+        );
+        bountyManager.verifyClaim(2, INVALID_CONTRIBUTORS);
+
+        _token.mint(address(_fundingManager), 100_000_000);
+        bountyManager.verifyClaim(2, DEFAULT_CONTRIBUTORS);
+
+        //notClaimed
+        vm.expectRevert(
+            IBountyManager
+                .Module__BountyManager__BountyAlreadyClaimedOrLocked
+                .selector
+        );
+        bountyManager.verifyClaim(2, DEFAULT_CONTRIBUTORS);
     }
 
     //--------------------------------------------------------------------------
