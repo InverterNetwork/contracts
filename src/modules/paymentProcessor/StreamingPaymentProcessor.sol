@@ -62,8 +62,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @notice checks that the client is calling for itself
-    modifier validClient(IERC20PaymentClient client) {
-        if (_msgSender() != address(client)) {
+    modifier validClient(address client) {
+        if (_msgSender() != client) {
             revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
         }
         _;
@@ -91,48 +91,47 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
-    function claimAll(IERC20PaymentClient client) external {
+    function claimAll(address client) external {
         if (
             !(
-                unclaimable(address(client), _msgSender()) > 0
-                    || activeVestingWallets[address(client)][_msgSender()].length
-                        > 0
+                unclaimable(client, _msgSender()) > 0
+                    || activeVestingWallets[client][_msgSender()].length > 0
             )
         ) {
             revert Module__PaymentProcessor__NothingToClaim(
-                address(client), _msgSender()
+                client, _msgSender()
             );
         }
 
-        _claimAll(address(client), _msgSender());
+        _claimAll(client, _msgSender());
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
     function claimForSpecificWalletId(
-        IERC20PaymentClient client,
+        address client,
         uint walletId,
         bool retryForUnclaimableAmounts
     ) external {
         if (
-            activeVestingWallets[address(client)][_msgSender()].length == 0
-                || walletId > numVestingWallets[address(client)][_msgSender()]
+            activeVestingWallets[client][_msgSender()].length == 0
+                || walletId > numVestingWallets[client][_msgSender()]
         ) {
             revert Module__PaymentProcessor__InvalidWallet(
-                address(client), _msgSender(), walletId
+                client, _msgSender(), walletId
             );
         }
 
         if (
-            _findActiveWalletId(address(client), _msgSender(), walletId)
+            _findActiveWalletId(client, _msgSender(), walletId)
                 == type(uint).max
         ) {
             revert Module__PaymentProcessor__InactiveWallet(
-                address(client), _msgSender(), walletId
+                client, _msgSender(), walletId
             );
         }
 
         _claimForSpecificWalletId(
-            address(client), _msgSender(), walletId, retryForUnclaimableAmounts
+            client, _msgSender(), walletId, retryForUnclaimableAmounts
         );
     }
 
@@ -140,7 +139,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function processPayments(IERC20PaymentClient client)
         external
         onlyModule
-        validClient(client)
+        validClient(address(client))
     {
         //We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
@@ -199,51 +198,46 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function cancelRunningPayments(IERC20PaymentClient client)
         external
         onlyModule
-        validClient(client)
+        validClient(address(client))
     {
         _cancelRunningOrders(address(client));
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
     function removeAllPaymentReceiverPayments(
-        IERC20PaymentClient client,
+        address client,
         address paymentReceiver
-    ) external onlyAuthorized {
+    ) external onlyOrchestratorOwner {
         if (
-            _findAddressInActiveVestings(address(client), paymentReceiver)
+            _findAddressInActiveVestings(client, paymentReceiver)
                 == type(uint).max
         ) {
             revert Module__PaymentProcessor__InvalidPaymentReceiver(
-                address(client), paymentReceiver
+                client, paymentReceiver
             );
         }
-        _removePayment(address(client), paymentReceiver);
+        _removePayment(client, paymentReceiver);
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
     function removePaymentForSpecificWalletId(
-        IERC20PaymentClient client,
+        address client,
         address paymentReceiver,
         uint walletId,
         bool retryForUnclaimableAmounts
-    ) external onlyAuthorized {
+    ) external onlyOrchestratorOwner {
         // First, we give the vested funds from this specific walletId to the beneficiary
         _claimForSpecificWalletId(
-            address(client),
-            paymentReceiver,
-            walletId,
-            retryForUnclaimableAmounts
+            client, paymentReceiver, walletId, retryForUnclaimableAmounts
         );
 
         // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
         // We will delete the payment order in question, if it hasn't already reached the end of its duration.
         if (
             block.timestamp
-                < dueToForSpecificWalletId(
-                    address(client), paymentReceiver, walletId
-                )
+                < dueToForSpecificWalletId(client, paymentReceiver, walletId)
         ) {
-            _afterClaimCleanup(address(client), paymentReceiver, walletId);
+            _afterClaimCleanup(client, paymentReceiver, walletId);
         }
     }
 

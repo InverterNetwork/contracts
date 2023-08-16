@@ -2,15 +2,17 @@
 pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 // SuT
 import {
     SingleVoteGovernor,
     ISingleVoteGovernor
-} from "src/modules/authorizer/SingleVoteGovernor.sol";
+} from "src/modules/utils/SingleVoteGovernor.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
@@ -26,38 +28,23 @@ import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
-contract SingleVoteGovernorTest is Test {
+contract SingleVoteGovernorTest is ModuleTest {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT
-    SingleVoteGovernor _authorizer;
+    SingleVoteGovernor _governor;
 
-    Orchestrator _orchestrator;
+    //Orchestrator _orchestrator;
     address[] initialVoters;
     address[] currentVoters;
 
     // Constants and other data structures
     uint internal constant DEFAULT_QUORUM = 2;
     uint internal constant DEFAULT_DURATION = 4 days;
-    // For the orchestrator
-    uint internal constant _ORCHESTRATOR_ID = 1;
-    // For the metadata
-    uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 1;
-    string constant URL = "https://github.com/organization/module";
-    string constant TITLE = "Module";
 
-    IModule.Metadata _METADATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
-
-    // Mocks
-    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
-    FundingManagerMock _fundingManager = new FundingManagerMock();
-    PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
-    ModuleMock module = new  ModuleMock();
-    // Mock users
     // intial authorizd users
     address internal constant ALBA = address(0xa1ba);
     address internal constant BOB = address(0xb0b);
@@ -67,25 +54,16 @@ contract SingleVoteGovernorTest is Test {
     function setUp() public {
         // Set up a orchestrator
         address authImpl = address(new SingleVoteGovernor());
-        _authorizer = SingleVoteGovernor(Clones.clone(authImpl));
+        _governor = SingleVoteGovernor(Clones.clone(authImpl));
 
-        address impl = address(new Orchestrator());
-        _orchestrator = Orchestrator(Clones.clone(impl));
+        _setUpOrchestrator(_governor);
 
-        address[] memory modules = new address[](1);
-        modules[0] = address(module);
+        //we give the governor the ownwer role
+        bytes32 ownerRole = _authorizer.getOwnerRole();
+        _authorizer.grantRole(ownerRole, address(_governor));
+        //_authorizer.setIsAuthorized(address(_governor), true);
 
-        _orchestrator.init(
-            _ORCHESTRATOR_ID,
-            address(this),
-            _token,
-            modules,
-            _fundingManager,
-            _authorizer,
-            _paymentProcessor
-        );
-
-        // Initialize the authorizer with 3 users
+        // Initialize the governor with 3 users
 
         initialVoters = new address[](3);
         initialVoters[0] = ALBA;
@@ -95,31 +73,17 @@ contract SingleVoteGovernorTest is Test {
         uint _startingThreshold = DEFAULT_QUORUM;
         uint _startingDuration = DEFAULT_DURATION;
 
-        _authorizer.init(
+        _governor.init(
             IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(initialVoters, _startingThreshold, _startingDuration)
         );
 
-        assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
-        assertEq(_orchestrator.isModule(address(_authorizer)), true);
-
-        assertEq(_authorizer.isAuthorized(address(_authorizer)), true);
-        assertEq(_authorizer.isVoter(ALBA), true);
-        assertEq(_authorizer.isVoter(BOB), true);
-        assertEq(_authorizer.isVoter(COBIE), true);
-
         currentVoters.push(ALBA);
         currentVoters.push(BOB);
         currentVoters.push(COBIE);
 
-        // The deployer may be owner, but not authorized by default
-        assertEq(_authorizer.isAuthorized(address(this)), false);
-        assertEq(_authorizer.isAuthorized(address(_orchestrator)), false);
-        assertEq(_authorizer.isVoter(address(this)), false);
-        assertEq(_authorizer.isVoter(address(_orchestrator)), false);
-
-        assertEq(_authorizer.voterCount(), 3);
+        //validation of the initial state happens in testInit()
     }
 
     //--------------------------------------------------------------------------
@@ -129,7 +93,7 @@ contract SingleVoteGovernorTest is Test {
         returns (uint)
     {
         vm.prank(callingUser);
-        uint _id = _authorizer.createMotion(_addr, _msg);
+        uint _id = _governor.createMotion(_addr, _msg);
         return _id;
     }
 
@@ -140,31 +104,31 @@ contract SingleVoteGovernorTest is Test {
                 abi.encodeWithSignature("addVoter(address)", users[i]);
             //for ease, we are assuming this is happening before any threshold changes
             uint _voteID = speedrunSuccessfulVote(
-                address(_authorizer), _encodedAction, initialVoters
+                address(_governor), _encodedAction, initialVoters
             );
-            _authorizer.executeMotion(_voteID);
+            _governor.executeMotion(_voteID);
 
             currentVoters.push(users[i]);
-            assertEq(_authorizer.isVoter(users[i]), true);
+            assertEq(_governor.isVoter(users[i]), true);
         }
     }
 
     function voteInFavor(address callingUser, uint voteID) public {
         uint8 vote = 0;
         vm.prank(callingUser);
-        _authorizer.castVote(voteID, vote);
+        _governor.castVote(voteID, vote);
     }
 
     function voteAgainst(address callingUser, uint voteID) public {
         uint8 vote = 1;
         vm.prank(callingUser);
-        _authorizer.castVote(voteID, vote);
+        _governor.castVote(voteID, vote);
     }
 
     function voteAbstain(address callingUser, uint voteID) public {
         uint8 vote = 2;
         vm.prank(callingUser);
-        _authorizer.castVote(voteID, vote);
+        _governor.castVote(voteID, vote);
     }
 
     function speedrunSuccessfulVote(
@@ -182,7 +146,7 @@ contract SingleVoteGovernorTest is Test {
         }
 
         // the voting time passes
-        vm.warp(block.timestamp + _authorizer.voteDuration() + 1);
+        vm.warp(block.timestamp + _governor.voteDuration() + 1);
 
         return _voteID;
     }
@@ -197,20 +161,20 @@ contract SingleVoteGovernorTest is Test {
         }
         uint _voteID = createVote(_voters[0], _target, _action);
 
-        for (uint i = 1; i < _authorizer.threshold(); ++i) {
+        for (uint i = 1; i < _governor.threshold(); ++i) {
             if (i < _voters.length) {
                 voteInFavor(_voters[(i - 1)], _voteID);
             }
         }
 
         // the voting time passes
-        vm.warp(block.timestamp + _authorizer.voteDuration() + 1);
+        vm.warp(block.timestamp + _governor.voteDuration() + 1);
 
         return _voteID;
     }
 
     function getMockValidVote() public view returns (address, bytes memory) {
-        address _moduleAddress = address(_authorizer);
+        address _moduleAddress = address(_governor);
         bytes memory _msg = abi.encodeWithSignature("setThreshold(uint)", 1);
 
         return (_moduleAddress, _msg);
@@ -232,7 +196,7 @@ contract SingleVoteGovernorTest is Test {
             uint _excAt,
             bool _excRes,
             bytes memory _excData
-        ) = _authorizer.motions(voteId);
+        ) = _governor.motions(voteId);
 
         _bufMotion.target = _addr;
         _bufMotion.action = _act;
@@ -248,7 +212,7 @@ contract SingleVoteGovernorTest is Test {
 
         for (uint i; i < currentVoters.length; ++i) {
             _bufMotion.receipts[currentVoters[i]] =
-                _authorizer.getReceipt(voteId, currentVoters[i]);
+                _governor.getReceipt(voteId, currentVoters[i]);
         }
 
         return _bufMotion;
@@ -256,6 +220,22 @@ contract SingleVoteGovernorTest is Test {
 
     //--------------------------------------------------------------------------
     // TESTS: INITIALIZATION
+
+    function testInit() public override(ModuleTest) {
+        assertEq(_orchestrator.isModule(address(_governor)), true);
+
+        assertEq(_authorizer.isAuthorized(address(_governor)), true);
+        assertEq(_governor.isVoter(ALBA), true);
+        assertEq(_governor.isVoter(BOB), true);
+        assertEq(_governor.isVoter(COBIE), true);
+
+        assertEq(_authorizer.isAuthorized(address(this)), false);
+        assertEq(_authorizer.isAuthorized(address(_orchestrator)), false);
+        assertEq(_governor.isVoter(address(this)), false);
+        assertEq(_governor.isVoter(address(_orchestrator)), false);
+
+        assertEq(_governor.voterCount(), 3);
+    }
 
     function testInitWithInitialVoters(address[] memory testVoters) public {
         //Checks that address list gets correctly stored on initialization
@@ -327,7 +307,7 @@ contract SingleVoteGovernorTest is Test {
         );
     }
 
-    function testReinitFails() public {
+    function testReinitFails() public override {
         //Create a mock new orchestrator
         Orchestrator newOrchestrator =
             Orchestrator(Clones.clone(address(new Orchestrator())));
@@ -348,11 +328,11 @@ contract SingleVoteGovernorTest is Test {
             )
         );
 
-        assertEq(_authorizer.isAuthorized(address(_authorizer)), true);
-        assertEq(_authorizer.isVoter(ALBA), true);
-        assertEq(_authorizer.isVoter(BOB), true);
-        assertEq(_authorizer.isVoter(COBIE), true);
-        assertEq(_authorizer.voterCount(), 3);
+        assertEq(_authorizer.isAuthorized(address(_governor)), true);
+        assertEq(_governor.isVoter(ALBA), true);
+        assertEq(_governor.isVoter(BOB), true);
+        assertEq(_governor.isVoter(COBIE), true);
+        assertEq(_governor.voterCount(), 3);
     }
 
     function testInitWithInvalidInitialVotersFails() public {
@@ -438,17 +418,17 @@ contract SingleVoteGovernorTest is Test {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        _authorizer.init2(_orchestrator, dependencyData);
+        _governor.init2(_orchestrator, dependencyData);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
         dependencyData = abi.encode(true, dependencies);
-        _authorizer.init2(_orchestrator, dependencyData);
+        _governor.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        _authorizer.init2(_orchestrator, dependencyData);
+        _governor.init2(_orchestrator, dependencyData);
     }
 
     //--------------------------------------------------------------------------
@@ -464,7 +444,7 @@ contract SingleVoteGovernorTest is Test {
             ISingleVoteGovernor.Motion storage _motion =
                 getFullMotionData(_voteID);
 
-            assertEq(_authorizer.motionCount(), (_voteID + 1));
+            assertEq(_governor.motionCount(), (_voteID + 1));
             assertEq(_motion.target, _moduleAddress);
             assertEq(_motion.action, _msg);
             assertEq(_motion.startTimestamp, block.timestamp);
@@ -486,14 +466,14 @@ contract SingleVoteGovernorTest is Test {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
 
         for (uint i; i < users.length; ++i) {
-            assertEq(_authorizer.isVoter(users[i]), false);
+            assertEq(_governor.isVoter(users[i]), false);
             vm.expectRevert(
                 ISingleVoteGovernor
                     .Module__SingleVoteGovernor__CallerNotVoter
                     .selector
             );
             vm.prank(users[i]);
-            _authorizer.createMotion(_moduleAddress, _msg);
+            _governor.createMotion(_moduleAddress, _msg);
         }
     }
 
@@ -502,9 +482,15 @@ contract SingleVoteGovernorTest is Test {
         batchAddAuthorized(users);
 
         for (uint i; i < users.length; ++i) {
-            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector,
+                    bytes32("onlySelf"),
+                    users[i]
+                )
+            );
             vm.prank(users[i]); //authorized, but not Module
-            _authorizer.addVoter(users[i]);
+            _governor.addVoter(users[i]);
         }
     }
 
@@ -513,9 +499,15 @@ contract SingleVoteGovernorTest is Test {
         batchAddAuthorized(users);
 
         for (uint i; i < users.length; ++i) {
-            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector,
+                    bytes32("onlySelf"),
+                    users[i]
+                )
+            );
             vm.prank(users[i]); //authorized, but not Module
-            _authorizer.removeVoter(users[i]);
+            _governor.removeVoter(users[i]);
         }
     }
 
@@ -528,7 +520,7 @@ contract SingleVoteGovernorTest is Test {
         batchAddAuthorized(users);
 
         for (uint i; i < users.length; ++i) {
-            assertEq(_authorizer.isVoter(users[i]), true);
+            assertEq(_governor.isVoter(users[i]), true);
 
             //prank as that address, create a vote and vote on it
             (address _moduleAddress, bytes memory _msg) = getMockValidVote();
@@ -536,7 +528,7 @@ contract SingleVoteGovernorTest is Test {
             voteInFavor(users[i], _newVote);
 
             //assert that voting worked (also confirms that vote exists)
-            assertEq(_authorizer.getReceipt(_newVote, users[i]).hasVoted, true);
+            assertEq(_governor.getReceipt(_newVote, users[i]).hasVoted, true);
         }
     }
 
@@ -688,16 +680,16 @@ contract SingleVoteGovernorTest is Test {
         voteAbstain(BOB, _voteID);
 
         ISingleVoteGovernor.Receipt memory _r =
-            _authorizer.getReceipt(_voteID, ALBA);
+            _governor.getReceipt(_voteID, ALBA);
         assertEq(_r.hasVoted, true);
         assertEq(_r.support, 2);
 
-        _r = _authorizer.getReceipt(_voteID, BOB);
+        _r = _governor.getReceipt(_voteID, BOB);
         assertEq(_r.hasVoted, true);
         assertEq(_r.support, 2);
 
         for (uint i; i < users.length; ++i) {
-            _r = _authorizer.getReceipt(_voteID, users[i]);
+            _r = _governor.getReceipt(_voteID, users[i]);
             assertEq(_r.hasVoted, true);
             assertEq(_r.support, 2);
         }
@@ -824,7 +816,7 @@ contract SingleVoteGovernorTest is Test {
                 .selector
         );
         vm.prank(ALBA);
-        _authorizer.castVote(_voteID, wrongVote);
+        _governor.castVote(_voteID, wrongVote);
     }
 
     // Fail vote for after already voting (testing the three vote variants)
@@ -876,14 +868,14 @@ contract SingleVoteGovernorTest is Test {
 
         // 2) The vote passes
         uint _voteID = speedrunSuccessfulVote(
-            address(_authorizer), _encodedAction, initialVoters
+            address(_governor), _encodedAction, initialVoters
         );
 
         // 3) The vote gets executed (by anybody)
-        _authorizer.executeMotion(_voteID);
+        _governor.executeMotion(_voteID);
 
         // 4) The module state has changed
-        assertEq(_authorizer.voteDuration(), _newDuration);
+        assertEq(_governor.voteDuration(), _newDuration);
     }
     // Fail to execute vote that didn't pass
 
@@ -894,7 +886,7 @@ contract SingleVoteGovernorTest is Test {
                 .Module__SingleVoteGovernor__InvalidMotionId
                 .selector
         );
-        _authorizer.executeMotion(wrongId);
+        _governor.executeMotion(wrongId);
     }
 
     // Fail to execute vote that didn't pass
@@ -912,7 +904,7 @@ contract SingleVoteGovernorTest is Test {
                 .Module__SingleVoteGovernor__ThresholdNotReached
                 .selector
         );
-        _authorizer.executeMotion(_voteID);
+        _governor.executeMotion(_voteID);
     }
 
     //Fail to execute vote while voting is open
@@ -932,10 +924,10 @@ contract SingleVoteGovernorTest is Test {
                     .selector
             )
         );
-        _authorizer.executeMotion(_voteID);
+        _governor.executeMotion(_voteID);
 
         //we wait and try again in the last block of voting time
-        vm.warp(block.timestamp + _authorizer.voteDuration());
+        vm.warp(block.timestamp + _governor.voteDuration());
 
         vm.expectRevert(
             abi.encodePacked(
@@ -944,7 +936,7 @@ contract SingleVoteGovernorTest is Test {
                     .selector
             )
         );
-        _authorizer.executeMotion(_voteID);
+        _governor.executeMotion(_voteID);
     }
 
     // Fail to execute an already executed vote
@@ -953,16 +945,15 @@ contract SingleVoteGovernorTest is Test {
         uint _newDuration = 3 days;
         bytes memory _encodedAction =
             abi.encodeWithSignature("setVotingDuration(uint256)", _newDuration);
-
         uint _voteID = speedrunSuccessfulVote(
-            address(_authorizer), _encodedAction, initialVoters
+            address(_governor), _encodedAction, initialVoters
         );
 
         // 2) Then the vote gets executed by anybody
-        _authorizer.executeMotion(_voteID);
+        _governor.executeMotion(_voteID);
 
         // 3) the module state has changed
-        assertEq(_authorizer.voteDuration(), _newDuration);
+        assertEq(_governor.voteDuration(), _newDuration);
 
         // 4) Now we test that we can't execute again:
         vm.expectRevert(
@@ -972,11 +963,11 @@ contract SingleVoteGovernorTest is Test {
                     .selector
             )
         );
-        _authorizer.executeMotion(_voteID);
+        _governor.executeMotion(_voteID);
     }
 
     function testOnlyGovernanceIsAuthorized(address _other) public {
-        vm.assume(_other != address(_authorizer));
+        vm.assume(_other != address(_governor));
 
         vm.expectRevert(
             IOrchestrator.Orchestrator__CallerNotAuthorized.selector
@@ -990,21 +981,21 @@ contract SingleVoteGovernorTest is Test {
     function testAddVoters(address[] memory users) public {
         _validateUserList(users);
 
-        vm.startPrank(address(_authorizer));
+        vm.startPrank(address(_governor));
         for (uint i; i < users.length; ++i) {
-            _authorizer.addVoter(users[i]);
+            _governor.addVoter(users[i]);
         }
 
         for (uint i; i < users.length; ++i) {
-            assertEq(_authorizer.isVoter(users[i]), true);
+            assertEq(_governor.isVoter(users[i]), true);
         }
         //test idempotence. We do the same again and verify that nothing fails and everything stays the same.
         for (uint i; i < users.length; ++i) {
-            _authorizer.addVoter(users[i]);
+            _governor.addVoter(users[i]);
         }
 
         for (uint i; i < users.length; ++i) {
-            assertEq(_authorizer.isVoter(users[i]), true);
+            assertEq(_governor.isVoter(users[i]), true);
         }
 
         vm.stopPrank();
@@ -1014,21 +1005,21 @@ contract SingleVoteGovernorTest is Test {
         _validateUserList(users);
         batchAddAuthorized(users);
 
-        vm.startPrank(address(_authorizer));
+        vm.startPrank(address(_governor));
         for (uint i; i < users.length; ++i) {
-            _authorizer.removeVoter(users[i]);
+            _governor.removeVoter(users[i]);
         }
 
         for (uint i; i < users.length; ++i) {
-            assertEq(_authorizer.isVoter(users[i]), false);
+            assertEq(_governor.isVoter(users[i]), false);
         }
         //test idempotence. We do the same again and verify that nothing fails and everything stays the same.
         for (uint i; i < users.length; ++i) {
-            _authorizer.removeVoter(users[i]);
+            _governor.removeVoter(users[i]);
         }
 
         for (uint i; i < users.length; ++i) {
-            assertEq(_authorizer.isVoter(users[i]), false);
+            assertEq(_governor.isVoter(users[i]), false);
         }
 
         vm.stopPrank();
@@ -1036,10 +1027,8 @@ contract SingleVoteGovernorTest is Test {
 
     // Fail to remove Authorized addresses until threshold is unreachble
     function testRemoveTooManyVoters() public {
-        assertEq(address(_orchestrator), address(_authorizer.orchestrator()));
-
-        vm.startPrank(address(_authorizer));
-        _authorizer.removeVoter(COBIE);
+        vm.startPrank(address(_governor));
+        _governor.removeVoter(COBIE);
 
         //this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
@@ -1047,26 +1036,24 @@ contract SingleVoteGovernorTest is Test {
                 .Module__SingleVoteGovernor__UnreachableThreshold
                 .selector
         );
-        _authorizer.removeVoter(BOB);
+        _governor.removeVoter(BOB);
 
         vm.stopPrank();
     }
 
     // Fail to remove Authorized addresses until the voterlist is empty
     function testRemoveUntilVoterListEmpty() public {
-        assertEq(address(_orchestrator), address(_authorizer.orchestrator()));
+        vm.startPrank(address(_governor));
+        _governor.setThreshold(0);
 
-        vm.startPrank(address(_authorizer));
-        _authorizer.setThreshold(0);
-
-        _authorizer.removeVoter(COBIE);
-        _authorizer.removeVoter(BOB);
+        _governor.removeVoter(COBIE);
+        _governor.removeVoter(BOB);
 
         //this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
             ISingleVoteGovernor.Module__SingleVoteGovernor__EmptyVoters.selector
         );
-        _authorizer.removeVoter(ALBA);
+        _governor.removeVoter(ALBA);
 
         vm.stopPrank();
     }
@@ -1076,30 +1063,30 @@ contract SingleVoteGovernorTest is Test {
 
     // Get correct threshold
     function testGetThreshold() public {
-        assertEq(_authorizer.threshold(), DEFAULT_QUORUM);
+        assertEq(_governor.threshold(), DEFAULT_QUORUM);
     }
 
     // Set a new threshold
     function testMotionSetThreshold() public {
         uint _newQ = 1;
 
-        vm.prank(address(_authorizer));
-        _authorizer.setThreshold(_newQ);
+        vm.prank(address(_governor));
+        _governor.setThreshold(_newQ);
 
-        assertEq(_authorizer.threshold(), _newQ);
+        assertEq(_governor.threshold(), _newQ);
     }
 
     // Fail to set a threshold that's too damn high
     function testSetUnreachableThreshold(uint _newQ) public {
-        vm.assume(_newQ > _authorizer.voterCount());
+        vm.assume(_newQ > _governor.voterCount());
 
         vm.expectRevert(
             ISingleVoteGovernor
                 .Module__SingleVoteGovernor__UnreachableThreshold
                 .selector
         );
-        vm.prank(address(_authorizer));
-        _authorizer.setThreshold(_newQ);
+        vm.prank(address(_governor));
+        _governor.setThreshold(_newQ);
     }
 
     // Fail to change threshold when not the module itself
@@ -1109,9 +1096,15 @@ contract SingleVoteGovernorTest is Test {
 
         uint _newQ = 1;
         for (uint i; i < users.length; ++i) {
-            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-            vm.prank(users[i]); //authorized, but not Orchestrator
-            _authorizer.setThreshold(_newQ);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector,
+                    bytes32("onlySelf"),
+                    users[i]
+                )
+            );
+            vm.prank(users[i]); //authorized, but not orchestrator
+            _governor.setThreshold(_newQ);
         }
     }
 
@@ -1123,14 +1116,14 @@ contract SingleVoteGovernorTest is Test {
         bytes memory _encodedAction =
             abi.encodeWithSignature("setThreshold(uint256)", _newThreshold);
         uint _voteID = speedrunSuccessfulVote(
-            address(_authorizer), _encodedAction, initialVoters
+            address(_governor), _encodedAction, initialVoters
         );
 
         // 2) The vote gets executed by anybody
-        _authorizer.executeMotion(_voteID);
+        _governor.executeMotion(_voteID);
 
         // 3) The orchestrator state has changed
-        assertEq(_authorizer.threshold(), _newThreshold);
+        assertEq(_governor.threshold(), _newThreshold);
     }
 
     //--------------------------------------------------------------------------
@@ -1138,22 +1131,22 @@ contract SingleVoteGovernorTest is Test {
 
     // Get correct vote duration
     function testGetVoteDuration() public {
-        assertEq(_authorizer.voteDuration(), DEFAULT_DURATION);
+        assertEq(_governor.voteDuration(), DEFAULT_DURATION);
     }
 
     // Set new vote duration
     function testMotionSetVoteDuration() public {
         uint _newDur = 3 days;
 
-        vm.prank(address(_authorizer));
-        _authorizer.setVotingDuration(_newDur);
+        vm.prank(address(_governor));
+        _governor.setVotingDuration(_newDur);
 
-        assertEq(_authorizer.voteDuration(), _newDur);
+        assertEq(_governor.voteDuration(), _newDur);
     }
 
     // Fail to set vote durations out of bounds
     function testMotionSetInvalidVoteDuration() public {
-        uint _oldDur = _authorizer.voteDuration();
+        uint _oldDur = _governor.voteDuration();
         uint _newDur = 3 weeks;
 
         vm.expectRevert(
@@ -1163,8 +1156,8 @@ contract SingleVoteGovernorTest is Test {
                     .selector
             )
         );
-        vm.prank(address(_authorizer));
-        _authorizer.setVotingDuration(_newDur);
+        vm.prank(address(_governor));
+        _governor.setVotingDuration(_newDur);
 
         _newDur = 1 hours;
 
@@ -1175,10 +1168,10 @@ contract SingleVoteGovernorTest is Test {
                     .selector
             )
         );
-        vm.prank(address(_authorizer));
-        _authorizer.setVotingDuration(_newDur);
+        vm.prank(address(_governor));
+        _governor.setVotingDuration(_newDur);
 
-        assertEq(_authorizer.voteDuration(), _oldDur);
+        assertEq(_governor.voteDuration(), _oldDur);
     }
 
     //Set new duration bygoing through governance
@@ -1196,9 +1189,15 @@ contract SingleVoteGovernorTest is Test {
 
         uint _newDuration = 5 days;
         for (uint i; i < users.length; ++i) {
-            vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
-            vm.prank(users[i]); //authorized, but not Orchestrator
-            _authorizer.setVotingDuration(_newDuration);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IModule.Module__CallerNotAuthorized.selector,
+                    bytes32("onlySelf"),
+                    users[i]
+                )
+            );
+            vm.prank(users[i]); //authorized, but not orchestrator
+            _governor.setVotingDuration(_newDuration);
         }
     }
 
@@ -1244,10 +1243,10 @@ contract SingleVoteGovernorTest is Test {
 
         invalids[0] = address(0);
         invalids[1] = address(_orchestrator);
-        invalids[2] = address(_authorizer);
+        invalids[2] = address(_governor);
         invalids[3] = address(_paymentProcessor);
         invalids[4] = address(_token);
-        invalids[5] = address(module);
+        invalids[5] = address(_authorizer);
         invalids[6] = address(this);
         invalids[7] = ALBA;
         invalids[8] = BOB;

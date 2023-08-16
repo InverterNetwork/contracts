@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
+
 import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
 
-contract AuthorizerMock is IRoleAuthorizer, Module {
+contract AuthorizerMock is IAuthorizer, Module {
     mapping(address => bool) private _authorized;
     mapping(bytes32 => mapping(address => bool)) private _roleAuthorized;
 
@@ -35,6 +36,11 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
         require(authorized != address(0), "Zero address can not be authorized");
 
         _authorized[authorized] = true;
+
+        _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][msg
+            .sender] = true;
+        _roleAuthorized[generateRoleId(address(orchestrator()), uint8(1))][msg
+            .sender] = true;
     }
 
     function mockInit(bytes memory configData) public {
@@ -48,8 +54,10 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
     //--------------------------------------------------------------------------
     // IAuthorizer Functions
 
+    // Also accepts the owner role as authorized.
     function isAuthorized(address who) external view returns (bool) {
-        return _authorized[who] || _allAuthorized;
+        return _authorized[who] || _allAuthorized
+            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][who];
     }
 
     //IRoleAuthorizer
@@ -61,6 +69,8 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
     {
         return _authorized[who]
             || _roleAuthorized[generateRoleId(msg.sender, role)][who]
+            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][who]
+            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(1))][who]
             || _allAuthorized;
     }
 
@@ -73,11 +83,12 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
     }
 
     function grantRoleFromModule(uint8 role, address target) external {
-        _roleAuthorized[generateRoleId(msg.sender, role)][target] = true;
+        console.log(_msgSender());
+        _roleAuthorized[generateRoleId(_msgSender(), role)][target] = true;
     }
 
     function revokeRoleFromModule(uint8 role, address target) external {
-        _roleAuthorized[generateRoleId(msg.sender, role)][target] = false;
+        _roleAuthorized[generateRoleId(_msgSender(), role)][target] = false;
     }
 
     function toggleModuleSelfManagement() external {}
@@ -100,13 +111,51 @@ contract AuthorizerMock is IRoleAuthorizer, Module {
         return 0;
     }
 
-    function grantRole(bytes32, address) external {}
-
-    function hasRole(bytes32, address) external pure returns (bool) {
-        return false;
+    function grantRole(bytes32 role, address who) public {
+        _roleAuthorized[role][who] = true;
     }
 
-    function revokeRole(bytes32, address) external pure {}
+    function hasRole(bytes32 role, address who) external view returns (bool) {
+        return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
+    }
+
+    function checkRoleMembership(bytes32 role, address who)
+        external
+        view
+        returns (bool)
+    {
+        return _roleAuthorized[role][who];
+    }
+
+    function revokeRole(bytes32 role, address who) public {
+        _roleAuthorized[role][who] = false;
+    }
 
     function renounceRole(bytes32, address) external pure {}
+
+    function getOwnerRole() external view returns (bytes32) {
+        return generateRoleId(address(orchestrator()), uint8(0));
+    }
+
+    function getManagerRole() external view returns (bytes32) {
+        return generateRoleId(address(orchestrator()), uint8(1));
+    }
+
+    /// @notice Grants a global role to a target
+    /// @param role The role to grant
+    /// @param target The address to grant the role to
+    /// @dev Only the addresses with the Owner role should be able to call this function
+    function grantGlobalRole(uint8 role, address target) external {
+        bytes32 roleID = generateRoleId(address(orchestrator()), role);
+        grantRole(roleID, target);
+    }
+
+    /// @notice Revokes a global role from a target
+    /// @param role The role to grant
+    /// @param target The address to grant the role to
+    /// @dev Only the addresses with the Owner role should be able to call this function
+    function revokeGlobalRole(uint8 role, address target) external {
+        bytes32 roleID = generateRoleId(address(orchestrator()), role);
+        revokeRole(roleID, target);
+    }
 }

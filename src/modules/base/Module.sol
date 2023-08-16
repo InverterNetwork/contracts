@@ -11,6 +11,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
 /**
  * @title Module
@@ -60,23 +61,49 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
 
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Orchestrator.
-    modifier onlyAuthorized() {
+    modifier onlyOrchestratorOwner() {
         IAuthorizer authorizer = __Module_orchestrator.authorizer();
-        if (!authorizer.isAuthorized(_msgSender())) {
-            revert Module__CallerNotAuthorized();
+
+        bytes32 ownerRole = authorizer.getOwnerRole();
+
+        if (!authorizer.hasRole(ownerRole, _msgSender())) {
+            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
         }
         _;
     }
 
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Orchestrator or the Orchestrator's manager.
-    modifier onlyAuthorizedOrManager() {
+    modifier onlyOrchestratorOwnerOrManager() {
         IAuthorizer authorizer = __Module_orchestrator.authorizer();
+
+        bytes32 ownerRole = authorizer.getOwnerRole();
+        bytes32 managerRole = authorizer.getManagerRole();
+
+        if (!authorizer.hasRole(managerRole, _msgSender())) {
+            revert Module__CallerNotAuthorized(managerRole, _msgSender());
+        } else if (!authorizer.hasRole(ownerRole, _msgSender())) {
+            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
+        }
+        _;
+    }
+
+    /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
+    modifier onlyModuleRole(uint8 roleId) {
         if (
-            !authorizer.isAuthorized(_msgSender())
-                && __Module_orchestrator.manager() != _msgSender()
+            !__Module_orchestrator.authorizer().hasRole(
+                __Module_orchestrator.authorizer().generateRoleId(
+                    address(this), roleId
+                ),
+                _msgSender()
+            )
         ) {
-            revert Module__CallerNotAuthorized();
+            revert Module__CallerNotAuthorized(
+                __Module_orchestrator.authorizer().generateRoleId(
+                    address(this), roleId
+                ),
+                _msgSender()
+            );
         }
         _;
     }
@@ -177,6 +204,25 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     /// @inheritdoc IModule
     function orchestrator() public view returns (IOrchestrator) {
         return __Module_orchestrator;
+    }
+
+    //--------------------------------------------------------------------------
+    // Role Management
+
+    function grantModuleRole(uint8 role, address addr)
+        external
+        onlyOrchestratorOwner
+    {
+        IAuthorizer roleAuthorizer = __Module_orchestrator.authorizer();
+        roleAuthorizer.grantRoleFromModule(uint8(role), addr);
+    }
+
+    function revokeModuleRole(uint8 role, address addr)
+        external
+        onlyOrchestratorOwner
+    {
+        IAuthorizer roleAuthorizer = __Module_orchestrator.authorizer();
+        roleAuthorizer.revokeRoleFromModule(uint8(role), addr);
     }
 
     //--------------------------------------------------------------------------

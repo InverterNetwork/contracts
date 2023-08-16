@@ -13,7 +13,7 @@ import {
 
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
-import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
+import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 
 import {
@@ -24,29 +24,12 @@ import {
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
-//@todo this has a direct dependency to the new RoleAuthorizer Module.
-//At the current state of the project the IRoleAuthorizer isnt the standardized Interface to use,
-//That means there is a possibility function calls will fail if the roleAuthorizer isnt implemented as the Authorizer
-//This will be changed in the coming future,
-//but till then the RoleAuthorizer has to be selected as the Authorizer Module of the orchestrator if the BountyManager is to be used
-
 contract BountyManager is IBountyManager, ERC20PaymentClient {
     using EnumerableSet for EnumerableSet.UintSet;
     using LinkedIdList for LinkedIdList.List;
 
     //--------------------------------------------------------------------------
     // Modifiers
-
-    //@todo Reminder that this will be moved into the Module Contract at a later point of time
-    modifier onlyRole(uint8 roleId) {
-        if (
-            !IRoleAuthorizer(address(__Module_orchestrator.authorizer()))
-                .isAuthorized(roleId, _msgSender())
-        ) {
-            revert Module__BountyManager__OnlyRole(roleId, address(this));
-        }
-        _;
-    }
 
     modifier onlyClaimContributor(uint claimId) {
         address sender = _msgSender();
@@ -205,8 +188,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     {
         //Note: due to the authorizer still not being set during initialization,
         // this function has to be called after.
-        IRoleAuthorizer(address(orchestrator().authorizer()))
-            .toggleModuleSelfManagement();
+        orchestrator().authorizer().toggleModuleSelfManagement();
     }
 
     //--------------------------------------------------------------------------
@@ -271,7 +253,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         bytes calldata details
     )
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(uint8(Roles.BountyAdmin))
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -297,7 +279,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
     {
         _bountyRegistry[bountyId].details = details;
@@ -308,7 +290,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function lockBounty(uint bountyId)
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
         notClaimed(bountyId)
     {
@@ -324,7 +306,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         bytes calldata details
     )
         external
-        onlyRole(uint8(Roles.ClaimAdmin))
+        onlyModuleRole(uint8(Roles.ClaimAdmin))
         validBountyId(bountyId)
         notClaimed(bountyId)
         returns (uint id)
@@ -411,7 +393,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function verifyClaim(uint claimId, uint bountyId)
         external
-        onlyRole(uint8(Roles.VerifyAdmin))
+        onlyModuleRole(uint8(Roles.VerifyAdmin))
         validClaimId(claimId)
         validBountyId(bountyId)
         claimBelongingToBounty(claimId, bountyId)
@@ -457,51 +439,5 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         _bountyRegistry[bountyId].claimedBy = claimId;
 
         emit ClaimVerified(claimId, bountyId);
-    }
-
-    //----------------------------------
-    // Role Functions
-
-    /// @inheritdoc IBountyManager
-    function grantBountyAdminRole(address addr) external onlyAuthorized {
-        //@todo Will be removed in the future and moved to the authorizer directly
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_orchestrator.authorizer())); //@todo Cast to IRoleAuthorizer wont be necessary as soon as the IAuthorizer Interface in Orchestrator is replaced by IRoleAuthorizer, this is the same for the other implementations
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.BountyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function grantClaimAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.ClaimAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function grantVerifyAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.VerifyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeBountyAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.BountyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeClaimAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.ClaimAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeVerifyAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_orchestrator.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.VerifyAdmin), addr);
     }
 }

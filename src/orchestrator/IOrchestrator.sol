@@ -42,7 +42,6 @@ interface IOrchestrator is IModuleManager {
     /// @notice Initialization function.
     function init(
         uint orchestratorId,
-        address owner,
         IERC20 token,
         address[] calldata modules,
         IFundingManager fundingManager,
@@ -96,10 +95,6 @@ interface IOrchestrator is IModuleManager {
     /// @notice The version of the orchestrator instance.
     function version() external pure returns (string memory);
 
-    function owner() external view returns (address);
-
-    function manager() external view returns (address);
-
     /// @notice find the address of a given module using it's name in a orchestrator
     function findModuleAddressInOrchestrator(string calldata moduleName)
         external
@@ -116,12 +111,6 @@ interface IOrchestrator is IModuleManager {
     function verifyAddressIsRecurringPaymentManager(
         address recurringPaymentManager
     ) external view returns (bool);
-
-    /// @notice Verify whether the given address is the milestone manager module
-    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
-        external
-        view
-        returns (bool);
 
     /// @notice Verify whether the given address is a funding manager
     function verifyAddressIsFundingManager(address fundingManagerAddress)

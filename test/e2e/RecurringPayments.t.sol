@@ -154,10 +154,10 @@ contract RecurringPayments is E2eTest {
         assertEq(wallets.length, 4);
 
         vm.prank(paymentReceiver2);
-        streamingPaymentProcessor.claimAll(recurringPaymentManager);
+        streamingPaymentProcessor.claimAll(address(recurringPaymentManager));
 
         vm.prank(paymentReceiver1);
-        streamingPaymentProcessor.claimAll(recurringPaymentManager);
+        streamingPaymentProcessor.claimAll(address(recurringPaymentManager));
 
         // PaymentReceiver2 should have got payments from both of their payment orders
         // PaymentReceiver1 should have got payment from one of their payment order

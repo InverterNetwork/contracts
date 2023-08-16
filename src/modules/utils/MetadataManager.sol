@@ -5,7 +5,7 @@ pragma solidity 0.8.19;
 import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
-import {IMetadataManager} from "src/modules/IMetadataManager.sol";
+import {IMetadataManager} from "src/modules/utils/IMetadataManager.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract MetadataManager is IMetadataManager, Module {
@@ -75,7 +75,7 @@ contract MetadataManager is IMetadataManager, Module {
 
     function setManagerMetadata(ManagerMetadata calldata managerMetadata_)
         external
-        onlyAuthorizedOrManager
+        onlyOrchestratorOwnerOrManager
     {
         _setManagerMetadata(managerMetadata_);
     }
@@ -93,7 +93,7 @@ contract MetadataManager is IMetadataManager, Module {
 
     function setOrchestratorMetadata(
         OrchestratorMetadata calldata orchestratorMetadata_
-    ) public onlyAuthorizedOrManager {
+    ) public onlyOrchestratorOwnerOrManager {
         _setOrchestratorMetadata(orchestratorMetadata_);
     }
 
@@ -112,7 +112,7 @@ contract MetadataManager is IMetadataManager, Module {
 
     function setTeamMetadata(MemberMetadata[] calldata teamMetadata_)
         external
-        onlyAuthorizedOrManager
+        onlyOrchestratorOwnerOrManager
     {
         _setTeamMetadata(teamMetadata_);
     }

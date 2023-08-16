@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {
     RoleAuthorizer,
-    IRoleAuthorizer
+    IAuthorizer
 } from "src/modules/authorizer/RoleAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -62,7 +62,6 @@ contract RoleAuthorizerTest is Test {
         modules[0] = address(module);
         _orchestrator.init(
             _ORCHESTRATOR_ID,
-            address(this),
             _token,
             modules,
             _fundingManager,
@@ -78,19 +77,12 @@ contract RoleAuthorizerTest is Test {
             abi.encode(initialAuth, initialManager)
         );
         assertEq(
-            _authorizer.hasRole(
-                _authorizer.ORCHESTRATOR_MANAGER_ROLE(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
         assertEq(
-            _authorizer.hasRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), ALBA),
-            true
-        );
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.ORCHESTRATOR_OWNER_ROLE(), address(this)
-            ),
+            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
             false
         );
     }
@@ -119,10 +111,7 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(testAuthorizer.isAuthorized(0, address(this)), false);
         assertEq(
-            testAuthorizer.getRoleMemberCount(
-                testAuthorizer.ORCHESTRATOR_OWNER_ROLE()
-            ),
-            1
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
     }
 
@@ -145,10 +134,7 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(testAuthorizer.isAuthorized(0, address(this)), true);
         assertEq(
-            testAuthorizer.getRoleMemberCount(
-                testAuthorizer.ORCHESTRATOR_OWNER_ROLE()
-            ),
-            1
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
     }
 
@@ -169,12 +155,7 @@ contract RoleAuthorizerTest is Test {
         assertEq(_authorizer.isAuthorized(0, address(this)), false);
         assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
         assertEq(_authorizer.isAuthorized(0, ALBA), true);
-        assertEq(
-            _authorizer.getRoleMemberCount(
-                _authorizer.ORCHESTRATOR_OWNER_ROLE()
-            ),
-            1
-        );
+        assertEq(_authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1);
     }
 
     function testInit2RoleAuthorizer() public {
@@ -210,32 +191,27 @@ contract RoleAuthorizerTest is Test {
     // Test manually granting and revoking roles as orchestrator-defined Owner
 
     function testGrantOwnerRole(address[] memory newAuthorized) public {
-        uint amountAuth = _authorizer.getRoleMemberCount(
-            _authorizer.ORCHESTRATOR_OWNER_ROLE()
-        );
+        uint amountAuth =
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
 
         _validateAuthorizedList(newAuthorized);
 
         vm.startPrank(address(ALBA));
         for (uint i; i < newAuthorized.length; ++i) {
-            _authorizer.grantRole(
-                _authorizer.ORCHESTRATOR_OWNER_ROLE(), newAuthorized[i]
-            );
+            _authorizer.grantRole(_authorizer.getOwnerRole(), newAuthorized[i]);
         }
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
             assertEq(
                 _authorizer.hasRole(
-                    _authorizer.ORCHESTRATOR_OWNER_ROLE(), newAuthorized[i]
+                    _authorizer.getOwnerRole(), newAuthorized[i]
                 ),
                 true
             );
         }
         assertEq(
-            _authorizer.getRoleMemberCount(
-                _authorizer.ORCHESTRATOR_OWNER_ROLE()
-            ),
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
             (amountAuth + newAuthorized.length)
         );
     }
@@ -243,42 +219,32 @@ contract RoleAuthorizerTest is Test {
     function testRevokeOwnerRole() public {
         //Add Bob as owner
         vm.startPrank(address(ALBA));
-        _authorizer.grantRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), BOB); //Meet your new Manager
+        _authorizer.grantRole(_authorizer.getOwnerRole(), BOB); //Meet your new Manager
         vm.stopPrank();
-        assertEq(
-            _authorizer.hasRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), BOB),
-            true
-        );
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), BOB), true);
 
-        uint amountAuth = _authorizer.getRoleMemberCount(
-            _authorizer.ORCHESTRATOR_OWNER_ROLE()
-        );
+        uint amountAuth =
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
 
         vm.startPrank(address(ALBA));
-        _authorizer.revokeRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), ALBA);
+        _authorizer.revokeRole(_authorizer.getOwnerRole(), ALBA);
         vm.stopPrank();
 
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), false);
         assertEq(
-            _authorizer.hasRole(_authorizer.ORCHESTRATOR_OWNER_ROLE(), ALBA),
-            false
-        );
-        assertEq(
-            _authorizer.getRoleMemberCount(
-                _authorizer.ORCHESTRATOR_OWNER_ROLE()
-            ),
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
             amountAuth - 1
         );
     }
 
     function testRemoveLastOwnerFails() public {
-        uint amountAuth = _authorizer.getRoleMemberCount(
-            _authorizer.ORCHESTRATOR_OWNER_ROLE()
-        );
-        bytes32 ownerRole = _authorizer.ORCHESTRATOR_OWNER_ROLE(); //To correctly time the vm.expectRevert
+        uint amountAuth =
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
+        bytes32 ownerRole = _authorizer.getOwnerRole(); //To correctly time the vm.expectRevert
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer
+                IAuthorizer
                     .Module__RoleAuthorizer__OwnerRoleCannotBeEmpty
                     .selector
             )
@@ -288,9 +254,7 @@ contract RoleAuthorizerTest is Test {
 
         assertEq(_authorizer.isAuthorized(ALBA), true);
         assertEq(
-            _authorizer.getRoleMemberCount(
-                _authorizer.ORCHESTRATOR_OWNER_ROLE()
-            ),
+            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
             amountAuth
         );
     }
@@ -472,7 +436,7 @@ contract RoleAuthorizerTest is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
+                IAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
                 newModule
             )
         );
@@ -494,7 +458,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer
+                IAuthorizer
                     .Module__RoleAuthorizer__ModuleNotSelfManaged
                     .selector
             )
@@ -598,7 +562,7 @@ contract RoleAuthorizerTest is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
+                IAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
                 newModule
             )
         );
@@ -620,7 +584,7 @@ contract RoleAuthorizerTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRoleAuthorizer
+                IAuthorizer
                     .Module__RoleAuthorizer__ModuleNotSelfManaged
                     .selector
             )
@@ -659,6 +623,54 @@ contract RoleAuthorizerTest is Test {
         );
     }
 
+    // Test grant and revoke global roles
+    // TODO
+
+    // Grant global roles
+    function testGrantGlobalRole() public {
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+        vm.prank(ALBA);
+        _authorizer.grantGlobalRole(uint8(3), BOB);
+        assertTrue(_authorizer.hasRole(globalRole, BOB));
+    }
+
+    function testGrantGlobalRoleFailsIfNotOwner() public {
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+        vm.prank(BOB);
+        vm.expectRevert();
+        _authorizer.grantGlobalRole(uint8(3), ALBA);
+        assertFalse(_authorizer.hasRole(globalRole, ALBA));
+    }
+
+    // Revoke  global roles
+    function testRevokeGlobalRole() public {
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+        vm.startPrank(ALBA);
+        _authorizer.grantGlobalRole(uint8(3), BOB);
+        assertTrue(_authorizer.hasRole(globalRole, BOB));
+
+        _authorizer.revokeGlobalRole(uint8(3), BOB);
+        assertEq(_authorizer.hasRole(globalRole, BOB), false);
+
+        vm.stopPrank();
+    }
+
+    function testRevokeGlobalRoleFailsIfNotOwner() public {
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), uint8(3));
+        vm.prank(ALBA);
+        _authorizer.grantGlobalRole(uint8(3), BOB);
+        assertTrue(_authorizer.hasRole(globalRole, BOB));
+
+        vm.prank(BOB);
+        vm.expectRevert();
+        _authorizer.revokeGlobalRole(uint8(3), BOB);
+        assertTrue(_authorizer.hasRole(globalRole, BOB));
+    }
+
     // =========================================================================
     // Test granting and revoking ADMIN control, and test admin control over module roles
 
@@ -692,9 +704,7 @@ contract RoleAuthorizerTest is Test {
 
         // Now we set the OWNER as Role admin
         vm.startPrank(BOB);
-        _authorizer.transferAdminRole(
-            roleId, _authorizer.ORCHESTRATOR_OWNER_ROLE()
-        );
+        _authorizer.transferAdminRole(roleId, _authorizer.getOwnerRole());
         vm.stopPrank();
 
         // ALBA can now freely grant and revoke roles
@@ -712,7 +722,7 @@ contract RoleAuthorizerTest is Test {
 
         bytes32 roleId =
             _authorizer.generateRoleId(newModule, uint8(ModuleRoles.ROLE_0));
-        bytes32 ownerRole = _authorizer.ORCHESTRATOR_OWNER_ROLE(); //Buffer this to time revert
+        bytes32 ownerRole = _authorizer.getOwnerRole(); //Buffer this to time revert
 
         // BOB is not allowed to do this
         vm.startPrank(BOB);

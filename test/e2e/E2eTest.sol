@@ -22,11 +22,11 @@ import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 import {StreamingPaymentProcessor} from
     "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
-import {MilestoneManager} from "src/modules/logicModule/MilestoneManager.sol";
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
 
 //Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -126,22 +126,6 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
-    MilestoneManager milestoneManagerImpl;
-    Beacon milestoneManagerBeacon;
-    address milestoneManagerBeaconOwner = address(0x2BEAC0);
-    IModule.Metadata milestoneManagerMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/milestone-manager",
-        "MilestoneManager"
-    );
-    IOrchestratorFactory.ModuleConfig milestoneManagerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
-        milestoneManagerMetadata,
-        abi.encode(100_000_000, 1_000_000, makeAddr("treasury")),
-        abi.encode(hasDependency, dependencies)
-    );
-
     BountyManager bountyManagerImpl;
     Beacon bountyManagerBeacon;
     address bountyManagerBeaconOwner = address(0x3BEAC0);
@@ -170,6 +154,27 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
+    SingleVoteGovernor singleVoteGovernorImpl;
+    Beacon singleVoteGovernorBeacon;
+    address singleVoteGovernorBeaconOwner =
+        makeAddr("single vote governor manager beacon owner");
+    IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/single-vote-governor",
+        "SingleVoteGovernor"
+    );
+
+    address[] initialVoters =
+        [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
+
+    IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
+        singleVoteGovernorMetadata,
+        abi.encode(initialVoters, 2, 3 days),
+        abi.encode(hasDependency, dependencies)
+    );
+
     function setUp() public {
         // Deploy Orchestrator implementation.
         orchestratorImpl = new Orchestrator();
@@ -178,11 +183,12 @@ contract E2eTest is Test {
         rebasingFundingManagerImpl = new RebasingFundingManager();
         paymentProcessorImpl = new SimplePaymentProcessor();
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
-        milestoneManagerImpl = new MilestoneManager();
+
         bountyManagerImpl = new BountyManager();
         recurringPaymentManagerImpl = new RecurringPaymentManager();
         authorizerImpl = new AuthorizerMock();
         roleAuthorizerImpl = new RoleAuthorizer();
+        singleVoteGovernorImpl = new SingleVoteGovernor();
 
         // Deploy module beacons.
         vm.prank(rebasingFundingManagerBeaconOwner);
@@ -191,8 +197,6 @@ contract E2eTest is Test {
         paymentProcessorBeacon = new Beacon();
         vm.prank(streamingPaymentProcessorBeaconOwner);
         streamingPaymentProcessorBeacon = new Beacon();
-        vm.prank(milestoneManagerBeaconOwner);
-        milestoneManagerBeacon = new Beacon();
         vm.prank(bountyManagerBeaconOwner);
         bountyManagerBeacon = new Beacon();
         vm.prank(recurringPaymentManagerBeaconOwner);
@@ -201,6 +205,8 @@ contract E2eTest is Test {
         authorizerBeacon = new Beacon();
         vm.prank(roleAuthorizerBeaconOwner);
         roleAuthorizerBeacon = new Beacon();
+        vm.prank(singleVoteGovernorBeaconOwner);
+        singleVoteGovernorBeacon = new Beacon();
 
         // Set beacon's implementations.
         vm.prank(rebasingFundingManagerBeaconOwner);
@@ -213,8 +219,6 @@ contract E2eTest is Test {
         streamingPaymentProcessorBeacon.upgradeTo(
             address(streamingPaymentProcessorImpl)
         );
-        vm.prank(milestoneManagerBeaconOwner);
-        milestoneManagerBeacon.upgradeTo(address(milestoneManagerImpl));
         vm.prank(bountyManagerBeaconOwner);
         bountyManagerBeacon.upgradeTo(address(bountyManagerImpl));
         vm.prank(recurringPaymentManagerBeaconOwner);
@@ -223,8 +227,12 @@ contract E2eTest is Test {
         );
         vm.prank(authorizerBeaconOwner);
         authorizerBeacon.upgradeTo(address(authorizerImpl));
+
         vm.prank(roleAuthorizerBeaconOwner);
         roleAuthorizerBeacon.upgradeTo(address(roleAuthorizerImpl));
+
+        vm.prank(singleVoteGovernorBeaconOwner);
+        singleVoteGovernorBeacon.upgradeTo(address(singleVoteGovernorImpl));
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
@@ -244,9 +252,6 @@ contract E2eTest is Test {
             IBeacon(streamingPaymentProcessorBeacon)
         );
         moduleFactory.registerMetadata(
-            milestoneManagerMetadata, IBeacon(milestoneManagerBeacon)
-        );
-        moduleFactory.registerMetadata(
             bountyManagerMetadata, IBeacon(bountyManagerBeacon)
         );
         moduleFactory.registerMetadata(
@@ -259,15 +264,17 @@ contract E2eTest is Test {
         moduleFactory.registerMetadata(
             roleAuthorizerMetadata, IBeacon(roleAuthorizerBeacon)
         );
+        moduleFactory.registerMetadata(
+            singleVoteGovernorMetadata, IBeacon(singleVoteGovernorBeacon)
+        );
     }
 
     function _createNewOrchestratorWithAllModules(
         IOrchestratorFactory.OrchestratorConfig memory config
     ) internal returns (IOrchestrator) {
         IOrchestratorFactory.ModuleConfig[] memory optionalModules =
-            new IOrchestratorFactory.ModuleConfig[](2);
-        optionalModules[0] = milestoneManagerFactoryConfig;
-        optionalModules[1] = bountyManagerFactoryConfig;
+            new IOrchestratorFactory.ModuleConfig[](1);
+        optionalModules[0] = bountyManagerFactoryConfig;
 
         IOrchestratorFactory.ModuleConfig memory
             rebasingFundingManagerFactoryConfig = IOrchestratorFactory
