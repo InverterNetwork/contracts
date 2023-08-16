@@ -122,10 +122,9 @@ contract baseModuleTest is ModuleTest {
 
         vm.startPrank(address(this));
 
-        module.grantModuleRole( role, addr);
+        module.grantModuleRole(role, addr);
 
-        bytes32 roleId =
-            _authorizer.generateRoleId(address(module), role);
+        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
         bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
         assertTrue(isAuthorized);
 

@@ -376,13 +376,12 @@ contract BountyManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), false);
 
         //onlyBountyAdmin
-                //TODO: Update Role mention
+        //TODO: Update Role mention
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.BountyAdmin)
+                    address(bountyManager), bountyManager.BOUNTY_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -461,13 +460,11 @@ contract BountyManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), false);
 
         //onlyClaimAdmin
-        //TODO: Update Role mention
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.ClaimAdmin)
+                    address(bountyManager), bountyManager.CLAIM_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -502,13 +499,11 @@ contract BountyManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), false);
 
         //onlyBountyAdmin
-                //TODO: Update Role mention
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.BountyAdmin)
+                    address(bountyManager), bountyManager.BOUNTY_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -552,13 +547,11 @@ contract BountyManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), false);
 
         //onlyBountyAdmin
-                //TODO: Update Role mention
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.BountyAdmin)
+                    address(bountyManager), bountyManager.BOUNTY_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -786,13 +779,11 @@ contract BountyManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), false);
 
         //onlyVerifyAdmin
-                //TODO: Update Role mention
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.VerifyAdmin)
+                    address(bountyManager), bountyManager.VERIFY_ADMIN_ROLE()
                 ),
                 address(this)
             )

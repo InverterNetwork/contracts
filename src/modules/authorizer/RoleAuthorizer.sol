@@ -28,8 +28,8 @@ contract RoleAuthorizer is
     mapping(address => bool) public selfManagedModules;
 
     // Stored for easy public reference. Other Modules can assume the following roles to exist
-    bytes32 public ORCHESTRATOR_OWNER_ROLE = "0x01";
-    bytes32 public ORCHESTRATOR_MANAGER_ROLE = "0x02";
+    bytes32 public constant ORCHESTRATOR_OWNER_ROLE = "0x01";
+    bytes32 public constant ORCHESTRATOR_MANAGER_ROLE = "0x02";
 
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -103,9 +103,6 @@ contract RoleAuthorizer is
         //We preliminarily grant admin role to the caller
         _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
 
-        //We preliminarily grant admin role to the caller
-        _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
-
         // Set up OWNER role structure:
 
         // -> set OWNER as admin of itself
@@ -146,7 +143,7 @@ contract RoleAuthorizer is
     // Public functions
 
     // View functions
-/* 
+    /* 
     /// @inheritdoc IAuthorizer
     /// @dev Implements the function of the IAuthorizer interface by defauling to check if the caller holds the OWNER role.
     function isAuthorized(address who) external view returns (bool) {
@@ -172,7 +169,7 @@ contract RoleAuthorizer is
         }
         return hasRole(roleId, who);
     }
- */
+    */
     /// @inheritdoc IAuthorizer
     function hasModuleRole(bytes32 role, address who)
         external

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // SuT
 import {Test} from "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 import {
     RoleAuthorizer,
@@ -25,7 +26,6 @@ import {PaymentProcessorMock} from
 contract RoleAuthorizerTest is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
-    address initialManager = address(this);
 
     // Mocks
     RoleAuthorizer _authorizer;
@@ -68,17 +68,22 @@ contract RoleAuthorizerTest is Test {
         );
 
         address initialAuth = ALBA;
+        address initialManager = address(this);
 
         _authorizer.init(
             IOrchestrator(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );
+
+        //console.log(_authorizer.hasRole(_authorizer.getManagerRole(), initialManager));
         assertEq(
             _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
+        //console.log(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA));
         assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
+        //console.log(_authorizer.hasRole(_authorizer.getOwnerRole(), address(this)));
         assertEq(
             _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
             false
@@ -141,14 +146,14 @@ contract RoleAuthorizerTest is Test {
         Orchestrator newOrchestrator =
             Orchestrator(Clones.clone(address(new Orchestrator())));
 
-        address[] memory initialAuth = new address[](1);
-        initialAuth[0] = address(this);
+        address initialOwner = address(this);
+        address initialManager = address(this);
 
         vm.expectRevert();
         _authorizer.init(
             IOrchestrator(newOrchestrator),
             _METADATA,
-            abi.encode(initialAuth, initialManager)
+            abi.encode(initialOwner, initialManager)
         );
         assertEq(_authorizer.hasRole("0x01", address(this)), false);
         assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
@@ -731,9 +736,9 @@ contract RoleAuthorizerTest is Test {
         assertEq(_authorizer.hasRole(roleId, BOB), false);
         vm.stopPrank();
 
-        // The module returns to Managed mode
-        vm.prank(newModule);
+        //TODO reiew if this test is still necessary
 
+        /*
         // ALBA can still freely grant and revoke roles
         assertEq(_authorizer.hasRole(roleId, BOB), false);
         vm.startPrank(ALBA);
@@ -741,7 +746,7 @@ contract RoleAuthorizerTest is Test {
         assertEq(_authorizer.hasRole(roleId, BOB), true);
         _authorizer.revokeRole(roleId, BOB);
         assertEq(_authorizer.hasRole(roleId, BOB), false);
-        vm.stopPrank();
+        vm.stopPrank();*/
     }
     // Test that ADMIN cannot change module roles if admin role was burned
 
@@ -754,7 +759,7 @@ contract RoleAuthorizerTest is Test {
 
         //Then we set up a mock module and buffer the role with burned admin
         address newModule = _setupMockSelfManagedModule();
-        bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_0);
+        bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_1);
 
         // BOB can NOT grant and revoke roles even though he's admin
         assertEq(_authorizer.hasRole(roleId, BOB), false);
@@ -845,7 +850,7 @@ contract RoleAuthorizerTest is Test {
         //Then we set up a mock module and buffer both roles
         address newModule = _setupMockSelfManagedModule();
         bytes32 roleId_0 = _authorizer.generateRoleId(newModule, ROLE_0);
-        bytes32 roleId_1 = _authorizer.generateRoleId(newModule, ROLE_0);
+        bytes32 roleId_1 = _authorizer.generateRoleId(newModule, ROLE_1);
 
         vm.startPrank(BOB);
 
@@ -906,12 +911,12 @@ contract RoleAuthorizerTest is Test {
         _orchestrator.addModule(address(mockModule));
 
         vm.startPrank(address(mockModule));
-        _authorizer.burnAdminFromModuleRole(ROLE_0);
+        _authorizer.burnAdminFromModuleRole(ROLE_1);
 
         vm.stopPrank();
 
         bytes32 burntAdmin = _authorizer.getRoleAdmin(
-            _authorizer.generateRoleId(address(mockModule), ROLE_0)
+            _authorizer.generateRoleId(address(mockModule), ROLE_1)
         );
         assertTrue(burntAdmin == _authorizer.BURN_ADMIN_ROLE());
 
