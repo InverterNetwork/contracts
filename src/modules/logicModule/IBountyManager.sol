@@ -89,8 +89,8 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Event emitted when a new Bounty is added.
     event BountyAdded(
         uint indexed bountyId,
-        uint indexed minimumPayoutAmount,
-        uint indexed maximumPayoutAmount,
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
         bytes details
     );
 
