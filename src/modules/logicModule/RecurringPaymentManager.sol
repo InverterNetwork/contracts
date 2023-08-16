@@ -291,21 +291,10 @@ contract RecurringPaymentManager is
             ++index;
         }
 
-        uint amountOfOrders;
-
-        //Get amount of orders needed
-        for (uint i; i < length; ++i) {
-            if (notTriggeredThisEpoch[i]) ++amountOfOrders;
-            if (notTriggeredPastEpoch[i]) ++amountOfOrders;
-        }
-        PaymentOrder[] memory orders = new PaymentOrder[](amountOfOrders);
         //Reset currentId to later iterate through the ids again
         currentId = startId;
         //Reset index to to later iterate through the notTriggered arrays again
         index = 0;
-
-        //Because PaymentOrders and the notTriggeredBool Arrays have different lengths and positions we have to iterate through them independently
-        uint paymentOrderIndex;
 
         //Loop through every element in payment list until endId is reached
         while (currentId != endId) {
@@ -314,15 +303,14 @@ contract RecurringPaymentManager is
                 //Update currentPayment
                 currentPayment = _paymentRegistry[currentId];
 
-                //add paymentOrder for this epoch
-                orders[paymentOrderIndex] = PaymentOrder({
+                PaymentOrder memory buf = PaymentOrder({
                     recipient: currentPayment.recipient,
                     amount: currentPayment.amount,
                     createdAt: block.timestamp,
                     //End of current epoch is the dueTo Date
                     dueTo: (currentEpoch + 1) * epochLength
                 });
-                ++paymentOrderIndex;
+                _addPaymentOrder(buf);
 
                 //if past epochs have not been triggered
                 if (notTriggeredPastEpoch[index]) {
@@ -330,7 +318,7 @@ contract RecurringPaymentManager is
                     epochsNotTriggered =
                         currentEpoch - currentPayment.lastTriggeredEpoch;
 
-                    orders[paymentOrderIndex] = PaymentOrder({
+                    buf = PaymentOrder({
                         recipient: currentPayment.recipient,
                         //because we already made a payment that for the current epoch
                         amount: currentPayment.amount * (epochsNotTriggered - 1),
@@ -338,8 +326,7 @@ contract RecurringPaymentManager is
                         //Payment was already due so dueDate is start of this epoch which should already have passed
                         dueTo: currentEpoch * epochLength
                     });
-
-                    ++paymentOrderIndex;
+                    _addPaymentOrder(buf);
                 }
                 //When done update the real state of lastTriggeredEpoch
                 _paymentRegistry[currentId].lastTriggeredEpoch = currentEpoch;
@@ -349,8 +336,6 @@ contract RecurringPaymentManager is
             currentId = _paymentList.list[currentId];
             ++index;
         }
-        //Finnally add all Payment orders in a single swoop so ensureTokenBalance isnt called repeatedly
-        _addPaymentOrders(orders);
 
         //when done process the Payments correctly
         __Module_orchestrator.paymentProcessor().processPayments(
