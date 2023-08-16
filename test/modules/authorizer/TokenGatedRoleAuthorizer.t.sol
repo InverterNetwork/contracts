@@ -436,6 +436,57 @@ contract TokenGatedRoleAuthorizerTest is Test {
         _authorizer.setThreshold(roleId, address(roleToken), 500);
     }
 
+    // Test setThresholdFromModule
+
+    function testSetThresholdFromModule() public {
+        bytes32 roleId = setUpTokenGatedRole(
+            address(mockModule), ROLE_TOKEN, address(roleToken), 500
+        );
+        vm.prank(address(mockModule));
+        _authorizer.setThresholdFromModule(ROLE_TOKEN, address(roleToken), 1000);
+        assertEq(
+            _authorizer.getThresholdValue(roleId, address(roleToken)), 1000
+        );
+    }
+
+    // invalid threshold from module
+
+    function testSetThresholdFromModuleFailsIfInvalid() public {
+        bytes32 role = ROLE_TOKEN;
+        vm.startPrank(address(mockModule));
+        _authorizer.makeRoleTokenGatedFromModule(role);
+
+        _authorizer.grantTokenRoleFromModule(role, address(roleToken), 100);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__InvalidThreshold
+                    .selector,
+                0
+            )
+        );
+        _authorizer.setThresholdFromModule(ROLE_TOKEN, address(roleToken), 0);
+
+        vm.stopPrank();
+    }
+
+    function testSetThresholdFromModuleFailsIfNotTokenGated() public {
+        // we set BOB as admin
+        makeAddressDefaultAdmin(BOB);
+
+        vm.prank(address(mockModule));
+        //We didn't make the role token-gated beforehand
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ITokenGatedRoleAuthorizer
+                    .Module__TokenGatedRoleAuthorizer__RoleNotTokenGated
+                    .selector
+            )
+        );
+        _authorizer.setThresholdFromModule(ROLE_TOKEN, address(roleToken), 500);
+    }
+
     //Test Authorization
 
     // Test token authorization

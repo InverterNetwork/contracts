@@ -65,38 +65,6 @@ contract TokenGatedRoleAuthorizer is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /*     /// @inheritdoc RoleAuthorizer
-    /// @dev We add a check to call a different function if the role is token-gated.
-    function isAuthorized(uint8 role, address who)
-        public
-        view
-        override(RoleAuthorizer, IAuthorizer)
-        returns (bool)
-    {
-        //Note: since it uses msgSender to generate ID, this should only be used by modules. Users should call hasRole()
-        bytes32 roleId;
-        // If the module self-manages its roles, check if account has the role.
-        if (selfManagedModules[_msgSender()]) {
-            roleId = generateRoleId(_msgSender(), role);
-            //check if token gated:
-            if (isTokenGated[roleId]) {
-                return hasTokenRole(roleId, who);
-            } else {
-                return hasRole(roleId, who);
-            }
-            // If not, check the account against the orchestrator roles
-        } else {
-            roleId = generateRoleId(address(orchestrator()), role);
-            //check if token gated:
-            if (isTokenGated[roleId]) {
-                //TODO add tests
-                return hasTokenRole(roleId, who);
-            } else {
-                return hasRole(roleId, who);
-            }
-        }
-    } */
-
     function hasRole(bytes32 roleId, address account)
         public
         view
@@ -195,7 +163,6 @@ contract TokenGatedRoleAuthorizer is
         address token,
         uint threshold
     ) external onlyModule(_msgSender()) {
-        selfManagedModules[_msgSender()] = true; // placeholder for in between removing uint8 role system
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _grantRole(roleId, token);
         _setThreshold(roleId, token, threshold);
@@ -206,7 +173,6 @@ contract TokenGatedRoleAuthorizer is
         public
         onlyModule(_msgSender())
     {
-        //TODO write tests
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setThreshold(roleId, token, threshold);
     }

@@ -26,22 +26,7 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     error Module__RoleAuthorizer__OwnerRoleCannotBeEmpty();
 
     //--------------------------------------------------------------------------
-    // Overloaded and overriden functions
-
-    /*     /// @notice Returns if an address has the Orchestrator Owner Role
-    /// @param who The adress to be checked.
-    function isAuthorized(address who) external view returns (bool);
-
-    /// @notice Overloads {isAuthorized} for a Module to ask whether an address holds the required role to execute
-    ///         the current transaction.
-    /// @param role The identifier of the role we want to check
-    /// @param who  The address on which to perform the check.
-    /// @dev If the role is not self-managed, it will default to the orchestrator roles
-    /// @dev If not, it will use the calling address to generate the role ID. Therefore, for checking on anything other than itself, hasRole() should be used
-    function isAuthorized(uint8 role, address who)
-        external
-        view
-        returns (bool); */
+    // Functions
 
     /// @notice Asks whether an address holds the required module role to execute
     ///         the current transaction.
@@ -52,9 +37,6 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
         external
         view
         returns (bool);
-
-    //--------------------------------------------------------------------------
-    // Functions
 
     /// @notice Helper function to generate a bytes32 role hash for a module role
     /// @param module The address of the module to generate the hash for

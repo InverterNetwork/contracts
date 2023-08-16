@@ -376,7 +376,6 @@ contract BountyManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), false);
 
         //onlyBountyAdmin
-        //TODO: Update Role mention
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,

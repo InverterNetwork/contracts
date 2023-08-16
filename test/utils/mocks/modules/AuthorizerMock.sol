@@ -141,11 +141,11 @@ contract AuthorizerMock is IAuthorizer, Module {
 
     function renounceRole(bytes32, address) external pure {}
 
-    function getOwnerRole() external view returns (bytes32) {
+    function getOwnerRole() external pure returns (bytes32) {
         return "0x01";
     }
 
-    function getManagerRole() external view returns (bytes32) {
+    function getManagerRole() external pure returns (bytes32) {
         return "0x02";
     }
 

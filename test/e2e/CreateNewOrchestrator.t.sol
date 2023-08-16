@@ -318,8 +318,7 @@ contract OrchestratorCreation is Test {
         //--------------------------------------------------------------------------------
         // Adding Module
 
-        // TODO Substitute with BountyManager
-        //Create milestoneManagerConfigData
+        //Create bountyManagerConfigData
         //Note: This bytes array is used for transmitting data in a generalized way
         //      to the modules during they initilization via the modulefactory
         //      Some Modules might need additional Deployment/Configuration data
