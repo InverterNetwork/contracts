@@ -144,6 +144,25 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         _;
     }
 
+    function contributorsNotChanged(
+        uint claimId,
+        Contributor[] memory contributors
+    ) internal view {
+        Contributor[] memory claimContribs =
+            _claimRegistry[claimId].contributors;
+
+        uint length = contributors.length;
+        for (uint i; i < length;) {
+            if (
+                contributors[i].addr != claimContribs[i].addr
+                    || contributors[i].claimAmount != claimContribs[i].claimAmount
+            ) revert Module__BountyManager__ContributorsChanged();
+            unchecked {
+                i++;
+            }
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
@@ -397,7 +416,11 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function verifyClaim(uint claimId, uint bountyId)
+    function verifyClaim(
+        uint claimId,
+        uint bountyId,
+        Contributor[] calldata contributors
+    )
         external
         onlyModuleRole(uint8(Roles.VerifyAdmin))
         validClaimId(claimId)
@@ -405,6 +428,8 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         claimBelongingToBounty(claimId, bountyId)
         notClaimed(bountyId)
     {
+        contributorsNotChanged(claimId, contributors);
+
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
 
         uint length = contribs.length;

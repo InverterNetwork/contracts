@@ -80,6 +80,9 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Given Bounty id is already claimed or Locked
     error Module__BountyManager__BountyAlreadyClaimedOrLocked();
 
+    /// @notice The given Contributors are not the same as in the claim. This might be connected to a tried front run of the given transaction.
+    error Module__BountyManager__ContributorsChanged();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -225,7 +228,13 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Completes a Bounty by verifying a claim.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if id invalid.
+    /// @dev contributors should be copied out of the given Claim. The parameter is used to prevent front running.
     /// @param claimId The id of the Claim that wants to claim the Bounty.
     /// @param bountyId The id of the Bounty that will be claimed.
-    function verifyClaim(uint claimId, uint bountyId) external;
+    /// @param contributors The contributor information for the Claim.
+    function verifyClaim(
+        uint claimId,
+        uint bountyId,
+        Contributor[] calldata contributors
+    ) external;
 }

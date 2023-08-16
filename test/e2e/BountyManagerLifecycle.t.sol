@@ -148,7 +148,7 @@ contract BountyManagerLifecycle is E2eTest {
         );
 
         vm.prank(verifier1);
-        bountyManager.verifyClaim(claimId, bountyId);
+        bountyManager.verifyClaim(claimId, bountyId, contribs);
 
         // Bounty has been paid out
         assertEq(token.balanceOf(contrib1.addr), 150e18);
