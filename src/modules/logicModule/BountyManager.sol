@@ -431,9 +431,6 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
             }
         }
 
-        //ensure that this contract has enough tokens to fulfill all payments
-        _ensureTokenBalance(totalAmount);
-
         //when done process the Payments correctly
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))

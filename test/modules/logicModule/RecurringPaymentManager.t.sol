@@ -762,11 +762,6 @@ contract RecurringPaymentManagerTest is ModuleTest {
                 );
             }
         }
-        // Check that recurringPaymentManager's token balance is sufficient for the
-        // payment orders by comparing it with the total amount of orders made (numberOfOrdersMade)
-        assertTrue(
-            _token.balanceOf(address(recurringPaymentManager)) == totalAmount
-        );
     }
 
     function assertOrder(

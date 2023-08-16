@@ -87,10 +87,6 @@ abstract contract ERC20PaymentClient is
         // Add new order to list of oustanding orders.
         _orders.push(order);
 
-        // Ensure our token balance is sufficient.
-        // Note that function is implemented in downstream contract.
-        _ensureTokenBalance(_outstandingTokenAmount);
-
         emit PaymentOrderAdded(order.recipient, order.amount);
     }
 
@@ -118,10 +114,6 @@ abstract contract ERC20PaymentClient is
 
         // Add total orders' amount to current outstanding amount.
         _outstandingTokenAmount += totalTokenAmount;
-
-        // Ensure our token balance is sufficient.
-        // Note that functions is implemented in downstream contract.
-        _ensureTokenBalance(_outstandingTokenAmount);
     }
 
     //--------------------------------------------------------------------------
