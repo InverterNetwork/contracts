@@ -25,9 +25,8 @@ interface IBountyManager is IERC20PaymentClient {
         /// @dev Arbitrary data to store Bounty details if necessary.
         ///      CAN be empty.
         bytes details;
-        /// @dev Id that claimed the bounty
-        ///      A Bounty is claimed if a Claim got acknowledged by a Verifier
-        uint claimedBy;
+        /// @dev If locked the Bounty is no longer available for a claim
+        bool locked;
     }
 
     struct Contributor {
@@ -45,6 +44,8 @@ interface IBountyManager is IERC20PaymentClient {
         /// @dev Arbitrary data to store Claim details if necessary.
         ///      CAN be empty.
         bytes details;
+        /// @dev Did this Claim claim its bounty already
+        bool claimed;
     }
 
     //--------------------------------------------------------------------------
@@ -74,8 +75,11 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Given total claims of contributors exceed or are below the given payout amounts of the bounty
     error Module__BountyManager__ClaimExceedsGivenPayoutAmounts();
 
-    /// @notice Given Bounty id is already claimed or Locked
-    error Module__BountyManager__BountyAlreadyClaimedOrLocked();
+    /// @notice Given Bounty id is Locked
+    error Module__BountyManager__BountyLocked();
+
+    /// @notice Given Claim id got already claimed
+    error Module__BountyManager__AlreadyClaimed();
 
     /// @notice The given Contributors are not the same as in the claim. This might be connected to a tried front run of the given transaction.
     error Module__BountyManager__ContributorsChanged();
@@ -113,7 +117,7 @@ interface IBountyManager is IERC20PaymentClient {
     event ClaimDetailsUpdated(uint indexed claimId, bytes details);
 
     /// @notice Event emitted when a Claim is verified.
-    event ClaimVerified(uint indexed bountyId, uint indexed claimId);
+    event ClaimVerified(uint indexed claimId);
 
     //--------------------------------------------------------------------------
     // Functions

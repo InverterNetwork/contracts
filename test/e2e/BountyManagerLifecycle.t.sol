@@ -135,10 +135,10 @@ contract BountyManagerLifecycle is E2eTest {
 
         bytes memory claimDetails = "This is a test submission";
 
-        vm.prank(contrib1.addr);
+        vm.prank(address(0xA11CE));
         uint claimId = bountyManager.addClaim(bountyId, contribs, claimDetails);
 
-        // Verifiers approve bounty
+        // Verifiers approve claim
 
         address verifier1 = makeAddr("verifier 1");
 
@@ -153,5 +153,17 @@ contract BountyManagerLifecycle is E2eTest {
         // Bounty has been paid out
         assertEq(token.balanceOf(contrib1.addr), 150e18);
         assertEq(token.balanceOf(contrib2.addr), 150e18);
+
+        //Lets create another Claim for the same bounty
+        vm.prank(address(0xA11CE));
+        claimId = bountyManager.addClaim(bountyId, contribs, claimDetails);
+
+        // Verifiers approve claim
+        vm.prank(verifier1);
+        bountyManager.verifyClaim(claimId, contribs);
+
+        // Bounty has been paid out
+        assertEq(token.balanceOf(contrib1.addr), 2 * 150e18);
+        assertEq(token.balanceOf(contrib2.addr), 2 * 150e18);
     }
 }
