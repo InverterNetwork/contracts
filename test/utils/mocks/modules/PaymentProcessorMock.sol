@@ -6,7 +6,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 import {IERC20PaymentClient} from
-    "src/modules/base/mixins/IERC20PaymentClient.sol";
+    "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
 contract PaymentProcessorMock is IPaymentProcessor {
     //--------------------------------------------------------------------------

@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
 // External Libraries
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 // Internal Dependencies
-import {Module} from "src/modules/base/Module.sol";
 
-import {ERC20PaymentClient} from
-    "src/modules/base/mixins/ERC20PaymentClient.sol";
+import {
+    ERC20PaymentClient,
+    Module
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
@@ -22,13 +19,12 @@ import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 import {
     IERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
-contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
-    using SafeERC20 for IERC20;
+contract BountyManager is IBountyManager, ERC20PaymentClient {
     using EnumerableSet for EnumerableSet.UintSet;
     using LinkedIdList for LinkedIdList.List;
 
@@ -129,19 +125,37 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         }
     }
 
-    modifier claimBelongingToBounty(uint claimId, uint bountyId) {
-        if (_claimRegistry[claimId].bountyId != bountyId) {
-            revert Module__BountyManager__ClaimNotBelongingToBounty();
+    modifier notLocked(uint bountyId) {
+        if (_bountyRegistry[bountyId].locked) {
+            revert Module__BountyManager__BountyLocked();
         }
         _;
     }
 
-    modifier notClaimed(uint bountyId) {
-        //Its not claimed if claimedBy is still 0
-        if (_bountyRegistry[bountyId].claimedBy != 0) {
-            revert Module__BountyManager__BountyAlreadyClaimedOrLocked();
+    modifier notClaimed(uint claimId) {
+        if (_claimRegistry[claimId].claimed) {
+            revert Module__BountyManager__AlreadyClaimed();
         }
         _;
+    }
+
+    function contributorsNotChanged(
+        uint claimId,
+        Contributor[] memory contributors
+    ) internal view {
+        Contributor[] memory claimContribs =
+            _claimRegistry[claimId].contributors;
+
+        uint length = contributors.length;
+        for (uint i; i < length;) {
+            if (
+                contributors[i].addr != claimContribs[i].addr
+                    || contributors[i].claimAmount != claimContribs[i].claimAmount
+            ) revert Module__BountyManager__ContributorsChanged();
+            unchecked {
+                i++;
+            }
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -285,6 +299,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         external
         onlyModuleRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
+        notLocked(bountyId)
     {
         _bountyRegistry[bountyId].details = details;
 
@@ -296,9 +311,9 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         external
         onlyModuleRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
-        notClaimed(bountyId)
+        notLocked(bountyId)
     {
-        _bountyRegistry[bountyId].claimedBy = type(uint).max;
+        _bountyRegistry[bountyId].locked = true;
 
         emit BountyLocked(bountyId);
     }
@@ -312,7 +327,7 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         external
         onlyModuleRole(uint8(Roles.ClaimAdmin))
         validBountyId(bountyId)
-        notClaimed(bountyId)
+        notLocked(bountyId)
         returns (uint id)
     {
         validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
@@ -347,21 +362,23 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function updateClaimContributors(
         uint claimId,
-        uint bountyId,
         Contributor[] calldata contributors
     )
         external
         validClaimId(claimId)
-        onlyClaimContributor(claimId)
-        validBountyId(bountyId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
+        onlyModuleRole(uint8(Roles.ClaimAdmin))
     {
-        validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
+        validContributorsForBounty(
+            contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
+        );
         Claim storage c = _claimRegistry[claimId];
 
         uint length = c.contributors.length;
         for (uint i; i < length;) {
             //remove ClaimId for each contributor address
-            contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId); //@note c.contributors[i].addr -> is there a more gas efficient alternative to this?
+            contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId);
             unchecked {
                 ++i;
             }
@@ -387,6 +404,8 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
         validClaimId(claimId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
         onlyClaimContributor(claimId)
     {
         _claimRegistry[claimId].details = details;
@@ -395,20 +414,18 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function verifyClaim(uint claimId, uint bountyId)
+    function verifyClaim(uint claimId, Contributor[] calldata contributors)
         external
         onlyModuleRole(uint8(Roles.VerifyAdmin))
         validClaimId(claimId)
-        validBountyId(bountyId)
-        claimBelongingToBounty(claimId, bountyId)
-        notClaimed(bountyId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
     {
+        contributorsNotChanged(claimId, contributors);
+
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
 
         uint length = contribs.length;
-
-        //total amount needed to verifyBounty
-        uint totalAmount;
 
         //current contributor in loop
         Contributor memory contrib;
@@ -416,7 +433,6 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
         //For each Contributor add payments according to the claimAmount specified
         for (uint i; i < length;) {
             contrib = contribs[i];
-            totalAmount += contrib.claimAmount;
 
             _addPaymentOrder(
                 PaymentOrder({
@@ -431,66 +447,14 @@ contract BountyManager is IBountyManager, Module, ERC20PaymentClient {
             }
         }
 
-        //ensure that this contract has enough tokens to fulfill all payments
-        _ensureTokenBalance(totalAmount);
-
         //when done process the Payments correctly
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))
         );
 
         //Set completed to true
-        _bountyRegistry[bountyId].claimedBy = claimId;
+        _claimRegistry[claimId].claimed = true;
 
-        emit ClaimVerified(claimId, bountyId);
-    }
-
-    //--------------------------------------------------------------------------
-    // {ERC20PaymentClient} Function Implementations
-
-    function _ensureTokenBalance(uint amount)
-        internal
-        override(ERC20PaymentClient)
-    {
-        uint balance = __Module_orchestrator.token().balanceOf(address(this));
-
-        if (balance < amount) {
-            // Trigger callback from orchestrator to transfer tokens
-            // to address(this).
-            bool ok;
-            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
-                address(__Module_orchestrator.fundingManager()),
-                abi.encodeWithSignature(
-                    "transferOrchestratorToken(address,uint256)",
-                    address(this),
-                    amount - balance
-                )
-            );
-
-            if (!ok) {
-                revert Module__ERC20PaymentClient__TokenTransferFailed();
-            }
-        }
-    }
-
-    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
-        internal
-        override(ERC20PaymentClient)
-    {
-        IERC20 token = __Module_orchestrator.token();
-        uint allowance = token.allowance(address(this), address(spender));
-
-        if (allowance < amount) {
-            token.safeIncreaseAllowance(address(spender), amount - allowance);
-        }
-    }
-
-    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
-        internal
-        view
-        override(ERC20PaymentClient)
-        returns (bool)
-    {
-        return __Module_orchestrator.paymentProcessor() == who;
+        emit ClaimVerified(claimId);
     }
 }

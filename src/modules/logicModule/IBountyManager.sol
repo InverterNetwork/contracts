@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC20PaymentClient} from
-    "src/modules/base/mixins/IERC20PaymentClient.sol";
+    "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
 interface IBountyManager is IERC20PaymentClient {
     //--------------------------------------------------------------------------
@@ -25,9 +25,8 @@ interface IBountyManager is IERC20PaymentClient {
         /// @dev Arbitrary data to store Bounty details if necessary.
         ///      CAN be empty.
         bytes details;
-        /// @dev Id that claimed the bounty
-        ///      A Bounty is claimed if a Claim got acknowledged by a Verifier
-        uint claimedBy;
+        /// @dev If locked the Bounty is no longer available for a claim
+        bool locked;
     }
 
     struct Contributor {
@@ -45,6 +44,8 @@ interface IBountyManager is IERC20PaymentClient {
         /// @dev Arbitrary data to store Claim details if necessary.
         ///      CAN be empty.
         bytes details;
+        /// @dev Did this Claim claim its bounty already
+        bool claimed;
     }
 
     //--------------------------------------------------------------------------
@@ -74,11 +75,14 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Given total claims of contributors exceed or are below the given payout amounts of the bounty
     error Module__BountyManager__ClaimExceedsGivenPayoutAmounts();
 
-    /// @notice Claim is not trying to claim given bounty
-    error Module__BountyManager__ClaimNotBelongingToBounty();
+    /// @notice Given Bounty id is Locked
+    error Module__BountyManager__BountyLocked();
 
-    /// @notice Given Bounty id is already claimed or Locked
-    error Module__BountyManager__BountyAlreadyClaimedOrLocked();
+    /// @notice Given Claim id got already claimed
+    error Module__BountyManager__AlreadyClaimed();
+
+    /// @notice The given Contributors are not the same as in the claim. This might be connected to a tried front run of the given transaction.
+    error Module__BountyManager__ContributorsChanged();
 
     //--------------------------------------------------------------------------
     // Events
@@ -86,8 +90,8 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Event emitted when a new Bounty is added.
     event BountyAdded(
         uint indexed bountyId,
-        uint indexed minimumPayoutAmount,
-        uint indexed maximumPayoutAmount,
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
         bytes details
     );
 
@@ -113,7 +117,7 @@ interface IBountyManager is IERC20PaymentClient {
     event ClaimDetailsUpdated(uint indexed claimId, bytes details);
 
     /// @notice Event emitted when a Claim is verified.
-    event ClaimVerified(uint indexed BountyId, uint indexed ClaimId);
+    event ClaimVerified(uint indexed claimId);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -208,11 +212,9 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Updates a Claim's contributor informations.
     /// @dev Reverts if an argument invalid.
     /// @param claimId The id of the Claim that will be updated.
-    /// @param bountyId The id of the bounty the Claim wants to claim.
     /// @param contributors The contributor information for the Claim.
     function updateClaimContributors(
         uint claimId,
-        uint bountyId,
         Contributor[] calldata contributors
     ) external;
 
@@ -225,7 +227,9 @@ interface IBountyManager is IERC20PaymentClient {
     /// @notice Completes a Bounty by verifying a claim.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if id invalid.
+    /// @dev contributors should be copied out of the given Claim. The parameter is used to prevent front running.
     /// @param claimId The id of the Claim that wants to claim the Bounty.
-    /// @param bountyId The id of the Bounty that will be claimed.
-    function verifyClaim(uint claimId, uint bountyId) external;
+    /// @param contributors The contributor information for the Claim.
+    function verifyClaim(uint claimId, Contributor[] calldata contributors)
+        external;
 }
