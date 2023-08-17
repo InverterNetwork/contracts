@@ -232,32 +232,7 @@ contract RecurringPaymentManager is
 
         uint currentEpoch = getCurrentEpoch();
 
-        //Get Length of id section
-        uint length;
-
-        //Loop through all ids in section
-        while (currentId != endId) {
-            ++length;
-            currentId = _paymentList.list[currentId];
-        }
-
-        //Create arrays with length that is equal to the amount of ids in the given id section
-        //notTriggeredThisEpoch marks which ids have not been triggered this epoch
-        //notTriggeredPastEpoch marks which ids have not been triggered in the past epochs
-        //If a value in here is true, that means we have to create a payment order for it
-        //This is later used to get the exact length of a paymentorder array needed to contain all the payment orders
-        bool[] memory notTriggeredThisEpoch = new bool[](length);
-        bool[] memory notTriggeredPastEpoch = new bool[](length);
-
-        //Reset currentId to later iterate through the ids again
-        currentId = startId;
-
-        //index to match the given id to the array positions of the notTriggered arrays
-        uint index;
-
-        //CurrentRecurringPayment
         RecurringPayment memory currentPayment;
-
         //Amount of how many epochs have been not triggered
         uint epochsNotTriggered;
 
@@ -271,69 +246,45 @@ contract RecurringPaymentManager is
                     currentEpoch - currentPayment.lastTriggeredEpoch;
                 //If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
-                    notTriggeredThisEpoch[index] = true;
+                    //add paymentOrder for this epoch
+                    _addPaymentOrder(
+                        PaymentOrder({
+                            recipient: currentPayment.recipient,
+                            amount: currentPayment.amount,
+                            createdAt: block.timestamp,
+                            //End of current epoch is the dueTo Date
+                            dueTo: (currentEpoch + 1) * epochLength
+                        })
+                    );
+
+                    //if past epochs have not been triggered
                     if (epochsNotTriggered > 1) {
-                        notTriggeredPastEpoch[index] = true;
+                        _addPaymentOrder(
+                            PaymentOrder({
+                                recipient: currentPayment.recipient,
+                                //because we already made a payment that for the current epoch
+                                amount: currentPayment.amount
+                                    * (epochsNotTriggered - 1),
+                                createdAt: block.timestamp,
+                                //Payment was already due so dueDate is start of this epoch which should already have passed
+                                dueTo: currentEpoch * epochLength
+                            })
+                        );
                     }
+                    //When done update the real state of lastTriggeredEpoch
+                    _paymentRegistry[currentId].lastTriggeredEpoch =
+                        currentEpoch;
                 }
             }
             //Set to next Id in List
             currentId = _paymentList.list[currentId];
-            //Count up index
-            ++index;
-        }
-
-        //Reset currentId to later iterate through the ids again
-        currentId = startId;
-        //Reset index to to later iterate through the notTriggered arrays again
-        index = 0;
-
-        //Loop through every element in payment list until endId is reached
-        while (currentId != endId) {
-            //If order hasnt been triggered this epoch
-            if (notTriggeredThisEpoch[index]) {
-                //Update currentPayment
-                currentPayment = _paymentRegistry[currentId];
-
-                PaymentOrder memory buf = PaymentOrder({
-                    recipient: currentPayment.recipient,
-                    amount: currentPayment.amount,
-                    createdAt: block.timestamp,
-                    //End of current epoch is the dueTo Date
-                    dueTo: (currentEpoch + 1) * epochLength
-                });
-                _addPaymentOrder(buf);
-
-                //if past epochs have not been triggered
-                if (notTriggeredPastEpoch[index]) {
-                    //Check how many epochs have not been triggered
-                    epochsNotTriggered =
-                        currentEpoch - currentPayment.lastTriggeredEpoch;
-
-                    buf = PaymentOrder({
-                        recipient: currentPayment.recipient,
-                        //because we already made a payment that for the current epoch
-                        amount: currentPayment.amount * (epochsNotTriggered - 1),
-                        createdAt: block.timestamp,
-                        //Payment was already due so dueDate is start of this epoch which should already have passed
-                        dueTo: currentEpoch * epochLength
-                    });
-                    _addPaymentOrder(buf);
-                }
-                //When done update the real state of lastTriggeredEpoch
-                _paymentRegistry[currentId].lastTriggeredEpoch = currentEpoch;
-            }
-
-            //Set to next Id in List
-            currentId = _paymentList.list[currentId];
-            ++index;
         }
 
         //when done process the Payments correctly
+        emit RecurringPaymentsTriggered(currentEpoch);
+
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))
         );
-
-        emit RecurringPaymentsTriggered(currentEpoch);
     }
 }
