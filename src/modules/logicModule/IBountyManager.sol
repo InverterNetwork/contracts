@@ -26,7 +26,7 @@ interface IBountyManager is IERC20PaymentClient {
         ///      CAN be empty.
         bytes details;
         /// @dev If locked the Bounty is no longer available for a claim
-        bool locked; //@todo
+        bool locked;
     }
 
     struct Contributor {
@@ -45,7 +45,7 @@ interface IBountyManager is IERC20PaymentClient {
         ///      CAN be empty.
         bytes details;
         /// @dev Did this Claim claim its bounty already
-        bool claimed; //@todo
+        bool claimed;
     }
 
     //--------------------------------------------------------------------------
