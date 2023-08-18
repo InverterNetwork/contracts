@@ -28,6 +28,14 @@ interface IOrchestratorFactory {
         IERC20 token;
     }
 
+    // *bytes dependencyData* is the data (in the form of bytes) that must be passed as part of ModuleConfig to provide information
+    //                        about any dependencies that this particular module might have on other modules (cross-dependency of modules)
+    // *Expected format of dependencyData*: abi.encode(bool hasDependency, string[] dependenciesURLs)
+    // *bool hasDependency*: This boolean indicates whether this module is dependent on other modules for initialization or not
+    //                       True if this module has other modules as dependencies, false otherwise
+    // *string[] dependenciesURLs*: In the case, where *hasDependency* had been set to true, this array of strings will contain the URL of the 
+    //                              required modules. These URL can be used with the `findModuleAddressInOrchestrator` function to find relevant addresses
+    //                              In case of no dependencies, this can be left as an empty array of strings.
     struct ModuleConfig {
         IModule.Metadata metadata;
         bytes configData;
