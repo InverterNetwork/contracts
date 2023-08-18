@@ -125,10 +125,16 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         }
     }
 
-    modifier notClaimed(uint bountyId) {
-        //Its not claimed if claimedBy is still 0
-        if (_bountyRegistry[bountyId].claimedBy != 0) {
-            revert Module__BountyManager__BountyAlreadyClaimedOrLocked();
+    modifier notLocked(uint bountyId) {
+        if (_bountyRegistry[bountyId].locked) {
+            revert Module__BountyManager__BountyLocked();
+        }
+        _;
+    }
+
+    modifier notClaimed(uint claimId) {
+        if (_claimRegistry[claimId].claimed) {
+            revert Module__BountyManager__AlreadyClaimed();
         }
         _;
     }
@@ -293,6 +299,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         external
         onlyModuleRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
+        notLocked(bountyId)
     {
         _bountyRegistry[bountyId].details = details;
 
@@ -304,9 +311,9 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         external
         onlyModuleRole(uint8(Roles.BountyAdmin))
         validBountyId(bountyId)
-        notClaimed(bountyId)
+        notLocked(bountyId)
     {
-        _bountyRegistry[bountyId].claimedBy = type(uint).max;
+        _bountyRegistry[bountyId].locked = true;
 
         emit BountyLocked(bountyId);
     }
@@ -320,7 +327,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         external
         onlyModuleRole(uint8(Roles.ClaimAdmin))
         validBountyId(bountyId)
-        notClaimed(bountyId)
+        notLocked(bountyId)
         returns (uint id)
     {
         validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
@@ -359,7 +366,8 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     )
         external
         validClaimId(claimId)
-        notClaimed(_claimRegistry[claimId].bountyId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
         onlyModuleRole(uint8(Roles.ClaimAdmin))
     {
         validContributorsForBounty(
@@ -396,7 +404,8 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
         validClaimId(claimId)
-        notClaimed(_claimRegistry[claimId].bountyId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
         onlyClaimContributor(claimId)
     {
         _claimRegistry[claimId].details = details;
@@ -409,7 +418,8 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         external
         onlyModuleRole(uint8(Roles.VerifyAdmin))
         validClaimId(claimId)
-        notClaimed(_claimRegistry[claimId].bountyId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
     {
         contributorsNotChanged(claimId, contributors);
 
@@ -443,8 +453,8 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         );
 
         //Set completed to true
-        _bountyRegistry[_claimRegistry[claimId].bountyId].claimedBy = claimId;
+        _claimRegistry[claimId].claimed = true;
 
-        emit ClaimVerified(claimId, _claimRegistry[claimId].bountyId);
+        emit ClaimVerified(claimId);
     }
 }
