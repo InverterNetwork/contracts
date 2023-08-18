@@ -214,21 +214,32 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         // Create a Bounty
         vm.startBroadcast(orchestratorOwnerPrivateKey);
-        {
-            orchestratorCreatedBountyManager.grantModuleRole(
-                orchestratorCreatedBountyManager.BOUNTY_ADMIN_ROLE(),
-                orchestratorOwner
-            );
 
-            bytes memory details = "TEST BOUNTY";
+        // Whitelist owner to create bounties
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.BOUNTY_ADMIN_ROLE(),
+            orchestratorOwner
+        );
 
-            uint bountyId = orchestratorCreatedBountyManager.addBounty(
-                100e18, 250e18, details
-            );
-        }
+        // Whitelist owner to post claims
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.CLAIM_ADMIN_ROLE(),
+            orchestratorOwner
+        );
+        // Whitelist owner to verify claims
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.VERIFY_ADMIN_ROLE(),
+            orchestratorOwner
+        );
+
+        bytes memory details = "TEST BOUNTY";
+
+        uint bountyId =
+            orchestratorCreatedBountyManager.addBounty(100e18, 250e18, details);
+
         vm.stopBroadcast();
 
-        console2.log("\t -Bounty Created.");
+        console2.log("\t -Bounty Created. Id: ", bountyId);
 
         console2.log(
             "=================================================================================="

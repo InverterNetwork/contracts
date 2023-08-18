@@ -23,4 +23,7 @@ ignore = ['src/generated/*']
 fuzz = { runs = 1_024 }
 verbosity = 4
 
+[rpc_endpoints]
+goerli = "${GOERLI_RPC_URL}"
+mainnet = "${RPC_URL}" 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
