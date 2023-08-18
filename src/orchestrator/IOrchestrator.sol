@@ -24,6 +24,12 @@ interface IOrchestrator is IModuleManager {
     /// @notice The given module is not used in the orchestrator
     error DependencyInjection__ModuleNotUsedInOrchestrator();
 
+    /// @notice Data passed to `findModuleAddressInOrchestrator` is not correct
+    error Orchestrator__IncorrectData__ModuleIdentifierEmpty();
+
+    /// @notice Data passed to `findModuleAddressInOrchestrator` is not correct
+    error Orchestrator__IncorrectData__ModuleURLStringEmpty();
+
     //--------------------------------------------------------------------------
     // Events
 

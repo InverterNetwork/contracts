@@ -303,6 +303,111 @@ contract OrchestratorCreation is Test {
         createNewOrchestrator();
     }
 
+    // Search via the module URL
+    function testModuleSearchFunctionsViaModuleURLs() public {
+        IOrchestrator orchestrator = createNewOrchestrator();
+
+        address fundingManagerAddress = address(orchestrator.fundingManager());
+        address paymentProcessorAddress =
+            address(orchestrator.paymentProcessor());
+
+        emit log_named_address("FMA", fundingManagerAddress);
+        emit log_named_address("PPA", paymentProcessorAddress);
+
+        assertTrue(!(fundingManagerAddress == address(0)));
+        assertTrue(!(paymentProcessorAddress == address(0)));
+
+        string memory fmURL = IModule(fundingManagerAddress).url();
+        string memory ppURL = IModule(paymentProcessorAddress).url();
+
+        emit log_named_string("FM URL", fmURL);
+        emit log_named_string("PP URL", ppURL);
+
+        address searchedFundingManagerAddress = orchestrator
+            .findModuleAddressInOrchestrator(fmURL, bytes32(""), false);
+        address searchedPaymentProcessAddress = orchestrator
+            .findModuleAddressInOrchestrator(ppURL, bytes32(""), false);
+
+        assertTrue(searchedFundingManagerAddress == fundingManagerAddress);
+        assertTrue(searchedPaymentProcessAddress == paymentProcessorAddress);
+    }
+
+    // Search via the module Identifier
+    function testModuleSearchFunctionsViaModuleIdentifiers() public {
+        IOrchestrator orchestrator = createNewOrchestrator();
+
+        address fundingManagerAddress = address(orchestrator.fundingManager());
+        address paymentProcessorAddress =
+            address(orchestrator.paymentProcessor());
+
+        emit log_named_address("FMA", fundingManagerAddress);
+        emit log_named_address("PPA", paymentProcessorAddress);
+
+        assertTrue(!(fundingManagerAddress == address(0)));
+        assertTrue(!(paymentProcessorAddress == address(0)));
+
+        bytes32 fmIdentifier = IModule(fundingManagerAddress).identifier();
+        bytes32 ppIdentifier = IModule(paymentProcessorAddress).identifier();
+
+        emit log_named_bytes32("FM Identifier", fmIdentifier);
+
+        address searchedFundingManagerAddress =
+            orchestrator.findModuleAddressInOrchestrator("", fmIdentifier, true);
+        address searchedPaymentProcessAddress =
+            orchestrator.findModuleAddressInOrchestrator("", ppIdentifier, true);
+
+        assertTrue(searchedFundingManagerAddress == fundingManagerAddress);
+        assertTrue(searchedPaymentProcessAddress == paymentProcessorAddress);
+    }
+
+    // If you put useIdentifier bool as true and pass the identifier as empty, then function reverts
+    function testModuleSearchFunctionsFailsForEmptyIdentifier() public {
+        IOrchestrator orchestrator = createNewOrchestrator();
+
+        address fundingManagerAddress = address(orchestrator.fundingManager());
+
+        emit log_named_address("FMA", fundingManagerAddress);
+
+        assertTrue(!(fundingManagerAddress == address(0)));
+
+        bytes32 fmIdentifier = IModule(fundingManagerAddress).identifier();
+
+        emit log_named_bytes32("FM Identifier", fmIdentifier);
+
+        vm.expectRevert(
+            IOrchestrator
+                .Orchestrator__IncorrectData__ModuleIdentifierEmpty
+                .selector
+        );
+        orchestrator.findModuleAddressInOrchestrator(
+            "any random string", bytes32(""), true
+        );
+    }
+
+    // If you put useIdentifier bool as false and pass the moduleURL as empty, then function reverts
+    function testModuleSearchFunctionsFailsForEmptyString() public {
+        IOrchestrator orchestrator = createNewOrchestrator();
+
+        address fundingManagerAddress = address(orchestrator.fundingManager());
+
+        emit log_named_address("FMA", fundingManagerAddress);
+
+        assertTrue(!(fundingManagerAddress == address(0)));
+
+        string memory fmURL = IModule(fundingManagerAddress).url();
+
+        emit log_named_string("FM URL", fmURL);
+
+        vm.expectRevert(
+            IOrchestrator
+                .Orchestrator__IncorrectData__ModuleURLStringEmpty
+                .selector
+        );
+        orchestrator.findModuleAddressInOrchestrator(
+            "", bytes32("any random identifier"), false
+        );
+    }
+
     //We're adding and removing a Module during the lifetime of the orchestrator
     function testManageModulesLiveOnPorposal() public {
         //Create Orchestrator

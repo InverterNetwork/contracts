@@ -33,7 +33,7 @@ interface IOrchestratorFactory {
     // *Expected format of dependencyData*: abi.encode(bool hasDependency, string[] dependenciesURLs, bytes additionalData)
     // *bool hasDependency*: This boolean indicates whether this module is dependent on other modules for initialization or not
     //                       True if this module has other modules as dependencies, false otherwise
-    // *string[] dependenciesURLs*: In the case, where *hasDependency* had been set to true, this array of strings will contain the URL of the 
+    // *string[] dependenciesURLs*: In the case, where *hasDependency* had been set to true, this array of strings will contain the URL of the
     //                              required modules. These URL can be used with the `findModuleAddressInOrchestrator` function to find relevant addresses
     //                              In case of no dependencies, this can be left as an empty array of strings.
     // *bytes additionalData*: Any additional data that the deployer thinks might be useful in the init2 function. Could include the identifier(in bytes form)

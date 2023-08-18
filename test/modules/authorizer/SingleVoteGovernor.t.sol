@@ -416,7 +416,8 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencyData = abi.encode(hasDependency, dependencies, additionalData);
+        bytes memory dependencyData =
+            abi.encode(hasDependency, dependencies, additionalData);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );

@@ -140,8 +140,12 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         string memory currentModuleURL;
         uint index;
 
-        for (; index < moduleAddressesLength;) {
-            if (!useIdentifier) {
+        if (!useIdentifier) {
+            if (bytes(moduleURL).length == 0) {
+                revert Orchestrator__IncorrectData__ModuleURLStringEmpty();
+            }
+
+            for (; index < moduleAddressesLength;) {
                 currentModuleURL = IModule(moduleAddresses[index]).url();
 
                 if (bytes(currentModuleURL).length == bytes(moduleURL).length) {
@@ -152,17 +156,27 @@ contract Orchestrator is IOrchestrator, ModuleManager {
                         return (index, moduleAddresses[index]);
                     }
                 }
-            } else {
+
+                unchecked {
+                    ++index;
+                }
+            }
+        } else {
+            if (moduleIdentifier == bytes32("")) {
+                revert Orchestrator__IncorrectData__ModuleIdentifierEmpty();
+            }
+
+            for (; index < moduleAddressesLength;) {
                 currentModuleIdentifier =
                     IModule(moduleAddresses[index]).identifier();
 
                 if (currentModuleIdentifier == moduleIdentifier) {
                     return (index, moduleAddresses[index]);
                 }
-            }
 
-            unchecked {
-                ++index;
+                unchecked {
+                    ++index;
+                }
             }
         }
 

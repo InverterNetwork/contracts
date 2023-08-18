@@ -289,7 +289,9 @@ contract E2eTest is Test {
     );
     IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
-        bountyManagerMetadata, bytes(""), abi.encode(true, dependencies, additionalData)
+        bountyManagerMetadata,
+        bytes(""),
+        abi.encode(true, dependencies, additionalData)
     );
 
     function setUpBountyManager() private {
