@@ -49,14 +49,18 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Setup
 
         // First we deploy a mock ERC20 to act as funding token for the orchestrator. It has a public mint function.
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
-        {
-            token = new ERC20Mock("Mock", "MOCK");
-        }
-        vm.stopBroadcast();
+        //vm.startBroadcast(orchestratorOwnerPrivateKey);
+        //{
+        //    token = new ERC20Mock("BloomMock", "BLMOCK");
+        //}
+        //vm.stopBroadcast();
+        token = ERC20Mock(0x61a4ABC15311EE7F2fe02b5F5b2e8B15c1E907be);
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
-        address orchestratorFactory = DeploymentScript.run();
+        //address orchestratorFactory = DeploymentScript.run();
+
+        //We use the exisiting orchestratorFactory address
+        address orchestratorFactory = 0x9069e7E04a0E6B5eAe7e8A76C6864feB75CdE436;
 
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
@@ -174,6 +178,26 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             "Orchestrator with Id %s created at address: %s ",
             test_orchestrator.orchestratorId(),
             address(test_orchestrator)
+        );
+       console2.log(
+            "\t-FundingManager deployed at address: %s ",
+            address(test_orchestrator.fundingManager())
+        );
+        console2.log(
+            "\t-Authorizer deployed at address: %s ",
+            address(test_orchestrator.authorizer())
+        );
+        console2.log(
+            "\t-PaymentProcessor deployed at address: %s ",
+            address(test_orchestrator.paymentProcessor())
+        );
+
+        console2.log(
+            "\t-BountyManager deployed at address: %s ",
+            address(orchestratorCreatedBountyManager)
+        );
+                console2.log(
+            "=================================================================================="
         );
 
         // ------------------------------------------------------------------------
