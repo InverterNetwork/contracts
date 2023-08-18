@@ -95,10 +95,6 @@ interface IOrchestrator is IModuleManager {
     /// @notice The version of the orchestrator instance.
     function version() external pure returns (string memory);
 
-    function owner() external view returns (address);
-
-    function manager() external view returns (address);
-
     /// @notice find the address of a given module using either the module URL or it's identifier in an orchestrator
     function findModuleAddressInOrchestrator(
         string calldata moduleURL,

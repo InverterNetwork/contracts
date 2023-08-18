@@ -72,7 +72,9 @@ contract StreamingPaymentsLifecycle is E2eTest {
 
         recurringPaymentManager = RecurringPaymentManager(
             orchestrator.findModuleAddressInOrchestrator(
-                "RecurringPaymentManager"
+                "https://github.com/inverter/recurring-payment-manager",
+                bytes32(""),
+                false
             )
         );
         // check if the recurringPaymentManager is initialized correctly or not.
@@ -80,7 +82,9 @@ contract StreamingPaymentsLifecycle is E2eTest {
 
         streamingPaymentProcessor = StreamingPaymentProcessor(
             orchestrator.findModuleAddressInOrchestrator(
-                "StreamingPaymentProcessor"
+                "https://github.com/inverter/streaming-payment-processor",
+                bytes32(""),
+                false
             )
         );
 

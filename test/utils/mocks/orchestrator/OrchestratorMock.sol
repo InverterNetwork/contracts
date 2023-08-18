@@ -86,11 +86,11 @@ contract OrchestratorMock is IOrchestrator {
 
     function manager() external view returns (address) {}
 
-    function findModuleAddressInOrchestrator(string calldata moduleName)
-        external
-        view
-        returns (address)
-    {}
+    function findModuleAddressInOrchestrator(
+        string calldata moduleURL,
+        bytes32 moduleIdentifier,
+        bool useIdentifier
+    ) external view returns (address) {}
 
     function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
         external
