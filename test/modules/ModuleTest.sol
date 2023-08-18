@@ -59,7 +59,6 @@ abstract contract ModuleTest is Test {
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,
-            address(this),
             _token,
             modules,
             _fundingManager,
@@ -77,21 +76,6 @@ abstract contract ModuleTest is Test {
     function testInit() public virtual;
 
     function testReinitFails() public virtual;
-
-    //--------------------------------------------------------------------------------
-    // Error Helper Functions
-    //
-    // Prefixed with `_expect`.
-
-    function _expectOrchestratorCallbackFailure(string memory funcSig)
-        internal
-    {
-        vm.expectRevert(
-            abi.encodeWithSignature(
-                "Module_OrchestratorCallbackFailed(string)", funcSig
-            )
-        );
-    }
 
     //--------------------------------------------------------------------------------
     // Assertion Helper Functions

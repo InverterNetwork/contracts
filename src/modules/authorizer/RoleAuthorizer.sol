@@ -5,11 +5,11 @@ pragma solidity 0.8.19;
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
 import {Module, IModule} from "src/modules/base/Module.sol";
+import {IAuthorizer} from "./IAuthorizer.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
-import {IRoleAuthorizer, IAuthorizer} from "./IRoleAuthorizer.sol";
 
 contract RoleAuthorizer is
-    IRoleAuthorizer,
+    IAuthorizer,
     AccessControlEnumerableUpgradeable,
     Module
 {
@@ -18,7 +18,6 @@ contract RoleAuthorizer is
 
     // Core roles for a orchestrator. They correspond to uint8(0) and uint(1)
     // NOTE that orchestrator owner can register more global roles using numbers from 2 onward. They'l need to go through the DEFAULT_ADMIN_ROLE for this.
-    // TODO Maybe it would be worth it to create an extra function that bypasses DEFAULT_ADMIN_ROLE, but only for global roles and by the ORCHESTRATOR_OWNER_ROLE? This would streamline the process of creating roles for all modules
     enum CoreRoles {
         OWNER, // Partial Access to Protected Functions
         MANAGER // Full Access to Protected Functions
@@ -101,6 +100,9 @@ contract RoleAuthorizer is
         ORCHESTRATOR_MANAGER_ROLE =
             generateRoleId(address(orchestrator()), uint8(CoreRoles.MANAGER));
 
+        //We preliminarily grant admin role to the caller
+        _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
+
         // Set up OWNER role structure:
 
         // -> set OWNER as admin of itself
@@ -108,19 +110,18 @@ contract RoleAuthorizer is
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
         _setRoleAdmin(DEFAULT_ADMIN_ROLE, ORCHESTRATOR_OWNER_ROLE);
 
-        // grant OWNER role to user from configData.
-        // Note: If the initial owner is 0x0, it defaults to msgSender()
-        if (initialOwner == address(0)) {
-            _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
-        } else {
-            _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
-        }
-
         // Set up MANAGER role structure:
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
         _setRoleAdmin(ORCHESTRATOR_MANAGER_ROLE, ORCHESTRATOR_OWNER_ROLE);
         // grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
+
+        // If there is an initial owner specified, we set it as owner and remove the deployer
+        // Note: If the initial owner is 0x0, it stays as msgSender()
+        if (initialOwner != address(0)) {
+            _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
+            renounceRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -150,7 +151,7 @@ contract RoleAuthorizer is
         return hasRole(ORCHESTRATOR_OWNER_ROLE, who);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function isAuthorized(uint8 role, address who)
         external
         view
@@ -169,7 +170,7 @@ contract RoleAuthorizer is
         return hasRole(roleId, who);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function generateRoleId(address module, uint8 role)
         public
         pure
@@ -181,7 +182,7 @@ contract RoleAuthorizer is
 
     // State-altering functions
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function toggleModuleSelfManagement() external onlyModule(_msgSender()) {
         if (selfManagedModules[_msgSender()]) {
             selfManagedModules[_msgSender()] = false;
@@ -192,7 +193,7 @@ contract RoleAuthorizer is
         }
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function grantRoleFromModule(uint8 role, address target)
         external
         onlyModule(_msgSender())
@@ -202,7 +203,7 @@ contract RoleAuthorizer is
         _grantRole(roleId, target);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function revokeRoleFromModule(uint8 role, address target)
         external
         onlyModule(_msgSender())
@@ -212,7 +213,7 @@ contract RoleAuthorizer is
         _revokeRole(roleId, target);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function transferAdminRole(bytes32 roleId, bytes32 newAdmin)
         external
         onlyRole(getRoleAdmin(roleId))
@@ -220,7 +221,7 @@ contract RoleAuthorizer is
         _setRoleAdmin(roleId, newAdmin);
     }
 
-    /// @inheritdoc IRoleAuthorizer
+    /// @inheritdoc IAuthorizer
     function burnAdminRole(uint8 role)
         external
         onlyModule(_msgSender())
@@ -228,5 +229,33 @@ contract RoleAuthorizer is
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
+    }
+
+    /// @inheritdoc IAuthorizer
+    function grantGlobalRole(uint8 role, address target)
+        external
+        onlyRole(ORCHESTRATOR_OWNER_ROLE)
+    {
+        bytes32 roleId = generateRoleId(address(orchestrator()), role);
+        _grantRole(roleId, target);
+    }
+
+    /// @inheritdoc IAuthorizer
+    function revokeGlobalRole(uint8 role, address target)
+        external
+        onlyRole(ORCHESTRATOR_OWNER_ROLE)
+    {
+        bytes32 roleId = generateRoleId(address(orchestrator()), role);
+        _revokeRole(roleId, target);
+    }
+
+    /// @inheritdoc IAuthorizer
+    function getOwnerRole() public view returns (bytes32) {
+        return ORCHESTRATOR_OWNER_ROLE;
+    }
+
+    /// @inheritdoc IAuthorizer
+    function getManagerRole() public view returns (bytes32) {
+        return ORCHESTRATOR_MANAGER_ROLE;
     }
 }

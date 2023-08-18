@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
-// External Libraries
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-
 // Internal Dependencies
-import {Module} from "src/modules/base/Module.sol";
-
-import {ERC20PaymentClient} from
-    "src/modules/base/mixins/ERC20PaymentClient.sol";
+import {
+    ERC20PaymentClient,
+    Module
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
@@ -21,17 +15,15 @@ import {IRecurringPaymentManager} from
 import {
     IERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
 contract RecurringPaymentManager is
     IRecurringPaymentManager,
-    Module,
     ERC20PaymentClient
 {
-    using SafeERC20 for IERC20;
     using LinkedIdList for LinkedIdList.List;
 
     //--------------------------------------------------------------------------
@@ -169,7 +161,7 @@ contract RecurringPaymentManager is
         address recipient
     )
         external
-        onlyAuthorizedOrManager
+        onlyOrchestratorOwnerOrManager
         validAmount(amount)
         validStartEpoch(startEpoch)
         validRecipient(recipient)
@@ -201,7 +193,7 @@ contract RecurringPaymentManager is
     /// @inheritdoc IRecurringPaymentManager
     function removeRecurringPayment(uint prevId, uint id)
         external
-        onlyAuthorizedOrManager
+        onlyOrchestratorOwnerOrManager
     {
         //trigger to resolve the given Payment
         _triggerFor(id, _paymentList.getNextId(id));
@@ -358,53 +350,5 @@ contract RecurringPaymentManager is
         );
 
         emit RecurringPaymentsTriggered(currentEpoch);
-    }
-    //--------------------------------------------------------------------------
-    // {ERC20PaymentClient} Function Implementations
-
-    function _ensureTokenBalance(uint amount)
-        internal
-        override(ERC20PaymentClient)
-    {
-        uint balance = __Module_orchestrator.token().balanceOf(address(this));
-
-        if (balance < amount) {
-            // Trigger callback from orchestrator to transfer tokens
-            // to address(this).
-            bool ok;
-            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
-                address(__Module_orchestrator.fundingManager()),
-                abi.encodeWithSignature(
-                    "transferOrchestratorToken(address,uint256)",
-                    address(this),
-                    amount - balance
-                )
-            );
-
-            if (!ok) {
-                revert Module__ERC20PaymentClient__TokenTransferFailed();
-            }
-        }
-    }
-
-    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
-        internal
-        override(ERC20PaymentClient)
-    {
-        IERC20 token = __Module_orchestrator.token();
-        uint allowance = token.allowance(address(this), address(spender));
-
-        if (allowance < amount) {
-            token.safeIncreaseAllowance(address(spender), amount - allowance);
-        }
-    }
-
-    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
-        internal
-        view
-        override(ERC20PaymentClient)
-        returns (bool)
-    {
-        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

@@ -257,10 +257,15 @@ contract RecurringPaymentManagerTest is ModuleTest {
         //Warp to a reasonable time
         vm.warp(2 weeks);
 
-        //onlyAuthorizedOrManager
+        //onlyOrchestratorOwnerOrManager
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.getManagerRole(),
+                address(0xBEEF)
+            )
+        );
         vm.prank(address(0xBEEF)); //Not Authorized
-
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0xBEEF));
 
         //validAmount
@@ -379,10 +384,15 @@ contract RecurringPaymentManagerTest is ModuleTest {
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        //onlyAuthorizedOrManager
+        //onlyOrchestratorOwnerOrManager
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.getManagerRole(),
+                address(0xBEEF)
+            )
+        );
         vm.prank(address(0xBEEF)); //Not Authorized
-
-        vm.expectRevert(IModule.Module__CallerNotAuthorized.selector);
         recurringPaymentManager.removeRecurringPayment(0, 1);
     }
 

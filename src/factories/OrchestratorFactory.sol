@@ -121,7 +121,6 @@ contract OrchestratorFactory is IOrchestratorFactory {
         // Initialize orchestrator.
         IOrchestrator(clone).init(
             _orchestratorIdCounter,
-            orchestratorConfig.owner,
             orchestratorConfig.token,
             modules,
             IFundingManager(fundingManager),

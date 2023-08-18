@@ -19,7 +19,7 @@ import {
 import {
     IERC20PaymentClient,
     ERC20PaymentClientMock
-} from "test/utils/mocks/modules/mixins/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -645,7 +645,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         assertTrue(expectedSalary != 0);
 
-        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
             address(paymentClient), paymentReceiver1, walletId, false
         );
@@ -768,7 +768,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         assertTrue(salary2 != 0);
 
-        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyAuthorized can call the next function
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
             address(paymentClient),
             paymentReceiver1,

@@ -6,11 +6,15 @@ import "forge-std/Test.sol";
 
 import "../deployment/DeploymentScript.s.sol";
 
-import {IMilestoneManager} from "src/modules/logicModule/IMilestoneManager.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IModule} from "src/modules/base/IModule.sol";
 import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
 import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {
+    BountyManager,
+    IBountyManager
+} from "src/modules/logicModule/BountyManager.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     bool hasDependency;
@@ -29,20 +33,12 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
     uint funder1PrivateKey = orchestratorOwnerPrivateKey;
     address funder1 = orchestratorOwner;
 
-    // Every Milestone needs some contributors
-    IMilestoneManager.Contributor alice = IMilestoneManager.Contributor(
-        address(0xA11CE), 50_000_000, "AliceIdHash"
-    );
-    IMilestoneManager.Contributor bob =
-        IMilestoneManager.Contributor(address(0x606), 50_000_000, "BobIdHash");
-
     //-------------------------------------------------------------------------
     // Storage
 
     ERC20Mock token;
     IOrchestrator test_orchestrator;
 
-    IMilestoneManager.Contributor[] contributors;
     address[] initialAuthorizedAddresses;
 
     //-------------------------------------------------------------------------
@@ -89,26 +85,25 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         );
 
         // Authorizer: Metadata, initial authorized addresses
-        initialAuthorizedAddresses.push(orchestratorOwner);
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
             authorizerMetadata,
-            abi.encode(initialAuthorizedAddresses),
+            abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
         );
 
         // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
-        IOrchestratorFactory.ModuleConfig memory milestoneManagerFactoryConfig =
+        IOrchestratorFactory.ModuleConfig memory bountyManagerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
-            milestoneManagerMetadata,
-            abi.encode(100_000_000, 1_000_000, orchestratorOwner),
-            abi.encode(hasDependency, dependencies)
+            bountyManagerMetadata,
+            abi.encode(""),
+            abi.encode(true, dependencies)
         );
 
-        // Add the configuration for all the non-mandatory modules. In this case only the Milestone Manager.
+        // Add the configuration for all the non-mandatory modules. In this case only the BountyManager.
         IOrchestratorFactory.ModuleConfig[] memory additionalModuleConfig =
             new IOrchestratorFactory.ModuleConfig[](1);
-        additionalModuleConfig[0] = milestoneManagerFactoryConfig;
+        additionalModuleConfig[0] = bountyManagerFactoryConfig;
 
         // ------------------------------------------------------------------------
         // Orchestrator Creation
@@ -142,35 +137,33 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         address[] memory moduleAddresses =
             IOrchestrator(test_orchestrator).listModules();
         uint lenModules = moduleAddresses.length;
-        address orchestratorCreatedMilestoneManagerAddress;
+        address orchestratorCreatedBountyManagerAddress;
 
         for (uint i; i < lenModules;) {
-            try IMilestoneManager(moduleAddresses[i]).hasActiveMilestone()
+            try IBountyManager(moduleAddresses[i]).isExistingBountyId(0)
             returns (bool) {
-                orchestratorCreatedMilestoneManagerAddress = moduleAddresses[i];
+                orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
                 break;
             } catch {
                 i++;
             }
         }
 
-        IMilestoneManager orchestratorCreatedMilestoneManager =
-            IMilestoneManager(orchestratorCreatedMilestoneManagerAddress);
+        BountyManager orchestratorCreatedBountyManager =
+            BountyManager(orchestratorCreatedBountyManagerAddress);
+
+        assertEq(
+            address(orchestratorCreatedBountyManager.orchestrator()),
+            address(test_orchestrator)
+        );
 
         assertFalse(
-            orchestratorCreatedMilestoneManager.hasActiveMilestone(),
-            "Error in the MilestoneManager"
+            orchestratorCreatedBountyManager.isExistingBountyId(0),
+            "Error in the BountyManager"
         );
         assertFalse(
-            orchestratorCreatedMilestoneManager.isExistingMilestoneId(
-                type(uint).max
-            ),
-            "Error in the MilestoneManager"
-        );
-        assertEq(
-            orchestratorCreatedMilestoneManager.getMaximumContributors(),
-            50,
-            "Error in the MilestoneManager"
+            orchestratorCreatedBountyManager.isExistingBountyId(type(uint).max),
+            "Error in the BountyManager"
         );
 
         console2.log("\n\n");
@@ -192,17 +185,17 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // to always have some amount of tokens in the orchestrator.
         // It's best, if the owner deposits them right after deployment.
 
-        uint initialDeposit = 10e18;
+        // Initial Deposit => 10e18;
         IFundingManager fundingManager =
             IFundingManager(address(test_orchestrator.fundingManager()));
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            token.mint(address(orchestratorOwner), initialDeposit);
+            token.mint(address(orchestratorOwner), 10e18);
 
-            token.approve(address(fundingManager), initialDeposit);
+            token.approve(address(fundingManager), 10e18);
 
-            fundingManager.deposit(initialDeposit);
+            fundingManager.deposit(10e18);
         }
         vm.stopBroadcast();
         console2.log("\t -Initialization Funding Done");
@@ -218,44 +211,21 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         console2.log("\t -Funder 1: Deposit Performed");
 
         // ------------------------------------------------------------------------
-        // Initialize Milestone Manager: Set up two Milestones with corresponding contributors
 
-        contributors.push(alice);
-        contributors.push(bob);
-
+        // Create a Bounty
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            orchestratorCreatedMilestoneManager.addMilestone(
-                1 weeks,
-                1000e18,
-                contributors,
-                bytes("Here could be a more detailed description")
+            orchestratorCreatedBountyManager.grantModuleRole(
+                uint8(IBountyManager.Roles.BountyAdmin), orchestratorOwner
             );
 
-            orchestratorCreatedMilestoneManager.addMilestone(
-                2 weeks,
-                5000e18,
-                contributors,
-                bytes("The second milestone, right after the first one")
-            );
+            bytes memory details = "TEST BOUNTY";
+
+            orchestratorCreatedBountyManager.addBounty(100e18, 250e18, details);
         }
         vm.stopBroadcast();
-        console2.log("\t -Milestones Added");
 
-        // Check if the Milestones have has been added correctly
-
-        // milestoneId 1 should exist and 0 shouldn't, since IDs start from 1.
-        assertTrue(
-            !(orchestratorCreatedMilestoneManager.isExistingMilestoneId(0))
-        );
-        assertTrue(orchestratorCreatedMilestoneManager.isExistingMilestoneId(1));
-
-        assertTrue(
-            orchestratorCreatedMilestoneManager.isContributor(1, alice.addr)
-        );
-        assertTrue(
-            orchestratorCreatedMilestoneManager.isContributor(2, alice.addr)
-        );
+        console2.log("\t -Bounty Created.");
 
         console2.log(
             "=================================================================================="
