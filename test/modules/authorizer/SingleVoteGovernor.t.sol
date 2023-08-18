@@ -33,6 +33,7 @@ import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 contract SingleVoteGovernorTest is ModuleTest {
     bool hasDependency;
     string[] dependencies = new string[](0);
+    bytes additionalData;
 
     // SuT
     SingleVoteGovernor _governor;
@@ -324,7 +325,8 @@ contract SingleVoteGovernorTest is ModuleTest {
                 DEFAULT_QUORUM,
                 DEFAULT_DURATION,
                 hasDependency,
-                dependencies
+                dependencies,
+                additionalData
             )
         );
 
@@ -414,7 +416,7 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies, additionalData);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
@@ -422,7 +424,7 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencyData = abi.encode(true, dependencies);
+        dependencyData = abi.encode(true, dependencies, additionalData);
         _governor.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.

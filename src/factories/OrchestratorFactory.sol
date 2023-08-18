@@ -179,7 +179,7 @@ contract OrchestratorFactory is IOrchestratorFactory {
         pure
         returns (bool requirement)
     {
-        (requirement,) = abi.decode(data, (bool, string[]));
+        (requirement, , ) = abi.decode(data, (bool, string[], bytes));
     }
 
     function _dependencyInjectionRequired(bytes memory dependencyData)

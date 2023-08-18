@@ -246,19 +246,20 @@ contract OrchestratorCreation is Test {
 
         bool hasDependency;
         string[] memory dependencies = new string[](0);
+        bytes memory additionalData;
 
         IOrchestratorFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
             fundingManagerMetadata,
             abi.encode(address(paymentToken)),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(hasDependency, dependencies, additionalData)
         );
 
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
             authorizerMetadata,
             abi.encode(address(this), address(this)),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(hasDependency, dependencies, additionalData)
         );
 
         //Create ModuleConfig for SimplePaymentProcessor
@@ -266,7 +267,7 @@ contract OrchestratorCreation is Test {
         IOrchestratorFactory.ModuleConfig(
             paymentProcessorMetadata,
             bytes(""),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(hasDependency, dependencies, additionalData)
         );
 
         //Create optionalModule array
@@ -281,7 +282,7 @@ contract OrchestratorCreation is Test {
         optionalModules[0] = IOrchestratorFactory.ModuleConfig(
             metadataManagerMetadata,
             abi.encode(ownerMetadata, orchestratorMetadata, teamMetadata),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(hasDependency, dependencies, additionalData)
         );
 
         //Create orchestrator using the different needed configs

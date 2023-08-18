@@ -22,6 +22,7 @@ import {
 contract RecurringPaymentManagerTest is ModuleTest {
     bool hasDependency;
     string[] dependencies = new string[](0);
+    bytes additionalData;
 
     // SuT
     RecurringPaymentManager recurringPaymentManager;
@@ -101,7 +102,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies, additionalData);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
@@ -109,7 +110,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencyData = abi.encode(true, dependencies);
+        dependencyData = abi.encode(true, dependencies, additionalData);
         recurringPaymentManager.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.

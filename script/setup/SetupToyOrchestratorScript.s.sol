@@ -19,6 +19,7 @@ import {
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     bool hasDependency;
     string[] dependencies = new string[](0);
+    bytes additionalData;
 
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
@@ -73,7 +74,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         IOrchestratorFactory.ModuleConfig(
             fundingManagerMetadata,
             abi.encode(address(token)),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(hasDependency, dependencies, additionalData)
         );
 
         // Payment Processor: only Metadata
@@ -81,7 +82,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         IOrchestratorFactory.ModuleConfig(
             paymentProcessorMetadata,
             bytes(""),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(hasDependency, dependencies, additionalData)
         );
 
         // Authorizer: Metadata, initial authorized addresses
@@ -89,7 +90,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         IOrchestratorFactory.ModuleConfig(
             authorizerMetadata,
             abi.encode(orchestratorOwner, orchestratorOwner),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(hasDependency, dependencies, additionalData)
         );
 
         // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
@@ -97,7 +98,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         IOrchestratorFactory.ModuleConfig(
             bountyManagerMetadata,
             abi.encode(""),
-            abi.encode(true, dependencies)
+            abi.encode(true, dependencies, additionalData)
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the BountyManager.

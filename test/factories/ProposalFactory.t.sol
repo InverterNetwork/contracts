@@ -29,6 +29,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 contract OrchestratorFactoryTest is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
+    bytes additionalData;
 
     // SuT
     OrchestratorFactory factory;
@@ -49,14 +50,14 @@ contract OrchestratorFactoryTest is Test {
     IOrchestratorFactory.ModuleConfig(
         IModule.Metadata(1, 1, "https://fundingmanager.com", "FundingManager"),
         bytes("data"),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     IOrchestratorFactory.ModuleConfig authorizerConfig = IOrchestratorFactory
         .ModuleConfig(
         IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
         abi.encode(address(this), address(this)),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     IOrchestratorFactory.ModuleConfig paymentProcessorConfig =
@@ -65,14 +66,14 @@ contract OrchestratorFactoryTest is Test {
             1, 1, "https://paymentprocessor.com", "SimplePaymentProcessor"
         ),
         bytes("data"),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     IOrchestratorFactory.ModuleConfig moduleConfig = IOrchestratorFactory
         .ModuleConfig(
         IModule.Metadata(1, 1, "https://module.com", "Module"),
         bytes(""),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     function setUp() public {

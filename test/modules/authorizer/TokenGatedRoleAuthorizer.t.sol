@@ -77,6 +77,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
 contract TokenGatedRoleAuthorizerTest is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
+    bytes additionalData;
 
     // Mocks
     TokenGatedRoleAuthorizer _authorizer;

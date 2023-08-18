@@ -43,6 +43,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 contract E2eTest is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
+    bytes additionalData;
 
     // Factory instances.
     ModuleFactory moduleFactory;
@@ -103,7 +104,7 @@ contract E2eTest is Test {
     IOrchestratorFactory.ModuleConfig(
         authorizerMetadata,
         abi.encode(address(this)),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     function setUpAuthorizerMock() private {
@@ -135,7 +136,7 @@ contract E2eTest is Test {
     IOrchestratorFactory.ModuleConfig(
         roleAuthorizerMetadata,
         abi.encode(address(this), address(this)),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     function setUpRoleAuthorizer() private {
@@ -174,7 +175,7 @@ contract E2eTest is Test {
     IOrchestratorFactory.ModuleConfig(
         paymentProcessorMetadata,
         bytes(""),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     function setUpSimplePaymentProcessor() private {
@@ -211,7 +212,7 @@ contract E2eTest is Test {
     IOrchestratorFactory.ModuleConfig(
         streamingPaymentProcessorMetadata,
         bytes(""),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     function setUpStreamingPaymentProcessor() private {
@@ -254,7 +255,7 @@ contract E2eTest is Test {
     IOrchestratorFactory.ModuleConfig(
         recurringPaymentManagerMetadata,
         abi.encode(1 weeks),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     function setUpRecurringPaymentManager() private {
@@ -288,7 +289,7 @@ contract E2eTest is Test {
     );
     IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
-        bountyManagerMetadata, bytes(""), abi.encode(true, dependencies)
+        bountyManagerMetadata, bytes(""), abi.encode(true, dependencies, additionalData)
     );
 
     function setUpBountyManager() private {
@@ -332,7 +333,7 @@ contract E2eTest is Test {
     IOrchestratorFactory.ModuleConfig(
         singleVoteGovernorMetadata,
         abi.encode(initialVoters, 2, 3 days),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(hasDependency, dependencies, additionalData)
     );
 
     function setSingleVoteGovernor() private {
@@ -393,7 +394,7 @@ contract E2eTest is Test {
                 .ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(config.token)),
-                abi.encode(hasDependency, dependencies)
+                abi.encode(hasDependency, dependencies, additionalData)
             );
 
         return orchestratorFactory.createOrchestrator(
@@ -417,7 +418,7 @@ contract E2eTest is Test {
                 .ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(config.token)),
-                abi.encode(hasDependency, dependencies)
+                abi.encode(hasDependency, dependencies, additionalData)
             );
 
         return orchestratorFactory.createOrchestrator(
@@ -441,7 +442,7 @@ contract E2eTest is Test {
                 .ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(config.token)),
-                abi.encode(hasDependency, dependencies)
+                abi.encode(hasDependency, dependencies, additionalData)
             );
 
         return orchestratorFactory.createOrchestrator(
