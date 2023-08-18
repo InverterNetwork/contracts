@@ -70,9 +70,6 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         // Add new order to list of oustanding orders.
         _orders.push(order);
 
-        // Ensure our token balance is sufficient.
-        _ensureTokenBalance(_outstandingTokenAmount);
-
         emit PaymentOrderAdded(order.recipient, order.amount);
     }
 
@@ -100,9 +97,6 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
 
         // Add total orders' amount to current outstanding amount.
         _outstandingTokenAmount += totalTokenAmount;
-
-        // Ensure our token balance is sufficient.
-        _ensureTokenBalance(_outstandingTokenAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -192,25 +186,19 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
 
     /// @dev Ensures `amount` of payment tokens exist in address(this).
     function _ensureTokenBalance(uint amount) internal virtual {
-        uint balance = __Module_orchestrator.fundingManager().token().balanceOf(
-            address(this)
+        // Trigger callback from orchestrator to transfer tokens
+        // to address(this).
+        bool ok;
+        (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+            address(__Module_orchestrator.fundingManager()),
+            abi.encodeCall(
+                IFundingManager.transferOrchestratorToken,
+                (address(this), amount)
+            )
         );
 
-        if (balance < amount) {
-            // Trigger callback from orchestrator to transfer tokens
-            // to address(this).
-            bool ok;
-            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
-                address(__Module_orchestrator.fundingManager()),
-                abi.encodeCall(
-                    IFundingManager.transferOrchestratorToken,
-                    (address(this), amount - balance)
-                )
-            );
-
-            if (!ok) {
-                revert Module__ERC20PaymentClient__TokenTransferFailed();
-            }
+        if (!ok) {
+            revert Module__ERC20PaymentClient__TokenTransferFailed();
         }
     }
 

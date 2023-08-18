@@ -809,10 +809,6 @@ contract BountyManagerTest is ModuleTest {
             assertEq(orders[i].dueTo, block.timestamp);
         }
 
-        // Check that bountyManager's token balance is sufficient for the
-        // payment orders by comparing it with the total amount of orders made
-        assertTrue(_token.balanceOf(address(bountyManager)) == totalAmount);
-
         assertEqualClaim(claimId, bountyId, contribs, details, true);
     }
 

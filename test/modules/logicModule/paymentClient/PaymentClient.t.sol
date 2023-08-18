@@ -252,37 +252,28 @@ contract ERC20PaymentClientTest is Test {
     //--------------------------------------------------------------------------
     // Test internal functions
 
-    function testEnsureTokenBalance(uint initialAmount, uint amountRequired)
-        public
-    {
+    function testEnsureTokenBalance(uint amountRequired) public {
         setupInternalFunctionTest();
-        token.mint(address(paymentClient), initialAmount);
 
-        if (initialAmount < amountRequired) {
-            //Check that Error works correctly
-            vm.expectRevert(
-                IERC20PaymentClient
-                    .Module__ERC20PaymentClient__TokenTransferFailed
-                    .selector
-            );
-            paymentClient.originalEnsureTokenBalance(amountRequired);
+        //Check that Error works correctly
+        vm.expectRevert(
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__TokenTransferFailed
+                .selector
+        );
+        paymentClient.originalEnsureTokenBalance(amountRequired);
 
-            orchestrator.setExecuteTxBoolReturn(true);
+        orchestrator.setExecuteTxBoolReturn(true);
 
-            paymentClient.originalEnsureTokenBalance(amountRequired);
+        paymentClient.originalEnsureTokenBalance(amountRequired);
 
-            assertEq(
-                abi.encodeCall(
-                    IFundingManager.transferOrchestratorToken,
-                    (address(paymentClient), amountRequired - initialAmount)
-                ),
-                orchestrator.executeTxData()
-            );
-        } else {
-            //If initialAmount already higher than amountRequired the data field of the mock should be empty
-            paymentClient.originalEnsureTokenBalance(amountRequired);
-            assertEq(bytes(""), orchestrator.executeTxData());
-        }
+        assertEq(
+            abi.encodeCall(
+                IFundingManager.transferOrchestratorToken,
+                (address(paymentClient), amountRequired)
+            ),
+            orchestrator.executeTxData()
+        );
     }
 
     function testEnsureTokenAllowance(uint initialAllowance, uint postAllowance)

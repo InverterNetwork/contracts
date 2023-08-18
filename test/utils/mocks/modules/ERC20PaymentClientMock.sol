@@ -51,10 +51,6 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
         // Add new order to list of oustanding orders.
         _orders.push(order);
 
-        // Ensure our token balance is sufficient.
-        // Note that function is implemented in downstream contract.
-        _ensureTokenBalance(_outstandingTokenAmount);
-
         emit PaymentOrderAdded(order.recipient, order.amount);
     }
 
