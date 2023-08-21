@@ -38,7 +38,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     address orchestratorAddress = 0x0A7c8C0EB1afAb6CBaD4bb2d4c738acFF047814A;
     address receiptTokenAddress = 0xC0f1842627Eeda938911A9A8368407ec241AC1dd;
     address bountyManagerAddress = 0x4FB5adc63fB08c7E7864Ce3f77714af6B8B50D9f;
-    
+
     // ===============================================================================================================
     // In case the Beacon of the Module is already deployed, introduce its address here
     // ===============================================================================================================
@@ -51,10 +51,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         1, 1, "https://github.com/inverter/tokenAuthorizer", "TokenAuthorizer"
     );
 
-
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
-
-
 
     function run() public {
         //Deploy Implementation and set up Beacon
@@ -63,7 +60,6 @@ contract deployAndSwitchTokenAuthorizer is Script {
         address authorizerBeacon = deployAndSetUpBeacon.run(
             authorizerImpl, address(moduleFactory), authorizerMetadata
         );
- 
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
@@ -117,6 +113,5 @@ contract deployAndSwitchTokenAuthorizer is Script {
         deployedAuthorizer.setThreshold(verifyRoleId, receiptTokenAddress, 1);
 
         vm.stopBroadcast();
-
     }
 }
