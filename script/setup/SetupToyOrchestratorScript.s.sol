@@ -179,7 +179,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             test_orchestrator.orchestratorId(),
             address(test_orchestrator)
         );
-       console2.log(
+        console2.log(
             "\t-FundingManager deployed at address: %s ",
             address(test_orchestrator.fundingManager())
         );
@@ -196,7 +196,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             "\t-BountyManager deployed at address: %s ",
             address(orchestratorCreatedBountyManager)
         );
-                console2.log(
+        console2.log(
             "=================================================================================="
         );
 
