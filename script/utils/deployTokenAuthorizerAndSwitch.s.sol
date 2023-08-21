@@ -40,26 +40,27 @@ contract deployAndSwitchTokenAuthorizer is Script {
     address bountyManagerAddress = 0x4FB5adc63fB08c7E7864Ce3f77714af6B8B50D9f;
 
     // ===============================================================================================================
-    // In case the Beacon of the Module is already deployed, introduce its address here
+    // Set the Module Metadata.
     // ===============================================================================================================
-    //address authorizerBeacon = 0x3594aAd2f1301888B2E40f50Dc8140a8c723D813;
-
-    ModuleFactory moduleFactory = ModuleFactory(moduleFactoryAddress);
-    Orchestrator orchestrator = Orchestrator(orchestratorAddress);
-
     IModule.Metadata authorizerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/tokenAuthorizer", "TokenAuthorizer"
     );
 
+    ModuleFactory moduleFactory = ModuleFactory(moduleFactoryAddress);
+    Orchestrator orchestrator = Orchestrator(orchestratorAddress);
+
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
     function run() public {
-        //Deploy Implementation and set up Beacon
+        /*   
+
+        // In case the module Beacon hasn't been deployed yet, deploy it and register it in the ModuleFactory   
+
         address authorizerImpl = deployTokenRoleAuthorizer.run();
 
         address authorizerBeacon = deployAndSetUpBeacon.run(
             authorizerImpl, address(moduleFactory), authorizerMetadata
-        );
+        ); */
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
@@ -79,6 +80,10 @@ contract deployAndSwitchTokenAuthorizer is Script {
         );
         TokenGatedRoleAuthorizer deployedAuthorizer =
             TokenGatedRoleAuthorizer(deployedAuthorizerAddress);
+
+        console.log(
+            "Deployed Authorizer at address: ", deployedAuthorizerAddress
+        );
 
         // add module to orchestrator
         orchestrator.setAuthorizer(deployedAuthorizer);
