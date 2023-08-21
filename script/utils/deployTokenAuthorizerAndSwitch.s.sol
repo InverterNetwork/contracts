@@ -31,9 +31,18 @@ contract deployAndSwitchTokenAuthorizer is Script {
     DeployTokenGatedRoleAuthorizer deployTokenRoleAuthorizer =
         new DeployTokenGatedRoleAuthorizer();
 
+    // ===============================================================================================================
+    // Introduce addresses of the deployed Orchestrator here
+    // ===============================================================================================================
     address moduleFactoryAddress = 0x349D52589aF62Ba1b35DB871F54FA2c5aFcA6B5B;
-    address orchestratorAddress = 0x94846d78aC3E35D4C6119000003CA81d362042d0;
-    address receiptTokenAddress = 0xe86b937e3901d715d5B4162B6A29758D1BD1Afd6;
+    address orchestratorAddress = 0x0A7c8C0EB1afAb6CBaD4bb2d4c738acFF047814A;
+    address receiptTokenAddress = 0xC0f1842627Eeda938911A9A8368407ec241AC1dd;
+    address bountyManagerAddress = 0x4FB5adc63fB08c7E7864Ce3f77714af6B8B50D9f;
+    
+    // ===============================================================================================================
+    // In case the Beacon of the Module is already deployed, introduce its address here
+    // ===============================================================================================================
+    //address authorizerBeacon = 0x3594aAd2f1301888B2E40f50Dc8140a8c723D813;
 
     ModuleFactory moduleFactory = ModuleFactory(moduleFactoryAddress);
     Orchestrator orchestrator = Orchestrator(orchestratorAddress);
@@ -42,24 +51,19 @@ contract deployAndSwitchTokenAuthorizer is Script {
         1, 1, "https://github.com/inverter/tokenAuthorizer", "TokenAuthorizer"
     );
 
-    address bountyManagerAddress = 0x7560b724B90eD62bF1ab3D374CdaD6d14EAF09BB;
+
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
-    address authorizer = 0x05E8B4d1F715B1a1D2BE4b6a91569dAaE1fC2F2A;
-    address authorizerBeacon = 0x3594aAd2f1301888B2E40f50Dc8140a8c723D813;
+
 
     function run() public {
-        /*
-        //call deployment script
-        address authorizer = deployTokenRoleAuthorizer.run();
-        // register at beacon / module factory
-        address authorizerBeacon = deployAndSetUpBeacon.run(
-            authorizer, address(moduleFactory), authorizerMetadata
-        );
-        */
+        //Deploy Implementation and set up Beacon
+        address authorizerImpl = deployTokenRoleAuthorizer.run();
 
-        // correct mistake from before
-        // orchestrator.removeModule(0xC0f1842627Eeda938911A9A8368407ec241AC1dd);
+        address authorizerBeacon = deployAndSetUpBeacon.run(
+            authorizerImpl, address(moduleFactory), authorizerMetadata
+        );
+ 
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
@@ -114,18 +118,5 @@ contract deployAndSwitchTokenAuthorizer is Script {
 
         vm.stopBroadcast();
 
-        /*vm.prank(orchestratorOwner);
-        uint bountyId =
-            bountyManager.addBounty(100e18, 250e18, "0x0");
-
-        console2.log("\t -Bounty Created. Id: ", bountyId);
-        /*
-        console2.log(
-            "=================================================================================="
-        );
-        console2.log("Claim added with id: ", claimId);
-        console2.log(
-            "=================================================================================="
-        ); */
     }
 }

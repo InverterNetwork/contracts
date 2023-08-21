@@ -13,18 +13,24 @@ contract addClaim is Script {
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
-    address bountyManagerAddress = 0x7560b724B90eD62bF1ab3D374CdaD6d14EAF09BB;
+    // ===============================================================================================================
+    // Introduce corresponding bounty manager and user addresses here
+    // ===============================================================================================================
+    address bountyManagerAddress = 0x4FB5adc63fB08c7E7864Ce3f77714af6B8B50D9f;
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
+
+    address user1 = 0x9518a55e5cd4Ac650A37a6Ab6c352A3146D2C9BD;
+    address user2 = 0x3064A400b5e74BeA12391058930EfD95a6911970;
 
     function run() public {
         IBountyManager.Contributor[] memory contributors =
             new IBountyManager.Contributor[](2);
         contributors[0] = IBountyManager.Contributor({
-            addr: 0x9518a55e5cd4Ac650A37a6Ab6c352A3146D2C9BD,
+            addr: user1,
             claimAmount: 100_000_000_000_000_000_000
         });
         contributors[1] = IBountyManager.Contributor({
-            addr: 0x3064A400b5e74BeA12391058930EfD95a6911970,
+            addr: user2,
             claimAmount: 100_000_000_000_000_000_000
         });
 
