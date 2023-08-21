@@ -3,13 +3,6 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-/* import "../deployment/DeploymentScript.s.sol";
-
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IModule} from "src/modules/base/IModule.sol";
-import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
-import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol"; */
 import {
     BountyManager,
     IBountyManager
@@ -20,7 +13,7 @@ contract addClaim is Script {
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
-    address bountyManagerAddress = 0x31B2634EF403BCCf95Caf0464ec1F3fd50DF8E3F;
+    address bountyManagerAddress = 0x7560b724B90eD62bF1ab3D374CdaD6d14EAF09BB;
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
     function run() public {
