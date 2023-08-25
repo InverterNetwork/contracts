@@ -164,6 +164,10 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     /// @dev Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
 
+    bytes32 public constant BOUNTY_ADMIN_ROLE = "BOUNTY_ADMIN";
+    bytes32 public constant CLAIM_ADMIN_ROLE = "CLAIM_ADMIN";
+    bytes32 public constant VERIFY_ADMIN_ROLE = "VERIFY_ADMIN";
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -206,7 +210,6 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     {
         //Note: due to the authorizer still not being set during initialization,
         // this function has to be called after.
-        orchestrator().authorizer().toggleModuleSelfManagement();
     }
 
     //--------------------------------------------------------------------------
@@ -271,7 +274,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         bytes calldata details
     )
         external
-        onlyModuleRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ADMIN_ROLE)
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -297,7 +300,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        onlyModuleRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ADMIN_ROLE)
         validBountyId(bountyId)
         notLocked(bountyId)
     {
@@ -309,7 +312,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function lockBounty(uint bountyId)
         external
-        onlyModuleRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ADMIN_ROLE)
         validBountyId(bountyId)
         notLocked(bountyId)
     {
@@ -325,7 +328,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         bytes calldata details
     )
         external
-        onlyModuleRole(uint8(Roles.ClaimAdmin))
+        onlyModuleRole(CLAIM_ADMIN_ROLE)
         validBountyId(bountyId)
         notLocked(bountyId)
         returns (uint id)
@@ -368,7 +371,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)
-        onlyModuleRole(uint8(Roles.ClaimAdmin))
+        onlyModuleRole(CLAIM_ADMIN_ROLE)
     {
         validContributorsForBounty(
             contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
@@ -416,7 +419,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     /// @inheritdoc IBountyManager
     function verifyClaim(uint claimId, Contributor[] calldata contributors)
         external
-        onlyModuleRole(uint8(Roles.VerifyAdmin))
+        onlyModuleRole(VERIFY_ADMIN_ROLE)
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)

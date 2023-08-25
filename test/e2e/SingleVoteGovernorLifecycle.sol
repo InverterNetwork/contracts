@@ -99,7 +99,9 @@ contract SingleVoteGovernorLifecycle is E2eTest {
         authorizer.grantRole(ownerRole, address(singleVoteGovernor));
 
         // we authorize governance to create  bounties
-        bountyManager.grantModuleRole(uint8(0), address(singleVoteGovernor));
+        bountyManager.grantModuleRole(
+            bountyManager.BOUNTY_ADMIN_ROLE(), address(singleVoteGovernor)
+        );
 
         authorizer.renounceRole(ownerRole, address(this));
 

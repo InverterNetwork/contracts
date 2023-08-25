@@ -216,7 +216,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
             orchestratorCreatedBountyManager.grantModuleRole(
-                uint8(IBountyManager.Roles.BountyAdmin), orchestratorOwner
+                orchestratorCreatedBountyManager.BOUNTY_ADMIN_ROLE(),
+                orchestratorOwner
             );
 
             bytes memory details = "TEST BOUNTY";
