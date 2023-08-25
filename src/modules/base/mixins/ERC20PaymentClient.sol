@@ -87,10 +87,6 @@ abstract contract ERC20PaymentClient is
         // Add new order to list of oustanding orders.
         _orders.push(order);
 
-        // Ensure our token balance is sufficient.
-        // Note that function is implemented in downstream contract.
-        _ensureTokenBalance(_outstandingTokenAmount);
-
         emit PaymentOrderAdded(order.recipient, order.amount);
     }
 
@@ -118,10 +114,6 @@ abstract contract ERC20PaymentClient is
 
         // Add total orders' amount to current outstanding amount.
         _outstandingTokenAmount += totalTokenAmount;
-
-        // Ensure our token balance is sufficient.
-        // Note that functions is implemented in downstream contract.
-        _ensureTokenBalance(_outstandingTokenAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -207,5 +199,49 @@ abstract contract ERC20PaymentClient is
         if (order.recipient == address(0) || order.recipient == address(this)) {
             revert Module__ERC20PaymentClient__InvalidRecipient();
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // {ERC20PaymentClient} Function Implementations
+
+    /// @dev Ensures `amount` of payment tokens exist in address(this).
+    function _ensureTokenBalance(uint amount) internal virtual {
+        // Trigger callback from orchestrator to transfer tokens
+        // to address(this).
+        bool ok;
+        (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+            address(__Module_orchestrator.fundingManager()),
+            abi.encodeCall(
+                IFundingManager.transferOrchestratorToken,
+                (address(this), amount)
+            )
+        );
+
+        if (!ok) {
+            revert Module__ERC20PaymentClient__TokenTransferFailed();
+        }
+    }
+
+    /// @dev Ensures `amount` of token allowance for payment processor(s).
+    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
+        internal
+        virtual
+    {
+        IERC20 token = __Module_orchestrator.token();
+        uint allowance = token.allowance(address(this), address(spender));
+
+        if (allowance < amount) {
+            token.safeIncreaseAllowance(address(spender), amount - allowance);
+        }
+    }
+
+    /// @dev Returns whether address `who` is an authorized payment processor.
+    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
+        internal
+        view
+        virtual
+        returns (bool)
+    {
+        return __Module_orchestrator.paymentProcessor() == who;
     }
 }

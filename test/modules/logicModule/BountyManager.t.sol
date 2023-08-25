@@ -637,7 +637,13 @@ contract BountyManagerTest is ModuleTest {
 
         //onlyClaimContributor
         vm.expectRevert(
-            IBountyManager.Module__BountyManager__OnlyClaimContributor.selector
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager), bountyManager.CLAIM_ADMIN_ROLE()
+                ),
+                address(this)
+            )
         );
         bountyManager.updateClaimContributors(2, 1, DEFAULT_CONTRIBUTORS);
     }
@@ -729,11 +735,7 @@ contract BountyManagerTest is ModuleTest {
             assertEq(orders[i].dueTo, block.timestamp);
         }
 
-        // Check that bountyManager's token balance is sufficient for the
-        // payment orders by comparing it with the total amount of orders made
-        assertTrue(_token.balanceOf(address(bountyManager)) == totalAmount);
-
-        assertEqualBounty(bountyId, 1, maxAmount, details, claimId); //Verified has to be true
+        assertEqualClaim(claimId, bountyId, contribs, details, true);
     }
 
     function testVerifyClaimModifierInPosition() public {

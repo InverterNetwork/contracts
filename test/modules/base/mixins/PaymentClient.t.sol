@@ -235,6 +235,69 @@ contract ERC20PaymentClientTest is Test {
     }
 
     //--------------------------------------------------------------------------
+    // Test internal functions
+
+    function testEnsureTokenBalance(uint amountRequired) public {
+        setupInternalFunctionTest();
+
+        //Check that Error works correctly
+        vm.expectRevert(
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__TokenTransferFailed
+                .selector
+        );
+        paymentClient.originalEnsureTokenBalance(amountRequired);
+
+        orchestrator.setExecuteTxBoolReturn(true);
+
+        paymentClient.originalEnsureTokenBalance(amountRequired);
+
+        assertEq(
+            abi.encodeCall(
+                IFundingManager.transferOrchestratorToken,
+                (address(paymentClient), amountRequired)
+            ),
+            orchestrator.executeTxData()
+        );
+    }
+
+    function testEnsureTokenAllowance(uint initialAllowance, uint postAllowance)
+        public
+    {
+        setupInternalFunctionTest();
+
+        //Set up initial allowance
+        vm.prank(address(paymentClient));
+        token.approve(address(paymentProcessor), initialAllowance);
+
+        paymentClient.originalEnsureTokenAllowance(
+            paymentProcessor, postAllowance
+        );
+
+        uint currentAllowance =
+            token.allowance(address(paymentClient), address(paymentProcessor));
+
+        if (initialAllowance > postAllowance) {
+            assertEq(currentAllowance, initialAllowance);
+        } else {
+            assertEq(currentAllowance, postAllowance);
+        }
+    }
+
+    function testIsAuthorizedPaymentProcessor(address addr) public {
+        setupInternalFunctionTest();
+        bool isAuthorized = paymentClient.originalIsAuthorizedPaymentProcessor(
+            IPaymentProcessor(addr)
+        );
+
+        if (addr == address(paymentProcessor)) {
+            assertTrue(isAuthorized);
+        } else {
+            assertFalse(isAuthorized);
+        }
+    }
+
+    //--------------------------------------------------------------------------
     // Assume Helper Functions
 
     function _assumeValidRecipient(address recipient) internal view {
