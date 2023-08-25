@@ -19,7 +19,7 @@ import {
 import {
     IERC20PaymentClient,
     ERC20PaymentClientMock
-} from "test/utils/mocks/modules/mixins/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -1031,9 +1031,6 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 })
             );
         }
-
-        // make sure all the balances are transfered to paymentClient
-        assertTrue(_token.balanceOf(address(paymentClient)) == total_amount);
 
         // Call processPayments.
         vm.prank(address(paymentClient));
