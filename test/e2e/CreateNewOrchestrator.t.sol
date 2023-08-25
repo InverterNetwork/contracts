@@ -269,14 +269,6 @@ contract OrchestratorCreation is Test {
             abi.encode(hasDependency, dependencies)
         );
 
-        //Create ModuleConfig for BountyManager
-        IOrchestratorFactory.ModuleConfig memory bountyManagerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
-            bountyManagerMetadata,
-            bytes(""),
-            abi.encode(hasDependency, dependencies)
-        );
-
         //Create optionalModule array
 
         //Technically Authorizer and SimplePaymentProcessor are the only necessary Modules, but we'll inlcude the metadata manager as an example

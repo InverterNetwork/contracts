@@ -51,7 +51,10 @@ contract E2eTest is Test {
     // Orchestrator implementation.
     Orchestrator orchestratorImpl;
 
-    //-- Module implementations, beacons, config for factory, and metadata.
+    //--------------------------------------------------------------------------
+    // fundingManager
+
+    // RebasingFundingManager
 
     RebasingFundingManager rebasingFundingManagerImpl;
     Beacon rebasingFundingManagerBeacon;
@@ -62,7 +65,32 @@ contract E2eTest is Test {
         "https://github.com/inverter/funding-manager",
         "RebasingFundingManager"
     );
-    //IOrchestratorFactory.ModuleConfig has to be set with token address, so needs a later Injection -> see _createNewOrchestratorWithAllModules()
+
+    function setUpRebasingFundingManager() private {
+        // Deploy module implementations.
+        rebasingFundingManagerImpl = new RebasingFundingManager();
+
+        // Deploy module beacons.
+        vm.prank(rebasingFundingManagerBeaconOwner);
+        rebasingFundingManagerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(rebasingFundingManagerBeaconOwner);
+        rebasingFundingManagerBeacon.upgradeTo(
+            address(rebasingFundingManagerImpl)
+        );
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            rebasingFundingManagerMetadata,
+            IBeacon(rebasingFundingManagerBeacon)
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // authorizer
+
+    // AuthorizerMock
 
     AuthorizerMock authorizerImpl;
     Beacon authorizerBeacon;
@@ -78,6 +106,24 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
+    function setUpAuthorizerMock() private {
+        // Deploy module implementations.
+        authorizerImpl = new AuthorizerMock();
+
+        // Deploy module beacons.
+        vm.prank(authorizerBeaconOwner);
+        authorizerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(authorizerBeaconOwner);
+        authorizerBeacon.upgradeTo(address(authorizerImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            authorizerMetadata, IBeacon(authorizerBeacon)
+        );
+    }
+
     RoleAuthorizer roleAuthorizerImpl;
     Beacon roleAuthorizerBeacon;
     address roleAuthorizerBeaconOwner = address(0x3BEAC0);
@@ -92,9 +138,30 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
-    SimplePaymentProcessor paymentProcessorImpl;
-    StreamingPaymentProcessor streamingPaymentProcessorImpl;
+    function setUpRoleAuthorizer() private {
+        // Deploy module implementations.
+        roleAuthorizerImpl = new RoleAuthorizer();
 
+        // Deploy module beacons.
+        vm.prank(roleAuthorizerBeaconOwner);
+        roleAuthorizerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(roleAuthorizerBeaconOwner);
+        roleAuthorizerBeacon.upgradeTo(address(roleAuthorizerImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            roleAuthorizerMetadata, IBeacon(roleAuthorizerBeacon)
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // paymentProcessor
+
+    // SimplePaymentProcessor
+
+    SimplePaymentProcessor paymentProcessorImpl;
     Beacon paymentProcessorBeacon;
     address paymentProcessorBeaconOwner = address(0x1BEAC0);
     IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
@@ -110,6 +177,27 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
+    function setUpSimplePaymentProcessor() private {
+        // Deploy module implementations.
+        paymentProcessorImpl = new SimplePaymentProcessor();
+
+        // Deploy module beacons.
+        vm.prank(paymentProcessorBeaconOwner);
+        paymentProcessorBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(paymentProcessorBeaconOwner);
+        paymentProcessorBeacon.upgradeTo(address(paymentProcessorImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
+        );
+    }
+
+    // StreamingPaymentProcessor
+
+    StreamingPaymentProcessor streamingPaymentProcessorImpl;
     Beacon streamingPaymentProcessorBeacon;
     address streamingPaymentProcessorBeaconOwner =
         makeAddr("streaming payment processor beacon owner");
@@ -126,16 +214,31 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
-    BountyManager bountyManagerImpl;
-    Beacon bountyManagerBeacon;
-    address bountyManagerBeaconOwner = address(0x3BEAC0);
-    IModule.Metadata bountyManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
-    );
-    IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
-        bountyManagerMetadata, bytes(""), abi.encode(true, dependencies)
-    );
+    function setUpStreamingPaymentProcessor() private {
+        // Deploy module implementations.
+        streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
+
+        // Deploy module beacons.
+        vm.prank(streamingPaymentProcessorBeaconOwner);
+        streamingPaymentProcessorBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(streamingPaymentProcessorBeaconOwner);
+        streamingPaymentProcessorBeacon.upgradeTo(
+            address(streamingPaymentProcessorImpl)
+        );
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            streamingPaymentProcessorMetadata,
+            IBeacon(streamingPaymentProcessorBeacon)
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // logicModules
+
+    // RecurringPaymentManager
 
     RecurringPaymentManager recurringPaymentManagerImpl;
     Beacon recurringPaymentManagerBeacon;
@@ -153,6 +256,63 @@ contract E2eTest is Test {
         abi.encode(1 weeks),
         abi.encode(hasDependency, dependencies)
     );
+
+    function setUpRecurringPaymentManager() private {
+        // Deploy module implementations.
+        recurringPaymentManagerImpl = new RecurringPaymentManager();
+
+        // Deploy module beacons.
+        vm.prank(recurringPaymentManagerBeaconOwner);
+        recurringPaymentManagerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(recurringPaymentManagerBeaconOwner);
+        recurringPaymentManagerBeacon.upgradeTo(
+            address(recurringPaymentManagerImpl)
+        );
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            recurringPaymentManagerMetadata,
+            IBeacon(recurringPaymentManagerBeacon)
+        );
+    }
+
+    // BountyManager
+
+    BountyManager bountyManagerImpl;
+    Beacon bountyManagerBeacon;
+    address bountyManagerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata bountyManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
+    );
+    IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
+        bountyManagerMetadata, bytes(""), abi.encode(true, dependencies)
+    );
+
+    function setUpBountyManager() private {
+        // Deploy module implementations.
+        bountyManagerImpl = new BountyManager();
+
+        // Deploy module beacons.
+        vm.prank(bountyManagerBeaconOwner);
+        bountyManagerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(bountyManagerBeaconOwner);
+        bountyManagerBeacon.upgradeTo(address(bountyManagerImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            bountyManagerMetadata, IBeacon(bountyManagerBeacon)
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // utils
+
+    // SingleVoteGovernor
 
     SingleVoteGovernor singleVoteGovernorImpl;
     Beacon singleVoteGovernorBeacon;
@@ -175,98 +335,50 @@ contract E2eTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
-    function setUp() public {
-        // Deploy Orchestrator implementation.
-        orchestratorImpl = new Orchestrator();
-
+    function setSingleVoteGovernor() private {
         // Deploy module implementations.
-        rebasingFundingManagerImpl = new RebasingFundingManager();
-        paymentProcessorImpl = new SimplePaymentProcessor();
-        streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
-
-        bountyManagerImpl = new BountyManager();
-        recurringPaymentManagerImpl = new RecurringPaymentManager();
-        authorizerImpl = new AuthorizerMock();
-        roleAuthorizerImpl = new RoleAuthorizer();
         singleVoteGovernorImpl = new SingleVoteGovernor();
 
         // Deploy module beacons.
-        vm.prank(rebasingFundingManagerBeaconOwner);
-        rebasingFundingManagerBeacon = new Beacon();
-        vm.prank(paymentProcessorBeaconOwner);
-        paymentProcessorBeacon = new Beacon();
-        vm.prank(streamingPaymentProcessorBeaconOwner);
-        streamingPaymentProcessorBeacon = new Beacon();
-        vm.prank(bountyManagerBeaconOwner);
-        bountyManagerBeacon = new Beacon();
-        vm.prank(recurringPaymentManagerBeaconOwner);
-        recurringPaymentManagerBeacon = new Beacon();
-        vm.prank(authorizerBeaconOwner);
-        authorizerBeacon = new Beacon();
-        vm.prank(roleAuthorizerBeaconOwner);
-        roleAuthorizerBeacon = new Beacon();
         vm.prank(singleVoteGovernorBeaconOwner);
         singleVoteGovernorBeacon = new Beacon();
 
         // Set beacon's implementations.
-        vm.prank(rebasingFundingManagerBeaconOwner);
-        rebasingFundingManagerBeacon.upgradeTo(
-            address(rebasingFundingManagerImpl)
-        );
-        vm.prank(paymentProcessorBeaconOwner);
-        paymentProcessorBeacon.upgradeTo(address(paymentProcessorImpl));
-        vm.prank(streamingPaymentProcessorBeaconOwner);
-        streamingPaymentProcessorBeacon.upgradeTo(
-            address(streamingPaymentProcessorImpl)
-        );
-        vm.prank(bountyManagerBeaconOwner);
-        bountyManagerBeacon.upgradeTo(address(bountyManagerImpl));
-        vm.prank(recurringPaymentManagerBeaconOwner);
-        recurringPaymentManagerBeacon.upgradeTo(
-            address(recurringPaymentManagerImpl)
-        );
-        vm.prank(authorizerBeaconOwner);
-        authorizerBeacon.upgradeTo(address(authorizerImpl));
-
-        vm.prank(roleAuthorizerBeaconOwner);
-        roleAuthorizerBeacon.upgradeTo(address(roleAuthorizerImpl));
-
         vm.prank(singleVoteGovernorBeaconOwner);
         singleVoteGovernorBeacon.upgradeTo(address(singleVoteGovernorImpl));
 
-        // Deploy Factories.
-        moduleFactory = new ModuleFactory();
-        orchestratorFactory =
-        new OrchestratorFactory(address(orchestratorImpl), address(moduleFactory));
-
         // Register modules at moduleFactory.
-        moduleFactory.registerMetadata(
-            rebasingFundingManagerMetadata,
-            IBeacon(rebasingFundingManagerBeacon)
-        );
-        moduleFactory.registerMetadata(
-            paymentProcessorMetadata, IBeacon(paymentProcessorBeacon)
-        );
-        moduleFactory.registerMetadata(
-            streamingPaymentProcessorMetadata,
-            IBeacon(streamingPaymentProcessorBeacon)
-        );
-        moduleFactory.registerMetadata(
-            bountyManagerMetadata, IBeacon(bountyManagerBeacon)
-        );
-        moduleFactory.registerMetadata(
-            recurringPaymentManagerMetadata,
-            IBeacon(recurringPaymentManagerBeacon)
-        );
-        moduleFactory.registerMetadata(
-            authorizerMetadata, IBeacon(authorizerBeacon)
-        );
-        moduleFactory.registerMetadata(
-            roleAuthorizerMetadata, IBeacon(roleAuthorizerBeacon)
-        );
         moduleFactory.registerMetadata(
             singleVoteGovernorMetadata, IBeacon(singleVoteGovernorBeacon)
         );
+    }
+
+    function setUp() public {
+        // Deploy Orchestrator implementation.
+        orchestratorImpl = new Orchestrator();
+
+        // Deploy Factories.
+        moduleFactory = new ModuleFactory();
+
+        orchestratorFactory =
+        new OrchestratorFactory(address(orchestratorImpl), address(moduleFactory));
+
+        //FundingManager
+        setUpRebasingFundingManager();
+
+        //Authorizer
+        setUpAuthorizerMock();
+        setUpRoleAuthorizer();
+        //PaymentProcessor
+        setUpSimplePaymentProcessor();
+        setUpStreamingPaymentProcessor();
+
+        //LogicModule
+        setUpRecurringPaymentManager();
+        setUpBountyManager();
+
+        //utils
+        setSingleVoteGovernor();
     }
 
     function _createNewOrchestratorWithAllModules(
