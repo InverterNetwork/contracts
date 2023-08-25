@@ -371,7 +371,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)
-        onlyModuleRole(uint8(Roles.ClaimAdmin))
+        onlyModuleRole(CLAIM_ADMIN_ROLE)
     {
         validContributorsForBounty(
             contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
