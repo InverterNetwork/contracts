@@ -73,7 +73,7 @@ contract TokenGatedRoleAuthorizer is
         returns (bool)
     {
         if (isTokenGated[roleId]) {
-            return hasTokenRole(roleId, account);
+            return _hasTokenRole(roleId, account);
         } else {
             return super.hasRole(roleId, account);
         }
@@ -108,28 +108,7 @@ contract TokenGatedRoleAuthorizer is
         onlyTokenGated(role)
         returns (bool)
     {
-        uint numberOfAllowedTokens = getRoleMemberCount(role);
-
-        for (uint i; i < numberOfAllowedTokens; ++i) {
-            address tokenAddr = getRoleMember(role, i);
-            bytes32 thresholdId = keccak256(abi.encodePacked(role, tokenAddr));
-            uint tokenThreshold = thresholdMap[thresholdId];
-
-            //Should work with both ERC20 and ERC721
-            try TokenInterface(tokenAddr).balanceOf(who) returns (
-                uint tokenBalance
-            ) {
-                if (tokenBalance >= tokenThreshold) {
-                    return true;
-                }
-            } catch {
-                // If the call fails, we continue to the next token.
-                // Emitting an event here would make this function (and the functions calling it) non-view.
-                // note we already enforce Interface implementation when granting the role.
-            }
-        }
-
-        return false;
+        return _hasTokenRole(role, who);
     }
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
@@ -214,5 +193,37 @@ contract TokenGatedRoleAuthorizer is
         bytes32 thresholdId = keccak256(abi.encodePacked(roleId, token));
         thresholdMap[thresholdId] = threshold;
         emit ChangedTokenThreshold(roleId, token, threshold);
+    }
+
+    /// @notice Internal function that checks if an account qualifies for a token-gated role.
+    /// @param role The role to be checked.
+    /// @param who The account to be checked.
+    function _hasTokenRole(bytes32 role, address who)
+        internal
+        view
+        returns (bool)
+    {
+        uint numberOfAllowedTokens = getRoleMemberCount(role);
+
+        for (uint i; i < numberOfAllowedTokens; ++i) {
+            address tokenAddr = getRoleMember(role, i);
+            bytes32 thresholdId = keccak256(abi.encodePacked(role, tokenAddr));
+            uint tokenThreshold = thresholdMap[thresholdId];
+
+            //Should work with both ERC20 and ERC721
+            try TokenInterface(tokenAddr).balanceOf(who) returns (
+                uint tokenBalance
+            ) {
+                if (tokenBalance >= tokenThreshold) {
+                    return true;
+                }
+            } catch {
+                // If the call fails, we continue to the next token.
+                // Emitting an event here would make this function (and the functions calling it) non-view.
+                // note we already enforce Interface implementation when granting the role.
+            }
+        }
+
+        return false;
     }
 }
