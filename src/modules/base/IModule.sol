@@ -84,7 +84,7 @@ interface IModule {
     /// @return The module's orchestrator.
     function orchestrator() external view returns (IOrchestrator);
 
-    function grantModuleRole(uint8 role, address addr) external;
+    function grantModuleRole(bytes32 role, address addr) external;
 
-    function revokeModuleRole(uint8 role, address addr) external;
+    function revokeModuleRole(bytes32 role, address addr) external;
 }

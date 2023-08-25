@@ -35,14 +35,6 @@ contract baseModuleTest is ModuleTest {
     // SuT
     ModuleMock module;
 
-    enum mockRoles {
-        ROLE_1,
-        ROLE_2,
-        ROLE_3,
-        ROLE_4,
-        ROLE_5
-    }
-
     bytes _CONFIGDATA = bytes("");
 
     function setUp() public {
@@ -125,13 +117,10 @@ contract baseModuleTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Role Functions
 
-    function testGrantModuleRole(uint8 role, address addr) public {
-        vm.assume(role <= uint8(type(mockRoles).max));
+    function testGrantModuleRole(bytes32 role, address addr) public {
         vm.assume(addr != address(0));
 
         vm.startPrank(address(this));
-
-        _authorizer.toggleModuleSelfManagement();
 
         module.grantModuleRole(role, addr);
 
@@ -142,12 +131,10 @@ contract baseModuleTest is ModuleTest {
         vm.stopPrank();
     }
 
-    function testRevokeModuleRole(uint8 role, address addr) public {
-        vm.assume(role <= uint8(type(mockRoles).max));
+    function testRevokeModuleRole(bytes32 role, address addr) public {
         vm.assume(addr != address(0));
 
         vm.startPrank(address(this));
-        _authorizer.toggleModuleSelfManagement();
 
         module.grantModuleRole(role, addr);
         module.revokeModuleRole(role, addr);

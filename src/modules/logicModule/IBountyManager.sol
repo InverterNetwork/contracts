@@ -6,15 +6,6 @@ import {IERC20PaymentClient} from
 
 interface IBountyManager is IERC20PaymentClient {
     //--------------------------------------------------------------------------
-    // Enums
-
-    enum Roles {
-        BountyAdmin,
-        ClaimAdmin,
-        VerifyAdmin
-    }
-
-    //--------------------------------------------------------------------------
     // Types
 
     struct Bounty {
