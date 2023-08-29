@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import {VirtualTokenSupplyBaseMock} from "./VirtualTokenSupplyBaseMock.sol";
+import {VirtualTokenSupplyBaseMock} from
+    "test/modules/fundingManager/bondingCurveFundingManager/marketMaker/utils/mocks/VirtualTokenSupplyBaseMock.sol";
 import {IVirtualTokenSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualTokenSupply.sol";
 
@@ -17,11 +18,7 @@ contract VirtualTokenSupplyBaseTest is Test {
     }
 
     function testAddTokenAmount(uint amount) external {
-        // uint maxAmountPossible = MAX_UINT - INITIAL_SUPPLY;
-        vm.assume(
-            amount < MAX_UINT_TEST && amount < (MAX_UINT_TEST - INITIAL_SUPPLY)
-        );
-        // vm.assume(amount < maxAmountPossible && amount < (MAX_UINT -INITIAL_SUPPLY));
+        vm.assume(amount < (MAX_UINT_TEST - INITIAL_SUPPLY));
         vm.startPrank(msg.sender);
         virtualTokenSupplyBase.addTokenAmount(amount);
         assertEq(

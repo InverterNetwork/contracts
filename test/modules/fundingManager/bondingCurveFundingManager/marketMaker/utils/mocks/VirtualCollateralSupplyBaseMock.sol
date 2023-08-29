@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {VirtualCollateralSupplyBase} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/VirtualCollateralSupplyBase.sol";
 
-contract VirtualTokenSupplyBaseMock is VirtualCollateralSupplyBase {
+contract VirtualCollateralSupplyBaseMock is VirtualCollateralSupplyBase {
     function setVirtualCollateralSupply(uint _virtualSupply)
         external
         virtual
@@ -14,10 +14,10 @@ contract VirtualTokenSupplyBaseMock is VirtualCollateralSupplyBase {
     }
 
     function addCollateralAmount(uint _amount) external {
-        super._addCollateralAmount(_amount);
+        super._addVirtualCollateralAmount(_amount);
     }
 
     function subCollateralAmount(uint _amount) external {
-        super._subCollateralAmount(_amount);
+        super._subVirtualCollateralAmount(_amount);
     }
 }
