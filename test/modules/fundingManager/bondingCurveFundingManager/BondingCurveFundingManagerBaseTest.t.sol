@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
+
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -21,7 +23,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     string private constant SYMBOL = "BCT";
     uint8 private constant DECIMALS = 18;
     uint private constant BUY_FEE = 0;
-    bool private constant BUY_IS_OPEN = false;
+    bool private constant BUY_IS_OPEN = true;
 
     BondingCurveFundingManagerMock bondingCurveFundingManger;
     address formula;
@@ -29,9 +31,12 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     function setUp() public {
         // Deploy contracts
         address impl = address(new BondingCurveFundingManagerMock());
+
         bondingCurveFundingManger =
             BondingCurveFundingManagerMock(Clones.clone(impl));
+
         formula = address(new BancorFormula());
+
         _setUpOrchestrator(bondingCurveFundingManger);
 
         // Init Module

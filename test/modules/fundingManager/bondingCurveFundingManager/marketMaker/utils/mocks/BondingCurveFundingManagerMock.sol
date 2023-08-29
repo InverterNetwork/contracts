@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
+
 // Internal Dependencies
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
@@ -39,8 +41,10 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         formula = IBancorFormula(_formula);
 
         _setTokenDecimals(_decimals);
+
         _setBuyFee(_buyFee);
-        if (_buyIsOpen == false) _closeBuy();
+
+        if (_buyIsOpen == true) _openBuy();
     }
 
     function _issueTokensFormulaWrapper(uint _depositAmount)
