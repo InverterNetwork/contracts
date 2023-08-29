@@ -163,7 +163,7 @@ abstract contract BondingCurveFundingManagerBase is
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokens(_depositAmount);
         // Mint tokens to address
-        _mint(msg.sender, mintAmount);
+        _mint(msg.sender, mintAmount); //@bug ?
     }
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
