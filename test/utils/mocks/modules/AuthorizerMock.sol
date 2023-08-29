@@ -37,10 +37,8 @@ contract AuthorizerMock is IAuthorizer, Module {
 
         _authorized[authorized] = true;
 
-        _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][msg
-            .sender] = true;
-        _roleAuthorized[generateRoleId(address(orchestrator()), uint8(1))][msg
-            .sender] = true;
+        _roleAuthorized["0x01"][msg.sender] = true;
+        _roleAuthorized["0x02"][msg.sender] = true;
     }
 
     function mockInit(bytes memory configData) public {
@@ -55,7 +53,7 @@ contract AuthorizerMock is IAuthorizer, Module {
     // IAuthorizer Functions
 
     // Also accepts the owner role as authorized.
-    function isAuthorized(address who) external view returns (bool) {
+    /*     function isAuthorized(address who) external view returns (bool) {
         return _authorized[who] || _allAuthorized
             || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][who];
     }
@@ -73,8 +71,8 @@ contract AuthorizerMock is IAuthorizer, Module {
             || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(1))][who]
             || _allAuthorized;
     }
-
-    function generateRoleId(address module, uint8 role)
+    */
+    function generateRoleId(address module, bytes32 role)
         public
         pure
         returns (bytes32)
@@ -82,12 +80,12 @@ contract AuthorizerMock is IAuthorizer, Module {
         return keccak256(abi.encodePacked(module, role));
     }
 
-    function grantRoleFromModule(uint8 role, address target) external {
+    function grantRoleFromModule(bytes32 role, address target) external {
         console.log(_msgSender());
         _roleAuthorized[generateRoleId(_msgSender(), role)][target] = true;
     }
 
-    function revokeRoleFromModule(uint8 role, address target) external {
+    function revokeRoleFromModule(bytes32 role, address target) external {
         _roleAuthorized[generateRoleId(_msgSender(), role)][target] = false;
     }
 
@@ -95,7 +93,7 @@ contract AuthorizerMock is IAuthorizer, Module {
 
     function transferAdminRole(bytes32, bytes32) external {}
 
-    function burnAdminRole(uint8) external {}
+    function burnAdminFromModuleRole(bytes32) external {}
 
     //IAccessControlUpgradeable
 
@@ -119,6 +117,16 @@ contract AuthorizerMock is IAuthorizer, Module {
         return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
     }
 
+    function hasModuleRole(bytes32 role, address who)
+        external
+        view
+        returns (bool)
+    {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        return
+            _authorized[who] || _roleAuthorized[roleId][who] || _allAuthorized;
+    }
+
     function checkRoleMembership(bytes32 role, address who)
         external
         view
@@ -133,19 +141,19 @@ contract AuthorizerMock is IAuthorizer, Module {
 
     function renounceRole(bytes32, address) external pure {}
 
-    function getOwnerRole() external view returns (bytes32) {
-        return generateRoleId(address(orchestrator()), uint8(0));
+    function getOwnerRole() external pure returns (bytes32) {
+        return "0x01";
     }
 
-    function getManagerRole() external view returns (bytes32) {
-        return generateRoleId(address(orchestrator()), uint8(1));
+    function getManagerRole() external pure returns (bytes32) {
+        return "0x02";
     }
 
     /// @notice Grants a global role to a target
     /// @param role The role to grant
     /// @param target The address to grant the role to
     /// @dev Only the addresses with the Owner role should be able to call this function
-    function grantGlobalRole(uint8 role, address target) external {
+    function grantGlobalRole(bytes32 role, address target) external {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
         grantRole(roleID, target);
     }
@@ -154,7 +162,7 @@ contract AuthorizerMock is IAuthorizer, Module {
     /// @param role The role to grant
     /// @param target The address to grant the role to
     /// @dev Only the addresses with the Owner role should be able to call this function
-    function revokeGlobalRole(uint8 role, address target) external {
+    function revokeGlobalRole(bytes32 role, address target) external {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
         revokeRole(roleID, target);
     }

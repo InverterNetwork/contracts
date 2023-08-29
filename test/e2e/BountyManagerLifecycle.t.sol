@@ -81,7 +81,7 @@ contract BountyManagerLifecycle is E2eTest {
 
         // we authorize the deployer of the orchestrator as the bounty admin
         bountyManager.grantModuleRole(
-            uint8(IBountyManager.Roles.BountyAdmin), address(this)
+            bountyManager.BOUNTY_ADMIN_ROLE(), address(this)
         );
         // Funders deposit funds
 
@@ -125,7 +125,7 @@ contract BountyManagerLifecycle is E2eTest {
 
         //auth.setIsAuthorized(address(0xA11CE), true);
         bountyManager.grantModuleRole(
-            uint8(IBountyManager.Roles.ClaimAdmin), address(0xA11CE)
+            bountyManager.CLAIM_ADMIN_ROLE(), address(0xA11CE)
         );
 
         IBountyManager.Contributor[] memory contribs =
@@ -135,23 +135,35 @@ contract BountyManagerLifecycle is E2eTest {
 
         bytes memory claimDetails = "This is a test submission";
 
-        vm.prank(contrib1.addr);
-        uint claimId = bountyManager.addClaim(1, contribs, claimDetails);
+        vm.prank(address(0xA11CE));
+        uint claimId = bountyManager.addClaim(bountyId, contribs, claimDetails);
 
-        // Verifiers approve bounty
+        // Verifiers approve claim
 
         address verifier1 = makeAddr("verifier 1");
 
         //auth.setIsAuthorized(verifier1, true);
         bountyManager.grantModuleRole(
-            uint8(IBountyManager.Roles.VerifyAdmin), verifier1
+            bountyManager.VERIFY_ADMIN_ROLE(), verifier1
         );
 
         vm.prank(verifier1);
-        bountyManager.verifyClaim(claimId, bountyId);
+        bountyManager.verifyClaim(claimId, contribs);
 
         // Bounty has been paid out
         assertEq(token.balanceOf(contrib1.addr), 150e18);
         assertEq(token.balanceOf(contrib2.addr), 150e18);
+
+        //Lets create another Claim for the same bounty
+        vm.prank(address(0xA11CE));
+        claimId = bountyManager.addClaim(bountyId, contribs, claimDetails);
+
+        // Verifiers approve claim
+        vm.prank(verifier1);
+        bountyManager.verifyClaim(claimId, contribs);
+
+        // Bounty has been paid out
+        assertEq(token.balanceOf(contrib1.addr), 2 * 150e18);
+        assertEq(token.balanceOf(contrib2.addr), 2 * 150e18);
     }
 }

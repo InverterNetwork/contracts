@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+
 // SuT
 import {
     ERC20PaymentClient,
     IERC20PaymentClient
-} from "src/modules/base/mixins/ERC20PaymentClient.sol";
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
 import {IPaymentProcessor} from
@@ -30,6 +32,10 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
         authorized[who] = to;
     }
 
+    function setOrchestrator(IOrchestrator orchestrator) external {
+        __Module_orchestrator = orchestrator;
+    }
+
     //--------------------------------------------------------------------------
     // IERC20PaymentClient Wrapper Functions
 
@@ -44,10 +50,6 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
 
         // Add new order to list of oustanding orders.
         _orders.push(order);
-
-        // Ensure our token balance is sufficient.
-        // Note that function is implemented in downstream contract.
-        _ensureTokenBalance(_outstandingTokenAmount);
 
         emit PaymentOrderAdded(order.recipient, order.amount);
     }
@@ -85,5 +87,26 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
         returns (bool)
     {
         return authorized[_msgSender()];
+    }
+
+    //for testing the original functionality of the internal functions I created this placeholders
+
+    function originalEnsureTokenBalance(uint amount) external {
+        return super._ensureTokenBalance(amount);
+    }
+
+    function originalEnsureTokenAllowance(
+        IPaymentProcessor spender,
+        uint amount
+    ) external {
+        return super._ensureTokenAllowance(spender, amount);
+    }
+
+    function originalIsAuthorizedPaymentProcessor(IPaymentProcessor processor)
+        external
+        view
+        returns (bool)
+    {
+        return super._isAuthorizedPaymentProcessor(processor);
     }
 }
