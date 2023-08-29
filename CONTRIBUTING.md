@@ -37,6 +37,7 @@ Your PR should have:
 Your PR should have:
 - Everything listed in the requirements for `dev` (fully tested, updated deployment scripts, code comments, etc.)
 - Full documentation coverage in the wiki. Draft the documentation in the PR comments.
+- Review of the requirements (according to the following section) by the developers and QA
 
 ### Requirements Verification
 For feature implementations that are guided by an SRS document or a similar specification:
