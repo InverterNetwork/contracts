@@ -13,11 +13,11 @@ contract VirtualCollateralSupplyBaseMock is VirtualCollateralSupplyBase {
         _setVirtualCollateralSupply(_virtualSupply);
     }
 
-    function addCollateralAmount(uint _amount) external {
+    function addVirtualCollateralAmount(uint _amount) external {
         super._addVirtualCollateralAmount(_amount);
     }
 
-    function subCollateralAmount(uint _amount) external {
+    function subVirtualCollateralAmount(uint _amount) external {
         super._subVirtualCollateralAmount(_amount);
     }
 }

@@ -3,14 +3,14 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import {VirtualCollateralSupplyBaseMock} from
-    "test/modules/fundingManager/bondingCurveFundingManager/marketMaker/utils/mocks/VirtualCollateralSupplyBaseMock.sol";
+    "./utils/mocks/VirtualCollateralSupplyBaseMock.sol";
 import {IVirtualCollateralSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualCollateralSupply.sol";
 
 contract VirtualCollateralSupplyBaseTest is Test {
     VirtualCollateralSupplyBaseMock virtualCollateralSupplyBase;
     uint internal constant INITIAL_SUPPLY = 1000e18;
-    uint internal constant MAX_UINT_TEST = 2 ** 256 - 1;
+    uint internal constant MAX_UINT = type(uint).max;
 
     function setUp() public {
         virtualCollateralSupplyBase = new VirtualCollateralSupplyBaseMock();
@@ -18,19 +18,34 @@ contract VirtualCollateralSupplyBaseTest is Test {
     }
 
     function testAddCollateralAmount(uint amount) external {
-        vm.assume(amount < (MAX_UINT_TEST - INITIAL_SUPPLY));
-        vm.startPrank(msg.sender);
-        virtualCollateralSupplyBase.addCollateralAmount(amount);
+        amount = bound(amount, 0, (MAX_UINT - INITIAL_SUPPLY));
+        virtualCollateralSupplyBase.addVirtualCollateralAmount(amount);
         assertEq(
             virtualCollateralSupplyBase.getVirtualCollateralSupply(),
             (INITIAL_SUPPLY + amount)
         );
     }
 
+    function testAddCollateralAmountFails(uint amount) external {
+        amount = bound(amount, (MAX_UINT - INITIAL_SUPPLY) + 1, MAX_UINT);
+
+        vm.expectRevert(
+            IVirtualCollateralSupply
+                .VirtualCollateralSupply_AddResultsInOverflow
+                .selector
+        );
+        virtualCollateralSupplyBase.addVirtualCollateralAmount(amount);
+
+        assertEq(
+            virtualCollateralSupplyBase.getVirtualCollateralSupply(),
+            (INITIAL_SUPPLY)
+        );
+    }
+
     function testSubCollateralAmount(uint amount) external {
         vm.assume(amount <= INITIAL_SUPPLY);
-        vm.startPrank(msg.sender);
-        virtualCollateralSupplyBase.subCollateralAmount(amount);
+
+        virtualCollateralSupplyBase.subVirtualCollateralAmount(amount);
         assertEq(
             virtualCollateralSupplyBase.getVirtualCollateralSupply(),
             (INITIAL_SUPPLY - amount)
@@ -39,12 +54,27 @@ contract VirtualCollateralSupplyBaseTest is Test {
 
     function testSubCollateralAmountFails(uint amount) external {
         vm.assume(amount > INITIAL_SUPPLY);
-        vm.startPrank(msg.sender);
+
         vm.expectRevert(
             IVirtualCollateralSupply
                 .VirtualCollateralSupply__SubtractResultsInUnderflow
                 .selector
         );
-        virtualCollateralSupplyBase.subCollateralAmount(amount);
+        virtualCollateralSupplyBase.subVirtualCollateralAmount(amount);
+    }
+
+    function testGetterAndSetter(uint amount) external {
+        vm.assume(amount <= MAX_UINT);
+
+        assertEq(
+            virtualCollateralSupplyBase.getVirtualCollateralSupply(),
+            (INITIAL_SUPPLY)
+        );
+
+        virtualCollateralSupplyBase.setVirtualCollateralSupply(amount);
+
+        assertEq(
+            virtualCollateralSupplyBase.getVirtualCollateralSupply(), (amount)
+        );
     }
 }

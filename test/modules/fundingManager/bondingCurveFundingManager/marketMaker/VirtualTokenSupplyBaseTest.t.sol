@@ -3,14 +3,14 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import {VirtualTokenSupplyBaseMock} from
-    "test/modules/fundingManager/bondingCurveFundingManager/marketMaker/utils/mocks/VirtualTokenSupplyBaseMock.sol";
+    "./utils/mocks/VirtualTokenSupplyBaseMock.sol";
 import {IVirtualTokenSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualTokenSupply.sol";
 
 contract VirtualTokenSupplyBaseTest is Test {
     VirtualTokenSupplyBaseMock virtualTokenSupplyBase;
     uint internal constant INITIAL_SUPPLY = 1000e18;
-    uint internal constant MAX_UINT_TEST = 2 ** 256 - 1;
+    uint internal constant MAX_UINT = type(uint).max;
 
     function setUp() public {
         virtualTokenSupplyBase = new VirtualTokenSupplyBaseMock();
@@ -18,19 +18,32 @@ contract VirtualTokenSupplyBaseTest is Test {
     }
 
     function testAddTokenAmount(uint amount) external {
-        vm.assume(amount < (MAX_UINT_TEST - INITIAL_SUPPLY));
-        vm.startPrank(msg.sender);
-        virtualTokenSupplyBase.addTokenAmount(amount);
+        amount = bound(amount, 0, (MAX_UINT - INITIAL_SUPPLY));
+
+        virtualTokenSupplyBase.addVirtualTokenAmount(amount);
         assertEq(
             virtualTokenSupplyBase.getVirtualTokenSupply(),
             (INITIAL_SUPPLY + amount)
         );
     }
 
+    function testAddTokenAmountFails(uint amount) external {
+        amount = bound(amount, (MAX_UINT - INITIAL_SUPPLY) + 1, MAX_UINT);
+
+        vm.expectRevert(
+            IVirtualTokenSupply.VirtualTokenSupply_AddResultsInOverflow.selector
+        );
+        virtualTokenSupplyBase.addVirtualTokenAmount(amount);
+
+        assertEq(
+            virtualTokenSupplyBase.getVirtualTokenSupply(), (INITIAL_SUPPLY)
+        );
+    }
+
     function testSubTokenAmount(uint amount) external {
         vm.assume(amount <= INITIAL_SUPPLY);
-        vm.startPrank(msg.sender);
-        virtualTokenSupplyBase.subTokenAmount(amount);
+
+        virtualTokenSupplyBase.subVirtualTokenAmount(amount);
         assertEq(
             virtualTokenSupplyBase.getVirtualTokenSupply(),
             (INITIAL_SUPPLY - amount)
@@ -39,12 +52,24 @@ contract VirtualTokenSupplyBaseTest is Test {
 
     function testSubTokenAmountFails(uint amount) external {
         vm.assume(amount > INITIAL_SUPPLY);
-        vm.startPrank(msg.sender);
+
         vm.expectRevert(
             IVirtualTokenSupply
                 .VirtualTokenSupply__SubtractResultsInUnderflow
                 .selector
         );
-        virtualTokenSupplyBase.subTokenAmount(amount);
+        virtualTokenSupplyBase.subVirtualTokenAmount(amount);
+    }
+
+    function testGetterAndSetter(uint amount) external {
+        vm.assume(amount <= MAX_UINT);
+
+        assertEq(
+            virtualTokenSupplyBase.getVirtualTokenSupply(), (INITIAL_SUPPLY)
+        );
+
+        virtualTokenSupplyBase.setVirtualTokenSupply(amount);
+
+        assertEq(virtualTokenSupplyBase.getVirtualTokenSupply(), (amount));
     }
 }
