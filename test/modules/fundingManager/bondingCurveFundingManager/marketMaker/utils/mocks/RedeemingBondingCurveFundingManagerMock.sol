@@ -7,23 +7,26 @@ import "forge-std/console.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // SuT
-import {
-    BondingCurveFundingManagerBase,
-    IBondingCurveFundingManagerBase
+import{
+    RedeemingBondingCurveFundingManagerBase,
+    IRedeemingBondingCurveFundingManagerBase
 } from
-    "src/modules/fundingManager/bondingCurveFundingManager/BondingCurveFundingManagerBase.sol";
+    "src/modules/fundingManager/bondingCurveFundingManager/RedeemingBondingCurveFundingManagerBase.sol";
+import {
+    BondingCurveFundingManagerMock
+} from
+    "test/modules/fundingManager/bondingCurveFundingManager/marketMaker/utils/mocks/BondingCurveFundingManagerMock.sol";
 import {IBancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";
 import {Module} from "src/modules/base/Module.sol";
 
-contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
-    IBancorFormula public formula;
+contract RedeemingBondingCurveFundingManagerMock is BondingCurveFundingManagerMock {
 
-    function init(
+        function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module) initializer {
+    ) external override(BondingCurveFundingManagerMock) initializer {
         __Module_init(orchestrator_, metadata);
 
         (
@@ -32,9 +35,10 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
             uint8 _decimals,
             address _formula,
             uint _buyFee,
-            bool _buyIsOpen
+            bool _buyIsOpen,
+            bool _sellIsOpen
         ) = abi.decode(
-            configData, (bytes32, bytes32, uint8, address, uint, bool)
+            configData, (bytes32, bytes32, uint8, address, uint, bool, bool)
         );
 
         __ERC20_init(
@@ -48,31 +52,18 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         _setBuyFee(_buyFee);
 
         if (_buyIsOpen == true) _openBuy();
+
+        if (_sellIsOpen == true) _openSell();
     }
 
-    function _issueTokensFormulaWrapper(uint _depositAmount)
+    function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
         view
-        override(BondingCurveFundingManagerBase)
+        override(RedeemingBondingCurveFundingManagerBase)
         returns (uint)
     {
-        // Since this is a mock, we will always mint the same amount of tokens as have been deposited
+        // Since this is a mock, we will always redeem the same amount of tokens as have been deposited
         // Integration tests using the actual Formula can be found in the BancorFormulaFundingManagerTest.t.sol
         return _depositAmount;
-
-    }
-
-    //--------------------------------------------------------------------------
-    // Mock access for internal functions
-
-    function call_calculateFeeDeductedDepositAmount(
-        uint _depositAmount,
-        uint _feePct
-    ) external pure returns (uint) {
-        return _calculateFeeDeductedDepositAmount(_depositAmount, _feePct);
-    }
-
-    function call_BPS() external pure returns (uint) {
-        return BPS;
     }
 }

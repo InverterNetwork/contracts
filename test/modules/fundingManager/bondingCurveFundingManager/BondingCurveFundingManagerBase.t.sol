@@ -197,11 +197,16 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         └── when the deposit amount is not 0
                 ├── when the fee is higher than 0
                 │       └── it should substract the fee from the deposit amount
-                │               └── it use determine the mint amount of tokens to mint 
-                │               └── it should mint the tokens to the receiver    
+                │               ├── it should pull the buy amount from the caller  
+                │               ├── it should take the fee out from the pulled amount 
+                │               ├── it should determine the mint amount of tokens to mint from the rest
+                │               ├── it should mint the tokens to the receiver 
+                │               └── it should emit an event? @todo   
                 └── when the fee is 0
-                        └── it use determine the mint amount of tokens to mint 
-                        └── it should mint the tokens to the receiver     
+                                ├── it should pull the buy amount from the caller  
+                                ├── it should determine the mint amount of tokens to mint 
+                                ├── it should mint the tokens to the receiver     
+                                └── it should emit an event? @todo      
         
     */
     function testBuyOrder_FailsIfDepositAmountIsZero() public {
@@ -288,7 +293,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         │      └── it should revert (tested in base Module modifier tests)
         └── when caller is the Orchestrator owner
                └── when buy functionality is already open
-                │      └── it should revert  -> sure? idempotence @note
+                │      └── it should revert  -> sure? idempotence @review
                 └── when buy functionality is not open
                         └── it should open the buy functionality
                         └── it should emit an event? @todo
@@ -322,9 +327,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
                └── when buy functionality is already closed
-                │      └── it should revert ->  sure? idempotence @note
+                │      └── it should revert ->  sure? idempotence @review
                 └── when buy functionality is not closed
-                        └── it should close the buy functionality
+                        ├── it should close the buy functionality
                         └── it should emit an event? @todo
     */
     function testCloseBuy_FailsIfAlreadyClosed()
@@ -358,7 +363,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 ├── when fee is  100% 
                 │     └── it should revert (empty buy-ins into the curve are not allowed)
                 └── when fee is below 100%
-                        └── it should set the new fee
+                        ├── it should set the new fee
                         └── it should emit an event? @todo
     */
     function testSetBuyFee_FailsIfFee100PercentOrMore(uint _fee)
