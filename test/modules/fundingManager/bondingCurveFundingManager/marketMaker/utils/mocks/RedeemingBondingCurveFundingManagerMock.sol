@@ -7,26 +7,25 @@ import "forge-std/console.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // SuT
-import{
+import {
     RedeemingBondingCurveFundingManagerBase,
     IRedeemingBondingCurveFundingManagerBase
 } from
     "src/modules/fundingManager/bondingCurveFundingManager/RedeemingBondingCurveFundingManagerBase.sol";
-import {
-    BondingCurveFundingManagerMock
-} from
-    "test/modules/fundingManager/bondingCurveFundingManager/marketMaker/utils/mocks/BondingCurveFundingManagerMock.sol";
 import {IBancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";
 import {Module} from "src/modules/base/Module.sol";
 
-contract RedeemingBondingCurveFundingManagerMock is BondingCurveFundingManagerMock {
+contract RedeemingBondingCurveFundingManagerMock is
+    RedeemingBondingCurveFundingManagerBase
+{
+    IBancorFormula public formula;
 
-        function init(
+    function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(BondingCurveFundingManagerMock) initializer {
+    ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
         (
@@ -54,6 +53,17 @@ contract RedeemingBondingCurveFundingManagerMock is BondingCurveFundingManagerMo
         if (_buyIsOpen == true) _openBuy();
 
         if (_sellIsOpen == true) _openSell();
+    }
+
+    function _issueTokensFormulaWrapper(uint _depositAmount)
+        internal
+        view
+        override
+        returns (uint)
+    {
+        // Since this is a mock, we will always mint the same amount of tokens as have been deposited
+        // Integration tests using the actual Formula can be found in the BancorFormulaFundingManagerTest.t.sol
+        return _depositAmount;
     }
 
     function _redeemTokensFormulaWrapper(uint _depositAmount)

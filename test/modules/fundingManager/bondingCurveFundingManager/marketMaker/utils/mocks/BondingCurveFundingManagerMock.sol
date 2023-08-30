@@ -59,7 +59,6 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         // Since this is a mock, we will always mint the same amount of tokens as have been deposited
         // Integration tests using the actual Formula can be found in the BancorFormulaFundingManagerTest.t.sol
         return _depositAmount;
-
     }
 
     //--------------------------------------------------------------------------

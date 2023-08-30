@@ -109,7 +109,6 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         bondingCurveFundingManger.init(_orchestrator, _METADATA, abi.encode());
     }
 
-
     /* Test sellingIsEnabled modifier
         ├── when sell is not open
         │       └── it should revert
@@ -173,5 +172,4 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                         ├── it should set the new fee
                         └── it should emit an event? @todo
     */
-
 }

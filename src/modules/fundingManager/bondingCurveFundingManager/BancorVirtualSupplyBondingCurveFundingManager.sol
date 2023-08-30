@@ -85,6 +85,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     // Init Function
 
     /// @inheritdoc Module
+    /// @todo This function crosses stack-too-deep threshold when we uncomment the decimals. It needs a refactor
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
@@ -95,7 +96,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         (
             bytes32 _name, // The name of the issuance token
             bytes32 _symbol, // The symbol of the issuance token
-            uint8 _decimals, // The decimals used within the issuance token
+            //uint8 _decimals, // The decimals used within the issuance token
             address _formula, // The formula contract used to calculate the issucance and redemption rate
             uint _initalTokenSupply, // The initial virtual issuance token supply
             uint _initialCollateralSupply, // The initial virtual collateral token supply
@@ -110,7 +111,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             (
                 bytes32,
                 bytes32,
-                uint8,
+                //uint8,
                 address,
                 uint,
                 uint,
@@ -127,7 +128,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             string(abi.encodePacked(_name)), string(abi.encodePacked(_symbol))
         );
         // Set token decimals for issuance token
-        _setTokenDecimals(_decimals);
+        //_setTokenDecimals(_decimals);
+        _setTokenDecimals(18);
         // Set formula contract
         formula = IBancorFormula(_formula);
         // Set virtual issuance token supply
