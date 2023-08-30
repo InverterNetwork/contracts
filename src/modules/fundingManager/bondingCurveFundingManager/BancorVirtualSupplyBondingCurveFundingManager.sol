@@ -85,7 +85,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     // Init Function
 
     /// @inheritdoc Module
-    /// @todo This function crosses stack-too-deep threshold when we uncomment the decimals. It needs a refactor
+    // @todo This function crosses stack-too-deep threshold when we uncomment the decimals. It needs a refactor
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,

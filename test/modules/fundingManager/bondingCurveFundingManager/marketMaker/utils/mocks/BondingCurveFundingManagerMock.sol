@@ -74,4 +74,9 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
     function call_BPS() external pure returns (uint) {
         return BPS;
     }
+
+    // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
+    function call_setDecimals(uint8 _newDecimals) external {
+        _setTokenDecimals(_newDecimals);
+    }
 }
