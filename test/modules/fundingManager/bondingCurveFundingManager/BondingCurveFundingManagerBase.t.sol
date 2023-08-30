@@ -425,6 +425,17 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(res, amountMinusFee);
     }
 
+    /* Test _setDecimals 
+        - Here we don't have limitations theoretically
+    */
+    function testSetDecimals(uint8 _newDecimals) public {
+        // No authentication since it's an internal function exposed by the mock contract
+        bondingCurveFundingManger.call_setDecimals(_newDecimals);
+
+        assertEq(bondingCurveFundingManger.decimals(), _newDecimals);
+
+    }
+
     // Test _issueTokens function
     // this is tested in the buyOrder tests
 
