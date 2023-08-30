@@ -153,7 +153,9 @@ abstract contract BondingCurveFundingManagerBase is
         }
         // Transfer collateral, confirming that correct amount == allowance
         __Module_orchestrator.token().safeTransferFrom(
-            _receiver, address(this), _depositAmount
+            _msgSender(),
+            address(this),
+            _depositAmount // bugfix @review
         );
         // Calculate deposit amount minus fee percentage
         if (buyFee > 0) {
@@ -163,7 +165,7 @@ abstract contract BondingCurveFundingManagerBase is
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokens(_depositAmount);
         // Mint tokens to address
-        _mint(msg.sender, mintAmount); //@bug ?
+        _mint(_receiver, mintAmount); // bugfix @review
     }
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
@@ -185,7 +187,8 @@ abstract contract BondingCurveFundingManagerBase is
     /// @dev Sets the buy transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for buy transactions.
     function _setBuyFee(uint _fee) internal {
-        if (_fee > BPS) {
+        if (_fee >= BPS) {
+            // bugfix @review if fee is == BPS the buy amount would be zero, and the check in _buyOrder would miss it
             revert BondingCurveFundingManager__InvalidFeePercentage();
         }
         buyFee = _fee;
@@ -201,6 +204,12 @@ abstract contract BondingCurveFundingManagerBase is
         uint _depositAmount,
         uint _feePct
     ) internal pure returns (uint depositAmountMinusFee) {
+        // bugfix @review
+        // If we avoid this check, we run into precision issues if _depositAmount is low and _feePct very closely above BPS and it would return zero instead of reverting
+        // Alternatively we could just return 0 and avoid reverts? But since we don't allow zero value deosits, this feels safer.
+        if (_feePct > BPS) {
+            revert BondingCurveFundingManager__InvalidFeePercentage();
+        }
         // Calculate fee amount
         uint feeAmount = (_depositAmount * _feePct) / BPS;
         // Subtract fee amount from deposit amount
