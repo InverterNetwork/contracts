@@ -17,7 +17,7 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
     /// @dev The internal state variable to keep track of the virtual token supply.
     uint internal virtualTokenSupply;
     /// @dev Maximum unsigned integer value for overflow checks.
-    uint private constant MAX_UINT = type(uint).max;
+    uint private constant MAX_UINT = type(uint).max; // TODO: The maximum supply has to be divided by the BPS precision used. If not, it can come to overflow errors in downstream contracts
 
     //--------------------------------------------------------------------------
     // Public Functions

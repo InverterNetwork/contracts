@@ -7,7 +7,10 @@ import "forge-std/console.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // SuT
-import {BondingCurveFundingManagerBase} from
+import {
+    BondingCurveFundingManagerBase,
+    IBondingCurveFundingManagerBase
+} from
     "src/modules/fundingManager/bondingCurveFundingManager/BondingCurveFundingManagerBase.sol";
 import {IBancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";
@@ -53,12 +56,30 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         override(BondingCurveFundingManagerBase)
         returns (uint)
     {
-        uint32 connectorWeight = 1000; // Mock value, needs to be calculated
+        // Since this is a mock, we will always mint the same amount of tokens as have been deposited
+        // Integration tests using the actual Formula can be found in the BancorFormulaFundingManagerTest.t.sol
+        return _depositAmount;
+
+        /* uint32 connectorWeight = 1000; // Mock value, needs to be calculated
         return formula.calculatePurchaseReturn(
             totalSupply(),
             __Module_orchestrator.token().balanceOf(address(this)),
             connectorWeight,
             _depositAmount
-        );
+        ); */
+    }
+
+    //--------------------------------------------------------------------------
+    // Mock access for internal functions
+
+    function call_calculateFeeDeductedDepositAmount(
+        uint _depositAmount,
+        uint _feePct
+    ) external pure returns (uint) {
+        return _calculateFeeDeductedDepositAmount(_depositAmount, _feePct);
+    }
+
+    function call_BPS() external pure returns (uint) {
+        return BPS;
     }
 }
