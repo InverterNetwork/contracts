@@ -178,28 +178,59 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         │       └── it should revert 
         └── when the sell amount is not 0
                 ├── when the fee is higher than 0
-                │       └── it should substract the fee from the reddemed amount
                 │               ├── it should take the sell amount from the caller
                 │               ├── it should determine the redeem amount of the sent tokens 
                 │               ├── it should substract the fee from the redeem amount
-                │               ├── it should send the rest to the receiver    
-                │               └── it should emit an event? @todo
+                │               ├── When there IS NOT enough collateral in the contract to cover the redeem amount
+                │               │        └── it should revert
+                │               └── When there IS enough collateral in the contract to cover the redeem amount
+                │                   ├── it should send the rest to the receiver    
+                │                   └── it should emit an event? @todo
                 └── when the fee is 0
                                 ├── it should take the sell amount from the caller
                                 ├── it should determine the redeem amount of the sent tokens 
-                                ├── it should send the rest to the receiver    
-                                └── it should emit an event? @todo
+                                ├── When there IS NOT enough collateral in the contract to cover the redeem amount
+                                │        └── it should revert
+                                └── When there IS enough collateral in the contract to cover the redeem amount
+                                   ├── it should send the rest to the receiver    
+                                   └── it should emit an event? @todo
     */
 
     function testSellOrder_FailsIfDepositAmountIsZero() public {
         vm.startPrank(non_owner_address);
+        {
+            vm.expectRevert(
+                IRedeemingBondingCurveFundingManagerBase
+                    .RedeemingBondingCurveFundingManager__InvalidDepositAmount
+                    .selector
+            );
+            bondingCurveFundingManger.sellOrder(0);
+        }
+        vm.stopPrank();
+    }
 
-        vm.expectRevert(
-            IRedeemingBondingCurveFundingManagerBase
-                .RedeemingBondingCurveFundingManager__InvalidDepositAmount
-                .selector
-        );
-        bondingCurveFundingManger.sellOrder(0);
+    function testSellOrder_FailsIfNotEnoughCollateralInContract(uint amount)
+        public
+    {
+        // Setup
+        vm.assume(amount > 0);
+
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, amount);
+
+        // we simulate the fundingManager spending some funds. It can't cover full redemption anymore.
+        _token.burn(address(bondingCurveFundingManger), 1);
+
+        vm.startPrank(seller);
+        {
+            vm.expectRevert(
+                IRedeemingBondingCurveFundingManagerBase
+                    .RedeemingBondingCurveFundingManager__InsufficientCollateralForRedemption
+                    .selector
+            );
+            bondingCurveFundingManger.sellOrder(amount);
+        }
+        vm.stopPrank();
     }
 
     function testSellOrderWithZeroFee(uint amount) public {
