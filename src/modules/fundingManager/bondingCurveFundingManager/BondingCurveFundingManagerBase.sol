@@ -206,7 +206,7 @@ abstract contract BondingCurveFundingManagerBase is
     ) internal pure returns (uint depositAmountMinusFee) {
         // bugfix @review
         // If we avoid this check, we run into precision issues if _depositAmount is low and _feePct very closely above BPS and it would return zero instead of reverting
-        // Alternatively we could just return 0 and avoid reverts? But since we don't allow zero value deosits, this feels safer.
+        // Alternatively we could just return 0 and avoid reverts? But since we don't allow zero value deposits, this feels safer.
         if (_feePct > BPS) {
             revert BondingCurveFundingManager__InvalidFeePercentage();
         }

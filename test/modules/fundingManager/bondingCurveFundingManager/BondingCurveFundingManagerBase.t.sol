@@ -281,13 +281,6 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(bondingCurveFundingManger.balanceOf(buyer), amountMinusFee);
     }
 
-    // Modifier to ensure the caller has the owner role
-    modifier callerIsOrchestratorOwner() {
-        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
-        vm.startPrank(owner_address);
-        _;
-    }
-
     /* Test openBuy and _openBuy function
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module modifier tests)
@@ -433,7 +426,6 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         bondingCurveFundingManger.call_setDecimals(_newDecimals);
 
         assertEq(bondingCurveFundingManger.decimals(), _newDecimals);
-
     }
 
     // Test _issueTokens function
@@ -441,6 +433,13 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Helper functions
+
+    // Modifier to ensure the caller has the owner role
+    modifier callerIsOrchestratorOwner() {
+        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
+        vm.startPrank(owner_address);
+        _;
+    }
 
     // Helper function that mints enough collateral tokens to a buyer and approves the bonding curve to spend them
     function _prepareBuyConditions(address buyer, uint amount) internal {
