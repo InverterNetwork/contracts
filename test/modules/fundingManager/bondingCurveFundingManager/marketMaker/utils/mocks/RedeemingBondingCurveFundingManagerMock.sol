@@ -76,4 +76,11 @@ contract RedeemingBondingCurveFundingManagerMock is
         // Integration tests using the actual Formula can be found in the BancorFormulaFundingManagerTest.t.sol
         return _depositAmount;
     }
+
+    //--------------------------------------------------------------------------
+    // Mock access for internal functions
+
+    function call_BPS() external pure returns (uint) {
+        return BPS;
+    }
 }

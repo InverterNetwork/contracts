@@ -26,6 +26,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     string private constant SYMBOL = "BCT";
     uint8 private constant DECIMALS = 18;
     uint private constant BUY_FEE = 0;
+    uint private constant SELL_FEE = 0;
     bool private constant BUY_IS_OPEN = true;
     bool private constant SELL_IS_OPEN = true;
 
@@ -102,6 +103,16 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             BUY_IS_OPEN,
             "Buy-is-open has not been set correctly"
         );
+        assertEq(
+            bondingCurveFundingManger.buyFee(),
+            SELL_FEE,
+            "Sell fee has not been set correctly"
+        );
+        assertEq(
+            bondingCurveFundingManger.buyIsOpen(),
+            SELL_IS_OPEN,
+            "Sell-is-open has not been set correctly"
+        );
     }
 
     function testReinitFails() public override {
@@ -116,8 +127,51 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 └── it should not revert (tested in sellOrder tests)
 
     */
+    function testSellingIsEnabled_FailsIfSellNotOpen() public {
+        vm.prank(owner_address);
+        bondingCurveFundingManger.closeSell();
+
+        vm.prank(non_owner_address);
+        vm.expectRevert(
+            IRedeemingBondingCurveFundingManagerBase
+                .RedeemingBondingCurveFundingManager__SellingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManger.sellOrderFor(non_owner_address, 100);
+    }
 
     // test modifier on sellOrderFor function
+
+    function testPassingModifiersOnSellOrderFor(uint sellAmount) public {
+        // Setup
+        vm.assume(sellAmount > 0);
+
+        address seller = makeAddr("seller");
+        address receiver = makeAddr("receiver");
+
+        _prepareSellConditions(seller, sellAmount);
+
+        // Pre-checks
+        uint bondingCurveBalanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManger));
+        uint receiverBalanceBefore = _token.balanceOf(receiver);
+        assertEq(_token.balanceOf(seller), 0);
+        assertEq(_token.balanceOf(receiver), 0);
+        assertEq(bondingCurveFundingManger.balanceOf(seller), sellAmount);
+
+        // Execution
+        vm.prank(seller);
+        bondingCurveFundingManger.sellOrderFor(receiver, sellAmount);
+
+        // Post-checks
+        uint redeemAmount = _token.balanceOf(receiver) - receiverBalanceBefore;
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManger)),
+            (bondingCurveBalanceBefore - redeemAmount)
+        );
+        assertEq(bondingCurveFundingManger.balanceOf(seller), 0);
+        assertEq(_token.balanceOf(seller), 0);
+    }
 
     /* Test sellOrder and _sellOrder function
         ├── when the sell amount is 0
@@ -137,6 +191,78 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                                 └── it should emit an event? @todo
     */
 
+    function testSellOrder_FailsIfDepositAmountIsZero() public {
+        vm.startPrank(non_owner_address);
+
+        vm.expectRevert(
+            IRedeemingBondingCurveFundingManagerBase
+                .RedeemingBondingCurveFundingManager__InvalidDepositAmount
+                .selector
+        );
+        bondingCurveFundingManger.sellOrder(0);
+    }
+
+    function testSellOrderWithZeroFee(uint amount) public {
+        // Setup
+        vm.assume(amount > 0);
+
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, amount);
+
+        // Pre-checks
+        uint bondingCurveCollateralBalanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManger));
+        assertEq(_token.balanceOf(seller), 0);
+        //uint userTokenBalanceBefore = bondingCurveFundingManger.balanceOf(seller);
+
+        // Execution
+        vm.prank(seller);
+        bondingCurveFundingManger.sellOrder(amount);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManger)),
+            (bondingCurveCollateralBalanceBefore - amount)
+        );
+        assertEq(_token.balanceOf(seller), amount);
+        assertEq(bondingCurveFundingManger.balanceOf(seller), 0);
+    }
+
+    function testSellOrderWithFee(uint amount, uint fee) public {
+        // Setup
+        uint _bps = bondingCurveFundingManger.call_BPS();
+        vm.assume(fee < _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManger.setSellFee(fee);
+        assertEq(bondingCurveFundingManger.sellFee(), fee);
+
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, amount);
+
+        // Pre-checks
+        uint bondingCurveCollateralBalanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManger));
+        assertEq(_token.balanceOf(seller), 0);
+
+        // Execution
+        vm.prank(seller);
+        bondingCurveFundingManger.sellOrder(amount);
+
+        // Post-checks
+        uint amountMinusFee =
+            amount - ((amount * fee) / bondingCurveFundingManger.call_BPS());
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManger)),
+            (bondingCurveCollateralBalanceBefore - amountMinusFee)
+        );
+        assertEq(_token.balanceOf(seller), amountMinusFee);
+        assertEq(bondingCurveFundingManger.balanceOf(seller), 0);
+    }
+
     /* Test openSell and _openSell function
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module modifier tests)
@@ -147,6 +273,29 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                         ├── it should open the sell functionality
                         └── it should emit an event? @todo
     */
+    function testOpenSell_FailsIfAlreadyOpen()
+        public
+        callerIsOrchestratorOwner
+    {
+        vm.expectRevert(
+            IRedeemingBondingCurveFundingManagerBase
+                .RedeemingBondingCurveFundingManager__SellingAlreadyOpen
+                .selector
+        );
+        bondingCurveFundingManger.openSell();
+    }
+
+    function testOpenSell() public callerIsOrchestratorOwner {
+        assertEq(bondingCurveFundingManger.sellIsOpen(), true);
+
+        bondingCurveFundingManger.closeSell();
+
+        assertEq(bondingCurveFundingManger.sellIsOpen(), false);
+
+        bondingCurveFundingManger.openSell();
+
+        assertEq(bondingCurveFundingManger.sellIsOpen(), true);
+    }
 
     /* Test closeSell and _closeSell function
         ├── when caller is not the Orchestrator owner
@@ -158,6 +307,28 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                         ├── it should close the sell functionality
                         └── it should emit an event? @todo
     */
+
+    function testCloseSell_FailsIfAlreadyClosed()
+        public
+        callerIsOrchestratorOwner
+    {
+        bondingCurveFundingManger.closeSell();
+
+        vm.expectRevert(
+            IRedeemingBondingCurveFundingManagerBase
+                .RedeemingBondingCurveFundingManager__SellingAlreadyClosed
+                .selector
+        );
+        bondingCurveFundingManger.closeSell();
+    }
+
+    function testCloseSell() public callerIsOrchestratorOwner {
+        assertEq(bondingCurveFundingManger.sellIsOpen(), true);
+
+        bondingCurveFundingManger.closeSell();
+
+        assertEq(bondingCurveFundingManger.sellIsOpen(), false);
+    }
 
     /* Test setSellFee and _setSellFee function
         ├── when caller is not the Orchestrator owner
@@ -172,4 +343,55 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                         ├── it should set the new fee
                         └── it should emit an event? @todo
     */
+
+    function testSetSellFee_FailsIfFeeIsOver100Percent(uint _fee)
+        public
+        callerIsOrchestratorOwner
+    {
+        vm.assume(_fee > bondingCurveFundingManger.call_BPS());
+        vm.expectRevert(
+            IRedeemingBondingCurveFundingManagerBase
+                .RedeemingBondingCurveFundingManager__InvalidFeePercentage
+                .selector
+        );
+        bondingCurveFundingManger.setSellFee(_fee);
+    }
+
+    function testSetSellFee(uint _fee) public callerIsOrchestratorOwner {
+        vm.assume(_fee <= bondingCurveFundingManger.call_BPS());
+
+        bondingCurveFundingManger.setSellFee(_fee);
+
+        assertEq(bondingCurveFundingManger.sellFee(), _fee);
+    }
+
+    //--------------------------------------------------------------------------
+    // Helper functions
+
+    // Modifier to ensure the caller has the owner role
+    modifier callerIsOrchestratorOwner() {
+        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
+        vm.startPrank(owner_address);
+        _;
+    }
+
+    // Helper function that:
+    //      - Mints collateral tokens to a seller and
+    //      - Deposits them so they can later be sold.
+    //      - Approves the BondingCurve contract to spend the receipt tokens
+    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many toknes as they deposit
+    function _prepareSellConditions(address seller, uint amount) internal {
+        _token.mint(seller, amount);
+
+        vm.startPrank(seller);
+        {
+            _token.approve(address(bondingCurveFundingManger), amount);
+            bondingCurveFundingManger.buyOrder(amount);
+
+            bondingCurveFundingManger.approve(
+                address(bondingCurveFundingManger), amount
+            );
+        }
+        vm.stopPrank();
+    }
 }
