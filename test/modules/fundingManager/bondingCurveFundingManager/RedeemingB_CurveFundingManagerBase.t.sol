@@ -30,7 +30,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     bool private constant BUY_IS_OPEN = true;
     bool private constant SELL_IS_OPEN = true;
 
-    RedeemingBondingCurveFundingManagerMock bondingCurveFundingManger;
+    RedeemingBondingCurveFundingManagerMock bondingCurveFundingManager;
     address formula;
 
     address owner_address = address(0xA1BA);
@@ -40,17 +40,17 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         // Deploy contracts
         address impl = address(new RedeemingBondingCurveFundingManagerMock());
 
-        bondingCurveFundingManger =
+        bondingCurveFundingManager =
             RedeemingBondingCurveFundingManagerMock(Clones.clone(impl));
 
         formula = address(new BancorFormula());
 
-        _setUpOrchestrator(bondingCurveFundingManger);
+        _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
 
         // Init Module
-        bondingCurveFundingManger.init(
+        bondingCurveFundingManager.init(
             _orchestrator,
             _METADATA,
             abi.encode(
@@ -74,42 +74,42 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
     function testInit() public override {
         assertEq(
-            bondingCurveFundingManger.name(),
+            bondingCurveFundingManager.name(),
             string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
             "Name has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.symbol(),
+            bondingCurveFundingManager.symbol(),
             string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
             "Symbol has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.decimals(),
+            bondingCurveFundingManager.decimals(),
             DECIMALS,
             "Decimals has not been set correctly"
         );
         assertEq(
-            address(bondingCurveFundingManger.formula()),
+            address(bondingCurveFundingManager.formula()),
             formula,
             "Formula has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.buyFee(),
+            bondingCurveFundingManager.buyFee(),
             BUY_FEE,
             "Buy fee has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.buyIsOpen(),
+            bondingCurveFundingManager.buyIsOpen(),
             BUY_IS_OPEN,
             "Buy-is-open has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.buyFee(),
+            bondingCurveFundingManager.buyFee(),
             SELL_FEE,
             "Sell fee has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.buyIsOpen(),
+            bondingCurveFundingManager.buyIsOpen(),
             SELL_IS_OPEN,
             "Sell-is-open has not been set correctly"
         );
@@ -117,7 +117,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
     function testReinitFails() public override {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        bondingCurveFundingManger.init(_orchestrator, _METADATA, abi.encode());
+        bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 
     /* Test sellingIsEnabled modifier
@@ -129,7 +129,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     */
     function testSellingIsEnabled_FailsIfSellNotOpen() public {
         vm.prank(owner_address);
-        bondingCurveFundingManger.closeSell();
+        bondingCurveFundingManager.closeSell();
 
         vm.prank(non_owner_address);
         vm.expectRevert(
@@ -137,7 +137,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 .RedeemingBondingCurveFundingManager__SellingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManger.sellOrderFor(non_owner_address, 100);
+        bondingCurveFundingManager.sellOrderFor(non_owner_address, 100);
     }
 
     // test modifier on sellOrderFor function
@@ -153,23 +153,23 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Pre-checks
         uint bondingCurveBalanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManger));
+            _token.balanceOf(address(bondingCurveFundingManager));
         uint receiverBalanceBefore = _token.balanceOf(receiver);
         assertEq(_token.balanceOf(seller), 0);
         assertEq(_token.balanceOf(receiver), 0);
-        assertEq(bondingCurveFundingManger.balanceOf(seller), sellAmount);
+        assertEq(bondingCurveFundingManager.balanceOf(seller), sellAmount);
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManger.sellOrderFor(receiver, sellAmount);
+        bondingCurveFundingManager.sellOrderFor(receiver, sellAmount);
 
         // Post-checks
         uint redeemAmount = _token.balanceOf(receiver) - receiverBalanceBefore;
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManger)),
+            _token.balanceOf(address(bondingCurveFundingManager)),
             (bondingCurveBalanceBefore - redeemAmount)
         );
-        assertEq(bondingCurveFundingManger.balanceOf(seller), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
         assertEq(_token.balanceOf(seller), 0);
     }
 
@@ -204,7 +204,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                     .RedeemingBondingCurveFundingManager__InvalidDepositAmount
                     .selector
             );
-            bondingCurveFundingManger.sellOrder(0);
+            bondingCurveFundingManager.sellOrder(0);
         }
         vm.stopPrank();
     }
@@ -219,7 +219,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         _prepareSellConditions(seller, amount);
 
         // we simulate the fundingManager spending some funds. It can't cover full redemption anymore.
-        _token.burn(address(bondingCurveFundingManger), 1);
+        _token.burn(address(bondingCurveFundingManager), 1);
 
         vm.startPrank(seller);
         {
@@ -228,7 +228,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                     .RedeemingBondingCurveFundingManager__InsufficientCollateralForRedemption
                     .selector
             );
-            bondingCurveFundingManger.sellOrder(amount);
+            bondingCurveFundingManager.sellOrder(amount);
         }
         vm.stopPrank();
     }
@@ -242,56 +242,56 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManger));
+            _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(seller), 0);
-        //uint userTokenBalanceBefore = bondingCurveFundingManger.balanceOf(seller);
+        //uint userTokenBalanceBefore = bondingCurveFundingManager.balanceOf(seller);
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManger.sellOrder(amount);
+        bondingCurveFundingManager.sellOrder(amount);
 
         // Post-checks
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManger)),
+            _token.balanceOf(address(bondingCurveFundingManager)),
             (bondingCurveCollateralBalanceBefore - amount)
         );
         assertEq(_token.balanceOf(seller), amount);
-        assertEq(bondingCurveFundingManger.balanceOf(seller), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
     }
 
     function testSellOrderWithFee(uint amount, uint fee) public {
         // Setup
-        uint _bps = bondingCurveFundingManger.call_BPS();
+        uint _bps = bondingCurveFundingManager.call_BPS();
         vm.assume(fee < _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
         amount = bound(amount, 1, maxAmount);
 
         vm.prank(owner_address);
-        bondingCurveFundingManger.setSellFee(fee);
-        assertEq(bondingCurveFundingManger.sellFee(), fee);
+        bondingCurveFundingManager.setSellFee(fee);
+        assertEq(bondingCurveFundingManager.sellFee(), fee);
 
         address seller = makeAddr("seller");
         _prepareSellConditions(seller, amount);
 
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManger));
+            _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(seller), 0);
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManger.sellOrder(amount);
+        bondingCurveFundingManager.sellOrder(amount);
 
         // Post-checks
         uint amountMinusFee =
-            amount - ((amount * fee) / bondingCurveFundingManger.call_BPS());
+            amount - ((amount * fee) / bondingCurveFundingManager.call_BPS());
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManger)),
+            _token.balanceOf(address(bondingCurveFundingManager)),
             (bondingCurveCollateralBalanceBefore - amountMinusFee)
         );
         assertEq(_token.balanceOf(seller), amountMinusFee);
-        assertEq(bondingCurveFundingManger.balanceOf(seller), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
     }
 
     /* Test openSell and _openSell function
@@ -313,19 +313,19 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 .RedeemingBondingCurveFundingManager__SellingAlreadyOpen
                 .selector
         );
-        bondingCurveFundingManger.openSell();
+        bondingCurveFundingManager.openSell();
     }
 
     function testOpenSell() public callerIsOrchestratorOwner {
-        assertEq(bondingCurveFundingManger.sellIsOpen(), true);
+        assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
-        bondingCurveFundingManger.closeSell();
+        bondingCurveFundingManager.closeSell();
 
-        assertEq(bondingCurveFundingManger.sellIsOpen(), false);
+        assertEq(bondingCurveFundingManager.sellIsOpen(), false);
 
-        bondingCurveFundingManger.openSell();
+        bondingCurveFundingManager.openSell();
 
-        assertEq(bondingCurveFundingManger.sellIsOpen(), true);
+        assertEq(bondingCurveFundingManager.sellIsOpen(), true);
     }
 
     /* Test closeSell and _closeSell function
@@ -343,22 +343,22 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         public
         callerIsOrchestratorOwner
     {
-        bondingCurveFundingManger.closeSell();
+        bondingCurveFundingManager.closeSell();
 
         vm.expectRevert(
             IRedeemingBondingCurveFundingManagerBase
                 .RedeemingBondingCurveFundingManager__SellingAlreadyClosed
                 .selector
         );
-        bondingCurveFundingManger.closeSell();
+        bondingCurveFundingManager.closeSell();
     }
 
     function testCloseSell() public callerIsOrchestratorOwner {
-        assertEq(bondingCurveFundingManger.sellIsOpen(), true);
+        assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
-        bondingCurveFundingManger.closeSell();
+        bondingCurveFundingManager.closeSell();
 
-        assertEq(bondingCurveFundingManger.sellIsOpen(), false);
+        assertEq(bondingCurveFundingManager.sellIsOpen(), false);
     }
 
     /* Test setSellFee and _setSellFee function
@@ -379,21 +379,21 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         public
         callerIsOrchestratorOwner
     {
-        vm.assume(_fee > bondingCurveFundingManger.call_BPS());
+        vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
             IRedeemingBondingCurveFundingManagerBase
                 .RedeemingBondingCurveFundingManager__InvalidFeePercentage
                 .selector
         );
-        bondingCurveFundingManger.setSellFee(_fee);
+        bondingCurveFundingManager.setSellFee(_fee);
     }
 
     function testSetSellFee(uint _fee) public callerIsOrchestratorOwner {
-        vm.assume(_fee <= bondingCurveFundingManger.call_BPS());
+        vm.assume(_fee <= bondingCurveFundingManager.call_BPS());
 
-        bondingCurveFundingManger.setSellFee(_fee);
+        bondingCurveFundingManager.setSellFee(_fee);
 
-        assertEq(bondingCurveFundingManger.sellFee(), _fee);
+        assertEq(bondingCurveFundingManager.sellFee(), _fee);
     }
 
     //--------------------------------------------------------------------------
@@ -416,11 +416,11 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         vm.startPrank(seller);
         {
-            _token.approve(address(bondingCurveFundingManger), amount);
-            bondingCurveFundingManger.buyOrder(amount);
+            _token.approve(address(bondingCurveFundingManager), amount);
+            bondingCurveFundingManager.buyOrder(amount);
 
-            bondingCurveFundingManger.approve(
-                address(bondingCurveFundingManger), amount
+            bondingCurveFundingManager.approve(
+                address(bondingCurveFundingManager), amount
             );
         }
         vm.stopPrank();

@@ -28,7 +28,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     uint private constant BUY_FEE = 0;
     bool private constant BUY_IS_OPEN = true;
 
-    BondingCurveFundingManagerMock bondingCurveFundingManger;
+    BondingCurveFundingManagerMock bondingCurveFundingManager;
     address formula;
 
     address owner_address = makeAddr("alice");
@@ -38,17 +38,17 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         // Deploy contracts
         address impl = address(new BondingCurveFundingManagerMock());
 
-        bondingCurveFundingManger =
+        bondingCurveFundingManager =
             BondingCurveFundingManagerMock(Clones.clone(impl));
 
         formula = address(new BancorFormula());
 
-        _setUpOrchestrator(bondingCurveFundingManger);
+        _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
 
         // Init Module
-        bondingCurveFundingManger.init(
+        bondingCurveFundingManager.init(
             _orchestrator,
             _METADATA,
             abi.encode(
@@ -71,32 +71,32 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     function testInit() public override {
         assertEq(
-            bondingCurveFundingManger.name(),
+            bondingCurveFundingManager.name(),
             string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
             "Name has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.symbol(),
+            bondingCurveFundingManager.symbol(),
             string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
             "Symbol has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.decimals(),
+            bondingCurveFundingManager.decimals(),
             DECIMALS,
             "Decimals has not been set correctly"
         );
         assertEq(
-            address(bondingCurveFundingManger.formula()),
+            address(bondingCurveFundingManager.formula()),
             formula,
             "Formula has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.buyFee(),
+            bondingCurveFundingManager.buyFee(),
             BUY_FEE,
             "Buy fee has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManger.buyIsOpen(),
+            bondingCurveFundingManager.buyIsOpen(),
             BUY_IS_OPEN,
             "Buy-is-open has not been set correctly"
         );
@@ -104,7 +104,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     function testReinitFails() public override {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        bondingCurveFundingManger.init(_orchestrator, _METADATA, abi.encode());
+        bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 
     /* Test buyingIsEnabled modifier
@@ -116,7 +116,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     */
     function testBuyingIsEnabled_FailsIfBuyNotOpen() public {
         vm.prank(owner_address);
-        bondingCurveFundingManger.closeBuy();
+        bondingCurveFundingManager.closeBuy();
 
         vm.prank(non_owner_address);
         vm.expectRevert(
@@ -124,7 +124,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManager__BuyingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManger.buyOrderFor(non_owner_address, 100);
+        bondingCurveFundingManager.buyOrderFor(non_owner_address, 100);
     }
 
     /* Test validReceiver modifier
@@ -144,7 +144,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManagerBase__InvalidRecipient
                 .selector
         );
-        bondingCurveFundingManger.buyOrderFor(address(0), 100);
+        bondingCurveFundingManager.buyOrderFor(address(0), 100);
 
         // Test for its own address)
         vm.expectRevert(
@@ -152,8 +152,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManagerBase__InvalidRecipient
                 .selector
         );
-        bondingCurveFundingManger.buyOrderFor(
-            address(bondingCurveFundingManger), 100
+        bondingCurveFundingManager.buyOrderFor(
+            address(bondingCurveFundingManager), 100
         );
 
         vm.stopPrank();
@@ -172,23 +172,23 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Pre-checks
         uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManger));
+            _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManger.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManger.balanceOf(receiver), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(receiver), 0);
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManger.buyOrderFor(receiver, amount);
+        bondingCurveFundingManager.buyOrderFor(receiver, amount);
 
         // Post-checks
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManger)),
+            _token.balanceOf(address(bondingCurveFundingManager)),
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManger.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManger.balanceOf(receiver), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(receiver), amount);
     }
 
     /* Test buyOrder and _buyOrder function
@@ -217,7 +217,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManager__InvalidDepositAmount
                 .selector
         );
-        bondingCurveFundingManger.buyOrder(0);
+        bondingCurveFundingManager.buyOrder(0);
     }
 
     function testBuyOrderWithZeroFee(uint amount) public {
@@ -229,56 +229,56 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Pre-checks
         uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManger));
+            _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManger.balanceOf(buyer), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManger.buyOrder(amount);
+        bondingCurveFundingManager.buyOrder(amount);
 
         // Post-checks
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManger)),
+            _token.balanceOf(address(bondingCurveFundingManager)),
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManger.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), amount);
     }
 
     function testBuyOrderWithFee(uint amount, uint fee) public {
         // Setup
-        uint _bps = bondingCurveFundingManger.call_BPS();
+        uint _bps = bondingCurveFundingManager.call_BPS();
         vm.assume(fee < _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
         amount = bound(amount, 1, maxAmount);
 
         vm.prank(owner_address);
-        bondingCurveFundingManger.setBuyFee(fee);
+        bondingCurveFundingManager.setBuyFee(fee);
 
         address buyer = makeAddr("buyer");
         _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
         uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManger));
+            _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManger.balanceOf(buyer), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManger.buyOrder(amount);
+        bondingCurveFundingManager.buyOrder(amount);
 
         // Post-checks
         uint amountMinusFee =
-            amount - (amount * fee / bondingCurveFundingManger.call_BPS());
+            amount - (amount * fee / bondingCurveFundingManager.call_BPS());
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManger)),
+            _token.balanceOf(address(bondingCurveFundingManager)),
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManger.balanceOf(buyer), amountMinusFee);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), amountMinusFee);
     }
 
     /* Test openBuy and _openBuy function
@@ -300,19 +300,19 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManager__BuyingAlreadyOpen
                 .selector
         );
-        bondingCurveFundingManger.openBuy();
+        bondingCurveFundingManager.openBuy();
     }
 
     function testOpenBuy() public callerIsOrchestratorOwner {
-        assertEq(bondingCurveFundingManger.buyIsOpen(), true);
+        assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
-        bondingCurveFundingManger.closeBuy();
+        bondingCurveFundingManager.closeBuy();
 
-        assertEq(bondingCurveFundingManger.buyIsOpen(), false);
+        assertEq(bondingCurveFundingManager.buyIsOpen(), false);
 
-        bondingCurveFundingManger.openBuy();
+        bondingCurveFundingManager.openBuy();
 
-        assertEq(bondingCurveFundingManger.buyIsOpen(), true);
+        assertEq(bondingCurveFundingManager.buyIsOpen(), true);
     }
 
     /* Test closeBuy and _closeBuy function
@@ -329,22 +329,22 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         public
         callerIsOrchestratorOwner
     {
-        bondingCurveFundingManger.closeBuy();
+        bondingCurveFundingManager.closeBuy();
 
         vm.expectRevert(
             IBondingCurveFundingManagerBase
                 .BondingCurveFundingManager__BuyingAlreadyClosed
                 .selector
         );
-        bondingCurveFundingManger.closeBuy();
+        bondingCurveFundingManager.closeBuy();
     }
 
     function testCloseBuy() public callerIsOrchestratorOwner {
-        assertEq(bondingCurveFundingManger.buyIsOpen(), true);
+        assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
-        bondingCurveFundingManger.closeBuy();
+        bondingCurveFundingManager.closeBuy();
 
-        assertEq(bondingCurveFundingManger.buyIsOpen(), false);
+        assertEq(bondingCurveFundingManager.buyIsOpen(), false);
     }
 
     /* Test setBuyFee and _setBuyFee function
@@ -363,21 +363,21 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         public
         callerIsOrchestratorOwner
     {
-        vm.assume(_fee >= bondingCurveFundingManger.call_BPS());
+        vm.assume(_fee >= bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
             IBondingCurveFundingManagerBase
                 .BondingCurveFundingManager__InvalidFeePercentage
                 .selector
         );
-        bondingCurveFundingManger.setBuyFee(_fee);
+        bondingCurveFundingManager.setBuyFee(_fee);
     }
 
     function testSetBuyFee(uint newFee) public callerIsOrchestratorOwner {
-        vm.assume(newFee < bondingCurveFundingManger.call_BPS());
+        vm.assume(newFee < bondingCurveFundingManager.call_BPS());
 
-        bondingCurveFundingManger.setBuyFee(newFee);
+        bondingCurveFundingManager.setBuyFee(newFee);
 
-        assertEq(bondingCurveFundingManger.buyFee(), newFee);
+        assertEq(bondingCurveFundingManager.buyFee(), newFee);
     }
 
     /* Test _calculateFeeDeductedDepositAmount function
@@ -390,13 +390,13 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint _depositAmount,
         uint _fee
     ) public {
-        vm.assume(_fee > bondingCurveFundingManger.call_BPS()); // fetch the BPS value through the mock
+        vm.assume(_fee > bondingCurveFundingManager.call_BPS()); // fetch the BPS value through the mock
         vm.expectRevert(
             IBondingCurveFundingManagerBase
                 .BondingCurveFundingManager__InvalidFeePercentage
                 .selector
         );
-        bondingCurveFundingManger.call_calculateFeeDeductedDepositAmount(
+        bondingCurveFundingManager.call_calculateFeeDeductedDepositAmount(
             _depositAmount, _fee
         );
     }
@@ -404,7 +404,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     function testCalculateFeeDeductedDepositAmount(uint _amount, uint _fee)
         public
     {
-        uint _bps = bondingCurveFundingManger.call_BPS();
+        uint _bps = bondingCurveFundingManager.call_BPS();
         vm.assume(_fee <= _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
@@ -412,7 +412,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         uint amountMinusFee = _amount - (_amount * _fee / _bps);
 
-        uint res = bondingCurveFundingManger
+        uint res = bondingCurveFundingManager
             .call_calculateFeeDeductedDepositAmount(_amount, _fee);
 
         assertEq(res, amountMinusFee);
@@ -423,9 +423,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     */
     function testSetDecimals(uint8 _newDecimals) public {
         // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManger.call_setDecimals(_newDecimals);
+        bondingCurveFundingManager.call_setDecimals(_newDecimals);
 
-        assertEq(bondingCurveFundingManger.decimals(), _newDecimals);
+        assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
     }
 
     // Test _issueTokens function
@@ -445,6 +445,6 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     function _prepareBuyConditions(address buyer, uint amount) internal {
         _token.mint(buyer, amount);
         vm.prank(buyer);
-        _token.approve(address(bondingCurveFundingManger), amount);
+        _token.approve(address(bondingCurveFundingManager), amount);
     }
 }

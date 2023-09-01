@@ -23,7 +23,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
     // The BancorVirtualSupplyBondingCurveFundingManager is not abstract, so all the necessary functions are already implemented
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
-
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 
@@ -42,12 +41,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
     function call_reserveRatioForSelling() external view returns (uint32) {
         return reserveRatioForSelling;
     }
+
     function call_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,
         uint8 _requiredDecimals
     ) external pure returns (uint) {
-        return _convertAmountToRequiredDecimal(_amount, _tokenDecimals, _requiredDecimals);
+        return _convertAmountToRequiredDecimal(
+            _amount, _tokenDecimals, _requiredDecimals
+        );
     }
-
 }
