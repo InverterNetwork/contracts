@@ -51,12 +51,16 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // First we deploy a mock ERC20 to act as funding token for the orchestrator. It has a public mint function.
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            token = new ERC20Mock("Mock", "MOCK");
+            token = new ERC20Mock("BloomMock", "BLMOCK");
         }
         vm.stopBroadcast();
+        //token = ERC20Mock(0x61a4ABC15311EE7F2fe02b5F5b2e8B15c1E907be);
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
         address orchestratorFactory = DeploymentScript.run();
+
+        //We use the exisiting orchestratorFactory address
+        //address orchestratorFactory = 0x9069e7E04a0E6B5eAe7e8A76C6864feB75CdE436;
 
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
@@ -175,6 +179,26 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             test_orchestrator.orchestratorId(),
             address(test_orchestrator)
         );
+        console2.log(
+            "\t-FundingManager deployed at address: %s ",
+            address(test_orchestrator.fundingManager())
+        );
+        console2.log(
+            "\t-Authorizer deployed at address: %s ",
+            address(test_orchestrator.authorizer())
+        );
+        console2.log(
+            "\t-PaymentProcessor deployed at address: %s ",
+            address(test_orchestrator.paymentProcessor())
+        );
+
+        console2.log(
+            "\t-BountyManager deployed at address: %s ",
+            address(orchestratorCreatedBountyManager)
+        );
+        console2.log(
+            "=================================================================================="
+        );
 
         // ------------------------------------------------------------------------
         // Initialize FundingManager
@@ -214,19 +238,32 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         // Create a Bounty
         vm.startBroadcast(orchestratorOwnerPrivateKey);
-        {
-            orchestratorCreatedBountyManager.grantModuleRole(
-                orchestratorCreatedBountyManager.BOUNTY_ADMIN_ROLE(),
-                orchestratorOwner
-            );
 
-            bytes memory details = "TEST BOUNTY";
+        // Whitelist owner to create bounties
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.BOUNTY_ADMIN_ROLE(),
+            orchestratorOwner
+        );
 
+        // Whitelist owner to post claims
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.CLAIM_ADMIN_ROLE(),
+            orchestratorOwner
+        );
+        // Whitelist owner to verify claims
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.VERIFY_ADMIN_ROLE(),
+            orchestratorOwner
+        );
+
+        bytes memory details = "TEST BOUNTY";
+
+        uint bountyId =
             orchestratorCreatedBountyManager.addBounty(100e18, 250e18, details);
-        }
+
         vm.stopBroadcast();
 
-        console2.log("\t -Bounty Created.");
+        console2.log("\t -Bounty Created. Id: ", bountyId);
 
         console2.log(
             "=================================================================================="
