@@ -79,7 +79,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// for reference.
     uint32 internal reserveRatioForSelling; //@note @review why no getters?
     /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
-    uint32 internal constant PPM = 1_000_000; //@bugfix @review changed type since it will be compared with uint32 
+    uint32 internal constant PPM = 1_000_000; //@bugfix @review changed type since it will be compared with uint32
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -361,7 +361,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     function _setReserveRatioForBuying(uint32 _reserveRatio) internal {
         // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
         //              - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
-        if (_reserveRatio == 0) { // @bugfix @review 
+        if (_reserveRatio == 0) {
+            // @bugfix @review
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
         }
@@ -380,7 +381,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     function _setReserveRatioForSelling(uint32 _reserveRatio) internal {
         // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
         //           - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
-        if (_reserveRatio == 0) { // @bugfix @review 
+        if (_reserveRatio == 0) {
+            // @bugfix @review
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
         }
