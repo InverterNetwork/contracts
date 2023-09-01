@@ -192,7 +192,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         override(RedeemingBondingCurveFundingManagerBase)
         sellingIsEnabled
     {
-        _virtualSupplySellOrder(msg.sender, _depositAmount);
+        _virtualSupplySellOrder(_msgSender(), _depositAmount);
     }
 
     //--------------------------------------------------------------------------
