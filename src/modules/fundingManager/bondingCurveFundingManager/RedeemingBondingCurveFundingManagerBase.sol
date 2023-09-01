@@ -68,7 +68,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         virtual
         sellingIsEnabled
     {
-        _sellOrder(msg.sender, _depositAmount);
+        _sellOrder(_msgSender(), _depositAmount);
     }
 
     //--------------------------------------------------------------------------

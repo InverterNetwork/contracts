@@ -531,7 +531,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     /*   
         Test mintIssuanceTokenTo function
     */
-    function testMintIssuanceTokenTo(uint amount) public callerIsOrchestratorOwner {
+    function testMintIssuanceTokenTo(uint amount)
+        public
+        callerIsOrchestratorOwner
+    {
         assertEq(bondingCurveFundingManager.balanceOf(non_owner_address), 0);
 
         bondingCurveFundingManager.mintIssuanceTokenTo(
