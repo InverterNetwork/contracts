@@ -64,7 +64,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     // Storage
 
     /// @dev The interface of the Bancor Formula used to calculate the issuance and redeeming amount.
-    IBancorFormula formula;
+    IBancorFormula public formula; // bugfix @review why not public?
     /// @dev Value is used to convert deposit amount to 18 decimals,
     /// which is required by the Bancor formula
     uint8 private constant eighteenDecimals = 18;
@@ -72,14 +72,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// of the Token's value that is held in reserve. The value is a number between 0 and 100%,
     /// expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
     /// for reference.
-    uint32 internal reserveRatioForBuying;
+    uint32 internal reserveRatioForBuying; //@note @review why no getters?
     /// @dev The reserve ratio for selling determines the rate of price growth. It is a measure of the fraction
     /// of the Token's value that is held in reserve. The value is a number between 0 and 100%,
     /// expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
     /// for reference.
-    uint32 internal reserveRatioForSelling;
+    uint32 internal reserveRatioForSelling; //@note @review why no getters?
     /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
-    uint internal constant PPM = 1_000_000;
+    uint32 internal constant PPM = 1_000_000; //@bugfix @review changed type since it will be compared with uint32 
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -171,7 +171,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         override(BondingCurveFundingManagerBase)
         buyingIsEnabled
     {
-        _virtualSupplyBuyOrder(msg.sender, _depositAmount);
+        _virtualSupplyBuyOrder(_msgSender(), _depositAmount);
     }
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
@@ -359,8 +359,12 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ///
     /// @param _reserveRatio The reserve ratio to be set for buying tokens. Must be <= PPM.
     function _setReserveRatioForBuying(uint32 _reserveRatio) internal {
-        // TODO: Qs - TEST: What happens when set to 0?
+        // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
         //              - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
+        if (_reserveRatio == 0) { // @bugfix @review 
+            revert
+                BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
+        }
         if (_reserveRatio > PPM) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
@@ -374,8 +378,12 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ///
     /// @param _reserveRatio The reserve ratio to be set for selling tokens. Must be <= PPM.
     function _setReserveRatioForSelling(uint32 _reserveRatio) internal {
-        // TODO: Qs - TEST: What happens when set to 0?
-        //              - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
+        // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
+        //           - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
+        if (_reserveRatio == 0) { // @bugfix @review 
+            revert
+                BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
+        }
         if (_reserveRatio > PPM) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
