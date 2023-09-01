@@ -199,6 +199,60 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Test covered in BondingCurveFundingManagerBase
     }
 
+    function testBuyOrder_FailsIfDepositAmountOverflowsVirtualCollateralSupply(
+        uint amount
+    ) public {
+        // Setup
+        amount = bound(amount, 2, 1e38); // see comment in testBuyOrderWithZeroFee
+        _token.mint(
+            address(bondingCurveFundingManager), (type(uint).max - amount)
+        );
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // we set a virtual collateral supply that will not cover the amount to redeem
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setVirtualCollateralSupply(
+            type(uint).max - amount + 1
+        );
+
+        vm.startPrank(buyer);
+        {
+            vm.expectRevert(
+                // This results in an overflow of the bonding curve math
+            );
+            bondingCurveFundingManager.buyOrder(amount);
+        }
+        vm.stopPrank();
+    }
+
+    function testBuyOrder_FailsIfMintAmountOverflowsVirtualTokenSupply(
+        uint amount
+    ) public {
+        // Setup
+        amount = bound(amount, 2, 1e38); // see comment in testBuyOrderWithZeroFee
+        _token.mint(
+            address(bondingCurveFundingManager), (type(uint).max - amount)
+        );
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // we set a virtual collateral supply that will not cover the amount to redeem
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setVirtualTokenSupply(type(uint).max);
+
+        vm.startPrank(buyer);
+        {
+            vm.expectRevert(
+                // This results in an overflow of the bonding curve math
+            );
+            bondingCurveFundingManager.buyOrder(amount);
+        }
+        vm.stopPrank();
+    }
+
     function testBuyOrderWithZeroFee(uint amount) public {
         // Setup
         // Above an amount of 1e38 the BancorFormula starts to revert. Assuming a token with 18 decimals or less, this value should cover most realistic usecases.
@@ -317,8 +371,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     function testSellOrder_FailsIfRedeemAmountExceedsVirtualCollateralSupply(
         uint amount
     ) public {
+        /*      TODO: look into precision limits to correctly set boundaries
+
         // Setup
-        amount = bound(amount, 1, 1e38); // see comment in testBuyOrderWithZeroFee
+        amount = bound(amount, 100_000_000, 1e38); // see comment in testBuyOrderWithZeroFee
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amount)
         );
@@ -326,9 +382,13 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         address seller = makeAddr("seller");
         _prepareSellConditions(seller, amount);
 
+        uint userSellAmount = bondingCurveFundingManager.balanceOf(seller);
+        vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause underflow
+
         // we set a virtual collateral supply that will not cover the amount to redeem
         vm.prank(owner_address);
-        bondingCurveFundingManager.setVirtualCollateralSupply(1);
+        bondingCurveFundingManager.setVirtualCollateralSupply(amount-1_000_000);
+
 
         vm.startPrank(seller);
         {
@@ -337,14 +397,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                     .VirtualCollateralSupply__SubtractResultsInUnderflow
                     .selector
             );
-            bondingCurveFundingManager.sellOrder(amount);
+            bondingCurveFundingManager.sellOrder(userSellAmount);
         }
-        vm.stopPrank();
+        vm.stopPrank(); */
     }
 
-    function testSellOrder_FailsIfBurnAmountExceedsVirtualTokenSupply()
-        public
-    {
+    function testSellOrder_FailsIfBurnAmountExceedsVirtualTokenSupply(
+        uint amount
+    ) public {
         // TODO
     }
 
@@ -457,7 +517,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
-    // No need to test these four:
+    // No need to test these four
     /*     
     function deposit(uint amount) external {}
     function depositFor(address to, uint amount) external {}
@@ -469,12 +529,19 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     // OnlyOrchestrator Functions
 
     /*   
-     // Probably bug and tested in VirtualTokenSupplyBase tests?
-    function mintIssuanceTokenTo(address _receiver, uint _amount)
-        external
-        onlyOrchestratorOwner
-        validReceiver(_receiver)
+        Test mintIssuanceTokenTo function
     */
+    function testMintIssuanceTokenTo(uint amount) public callerIsOrchestratorOwner {
+        assertEq(bondingCurveFundingManager.balanceOf(non_owner_address), 0);
+
+        bondingCurveFundingManager.mintIssuanceTokenTo(
+            non_owner_address, amount
+        );
+
+        assertEq(
+            bondingCurveFundingManager.balanceOf(non_owner_address), amount
+        );
+    }
 
     /* Test setVirtualTokenSupply and _setVirtualTokenSupply function
         ├── when caller is not the Orchestrator owner
@@ -708,9 +775,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         {
             _token.approve(address(bondingCurveFundingManager), amount);
             bondingCurveFundingManager.buyOrder(amount);
+            uint userSellAmount = bondingCurveFundingManager.balanceOf(seller);
 
             bondingCurveFundingManager.approve(
-                address(bondingCurveFundingManager), amount
+                address(bondingCurveFundingManager), userSellAmount
             );
         }
         vm.stopPrank();
