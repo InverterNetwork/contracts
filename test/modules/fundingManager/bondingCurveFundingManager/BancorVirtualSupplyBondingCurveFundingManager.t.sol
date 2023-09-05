@@ -730,16 +730,45 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
     function testConvertAmountToRequiredDecimals_whenAbove(
         uint _amount,
-        uint8 _decimals
+        uint8 _tokenDecimals,
+        uint8 _requiredDecimals
     ) public {
-        //TODO
+        // Bounds necessary to avoid overflows:
+        // amount < (1e78 (uint.max) - 1e32 (max decimals) - 1e5 (BPS))
+        // @review if these constraints seem reasonable
+        _amount = bound(_amount, 1, 1e41);
+        _requiredDecimals= uint8(bound(_requiredDecimals, 1, 18));
+        _tokenDecimals = uint8(bound(_tokenDecimals, _requiredDecimals+1, 32));
+
+
+        uint res = bondingCurveFundingManager
+            .call_convertAmountToRequiredDecimal(
+            _amount, _tokenDecimals, _requiredDecimals
+        );
+        uint factor = _tokenDecimals - _requiredDecimals;
+
+        assertEq((_amount /  (10 ** factor)), res);
     }
 
     function testConvertAmountToRequiredDecimals_whenBelow(
         uint _amount,
-        uint8 _decimals
+        uint8 _tokenDecimals,
+        uint8 _requiredDecimals
     ) public {
-        //TODO
+        // Bounds necessary to avoid overflows:
+        // amount < (1e78 (uint.max) - 1e32 (max decimals) - 1e5 (BPS))
+        // @review if these constraints seem reasonable
+        _amount = bound(_amount, 1, 1e41);
+        _tokenDecimals= uint8(bound(_tokenDecimals, 1, 18));
+        _requiredDecimals = uint8(bound(_requiredDecimals, _tokenDecimals+1, 32));
+
+
+        uint res = bondingCurveFundingManager
+            .call_convertAmountToRequiredDecimal(
+            _amount, _tokenDecimals, _requiredDecimals
+        );
+        uint factor =  _requiredDecimals-_tokenDecimals;
+        assertEq((res % (10 ** factor)), 0);
     }
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Mutating Functions

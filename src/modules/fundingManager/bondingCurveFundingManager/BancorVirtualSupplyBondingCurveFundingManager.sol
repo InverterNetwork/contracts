@@ -402,6 +402,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _requiredDecimals The required decimal places for the token.
     ///
     /// @return The converted amount with required decimal places.
+    // @note @review I think the implementation for (_tokenDecimals > _requiredDecimals) is wrong? If the difference in decimals is bigger than BPS it just starts returning zero
+    // In general, I'm not sure I understand the use of BPS here. The alternative version leaving it out seems to accomplish the same goal, or am I missing something?
     function _convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,
@@ -414,15 +416,22 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // If the decimal of token is > required decimal, calculate conversion rate and
         // return amount converted to required decimal
         if (_tokenDecimals > _requiredDecimals) {
-            uint conversionFactor =
+/*             uint conversionFactor =
                 BPS / (10 ** (_tokenDecimals - _requiredDecimals));
-            return (_amount * conversionFactor) / BPS;
+            return (_amount * conversionFactor) / BPS; */
+            uint conversionFactor =
+                (10 ** (_tokenDecimals - _requiredDecimals));
+            return (_amount / conversionFactor) ;
+
         } else {
             // If the decimal of token is < required decimal, calculate conversion rate and
             // return amount converted to required decimals
-            uint conversionFactor =
+/*             uint conversionFactor =
                 BPS * (10 ** (_requiredDecimals - _tokenDecimals));
-            return (_amount * conversionFactor) / BPS;
+            return (_amount * conversionFactor) / BPS; */
+            uint conversionFactor =
+             (10 ** (_requiredDecimals - _tokenDecimals));
+            return (_amount * conversionFactor) ;
         }
     }
 
