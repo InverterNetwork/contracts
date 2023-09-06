@@ -416,22 +416,19 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // If the decimal of token is > required decimal, calculate conversion rate and
         // return amount converted to required decimal
         if (_tokenDecimals > _requiredDecimals) {
-/*             uint conversionFactor =
+            /*             uint conversionFactor =
                 BPS / (10 ** (_tokenDecimals - _requiredDecimals));
             return (_amount * conversionFactor) / BPS; */
-            uint conversionFactor =
-                (10 ** (_tokenDecimals - _requiredDecimals));
-            return (_amount / conversionFactor) ;
-
+            uint conversionFactor = (10 ** (_tokenDecimals - _requiredDecimals));
+            return (_amount / conversionFactor);
         } else {
             // If the decimal of token is < required decimal, calculate conversion rate and
             // return amount converted to required decimals
-/*             uint conversionFactor =
+            /*             uint conversionFactor =
                 BPS * (10 ** (_requiredDecimals - _tokenDecimals));
             return (_amount * conversionFactor) / BPS; */
-            uint conversionFactor =
-             (10 ** (_requiredDecimals - _tokenDecimals));
-            return (_amount * conversionFactor) ;
+            uint conversionFactor = (10 ** (_requiredDecimals - _tokenDecimals));
+            return (_amount * conversionFactor);
         }
     }
 
