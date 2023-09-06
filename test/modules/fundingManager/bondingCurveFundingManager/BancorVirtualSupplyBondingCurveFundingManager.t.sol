@@ -191,11 +191,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    // TODO expand for virtual supply
-    // test buyOrderFor function
-    //  - Both modifiers have been tested in the upstream tests
-    //  - The goal of this test is just to verify that the tokens get sent to a different receiver
-
     /* Test buyOrder and _virtualSupplyBuyOrder function
         ├── when the deposit amount is 0
         │       └── it should revert 
@@ -362,9 +357,51 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         assertEq(bondingCurveFundingManager.balanceOf(buyer), formulaReturn);
     }
 
-    // test sellOrderFor function
+    // test buyOrderFor function
     //  - Both modifiers have been tested in the upstream tests
+    //  - Buy order branches are tested in sellOrder tests
     //  - The goal of this test is just to verify that the tokens get sent to a different receiver
+
+    function testBuyOrderFor(address to, uint amount) public {
+        // Setup
+
+        vm.assume(to != address(0));
+
+        // Above an amount of 1e38 the BancorFormula starts to revert. Assuming a token with 18 decimals or less, this value should cover most realistic usecases.
+        // @question @review should we add an explicit check in the deposit code?
+        amount = bound(amount, 1, 1e38);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Pre-checks
+        uint balanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Use formula to get expected return values
+        uint formulaReturn = bondingCurveFundingManager.formula()
+            .calculatePurchaseReturn(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForBuying(),
+            amount
+        );
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buyOrderFor(to, amount);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (balanceBefore + amount)
+        );
+        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(to), formulaReturn);
+    }
 
     /* Test sellOrder and _virtualSupplySellOrder function
         ├── when the sell amount is 0
@@ -592,6 +629,79 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         assertEq(
             bondingCurveFundingManager.getVirtualCollateralSupply(),
             newVirtualCollateral - sellAmountMinusFee
+        );
+    }
+
+    // test sellOrderFor function
+    //  - Both modifiers have been tested in the upstream tests
+    //  - Sell order branches are tested in sellOrder tests
+    //  - The goal of this test is just to verify that the tokens get sent to a different receiver
+
+    function testSellOrderFor(uint amountIn, address to) public {
+        // Setup
+
+        vm.assume(to != address(0));
+
+        // For sells, number above 1e26 start reverting!?
+        amountIn = bound(amountIn, 1, 1e26); // see comment in testBuyOrderWithZeroFee
+        _token.mint(
+            address(bondingCurveFundingManager), (type(uint).max - amountIn)
+        ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
+
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, amountIn);
+
+        uint userSellAmount = bondingCurveFundingManager.balanceOf(seller);
+        vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause underflow
+
+        // Set virtual supply to some number above the sell amount
+        // Set virtual collateral to some number
+        uint newVirtualTokenSupply = userSellAmount * 2;
+        uint newVirtualCollateral = amountIn * 2;
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setVirtualTokenSupply(
+                newVirtualTokenSupply
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                newVirtualCollateral
+            );
+        }
+        vm.stopPrank();
+
+        // Use formula to get expected return values
+        uint formulaReturn = bondingCurveFundingManager.formula()
+            .calculateSaleReturn(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForSelling(),
+            userSellAmount
+        );
+
+        // Perform the sell
+        vm.startPrank(seller);
+        {
+            bondingCurveFundingManager.sellOrderFor(to, userSellAmount);
+        }
+        vm.stopPrank();
+
+        // Check real-world token/collateral balances
+        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(_token.balanceOf(seller), 0);
+        assertEq(_token.balanceOf(to), formulaReturn);
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (type(uint).max - formulaReturn)
+        );
+
+        // Check virtual token/collateral balances
+        assertEq(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            newVirtualTokenSupply - userSellAmount
+        );
+        assertEq(
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            newVirtualCollateral - formulaReturn
         );
     }
 
@@ -849,7 +959,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 └── it should emit an event? @todo
     */
 
-    function transferOrchestratorToken(address to, uint amount) public {
+    function testTransferOrchestratorToken(address to, uint amount) public {
+        vm.assume(to != address(0));
+
         _token.mint(address(bondingCurveFundingManager), amount);
 
         assertEq(_token.balanceOf(to), 0);
