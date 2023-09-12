@@ -217,11 +217,19 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            token.mint(address(orchestratorOwner), scriptConstants.orchestratorTokenDepositAmount());
+            token.mint(
+                address(orchestratorOwner),
+                scriptConstants.orchestratorTokenDepositAmount()
+            );
 
-            token.approve(address(fundingManager), scriptConstants.orchestratorTokenDepositAmount());
+            token.approve(
+                address(fundingManager),
+                scriptConstants.orchestratorTokenDepositAmount()
+            );
 
-            fundingManager.deposit(scriptConstants.orchestratorTokenDepositAmount());
+            fundingManager.deposit(
+                scriptConstants.orchestratorTokenDepositAmount()
+            );
         }
         vm.stopBroadcast();
         console2.log("\t -Initialization Funding Done");
@@ -230,7 +238,10 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         vm.startBroadcast(funder1PrivateKey);
         {
             token.mint(funder1, scriptConstants.funder1TokenDepositAmount());
-            token.approve(address(fundingManager), scriptConstants.funder1TokenDepositAmount());
+            token.approve(
+                address(fundingManager),
+                scriptConstants.funder1TokenDepositAmount()
+            );
             fundingManager.deposit(scriptConstants.funder1TokenDepositAmount());
         }
         vm.stopBroadcast();
@@ -260,12 +271,11 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         bytes memory details = "TEST BOUNTY";
 
-        uint bountyId =
-            orchestratorCreatedBountyManager.addBounty(
-                scriptConstants.addBounty_minimumPayoutAmount(), 
-                scriptConstants.addBounty_maximumPayoutAmount(), 
-                details
-            );
+        uint bountyId = orchestratorCreatedBountyManager.addBounty(
+            scriptConstants.addBounty_minimumPayoutAmount(),
+            scriptConstants.addBounty_maximumPayoutAmount(),
+            details
+        );
 
         vm.stopBroadcast();
 

@@ -38,7 +38,9 @@ contract addClaim is Script {
 
         vm.startBroadcast(orchestratorOwner);
 
-        uint claimId = bountyManager.addClaim(1, contributors, scriptConstants.emptyBytes());
+        uint claimId = bountyManager.addClaim(
+            1, contributors, scriptConstants.emptyBytes()
+        );
 
         vm.stopBroadcast();
 
