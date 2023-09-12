@@ -7,8 +7,10 @@ import {
     BountyManager,
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
+import {ScriptConstants} from "../script-constants.sol";
 
 contract addClaim is Script {
+    ScriptConstants scriptConstants = new ScriptConstants();
     uint orchestratorOwnerPrivateKey =
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
@@ -16,27 +18,27 @@ contract addClaim is Script {
     // ===============================================================================================================
     // Introduce corresponding bounty manager and user addresses here
     // ===============================================================================================================
-    address bountyManagerAddress = 0x4FB5adc63fB08c7E7864Ce3f77714af6B8B50D9f;
+    address bountyManagerAddress = scriptConstants.bountyManagerAddress();
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
-    address user1 = 0x9518a55e5cd4Ac650A37a6Ab6c352A3146D2C9BD;
-    address user2 = 0x3064A400b5e74BeA12391058930EfD95a6911970;
+    address user1 = scriptConstants.addBountyManagerClaim_user1();
+    address user2 = scriptConstants.addBountyManagerClaim_user2();
 
     function run() public {
         IBountyManager.Contributor[] memory contributors =
             new IBountyManager.Contributor[](2);
         contributors[0] = IBountyManager.Contributor({
             addr: user1,
-            claimAmount: 100_000_000_000_000_000_000
+            claimAmount: scriptConstants.addBountyManagerClaim_user1_amount()
         });
         contributors[1] = IBountyManager.Contributor({
             addr: user2,
-            claimAmount: 100_000_000_000_000_000_000
+            claimAmount: scriptConstants.addBountyManagerClaim_user2_amount()
         });
 
         vm.startBroadcast(orchestratorOwner);
 
-        uint claimId = bountyManager.addClaim(1, contributors, "0x0");
+        uint claimId = bountyManager.addClaim(1, contributors, scriptConstants.emptyBytes());
 
         vm.stopBroadcast();
 
