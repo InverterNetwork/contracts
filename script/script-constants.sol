@@ -19,4 +19,9 @@ contract ScriptConstants {
 
     uint public addBountyManagerClaim_user1_amount = 100_000_000_000_000_000_000;
     uint public addBountyManagerClaim_user2_amount = 100_000_000_000_000_000_000;
+
+    uint public orchestratorTokenDepositAmount = 10e18;
+    uint public funder1TokenDepositAmount = 1000e18;
+    uint public addBounty_minimumPayoutAmount = 100e18;
+    uint public addBounty_maximumPayoutAmount = 250e18;
 }
