@@ -42,12 +42,12 @@ interface IStakingManager {
     function getStakeForAddress(address addr, uint id)
         external
         view
-        returns (Stake stake);
+        returns (Stake memory stake);
 
     function getAllStakeIdsForAddress(address addr)
         external
         view
-        returns (uint[] stakeIds);
+        returns (uint[] memory stakeIds);
 
     //Mutating Functions
 

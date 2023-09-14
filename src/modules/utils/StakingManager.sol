@@ -5,6 +5,7 @@ pragma solidity 0.8.19;
 import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {IStakingManager} from "src/modules/utils/IStakingManager.sol";
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
@@ -18,7 +19,7 @@ contract StakingManager is IStakingManager, Module {
     using SafeERC20 for IERC20;
     using LinkedIdList for LinkedIdList.List;
 
-    IERC20 private token;
+    IERC20 public token;
 
     //--------------------------------------------------------------------------
     // Storage
@@ -45,18 +46,15 @@ contract StakingManager is IStakingManager, Module {
     // Functions
 
     //Getter Functions
-    function token() external view returns (IERC20) {
-        return token;
-    }
 
     function getTotalAmount() external view returns (uint) {
         return _totalAmount;
     }
 
-    function getStakeForAddress(uint id, address addr)
+    function getStakeForAddress(address addr, uint id)
         external
         view
-        returns (Stake stake)
+        returns (Stake memory stake)
     {
         return _stakeRegistry[addr][id];
     }
@@ -64,7 +62,7 @@ contract StakingManager is IStakingManager, Module {
     function getAllStakeIdsForAddress(address addr)
         external
         view
-        returns (uint[] stakeIds)
+        returns (uint[] memory stakeIds)
     {
         return _stakeIds[addr].listIds();
     }
@@ -85,14 +83,16 @@ contract StakingManager is IStakingManager, Module {
         _withdrawTo(stakeId, _msgSender(), amount);
     }
 
-    function withdrawTo(uint stakeId, address to, uint amount) external;
+    function withdrawTo(uint stakeId, address to, uint amount) external {
+        _withdrawTo(stakeId, to, amount);
+    }
 
     function _depositFor(address to, uint amount)
         internal
         returns (uint stakeId)
     {
         address sender = _msgSender();
-        token.safeTransferFrom(sender, address(this), amount_);
+        token.safeTransferFrom(sender, address(this), amount);
         //@todo create stake struct accordingly
 
         emit Deposit(stakeId, sender, address(this), amount);
