@@ -6,13 +6,23 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 interface IStakingManager {
     //--------------------------------------------------------------------------
-    // Errors
-
+    // Data Structures
     struct Stake {
-        uint id;
         uint amount;
         uint timesstamp;
     }
+
+    //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Given amount is invalid.
+    error Module__StakingManager__InvalidAmount();
+
+    /// @notice Given stake id is invalid.
+    error Module__StakingManager__InvalidStakeId();
+
+    /// @notice Given withdraw amount is invalid.
+    error Module__StakingManager__InvalidWithdrawAmount();
 
     //--------------------------------------------------------------------------
     // Events
@@ -50,12 +60,13 @@ interface IStakingManager {
         returns (uint[] memory stakeIds);
 
     //Mutating Functions
-
     function deposit(uint amount) external returns (uint stakeId);
+
     function depositFor(address to, uint amount)
         external
         returns (uint stakeId);
 
     function withdraw(uint stakeId, uint amount) external;
+
     function withdrawTo(uint stakeId, address to, uint amount) external;
 }

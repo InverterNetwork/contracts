@@ -20,12 +20,36 @@ contract StakingManager is IStakingManager, Module {
     using LinkedIdList for LinkedIdList.List;
 
     IERC20 public token;
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier validAmount(uint amount) {
+        if (amount == 0) {
+            revert Module__StakingManager__InvalidAmount();
+        }
+        _;
+    }
+
+    modifier validStakeId(address addr, uint stakeId) {
+        if (!_stakeIds[addr].isExistingId(stakeId)) {
+            revert Module__StakingManager__InvalidStakeId();
+        }
+        _;
+    }
+
+    modifier validWithdrawAmount(address addr, uint stakeId, uint amount) {
+        if (_stakeRegistry[addr][stakeId].amount < amount) {
+            revert Module__StakingManager__InvalidWithdrawAmount();
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Storage
     uint private _totalAmount;
 
     mapping(address => LinkedIdList.List) private _stakeIds;
+    mapping(address => uint) private _stakeIdCounter;
     mapping(address => mapping(uint => Stake)) private _stakeRegistry;
 
     //--------------------------------------------------------------------------
@@ -89,19 +113,44 @@ contract StakingManager is IStakingManager, Module {
 
     function _depositFor(address to, uint amount)
         internal
+        validAmount(amount)
         returns (uint stakeId)
     {
+        //if no stakes have been created yet
+        if (_stakeIdCounter[to] == 0) {
+            //init LinkedList
+            _stakeIds[to].init();
+        }
+
+        //Increase idCounter
+        stakeId = _stakeIdCounter[to]++;
+        //Add id to list
+        _stakeIds[to].addId(stakeId);
+        //Set Stake in registry
+        _stakeRegistry[to][stakeId] =
+            Stake({amount: amount, timesstamp: block.timestamp});
+
         address sender = _msgSender();
         token.safeTransferFrom(sender, address(this), amount);
-        //@todo create stake struct accordingly
-
         emit Deposit(stakeId, sender, address(this), amount);
     }
 
-    function _withdrawTo(uint stakeId, address to, uint amount) internal {
-        token.safeTransfer(to, amount);
-        //@todo modify stake struct accordingly
+    function _withdrawTo(uint stakeId, address to, uint amount)
+        internal
+        validStakeId(_msgSender(), stakeId)
+        validAmount(amount)
+        validWithdrawAmount(_msgSender(), stakeId, amount)
+    {
+        Stake storage stake = _stakeRegistry[_msgSender()][stakeId];
+        //If Stake amount equals amount user wants to withdraw
+        if (amount == stake.amount) {
+            //@todo remove Accordingly when zero amount
+            stake.amount -= amount; //This is a placeholder for the todo above
+        } else {
+            stake.amount -= amount;
+        }
 
+        token.safeTransfer(to, amount);
         emit Withdrawal(stakeId, address(this), to, amount);
     }
 }
