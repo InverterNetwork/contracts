@@ -108,6 +108,13 @@ contract StakingManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Getter
 
+    function testGetStakeForAddressModifierInPosition() public {
+        vm.expectRevert(
+            IStakingManager.Module__StakingManager__InvalidStakeId.selector
+        );
+        stakingManager.getStakeForAddress(address(0xBEEF), 1);
+    }
+
     //--------------------------------------------------------------------------
     // Mutating Functions
 
