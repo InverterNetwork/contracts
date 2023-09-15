@@ -46,7 +46,7 @@ contract StakingManager is IStakingManager, Module {
 
     //--------------------------------------------------------------------------
     // Storage
-    uint private _totalAmount;
+    uint private _totalStakeAmount;
 
     mapping(address => LinkedIdList.List) private _stakeIds;
     mapping(address => uint) private _stakeIdCounter;
@@ -71,13 +71,14 @@ contract StakingManager is IStakingManager, Module {
 
     //Getter Functions
 
-    function getTotalAmount() external view returns (uint) {
-        return _totalAmount;
+    function getTotalStakeAmount() external view returns (uint) {
+        return _totalStakeAmount;
     }
 
     function getStakeForAddress(address addr, uint id)
         external
         view
+        validStakeId(addr, id)
         returns (Stake memory stake)
     {
         return _stakeRegistry[addr][id];
@@ -130,6 +131,9 @@ contract StakingManager is IStakingManager, Module {
         _stakeRegistry[to][stakeId] =
             Stake({amount: amount, timesstamp: block.timestamp});
 
+        //Increase totalStakeAmount
+        _totalStakeAmount += amount;
+
         address sender = _msgSender();
         token.safeTransferFrom(sender, address(this), amount);
         emit Deposit(stakeId, sender, address(this), amount);
@@ -155,6 +159,9 @@ contract StakingManager is IStakingManager, Module {
         } else {
             stake.amount -= amount;
         }
+
+        //Decrease totalStakeAmount
+        _totalStakeAmount -= amount;
 
         token.safeTransfer(to, amount);
         emit Withdrawal(stakeId, address(this), to, amount);

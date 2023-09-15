@@ -47,7 +47,7 @@ interface IStakingManager {
     //Getter Functions
     function token() external view returns (IERC20);
 
-    function getTotalAmount() external view returns (uint);
+    function getTotalStakeAmount() external view returns (uint);
 
     function getStakeForAddress(address addr, uint id)
         external
