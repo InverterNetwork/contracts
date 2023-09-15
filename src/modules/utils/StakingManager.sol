@@ -123,7 +123,7 @@ contract StakingManager is IStakingManager, Module {
         }
 
         //Increase idCounter
-        stakeId = _stakeIdCounter[to]++;
+        stakeId = ++_stakeIdCounter[to];
         //Add id to list
         _stakeIds[to].addId(stakeId);
         //Set Stake in registry
@@ -141,11 +141,17 @@ contract StakingManager is IStakingManager, Module {
         validAmount(amount)
         validWithdrawAmount(_msgSender(), stakeId, amount)
     {
+        address sender = _msgSender();
         Stake storage stake = _stakeRegistry[_msgSender()][stakeId];
         //If Stake amount equals amount user wants to withdraw
         if (amount == stake.amount) {
-            //@todo remove Accordingly when zero amount
-            stake.amount -= amount; //This is a placeholder for the todo above
+            //If full withdraw delete stake and remove it from list
+            delete _stakeRegistry[sender][stakeId]; //@note this might even be not necessary
+
+            _stakeIds[sender].removeId(
+                _stakeIds[sender].getPreviousId(stakeId), //@note this is not ideal, but will do for the POC
+                stakeId
+            );
         } else {
             stake.amount -= amount;
         }

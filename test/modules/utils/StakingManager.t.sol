@@ -36,6 +36,10 @@ contract StakingManagerTest is ModuleTest {
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(_token))
         );
+
+        //Initially mint 10_000 token for testing
+        _token.mint(address(this), 10_000);
+        _token.approve(address(stakingManager), 10_000);
     }
 
     //--------------------------------------------------------------------------
@@ -53,6 +57,53 @@ contract StakingManagerTest is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Modifier
+
+    function testValidAmount(uint amount) public {
+        amount = bound(amount, 0, 10_000);
+
+        if (amount == 0) {
+            vm.expectRevert(
+                IStakingManager.Module__StakingManager__InvalidAmount.selector
+            );
+        }
+
+        stakingManager.deposit(amount);
+    }
+
+    function testValidStakeId(uint usedIds, uint id) public {
+        usedIds = bound(usedIds, 0, 1000);
+
+        for (uint i; i < usedIds; i++) {
+            stakingManager.deposit(1);
+        }
+
+        if (id > usedIds || id == 0) {
+            vm.expectRevert(
+                IStakingManager.Module__StakingManager__InvalidStakeId.selector
+            );
+        }
+
+        stakingManager.withdraw(id, 1);
+    }
+
+    function testValidWithdrawAmount(uint amount, uint withdrawAmount) public {
+        amount = bound(amount, 1, 10_000);
+        if (withdrawAmount == 0) {
+            withdrawAmount = 1;
+        }
+
+        uint id = stakingManager.deposit(amount);
+
+        if (withdrawAmount > amount) {
+            vm.expectRevert(
+                IStakingManager
+                    .Module__StakingManager__InvalidWithdrawAmount
+                    .selector
+            );
+        }
+
+        stakingManager.withdraw(id, withdrawAmount);
+    }
 
     //--------------------------------------------------------------------------
     // Getter
