@@ -134,13 +134,15 @@ library LinkedIdList {
     function listIds(List storage self) internal view returns (uint[] memory) {
         uint[] memory result = new uint256[](self.size);
 
-        // Populate result array.
-        uint index;
-        uint elem = self.list[_SENTINEL];
-        while (elem != _SENTINEL) {
-            result[index] = elem;
-            elem = self.list[elem];
-            index++;
+        if (self.size != 0) {
+            // Populate result array.
+            uint index;
+            uint elem = self.list[_SENTINEL];
+            while (elem != _SENTINEL) {
+                result[index] = elem;
+                elem = self.list[elem];
+                index++;
+            }
         }
 
         return result;
