@@ -26,9 +26,16 @@ We operate using a two-branch-system:
 
 ## Criteria for Pull Requests
 
+### General Remarks
+When working on the Inverter Network contracts, please keep in mind the following principles:
+- **Keep It Simple, Stupid (KISS)**: The KISS principle states that simplicity should be a key goal in design and unnecessary complexity should be avoided. Ensure that your code is easy to understand, concise, and without redundant or unnecessary parts. Simple code is easier to review, debug, and maintain in the long run.
+- **Modularity**: Our contracts have been developed with a modular approach. This modular structure allows us to maintain clarity in design, fosters code reuse, and simplifies testing. When adding to or modifying the codebase, ensure that you respect this modularity. Components should have a single responsibility and communicate through well-defined interfaces. If a function or a contract is becoming too complex or trying to handle too many things, consider splitting it into smaller, more focused components.
+
+By following these principles, you ensure that the Inverter Network contracts remain robust, maintainable, and easy to comprehend for all contributors, both current and future. 
+
 ### Merging into `dev`
 Your PR should have:
-- Full test coverage of the new feature.
+- Full test coverage of the new feature, following the style of the existing tests.
 - Updated deployment scripts (if necessary).
 - Proper code comments.
 - Ensure the GitHub Continuous Integration (CI) and Linter checks pass without errors.
