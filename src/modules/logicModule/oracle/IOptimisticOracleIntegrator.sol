@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface IOptimisticOracleIntegrator {
+import {OptimisticOracleV3CallbackRecipientInterface} from
+    "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+
+interface IOptimisticOracleIntegrator is
+    OptimisticOracleV3CallbackRecipientInterface
+{
     struct DataAssertion {
         bytes32 dataId; // The dataId that was asserted.
         bytes32 data; // This could be an arbitrary data type.

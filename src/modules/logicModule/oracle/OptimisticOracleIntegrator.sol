@@ -7,14 +7,22 @@ import {Module} from "src/modules/base/Module.sol";
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
+import {IOptimisticOracleIntegrator} from
+    "src/modules/logicModule/oracle/IOptimisticOracleIntegrator.sol";
+
+// External Dependencies
 import {OptimisticOracleV3CallbackRecipientInterface} from
     "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
-
 import {OptimisticOracleV3Interface} from
     "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+import {ClaimData} from
+    "src/modules/logicModule/oracle/optimistic-oracle-v3/ClaimData.sol";
+
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 abstract contract OptimisticOracleIntegrator is
-    OptimisticOracleV3CallbackRecipientInterface,
+    IOptimisticOracleIntegrator,
     Module
 {
     using SafeERC20 for IERC20;
@@ -39,12 +47,12 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Initialization
 
-    /// @inheritdoc IModule
+    /// @inheritdoc Module
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external virtual initializer {
+    ) external virtual override initializer {
         __Module_init(orchestrator_, metadata);
 
         //address currencyAddr;
