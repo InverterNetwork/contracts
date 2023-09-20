@@ -720,6 +720,26 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
+    /*
+        Test getReserveRatioForBuying()
+    */
+    function testGetReserveRatioForBuying() public {
+        assertEq(
+            bondingCurveFundingManager.getReserveRatioForBuying(),
+            bondingCurveFundingManager.call_reserveRatioForBuying()
+        );
+    }
+    /*
+        Test getReserveRatioForSelling()
+    */
+
+    function testGetReserveRatioForSelling() public {
+        assertEq(
+            bondingCurveFundingManager.getReserveRatioForSelling(),
+            bondingCurveFundingManager.call_reserveRatioForSelling()
+        );
+    }
+
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 

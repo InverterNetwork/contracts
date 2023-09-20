@@ -32,4 +32,12 @@ interface IBancorVirtualSupplyBondingCurveFundingManager {
     /// @dev This function can only be called by the Orchestrator owner, or Manager.
     /// @param _reserveRatio The new reserve ratio for selling, expressed in PPM.
     function setReserveRatioForSelling(uint32 _reserveRatio) external;
+
+    /// @notice Returns reserve ratio set for buying, used in the Bancor Formula contract
+    /// @return Reserve Ratio for buying
+    function getReserveRatioForBuying() external view returns (uint32);
+
+    /// @notice Returns reserve ratio set for selling, used in the Bancor Formula contract
+    /// @return Reserve Ratio for selling
+    function getReserveRatioForSelling() external view returns (uint32);
 }

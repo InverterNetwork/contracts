@@ -64,7 +64,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     // Storage
 
     /// @dev The interface of the Bancor Formula used to calculate the issuance and redeeming amount.
-    IBancorFormula public formula; // bugfix @review why not public?
+    IBancorFormula public formula;
     /// @dev Value is used to convert deposit amount to 18 decimals,
     /// which is required by the Bancor formula
     uint8 private constant eighteenDecimals = 18;
@@ -72,14 +72,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// of the Token's value that is held in reserve. The value is a number between 0 and 100%,
     /// expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
     /// for reference.
-    uint32 internal reserveRatioForBuying; //@note @review why no getters?
+    uint32 internal reserveRatioForBuying;
     /// @dev The reserve ratio for selling determines the rate of price growth. It is a measure of the fraction
     /// of the Token's value that is held in reserve. The value is a number between 0 and 100%,
     /// expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
     /// for reference.
-    uint32 internal reserveRatioForSelling; //@note @review why no getters?
+    uint32 internal reserveRatioForSelling;
     /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
-    uint32 internal constant PPM = 1_000_000; //@bugfix @review changed type since it will be compared with uint32
+    uint32 internal constant PPM = 1_000_000;
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -193,6 +193,16 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         sellingIsEnabled
     {
         _virtualSupplySellOrder(_msgSender(), _depositAmount);
+    }
+
+    /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
+    function getReserveRatioForBuying() external view returns (uint32) {
+        return reserveRatioForBuying;
+    }
+
+    /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
+    function getReserveRatioForSelling() external view returns (uint32) {
+        return reserveRatioForBuying;
     }
 
     //--------------------------------------------------------------------------
@@ -362,7 +372,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
         //              - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
         if (_reserveRatio == 0) {
-            // @bugfix @review
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
         }
@@ -382,7 +391,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
         //           - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
         if (_reserveRatio == 0) {
-            // @bugfix @review
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
         }
@@ -402,8 +410,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _requiredDecimals The required decimal places for the token.
     ///
     /// @return The converted amount with required decimal places.
-    // @note @review I think the implementation for (_tokenDecimals > _requiredDecimals) is wrong? If the difference in decimals is bigger than BPS it just starts returning zero
-    // In general, I'm not sure I understand the use of BPS here. The alternative version leaving it out seems to accomplish the same goal, or am I missing something?
     function _convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,
@@ -416,17 +422,11 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // If the decimal of token is > required decimal, calculate conversion rate and
         // return amount converted to required decimal
         if (_tokenDecimals > _requiredDecimals) {
-            /*             uint conversionFactor =
-                BPS / (10 ** (_tokenDecimals - _requiredDecimals));
-            return (_amount * conversionFactor) / BPS; */
             uint conversionFactor = (10 ** (_tokenDecimals - _requiredDecimals));
             return (_amount / conversionFactor);
         } else {
             // If the decimal of token is < required decimal, calculate conversion rate and
             // return amount converted to required decimals
-            /*             uint conversionFactor =
-                BPS * (10 ** (_requiredDecimals - _tokenDecimals));
-            return (_amount * conversionFactor) / BPS; */
             uint conversionFactor = (10 ** (_requiredDecimals - _tokenDecimals));
             return (_amount * conversionFactor);
         }
