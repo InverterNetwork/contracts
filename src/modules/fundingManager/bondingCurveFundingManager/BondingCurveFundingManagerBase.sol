@@ -153,9 +153,7 @@ abstract contract BondingCurveFundingManagerBase is
         }
         // Transfer collateral, confirming that correct amount == allowance
         __Module_orchestrator.token().safeTransferFrom(
-            _msgSender(),
-            address(this),
-            _depositAmount // bugfix @review
+            _msgSender(), address(this), _depositAmount
         );
         // Calculate deposit amount minus fee percentage
         if (buyFee > 0) {
@@ -165,7 +163,7 @@ abstract contract BondingCurveFundingManagerBase is
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokens(_depositAmount);
         // Mint tokens to address
-        _mint(_receiver, mintAmount); // bugfix @review
+        _mint(_receiver, mintAmount);
     }
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
@@ -188,7 +186,6 @@ abstract contract BondingCurveFundingManagerBase is
     /// @param _fee The fee percentage to set for buy transactions.
     function _setBuyFee(uint _fee) internal {
         if (_fee >= BPS) {
-            // bugfix @review if fee is == BPS the buy amount would be zero, and the check in _buyOrder would miss it
             revert BondingCurveFundingManager__InvalidFeePercentage();
         }
         buyFee = _fee;
@@ -204,9 +201,6 @@ abstract contract BondingCurveFundingManagerBase is
         uint _depositAmount,
         uint _feePct
     ) internal pure returns (uint depositAmountMinusFee) {
-        // bugfix @review
-        // If we avoid this check, we run into precision issues if _depositAmount is low and _feePct very closely above BPS and it would return zero instead of reverting
-        // Alternatively we could just return 0 and avoid reverts? But since we don't allow zero value deposits, this feels safer.
         if (_feePct > BPS) {
             revert BondingCurveFundingManager__InvalidFeePercentage();
         }
