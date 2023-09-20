@@ -277,8 +277,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
     function testBuyOrderWithZeroFee(uint amount) public {
         // Setup
-        // Above an amount of 1e38 the BancorFormula starts to revert. Assuming a token with 18 decimals or less, this value should cover most realistic usecases.
-        // @question @review should we add an explicit check in the deposit code?
+        // Above an amount of 1e38 the BancorFormula starts to revert.
         amount = bound(amount, 1, 1e38);
 
         address buyer = makeAddr("buyer");
@@ -367,8 +366,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         vm.assume(to != address(0));
 
-        // Above an amount of 1e38 the BancorFormula starts to revert. Assuming a token with 18 decimals or less, this value should cover most realistic usecases.
-        // @question @review should we add an explicit check in the deposit code?
+        // Above an amount of 1e38 the BancorFormula starts to revert.
         amount = bound(amount, 1, 1e38);
 
         address buyer = makeAddr("buyer");
@@ -934,7 +932,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     ) public {
         // Bounds necessary to avoid overflows:
         // amount < (1e78 (uint.max) - 1e32 (max decimals in test) - 1e5 (BPS))
-        // @review if these constraints seem reasonable
         _amount = bound(_amount, 1, 1e41);
         _requiredDecimals = uint8(bound(_requiredDecimals, 1, 18));
         _tokenDecimals = uint8(bound(_tokenDecimals, _requiredDecimals + 1, 32));
@@ -955,7 +952,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     ) public {
         // Bounds necessary to avoid overflows:
         // amount < (1e78 (uint.max) - 1e32 (max decimals in test) - 1e5 (BPS))
-        // @review if these constraints seem reasonable
         _amount = bound(_amount, 1, 1e41);
         _tokenDecimals = uint8(bound(_tokenDecimals, 1, 18));
         _requiredDecimals =
