@@ -18,8 +18,10 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
 
 import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
+import {ScriptConstants} from "../script-constants.sol";
 
 contract deployAndSwitchTokenAuthorizer is Script {
+    ScriptConstants scriptConstants = new ScriptConstants();
     // ===============================================================================================================
     // NOTE: This script has to be executed by the Orchestrator owner address.
     // IT IS STRONGLY RECOMMENDED TO STORE THE PRIVATE KEY TO THAT ADDRESS IN A SEPARATE .ENV FILE
@@ -33,7 +35,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // Introduce addresses of the deployed Orchestrator, BountyManager and Authorizer
         // ===============================================================================================================
 
-        address orchestratorAddress = 0x0A7c8C0EB1afAb6CBaD4bb2d4c738acFF047814A;
+        address orchestratorAddress = scriptConstants.orchestratorAddress();
         Orchestrator orchestrator = Orchestrator(orchestratorAddress);
 
         // The address of the deployed TokenGatedRoleAuthorizer.
@@ -42,8 +44,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
             TokenGatedRoleAuthorizer(authorizerAddress);
 
         // This script assumes we want to set the Role in the BountyManager. Change if appropriate.
-        address bountyManagerAddress =
-            0x4FB5adc63fB08c7E7864Ce3f77714af6B8B50D9f;
+        address bountyManagerAddress = scriptConstants.bountyManagerAddress();
         BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
         // ===============================================================================================================
@@ -52,7 +53,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         //      - Minimum amount of tokens needed by the caller
         // ===============================================================================================================
 
-        address gatingTokenAddress = 0xC0f1842627Eeda938911A9A8368407ec241AC1dd;
+        address gatingTokenAddress = scriptConstants.receiptTokenAddress();
         uint thresholdAmount = 1;
 
         // ===============================================================================================================
