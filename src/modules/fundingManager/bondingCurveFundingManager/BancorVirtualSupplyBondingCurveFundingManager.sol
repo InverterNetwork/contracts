@@ -153,7 +153,16 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     //--------------------------------------------------------------------------
     // Public Functions
 
-    /// @inheritdoc IBondingCurveFundingManagerBase
+    /// @notice Buy tokens on behalf of a specified receiver address. This function is subject
+    /// to a transactional limit, determined by the deposit token's decimal precision and the underlying
+    /// bonding curve algorithm.
+    /// @dev Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
+    /// Important: The Bancor Formula has an upper computational limit of (10^38). For tokens with
+    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^20).
+    /// While this is substantially large, it is crucial to be aware of this constraint.
+    /// Transactions exceeding this limit will be reverted.
+    /// @param _receiver The address that will receive the bought tokens.
+    /// @param _depositAmount The amount of collateral token depoisited.
     function buyOrderFor(address _receiver, uint _depositAmount)
         external
         payable
@@ -164,7 +173,15 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _virtualSupplyBuyOrder(_receiver, _depositAmount);
     }
 
-    /// @inheritdoc IBondingCurveFundingManagerBase
+    /// @notice Buy tokens for the sender's address. This function is subject
+    /// to a transactional limit, determined by the deposit token's decimal precision and the underlying
+    /// bonding curve algorithm.
+    /// @dev Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
+    /// Important: The Bancor Formula has an upper computational limit of (10^38). For tokens with
+    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^20).
+    /// While this is substantially large, it is crucial to be aware of this constraint.
+    /// Transactions exceeding this limit will be reverted.
+    /// @param _depositAmount The amount of collateral token depoisited.
     function buyOrder(uint _depositAmount)
         external
         payable
@@ -174,7 +191,15 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _virtualSupplyBuyOrder(_msgSender(), _depositAmount);
     }
 
-    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    /// @notice Redeem tokens on behalf of a specified receiver address. This function is subject
+    /// to a transactional limit, determined by the issuing token's decimal precision and the underlying
+    /// bonding curve algorithm.
+    /// @dev Redirects to the internal function `_sellOrder` by passing the receiver address and deposit amount.
+    /// Important: The Bancor Formula has an upper computational limit of (10^26). For tokens with
+    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
+    /// 100,000,000. Transactions exceeding this limit will be reverted.
+    /// @param _receiver The address that will receive the redeemed tokens.
+    /// @param _depositAmount The amount of issued token to deposited.
     function sellOrderFor(address _receiver, uint _depositAmount)
         external
         payable
@@ -185,7 +210,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _virtualSupplySellOrder(_receiver, _depositAmount);
     }
 
-    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    /// @notice Sell collateral for the sender's address. This function is subject
+    /// to a transactional limit, determined by the issuing token's decimal precision and the underlying
+    /// bonding curve algorithm.
+    /// @dev Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
+    /// Important: The Bancor Formula has an upper computational limit of (10^26). For tokens with
+    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
+    /// 100,000,000. Transactions exceeding this limit will be reverted.
+    /// @param _depositAmount The amount of issued token depoisited.
     function sellOrder(uint _depositAmount)
         external
         payable
