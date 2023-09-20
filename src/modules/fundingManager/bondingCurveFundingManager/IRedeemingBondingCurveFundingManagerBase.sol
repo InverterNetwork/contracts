@@ -6,10 +6,10 @@ interface IRedeemingBondingCurveFundingManagerBase {
     // Errors
 
     /// @notice Function is only callable if selling is not already enabled.
-    error RedeemingBondingCurveFundingManager__SellingAlreadyOpen(); // bugfix @review oversight?
+    error RedeemingBondingCurveFundingManager__SellingAlreadyOpen();
 
     /// @notice Function is only callable if selling is not already closed.
-    error RedeemingBondingCurveFundingManager__SellingAlreadyClosed(); // bugfix @review oversight?
+    error RedeemingBondingCurveFundingManager__SellingAlreadyClosed();
 
     /// @notice Percentage amount is bigger than 100%, i.e. 10_000
     error RedeemingBondingCurveFundingManager__InvalidFeePercentage();

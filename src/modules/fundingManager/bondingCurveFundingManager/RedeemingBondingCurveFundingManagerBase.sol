@@ -127,16 +127,14 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
         // Transfer issued token to contract, confirming deposit amount == allowance
         IERC20(address(this)).safeTransferFrom(
-            _msgSender(),
-            address(this),
-            _depositAmount // bugfix @review
+            _msgSender(), address(this), _depositAmount
         );
         // Calculate redeem amount based on upstream formula
         redeemAmount = _redeemTokens(_depositAmount);
         // Subtract fee from redeem amount
         if (sellFee > 0) {
             redeemAmount =
-                _calculateFeeDeductedDepositAmount(redeemAmount, sellFee); //bugfix @review (not really, pretty clear cut bug)
+                _calculateFeeDeductedDepositAmount(redeemAmount, sellFee);
         }
         // Require that enough collateral token is held to be redeemable
         if (
@@ -154,7 +152,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
     function _openSell() internal {
         if (sellIsOpen == true) {
-            revert RedeemingBondingCurveFundingManager__SellingAlreadyOpen(); // bugfix @review oversight?
+            revert RedeemingBondingCurveFundingManager__SellingAlreadyOpen();
         }
         sellIsOpen = true;
     }
@@ -162,7 +160,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @dev Closes the sell functionality by setting the state variable `sellIsOpen` to false.
     function _closeSell() internal {
         if (sellIsOpen == false) {
-            revert RedeemingBondingCurveFundingManager__SellingAlreadyClosed(); // bugfix @review oversight?
+            revert RedeemingBondingCurveFundingManager__SellingAlreadyClosed();
         }
         sellIsOpen = false;
     }
