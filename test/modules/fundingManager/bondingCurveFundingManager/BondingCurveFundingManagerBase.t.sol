@@ -286,7 +286,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         │      └── it should revert (tested in base Module modifier tests)
         └── when caller is the Orchestrator owner
                └── when buy functionality is already open
-                │      └── it should revert  -> sure? idempotence @review
+                │      └── it should revert
                 └── when buy functionality is not open
                         └── it should open the buy functionality
                         └── it should emit an event? @todo
@@ -320,7 +320,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
                └── when buy functionality is already closed
-                │      └── it should revert ->  sure? idempotence @review
+                │      └── it should revert 
                 └── when buy functionality is not closed
                         ├── it should close the buy functionality
                         └── it should emit an event? @todo
