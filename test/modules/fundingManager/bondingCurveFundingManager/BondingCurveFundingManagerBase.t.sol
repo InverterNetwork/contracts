@@ -247,7 +247,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, 0, buyer);
+        emit TokensBought(buyer, amount, amount, buyer);
 
         // Execution
         vm.prank(buyer);
@@ -290,7 +290,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, amountMinusFee, buyer);
+        emit TokensBought(buyer, amountMinusFee, amountMinusFee, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
 
         // Execution
         vm.prank(buyer);
