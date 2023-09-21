@@ -164,6 +164,8 @@ abstract contract BondingCurveFundingManagerBase is
         mintAmount = _issueTokens(_depositAmount);
         // Mint tokens to address
         _mint(_receiver, mintAmount);
+        // Emit event
+        emit TokensBought(_receiver, _depositAmount, mintAmount, _msgSender());
     }
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
@@ -172,6 +174,7 @@ abstract contract BondingCurveFundingManagerBase is
             revert BondingCurveFundingManager__BuyingAlreadyOpen();
         }
         buyIsOpen = true;
+        emit BuyingEnabled();
     }
 
     /// @dev Closes the buy functionality by setting the state variable `buyIsOpen` to false.
@@ -180,6 +183,7 @@ abstract contract BondingCurveFundingManagerBase is
             revert BondingCurveFundingManager__BuyingAlreadyClosed();
         }
         buyIsOpen = false;
+        emit BuyingDisabled();
     }
 
     /// @dev Sets the buy transaction fee, expressed in BPS.
@@ -188,6 +192,7 @@ abstract contract BondingCurveFundingManagerBase is
         if (_fee >= BPS) {
             revert BondingCurveFundingManager__InvalidFeePercentage();
         }
+        emit BuyFeeUpdated(buyFee, _fee);
         buyFee = _fee;
     }
 
