@@ -262,7 +262,6 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         );
         emit TokensSold(seller, amount, amount, seller);
 
-
         // Execution
         vm.prank(seller);
         bondingCurveFundingManager.sellOrder(amount);
