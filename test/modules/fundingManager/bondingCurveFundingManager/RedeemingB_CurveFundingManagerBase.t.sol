@@ -36,6 +36,16 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     address owner_address = address(0xA1BA);
     address non_owner_address = address(0xB0B);
 
+    event SellingEnabled();
+    event SellingDisabled();
+    event SellFeeUpdated(uint indexed oldSellFee, uint indexed newSellFee);
+    event TokensSold(
+        address indexed receiver,
+        uint indexed depositAmount,
+        uint indexed receivedAmount,
+        address seller
+    );
+
     function setUp() public {
         // Deploy contracts
         address impl = address(new RedeemingBondingCurveFundingManagerMock());
@@ -185,7 +195,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 │               │        └── it should revert
                 │               └── When there IS enough collateral in the contract to cover the redeem amount
                 │                   ├── it should send the rest to the receiver    
-                │                   └── it should emit an event? @todo
+                │                   └── it should emit an event
                 └── when the fee is 0
                                 ├── it should take the sell amount from the caller
                                 ├── it should determine the redeem amount of the sent tokens 
@@ -193,7 +203,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                                 │        └── it should revert
                                 └── When there IS enough collateral in the contract to cover the redeem amount
                                    ├── it should send the rest to the receiver    
-                                   └── it should emit an event? @todo
+                                   └── it should emit an event
     */
 
     function testSellOrder_FailsIfDepositAmountIsZero() public {
@@ -246,6 +256,12 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_token.balanceOf(seller), 0);
         //uint userTokenBalanceBefore = bondingCurveFundingManager.balanceOf(seller);
 
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensSold(seller, amount, uint(0), seller);
+
         // Execution
         vm.prank(seller);
         bondingCurveFundingManager.sellOrder(amount);
@@ -279,13 +295,21 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(seller), 0);
 
+        // Calculate receive amount
+        uint amountMinusFee =
+            amount - ((amount * fee) / bondingCurveFundingManager.call_BPS());
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensSold(seller, amount, amountMinusFee, seller);
+
         // Execution
         vm.prank(seller);
         bondingCurveFundingManager.sellOrder(amount);
 
         // Post-checks
-        uint amountMinusFee =
-            amount - ((amount * fee) / bondingCurveFundingManager.call_BPS());
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
             (bondingCurveCollateralBalanceBefore - amountMinusFee)
@@ -302,7 +326,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 │      └── it should revert
                 └── when sell functionality is not open
                         ├── it should open the sell functionality
-                        └── it should emit an event? @todo
+                        └── it should emit an event
     */
     function testOpenSell_FailsIfAlreadyOpen()
         public
@@ -323,6 +347,9 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
 
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit SellingEnabled();
+
         bondingCurveFundingManager.openSell();
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
@@ -336,7 +363,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 │      └── it should revert -> 
                 └── when sell functionality is not closed
                         ├── it should close the sell functionality
-                        └── it should emit an event? @todo
+                        └── it should emit an event
     */
 
     function testCloseSell_FailsIfAlreadyClosed()
@@ -356,6 +383,8 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     function testCloseSell() public callerIsOrchestratorOwner {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
@@ -367,12 +396,12 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         └── when caller is the Orchestrator owner
                └── when fee is over 100% 
                 │      └── it should revert
-                ├── when fee is  100% 
+                ├── when fee is 100% 
                 │       ├── it should set the new fee (it's basically a burn function))
-                │       └── it should emit an event? @todo
+                │       └── it should emit an event
                 └── when fee is below 100%
                         ├── it should set the new fee
-                        └── it should emit an event? @todo
+                        └── it should emit an event?
     */
 
     function testSetSellFee_FailsIfFeeIsOver100Percent(uint _fee)
@@ -391,6 +420,10 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     function testSetSellFee(uint _fee) public callerIsOrchestratorOwner {
         vm.assume(_fee <= bondingCurveFundingManager.call_BPS());
 
+        vm.expectEmit(
+            true, true, false, false, address(bondingCurveFundingManager)
+        );
+        emit SellFeeUpdated(SELL_FEE, _fee);
         bondingCurveFundingManager.setSellFee(_fee);
 
         assertEq(bondingCurveFundingManager.sellFee(), _fee);
