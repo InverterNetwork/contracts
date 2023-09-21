@@ -11,7 +11,15 @@ interface IBancorVirtualSupplyBondingCurveFundingManager {
     //--------------------------------------------------------------------------
     // Events
 
-    // TODO: Contract still needs events. Where are events needed?
+    /// @notice Event emitted when the reserve ratio for buying is updated
+    event BuyReserveRatioSet(
+        uint32 indexed newBuyReserveRatio, uint32 indexed oldBuyReserveRatio
+    );
+
+    /// @notice Event emitted when the reserve ratio for selling is updated
+    event SellReserveRatioSet(
+        uint32 indexed newSellReserveRatio, uint32 indexed oldSellReserveRatio
+    );
 
     //--------------------------------------------------------------------------
     // Functions

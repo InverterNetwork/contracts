@@ -408,6 +408,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
         }
+        emit BuyReserveRatioSet(_reserveRatio, reserveRatioForBuying);
         reserveRatioForBuying = _reserveRatio;
     }
 
@@ -425,6 +426,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
         }
+        emit SellReserveRatioSet(_reserveRatio, reserveRatioForSelling);
         reserveRatioForSelling = _reserveRatio;
     }
 

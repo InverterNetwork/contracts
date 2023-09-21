@@ -176,7 +176,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         if (_fee > BPS) {
             revert RedeemingBondingCurveFundingManager__InvalidFeePercentage();
         }
-        emit SellFeeUpdated(sellFee, _fee);
+        emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
     }
 
