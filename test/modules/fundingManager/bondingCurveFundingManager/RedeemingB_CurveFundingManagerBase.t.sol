@@ -260,7 +260,8 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensSold(seller, amount, uint(0), seller);
+        emit TokensSold(seller, amount, amount, seller);
+
 
         // Execution
         vm.prank(seller);
