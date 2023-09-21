@@ -27,7 +27,22 @@ interface IRedeemingBondingCurveFundingManagerBase {
     //--------------------------------------------------------------------------
     // Events
 
-    // TODO: Contract still needs events. Where are events needed?
+    /// @notice Event emitted when selling is opened
+    event SellingEnabled();
+
+    /// @notice Event emitted when selling is closed
+    event SellingDisabled();
+
+    /// @notice Event emitted when sell fee is updated
+    event SellFeeUpdated(uint indexed newSellFee, uint indexed oldSellFee);
+
+    /// @notice Event emitted when tokens have been succesfully redeemed
+    event TokensSold(
+        address indexed receiver,
+        uint indexed depositAmount,
+        uint indexed receivedAmount,
+        address seller
+    );
 
     //--------------------------------------------------------------------------
     // Functions

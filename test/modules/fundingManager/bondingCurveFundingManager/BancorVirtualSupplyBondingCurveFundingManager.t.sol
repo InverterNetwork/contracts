@@ -73,6 +73,43 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     address owner_address = address(0xA1BA);
     address non_owner_address = address(0xB0B);
 
+    event Transfer(address indexed from, address indexed to, uint value);
+
+    event TokensBought(
+        address indexed receiver,
+        uint indexed depositAmount,
+        uint indexed receivedAmount,
+        address buyer
+    );
+    event VirtualCollateralAmountAdded(
+        uint indexed amountAdded, uint indexed newSupply
+    );
+    event VirtualCollateralAmountSubtracted(
+        uint indexed amountSubtracted, uint indexed newSupply
+    );
+    event VirtualTokenAmountSubtracted(
+        uint indexed amountSubtracted, uint indexed newSupply
+    );
+    event VirtualTokenAmountAdded(
+        uint indexed amountAdded, uint indexed newSupply
+    );
+    event TokensSold(
+        address indexed receiver,
+        uint indexed depositAmount,
+        uint indexed receivedAmount,
+        address seller
+    );
+    event BuyReserveRatioSet(
+        uint32 indexed newBuyReserveRatio, uint32 indexed oldBuyReserveRatio
+    );
+    event SellReserveRatioSet(
+        uint32 indexed newSellReserveRatio, uint32 indexed oldSellReserveRatio
+    );
+    event VirtualTokenSupplySet(uint indexed newSupply, uint indexed oldSupply);
+    event VirtualCollateralSupplySet(
+        uint indexed newSupply, uint indexed oldSupply
+    );
+
     //--------------------------------------------------------------------------
     // Events
     event TransferOrchestratorToken(address indexed to, uint indexed amount);
@@ -300,6 +337,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        // Q?: Can I test for multiple events?
+        // emit Transfer(address(0), buyer, formulaReturn);
+        emit TokensBought(buyer, amount, formulaReturn, buyer);
+        // emit VirtualTokenAmountAdded(1, (balanceBefore + amount));
+        // emit VirtualCollateralAmountAdded(amount, formulaReturn);
         bondingCurveFundingManager.buyOrder(amount);
 
         // Post-checks
@@ -345,6 +390,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        // Q?: Can I test for multiple events?
+        // emit Transfer(address(0), buyer, formulaReturn);
+        emit TokensBought(buyer, buyAmountMinusFee, formulaReturn, buyer);
+        // emit VirtualTokenAmountAdded(1, (balanceBefore + amount));
+        // emit VirtualCollateralAmountAdded(amount, formulaReturn);
         bondingCurveFundingManager.buyOrder(amount);
 
         // Post-checks
@@ -531,6 +584,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Perform the sell
         vm.startPrank(seller);
         {
+            vm.expectEmit(
+                true, true, true, true, address(bondingCurveFundingManager)
+            );
+            // Q?: Can I test for multiple events?
+            // emit Transfer( address(bondingCurveFundingManager),seller, formulaReturn);
+            emit TokensSold(seller, userSellAmount, formulaReturn, seller);
+            // emit VirtualTokenAmountSubtracted(userSellAmount, newVirtualTokenSupply - userSellAmount);
+            // emit VirtualCollateralAmountSubtracted(formulaReturn, newVirtualCollateral - formulaReturn);
             bondingCurveFundingManager.sellOrder(userSellAmount);
         }
         vm.stopPrank();
@@ -607,6 +668,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Perform the sell
         vm.startPrank(seller);
         {
+            vm.expectEmit(
+                true, true, true, true, address(bondingCurveFundingManager)
+            );
+            // Q?: Can I test for multiple events?
+            // emit Transfer( address(bondingCurveFundingManager),seller, formulaReturn);
+            emit TokensSold(seller, userSellAmount, sellAmountMinusFee, seller);
+            // emit VirtualTokenAmountSubtracted(userSellAmount, newVirtualTokenSupply - userSellAmount);
+            // emit VirtualCollateralAmountSubtracted(formulaReturn, newVirtualCollateral - formulaReturn);
             bondingCurveFundingManager.sellOrder(userSellAmount);
         }
         vm.stopPrank();
@@ -764,13 +833,17 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
                 ├── it should set the new token supply
-                └── it should emit an event? @todo
+                └── it should emit an event
 
     */
     function testSetVirtualTokenSupply(uint _newSupply)
         public
         callerIsOrchestratorOwner
     {
+        vm.expectEmit(
+            true, true, false, false, address(bondingCurveFundingManager)
+        );
+        emit VirtualTokenSupplySet(_newSupply, INITIAL_TOKEN_SUPPLY);
         bondingCurveFundingManager.setVirtualTokenSupply(_newSupply);
         assertEq(bondingCurveFundingManager.getVirtualTokenSupply(), _newSupply);
     }
@@ -780,7 +853,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
                 ├── it should set the new collateral supply
-                └── it should emit an event? @todo
+                └── it should emit an event
 
     */
 
@@ -788,6 +861,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         public
         callerIsOrchestratorOwner
     {
+        vm.expectEmit(
+            true, true, false, false, address(bondingCurveFundingManager)
+        );
+        emit VirtualCollateralSupplySet(_newSupply, INITIAL_COLLATERAL_SUPPLY);
         bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
         assertEq(
             bondingCurveFundingManager.getVirtualCollateralSupply(), _newSupply
@@ -802,10 +879,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 │       └── it should revert
                 ├── when reserve ratio is below 100%
                 │       ├── it should set the new ratio
-                │       └── it should emit an event? @todo
+                │       └── it should emit an event
                 ├── when reserve ratio is  100% 
                 │       ├── it should set the new ratio 
-                │       └── it should emit an event? @todo
+                │       └── it should emit an event
                 └──  when reserve ratio is over 100% 
                         └── it should revert
     */
@@ -840,6 +917,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         //manual bound for uint32
         _newRatio = (_newRatio % bondingCurveFundingManager.call_PPM()) + 1; // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
 
+        vm.expectEmit(
+            true, true, false, false, address(bondingCurveFundingManager)
+        );
+        emit BuyReserveRatioSet(_newRatio, RESERVE_RATIO_FOR_BUYING);
         bondingCurveFundingManager.setReserveRatioForBuying(_newRatio);
         assertEq(
             bondingCurveFundingManager.call_reserveRatioForBuying(), _newRatio
@@ -857,10 +938,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 │       └── it should revert
                 ├── when reserve ratio is below 100%
                 │       ├── it should set the new ratio
-                │       └── it should emit an event? @todo
+                │       └── it should emit an event
                 ├── when reserve ratio is  100% 
                 │       ├── it should set the new ratio 
-                │       └── it should emit an event? @todo
+                │       └── it should emit an event
                 └──  when reserve ratio is over 100% 
                         └── it should revert
     */
@@ -894,7 +975,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     {
         //manual bound for uint32
         _newRatio = (_newRatio % bondingCurveFundingManager.call_PPM()) + 1; // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
-
+        vm.expectEmit(
+            true, true, false, false, address(bondingCurveFundingManager)
+        );
+        emit SellReserveRatioSet(_newRatio, RESERVE_RATIO_FOR_SELLING);
         bondingCurveFundingManager.setReserveRatioForSelling(_newRatio);
         assertEq(
             bondingCurveFundingManager.call_reserveRatioForSelling(), _newRatio
@@ -972,7 +1056,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
                 ├── it should send the funds to the specified address
-                └── it should emit an event? @todo
+                └── it should emit an event?
     */
 
     function testTransferOrchestratorToken(address to, uint amount) public {

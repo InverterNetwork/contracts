@@ -401,8 +401,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ///
     /// @param _reserveRatio The reserve ratio to be set for buying tokens. Must be <= PPM.
     function _setReserveRatioForBuying(uint32 _reserveRatio) internal {
-        // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
-        //              - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
         if (_reserveRatio == 0) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
@@ -411,6 +409,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
         }
+        emit BuyReserveRatioSet(_reserveRatio, reserveRatioForBuying);
         reserveRatioForBuying = _reserveRatio;
     }
 
@@ -420,8 +419,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ///
     /// @param _reserveRatio The reserve ratio to be set for selling tokens. Must be <= PPM.
     function _setReserveRatioForSelling(uint32 _reserveRatio) internal {
-        // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
-        //           - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
         if (_reserveRatio == 0) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
@@ -430,6 +427,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
         }
+        emit SellReserveRatioSet(_reserveRatio, reserveRatioForSelling);
         reserveRatioForSelling = _reserveRatio;
     }
 

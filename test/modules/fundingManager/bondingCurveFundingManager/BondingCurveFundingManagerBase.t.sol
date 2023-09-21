@@ -34,6 +34,16 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     address owner_address = makeAddr("alice");
     address non_owner_address = makeAddr("bob");
 
+    event BuyingEnabled();
+    event BuyingDisabled();
+    event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
+    event TokensBought(
+        address indexed receiver,
+        uint indexed depositAmount,
+        uint indexed receivedAmount,
+        address buyer
+    );
+
     function setUp() public {
         // Deploy contracts
         address impl = address(new BondingCurveFundingManagerMock());
@@ -201,12 +211,12 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 │               ├── it should take the fee out from the pulled amount 
                 │               ├── it should determine the mint amount of tokens to mint from the rest
                 │               ├── it should mint the tokens to the receiver 
-                │               └── it should emit an event? @todo   
+                │               └── it should emit an event?  
                 └── when the fee is 0
                                 ├── it should pull the buy amount from the caller  
                                 ├── it should determine the mint amount of tokens to mint 
                                 ├── it should mint the tokens to the receiver     
-                                └── it should emit an event? @todo      
+                                └── it should emit an event?    
         
     */
     function testBuyOrder_FailsIfDepositAmountIsZero() public {
@@ -232,6 +242,12 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
             _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
         assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(buyer, amount, amount, buyer);
 
         // Execution
         vm.prank(buyer);
@@ -266,13 +282,21 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_token.balanceOf(buyer), amount);
         assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
 
+        // Calculate receiving amount
+        uint amountMinusFee =
+            amount - (amount * fee / bondingCurveFundingManager.call_BPS());
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(buyer, amountMinusFee, amountMinusFee, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+
         // Execution
         vm.prank(buyer);
         bondingCurveFundingManager.buyOrder(amount);
 
         // Post-checks
-        uint amountMinusFee =
-            amount - (amount * fee / bondingCurveFundingManager.call_BPS());
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
             (balanceBefore + amount)
@@ -289,7 +313,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 │      └── it should revert
                 └── when buy functionality is not open
                         └── it should open the buy functionality
-                        └── it should emit an event? @todo
+                        └── it should emit an event
     */
     function testOpenBuy_FailsIfAlreadyOpen()
         public
@@ -310,6 +334,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         assertEq(bondingCurveFundingManager.buyIsOpen(), false);
 
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit BuyingEnabled();
+
         bondingCurveFundingManager.openBuy();
 
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
@@ -323,7 +350,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 │      └── it should revert 
                 └── when buy functionality is not closed
                         ├── it should close the buy functionality
-                        └── it should emit an event? @todo
+                        └── it should emit an event
     */
     function testCloseBuy_FailsIfAlreadyClosed()
         public
@@ -342,6 +369,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     function testCloseBuy() public callerIsOrchestratorOwner {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit BuyingDisabled();
+
         bondingCurveFundingManager.closeBuy();
 
         assertEq(bondingCurveFundingManager.buyIsOpen(), false);
@@ -357,7 +387,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 │     └── it should revert (empty buy-ins into the curve are not allowed)
                 └── when fee is below 100%
                         ├── it should set the new fee
-                        └── it should emit an event? @todo
+                        └── it should emit an event
     */
     function testSetBuyFee_FailsIfFee100PercentOrMore(uint _fee)
         public
@@ -374,6 +404,11 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     function testSetBuyFee(uint newFee) public callerIsOrchestratorOwner {
         vm.assume(newFee < bondingCurveFundingManager.call_BPS());
+
+        vm.expectEmit(
+            true, true, false, false, address(bondingCurveFundingManager)
+        );
+        emit BuyFeeUpdated(newFee, BUY_FEE);
 
         bondingCurveFundingManager.setBuyFee(newFee);
 

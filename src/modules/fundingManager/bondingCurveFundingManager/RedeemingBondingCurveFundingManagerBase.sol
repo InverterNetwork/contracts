@@ -147,6 +147,8 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
         // Transfer tokens to receiver
         __Module_orchestrator.token().transfer(_receiver, redeemAmount);
+        // Emit event
+        emit TokensSold(_receiver, _depositAmount, redeemAmount, _msgSender());
     }
 
     /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
@@ -155,6 +157,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             revert RedeemingBondingCurveFundingManager__SellingAlreadyOpen();
         }
         sellIsOpen = true;
+        emit SellingEnabled();
     }
 
     /// @dev Closes the sell functionality by setting the state variable `sellIsOpen` to false.
@@ -163,6 +166,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             revert RedeemingBondingCurveFundingManager__SellingAlreadyClosed();
         }
         sellIsOpen = false;
+        emit SellingDisabled();
     }
 
     /// @dev Sets the sell transaction fee, expressed in BPS.
@@ -171,6 +175,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         if (_fee > BPS) {
             revert RedeemingBondingCurveFundingManager__InvalidFeePercentage();
         }
+        emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
     }
 

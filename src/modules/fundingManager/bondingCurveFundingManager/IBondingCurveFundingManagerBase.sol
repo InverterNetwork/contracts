@@ -27,7 +27,22 @@ interface IBondingCurveFundingManagerBase {
     //--------------------------------------------------------------------------
     // Events
 
-    // TODO: Contract still needs events. Where are events needed?
+    /// @notice Event emitted when buying is opened
+    event BuyingEnabled();
+
+    /// @notice Event emitted when buying is closed
+    event BuyingDisabled();
+
+    /// @notice Event emitted when buy fee is updated
+    event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
+
+    /// @notice Event emitted when tokens have been succesfully issued
+    event TokensBought(
+        address indexed receiver,
+        uint indexed depositAmount,
+        uint indexed receivedAmount,
+        address buyer
+    );
 
     //--------------------------------------------------------------------------
     // Functions
