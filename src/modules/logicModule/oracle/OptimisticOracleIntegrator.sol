@@ -177,5 +177,5 @@ abstract contract OptimisticOracleIntegrator is
 
     /// @inheritdoc IOptimisticOracleIntegrator
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
-    function assertionDisputedCallback(bytes32 assertionId) public virtual {}
+    function assertionDisputedCallback(bytes32 assertionId) public virtual;
 }

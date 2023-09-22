@@ -14,14 +14,27 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // SuT
 import {
-OptimisticOracleIntegrator,
-IOptimisticOracleIntegrator
+    OptimisticOracleIntegrator,
+    IOptimisticOracleIntegrator
 } from "src/modules/logicModule/oracle/OptimisticOracleIntegrator.sol";
 
 contract OptimisticOracleIntegratorTest is ModuleTest {
-
     // Setup + Init
 
+    function setUp() public {
+        // TODO
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: Initialization
+
+    function testInit() public override(ModuleTest) {
+        //TODO
+    }
+
+    function testReinitFails() public override(ModuleTest) {
+        //TODO
+    }
 
     // Tests
 
@@ -34,15 +47,12 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
 
     */
-    function testGetData_ReturnsZeroWhenAssertionNotResolved(){
+    function testGetData_ReturnsZeroWhenAssertionNotResolved() public {}
 
-    }
-
-    function testGetData(){}
+    function testGetData() public {}
 
     //==========================================================================
     // Setter Functions
-
 
     /*
         When the caller is not the owner
@@ -58,18 +68,13 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     */
 
-    function testSetDefaultCurrencyFails_whenNewCurrencyIsZero(){
+    function testSetDefaultCurrencyFails_whenNewCurrencyIsZero() public {}
 
-    }
+    function testSetDefaultCurrencyFails_whenNewCurrencyIsNotWhitelisted()
+        public
+    {}
 
-    function testSetDefaultCurrencyFails_whenNewCurrencyIsNotWhitelisted(){
-        
-    }
-
-    function testSetDefaultCurrency(){
-        
-    }
-
+    function testSetDefaultCurrency() public {}
 
     /*
         When the caller is not the owner
@@ -83,19 +88,15 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
                 sets the new address as optimistic oracle
                 emits an event
     */
-    function testSetOptimisticOracleFails_WhenNewOracleIsZero(){
+    function testSetOptimisticOracleFails_WhenNewOracleIsZero() public {}
 
-    }
+    function testSetOptimisticOracleFails_WhenNewOracleIsNotUmaOptimiticOracle()
+        public
+    {}
 
-    function testSetOptimisticOracleFails_WhenNewOracleIsNotUmaOptimiticOracle(){
+    function testSetOptimisticOracle() public {}
 
-    }
-
-    function testSetOptimisticOracle(){
-
-    }
-
-      /*
+    /*
         When the caller is not the owner
             reverts (tested in module tests)
         When the caller is the owner
@@ -106,13 +107,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
                 emits an event
     */
 
-    function testSetDefaultAssertionLivenessFails_whenLivenessIsZero(){
+    function testSetDefaultAssertionLivenessFails_whenLivenessIsZero() public {}
 
-    }
-
-    function testSetDefaultAssertionLiveness(){
-
-    }
+    function testSetDefaultAssertionLiveness() public {}
 
     /*
         When the caller does not have asserter role
@@ -139,10 +136,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     */
 
-    function testAssertDataFor_whenAsserterAddressIsZero(){}
-    function testAssertDataForFails_whenCallerDoesNotHaveEnoughFundsForBond(){}
-    function testAssertDataFor_whenAsserterAddressIsNotZero();
-
+    function testAssertDataFor_whenAsserterAddressIsZero() public {}
+    function testAssertDataForFails_whenCallerDoesNotHaveEnoughFundsForBond()
+        public
+    {}
+    function testAssertDataFor_whenAsserterAddressIsNotZero() public {}
 
     /*
         When the caller is not the OO
@@ -155,17 +153,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
                 emits an event
     */
 
-    function testAssertioResolvedCallbackFails_whenCallerNotTheOO(){
-
-    }
-    function testAssertioResolvedCallback(){
-
-    }
+    function testAssertioResolvedCallbackFails_whenCallerNotTheOO() public {}
+    function testAssertioResolvedCallback() public {}
 
     /*
      Nothing happens (maybe necessary to mock for coverage? )
      */
     function assertionDisputedCallback(bytes32 assertionId) public virtual {}
-
-
 }
