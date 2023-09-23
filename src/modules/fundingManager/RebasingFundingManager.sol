@@ -53,6 +53,11 @@ contract RebasingFundingManager is
     uint internal constant DEPOSIT_CAP = 100_000_000e18;
 
     //--------------------------------------------------------------------------
+    // Storage
+
+    IERC20 private _token;
+
+    //--------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module
@@ -64,6 +69,7 @@ contract RebasingFundingManager is
         __Module_init(orchestrator_, metadata);
 
         address orchestratorTokenAddress = abi.decode(configData, (address));
+        _token = IERC20(orchestratorTokenAddress);
 
         string memory _id = orchestrator_.orchestratorId().toString();
         string memory _name = string(
@@ -79,7 +85,7 @@ contract RebasingFundingManager is
     }
 
     function token() public view returns (IERC20) {
-        return __Module_orchestrator.token();
+        return _token;
     }
 
     /// @dev Returns the current token balance as supply target.
@@ -151,7 +157,7 @@ contract RebasingFundingManager is
     }
 
     function _transferOrchestratorToken(address to, uint amount) internal {
-        __Module_orchestrator.token().safeTransfer(to, amount);
+        token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
     }

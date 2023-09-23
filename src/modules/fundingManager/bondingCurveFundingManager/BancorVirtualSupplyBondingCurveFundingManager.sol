@@ -74,7 +74,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _setTokenDecimals(_decimals);
         _setVirtualCollateralSupply(_initialCollateralSupply);
         _setVirtualTokenSupply(_initalTokenSupply);
-        _setCollateral(address(__Module_orchestrator.token()));
+        _setCollateral(address(__Module_orchestrator.fundingManager().token()));
     }
 
     //--------------------------------------------------------------------------

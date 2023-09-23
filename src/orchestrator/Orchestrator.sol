@@ -73,8 +73,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Storage
 
-    IERC20 private _token;
-
     /// @inheritdoc IOrchestrator
     uint public override(IOrchestrator) orchestratorId;
 
@@ -97,7 +95,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function init(
         uint orchestratorId_,
-        IERC20 token_,
         address[] calldata modules,
         IFundingManager fundingManager_,
         IAuthorizer authorizer_,
@@ -108,8 +105,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
 
         // Set storage variables.
         orchestratorId = orchestratorId_;
-
-        _token = token_;
 
         fundingManager = fundingManager_;
         authorizer = authorizer_;

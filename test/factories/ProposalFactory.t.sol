@@ -131,9 +131,6 @@ contract OrchestratorFactoryTest is Test {
 
         // Check that orchestrator's strorage correctly initialized.
         assertEq(orchestrator.orchestratorId(), 1);
-        assertEq(
-            address(orchestrator.token()), address(orchestratorConfig.token)
-        );
         assertTrue(address(orchestrator.authorizer()) != address(0));
         assertTrue(address(orchestrator.paymentProcessor()) != address(0));
 

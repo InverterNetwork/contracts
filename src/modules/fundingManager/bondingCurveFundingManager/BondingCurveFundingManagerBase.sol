@@ -46,7 +46,7 @@ abstract contract BondingCurveFundingManagerBase is
     // Public Functions
 
     function token() public view returns (IERC20) {
-        return __Module_orchestrator.token();
+        return __Module_orchestrator.fundingManager().token();
     }
 
     function buyOrder(uint _depositAmount) external payable virtual {
@@ -136,7 +136,7 @@ abstract contract BondingCurveFundingManagerBase is
         external
         onlyOrchestrator
     {
-        __Module_orchestrator.token().safeTransfer(to, amount);
+        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
     }

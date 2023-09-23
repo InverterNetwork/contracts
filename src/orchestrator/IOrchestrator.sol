@@ -45,7 +45,6 @@ interface IOrchestrator is IModuleManager {
     /// @notice Initialization function.
     function init(
         uint orchestratorId,
-        IERC20 token,
         address[] calldata modules,
         IFundingManager fundingManager,
         IAuthorizer authorizer,
