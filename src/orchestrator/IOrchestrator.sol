@@ -91,10 +91,6 @@ interface IOrchestrator is IModuleManager {
     ///         payments.
     function paymentProcessor() external view returns (IPaymentProcessor);
 
-    /// @notice The orchestrator's {IERC20} token accepted for fundings and used
-    ///         for payments.
-    function token() external view returns (IERC20);
-
     /// @notice The version of the orchestrator instance.
     function version() external pure returns (string memory);
 

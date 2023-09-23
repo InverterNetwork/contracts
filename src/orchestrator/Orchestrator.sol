@@ -326,11 +326,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     // View Functions
 
     /// @inheritdoc IOrchestrator
-    function token() public view override(IOrchestrator) returns (IERC20) {
-        return _token;
-    }
-
-    /// @inheritdoc IOrchestrator
     function version() external pure returns (string memory) {
         return "1";
     }
