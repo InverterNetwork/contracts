@@ -10,6 +10,7 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
+import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 
 interface IOrchestrator is IModuleManager {
     //--------------------------------------------------------------------------
@@ -107,7 +108,6 @@ interface IOrchestrator is IModuleManager {
     /// @notice Verify whether the given address is a payment processor
     function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
         external
-        view
         returns (bool);
 
     /// @notice Verify whether the given address is the recurring payment manager

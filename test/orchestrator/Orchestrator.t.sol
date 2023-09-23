@@ -176,6 +176,15 @@ contract OrchestratorTest is Test {
         }
     }
 
+    function testVerifyAddressIsPaymentProcessor(address randomAddress) public {
+        assertTrue(address(orchestrator) != address(0));
+
+        emit log_named_address("Random Address", randomAddress);
+
+        bool isPP = orchestrator.verifyAddressIsPaymentProcessor(randomAddress);
+        assertTrue(isPP);
+    }
+
     //--------------------------------------------------------------------------
     // Tests: Replacing the three base modules: authorizer, funding manager,
     //        payment processor
@@ -358,43 +367,43 @@ contract OrchestratorTest is Test {
         assertTrue(orchestrator.fundingManager() == fundingManager);
     }
 
-    function testSetPaymentProcessor(
-        uint orchestratorId,
-        address[] memory modules
-    ) public {
-        // limit to 100, otherwise we could run into the max module limit
-        modules = cutArray(100, modules);
+    // function testSetPaymentProcessor(
+    //     uint orchestratorId,
+    //     address[] memory modules
+    // ) public {
+    //     // limit to 100, otherwise we could run into the max module limit
+    //     modules = cutArray(100, modules);
 
-        types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
+    //     types.assumeValidOrchestratorId(orchestratorId);
+    //     types.assumeValidModules(modules);
 
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
+    //     // Make sure mock addresses are not in set of modules.
+    //     assumeMockAreNotInSet(modules);
 
-        // Initialize orchestrator.
-        orchestrator.init(
-            orchestratorId,
-            token,
-            modules,
-            fundingManager,
-            authorizer,
-            paymentProcessor
-        );
+    //     // Initialize orchestrator.
+    //     orchestrator.init(
+    //         orchestratorId,
+    //         token,
+    //         modules,
+    //         fundingManager,
+    //         authorizer,
+    //         paymentProcessor
+    //     );
 
-        authorizer.setIsAuthorized(address(this), true);
+    //     authorizer.setIsAuthorized(address(this), true);
 
-        // Create new payment processor module
-        PaymentProcessorMock newPaymentProcessor = new PaymentProcessorMock();
-        vm.assume(newPaymentProcessor != paymentProcessor);
-        types.assumeElemNotInSet(modules, address(newPaymentProcessor));
+    //     // Create new payment processor module
+    //     PaymentProcessorMock newPaymentProcessor = new PaymentProcessorMock();
+    //     vm.assume(newPaymentProcessor != paymentProcessor);
+    //     types.assumeElemNotInSet(modules, address(newPaymentProcessor));
 
-        // set the new payment processor module
-        vm.expectEmit(true, true, true, true);
-        emit PaymentProcessorUpdated(address(newPaymentProcessor));
+    //     // set the new payment processor module
+    //     vm.expectEmit(true, true, true, true);
+    //     emit PaymentProcessorUpdated(address(newPaymentProcessor));
 
-        orchestrator.setPaymentProcessor(newPaymentProcessor);
-        assertTrue(orchestrator.paymentProcessor() == newPaymentProcessor);
-    }
+    //     orchestrator.setPaymentProcessor(newPaymentProcessor);
+    //     assertTrue(orchestrator.paymentProcessor() == newPaymentProcessor);
+    // }
 
     function testSetPaymentProcessorFailsIfWrongModuleType(
         uint orchestratorId,

@@ -17,8 +17,11 @@ import {
     IOrchestrator,
     IFundingManager,
     IPaymentProcessor,
-    IAuthorizer
+    IAuthorizer,
+    IBountyManager
 } from "src/orchestrator/IOrchestrator.sol";
+
+import {IERC20PaymentClient} from "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 /**
@@ -126,7 +129,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Module search functions
 
-    /// @notice verifies whether a orchestrator with the title `moduleName` has been used in this orchestrator
+    /// @notice verifies whether a module with the title `moduleName` has been used in this orchestrator
     /// @dev The query string and the module title should be **exactly** same, as in same whitespaces, same capitalizations, etc.
     /// @param moduleName Query string which is the title of the module to be searched in the orchestrator
     /// @return uint256 index of the module in the list of modules used in the orchestrator
@@ -230,13 +233,20 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
         public
-        view
         returns (bool)
     {
         IPaymentProcessor paymentProcessorModule =
             IPaymentProcessor(paymentProcessorAddress);
+        IERC20PaymentClient paymentClient = IERC20PaymentClient(address(0));
 
-        try paymentProcessorModule.token() returns (IERC20) {
+        try paymentProcessorModule.processPayments(paymentClient) {
+            // try paymentProcessorModule.processPayments(paymentClient){
+            //     return false; // Orchestrator should not be able to call processPayment
+            // } catch (bytes memory reason) {
+            //     bytes4 expectedErrorSelector = IPaymentProcessor.Module__PaymentManager__OnlyCallableByModule.selector;
+            //     bytes4 receivedErrorSelector = bytes4(reason);
+            //     return expectedErrorSelector == receivedErrorSelector;
+            // }
             return true;
         } catch {
             return false;
