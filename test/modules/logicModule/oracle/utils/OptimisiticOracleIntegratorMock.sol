@@ -23,7 +23,7 @@ import {ClaimData} from
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-contract OptimisticOracleV3Mock is OptimisticOracleIntegrator {
+contract OptimisticOracleIntegratorMock is OptimisticOracleIntegrator {
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully

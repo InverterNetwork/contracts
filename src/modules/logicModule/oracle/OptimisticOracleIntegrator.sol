@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
+import "forge-std/console.sol";
+
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
 
@@ -53,15 +55,23 @@ abstract contract OptimisticOracleIntegrator is
         Metadata memory metadata,
         bytes memory configData
     ) external virtual override initializer {
-        __Module_init(orchestrator_, metadata);
+        console.log(address(orchestrator_));
+        //__Module_init(orchestrator_, metadata);
 
         //address currencyAddr;
         //address ooAddr;
 
         (address currencyAddr, address ooAddr) =
             abi.decode(configData, (address, address));
+        console.log(currencyAddr);
+        console.log(ooAddr);
+
+        oo = OptimisticOracleV3Interface(ooAddr);
+        defaultIdentifier = oo.defaultIdentifier();
+        console.logBytes32(defaultIdentifier);
+
         setDefaultCurrency(currencyAddr);
-        setOptimisticOracle(ooAddr);
+        //setOptimisticOracle(ooAddr);
     }
 
     //--------------------------------------------------------------------------

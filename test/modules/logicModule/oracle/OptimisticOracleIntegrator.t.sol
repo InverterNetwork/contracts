@@ -3,6 +3,16 @@ pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
 
+// SuT
+import {OptimisticOracleIntegratorMock} from 
+ "test/modules/logicModule/oracle/utils/OptimisiticOracleIntegratorMock.sol";
+
+ import {OptimisticOracleV3Mock} from 
+ "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
+
+
+
+
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -19,10 +29,31 @@ import {
 } from "src/modules/logicModule/oracle/OptimisticOracleIntegrator.sol";
 
 contract OptimisticOracleIntegratorTest is ModuleTest {
+    OptimisticOracleIntegratorMock ooIntegrator;
+    OptimisticOracleV3Mock ooV3;
+
+    uint64 immutable DEFAULT_LIVENESS = 5000;
+
     // Setup + Init
 
     function setUp() public {
         // TODO
+        ooV3 = new OptimisticOracleV3Mock(_token, DEFAULT_LIVENESS);
+
+        //Add Module to Mock Orchestrator
+        address impl = address(new OptimisticOracleIntegratorMock());
+        ooIntegrator = OptimisticOracleIntegratorMock(Clones.clone(impl));
+
+        _setUpOrchestrator(ooIntegrator);
+
+        _authorizer.setAllAuthorized(true);
+
+        console.log(address(_token));
+        console.log(address(ooV3));
+        bytes memory _configData = abi.encode(address(_token), address(ooV3));
+        console.logBytes(_configData);
+
+        ooIntegrator.init(_orchestrator, _METADATA, _configData);
     }
 
     //--------------------------------------------------------------------------
@@ -33,7 +64,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     }
 
     function testReinitFails() public override(ModuleTest) {
-        //TODO
+        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        ooIntegrator.init(_orchestrator, _METADATA, bytes(""));
     }
 
     // Tests
