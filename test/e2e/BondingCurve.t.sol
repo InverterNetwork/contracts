@@ -95,10 +95,6 @@ contract BondingCurveE2E is E2eTest {
         // Note that we simulate orchestrator spending by just burning tokens.
         uint halfOfDeposit = token.balanceOf(address(fundingManager)) / 2;
         fundingManager.setVirtualCollateralSupply(halfOfDeposit);
-        /*         token.burn(
-            address(fundingManager),
-            token.balanceOf(address(fundingManager)) / 2
-        ); */
 
         // Bob is also able to withdraw half of his funded tokens.
         vm.startPrank(bob);

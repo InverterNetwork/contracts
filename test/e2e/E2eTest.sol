@@ -106,7 +106,7 @@ contract E2eTest is Test {
         "BancorVirtualSupplyBondingCurveFundingManager"
     );
 
-    function setUpBondingCurveFundingManager() private {
+    function setUpBancorVirtualSupplyBondingCurveFundingManager() private {
         // Deploy module implementations.
         bancorVirtualSupplyBondingCurveFundingManagerImpl =
             new BancorVirtualSupplyBondingCurveFundingManager();
@@ -406,7 +406,7 @@ contract E2eTest is Test {
 
         //FundingManager
         setUpRebasingFundingManager();
-        setUpBondingCurveFundingManager();
+        setUpBancorVirtualSupplyBondingCurveFundingManager();
 
         //Authorizer
         setUpAuthorizerMock();

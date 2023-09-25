@@ -55,8 +55,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     IBancorVirtualSupplyBondingCurveFundingManager,
     VirtualTokenSupplyBase,
     VirtualCollateralSupplyBase,
-    RedeemingBondingCurveFundingManagerBase,
-    IFundingManager
+    RedeemingBondingCurveFundingManagerBase
 {
     using SafeERC20 for IERC20;
 
@@ -170,7 +169,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         validReceiver(_receiver)
         buyingIsEnabled
     {
-        _virtualSupplyBuyOrder(_receiver, _depositAmount);
+        _virtualBuyOrder(_receiver, _depositAmount);
     }
 
     /// @notice Buy tokens for the sender's address. This function is subject
@@ -188,7 +187,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         override(BondingCurveFundingManagerBase)
         buyingIsEnabled
     {
-        _virtualSupplyBuyOrder(_msgSender(), _depositAmount);
+        _virtualBuyOrder(_msgSender(), _depositAmount);
     }
 
     /// @notice Redeem tokens on behalf of a specified receiver address. This function is subject
@@ -207,7 +206,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         validReceiver(_receiver)
         sellingIsEnabled
     {
-        _virtualSupplySellOrder(_receiver, _depositAmount);
+        _virtualSellOrder(_receiver, _depositAmount);
     }
 
     /// @notice Sell collateral for the sender's address. This function is subject
@@ -224,7 +223,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         override(RedeemingBondingCurveFundingManagerBase)
         sellingIsEnabled
     {
-        _virtualSupplySellOrder(_msgSender(), _depositAmount);
+        _virtualSellOrder(_msgSender(), _depositAmount);
     }
 
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
@@ -375,7 +374,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// virtual balances accordingly.
     /// @param _receiver The address of the recipient of the issued tokens.
     /// @param _depositAmount The amount of collateral deposited for the buy order.
-    function _virtualSupplyBuyOrder(address _receiver, uint _depositAmount)
+    function _virtualBuyOrder(address _receiver, uint _depositAmount)
         internal
     {
         uint amountIssued = _buyOrder(_receiver, _depositAmount);
@@ -388,7 +387,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// virtual balances accordingly.
     /// @param _receiver The address that will receive the redeem amount.
     /// @param _depositAmount The amount of tokens that are being sold.
-    function _virtualSupplySellOrder(address _receiver, uint _depositAmount)
+    function _virtualSellOrder(address _receiver, uint _depositAmount)
         internal
     {
         uint redeemAmount = _sellOrder(_receiver, _depositAmount);
@@ -401,8 +400,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ///
     /// @param _reserveRatio The reserve ratio to be set for buying tokens. Must be <= PPM.
     function _setReserveRatioForBuying(uint32 _reserveRatio) internal {
-        // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
-        //              - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
         if (_reserveRatio == 0) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
@@ -420,8 +417,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ///
     /// @param _reserveRatio The reserve ratio to be set for selling tokens. Must be <= PPM.
     function _setReserveRatioForSelling(uint32 _reserveRatio) internal {
-        // TODO: Qs - TEST: What happens when set to 0? -> Reserve ratio of 0 is not allowed
-        //           - Do we want to enforce a max/min value other than absolutes base on test result, i.e. 0 - 100%?
         if (_reserveRatio == 0) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
@@ -462,18 +457,5 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             uint conversionFactor = (10 ** (_requiredDecimals - _tokenDecimals));
             return (_amount * conversionFactor);
         }
-    }
-
-    //--------------------------------------------------------------------------
-    // OnlyOrchestrator Mutating Functions
-
-    /// @inheritdoc IFundingManager
-    function transferOrchestratorToken(address to, uint amount)
-        external
-        onlyOrchestrator
-    {
-        __Module_orchestrator.token().safeTransfer(to, amount);
-
-        emit TransferOrchestratorToken(to, amount);
     }
 }

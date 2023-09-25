@@ -15,6 +15,9 @@ import {
 import {IBancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";
 import {Module} from "src/modules/base/Module.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 contract RedeemingBondingCurveFundingManagerMock is
     RedeemingBondingCurveFundingManagerBase
@@ -83,4 +86,24 @@ contract RedeemingBondingCurveFundingManagerMock is
     function call_BPS() external pure returns (uint) {
         return BPS;
     }
+
+    //--------------------------------------------------------------------------
+    // Will be removed once we update base fundingManager
+
+    /// @inheritdoc IFundingManager
+    function token() public view returns (IERC20) {
+        return __Module_orchestrator.token();
+    }
+
+    /// @inheritdoc IFundingManager
+    function deposit(uint amount) external {}
+
+    /// @inheritdoc IFundingManager
+    function depositFor(address to, uint amount) external {}
+
+    /// @inheritdoc IFundingManager
+    function withdraw(uint amount) external {}
+
+    /// @inheritdoc IFundingManager
+    function withdrawTo(address to, uint amount) external {}
 }
