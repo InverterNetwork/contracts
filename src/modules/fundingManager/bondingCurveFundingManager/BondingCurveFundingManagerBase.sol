@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IBondingCurveFundingManagerBase} from
     "src/modules/fundingManager/bondingCurveFundingManager/IBondingCurveFundingManagerBase.sol";
 
@@ -31,6 +32,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 ///             the downstream contract.
 abstract contract BondingCurveFundingManagerBase is
     IBondingCurveFundingManagerBase,
+    IFundingManager,
     ContextUpgradeable,
     ERC20Upgradeable,
     Module
@@ -232,5 +234,18 @@ abstract contract BondingCurveFundingManagerBase is
     /// @param _decimals The number of decimals to set for the token.
     function _setTokenDecimals(uint8 _decimals) internal {
         tokenDecimals = _decimals;
+    }
+
+    //--------------------------------------------------------------------------
+    // OnlyOrchestrator Mutating Functions
+
+    /// @inheritdoc IFundingManager
+    function transferOrchestratorToken(address to, uint amount)
+        external
+        onlyOrchestrator
+    {
+        __Module_orchestrator.token().safeTransfer(to, amount);
+
+        emit TransferOrchestratorToken(to, amount);
     }
 }

@@ -188,7 +188,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         │       └── it should revert 
         └── when the sell amount is not 0
                 ├── when the fee is higher than 0
-                │               ├── it should take the sell amount from the caller
+                │               ├── it should burn the sell amount from the caller
                 │               ├── it should determine the redeem amount of the sent tokens 
                 │               ├── it should substract the fee from the redeem amount
                 │               ├── When there IS NOT enough collateral in the contract to cover the redeem amount
@@ -197,7 +197,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 │                   ├── it should send the rest to the receiver    
                 │                   └── it should emit an event
                 └── when the fee is 0
-                                ├── it should take the sell amount from the caller
+                                ├── it should burn the sell amount from the caller
                                 ├── it should determine the redeem amount of the sent tokens 
                                 ├── When there IS NOT enough collateral in the contract to cover the redeem amount
                                 │        └── it should revert
@@ -253,6 +253,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
+        uint totalTokenSupplyBefore = bondingCurveFundingManager.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
         //uint userTokenBalanceBefore = bondingCurveFundingManager.balanceOf(seller);
 
@@ -273,6 +274,10 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         );
         assertEq(_token.balanceOf(seller), amount);
         assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(
+            bondingCurveFundingManager.totalSupply(),
+            totalTokenSupplyBefore - amount
+        );
     }
 
     function testSellOrderWithFee(uint amount, uint fee) public {
@@ -293,6 +298,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
+        uint totalTokenSupplyBefore = bondingCurveFundingManager.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
 
         // Calculate receive amount
@@ -316,6 +322,10 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         );
         assertEq(_token.balanceOf(seller), amountMinusFee);
         assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(
+            bondingCurveFundingManager.totalSupply(),
+            totalTokenSupplyBefore - amount
+        );
     }
 
     /* Test openSell and _openSell function

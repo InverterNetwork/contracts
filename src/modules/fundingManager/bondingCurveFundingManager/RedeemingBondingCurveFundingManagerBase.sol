@@ -122,15 +122,16 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         internal
         returns (uint redeemAmount)
     {
+        // TODO: Burn the tokens and update tests
         if (_depositAmount == 0) {
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
-        // Transfer issued token to contract, confirming deposit amount == allowance
-        IERC20(address(this)).safeTransferFrom(
-            _msgSender(), address(this), _depositAmount
-        );
         // Calculate redeem amount based on upstream formula
         redeemAmount = _redeemTokens(_depositAmount);
+
+        // Burn issued token from user
+        _burn(_msgSender(), _depositAmount);
+
         // Subtract fee from redeem amount
         if (sellFee > 0) {
             redeemAmount =

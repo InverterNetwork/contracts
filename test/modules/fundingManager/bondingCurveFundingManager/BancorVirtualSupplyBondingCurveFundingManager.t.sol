@@ -47,7 +47,7 @@ import {RedeemingBondingCurveFundingManagerBaseTest} from
 
     are not tested since they are empty and will be removed in the future.
 
-    Also, since the following functions just wrap the formula contract, their content is assumed to be tested in the formula tests, not here:
+    Also, since the following functions just wrap the Bancor formula contract, their content is assumed to be tested in the original formula tests, not here:
 
     - _issueTokensFormulaWrapper(uint _depositAmount)
     - _redeemTokensFormulaWrapper(uint _depositAmount)
@@ -370,6 +370,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         amount = bound(amount, 1, 1e38);
 
         address buyer = makeAddr("buyer");
+        assertNotEq(to, buyer);
+
         _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
@@ -647,6 +649,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
 
         address seller = makeAddr("seller");
+        assertNotEq(to, seller);
+
         _prepareSellConditions(seller, amountIn);
 
         uint userSellAmount = bondingCurveFundingManager.balanceOf(seller);
