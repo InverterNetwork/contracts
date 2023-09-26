@@ -24,6 +24,9 @@ interface IBondingCurveFundingManagerBase {
     /// Bonding Curve Funding Manager itself
     error BondingCurveFundingManagerBase__InvalidRecipient();
 
+    /// @notice Token decimals can not be zero
+    error BondingCurveFundingManager__InvalidDecimals();
+
     //--------------------------------------------------------------------------
     // Events
 

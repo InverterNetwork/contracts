@@ -233,6 +233,9 @@ abstract contract BondingCurveFundingManagerBase is
     /// This function updates the `tokenDecimals` state variable.
     /// @param _decimals The number of decimals to set for the token.
     function _setTokenDecimals(uint8 _decimals) internal {
+        if (_decimals == 0) {
+            revert BondingCurveFundingManager__InvalidDecimals();
+        }
         tokenDecimals = _decimals;
     }
 
