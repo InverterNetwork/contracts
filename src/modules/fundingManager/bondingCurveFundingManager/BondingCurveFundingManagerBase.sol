@@ -194,7 +194,7 @@ abstract contract BondingCurveFundingManagerBase is
         if (_fee >= BPS) {
             revert BondingCurveFundingManager__InvalidFeePercentage();
         }
-        emit BuyFeeUpdated(buyFee, _fee);
+        emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;
     }
 

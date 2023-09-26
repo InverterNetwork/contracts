@@ -38,7 +38,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
     event SellingEnabled();
     event SellingDisabled();
-    event SellFeeUpdated(uint indexed oldSellFee, uint indexed newSellFee);
+    event SellFeeUpdated(uint indexed newSellFee, uint indexed oldSellFee);
     event TokensSold(
         address indexed receiver,
         uint indexed depositAmount,
@@ -433,7 +433,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit SellFeeUpdated(SELL_FEE, _fee);
+        emit SellFeeUpdated(_fee, SELL_FEE);
         bondingCurveFundingManager.setSellFee(_fee);
 
         assertEq(bondingCurveFundingManager.sellFee(), _fee);

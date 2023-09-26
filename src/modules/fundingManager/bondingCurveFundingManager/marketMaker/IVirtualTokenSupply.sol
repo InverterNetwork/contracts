@@ -15,7 +15,18 @@ interface IVirtualTokenSupply {
     //--------------------------------------------------------------------------
     // Events
 
-    // TODO: Contract still needs events. Where are events needed?
+    /// @notice Event emitted when virtual token supply has been set
+    event VirtualTokenSupplySet(uint indexed newSupply, uint indexed oldSupply);
+
+    /// @notice Event emitted when virtual token amount has been added
+    event VirtualTokenAmountAdded(
+        uint indexed amountAdded, uint indexed newSupply
+    );
+
+    /// @notice Event emitted when virtual token amount has ben subtracted
+    event VirtualTokenAmountSubtracted(
+        uint indexed amountSubtracted, uint indexed newSupply
+    );
 
     //--------------------------------------------------------------------------
     // Functions

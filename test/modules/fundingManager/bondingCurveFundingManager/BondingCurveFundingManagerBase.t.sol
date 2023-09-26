@@ -36,7 +36,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     event BuyingEnabled();
     event BuyingDisabled();
-    event BuyFeeUpdated(uint indexed oldBuyFee, uint indexed newBuyFee);
+    event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
     event TokensBought(
         address indexed receiver,
         uint indexed depositAmount,
@@ -408,7 +408,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit BuyFeeUpdated(BUY_FEE, newFee);
+        emit BuyFeeUpdated(newFee, BUY_FEE);
 
         bondingCurveFundingManager.setBuyFee(newFee);
 

@@ -44,6 +44,7 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
             revert VirtualTokenSupply_AddResultsInOverflow();
         }
         virtualTokenSupply += _amount;
+        emit VirtualTokenAmountAdded(_amount, virtualTokenSupply);
     }
 
     /// @dev Subtracts a specified amount from the virtual token supply.
@@ -54,11 +55,13 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
             revert VirtualTokenSupply__SubtractResultsInUnderflow();
         }
         virtualTokenSupply -= _amount;
+        emit VirtualTokenAmountSubtracted(_amount, virtualTokenSupply);
     }
 
     /// @dev Internal function to directly set the virtual token supply to a new value.
     /// @param _virtualSupply The new value to set for the virtual token supply.
     function _setVirtualTokenSupply(uint _virtualSupply) internal {
+        emit VirtualTokenSupplySet(_virtualSupply, virtualTokenSupply);
         virtualTokenSupply = _virtualSupply;
     }
 

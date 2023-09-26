@@ -43,6 +43,7 @@ abstract contract VirtualCollateralSupplyBase is IVirtualCollateralSupply {
             revert VirtualCollateralSupply_AddResultsInOverflow();
         }
         virtualCollateralSupply += _amount;
+        emit VirtualCollateralAmountAdded(_amount, virtualCollateralSupply);
     }
 
     /// @dev Subtracts a specified amount from the virtual collateral supply.
@@ -54,11 +55,13 @@ abstract contract VirtualCollateralSupplyBase is IVirtualCollateralSupply {
         }
 
         virtualCollateralSupply -= _amount;
+        emit VirtualCollateralAmountSubtracted(_amount, virtualCollateralSupply);
     }
 
     /// @dev Internal function to directly set the virtual collateral supply to a new value.
     /// @param _virtualSupply The new value to set for the virtual collateral supply.
     function _setVirtualCollateralSupply(uint _virtualSupply) internal {
+        emit VirtualCollateralSupplySet(_virtualSupply, virtualCollateralSupply);
         virtualCollateralSupply = _virtualSupply;
     }
 

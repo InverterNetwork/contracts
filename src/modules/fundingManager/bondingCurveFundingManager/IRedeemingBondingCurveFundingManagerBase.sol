@@ -34,7 +34,7 @@ interface IRedeemingBondingCurveFundingManagerBase {
     event SellingDisabled();
 
     /// @notice Event emitted when sell fee is updated
-    event SellFeeUpdated(uint indexed oldSellFee, uint indexed newSellFee);
+    event SellFeeUpdated(uint indexed newSellFee, uint indexed oldSellFee);
 
     /// @notice Event emitted when tokens have been succesfully redeemed
     event TokensSold(

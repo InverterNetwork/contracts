@@ -15,7 +15,20 @@ interface IVirtualCollateralSupply {
     //--------------------------------------------------------------------------
     // Events
 
-    // TODO: Contract still needs events. Where are events needed?
+    /// @notice Event emitted when virtual collateral supply has been set
+    event VirtualCollateralSupplySet(
+        uint indexed newSupply, uint indexed oldSupply
+    );
+
+    /// @notice Event emitted when virtual collateral amount has been added
+    event VirtualCollateralAmountAdded(
+        uint indexed amountAdded, uint indexed newSupply
+    );
+
+    /// @notice Event emitted when virtual collateral amount has ben subtracted
+    event VirtualCollateralAmountSubtracted(
+        uint indexed amountSubtracted, uint indexed newSupply
+    );
 
     //--------------------------------------------------------------------------
     // Functions

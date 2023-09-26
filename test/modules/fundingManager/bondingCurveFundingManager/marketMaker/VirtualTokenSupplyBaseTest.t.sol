@@ -12,6 +12,14 @@ contract VirtualTokenSupplyBaseTest is Test {
     uint internal constant INITIAL_SUPPLY = 1000e18;
     uint internal constant MAX_UINT = type(uint).max;
 
+    event VirtualTokenSupplySet(uint indexed newSupply, uint indexed oldSupply);
+    event VirtualTokenAmountAdded(
+        uint indexed amountAdded, uint indexed newSupply
+    );
+    event VirtualTokenAmountSubtracted(
+        uint indexed amountSubtracted, uint indexed newSupply
+    );
+
     function setUp() public {
         virtualTokenSupplyBase = new VirtualTokenSupplyBaseMock();
         virtualTokenSupplyBase.setVirtualTokenSupply(INITIAL_SUPPLY);
@@ -20,6 +28,9 @@ contract VirtualTokenSupplyBaseTest is Test {
     function testAddTokenAmount(uint amount) external {
         amount = bound(amount, 0, (MAX_UINT - INITIAL_SUPPLY));
 
+        // Test event
+        vm.expectEmit(true, true, false, false, address(virtualTokenSupplyBase));
+        emit VirtualTokenAmountAdded(amount, (INITIAL_SUPPLY + amount));
         virtualTokenSupplyBase.addVirtualTokenAmount(amount);
         assertEq(
             virtualTokenSupplyBase.getVirtualTokenSupply(),
@@ -43,6 +54,9 @@ contract VirtualTokenSupplyBaseTest is Test {
     function testSubTokenAmount(uint amount) external {
         vm.assume(amount <= INITIAL_SUPPLY);
 
+        // Test event
+        vm.expectEmit(true, true, false, false, address(virtualTokenSupplyBase));
+        emit VirtualTokenAmountSubtracted(amount, (INITIAL_SUPPLY - amount));
         virtualTokenSupplyBase.subVirtualTokenAmount(amount);
         assertEq(
             virtualTokenSupplyBase.getVirtualTokenSupply(),
@@ -67,7 +81,9 @@ contract VirtualTokenSupplyBaseTest is Test {
         assertEq(
             virtualTokenSupplyBase.getVirtualTokenSupply(), (INITIAL_SUPPLY)
         );
-
+        // Test event
+        vm.expectEmit(true, true, false, false, address(virtualTokenSupplyBase));
+        emit VirtualTokenSupplySet(amount, INITIAL_SUPPLY);
         virtualTokenSupplyBase.setVirtualTokenSupply(amount);
 
         assertEq(virtualTokenSupplyBase.getVirtualTokenSupply(), (amount));

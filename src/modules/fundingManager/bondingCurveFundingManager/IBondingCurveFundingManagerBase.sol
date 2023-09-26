@@ -34,7 +34,7 @@ interface IBondingCurveFundingManagerBase {
     event BuyingDisabled();
 
     /// @notice Event emitted when buy fee is updated
-    event BuyFeeUpdated(uint indexed oldBuyFee, uint indexed newBuyFee);
+    event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
 
     /// @notice Event emitted when tokens have been succesfully issued
     event TokensBought(
