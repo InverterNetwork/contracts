@@ -16,6 +16,8 @@ import {
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
 import {ScriptConstants} from "../script-constants.sol";
+import {RebasingFundingManager} from
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     ScriptConstants scriptConstants = new ScriptConstants();
@@ -212,8 +214,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // It's best, if the owner deposits them right after deployment.
 
         // Initial Deposit => 10e18;
-        IFundingManager fundingManager =
-            IFundingManager(address(test_orchestrator.fundingManager()));
+        RebasingFundingManager fundingManager =
+            RebasingFundingManager(address(test_orchestrator.fundingManager()));
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
