@@ -15,6 +15,7 @@ contract Deployment is ElasticReceiptTokenTest {
 
     function testContructor() public {
         // Constructor arguments.
+
         assertEq(ert.underlier(), address(underlier));
         assertEq(ert.name(), NAME);
         assertEq(ert.symbol(), SYMBOL);
