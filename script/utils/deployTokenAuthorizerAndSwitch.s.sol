@@ -17,9 +17,11 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
 
 import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
+import {ScriptConstants} from "../script-constants.sol";
 
 contract deployAndSwitchTokenAuthorizer is Script {
     DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
+    ScriptConstants scriptConstants = new ScriptConstants();
 
     bool hasDependency;
     string[] dependencies = new string[](0);
@@ -34,10 +36,10 @@ contract deployAndSwitchTokenAuthorizer is Script {
     // ===============================================================================================================
     // Introduce addresses of the deployed Orchestrator here
     // ===============================================================================================================
-    address moduleFactoryAddress = 0x349D52589aF62Ba1b35DB871F54FA2c5aFcA6B5B;
-    address orchestratorAddress = 0x0A7c8C0EB1afAb6CBaD4bb2d4c738acFF047814A;
-    address receiptTokenAddress = 0xC0f1842627Eeda938911A9A8368407ec241AC1dd;
-    address bountyManagerAddress = 0x4FB5adc63fB08c7E7864Ce3f77714af6B8B50D9f;
+    address moduleFactoryAddress = scriptConstants.moduleFactoryAddress();
+    address orchestratorAddress = scriptConstants.orchestratorAddress();
+    address receiptTokenAddress = scriptConstants.receiptTokenAddress();
+    address bountyManagerAddress = scriptConstants.bountyManagerAddress();
 
     // ===============================================================================================================
     // Set the Module Metadata.
