@@ -33,6 +33,8 @@ interface IVirtualTokenSupply {
 
     /// @notice Sets the virtual token supply to a new value.
     /// @dev This function calls the internal function `_setVirtualTokenSupply`.
+    /// The function must be implemented by the downstream contract. The downstream contract should
+    /// manage access control for setting the supply.
     /// @param _virtualSupply The new value to set for the virtual token supply.
     function setVirtualTokenSupply(uint _virtualSupply) external;
 
