@@ -238,20 +238,20 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 │               ├── it should take the fee out from the pulled amount 
                 │               ├── it should determine the mint amount of tokens to mint from the rest
                 │               ├── it should mint the tokens to the receiver 
-                │               ├── it should emit an event? @todo  
+                │               ├── it should emit an event
                 │               ├── it should update the virtual token amount
-                │               ├── it should emit an event? @todo 
+                │               ├── it should emit an event
                 │               ├── it should update the virtual collateral amount
-                │               └── it should emit an event? @todo             
+                │               └── it should emit an event            
                 └── when the fee is 0
                                 ├── it should pull the buy amount from the caller  
                                 ├── it should determine the mint amount of tokens to mint 
                                 ├── it should mint the tokens to the receiver 
-                                ├── it should emit an event? @todo  
+                                ├── it should emit an event
                                 ├── it should update the virtual token amount
-                                ├── it should emit an event? @todo 
+                                ├── it should emit an event
                                 ├── it should update the virtual collateral amount
-                                └── it should emit an event? @todo       
+                                └── it should emit an event     
         
     */
     function testBuyOrder_FailsIfDepositAmountIsZero() public {
@@ -337,14 +337,28 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
+        vm.expectEmit(true, true, true, true, address(_token));
+        emit Transfer(buyer, address(bondingCurveFundingManager), amount);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        // Q?: Can I test for multiple events?
-        // emit Transfer(address(0), buyer, formulaReturn);
+        emit Transfer(address(0), buyer, formulaReturn);
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
         emit TokensBought(buyer, amount, formulaReturn, buyer);
-        // emit VirtualTokenAmountAdded(1, (balanceBefore + amount));
-        // emit VirtualCollateralAmountAdded(amount, formulaReturn);
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit VirtualTokenAmountAdded(
+            formulaReturn, (INITIAL_TOKEN_SUPPLY + formulaReturn)
+        );
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit VirtualCollateralAmountAdded(
+            amount, (INITIAL_COLLATERAL_SUPPLY + amount)
+        );
         bondingCurveFundingManager.buyOrder(amount);
 
         // Post-checks
@@ -390,14 +404,28 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
+        vm.expectEmit(true, true, true, true, address(_token));
+        emit Transfer(buyer, address(bondingCurveFundingManager), amount);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        // Q?: Can I test for multiple events?
-        // emit Transfer(address(0), buyer, formulaReturn);
+        emit Transfer(address(0), buyer, formulaReturn);
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
         emit TokensBought(buyer, buyAmountMinusFee, formulaReturn, buyer);
-        // emit VirtualTokenAmountAdded(1, (balanceBefore + amount));
-        // emit VirtualCollateralAmountAdded(amount, formulaReturn);
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit VirtualTokenAmountAdded(
+            formulaReturn, (INITIAL_TOKEN_SUPPLY + formulaReturn)
+        );
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit VirtualCollateralAmountAdded(
+            amount, (INITIAL_TOKEN_SUPPLY + amount)
+        );
         bondingCurveFundingManager.buyOrder(amount);
 
         // Post-checks
@@ -471,11 +499,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 │                       │       └── it should revert
                 │                       └── When the amount of redeemed tokens does not exceed the virtual token supply
                 │                               ├── it should send the rest to the receiver    
-                │                               ├── it should emit an event? @todo
+                │                               ├── it should emit an event
                 │                               ├── it should update the virtual token amount
-                │                               ├── it should emit an event? @todo 
+                │                               ├── it should emit an event
                 │                               ├── it should update the virtual collateral amount
-                │                               └── it should emit an event? @todo 
+                │                               └── it should emit an event
                 └── when the fee is 0
                                 ├── it should take the sell amount from the caller
                                 ├── it should determine the redeem amount of the sent tokens 
@@ -486,11 +514,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                                         │       └── it should revert
                                         └── When the amount of redeemed tokens does not exceed the virtual token supply
                                                 ├── it should send the rest to the receiver    
-                                                ├── it should emit an event? @todo
+                                                ├── it should emit an event
                                                 ├── it should update the virtual token amount
-                                                ├── it should emit an event? @todo 
+                                                ├── it should emit an event
                                                 ├── it should update the virtual collateral amount
-                                                └── it should emit an event? @todo
+                                                └── it should emit an event
     */
 
     function testSellOrder_FailsIfDepositAmountIsZero() public {
@@ -586,14 +614,28 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Perform the sell
         vm.startPrank(seller);
         {
+            vm.expectEmit(true, true, true, true, address(_token));
+            emit Transfer(
+                address(bondingCurveFundingManager),
+                address(seller),
+                formulaReturn
+            );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            // Q?: Can I test for multiple events?
-            // emit Transfer( address(bondingCurveFundingManager),seller, formulaReturn);
             emit TokensSold(seller, userSellAmount, formulaReturn, seller);
-            // emit VirtualTokenAmountSubtracted(userSellAmount, newVirtualTokenSupply - userSellAmount);
-            // emit VirtualCollateralAmountSubtracted(formulaReturn, newVirtualCollateral - formulaReturn);
+            vm.expectEmit(
+                true, true, true, true, address(bondingCurveFundingManager)
+            );
+            emit VirtualTokenAmountSubtracted(
+                userSellAmount, newVirtualTokenSupply - userSellAmount
+            );
+            vm.expectEmit(
+                true, true, true, true, address(bondingCurveFundingManager)
+            );
+            emit VirtualCollateralAmountSubtracted(
+                formulaReturn, newVirtualCollateral - formulaReturn
+            );
             bondingCurveFundingManager.sellOrder(userSellAmount);
         }
         vm.stopPrank();
@@ -670,14 +712,28 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Perform the sell
         vm.startPrank(seller);
         {
+            vm.expectEmit(true, true, true, true, address(_token));
+            emit Transfer(
+                address(bondingCurveFundingManager),
+                address(seller),
+                sellAmountMinusFee
+            );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            // Q?: Can I test for multiple events?
-            // emit Transfer( address(bondingCurveFundingManager),seller, formulaReturn);
             emit TokensSold(seller, userSellAmount, sellAmountMinusFee, seller);
-            // emit VirtualTokenAmountSubtracted(userSellAmount, newVirtualTokenSupply - userSellAmount);
-            // emit VirtualCollateralAmountSubtracted(formulaReturn, newVirtualCollateral - formulaReturn);
+            vm.expectEmit(
+                true, true, true, true, address(bondingCurveFundingManager)
+            );
+            emit VirtualTokenAmountSubtracted(
+                userSellAmount, newVirtualTokenSupply - userSellAmount
+            );
+            vm.expectEmit(
+                true, true, true, true, address(bondingCurveFundingManager)
+            );
+            emit VirtualCollateralAmountSubtracted(
+                sellAmountMinusFee, newVirtualCollateral - sellAmountMinusFee
+            );
             bondingCurveFundingManager.sellOrder(userSellAmount);
         }
         vm.stopPrank();
