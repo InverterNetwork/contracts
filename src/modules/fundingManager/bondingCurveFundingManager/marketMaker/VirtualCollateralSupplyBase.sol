@@ -17,7 +17,7 @@ abstract contract VirtualCollateralSupplyBase is IVirtualCollateralSupply {
     /// @dev The internal state variable to keep track of the virtual collateral supply.
     uint internal virtualCollateralSupply;
     /// @dev Maximum unsigned integer value for overflow checks.
-    uint private constant MAX_UINT = type(uint).max; // TODO: The maximum supply has to be divided by the BPS precision used. If not, it can come to overflow errors in downstream contracts
+    uint private constant MAX_UINT = type(uint).max;
 
     //--------------------------------------------------------------------------
     // Public Functions

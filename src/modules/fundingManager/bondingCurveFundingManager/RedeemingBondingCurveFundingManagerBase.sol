@@ -122,7 +122,6 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         internal
         returns (uint redeemAmount)
     {
-        // TODO: Burn the tokens and update tests
         if (_depositAmount == 0) {
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
