@@ -71,9 +71,9 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // Make the Role Token-Gated
         // ===============================================================================================================
 
-        // Choose the role to be modified. In this example we will use the CLAIM_ADMIN_ROLE
+        // Choose the role to be modified. In this example we will use the CLAIMANT_ROLE
         bytes32 roleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.CLAIM_ADMIN_ROLE()
+            bountyManagerAddress, bountyManager.CLAIMANT_ROLE()
         );
 
         //First, we mark the Role as Token-Gated
