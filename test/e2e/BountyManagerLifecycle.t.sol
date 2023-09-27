@@ -81,7 +81,7 @@ contract BountyManagerLifecycle is E2eTest {
 
         // we authorize the deployer of the orchestrator as the bounty admin
         bountyManager.grantModuleRole(
-            bountyManager.BOUNTY_ADMIN_ROLE(), address(this)
+            bountyManager.BOUNTY_ISSUER_ROLE(), address(this)
         );
         // Funders deposit funds
 
@@ -125,7 +125,7 @@ contract BountyManagerLifecycle is E2eTest {
 
         //auth.setIsAuthorized(address(0xA11CE), true);
         bountyManager.grantModuleRole(
-            bountyManager.CLAIM_ADMIN_ROLE(), address(0xA11CE)
+            bountyManager.CLAIMANT_ROLE(), address(0xA11CE)
         );
 
         IBountyManager.Contributor[] memory contribs =
@@ -143,9 +143,7 @@ contract BountyManagerLifecycle is E2eTest {
         address verifier1 = makeAddr("verifier 1");
 
         //auth.setIsAuthorized(verifier1, true);
-        bountyManager.grantModuleRole(
-            bountyManager.VERIFY_ADMIN_ROLE(), verifier1
-        );
+        bountyManager.grantModuleRole(bountyManager.VERIFIER_ROLE(), verifier1);
 
         vm.prank(verifier1);
         bountyManager.verifyClaim(claimId, contribs);
