@@ -37,7 +37,7 @@ import {
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract SingleVoteGovernorLifecycle is E2eTest {
+contract SingleVoteGovernorE2E is E2eTest {
     // voters
     address voter1 = makeAddr("voter1");
     address voter2 = makeAddr("voter2");
@@ -46,7 +46,7 @@ contract SingleVoteGovernorLifecycle is E2eTest {
     // Constants
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
-    function test_e2e_SingleVoteGovernorLifecycle() public {
+    function test_e2e_SingleVoteGovernorE2E() public {
         // -----------INIT
         // address(this) creates a new orchestrator.
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
