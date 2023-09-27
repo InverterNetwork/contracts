@@ -13,7 +13,7 @@ import {SimplePaymentProcessor} from
  * @author Inverter Network
  */
 
-contract DeployPaymentProcessor is Script {
+contract DeploySimplePaymentProcessor is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");

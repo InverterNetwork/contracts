@@ -22,6 +22,9 @@ interface IOrchestrator is IModuleManager {
     error Orchestrator__ExecuteTxFailed();
 
     /// @notice The given module is not used in the orchestrator
+    error Orchestrator__InvalidModuleType(address module);
+
+    /// @notice The given module is not used in the orchestrator
     error DependencyInjection__ModuleNotUsedInOrchestrator();
 
     //--------------------------------------------------------------------------

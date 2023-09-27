@@ -184,7 +184,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
 
     /// @inheritdoc IOrchestrator
     function verifyAddressIsAuthorizerModule(address authModule)
-        external
+        public
         view
         returns (bool)
     {
@@ -199,7 +199,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
 
     /// @inheritdoc IOrchestrator
     function verifyAddressIsFundingManager(address fundingManagerAddress)
-        external
+        public
         view
         returns (bool)
     {
@@ -216,7 +216,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function verifyAddressIsRecurringPaymentManager(
         address recurringPaymentManager
-    ) external view returns (bool) {
+    ) public view returns (bool) {
         RecurringPaymentManager paymentManager =
             RecurringPaymentManager(recurringPaymentManager);
 
@@ -229,7 +229,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
 
     /// @inheritdoc IOrchestrator
     function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
-        external
+        public
         view
         returns (bool)
     {
@@ -265,10 +265,14 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        addModule(address(authorizer_));
-        removeModule(address(authorizer));
-        authorizer = authorizer_;
-        emit AuthorizerUpdated(address(authorizer_));
+        if (verifyAddressIsAuthorizerModule(address(authorizer_))) {
+            addModule(address(authorizer_));
+            removeModule(address(authorizer));
+            authorizer = authorizer_;
+            emit AuthorizerUpdated(address(authorizer_));
+        } else {
+            revert Orchestrator__InvalidModuleType(address(authorizer_));
+        }
     }
 
     /// @inheritdoc IOrchestrator
@@ -276,10 +280,14 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        addModule(address(fundingManager_));
-        removeModule(address(fundingManager));
-        fundingManager = fundingManager_;
-        emit FundingManagerUpdated(address(fundingManager_));
+        if (verifyAddressIsFundingManager(address(fundingManager_))) {
+            addModule(address(fundingManager_));
+            removeModule(address(fundingManager));
+            fundingManager = fundingManager_;
+            emit FundingManagerUpdated(address(fundingManager_));
+        } else {
+            revert Orchestrator__InvalidModuleType(address(fundingManager_));
+        }
     }
 
     /// @inheritdoc IOrchestrator
@@ -287,10 +295,14 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        addModule(address(paymentProcessor_));
-        removeModule(address(paymentProcessor));
-        paymentProcessor = paymentProcessor_;
-        emit PaymentProcessorUpdated(address(paymentProcessor_));
+        if (verifyAddressIsPaymentProcessor(address(paymentProcessor_))) {
+            addModule(address(paymentProcessor_));
+            removeModule(address(paymentProcessor));
+            paymentProcessor = paymentProcessor_;
+            emit PaymentProcessorUpdated(address(paymentProcessor_));
+        } else {
+            revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
+        }
     }
 
     /// @inheritdoc IOrchestrator

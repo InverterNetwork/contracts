@@ -46,11 +46,5 @@ interface IFundingManager {
 
     function token() external view returns (IERC20);
 
-    function deposit(uint amount) external;
-    function depositFor(address to, uint amount) external;
-
-    function withdraw(uint amount) external;
-    function withdrawTo(address to, uint amount) external;
-
     function transferOrchestratorToken(address to, uint amount) external;
 }
