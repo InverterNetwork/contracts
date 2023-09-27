@@ -29,7 +29,6 @@ import {
     IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
-
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
@@ -42,7 +41,7 @@ contract RoleAuthorizerE2E is E2eTest {
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
     function test_e2e_RoleAuthorizer() public {
-         // -----------INIT
+        // -----------INIT
         // address(this) creates a new orchestrator.
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
@@ -51,9 +50,7 @@ contract RoleAuthorizerE2E is E2eTest {
         });
 
         IOrchestrator orchestrator =
-        _createNewOrchestratorWithAllModules(
-            orchestratorConfig
-        );
+            _createNewOrchestratorWithAllModules(orchestratorConfig);
 
         RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
@@ -76,11 +73,9 @@ contract RoleAuthorizerE2E is E2eTest {
             }
         }
 
-
-
-
+        //--------------------------------------------------------------------------------
         // Assign Bounty Manager Roles
-
+        //--------------------------------------------------------------------------------
 
         // we authorize the owner to create  bounties
         bountyManager.grantModuleRole(
@@ -97,14 +92,12 @@ contract RoleAuthorizerE2E is E2eTest {
             bountyManager.CLAIM_ADMIN_ROLE(), address(bountySubmitter)
         );
 
-
         // we grant manager role to managerAddress
         bytes32 managerRole = authorizer.getManagerRole();
         authorizer.grantRole(managerRole, address(orchestratorManager));
         authorizer.renounceRole(managerRole, address(this));
         assertTrue(authorizer.hasRole(managerRole, orchestratorManager));
         assertEq(authorizer.getRoleMemberCount(managerRole), 1);
-
 
         //we grant owner role to ownerAddress
         bytes32 ownerRole = authorizer.getOwnerRole();
@@ -113,23 +106,16 @@ contract RoleAuthorizerE2E is E2eTest {
         assertTrue(authorizer.hasRole(ownerRole, orchestratorOwner));
         assertEq(authorizer.getRoleMemberCount(ownerRole), 1);
 
+        //--------------------------------------------------------------------------------
+        // Set up seed deposit and initial deposit by users
+        //--------------------------------------------------------------------------------
 
-        // Funders deposit funds
-
-        // IMPORTANT
-        // =========
-        // Due to how the underlying rebase mechanism works, it is necessary
-        // to always have some amount of tokens in the orchestrator.
-        // It's best, if the owner deposits them right after deployment.
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
         token.approve(address(fundingManager), initialDeposit);
         fundingManager.deposit(initialDeposit);
 
-        // Seeing this great working on the orchestrator, funder1 decides to fund
-        // the orchestrator with 1k of tokens.
         address funder1 = makeAddr("funder1");
-
         token.mint(funder1, 1000e18);
 
         vm.startPrank(funder1);
@@ -139,12 +125,15 @@ contract RoleAuthorizerE2E is E2eTest {
         }
         vm.stopPrank();
 
+        //--------------------------------------------------------------------------------
+        // Create bounty
+        //--------------------------------------------------------------------------------
+
         // Bounty details
         uint minimumPayoutAmount = 100e18;
         uint maximumPayoutAmount = 500e18;
         bytes memory details = "This is a test bounty";
 
-        // Create bounty
         vm.prank(orchestratorOwner);
         uint bountyId = bountyManager.addBounty(
             minimumPayoutAmount, maximumPayoutAmount, details
@@ -157,29 +146,27 @@ contract RoleAuthorizerE2E is E2eTest {
         assertEq(bounty.maximumPayoutAmount, maximumPayoutAmount);
         assertEq(bounty.details, details);
 
-        // Workers submit bounty
+        //--------------------------------------------------------------------------------
+        // Worker submits bounty
+        //--------------------------------------------------------------------------------
         vm.startPrank(bountySubmitter);
-            IBountyManager.Contributor memory BOB =
-        IBountyManager.Contributor(bountySubmitter, 200e18);
-        
-            IBountyManager.Contributor[] memory contribs =
+        IBountyManager.Contributor memory BOB =
+            IBountyManager.Contributor(bountySubmitter, 200e18);
+
+        IBountyManager.Contributor[] memory contribs =
             new IBountyManager.Contributor[](1);
-            contribs[0] = BOB;
+        contribs[0] = BOB;
 
-        bytes memory claimDetails = "This is a test submission";
+        uint claimId = bountyManager.addClaim(
+            bountyId, contribs, "This is a test submission"
+        );
 
-        uint claimId = bountyManager.addClaim(bountyId, contribs, claimDetails);
+        vm.stopPrank();
 
-        vm.stopPrank(); 
-
+        //--------------------------------------------------------------------------------
         // Manager verifies bounty claim
+        //--------------------------------------------------------------------------------
         vm.prank(orchestratorManager);
         bountyManager.verifyClaim(claimId, contribs);
-
-
-
-
     }
-
-
 }

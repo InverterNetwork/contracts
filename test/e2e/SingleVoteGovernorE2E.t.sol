@@ -105,22 +105,15 @@ contract SingleVoteGovernorE2E is E2eTest {
 
         authorizer.renounceRole(ownerRole, address(this));
 
-        // Funders deposit funds
-
-        // IMPORTANT
-        // =========
-        // Due to how the underlying rebase mechanism works, it is necessary
-        // to always have some amount of tokens in the orchestrator.
-        // It's best, if the owner deposits them right after deployment.
+        //--------------------------------------------------------------------------------
+        // Set up seed deposit and initial deposit by users
+        //--------------------------------------------------------------------------------
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
         token.approve(address(fundingManager), initialDeposit);
         fundingManager.deposit(initialDeposit);
 
-        // Seeing this great working on the orchestrator, funder1 decides to fund
-        // the orchestrator with 1k of tokens.
         address funder1 = makeAddr("funder1");
-
         token.mint(funder1, 1000e18);
 
         vm.startPrank(funder1);
@@ -129,6 +122,10 @@ contract SingleVoteGovernorE2E is E2eTest {
             fundingManager.deposit(1000e18);
         }
         vm.stopPrank();
+
+        //--------------------------------------------------------------------------------
+        // Set up Vote to create Bounty
+        //--------------------------------------------------------------------------------
 
         // Bounty details
         uint minimumPayoutAmount = 100e18;
@@ -149,7 +146,9 @@ contract SingleVoteGovernorE2E is E2eTest {
 
         vm.warp(block.timestamp + 2);
 
-        // voters vote
+        //--------------------------------------------------------------------------------
+        // Vote happens
+        //--------------------------------------------------------------------------------
         vm.prank(voter1);
         singleVoteGovernor.castVote(motionId, 0);
         vm.prank(voter2);
@@ -158,8 +157,9 @@ contract SingleVoteGovernorE2E is E2eTest {
         singleVoteGovernor.castVote(motionId, 0);
 
         vm.warp(block.timestamp + 3 days);
-
-        // execute vote
+        //--------------------------------------------------------------------------------
+        // Execute Vote
+        //--------------------------------------------------------------------------------
         vm.prank(voter1);
         singleVoteGovernor.executeMotion(motionId);
 

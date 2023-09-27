@@ -26,7 +26,8 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
-import {TokenGatedRoleAuthorizer} from "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
+import {TokenGatedRoleAuthorizer} from
+    "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
 
 //Mocks
@@ -159,9 +160,12 @@ contract E2eTest is Test {
 
     TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
     Beacon tokenRoleAuthorizerBeacon;
-    address  tokenRoleAuthorizerBeaconOwner = address(0x3BEAC0);
-    IModule.Metadata  tokenRoleAuthorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/tokenRoleAuthorizer", "TokenGatedRoleAuthorizer"
+    address tokenRoleAuthorizerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/tokenRoleAuthorizer",
+        "TokenGatedRoleAuthorizer"
     );
     // Note that RoleAuthorizer owner and manager are the same
     IOrchestratorFactory.ModuleConfig tokenRoleAuthorizerFactoryConfig =
@@ -188,7 +192,6 @@ contract E2eTest is Test {
             tokenRoleAuthorizerMetadata, IBeacon(tokenRoleAuthorizerBeacon)
         );
     }
-
 
     //--------------------------------------------------------------------------
     // paymentProcessor
