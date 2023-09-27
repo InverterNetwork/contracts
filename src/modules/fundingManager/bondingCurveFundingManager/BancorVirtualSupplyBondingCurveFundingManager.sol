@@ -244,18 +244,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         return __Module_orchestrator.token();
     }
 
-    /// @inheritdoc IFundingManager
-    function deposit(uint amount) external {}
-
-    /// @inheritdoc IFundingManager
-    function depositFor(address to, uint amount) external {}
-
-    /// @inheritdoc IFundingManager
-    function withdraw(uint amount) external {}
-
-    /// @inheritdoc IFundingManager
-    function withdrawTo(address to, uint amount) external {}
-
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
