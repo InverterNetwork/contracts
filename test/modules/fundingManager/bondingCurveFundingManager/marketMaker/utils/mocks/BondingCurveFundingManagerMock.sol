@@ -90,16 +90,4 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
     function token() public view returns (IERC20) {
         return __Module_orchestrator.token();
     }
-
-    /// @inheritdoc IFundingManager
-    function deposit(uint amount) external {}
-
-    /// @inheritdoc IFundingManager
-    function depositFor(address to, uint amount) external {}
-
-    /// @inheritdoc IFundingManager
-    function withdraw(uint amount) external {}
-
-    /// @inheritdoc IFundingManager
-    function withdrawTo(address to, uint amount) external {}
 }
