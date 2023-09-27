@@ -79,17 +79,17 @@ contract RoleAuthorizerE2E is E2eTest {
 
         // we authorize the owner to create  bounties
         bountyManager.grantModuleRole(
-            bountyManager.BOUNTY_ADMIN_ROLE(), address(orchestratorOwner)
+            bountyManager.BOUNTY_ISSUER_ROLE(), address(orchestratorOwner)
         );
 
         // we authorize the manager to verify bounty claims
         bountyManager.grantModuleRole(
-            bountyManager.VERIFY_ADMIN_ROLE(), address(orchestratorManager)
+            bountyManager.VERIFIER_ROLE(), address(orchestratorManager)
         );
 
         // we authorize the bountySubmitter to submit bounty claims
         bountyManager.grantModuleRole(
-            bountyManager.CLAIM_ADMIN_ROLE(), address(bountySubmitter)
+            bountyManager.CLAIMANT_ROLE(), address(bountySubmitter)
         );
 
         // we grant manager role to managerAddress

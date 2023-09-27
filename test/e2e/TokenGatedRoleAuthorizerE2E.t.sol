@@ -88,7 +88,7 @@ contract TokenGatedRoleAuthorizerE2E is E2eTest {
         {
             // Make the BOUNTY_ADMIN_ROLE token-gated by GATOR token and set the threshold
             bytes32 bountyRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.BOUNTY_ADMIN_ROLE()
+                address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
             );
             authorizer.setTokenGated(bountyRoleId, true);
             authorizer.grantRole(bountyRoleId, address(gatingToken));
@@ -99,7 +99,7 @@ contract TokenGatedRoleAuthorizerE2E is E2eTest {
 
             // Make the VERIFY_ADMIN_ROLE token-gated by GATOR token and set the threshold
             bytes32 verifierRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.VERIFY_ADMIN_ROLE()
+                address(bountyManager), bountyManager.VERIFIER_ROLE()
             );
             authorizer.setTokenGated(verifierRoleId, true);
             authorizer.grantRole(verifierRoleId, address(gatingToken));
@@ -110,7 +110,7 @@ contract TokenGatedRoleAuthorizerE2E is E2eTest {
 
             // Make the CLAIM_ADMIN_ROLE token-gated by GATOR token and set the threshold
             bytes32 claimRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.CLAIM_ADMIN_ROLE()
+                address(bountyManager), bountyManager.CLAIMANT_ROLE()
             );
             authorizer.setTokenGated(claimRoleId, true);
             authorizer.grantRole(claimRoleId, address(gatingToken));
