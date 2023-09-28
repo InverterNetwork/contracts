@@ -97,13 +97,13 @@ contract deployAndSwitchTokenAuthorizer is Script {
 
         // make all BountyManager roles tokenGated
         bytes32 claimRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.CLAIM_ADMIN_ROLE()
+            bountyManagerAddress, bountyManager.CLAIMANT_ROLE()
         );
         bytes32 bountyRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.BOUNTY_ADMIN_ROLE()
+            bountyManagerAddress, bountyManager.BOUNTY_ISSUER_ROLE()
         );
         bytes32 verifyRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.VERIFY_ADMIN_ROLE()
+            bountyManagerAddress, bountyManager.VERIFIER_ROLE()
         );
 
         //manually set tokenGated, token and threshold for all roles
