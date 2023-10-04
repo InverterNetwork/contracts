@@ -257,19 +257,17 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         // Whitelist owner to create bounties
         orchestratorCreatedBountyManager.grantModuleRole(
-            orchestratorCreatedBountyManager.BOUNTY_ADMIN_ROLE(),
+            orchestratorCreatedBountyManager.BOUNTY_ISSUER_ROLE(),
             orchestratorOwner
         );
 
         // Whitelist owner to post claims
         orchestratorCreatedBountyManager.grantModuleRole(
-            orchestratorCreatedBountyManager.CLAIM_ADMIN_ROLE(),
-            orchestratorOwner
+            orchestratorCreatedBountyManager.CLAIMANT_ROLE(), orchestratorOwner
         );
         // Whitelist owner to verify claims
         orchestratorCreatedBountyManager.grantModuleRole(
-            orchestratorCreatedBountyManager.VERIFY_ADMIN_ROLE(),
-            orchestratorOwner
+            orchestratorCreatedBountyManager.VERIFIER_ROLE(), orchestratorOwner
         );
 
         bytes memory details = "TEST BOUNTY";
