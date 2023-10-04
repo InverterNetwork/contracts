@@ -15,8 +15,12 @@ import {
     BountyManager,
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
+import {ScriptConstants} from "../script-constants.sol";
+import {RebasingFundingManager} from
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
+    ScriptConstants scriptConstants = new ScriptConstants();
     bool hasDependency;
     string[] dependencies = new string[](0);
     bytes additionalData;
@@ -52,12 +56,16 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // First we deploy a mock ERC20 to act as funding token for the orchestrator. It has a public mint function.
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            token = new ERC20Mock("Mock", "MOCK");
+            token = new ERC20Mock("BloomMock", "BLMOCK");
         }
         vm.stopBroadcast();
+        //token = ERC20Mock(0x61a4ABC15311EE7F2fe02b5F5b2e8B15c1E907be);
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
         address orchestratorFactory = DeploymentScript.run();
+
+        //We use the exisiting orchestratorFactory address
+        //address orchestratorFactory = 0x9069e7E04a0E6B5eAe7e8A76C6864feB75CdE436;
 
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
@@ -176,6 +184,26 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             test_orchestrator.orchestratorId(),
             address(test_orchestrator)
         );
+        console2.log(
+            "\t-FundingManager deployed at address: %s ",
+            address(test_orchestrator.fundingManager())
+        );
+        console2.log(
+            "\t-Authorizer deployed at address: %s ",
+            address(test_orchestrator.authorizer())
+        );
+        console2.log(
+            "\t-PaymentProcessor deployed at address: %s ",
+            address(test_orchestrator.paymentProcessor())
+        );
+
+        console2.log(
+            "\t-BountyManager deployed at address: %s ",
+            address(orchestratorCreatedBountyManager)
+        );
+        console2.log(
+            "=================================================================================="
+        );
 
         // ------------------------------------------------------------------------
         // Initialize FundingManager
@@ -187,16 +215,24 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // It's best, if the owner deposits them right after deployment.
 
         // Initial Deposit => 10e18;
-        IFundingManager fundingManager =
-            IFundingManager(address(test_orchestrator.fundingManager()));
+        RebasingFundingManager fundingManager =
+            RebasingFundingManager(address(test_orchestrator.fundingManager()));
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            token.mint(address(orchestratorOwner), 10e18);
+            token.mint(
+                address(orchestratorOwner),
+                scriptConstants.orchestratorTokenDepositAmount()
+            );
 
-            token.approve(address(fundingManager), 10e18);
+            token.approve(
+                address(fundingManager),
+                scriptConstants.orchestratorTokenDepositAmount()
+            );
 
-            fundingManager.deposit(10e18);
+            fundingManager.deposit(
+                scriptConstants.orchestratorTokenDepositAmount()
+            );
         }
         vm.stopBroadcast();
         console2.log("\t -Initialization Funding Done");
@@ -204,9 +240,12 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Mint some tokens for the funder and deposit them
         vm.startBroadcast(funder1PrivateKey);
         {
-            token.mint(funder1, 1000e18);
-            token.approve(address(fundingManager), 1000e18);
-            fundingManager.deposit(1000e18);
+            token.mint(funder1, scriptConstants.funder1TokenDepositAmount());
+            token.approve(
+                address(fundingManager),
+                scriptConstants.funder1TokenDepositAmount()
+            );
+            fundingManager.deposit(scriptConstants.funder1TokenDepositAmount());
         }
         vm.stopBroadcast();
         console2.log("\t -Funder 1: Deposit Performed");
@@ -215,18 +254,35 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         // Create a Bounty
         vm.startBroadcast(orchestratorOwnerPrivateKey);
-        {
-            orchestratorCreatedBountyManager.grantModuleRole(
-                uint8(IBountyManager.Roles.BountyAdmin), orchestratorOwner
-            );
 
-            bytes memory details = "TEST BOUNTY";
+        // Whitelist owner to create bounties
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.BOUNTY_ADMIN_ROLE(),
+            orchestratorOwner
+        );
 
-            orchestratorCreatedBountyManager.addBounty(100e18, 250e18, details);
-        }
+        // Whitelist owner to post claims
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.CLAIM_ADMIN_ROLE(),
+            orchestratorOwner
+        );
+        // Whitelist owner to verify claims
+        orchestratorCreatedBountyManager.grantModuleRole(
+            orchestratorCreatedBountyManager.VERIFY_ADMIN_ROLE(),
+            orchestratorOwner
+        );
+
+        bytes memory details = "TEST BOUNTY";
+
+        uint bountyId = orchestratorCreatedBountyManager.addBounty(
+            scriptConstants.addBounty_minimumPayoutAmount(),
+            scriptConstants.addBounty_maximumPayoutAmount(),
+            details
+        );
+
         vm.stopBroadcast();
 
-        console2.log("\t -Bounty Created.");
+        console2.log("\t -Bounty Created. Id: ", bountyId);
 
         console2.log(
             "=================================================================================="

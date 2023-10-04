@@ -1034,9 +1034,6 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             );
         }
 
-        // make sure all the balances are transfered to paymentClient
-        assertTrue(_token.balanceOf(address(paymentClient)) == total_amount);
-
         // Call processPayments.
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);

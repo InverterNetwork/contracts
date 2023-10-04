@@ -3,7 +3,15 @@ pragma solidity 0.8.19;
 // External Libraries
 
 import {ITokenGatedRoleAuthorizer} from "./ITokenGatedRoleAuthorizer.sol";
-import {IAuthorizer, RoleAuthorizer} from "./RoleAuthorizer.sol";
+import {
+    IAuthorizer,
+    RoleAuthorizer,
+    AccessControlEnumerableUpgradeable
+} from "./RoleAuthorizer.sol";
+import {
+    AccessControlUpgradeable,
+    IAccessControlUpgradeable
+} from "@oz-up/access/AccessControlUpgradeable.sol";
 
 interface TokenInterface {
     function balanceOf(address _owner) external view returns (uint balance);
@@ -57,29 +65,17 @@ contract TokenGatedRoleAuthorizer is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /// @inheritdoc RoleAuthorizer
-    /// @dev We add a check to call a different function if the role is token-gated.
-    function isAuthorized(uint8 role, address who)
+    function hasRole(bytes32 roleId, address account)
         public
         view
-        override(RoleAuthorizer, IAuthorizer)
+        virtual
+        override(AccessControlUpgradeable, IAccessControlUpgradeable)
         returns (bool)
     {
-        //Note: since it uses msgSender to generate ID, this should only be used by modules. Users should call hasRole()
-        bytes32 roleId;
-        // If the module self-manages its roles, check if account has the role.
-        if (selfManagedModules[_msgSender()]) {
-            roleId = generateRoleId(_msgSender(), role);
-            //check if token gated:
-            if (isTokenGated[roleId]) {
-                return hasTokenRole(roleId, who);
-            } else {
-                return hasRole(roleId, who);
-            }
-            // If not, check the account against the orchestrator roles
+        if (isTokenGated[roleId]) {
+            return _hasTokenRole(roleId, account);
         } else {
-            roleId = generateRoleId(address(orchestrator()), role);
-            return hasRole(roleId, who);
+            return super.hasRole(roleId, account);
         }
     }
 
@@ -109,30 +105,10 @@ contract TokenGatedRoleAuthorizer is
     function hasTokenRole(bytes32 role, address who)
         public
         view
+        onlyTokenGated(role)
         returns (bool)
     {
-        uint numberOfAllowedTokens = getRoleMemberCount(role);
-
-        for (uint i; i < numberOfAllowedTokens; ++i) {
-            address tokenAddr = getRoleMember(role, i);
-            bytes32 thresholdId = keccak256(abi.encodePacked(role, tokenAddr));
-            uint tokenThreshold = thresholdMap[thresholdId];
-
-            //Should work with both ERC20 and ERC721
-            try TokenInterface(tokenAddr).balanceOf(who) returns (
-                uint tokenBalance
-            ) {
-                if (tokenBalance >= tokenThreshold) {
-                    return true;
-                }
-            } catch {
-                // If the call fails, we continue to the next token.
-                // Emitting an event here would make this function (and the functions calling it) non-view.
-                // note we already enforce Interface implementation when granting the role.
-            }
-        }
-
-        return false;
+        return _hasTokenRole(role, who);
     }
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
@@ -149,10 +125,9 @@ contract TokenGatedRoleAuthorizer is
     // State-altering functions
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
-    function makeRoleTokenGatedFromModule(uint8 role)
+    function makeRoleTokenGatedFromModule(bytes32 role)
         public
         onlyModule(_msgSender())
-        onlySelfManaged
         onlyEmptyRole(generateRoleId(_msgSender(), role))
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
@@ -162,13 +137,22 @@ contract TokenGatedRoleAuthorizer is
     }
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
-    function grantTokenRoleFromModule(uint8 role, address token, uint threshold)
-        external
-        onlyModule(_msgSender())
-        onlySelfManaged
-    {
+    function grantTokenRoleFromModule(
+        bytes32 role,
+        address token,
+        uint threshold
+    ) external onlyModule(_msgSender()) {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _grantRole(roleId, token);
+        _setThreshold(roleId, token, threshold);
+    }
+
+    /// @inheritdoc ITokenGatedRoleAuthorizer
+    function setThresholdFromModule(bytes32 role, address token, uint threshold)
+        public
+        onlyModule(_msgSender())
+    {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
         _setThreshold(roleId, token, threshold);
     }
 
@@ -209,5 +193,37 @@ contract TokenGatedRoleAuthorizer is
         bytes32 thresholdId = keccak256(abi.encodePacked(roleId, token));
         thresholdMap[thresholdId] = threshold;
         emit ChangedTokenThreshold(roleId, token, threshold);
+    }
+
+    /// @notice Internal function that checks if an account qualifies for a token-gated role.
+    /// @param role The role to be checked.
+    /// @param who The account to be checked.
+    function _hasTokenRole(bytes32 role, address who)
+        internal
+        view
+        returns (bool)
+    {
+        uint numberOfAllowedTokens = getRoleMemberCount(role);
+
+        for (uint i; i < numberOfAllowedTokens; ++i) {
+            address tokenAddr = getRoleMember(role, i);
+            bytes32 thresholdId = keccak256(abi.encodePacked(role, tokenAddr));
+            uint tokenThreshold = thresholdMap[thresholdId];
+
+            //Should work with both ERC20 and ERC721
+            try TokenInterface(tokenAddr).balanceOf(who) returns (
+                uint tokenBalance
+            ) {
+                if (tokenBalance >= tokenThreshold) {
+                    return true;
+                }
+            } catch {
+                // If the call fails, we continue to the next token.
+                // Emitting an event here would make this function (and the functions calling it) non-view.
+                // note we already enforce Interface implementation when granting the role.
+            }
+        }
+
+        return false;
     }
 }

@@ -17,8 +17,8 @@ import {DeployOrchestratorFactory} from
     "script/factories/DeployOrchestratorFactory.s.sol";
 import {DeployBountyManager} from "script/modules/DeployBountyManager.s.sol";
 import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
-import {DeployStreamingPaymentProcessor} from
-    "script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol";
+import {DeploySimplePaymentProcessor} from
+    "script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol";
 import {DeployRebasingFundingManager} from
     "script/modules/DeployRebasingFundingManager.s.sol";
 import {DeployRoleAuthorizer} from
@@ -33,8 +33,8 @@ contract DeploymentScript is Script {
         new DeployOrchestratorFactory();
 
     DeployOrchestrator deployOrchestrator = new DeployOrchestrator();
-    DeployStreamingPaymentProcessor deployStreamingPaymentProcessor =
-        new DeployStreamingPaymentProcessor();
+    DeploySimplePaymentProcessor deploySimplePaymentProcessor =
+        new DeploySimplePaymentProcessor();
     DeployRebasingFundingManager deployRebasingFundingManager =
         new DeployRebasingFundingManager();
     DeployRoleAuthorizer deployRoleAuthorizer = new DeployRoleAuthorizer();
@@ -46,7 +46,7 @@ contract DeploymentScript is Script {
     // Deployed Contracts
 
     address orchestrator;
-    address streamingPaymentProcessor;
+    address simplePaymentProcessor;
     address bountyManager;
     address fundingManager;
     address authorizer;
@@ -65,7 +65,7 @@ contract DeploymentScript is Script {
         1,
         1,
         "https://github.com/inverter/payment-processor",
-        "StreamingPaymentProcessor"
+        "SimplePaymentProcessor"
     );
 
     IModule.Metadata fundingManagerMetadata = IModule.Metadata(
@@ -85,7 +85,7 @@ contract DeploymentScript is Script {
     function run() public virtual returns (address factory) {
         // Deploy implementation contracts.
         orchestrator = deployOrchestrator.run();
-        streamingPaymentProcessor = deployStreamingPaymentProcessor.run();
+        simplePaymentProcessor = deploySimplePaymentProcessor.run();
         fundingManager = deployRebasingFundingManager.run();
         authorizer = deployRoleAuthorizer.run();
 
@@ -97,7 +97,7 @@ contract DeploymentScript is Script {
 
         // Create beacons, set implementations and set metadata.
         paymentProcessorBeacon = deployAndSetUpBeacon.run(
-            streamingPaymentProcessor, moduleFactory, paymentProcessorMetadata
+            simplePaymentProcessor, moduleFactory, paymentProcessorMetadata
         );
         fundingManagerBeacon = deployAndSetUpBeacon.run(
             fundingManager, moduleFactory, fundingManagerMetadata

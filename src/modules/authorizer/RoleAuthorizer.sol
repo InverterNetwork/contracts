@@ -16,20 +16,9 @@ contract RoleAuthorizer is
     //--------------------------------------------------------------------------
     // Storage
 
-    // Core roles for a orchestrator. They correspond to uint8(0) and uint(1)
-    // NOTE that orchestrator owner can register more global roles using numbers from 2 onward. They'l need to go through the DEFAULT_ADMIN_ROLE for this.
-    enum CoreRoles {
-        OWNER, // Partial Access to Protected Functions
-        MANAGER // Full Access to Protected Functions
-    }
-
-    // Stores the if a module wants to use it's own roles
-    // If false it uses the orchestrator's  core roles.
-    mapping(address => bool) public selfManagedModules;
-
     // Stored for easy public reference. Other Modules can assume the following roles to exist
-    bytes32 public ORCHESTRATOR_OWNER_ROLE;
-    bytes32 public ORCHESTRATOR_MANAGER_ROLE;
+    bytes32 public constant ORCHESTRATOR_OWNER_ROLE = "0x01";
+    bytes32 public constant ORCHESTRATOR_MANAGER_ROLE = "0x02";
 
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -41,14 +30,6 @@ contract RoleAuthorizer is
     modifier onlyModule(address module) {
         if (!orchestrator().isModule(module)) {
             revert Module__RoleAuthorizer__NotActiveModule(module);
-        }
-        _;
-    }
-
-    /// @notice Verifies that the calling module has turned on self-management
-    modifier onlySelfManaged() {
-        if (!selfManagedModules[_msgSender()]) {
-            revert Module__RoleAuthorizer__ModuleNotSelfManaged();
         }
         _;
     }
@@ -94,12 +75,6 @@ contract RoleAuthorizer is
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        // Store RoleIDs for the Orchestrator roles:
-        ORCHESTRATOR_OWNER_ROLE =
-            generateRoleId(address(orchestrator()), uint8(CoreRoles.OWNER));
-        ORCHESTRATOR_MANAGER_ROLE =
-            generateRoleId(address(orchestrator()), uint8(CoreRoles.MANAGER));
-
         //We preliminarily grant admin role to the caller
         _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
 
@@ -142,36 +117,20 @@ contract RoleAuthorizer is
     //--------------------------------------------------------------------------
     // Public functions
 
-    // View functions
-
     /// @inheritdoc IAuthorizer
-    /// @dev Implements the function of the IAuthorizer interface by defauling to check if the caller holds the OWNER role.
-    function isAuthorized(address who) external view returns (bool) {
-        // In case no role is specfied, we ask if the caller is an owner
-        return hasRole(ORCHESTRATOR_OWNER_ROLE, who);
-    }
-
-    /// @inheritdoc IAuthorizer
-    function isAuthorized(uint8 role, address who)
+    function hasModuleRole(bytes32 role, address who)
         external
         view
         virtual
         returns (bool)
     {
         //Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()
-        bytes32 roleId;
-        // If the module uses its own roles, check if account has the role.
-        // else check if account has role in orchestrator
-        if (selfManagedModules[_msgSender()]) {
-            roleId = generateRoleId(_msgSender(), role);
-        } else {
-            roleId = generateRoleId(address(orchestrator()), role);
-        }
+        bytes32 roleId = generateRoleId(_msgSender(), role);
         return hasRole(roleId, who);
     }
 
     /// @inheritdoc IAuthorizer
-    function generateRoleId(address module, uint8 role)
+    function generateRoleId(address module, bytes32 role)
         public
         pure
         returns (bytes32)
@@ -180,34 +139,19 @@ contract RoleAuthorizer is
         return keccak256(abi.encodePacked(module, role));
     }
 
-    // State-altering functions
-
     /// @inheritdoc IAuthorizer
-    function toggleModuleSelfManagement() external onlyModule(_msgSender()) {
-        if (selfManagedModules[_msgSender()]) {
-            selfManagedModules[_msgSender()] = false;
-            emit setRoleSelfManagement(_msgSender(), false);
-        } else {
-            selfManagedModules[_msgSender()] = true;
-            emit setRoleSelfManagement(_msgSender(), true);
-        }
-    }
-
-    /// @inheritdoc IAuthorizer
-    function grantRoleFromModule(uint8 role, address target)
+    function grantRoleFromModule(bytes32 role, address target)
         external
         onlyModule(_msgSender())
-        onlySelfManaged
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _grantRole(roleId, target);
     }
 
     /// @inheritdoc IAuthorizer
-    function revokeRoleFromModule(uint8 role, address target)
+    function revokeRoleFromModule(bytes32 role, address target)
         external
         onlyModule(_msgSender())
-        onlySelfManaged
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _revokeRole(roleId, target);
@@ -222,17 +166,16 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function burnAdminRole(uint8 role)
+    function burnAdminFromModuleRole(bytes32 role)
         external
         onlyModule(_msgSender())
-        onlySelfManaged
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
 
     /// @inheritdoc IAuthorizer
-    function grantGlobalRole(uint8 role, address target)
+    function grantGlobalRole(bytes32 role, address target)
         external
         onlyRole(ORCHESTRATOR_OWNER_ROLE)
     {
@@ -241,7 +184,7 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function revokeGlobalRole(uint8 role, address target)
+    function revokeGlobalRole(bytes32 role, address target)
         external
         onlyRole(ORCHESTRATOR_OWNER_ROLE)
     {
@@ -250,12 +193,12 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
-    function getOwnerRole() public view returns (bytes32) {
+    function getOwnerRole() public pure returns (bytes32) {
         return ORCHESTRATOR_OWNER_ROLE;
     }
 
     /// @inheritdoc IAuthorizer
-    function getManagerRole() public view returns (bytes32) {
+    function getManagerRole() public pure returns (bytes32) {
         return ORCHESTRATOR_MANAGER_ROLE;
     }
 }

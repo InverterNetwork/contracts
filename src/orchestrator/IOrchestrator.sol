@@ -16,10 +16,13 @@ interface IOrchestrator is IModuleManager {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Orchestrator__CallerNotAuthorized();
+    error Orchestrator__CallerNotAuthorized(bytes32 role, address caller);
 
     /// @notice Execution of transaction failed.
     error Orchestrator__ExecuteTxFailed();
+
+    /// @notice The given module is not used in the orchestrator
+    error Orchestrator__InvalidModuleType(address module);
 
     /// @notice The given module is not used in the orchestrator
     error DependencyInjection__ModuleNotUsedInOrchestrator();

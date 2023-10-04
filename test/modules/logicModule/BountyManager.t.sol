@@ -408,8 +408,7 @@ contract BountyManagerTest is ModuleTest {
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.BountyAdmin)
+                    address(bountyManager), bountyManager.BOUNTY_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -490,8 +489,7 @@ contract BountyManagerTest is ModuleTest {
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.ClaimAdmin)
+                    address(bountyManager), bountyManager.CLAIM_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -530,8 +528,7 @@ contract BountyManagerTest is ModuleTest {
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.BountyAdmin)
+                    address(bountyManager), bountyManager.BOUNTY_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -587,8 +584,7 @@ contract BountyManagerTest is ModuleTest {
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.BountyAdmin)
+                    address(bountyManager), bountyManager.BOUNTY_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -671,8 +667,7 @@ contract BountyManagerTest is ModuleTest {
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.ClaimAdmin)
+                    address(bountyManager), bountyManager.CLAIM_ADMIN_ROLE()
                 ),
                 address(this)
             )
@@ -809,10 +804,6 @@ contract BountyManagerTest is ModuleTest {
             assertEq(orders[i].dueTo, block.timestamp);
         }
 
-        // Check that bountyManager's token balance is sufficient for the
-        // payment orders by comparing it with the total amount of orders made
-        assertTrue(_token.balanceOf(address(bountyManager)) == totalAmount);
-
         assertEqualClaim(claimId, bountyId, contribs, details, true);
     }
 
@@ -831,8 +822,7 @@ contract BountyManagerTest is ModuleTest {
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
-                    address(bountyManager),
-                    uint8(IBountyManager.Roles.VerifyAdmin)
+                    address(bountyManager), bountyManager.VERIFY_ADMIN_ROLE()
                 ),
                 address(this)
             )

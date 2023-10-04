@@ -21,8 +21,10 @@ import {
 } from "src/orchestrator/IOrchestrator.sol";
 
 // Mocks
-import {FundingManagerMock} from
-    "test/utils/mocks/modules/FundingManagerMock.sol";
+import {
+    FundingManagerMock,
+    IFundingManager
+} from "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
@@ -218,8 +220,54 @@ contract OrchestratorTest is Test {
 
         // verify whether the init value is set and not the value from the old
         // authorizer, to check whether the replacement is successful
-        assertFalse(orchestrator.authorizer().isAuthorized(address(this)));
-        assertTrue(orchestrator.authorizer().isAuthorized(address(0xA11CE)));
+        bytes32 ownerRole = orchestrator.authorizer().getOwnerRole();
+        assertFalse(orchestrator.authorizer().hasRole(ownerRole, address(this)));
+        assertTrue(
+            orchestrator.authorizer().hasRole(ownerRole, address(0xA11CE))
+        );
+    }
+
+    function testSetAuthorizerFailsIfWrongModuleType(
+        uint orchestratorId,
+        address[] memory modules
+    ) public {
+        // limit to 100, otherwise we could run into the max module limit
+        modules = cutArray(100, modules);
+
+        types.assumeValidOrchestratorId(orchestratorId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        assumeMockAreNotInSet(modules);
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            token,
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        // Create new authorizer module
+        address newAuthorizer = address(0x8888);
+        vm.assume(newAuthorizer != address(authorizer));
+        types.assumeElemNotInSet(modules, address(newAuthorizer));
+
+        // set the new payment processor module. First the verification function reverts, then the setter.
+        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator.Orchestrator__InvalidModuleType.selector,
+                newAuthorizer
+            )
+        );
+
+        orchestrator.setAuthorizer(IAuthorizer(newAuthorizer));
+        assertTrue(orchestrator.authorizer() == authorizer);
     }
 
     function testSetFundingManager(
@@ -266,6 +314,50 @@ contract OrchestratorTest is Test {
         );
     }
 
+    function testSetFundingManagerFailsIfWrongModuleType(
+        uint orchestratorId,
+        address[] memory modules
+    ) public {
+        // limit to 100, otherwise we could run into the max module limit
+        modules = cutArray(100, modules);
+
+        types.assumeValidOrchestratorId(orchestratorId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        assumeMockAreNotInSet(modules);
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            token,
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+        FundingManagerMock(address(orchestrator.fundingManager())).setToken(
+            IERC20(address(0xA11CE))
+        );
+
+        // Create new funding manager module
+        address newFundingManager = address(0x8888);
+        vm.assume(newFundingManager != address(fundingManager));
+        types.assumeElemNotInSet(modules, newFundingManager);
+
+        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator.Orchestrator__InvalidModuleType.selector,
+                newFundingManager
+            )
+        );
+        orchestrator.setFundingManager(IFundingManager(newFundingManager));
+        assertTrue(orchestrator.fundingManager() == fundingManager);
+    }
+
     function testSetPaymentProcessor(
         uint orchestratorId,
         address[] memory modules
@@ -302,6 +394,49 @@ contract OrchestratorTest is Test {
 
         orchestrator.setPaymentProcessor(newPaymentProcessor);
         assertTrue(orchestrator.paymentProcessor() == newPaymentProcessor);
+    }
+
+    function testSetPaymentProcessorFailsIfWrongModuleType(
+        uint orchestratorId,
+        address[] memory modules
+    ) public {
+        // limit to 100, otherwise we could run into the max module limit
+        modules = cutArray(100, modules);
+
+        types.assumeValidOrchestratorId(orchestratorId);
+        types.assumeValidModules(modules);
+
+        // Make sure mock addresses are not in set of modules.
+        assumeMockAreNotInSet(modules);
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            token,
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        // Create new payment processor module
+        address newPaymentProcessor = address(0x8888);
+        vm.assume(newPaymentProcessor != address(paymentProcessor));
+        types.assumeElemNotInSet(modules, newPaymentProcessor);
+
+        // set the new payment processor module. First the verification function reverts, then the setter.
+        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator.Orchestrator__InvalidModuleType.selector,
+                newPaymentProcessor
+            )
+        );
+        orchestrator.setPaymentProcessor(IPaymentProcessor(newPaymentProcessor));
+
+        assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
     }
 
     //--------------------------------------------------------------------------
@@ -452,7 +587,11 @@ contract OrchestratorTest is Test {
         authorizer.setIsAuthorized(address(this), false);
 
         vm.expectRevert(
-            IOrchestrator.Orchestrator__CallerNotAuthorized.selector
+            abi.encodeWithSelector(
+                IOrchestrator.Orchestrator__CallerNotAuthorized.selector,
+                authorizer.getOwnerRole(),
+                address(this)
+            )
         );
         orchestrator.executeTx(address(this), abi.encodeWithSignature("ok()"));
     }
