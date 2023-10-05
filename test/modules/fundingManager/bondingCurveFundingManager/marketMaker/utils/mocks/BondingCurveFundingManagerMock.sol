@@ -80,8 +80,9 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
 
     function buyOrderFor(address _receiver, uint _depositAmount)
         external
+        payable
         override(BondingCurveFundingManagerBase)
-        payable{}
+    {}
 
     // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
     function call_setDecimals(uint8 _newDecimals) external {
