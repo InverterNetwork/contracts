@@ -92,6 +92,9 @@ contract RoleAuthorizerE2E is E2eTest {
             bountyManager.CLAIMANT_ROLE(), address(bountySubmitter)
         );
 
+        // Since we deploy the orchestrator, with address(this) as owner and manager for easier setup,
+        // we now assign them to two external addresses. In production these will be directly set on deployment.
+
         // we grant manager role to managerAddress
         bytes32 managerRole = authorizer.getManagerRole();
         authorizer.grantRole(managerRole, address(orchestratorManager));

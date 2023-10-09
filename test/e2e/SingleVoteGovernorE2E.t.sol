@@ -103,25 +103,8 @@ contract SingleVoteGovernorE2E is E2eTest {
             bountyManager.BOUNTY_ISSUER_ROLE(), address(singleVoteGovernor)
         );
 
+        // By having address(this) renounce the Owner Role, all changes from now on need to go through the SingleVoteGovernor
         authorizer.renounceRole(ownerRole, address(this));
-
-        //--------------------------------------------------------------------------------
-        // Set up seed deposit and initial deposit by users
-        //--------------------------------------------------------------------------------
-        uint initialDeposit = 10e18;
-        token.mint(address(this), initialDeposit);
-        token.approve(address(fundingManager), initialDeposit);
-        fundingManager.deposit(initialDeposit);
-
-        address funder1 = makeAddr("funder1");
-        token.mint(funder1, 1000e18);
-
-        vm.startPrank(funder1);
-        {
-            token.approve(address(fundingManager), 1000e18);
-            fundingManager.deposit(1000e18);
-        }
-        vm.stopPrank();
 
         //--------------------------------------------------------------------------------
         // Set up Vote to create Bounty
