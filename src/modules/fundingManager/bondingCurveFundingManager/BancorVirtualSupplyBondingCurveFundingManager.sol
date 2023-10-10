@@ -147,7 +147,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         if (_buyIsOpen == true) _openBuy();
         // Set selling functionality to open if true. By default selling is false
         if (_sellIsOpen == true) _openSell();
->>>>>>> 60a6d40620791390de241f35c4e212a78d5a9926
     }
 
     //--------------------------------------------------------------------------

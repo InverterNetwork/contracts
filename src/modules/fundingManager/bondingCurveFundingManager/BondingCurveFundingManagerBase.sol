@@ -82,7 +82,6 @@ abstract contract BondingCurveFundingManagerBase is
         validReceiver(_receiver)
     {
         _buyOrder(_receiver, _depositAmount);
->>>>>>> 60a6d40620791390de241f35c4e212a78d5a9926
     }
 
     /// @inheritdoc IBondingCurveFundingManagerBase
