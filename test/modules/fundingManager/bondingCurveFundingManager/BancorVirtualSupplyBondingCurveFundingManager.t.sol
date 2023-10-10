@@ -839,7 +839,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
      Test token() getter
     */
     function testCollateralTokenGetter() public {
-        address orchestratorToken = address(_orchestrator.token());
+        address orchestratorToken =
+            address(_orchestrator.fundingManager().token());
         assertEq(
             address(bondingCurveFundingManager.token()),
             orchestratorToken,
