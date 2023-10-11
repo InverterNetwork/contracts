@@ -839,13 +839,19 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
      Test token() getter
     */
     function testCollateralTokenGetter() public {
-        address orchestratorToken =
-            address(_orchestrator.fundingManager().token());
+        address fundingManager = address(_orchestrator.fundingManager());
         assertEq(
-            address(bondingCurveFundingManager.token()),
-            orchestratorToken,
-            "Token getter returns wrong address"
+            fundingManager,
+            address(bondingCurveFundingManager),
+            "The funding manager is not the bonding curve funding manager"
         );
+        // address orchestratorToken =
+        //     address(_orchestrator.fundingManager().token());
+        // assertEq(
+        //     address(bondingCurveFundingManager.token()),
+        //     orchestratorToken,
+        //     "Token getter returns wrong address"
+        // );
     }
 
     /*

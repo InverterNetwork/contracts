@@ -40,6 +40,8 @@ contract BondingCurveE2E is E2eTest {
             orchestratorConfig
         );
 
+        assertTrue(address(orchestrator.fundingManager()) != address(0));
+        assertTrue(orchestrator.fundingManager().token() == token);
         BancorVirtualSupplyBondingCurveFundingManager fundingManager =
         BancorVirtualSupplyBondingCurveFundingManager(
             address(orchestrator.fundingManager())
