@@ -16,6 +16,8 @@ import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
+import {IBancorVirtualSupplyBondingCurveFundingManager} from
+    "src/modules/fundingManager/bondingCurveFundingManager/IBancorVirtualSupplyBondingCurveFundingManager.sol";
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 import {BancorVirtualSupplyBondingCurveFundingManager} from
@@ -496,31 +498,38 @@ contract E2eTest is Test {
     }
 
     function _createNewOrchestratorWithAllModules_withBondingCurveFundingManager(
-        IOrchestratorFactory.OrchestratorConfig memory config
+        IOrchestratorFactory.OrchestratorConfig memory config,
+        address acceptedToken
     ) internal returns (IOrchestrator) {
         IOrchestratorFactory.ModuleConfig[] memory optionalModules =
             new IOrchestratorFactory.ModuleConfig[](1);
         optionalModules[0] = bountyManagerFactoryConfig;
 
+        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
+            issuanceToken;
+        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
+            memory bc_properties;
         BancorFormula formula = new BancorFormula();
+
+        issuanceToken.name = bytes32(abi.encodePacked("Bonding Curve Token"));
+        issuanceToken.symbol = bytes32(abi.encodePacked("BCT"));
+        issuanceToken.decimals = uint8(18);
+        issuanceToken.initialTokenSupply = 100;
+        issuanceToken.initialCollateralSupply = 100;
+
+        bc_properties.formula = address(formula);
+        bc_properties.reserveRatioForBuying = 200_000;
+        bc_properties.reserveRatioForSelling = 200_000;
+        bc_properties.buyFee = 0;
+        bc_properties.sellFee = 0;
+        bc_properties.buyIsOpen = true;
+        bc_properties.sellIsOpen = true;
 
         IOrchestratorFactory.ModuleConfig memory
             bancorVirtualSupplyBondingCurveFundingManagerConfig =
             IOrchestratorFactory.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(
-                    bytes32(abi.encodePacked("Bonding Curve Token")),
-                    bytes32(abi.encodePacked("BCT")),
-                    address(formula),
-                    100,
-                    100,
-                    200_000,
-                    200_000,
-                    0,
-                    0,
-                    true,
-                    true
-                ),
+                abi.encode(issuanceToken, bc_properties, acceptedToken),
                 abi.encode(hasDependency, dependencies)
             );
         return orchestratorFactory.createOrchestrator(

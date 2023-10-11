@@ -27,7 +27,7 @@ interface IBancorVirtualSupplyBondingCurveFundingManager {
         bytes32 name;
         bytes32 symbol;
         uint8 decimals;
-        uint initalTokenSupply;
+        uint initialTokenSupply;
         uint initialCollateralSupply;
     }
 

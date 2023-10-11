@@ -112,7 +112,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
-        _setVirtualTokenSupply(issuanceToken.initalTokenSupply);
+        _setVirtualTokenSupply(issuanceToken.initialTokenSupply);
         // Set virtual collateral supply
         _setVirtualCollateralSupply(issuanceToken.initialCollateralSupply);
         // Set reserve ratio for buying
