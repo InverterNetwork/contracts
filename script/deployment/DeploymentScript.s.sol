@@ -21,6 +21,8 @@ import {DeploySimplePaymentProcessor} from
     "script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol";
 import {DeployRebasingFundingManager} from
     "script/modules/fundingManager/DeployRebasingFundingManager.s.sol";
+import {DeployBancorVirtualSupplyBondingCurveFundingManager} from
+    "script/modules/fundingManager/DeployBancorVirtualSupplyBondingCurveFundingManager.s.sol";
 import {DeployRoleAuthorizer} from
     "script/modules/governance/DeployRoleAuthorizer.s.sol";
 
@@ -37,6 +39,9 @@ contract DeploymentScript is Script {
         new DeploySimplePaymentProcessor();
     DeployRebasingFundingManager deployRebasingFundingManager =
         new DeployRebasingFundingManager();
+    DeployBancorVirtualSupplyBondingCurveFundingManager
+        deployBancorVirtualSupplyBondingCurveFundingManager =
+            new DeployBancorVirtualSupplyBondingCurveFundingManager();
     DeployRoleAuthorizer deployRoleAuthorizer = new DeployRoleAuthorizer();
     DeployBountyManager deployBountyManager = new DeployBountyManager();
 
@@ -49,6 +54,7 @@ contract DeploymentScript is Script {
     address simplePaymentProcessor;
     address bountyManager;
     address fundingManager;
+    address bondingCurveFundingManager;
     address authorizer;
 
     address moduleFactory;
@@ -57,6 +63,7 @@ contract DeploymentScript is Script {
     address paymentProcessorBeacon;
     address bountyManagerBeacon;
     address fundingManagerBeacon;
+    address bondingCurveFundingManagerBeacon;
     address authorizerBeacon;
 
     // ------------------------------------------------------------------------
@@ -80,6 +87,13 @@ contract DeploymentScript is Script {
         1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
 
+    IModule.Metadata bondingCurveFundingManagerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/bonding-curve-funding-manager",
+        "BancorVirtualSupplyBondingCurveFundingManager"
+    );
+
     /// @notice Deploys all necessary factories, beacons and iplementations
     /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
@@ -87,6 +101,8 @@ contract DeploymentScript is Script {
         orchestrator = deployOrchestrator.run();
         simplePaymentProcessor = deploySimplePaymentProcessor.run();
         fundingManager = deployRebasingFundingManager.run();
+        bondingCurveFundingManager =
+            deployBancorVirtualSupplyBondingCurveFundingManager.run();
         authorizer = deployRoleAuthorizer.run();
 
         moduleFactory = deployModuleFactory.run();
@@ -101,6 +117,11 @@ contract DeploymentScript is Script {
         );
         fundingManagerBeacon = deployAndSetUpBeacon.run(
             fundingManager, moduleFactory, fundingManagerMetadata
+        );
+        bondingCurveFundingManagerBeacon = deployAndSetUpBeacon.run(
+            bondingCurveFundingManager,
+            moduleFactory,
+            bondingCurveFundingManagerMetadata
         );
         authorizerBeacon = deployAndSetUpBeacon.run(
             authorizer, moduleFactory, authorizerMetadata
