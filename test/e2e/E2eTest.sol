@@ -18,6 +18,10 @@ import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
+import {BancorVirtualSupplyBondingCurveFundingManager} from
+    "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
+import {BancorFormula} from
+    "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
 import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 import {StreamingPaymentProcessor} from
@@ -86,6 +90,43 @@ contract E2eTest is Test {
         moduleFactory.registerMetadata(
             rebasingFundingManagerMetadata,
             IBeacon(rebasingFundingManagerBeacon)
+        );
+    }
+
+    // BancorVirtualSupplyBondingCurveFundingManager
+
+    BancorVirtualSupplyBondingCurveFundingManager
+        bancorVirtualSupplyBondingCurveFundingManagerImpl;
+    Beacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
+    address bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner =
+        address(0x3BEAC0);
+    IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
+    IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/bonding-curve-funding-manager",
+        "BancorVirtualSupplyBondingCurveFundingManager"
+    );
+
+    function setUpBancorVirtualSupplyBondingCurveFundingManager() private {
+        // Deploy module implementations.
+        bancorVirtualSupplyBondingCurveFundingManagerImpl =
+            new BancorVirtualSupplyBondingCurveFundingManager();
+
+        // Deploy module beacons.
+        vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
+        bancorVirtualSupplyBondingCurveFundingManagerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
+        bancorVirtualSupplyBondingCurveFundingManagerBeacon.upgradeTo(
+            address(bancorVirtualSupplyBondingCurveFundingManagerImpl)
+        );
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            IBeacon(bancorVirtualSupplyBondingCurveFundingManagerBeacon)
         );
     }
 
@@ -402,6 +443,7 @@ contract E2eTest is Test {
 
         //FundingManager
         setUpRebasingFundingManager();
+        setUpBancorVirtualSupplyBondingCurveFundingManager();
 
         //Authorizer
         setUpAuthorizerMock();
@@ -486,6 +528,43 @@ contract E2eTest is Test {
         return orchestratorFactory.createOrchestrator(
             config,
             rebasingFundingManagerFactoryConfig,
+            roleAuthorizerFactoryConfig,
+            paymentProcessorFactoryConfig,
+            optionalModules
+        );
+    }
+
+    function _createNewOrchestratorWithAllModules_withBondingCurveFundingManager(
+        IOrchestratorFactory.OrchestratorConfig memory config
+    ) internal returns (IOrchestrator) {
+        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory.ModuleConfig[](1);
+        optionalModules[0] = bountyManagerFactoryConfig;
+
+        BancorFormula formula = new BancorFormula();
+
+        IOrchestratorFactory.ModuleConfig memory
+            bancorVirtualSupplyBondingCurveFundingManagerConfig =
+            IOrchestratorFactory.ModuleConfig(
+                bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                abi.encode(
+                    bytes32(abi.encodePacked("Bonding Curve Token")),
+                    bytes32(abi.encodePacked("BCT")),
+                    address(formula),
+                    100,
+                    100,
+                    200_000,
+                    200_000,
+                    0,
+                    0,
+                    true,
+                    true
+                ),
+                abi.encode(hasDependency, dependencies)
+            );
+        return orchestratorFactory.createOrchestrator(
+            config,
+            bancorVirtualSupplyBondingCurveFundingManagerConfig,
             roleAuthorizerFactoryConfig,
             paymentProcessorFactoryConfig,
             optionalModules

@@ -13,11 +13,11 @@ contract VirtualTokenSupplyBaseMock is VirtualTokenSupplyBase {
         _setVirtualTokenSupply(_virtualSupply);
     }
 
-    function addTokenAmount(uint _amount) external {
-        super._addTokenAmount(_amount);
+    function addVirtualTokenAmount(uint _amount) external {
+        super._addVirtualTokenAmount(_amount);
     }
 
-    function subTokenAmount(uint _amount) external {
-        super._subTokenAmount(_amount);
+    function subVirtualTokenAmount(uint _amount) external {
+        super._subVirtualTokenAmount(_amount);
     }
 }

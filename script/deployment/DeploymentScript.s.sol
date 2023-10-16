@@ -20,7 +20,7 @@ import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
 import {DeploySimplePaymentProcessor} from
     "script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol";
 import {DeployRebasingFundingManager} from
-    "script/modules/DeployRebasingFundingManager.s.sol";
+    "script/modules/fundingManager/DeployRebasingFundingManager.s.sol";
 import {DeployRoleAuthorizer} from
     "script/modules/governance/DeployRoleAuthorizer.s.sol";
 
