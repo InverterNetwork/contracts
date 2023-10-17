@@ -48,9 +48,12 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
         _authorizer.setAllAuthorized(true);
 
-        console.log(address(_token));
-        console.log(address(ooV3));
+        assertEq(address(_authorizer), address(_orchestrator.authorizer()));
+
+        console.log("Token address: ", address(_token));
+        console.log("Optimistic Oracle address: ",address(ooV3));
         bytes memory _configData = abi.encode(address(_token), address(ooV3));
+        console.log("Optimistic Oracle config data (next line): ");
         console.logBytes(_configData);
 
         ooIntegrator.init(_orchestrator, _METADATA, _configData);
@@ -60,7 +63,39 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
-        //TODO
+
+        bytes memory _configData = abi.encode(address(_token), address(ooV3));
+
+        //TODO:
+        // Assert that all the variables are correctly set or test if wrong inits fail?
+/*         vm.expectRevert(
+            IModule
+                .Module__InvalidOrchestratorAddress
+                .selector
+        );
+
+        //Init Module wrongly
+        ooIntegrator.init(
+            _orchestrator, _METADATA, abi.encode(1 weeks - 1)
+        );
+
+        vm.expectRevert(
+            IOptimisticOracleIntegrator
+                .Module__RecurringPaymentManager__InvalidEpochLength
+                .selector
+        );
+
+        //Init Module wrongly
+        ooIntegrator.init(
+            _orchestrator, _METADATA, abi.encode(52 weeks + 1)
+        );
+
+        //Init Module correct
+        ooIntegrator.init(
+            _orchestrator, _METADATA, abi.encode(1 weeks)
+        );
+
+        assertEq(ooIntegrator.getEpochLength(), 1 weeks); */
     }
 
     function testReinitFails() public override(ModuleTest) {

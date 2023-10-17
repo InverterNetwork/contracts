@@ -55,23 +55,22 @@ abstract contract OptimisticOracleIntegrator is
         Metadata memory metadata,
         bytes memory configData
     ) external virtual override initializer {
-        console.log(address(orchestrator_));
-        //__Module_init(orchestrator_, metadata);
-
-        //address currencyAddr;
-        //address ooAddr;
+        //ToDo remove logs
+        console.log("Orchestrator address:", address(orchestrator_));
+        __Module_init(orchestrator_, metadata);
 
         (address currencyAddr, address ooAddr) =
             abi.decode(configData, (address, address));
-        console.log(currencyAddr);
-        console.log(ooAddr);
+        console.log("Currency address:",currencyAddr);
+        console.log("Optimistic Oracle address:", ooAddr);
 
         oo = OptimisticOracleV3Interface(ooAddr);
         defaultIdentifier = oo.defaultIdentifier();
+        console.log("Default Identifier data (next line): ");
         console.logBytes32(defaultIdentifier);
 
         setDefaultCurrency(currencyAddr);
-        //setOptimisticOracle(ooAddr);
+        setOptimisticOracle(ooAddr);
     }
 
     //--------------------------------------------------------------------------

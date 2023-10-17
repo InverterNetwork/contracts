@@ -81,7 +81,9 @@ contract BountyManagerTest is ModuleTest {
     // Test: Initialization
 
     //This function also tests all the getters
-    function testInit() public override(ModuleTest) {}
+    function testInit() public override(ModuleTest) {
+        //TODO
+    }
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
