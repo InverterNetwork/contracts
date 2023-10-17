@@ -4,6 +4,8 @@ interface IStakingManager {
     //--------------------------------------------------------------------------
     // Errors
 
+    //@todo look into how paymentprocessor takes funds. Do Staking Tokens and Reward tokens have to be different
+
     /// @notice Given ... is invalid.
     //error Module__StakingManager__Invalid...();
 
@@ -61,4 +63,10 @@ interface IStakingManager {
     /// @dev Reaps the rewards collected up to this point for the msg.Sender()
     /// @param amount : how much token should be withdrawn
     function withdraw(uint amount) external;
+
+    /// @notice Sets the rewards that are to be distributed
+    /// @dev Equally distributes the reward amount over the given time period
+    /// @param amount : how much token should be distributed
+    /// @param duration : how much time it will take to distribute the token
+    function setRewards(uint amount, uint duration) external;
 }
