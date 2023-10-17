@@ -30,6 +30,8 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {TokenGatedRoleAuthorizer} from
+    "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
 
 //Mocks
@@ -194,6 +196,41 @@ contract E2eTest is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             roleAuthorizerMetadata, IBeacon(roleAuthorizerBeacon)
+        );
+    }
+
+    TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
+    Beacon tokenRoleAuthorizerBeacon;
+    address tokenRoleAuthorizerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/tokenRoleAuthorizer",
+        "TokenGatedRoleAuthorizer"
+    );
+    // Note that RoleAuthorizer owner and manager are the same
+    IOrchestratorFactory.ModuleConfig tokenRoleAuthorizerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
+        tokenRoleAuthorizerMetadata,
+        abi.encode(address(this), address(this)),
+        abi.encode(hasDependency, dependencies)
+    );
+
+    function setUpTokenGatedRoleAuthorizer() private {
+        // Deploy module implementations.
+        tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer();
+
+        // Deploy module beacons.
+        vm.prank(tokenRoleAuthorizerBeaconOwner);
+        tokenRoleAuthorizerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(tokenRoleAuthorizerBeaconOwner);
+        tokenRoleAuthorizerBeacon.upgradeTo(address(tokenRoleAuthorizerImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            tokenRoleAuthorizerMetadata, IBeacon(tokenRoleAuthorizerBeacon)
         );
     }
 
@@ -411,6 +448,8 @@ contract E2eTest is Test {
         //Authorizer
         setUpAuthorizerMock();
         setUpRoleAuthorizer();
+        setUpTokenGatedRoleAuthorizer();
+
         //PaymentProcessor
         setUpSimplePaymentProcessor();
         setUpStreamingPaymentProcessor();
@@ -441,7 +480,7 @@ contract E2eTest is Test {
         return orchestratorFactory.createOrchestrator(
             config,
             rebasingFundingManagerFactoryConfig,
-            authorizerFactoryConfig,
+            roleAuthorizerFactoryConfig,
             paymentProcessorFactoryConfig,
             optionalModules
         );
