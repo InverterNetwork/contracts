@@ -113,7 +113,9 @@ contract StakingManager is
         //Update rewardValue, updatedTimestamp and earned values
         _update(sender);
 
+        //Reduce balances accordingly
         _balances[sender] -= amount;
+        //Total value too
         totalSupply -= amount;
         IERC20(stakingToken).safeTransfer(sender, amount);
 
@@ -167,7 +169,7 @@ contract StakingManager is
 
         //If trigger address is 0 then its not a user
         if (triggerAddress != address(0)) {
-            rewards[triggerAddress] = earned(triggerAddress);
+            rewards[triggerAddress] = _earned(triggerAddress, rewardValue);
             userRewardValue[triggerAddress] = rewardValue;
         }
     }
@@ -205,16 +207,16 @@ contract StakingManager is
         view
         returns (uint)
     {
-        return (providedRewardValue - userRewardValue[user]) //@todo Give explanation why this is necessary here
+        return (providedRewardValue - userRewardValue[user]) //This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
             * _balances[user] // multiply by users balance of tokens to get their share of the token rewards
             / 1e18 // See comment in _calculateRewardValue();
-            + rewards[_account];
+            + rewards[user];
     }
 
     ///@dev direct distribution of earned rewards via the payment processor
     function _distributeRewards(address recipient) private {
         //Check what recipient has earned
-        uint amount = _earned(sender, rewardValue);
+        uint amount = _earned(recipient, rewardValue);
         //Set rewards to zero
         rewards[recipient] = 0;
 
