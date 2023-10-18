@@ -71,7 +71,7 @@ contract StakingManager is
         bytes memory configData
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
-        stakingToken = abi.decode(configData, (address));
+        stakingToken = abi.decode(configData, (address)); //@note currently there is no way to change the staking token address
     }
 
     //--------------------------------------------------------------------------
