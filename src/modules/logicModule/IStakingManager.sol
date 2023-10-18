@@ -6,14 +6,19 @@ interface IStakingManager {
 
     //@todo look into how paymentprocessor takes funds. Do Staking Tokens and Reward tokens have to be different
 
-    /// @notice Given ... is invalid.
-    //error Module__StakingManager__Invalid...();
+    /// @notice Given Duration is invalid.
+    error Module__StakingManager__InvalidDuration();
+
+    /// @notice The calculated Reward rate is too low to be used.
+    error Module__StakingManager__InvalidRewardRate();
 
     //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a reward is added.
-    event RewardAdded(uint reward);
+    event RewardSet(
+        uint rewardAmount, uint duration, uint newRewardRate, uint newRewardsEnd
+    );
 
     /// @notice Event emitted when the reward duration is updated.
     event RewardsDurationUpdated(uint newDuration);
@@ -22,7 +27,10 @@ interface IStakingManager {
     event Staked(address indexed user, uint amount);
 
     /// @notice Event emitted when a user withdraws an amount.
-    event Withdrawn(address indexed user, uint amount, uint rewardAmount);
+    event Withdrawn(address indexed user, uint amount);
+
+    /// @notice Event emitted when a user receives Rewards.
+    event RewardsDistributed(address indexed user, uint amount);
 
     //--------------------------------------------------------------------------
     // Getter Functions
@@ -35,7 +43,7 @@ interface IStakingManager {
 
     /// @notice Returns how much Tokens will be distributed per second to all users that staked in this contract
     function rewardRate() external view returns (uint);
-    //@todo how to tell people how much rewards they actually get?
+    //@todo how to tell people how much rewards over time they actually get?
     // RewardRate isnt really cutting it
     //I could return the "reward Value" but that also isnt the correct thing
     //Maybe over a timeperiod, but that wouldnt be supported in the logic, when we dont save past "rewardValues"

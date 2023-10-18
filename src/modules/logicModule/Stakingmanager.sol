@@ -33,6 +33,13 @@ contract StakingManager is
     //--------------------------------------------------------------------------
     // Modifiers
 
+    modifier validDuration(uint duration) {
+        if (duration == 0) {
+            revert Module__StakingManager__InvalidDuration();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -51,6 +58,8 @@ contract StakingManager is
     mapping(address => uint) private _balances;
 
     mapping(address => uint) private userRewardValue;
+
+    mapping(address => uint) private rewards;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -88,54 +97,61 @@ contract StakingManager is
 
         //If the user has already staked
         if (_balances[sender] != 0) {
-            _distributeRewards(sender, _earned(sender, rewardValue));
+            _distributeRewards(sender);
         }
 
         _balances[sender] += amount;
         totalSupply += amount;
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
 
-        //@todo event
+        emit Staked(sender, amount);
     }
 
     /// @inheritdoc IStakingManager
     function withdraw(uint amount) external nonReentrant validAmount(amount) {
         address sender = _msgSender();
+        //Update rewardValue, updatedTimestamp and earned values
         _update(sender);
 
         _balances[sender] -= amount;
         totalSupply -= amount;
         IERC20(stakingToken).safeTransfer(sender, amount);
 
-        _distributeRewards(sender, _earned(sender, rewardValue));
-        //@todo event
+        _distributeRewards(sender);
+
+        emit Withdrawn(sender, amount);
     }
 
     /// @inheritdoc IStakingManager
     function setRewards(uint amount, uint duration)
         external
-        //@todo access
+        onlyOrchestratorOwnerOrManager //@note is this okay? // Should i add another role?
         validAmount(amount)
-    //@todo duration check
+        validDuration(duration)
     {
         _update(address(0));
         //If rewardsEnd is already reached
         if (block.timestamp >= rewardsEnd) {
-            //
+            //Dont include previous reward Rate
             rewardRate = amount / duration;
         } else {
+            //Calculate remaind rewards supposed to go into the pool
             uint remainingRewards = (rewardsEnd - block.timestamp) * rewardRate;
+            //Add new Amount to previous amount and calculate rate
             rewardRate = (amount + remainingRewards) / duration;
         }
 
+        //RewardRate cant be zero
         if (rewardRate == 0) {
-            revert();
-            //@todo custom error
+            revert Module__StakingManager__InvalidRewardRate();
         }
+
         //Rewards end is now plus duration
         rewardsEnd = block.timestamp + duration;
         //Update lastUpdate or calculation of rewards would include timeperiod where no rewards should have been distributed
         lastUpdate = block.timestamp;
+
+        emit RewardSet(amount, duration, rewardRate, rewardsEnd);
     }
 
     //--------------------------------------------------------------------------
@@ -151,6 +167,7 @@ contract StakingManager is
 
         //If trigger address is 0 then its not a user
         if (triggerAddress != address(0)) {
+            rewards[triggerAddress] = earned(triggerAddress);
             userRewardValue[triggerAddress] = rewardValue;
         }
     }
@@ -190,10 +207,17 @@ contract StakingManager is
     {
         return (providedRewardValue - userRewardValue[user]) //@todo Give explanation why this is necessary here
             * _balances[user] // multiply by users balance of tokens to get their share of the token rewards
-            / 1e18; // See comment in _calculateRewardValue();
+            / 1e18 // See comment in _calculateRewardValue();
+            + rewards[_account];
     }
 
-    function _distributeRewards(address recipient, uint amount) private {
+    ///@dev direct distribution of earned rewards via the payment processor
+    function _distributeRewards(address recipient) private {
+        //Check what recipient has earned
+        uint amount = _earned(sender, rewardValue);
+        //Set rewards to zero
+        rewards[recipient] = 0;
+
         _addPaymentOrder(
             PaymentOrder({
                 recipient: recipient,
@@ -206,6 +230,7 @@ contract StakingManager is
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))
         );
-        //@todo event
+
+        emit RewardsDistributed(recipient, amount);
     }
 }
