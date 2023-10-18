@@ -35,23 +35,27 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     uint orchestratorOwnerPrivateKey =
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+
     address collateralTokenAddress =
         vm.envAddress("BONDING_CURVE_COLLATERAL_TOKEN");
     ERC20 collateralToken = ERC20(collateralTokenAddress);
 
+    address bancorFormulaAddress = vm.envAddress("BANCOR_FORMULA_ADDRESS");
+    BancorFormula formula = BancorFormula(bancorFormulaAddress);
+
     // ========================================================================
     // BONDING CURVE PARAMETERS
 
-    string CURVE_TOKEN_NAME = "Bonding Curve Token";
-    string CURVE_TOKEN_SYMBOL = "BCT";
+    bytes32 CURVE_TOKEN_NAME = "Conding Burve Token";
+    bytes32 CURVE_TOKEN_SYMBOL = "BCRG";
     uint INITIAL_TOKEN_SUPPLY = 1;
     uint INITIAL_COLLATERAL_SUPPLY = 1;
-    uint RESERVE_RATIO_FOR_BUYING = 200_000;
-    uint RESERVE_RATIO_FOR_SELLING = 200_000;
+    uint RESERVE_RATIO_FOR_BUYING = 330_000;
+    uint RESERVE_RATIO_FOR_SELLING = 330_000;
     uint BUY_FEE = 0;
-    uint SELL_FEE = 0;
+    uint SELL_FEE = 100;
     bool BUY_IS_OPEN = true;
-    bool SELL_IS_OPEN = true;
+    bool SELL_IS_OPEN = false;
 
     // ========================================================================
 
@@ -59,9 +63,6 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // Storage
 
     IOrchestrator _orchestrator;
-
-    BancorFormula formula;
-
     address[] initialAuthorizedAddresses;
 
     //-------------------------------------------------------------------------
@@ -75,12 +76,12 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         address orchestratorFactory = DeploymentScript.run();
 
         //If there's no formula deployment on the chain, we deploy the Bancor Formula
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        /* vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
             formula = new BancorFormula();
         }
         vm.stopBroadcast();
-
+        */
         // ------------------------------------------------------------------------
         // Setup
 
