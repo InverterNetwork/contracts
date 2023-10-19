@@ -34,6 +34,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     uint64 immutable DEFAULT_LIVENESS = 5000;
 
+    // Mock data for assertions
+        bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
+        bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
+        address constant MOCK_ASSERTER_ADDRESS = address(0x0);
+
     // Setup + Init
 
     function setUp() public {
@@ -50,11 +55,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
         assertEq(address(_authorizer), address(_orchestrator.authorizer()));
 
-        console.log("Token address: ", address(_token));
-        console.log("Optimistic Oracle address: ",address(ooV3));
+        //console.log("Token address: ", address(_token));
+        //console.log("Optimistic Oracle address: ",address(ooV3));
         bytes memory _configData = abi.encode(address(_token), address(ooV3));
-        console.log("Optimistic Oracle config data (next line): ");
-        console.logBytes(_configData);
+        //console.log("Optimistic Oracle config data (next line): ");
+        //console.logBytes(_configData);
 
         ooIntegrator.init(_orchestrator, _METADATA, _configData);
     }
@@ -114,9 +119,28 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
 
     */
-    function testGetData_ReturnsZeroWhenAssertionNotResolved() public {}
+    function testGetData_ReturnsZeroWhenAssertionNotResolved() public {
+        bytes32 assertionId = createMockAssertion(MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, MOCK_ASSERTER_ADDRESS);
 
-    function testGetData() public {}
+        (bool assertionResolved, bytes32 data) = ooIntegrator.getData(assertionId);
+
+        assertEq(assertionResolved, false);
+        assertEq(data, 0);
+    }
+
+    function testGetData() public {
+
+        bytes32 assertionId = createMockAssertion(MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, MOCK_ASSERTER_ADDRESS);
+
+        resolveMockAssertion(assertionId);
+
+
+        (bool assertionResolved, bytes32 data) = ooIntegrator.getData(assertionId);
+
+        assertEq(assertionResolved, true);
+        assertEq(data, MOCK_ASSERTION_DATA);
+
+    }
 
     //==========================================================================
     // Setter Functions
@@ -135,13 +159,25 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     */
 
-    function testSetDefaultCurrencyFails_whenNewCurrencyIsZero() public {}
+    function testSetDefaultCurrencyFails_whenNewCurrencyIsZero() public {
+        vm.expectRevert(); // TODO: exact revert message
+        ooIntegrator.setDefaultCurrency(address(0));
+    }
 
-    function testSetDefaultCurrencyFails_whenNewCurrencyIsNotWhitelisted()
+    function testSetDefaultCurrencyFails_whenNewCurrencyIsNotWhitelisted(address nonWhitelisted)
         public
-    {}
+    {
+              vm.expectRevert(); // TODO: exact revert message
+        ooIntegrator.setDefaultCurrency(nonWhitelisted);   
+    }
 
-    function testSetDefaultCurrency() public {}
+    function testSetDefaultCurrency(address whitelisted) public {
+        whitelistAddress(whitelisted);
+
+        ooIntegrator.setDefaultCurrency(whitelisted);
+
+        assertEq(address(ooIntegrator.defaultCurrency), whitelisted);
+    }
 
     /*
         When the caller is not the owner
@@ -227,4 +263,23 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
      Nothing happens (maybe necessary to mock for coverage? )
      */
     function assertionDisputedCallback(bytes32 assertionId) public virtual {}
+
+    // Helper Functions
+
+    function createMockAssertion(bytes32 dataId, bytes32 data, address asserter) internal returns(bytes32 assertionId){
+
+        assertionId  = ooIntegrator.assertDataFor(dataId, data,  asserter);
+
+
+
+    }
+
+    function resolveMockAssertion(bytes32 assertionId) internal returns(bool assertionResult){
+        
+        assertionResult = ooV3.settleAndGetAssertionResult(assertionId);
+
+                // The callback gets called in the above statement
+
+
+    }
 }
