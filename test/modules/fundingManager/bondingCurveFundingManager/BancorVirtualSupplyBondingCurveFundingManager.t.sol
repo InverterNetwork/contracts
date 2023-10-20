@@ -127,8 +127,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         issuanceToken.name = bytes32(abi.encodePacked(NAME));
         issuanceToken.symbol = bytes32(abi.encodePacked(SYMBOL));
         issuanceToken.decimals = uint8(18);
-        issuanceToken.initialTokenSupply = INITIAL_TOKEN_SUPPLY;
-        issuanceToken.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -137,6 +135,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         bc_properties.sellFee = SELL_FEE;
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
+        bc_properties.initialTokenSupply = INITIAL_TOKEN_SUPPLY;
+        bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
         address impl =
             address(new BancorVirtualSupplyBondingCurveFundingManagerMock());

@@ -553,8 +553,6 @@ contract E2eTest is Test {
         issuanceToken.name = bytes32(abi.encodePacked("Bonding Curve Token"));
         issuanceToken.symbol = bytes32(abi.encodePacked("BCT"));
         issuanceToken.decimals = uint8(18);
-        issuanceToken.initialTokenSupply = 100;
-        issuanceToken.initialCollateralSupply = 100;
 
         bc_properties.formula = address(formula);
         bc_properties.reserveRatioForBuying = 200_000;
@@ -563,6 +561,8 @@ contract E2eTest is Test {
         bc_properties.sellFee = 0;
         bc_properties.buyIsOpen = true;
         bc_properties.sellIsOpen = true;
+        bc_properties.initialTokenSupply = 100;
+        bc_properties.initialCollateralSupply = 100;
 
         IOrchestratorFactory.ModuleConfig memory
             bancorVirtualSupplyBondingCurveFundingManagerConfig =
