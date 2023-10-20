@@ -74,7 +74,7 @@ abstract contract BondingCurveFundingManagerBase is
     // Public Functions
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function buyOrderFor(address _receiver, uint _depositAmount)
+    function buyFor(address _receiver, uint _depositAmount)
         external
         virtual
         buyingIsEnabled
@@ -84,7 +84,7 @@ abstract contract BondingCurveFundingManagerBase is
     }
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function buyOrder(uint _depositAmount) external virtual buyingIsEnabled {
+    function buy(uint _depositAmount) external virtual buyingIsEnabled {
         _buyOrder(_msgSender(), _depositAmount);
     }
 

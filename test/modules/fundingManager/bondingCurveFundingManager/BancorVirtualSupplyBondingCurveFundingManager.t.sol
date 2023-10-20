@@ -228,7 +228,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    /* Test buyOrder and _virtualSupplyBuyOrder function
+    /* Test buy and _virtualSupplyBuyOrder function
         ├── when the deposit amount is 0
         │       └── it should revert 
         └── when the deposit amount is not 0
@@ -281,7 +281,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             vm.expectRevert(
                 // This results in an overflow of the bonding curve math
             );
-            bondingCurveFundingManager.buyOrder(amount);
+            bondingCurveFundingManager.buy(amount);
         }
         vm.stopPrank();
     }
@@ -307,7 +307,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             vm.expectRevert(
                 // This results in an overflow of the bonding curve math
             );
-            bondingCurveFundingManager.buyOrder(amount);
+            bondingCurveFundingManager.buy(amount);
         }
         vm.stopPrank();
     }
@@ -359,7 +359,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         emit VirtualCollateralAmountAdded(
             amount, (INITIAL_COLLATERAL_SUPPLY + amount)
         );
-        bondingCurveFundingManager.buyOrder(amount);
+        bondingCurveFundingManager.buy(amount);
 
         // Post-checks
         assertEq(
@@ -426,7 +426,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         emit VirtualCollateralAmountAdded(
             amount, (INITIAL_TOKEN_SUPPLY + amount)
         );
-        bondingCurveFundingManager.buyOrder(amount);
+        bondingCurveFundingManager.buy(amount);
 
         // Post-checks
         assertEq(
@@ -437,9 +437,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         assertEq(bondingCurveFundingManager.balanceOf(buyer), formulaReturn);
     }
 
-    // test buyOrderFor function
+    // test buyFor function
     //  - Both modifiers have been tested in the upstream tests
-    //  - Buy order branches are tested in sellOrder tests
+    //  - Buy order branches are tested in sell tests
     //  - The goal of this test is just to verify that the tokens get sent to a different receiver
 
     function testBuyOrderFor(address to, uint amount) public {
@@ -472,7 +472,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buyOrderFor(to, amount);
+        bondingCurveFundingManager.buyFor(to, amount);
 
         // Post-checks
         assertEq(
@@ -484,7 +484,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         assertEq(bondingCurveFundingManager.balanceOf(to), formulaReturn);
     }
 
-    /* Test sellOrder and _virtualSupplySellOrder function
+    /* Test sell and _virtualSupplySellOrder function
         ├── when the sell amount is 0
         │       └── it should revert 
         └── when the sell amount is not 0
@@ -547,7 +547,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectRevert(); //The formula reverts
-            bondingCurveFundingManager.sellOrder(userSellAmount);
+            bondingCurveFundingManager.sell(userSellAmount);
         }
         vm.stopPrank();
     }
@@ -567,7 +567,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectRevert(); //The formula reverts
-            bondingCurveFundingManager.sellOrder(amount);
+            bondingCurveFundingManager.sell(amount);
         }
         vm.stopPrank();
     }
@@ -636,7 +636,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             emit VirtualCollateralAmountSubtracted(
                 formulaReturn, newVirtualCollateral - formulaReturn
             );
-            bondingCurveFundingManager.sellOrder(userSellAmount);
+            bondingCurveFundingManager.sell(userSellAmount);
         }
         vm.stopPrank();
 
@@ -734,7 +734,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             emit VirtualCollateralAmountSubtracted(
                 sellAmountMinusFee, newVirtualCollateral - sellAmountMinusFee
             );
-            bondingCurveFundingManager.sellOrder(userSellAmount);
+            bondingCurveFundingManager.sell(userSellAmount);
         }
         vm.stopPrank();
 
@@ -757,9 +757,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
-    // test sellOrderFor function
+    // test sellFor function
     //  - Both modifiers have been tested in the upstream tests
-    //  - Sell order branches are tested in sellOrder tests
+    //  - Sell order branches are tested in sell tests
     //  - The goal of this test is just to verify that the tokens get sent to a different receiver
 
     function testSellOrderFor(uint amountIn, address to) public {
@@ -808,7 +808,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Perform the sell
         vm.startPrank(seller);
         {
-            bondingCurveFundingManager.sellOrderFor(to, userSellAmount);
+            bondingCurveFundingManager.sellFor(to, userSellAmount);
         }
         vm.stopPrank();
 
@@ -1168,7 +1168,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.startPrank(seller);
         {
             _token.approve(address(bondingCurveFundingManager), amount);
-            bondingCurveFundingManager.buyOrder(amount);
+            bondingCurveFundingManager.buy(amount);
             uint userSellAmount = bondingCurveFundingManager.balanceOf(seller);
 
             bondingCurveFundingManager.approve(

@@ -66,7 +66,7 @@ contract BondingCurveE2E is E2eTest {
             token.approve(address(fundingManager), 1000e18);
 
             // Deposit tokens, i.e. fund the fundingmanager.
-            fundingManager.buyOrder(1000e18);
+            fundingManager.buy(1000e18);
 
             // After the deposit, alice received some amount of receipt tokens
             // from the fundingmanager.
@@ -81,7 +81,7 @@ contract BondingCurveE2E is E2eTest {
             token.approve(address(fundingManager), 5000e18);
 
             // Deposit tokens, i.e. fund the fundingmanager.
-            fundingManager.buyOrder(5000e18);
+            fundingManager.buy(5000e18);
 
             // After the deposit, bob received some amount of receipt tokens
             // from the fundingmanager.
@@ -104,7 +104,7 @@ contract BondingCurveE2E is E2eTest {
                 address(fundingManager), fundingManager.balanceOf(bob)
             );
 
-            fundingManager.sellOrder(fundingManager.balanceOf(bob));
+            fundingManager.sell(fundingManager.balanceOf(bob));
             assertApproxEqRel(token.balanceOf(bob), 2500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
@@ -117,7 +117,7 @@ contract BondingCurveE2E is E2eTest {
                 address(fundingManager), fundingManager.balanceOf(alice)
             );
 
-            fundingManager.sellOrder(fundingManager.balanceOf(alice));
+            fundingManager.sell(fundingManager.balanceOf(alice));
             assertApproxEqRel(token.balanceOf(alice), 500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
