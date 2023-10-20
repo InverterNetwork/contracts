@@ -57,7 +57,7 @@ interface IRedeemingBondingCurveFundingManagerBase {
 
     /// @notice Sell collateral for the sender's address.
     /// @dev Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
-    /// @param _depositAmount The amount of issued token depoisited.
+    /// @param _depositAmount The amount of issued token deposited.
     function sellOrder(uint _depositAmount) external payable;
 
     /// @notice Opens the selling functionality for the collateral.

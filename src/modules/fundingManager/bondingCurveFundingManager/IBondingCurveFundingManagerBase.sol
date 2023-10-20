@@ -53,7 +53,7 @@ interface IBondingCurveFundingManagerBase {
     /// @notice Buy tokens on behalf of a specified receiver address.
     /// @dev Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
     /// @param _receiver The address that will receive the bought tokens.
-    /// @param _depositAmount The amount of collateral token depoisited.
+    /// @param _depositAmount The amount of collateral token deposited.
     function buyOrderFor(address _receiver, uint _depositAmount)
         external
         payable;

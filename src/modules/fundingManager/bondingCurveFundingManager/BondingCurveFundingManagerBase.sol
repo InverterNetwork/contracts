@@ -218,8 +218,7 @@ abstract contract BondingCurveFundingManagerBase is
         depositAmountMinusFee = _depositAmount - feeAmount;
     }
 
-    /// @dev Issues tokens based on the deposit amount.
-    /// This function utilizes another internal function, `_issueTokensFormulaWrapper`,
+    /// @dev This function utilizes another internal function, `_issueTokensFormulaWrapper`,
     /// to determine how many tokens should be minted.
     /// @param _depositAmount The amount of funds deposited for which tokens are to be issued.
     /// @return mintAmount The number of tokens that will be minted.

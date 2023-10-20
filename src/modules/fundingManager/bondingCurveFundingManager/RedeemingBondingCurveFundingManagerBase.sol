@@ -114,9 +114,9 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// to be possible. No further functionality is implemented which would manages the outflow of
     /// collateral, e.g., restricting max redeemable amount per user, or a redeemable amount which
     /// differes from the actual balance.
-    /// @param _receiver The address receiving the redeem amount after the sell order is processed.
+    /// @param _receiver The address receiving the redeem amount.
     /// @param _depositAmount The amount of tokens being sold by the receiver.
-    /// @return redeemAmount The amount of tokens the receiver will get after selling `_depositAmount`.
+    /// @return redeemAmount The amount of tokens that are transfered to the receiver in exchange for _depositAmount.
     /// Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
     /// contract for redemption.
     function _sellOrder(address _receiver, uint _depositAmount)
@@ -180,8 +180,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         sellFee = _fee;
     }
 
-    /// @dev Redeems collateral based on the deposit amount.
-    /// This function utilizes another internal function, `_redeemTokensFormulaWrapper`,
+    /// @dev This function utilizes another internal function, `_redeemTokensFormulaWrapper`,
     /// to determine how many collateral tokens should be redeemed.
     /// @param _depositAmount The amount of issued tokens deposited for which collateral are to
     /// be redeemed.
