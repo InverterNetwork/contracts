@@ -53,7 +53,6 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
     function sellOrderFor(address _receiver, uint _depositAmount)
         external
-        payable
         virtual
         sellingIsEnabled
         validReceiver(_receiver)
@@ -62,12 +61,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     }
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function sellOrder(uint _depositAmount)
-        external
-        payable
-        virtual
-        sellingIsEnabled
-    {
+    function sellOrder(uint _depositAmount) external virtual sellingIsEnabled {
         _sellOrder(_msgSender(), _depositAmount);
     }
 

@@ -164,7 +164,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _depositAmount The amount of collateral token depoisited.
     function buyOrderFor(address _receiver, uint _depositAmount)
         external
-        payable
         override(BondingCurveFundingManagerBase)
         validReceiver(_receiver)
         buyingIsEnabled
@@ -183,7 +182,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _depositAmount The amount of collateral token depoisited.
     function buyOrder(uint _depositAmount)
         external
-        payable
         override(BondingCurveFundingManagerBase)
         buyingIsEnabled
     {
@@ -201,7 +199,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _depositAmount The amount of issued token to deposited.
     function sellOrderFor(address _receiver, uint _depositAmount)
         external
-        payable
         override(RedeemingBondingCurveFundingManagerBase)
         validReceiver(_receiver)
         sellingIsEnabled
@@ -219,7 +216,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _depositAmount The amount of issued token depoisited.
     function sellOrder(uint _depositAmount)
         external
-        payable
         override(RedeemingBondingCurveFundingManagerBase)
         sellingIsEnabled
     {
