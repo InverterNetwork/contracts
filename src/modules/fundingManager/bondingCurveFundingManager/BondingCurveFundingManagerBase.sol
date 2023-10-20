@@ -135,6 +135,7 @@ abstract contract BondingCurveFundingManagerBase is
     /// @return uint Return the amount of tokens to be issued
     function _issueTokensFormulaWrapper(uint _depositAmount)
         internal
+        view
         virtual
         returns (uint);
 
@@ -224,6 +225,7 @@ abstract contract BondingCurveFundingManagerBase is
     /// @return mintAmount The number of tokens that will be minted.
     function _issueTokens(uint _depositAmount)
         internal
+        view
         returns (uint mintAmount)
     {
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);

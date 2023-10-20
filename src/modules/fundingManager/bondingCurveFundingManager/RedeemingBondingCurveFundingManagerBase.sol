@@ -99,6 +99,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @return uint Return the amount of collateral to be redeemed
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
+        view
         virtual
         returns (uint);
 
@@ -126,7 +127,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
         // Calculate redeem amount based on upstream formula
-        redeemAmount = _redeemTokens(_depositAmount);
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
 
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
@@ -187,6 +188,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @return redeemAmount The number of collateral tokens to be redeemed.
     function _redeemTokens(uint _depositAmount)
         internal
+        view
         returns (uint redeemAmount)
     {
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
