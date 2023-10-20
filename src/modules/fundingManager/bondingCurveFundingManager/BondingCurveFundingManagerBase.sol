@@ -203,9 +203,6 @@ abstract contract BondingCurveFundingManagerBase is
         uint _depositAmount,
         uint _feePct
     ) internal pure returns (uint depositAmountMinusFee) {
-        if (_feePct > BPS) {
-            revert BondingCurveFundingManager__InvalidFeePercentage();
-        }
         // Calculate fee amount
         uint feeAmount = (_depositAmount * _feePct) / BPS;
         // Subtract fee amount from deposit amount

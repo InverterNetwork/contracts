@@ -416,26 +416,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test _calculateFeeDeductedDepositAmount function
-        ├── when feePct is higher than the BPS
-        │      └── it should return zero 
         └── when feePct is lower than the BPS
                 └── it should return the deposit amount with the fee deducted
     */
-    function testCalculateFeeDeductedDepositAmount_ZeroIfFeeHigherThanBPS(
-        uint _depositAmount,
-        uint _fee
-    ) public {
-        vm.assume(_fee > bondingCurveFundingManager.call_BPS()); // fetch the BPS value through the mock
-        vm.expectRevert(
-            IBondingCurveFundingManagerBase
-                .BondingCurveFundingManager__InvalidFeePercentage
-                .selector
-        );
-        bondingCurveFundingManager.call_calculateFeeDeductedDepositAmount(
-            _depositAmount, _fee
-        );
-    }
-
     function testCalculateFeeDeductedDepositAmount(uint _amount, uint _fee)
         public
     {
