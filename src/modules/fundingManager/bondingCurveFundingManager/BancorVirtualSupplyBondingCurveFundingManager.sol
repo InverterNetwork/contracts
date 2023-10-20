@@ -114,7 +114,9 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // Set virtual issuance token supply
         _setVirtualTokenSupply(bondingCurveProperties.initialTokenSupply);
         // Set virtual collateral supply
-        _setVirtualCollateralSupply(bondingCurveProperties.initialCollateralSupply);
+        _setVirtualCollateralSupply(
+            bondingCurveProperties.initialCollateralSupply
+        );
         // Set reserve ratio for buying
         _setReserveRatioForBuying(bondingCurveProperties.reserveRatioForBuying);
         // Set reserve ratio for selling
