@@ -35,9 +35,10 @@ contract BondingCurveE2E is E2eTest {
             token: token
         });
 
+        // @todo init will fail because of the new structs that have been introduced
         IOrchestrator orchestrator =
         _createNewOrchestratorWithAllModules_withBondingCurveFundingManager(
-            orchestratorConfig
+            orchestratorConfig, address(token)
         );
 
         BancorVirtualSupplyBondingCurveFundingManager fundingManager =

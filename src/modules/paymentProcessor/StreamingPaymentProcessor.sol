@@ -314,7 +314,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @inheritdoc IPaymentProcessor
     function token() public view returns (IERC20) {
-        return this.orchestrator().token();
+        return this.orchestrator().fundingManager().token();
     }
 
     /// @inheritdoc IStreamingPaymentProcessor
