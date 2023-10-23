@@ -370,7 +370,13 @@ contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
         internal
         returns (bool)
     {
-        return true;
+        WhitelistedCurrency memory buf = cachedCurrencies[currency];
+
+        if (buf.isWhitelisted) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     // Sends assertion resolved callback to the callback recipient and escalation manager (if set).
@@ -393,5 +399,10 @@ contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
             OptimisticOracleV3CallbackRecipientInterface(cr)
                 .assertionDisputedCallback(assertionId);
         }
+    }
+
+    function whitelistCurrency(address currency, uint fee) external {
+        WhitelistedCurrency memory newCurrency = WhitelistedCurrency(true, fee);
+        cachedCurrencies[currency] = newCurrency;
     }
 }

@@ -91,6 +91,9 @@ abstract contract OptimisticOracleIntegrator is
         public
         onlyOrchestratorOwner
     {
+        if (address(_newCurrency) == address(0)) {
+            revert(); //TODO add revert type
+        }
         defaultCurrency = IERC20(_newCurrency);
     }
 
