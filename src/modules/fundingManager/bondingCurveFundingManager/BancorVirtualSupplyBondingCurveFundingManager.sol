@@ -79,12 +79,13 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     uint32 internal reserveRatioForSelling;
     /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
     uint32 internal constant PPM = 1_000_000;
+    /// @dev Token that is accepted by this funding manager for deposits.
+    IERC20 private _token;
 
     //--------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module
-    // @todo This function crosses stack-too-deep threshold when we uncomment the decimals. It needs a refactor
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
@@ -92,61 +93,44 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
-        (
-            bytes32 _name, // The name of the issuance token
-            bytes32 _symbol, // The symbol of the issuance token
-            //uint8 _decimals, // The decimals used within the issuance token
-            address _formula, // The formula contract used to calculate the issucance and redemption rate
-            uint _initalTokenSupply, // The initial virtual issuance token supply
-            uint _initialCollateralSupply, // The initial virtual collateral token supply
-            uint32 _reserveRatioForBuying, // The reserve ratio, expressed in PPM, used for issuance on the bonding curve
-            uint32 _reserveRatioForSelling, // The reserve ratio, expressed in PPM, used for redeeming on the bonding curve
-            uint _buyFee, // The buy fee expressed in base points
-            uint _sellFee, // The sell fee expressed in base points
-            bool _buyIsOpen, // The indicator used for enabling/disabling the buying functionalities on deployment
-            bool _sellIsOpen // The indicator used for enabling/disabling the selling functionalties on deployment
-        ) = abi.decode(
-            configData,
-            (
-                bytes32,
-                bytes32,
-                //uint8,
-                address,
-                uint,
-                uint,
-                uint32,
-                uint32,
-                uint,
-                uint,
-                bool,
-                bool
-            )
+        address _acceptedToken;
+        IssuanceToken memory issuanceToken;
+        BondingCurveProperties memory bondingCurveProperties;
+
+        (issuanceToken, bondingCurveProperties, _acceptedToken) = abi.decode(
+            configData, (IssuanceToken, BondingCurveProperties, address)
         );
 
         __ERC20_init(
-            string(abi.encodePacked(_name)), string(abi.encodePacked(_symbol))
+            string(abi.encodePacked(issuanceToken.name)),
+            string(abi.encodePacked(issuanceToken.symbol))
         );
+
+        _token = IERC20(_acceptedToken);
         // Set token decimals for issuance token
-        //_setTokenDecimals(_decimals);
-        _setTokenDecimals(18);
+        _setTokenDecimals(issuanceToken.decimals);
         // Set formula contract
-        formula = IBancorFormula(_formula);
+        formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
-        _setVirtualTokenSupply(_initalTokenSupply);
+        _setVirtualTokenSupply(bondingCurveProperties.initialTokenSupply);
         // Set virtual collateral supply
-        _setVirtualCollateralSupply(_initialCollateralSupply);
+        _setVirtualCollateralSupply(
+            bondingCurveProperties.initialCollateralSupply
+        );
         // Set reserve ratio for buying
-        _setReserveRatioForBuying(_reserveRatioForBuying);
+        _setReserveRatioForBuying(bondingCurveProperties.reserveRatioForBuying);
         // Set reserve ratio for selling
-        _setReserveRatioForSelling(_reserveRatioForSelling);
+        _setReserveRatioForSelling(
+            bondingCurveProperties.reserveRatioForSelling
+        );
         // Set buy fee percentage
-        _setBuyFee(_buyFee);
+        _setBuyFee(bondingCurveProperties.buyFee);
         // Set sell fee percentage
-        _setSellFee(_sellFee);
+        _setSellFee(bondingCurveProperties.sellFee);
         // Set buying functionality to open if true. By default buying is false
-        if (_buyIsOpen == true) _openBuy();
+        if (bondingCurveProperties.buyIsOpen == true) _openBuy();
         // Set selling functionality to open if true. By default selling is false
-        if (_sellIsOpen == true) _openSell();
+        if (bondingCurveProperties.sellIsOpen == true) _openSell();
     }
 
     //--------------------------------------------------------------------------
@@ -237,7 +221,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     /// @inheritdoc IFundingManager
     function token() public view returns (IERC20) {
-        return __Module_orchestrator.token();
+        return _token;
     }
 
     //--------------------------------------------------------------------------

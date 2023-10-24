@@ -116,13 +116,33 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
     function setUp() public {
         // Deploy contracts
+        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
+            issuanceToken;
+        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
+            memory bc_properties;
+
+        BancorFormula bancorFormula = new BancorFormula();
+        formula = address(bancorFormula);
+
+        issuanceToken.name = bytes32(abi.encodePacked(NAME));
+        issuanceToken.symbol = bytes32(abi.encodePacked(SYMBOL));
+        issuanceToken.decimals = uint8(18);
+
+        bc_properties.formula = formula;
+        bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
+        bc_properties.reserveRatioForSelling = RESERVE_RATIO_FOR_SELLING;
+        bc_properties.buyFee = BUY_FEE;
+        bc_properties.sellFee = SELL_FEE;
+        bc_properties.buyIsOpen = BUY_IS_OPEN;
+        bc_properties.sellIsOpen = SELL_IS_OPEN;
+        bc_properties.initialTokenSupply = INITIAL_TOKEN_SUPPLY;
+        bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
+
         address impl =
             address(new BancorVirtualSupplyBondingCurveFundingManagerMock());
 
         bondingCurveFundingManager =
         BancorVirtualSupplyBondingCurveFundingManagerMock(Clones.clone(impl));
-
-        formula = address(new BancorFormula());
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -133,18 +153,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                bytes32(abi.encodePacked(NAME)),
-                bytes32(abi.encodePacked(SYMBOL)),
-                //DECIMALS,  @todo see BancorBondingCurveContract
-                formula,
-                INITIAL_TOKEN_SUPPLY,
-                INITIAL_COLLATERAL_SUPPLY,
-                RESERVE_RATIO_FOR_BUYING,
-                RESERVE_RATIO_FOR_SELLING,
-                BUY_FEE,
-                SELL_FEE,
-                BUY_IS_OPEN,
-                SELL_IS_OPEN
+                issuanceToken,
+                bc_properties,
+                _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
         );
     }
@@ -839,7 +850,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
      Test token() getter
     */
     function testCollateralTokenGetter() public {
-        address orchestratorToken = address(_orchestrator.token());
+        address orchestratorToken =
+            address(_orchestrator.fundingManager().token());
         assertEq(
             address(bondingCurveFundingManager.token()),
             orchestratorToken,

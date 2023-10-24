@@ -62,7 +62,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     /// @inheritdoc IPaymentProcessor
     function token() public view returns (IERC20) {
-        return __Module_orchestrator.token();
+        return __Module_orchestrator.fundingManager().token();
     }
 
     /// @inheritdoc IPaymentProcessor

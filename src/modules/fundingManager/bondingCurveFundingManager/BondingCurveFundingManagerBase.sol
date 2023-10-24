@@ -149,7 +149,7 @@ abstract contract BondingCurveFundingManagerBase is
             revert BondingCurveFundingManager__InvalidDepositAmount();
         }
         // Transfer collateral, confirming that correct amount == allowance
-        __Module_orchestrator.token().safeTransferFrom(
+        __Module_orchestrator.fundingManager().token().safeTransferFrom(
             _msgSender(), address(this), _depositAmount
         );
         // Calculate deposit amount minus fee percentage
@@ -239,7 +239,7 @@ abstract contract BondingCurveFundingManagerBase is
         external
         onlyOrchestrator
     {
-        __Module_orchestrator.token().safeTransfer(to, amount);
+        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
     }

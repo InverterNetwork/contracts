@@ -134,14 +134,18 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         // Require that enough collateral token is held to be redeemable
         if (
             redeemAmount
-                > __Module_orchestrator.token().balanceOf(address(this))
+                > __Module_orchestrator.fundingManager().token().balanceOf(
+                    address(this)
+                )
         ) {
             revert
                 RedeemingBondingCurveFundingManager__InsufficientCollateralForRedemption(
             );
         }
         // Transfer tokens to receiver
-        __Module_orchestrator.token().transfer(_receiver, redeemAmount);
+        __Module_orchestrator.fundingManager().token().transfer(
+            _receiver, redeemAmount
+        );
         // Emit event
         emit TokensSold(_receiver, _depositAmount, redeemAmount, _msgSender());
     }

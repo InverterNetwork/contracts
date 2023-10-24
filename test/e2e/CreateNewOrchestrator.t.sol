@@ -336,7 +336,7 @@ contract OrchestratorCreation is Test {
         address newFundingManager = moduleFactory.createModule(
             fundingManagerMetadata,
             orchestrator,
-            abi.encode(address(orchestrator.token()))
+            abi.encode(address(orchestrator.fundingManager().token()))
         );
 
         address[] memory initialAuthorizedAddresses = new address[](1);

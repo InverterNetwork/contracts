@@ -47,7 +47,6 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
         modules[0] = address(module);
         _orchestrator.init(
             _ORCHESTRATOR_ID,
-            _token,
             modules,
             _fundingManager,
             _authorizer,
@@ -119,7 +118,6 @@ contract TokenGatedRoleAuthorizerTest is Test {
         modules[0] = address(mockModule);
         _orchestrator.init(
             _ORCHESTRATOR_ID,
-            _token,
             modules,
             _fundingManager,
             _authorizer,

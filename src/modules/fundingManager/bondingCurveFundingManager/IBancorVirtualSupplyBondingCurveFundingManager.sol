@@ -22,6 +22,26 @@ interface IBancorVirtualSupplyBondingCurveFundingManager {
     );
 
     //--------------------------------------------------------------------------
+    // Structs
+    struct IssuanceToken {
+        bytes32 name; // The name of the issuance token
+        bytes32 symbol; // The symbol of the issuance token
+        uint8 decimals; // The decimals used within the issuance token
+    }
+
+    struct BondingCurveProperties {
+        address formula; // The formula contract used to calculate the issucance and redemption rate
+        uint32 reserveRatioForBuying; // The reserve ratio, expressed in PPM, used for issuance on the bonding curve
+        uint32 reserveRatioForSelling; // The reserve ratio, expressed in PPM, used for redeeming on the bonding curve
+        uint buyFee; // The buy fee expressed in base points
+        uint sellFee; // The sell fee expressed in base points
+        bool buyIsOpen; // The indicator used for enabling/disabling the buying functionalities on deployment
+        bool sellIsOpen; // The indicator used for enabling/disabling the selling functionalties on deployment
+        uint initialTokenSupply; // The initial virtual issuance token supply
+        uint initialCollateralSupply; // The initial virtual collateral token supply
+    }
+
+    //--------------------------------------------------------------------------
     // Functions
 
     /// @notice Mints a specified amount of Issuance Tokens to a designated receiver address.

@@ -134,7 +134,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         assert(address(test_orchestrator) != address(0));
 
         address orchestratorToken =
-            address(IOrchestrator(test_orchestrator).token());
+            address(IOrchestrator(test_orchestrator).fundingManager().token());
         assertEq(orchestratorToken, address(token));
 
         // Now we need to find the MilestoneManager. ModuleManager has a function called `listModules` that returns a list of
