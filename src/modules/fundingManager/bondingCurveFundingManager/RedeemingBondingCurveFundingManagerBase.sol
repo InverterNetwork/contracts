@@ -177,17 +177,4 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
     }
-
-    /// @dev This function utilizes another internal function, `_redeemTokensFormulaWrapper`,
-    /// to determine how many collateral tokens should be redeemed.
-    /// @param _depositAmount The amount of issued tokens deposited for which collateral are to
-    /// be redeemed.
-    /// @return redeemAmount The number of collateral tokens to be redeemed.
-    function _redeemTokens(uint _depositAmount)
-        internal
-        view
-        returns (uint redeemAmount)
-    {
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-    }
 }

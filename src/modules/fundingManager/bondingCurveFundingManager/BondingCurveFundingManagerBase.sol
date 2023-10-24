@@ -158,7 +158,7 @@ abstract contract BondingCurveFundingManagerBase is
                 _calculateFeeDeductedDepositAmount(_depositAmount, buyFee);
         }
         // Calculate mint amount based on upstream formula
-        mintAmount = _issueTokens(_depositAmount);
+        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
         // Mint tokens to address
         _mint(_receiver, mintAmount);
         // Emit event
@@ -207,18 +207,6 @@ abstract contract BondingCurveFundingManagerBase is
         uint feeAmount = (_depositAmount * _feePct) / BPS;
         // Subtract fee amount from deposit amount
         depositAmountMinusFee = _depositAmount - feeAmount;
-    }
-
-    /// @dev This function utilizes another internal function, `_issueTokensFormulaWrapper`,
-    /// to determine how many tokens should be minted.
-    /// @param _depositAmount The amount of funds deposited for which tokens are to be issued.
-    /// @return mintAmount The number of tokens that will be minted.
-    function _issueTokens(uint _depositAmount)
-        internal
-        view
-        returns (uint mintAmount)
-    {
-        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
     }
 
     /// @dev Sets the number of decimals for the token.
