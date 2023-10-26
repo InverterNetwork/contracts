@@ -51,4 +51,16 @@ contract FundingManagerMock is IFundingManager, Module {
     function transferOrchestratorToken(address to, uint amount) external {
         _token.safeTransfer(to, amount);
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
+        return interfaceId == interfaceId_IFundingManager
+            || super.supportsInterface(interfaceId);
+    }
 }
