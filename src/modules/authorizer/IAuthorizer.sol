@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {IAccessControlEnumerableUpgradeable} from
     "@oz-up/access/IAccessControlEnumerableUpgradeable.sol";
 
-interface IAuthorizer is IAccessControlEnumerableUpgradeable {
+interface IAuthorizer is IAccessControlEnumerableUpgradeable, IERC165 {
     //--------------------------------------------------------------------------
     // Events
 

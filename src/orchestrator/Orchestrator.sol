@@ -12,6 +12,9 @@ import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {ModuleManager} from "src/orchestrator/base/ModuleManager.sol";
 
+// Internal Libraries
+import {LibInterfaceId} from "src/modules/lib/LibInterfaceId.sol";
+
 // Internal Interfaces
 import {
     IOrchestrator,
@@ -193,14 +196,16 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        //if (verifyAddressIsAuthorizerModule(address(authorizer_))) {
-        addModule(address(authorizer_));
-        removeModule(address(authorizer));
-        authorizer = authorizer_;
-        emit AuthorizerUpdated(address(authorizer_));
-        // } else {
-        //     revert Orchestrator__InvalidModuleType(address(authorizer_));
-        // }
+        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
+        bytes4 authorizerInterfaceId = LibInterfaceId.getInterfaceId_IAuthorizer();
+        if (authorizer_.supportsInterface(moduleInterfaceId) && authorizer_.supportsInterface(authorizerInterfaceId)) {
+            addModule(address(authorizer_));
+            removeModule(address(authorizer));
+            authorizer = authorizer_;
+            emit AuthorizerUpdated(address(authorizer_));
+        } else {
+            revert Orchestrator__InvalidModuleType(address(authorizer_));
+        }
     }
 
     /// @inheritdoc IOrchestrator
@@ -208,14 +213,16 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        //        if (verifyAddressIsFundingManager(address(fundingManager_))) {
-        addModule(address(fundingManager_));
-        removeModule(address(fundingManager));
-        fundingManager = fundingManager_;
-        emit FundingManagerUpdated(address(fundingManager_));
-        // } else {
-        //     revert Orchestrator__InvalidModuleType(address(fundingManager_));
-        // }
+        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
+        bytes4 fundingManagerInterfaceId = LibInterfaceId.getInterfaceId_IFundingManager();
+        //if (fundingManager_.supportsInterface(moduleInterfaceId) && fundingManager_.supportsInterface(fundingManagerInterfaceId)) {
+            addModule(address(fundingManager_));
+            removeModule(address(fundingManager));
+            fundingManager = fundingManager_;
+            emit FundingManagerUpdated(address(fundingManager_));
+        //} else {
+            //revert Orchestrator__InvalidModuleType(address(fundingManager_));
+        //}
     }
 
     /// @inheritdoc IOrchestrator
@@ -223,14 +230,16 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        //        if (verifyAddressIsPaymentProcessor(address(paymentProcessor_))) {
-        addModule(address(paymentProcessor_));
-        removeModule(address(paymentProcessor));
-        paymentProcessor = paymentProcessor_;
-        //     emit PaymentProcessorUpdated(address(paymentProcessor_));
-        // } else {
-        //     revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
-        // }
+        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
+        bytes4 paymentProcessorInterfaceId = LibInterfaceId.getInterfaceId_IPaymentProcessor();
+        if (paymentProcessor_.supportsInterface(moduleInterfaceId) && paymentProcessor_.supportsInterface(paymentProcessorInterfaceId)) {
+            addModule(address(paymentProcessor_));
+            removeModule(address(paymentProcessor));
+            paymentProcessor = paymentProcessor_;
+            emit PaymentProcessorUpdated(address(paymentProcessor_));
+        } else {
+            revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
+        }
     }
 
     /// @inheritdoc IOrchestrator

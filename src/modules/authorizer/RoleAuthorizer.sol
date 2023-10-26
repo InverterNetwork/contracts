@@ -122,7 +122,7 @@ contract RoleAuthorizer is
         public
         view
         virtual
-        override(Module, AccessControlEnumerableUpgradeable)
+        override(Module, AccessControlEnumerableUpgradeable, IERC165)
         returns (bool)
     {
         bytes4 interfaceId_IAuthorizer = type(IAuthorizer).interfaceId;
