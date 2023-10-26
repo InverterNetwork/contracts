@@ -209,7 +209,7 @@ contract OrchestratorTest is Test {
 
         orchestrator.setAuthorizer(newAuthorizer);
         assertTrue(orchestrator.authorizer() == newAuthorizer);
-
+        
         // verify whether the init value is set and not the value from the old
         // authorizer, to check whether the replacement is successful
         bytes32 ownerRole = orchestrator.authorizer().getOwnerRole();

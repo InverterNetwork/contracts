@@ -166,4 +166,16 @@ contract AuthorizerMock is IAuthorizer, Module {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
         revokeRole(roleID, target);
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IAuthorizer = type(IAuthorizer).interfaceId;
+        return interfaceId == interfaceId_IAuthorizer
+            || super.supportsInterface(interfaceId);
+    }
 }
