@@ -198,8 +198,14 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     {
         address authorizerContract = address(authorizer_);
         bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
-        bytes4 authorizerInterfaceId = LibInterfaceId.getInterfaceId_IAuthorizer();
-        if (_supportsInterfaceHelper(authorizerContract, moduleInterfaceId) && _supportsInterfaceHelper(authorizerContract, authorizerInterfaceId)) {
+        bytes4 authorizerInterfaceId =
+            LibInterfaceId.getInterfaceId_IAuthorizer();
+        if (
+            _supportsInterfaceHelper(authorizerContract, moduleInterfaceId)
+                && _supportsInterfaceHelper(
+                    authorizerContract, authorizerInterfaceId
+                )
+        ) {
             addModule(address(authorizer_));
             removeModule(address(authorizer));
             authorizer = authorizer_;
@@ -218,7 +224,12 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
         bytes4 fundingManagerInterfaceId =
             LibInterfaceId.getInterfaceId_IFundingManager();
-        if (_supportsInterfaceHelper(fundingManagerContract, moduleInterfaceId) && _supportsInterfaceHelper(fundingManagerContract, fundingManagerInterfaceId)) {
+        if (
+            _supportsInterfaceHelper(fundingManagerContract, moduleInterfaceId)
+                && _supportsInterfaceHelper(
+                    fundingManagerContract, fundingManagerInterfaceId
+                )
+        ) {
             addModule(address(fundingManager_));
             removeModule(address(fundingManager));
             fundingManager = fundingManager_;
@@ -235,8 +246,16 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     {
         address paymentProcessorContract = address(paymentProcessor_);
         bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
-        bytes4 paymentProcessorInterfaceId = LibInterfaceId.getInterfaceId_IPaymentProcessor();
-        if (_supportsInterfaceHelper(paymentProcessorContract, moduleInterfaceId) && _supportsInterfaceHelper(paymentProcessorContract, paymentProcessorInterfaceId)) {
+        bytes4 paymentProcessorInterfaceId =
+            LibInterfaceId.getInterfaceId_IPaymentProcessor();
+        if (
+            _supportsInterfaceHelper(
+                paymentProcessorContract, moduleInterfaceId
+            )
+                && _supportsInterfaceHelper(
+                    paymentProcessorContract, paymentProcessorInterfaceId
+                )
+        ) {
             addModule(address(paymentProcessor_));
             removeModule(address(paymentProcessor));
             paymentProcessor = paymentProcessor_;
@@ -246,17 +265,20 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         }
     }
 
-    function _supportsInterfaceHelper(address _contractAddress, bytes4 _interfaceId) private returns (bool isSupported) {
-        require(_contractAddress.code.length != 0, "Contract Address need to passed here");
-        
-        (bool success, bytes memory data) = _contractAddress.call(
-            abi.encodeWithSignature(
-                "supportsInterface(bytes4)",
-                _interfaceId
-            )
+    function _supportsInterfaceHelper(
+        address _contractAddress,
+        bytes4 _interfaceId
+    ) private returns (bool isSupported) {
+        require(
+            _contractAddress.code.length != 0,
+            "Contract Address need to passed here"
         );
 
-        if(success && abi.decode(data, (bool))) {
+        (bool success, bytes memory data) = _contractAddress.call(
+            abi.encodeWithSignature("supportsInterface(bytes4)", _interfaceId)
+        );
+
+        if (success && abi.decode(data, (bool))) {
             isSupported = true;
         } else {
             isSupported = false;
