@@ -60,8 +60,8 @@ contract SingleVoteGovernorE2E is E2eTest {
             orchestratorConfig
         );
 
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
+        // RebasingFundingManager fundingManager =
+        //     RebasingFundingManager(address(orchestrator.fundingManager()));
 
         RoleAuthorizer authorizer =
             RoleAuthorizer(address(orchestrator.authorizer()));

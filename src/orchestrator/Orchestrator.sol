@@ -194,10 +194,10 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         onlyOrchestratorOwner
     {
         //if (verifyAddressIsAuthorizerModule(address(authorizer_))) {
-            addModule(address(authorizer_));
-            removeModule(address(authorizer));
-            authorizer = authorizer_;
-            emit AuthorizerUpdated(address(authorizer_));
+        addModule(address(authorizer_));
+        removeModule(address(authorizer));
+        authorizer = authorizer_;
+        emit AuthorizerUpdated(address(authorizer_));
         // } else {
         //     revert Orchestrator__InvalidModuleType(address(authorizer_));
         // }
@@ -208,11 +208,11 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-//        if (verifyAddressIsFundingManager(address(fundingManager_))) {
-            addModule(address(fundingManager_));
-            removeModule(address(fundingManager));
-            fundingManager = fundingManager_;
-            emit FundingManagerUpdated(address(fundingManager_));
+        //        if (verifyAddressIsFundingManager(address(fundingManager_))) {
+        addModule(address(fundingManager_));
+        removeModule(address(fundingManager));
+        fundingManager = fundingManager_;
+        emit FundingManagerUpdated(address(fundingManager_));
         // } else {
         //     revert Orchestrator__InvalidModuleType(address(fundingManager_));
         // }
@@ -223,10 +223,10 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-//        if (verifyAddressIsPaymentProcessor(address(paymentProcessor_))) {
-            addModule(address(paymentProcessor_));
-            removeModule(address(paymentProcessor));
-            paymentProcessor = paymentProcessor_;
+        //        if (verifyAddressIsPaymentProcessor(address(paymentProcessor_))) {
+        addModule(address(paymentProcessor_));
+        removeModule(address(paymentProcessor));
+        paymentProcessor = paymentProcessor_;
         //     emit PaymentProcessorUpdated(address(paymentProcessor_));
         // } else {
         //     revert Orchestrator__InvalidModuleType(address(paymentProcessor_));

@@ -6,6 +6,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Interfaces
 import {
@@ -27,7 +28,7 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
  *
  * @author Inverter Network
  */
-contract OrchestratorFactory is IOrchestratorFactory {
+contract OrchestratorFactory is IOrchestratorFactory, ERC165 {
     //--------------------------------------------------------------------------
     // Immutables
 
@@ -191,5 +192,18 @@ contract OrchestratorFactory is IOrchestratorFactory {
         } catch {
             return false;
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IOrchestratorFactory =
+            type(IOrchestratorFactory).interfaceId;
+        return interfaceId == interfaceId_IOrchestratorFactory
+            || super.supportsInterface(interfaceId);
     }
 }
