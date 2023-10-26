@@ -114,7 +114,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         public
         view
         virtual
-        override(Module, IERC165)
+        override(Module)
         returns (bool)
     {
         bytes4 interfaceId_IPaymentProcessor =

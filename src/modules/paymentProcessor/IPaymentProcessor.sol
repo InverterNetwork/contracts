@@ -2,12 +2,11 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 import {IERC20PaymentClient} from
     "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
-interface IPaymentProcessor is IERC165 {
+interface IPaymentProcessor {
     //--------------------------------------------------------------------------
     // Errors
 

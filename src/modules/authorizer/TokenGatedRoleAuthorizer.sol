@@ -69,7 +69,7 @@ contract TokenGatedRoleAuthorizer is
         public
         view
         virtual
-        override(RoleAuthorizer, IERC165)
+        override(RoleAuthorizer)
         returns (bool)
     {
         bytes4 interfaceId_ITokenGatedRoleAuthorizer =
