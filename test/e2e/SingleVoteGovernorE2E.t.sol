@@ -37,7 +37,7 @@ import {
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract SingleVoteGovernorLifecycle is E2eTest {
+contract SingleVoteGovernorE2E is E2eTest {
     // voters
     address voter1 = makeAddr("voter1");
     address voter2 = makeAddr("voter2");
@@ -46,7 +46,7 @@ contract SingleVoteGovernorLifecycle is E2eTest {
     // Constants
     ERC20Mock token = new ERC20Mock("Mock", "MOCK");
 
-    function test_e2e_SingleVoteGovernorLifecycle() public {
+    function test_e2e_SingleVoteGovernorE2E() public {
         // -----------INIT
         // address(this) creates a new orchestrator.
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
@@ -103,32 +103,12 @@ contract SingleVoteGovernorLifecycle is E2eTest {
             bountyManager.BOUNTY_ISSUER_ROLE(), address(singleVoteGovernor)
         );
 
+        // By having address(this) renounce the Owner Role, all changes from now on need to go through the SingleVoteGovernor
         authorizer.renounceRole(ownerRole, address(this));
 
-        // Funders deposit funds
-
-        // IMPORTANT
-        // =========
-        // Due to how the underlying rebase mechanism works, it is necessary
-        // to always have some amount of tokens in the orchestrator.
-        // It's best, if the owner deposits them right after deployment.
-        uint initialDeposit = 10e18;
-        token.mint(address(this), initialDeposit);
-        token.approve(address(fundingManager), initialDeposit);
-        fundingManager.deposit(initialDeposit);
-
-        // Seeing this great working on the orchestrator, funder1 decides to fund
-        // the orchestrator with 1k of tokens.
-        address funder1 = makeAddr("funder1");
-
-        token.mint(funder1, 1000e18);
-
-        vm.startPrank(funder1);
-        {
-            token.approve(address(fundingManager), 1000e18);
-            fundingManager.deposit(1000e18);
-        }
-        vm.stopPrank();
+        //--------------------------------------------------------------------------------
+        // Set up Vote to create Bounty
+        //--------------------------------------------------------------------------------
 
         // Bounty details
         uint minimumPayoutAmount = 100e18;
@@ -149,7 +129,9 @@ contract SingleVoteGovernorLifecycle is E2eTest {
 
         vm.warp(block.timestamp + 2);
 
-        // voters vote
+        //--------------------------------------------------------------------------------
+        // Vote happens
+        //--------------------------------------------------------------------------------
         vm.prank(voter1);
         singleVoteGovernor.castVote(motionId, 0);
         vm.prank(voter2);
@@ -158,8 +140,9 @@ contract SingleVoteGovernorLifecycle is E2eTest {
         singleVoteGovernor.castVote(motionId, 0);
 
         vm.warp(block.timestamp + 3 days);
-
-        // execute vote
+        //--------------------------------------------------------------------------------
+        // Execute Vote
+        //--------------------------------------------------------------------------------
         vm.prank(voter1);
         singleVoteGovernor.executeMotion(motionId);
 

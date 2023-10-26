@@ -207,7 +207,7 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         internal
         virtual
     {
-        IERC20 token = __Module_orchestrator.token();
+        IERC20 token = __Module_orchestrator.fundingManager().token();
         uint allowance = token.allowance(address(this), address(spender));
 
         if (allowance < amount) {
