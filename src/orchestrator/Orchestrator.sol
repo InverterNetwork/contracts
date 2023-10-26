@@ -171,71 +171,8 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         return moduleAddress;
     }
 
-    //--------------------------------------------------------------------------
-    // Module address verification functions
-    // Note These set of functions are not mandatory for the functioning of the protocol, however they
-    //      are provided for the convenience of the users since matching the names of the modules does not
-    //      fully guarantee that the returned address is the address of the exact module the user was looking for
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsAuthorizerModule(address authModule)
-        public
-        view
-        returns (bool)
-    {
-        IAuthorizer authorizerModule = IAuthorizer(authModule);
-
-        try authorizerModule.getOwnerRole() returns (bytes32) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsFundingManager(address fundingManagerAddress)
-        public
-        view
-        returns (bool)
-    {
-        IFundingManager fundingManagerModule =
-            IFundingManager(fundingManagerAddress);
-
-        try fundingManagerModule.token() returns (IERC20) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsRecurringPaymentManager(
-        address recurringPaymentManager
-    ) public view returns (bool) {
-        RecurringPaymentManager paymentManager =
-            RecurringPaymentManager(recurringPaymentManager);
-
-        try paymentManager.getEpochLength() returns (uint) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
-        public
-        view
-        returns (bool)
-    {
-        IPaymentProcessor paymentProcessorModule =
-            IPaymentProcessor(paymentProcessorAddress);
-
-        try paymentProcessorModule.token() returns (IERC20) {
-            return true;
-        } catch {
-            return false;
-        }
+    function getInterfaceId() external pure returns (bytes4) {
+        return type(IOrchestrator).interfaceId;
     }
 
     //--------------------------------------------------------------------------
