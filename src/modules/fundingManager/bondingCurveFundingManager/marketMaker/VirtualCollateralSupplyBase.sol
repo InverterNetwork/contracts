@@ -42,7 +42,10 @@ abstract contract VirtualCollateralSupplyBase is IVirtualCollateralSupply {
         if (_amount > (MAX_UINT - virtualCollateralSupply)) {
             revert VirtualCollateralSupply_AddResultsInOverflow();
         }
-        virtualCollateralSupply += _amount;
+        unchecked {
+            virtualCollateralSupply += _amount;
+        }
+
         emit VirtualCollateralAmountAdded(_amount, virtualCollateralSupply);
     }
 
@@ -57,8 +60,10 @@ abstract contract VirtualCollateralSupplyBase is IVirtualCollateralSupply {
         if (_amount == virtualCollateralSupply) {
             revert VirtualCollateralSupply__VirtualSupplyCannotBeZero();
         }
+        unchecked {
+            virtualCollateralSupply -= _amount;
+        }
 
-        virtualCollateralSupply -= _amount;
         emit VirtualCollateralAmountSubtracted(_amount, virtualCollateralSupply);
     }
 

@@ -43,7 +43,10 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
         if (_amount > (MAX_UINT - virtualTokenSupply)) {
             revert VirtualTokenSupply_AddResultsInOverflow();
         }
-        virtualTokenSupply += _amount;
+        unchecked {
+            virtualTokenSupply += _amount;
+        }
+
         emit VirtualTokenAmountAdded(_amount, virtualTokenSupply);
     }
 
@@ -58,8 +61,9 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
         if (_amount == virtualTokenSupply) {
             revert VirtualTokenSupply__VirtualSupplyCannotBeZero();
         }
-
-        virtualTokenSupply -= _amount;
+        unchecked {
+            virtualTokenSupply -= _amount;
+        }
         emit VirtualTokenAmountSubtracted(_amount, virtualTokenSupply);
     }
 

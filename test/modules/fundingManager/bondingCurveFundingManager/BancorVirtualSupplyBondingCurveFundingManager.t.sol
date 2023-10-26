@@ -931,7 +931,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         callerIsOrchestratorOwner
     {
         vm.assume(_newSupply != 0);
-        
+
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
