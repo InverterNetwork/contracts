@@ -6,6 +6,9 @@ interface IVirtualTokenSupply {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice The virtual supply cannot be zero.
+    error VirtualTokenSupply__VirtualSupplyCannotBeZero();
+
     /// @notice Subtracting would result in an underflow.
     error VirtualTokenSupply__SubtractResultsInUnderflow();
 

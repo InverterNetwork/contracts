@@ -904,14 +904,34 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
-                ├── it should set the new token supply
-                └── it should emit an event
+                ├── when the new token supply is zero
+                │   └── it should revert
+                └── when the new token supply is above zero
+                    ├── it should set the new token supply
+                    └── it should emit an event
 
     */
+
+    function testSetVirtualTokenSupply_FailsIfZero()
+        public
+        callerIsOrchestratorOwner
+    {
+        uint _newSupply = 0;
+
+        vm.expectRevert(
+            IVirtualTokenSupply
+                .VirtualTokenSupply__VirtualSupplyCannotBeZero
+                .selector
+        );
+        bondingCurveFundingManager.setVirtualTokenSupply(_newSupply);
+    }
+
     function testSetVirtualTokenSupply(uint _newSupply)
         public
         callerIsOrchestratorOwner
     {
+        vm.assume(_newSupply != 0);
+        
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
@@ -924,15 +944,34 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
-                ├── it should set the new collateral supply
-                └── it should emit an event
+                ├── when the new collateral supply is zero
+                │   └── it should revert
+                └── when the new collateral supply is above zero
+                    ├── it should set the new collateral supply
+                    └── it should emit an event
 
     */
+
+    function testSetVirtualCollateralSupply_FailsIfZero()
+        public
+        callerIsOrchestratorOwner
+    {
+        uint _newSupply = 0;
+
+        vm.expectRevert(
+            IVirtualCollateralSupply
+                .VirtualCollateralSupply__VirtualSupplyCannotBeZero
+                .selector
+        );
+        bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
+    }
 
     function testSetVirtualCollateralSupply(uint _newSupply)
         public
         callerIsOrchestratorOwner
     {
+        vm.assume(_newSupply != 0);
+
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );

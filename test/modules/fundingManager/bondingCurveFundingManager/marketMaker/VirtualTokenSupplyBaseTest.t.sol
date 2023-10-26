@@ -52,7 +52,7 @@ contract VirtualTokenSupplyBaseTest is Test {
     }
 
     function testSubTokenAmount(uint amount) external {
-        vm.assume(amount <= INITIAL_SUPPLY);
+        vm.assume(amount < INITIAL_SUPPLY);
 
         // Test event
         vm.expectEmit(true, true, false, false, address(virtualTokenSupplyBase));
@@ -75,8 +75,19 @@ contract VirtualTokenSupplyBaseTest is Test {
         virtualTokenSupplyBase.subVirtualTokenAmount(amount);
     }
 
+    function testSubTokenAmountFailsIfZero() external {
+        uint amount = INITIAL_SUPPLY;
+
+        vm.expectRevert(
+            IVirtualTokenSupply
+                .VirtualTokenSupply__VirtualSupplyCannotBeZero
+                .selector
+        );
+        virtualTokenSupplyBase.subVirtualTokenAmount(amount);
+    }
+
     function testGetterAndSetter(uint amount) external {
-        vm.assume(amount <= MAX_UINT);
+        amount = bound(amount, 1, MAX_UINT);
 
         assertEq(
             virtualTokenSupplyBase.getVirtualTokenSupply(), (INITIAL_SUPPLY)
@@ -87,5 +98,20 @@ contract VirtualTokenSupplyBaseTest is Test {
         virtualTokenSupplyBase.setVirtualTokenSupply(amount);
 
         assertEq(virtualTokenSupplyBase.getVirtualTokenSupply(), (amount));
+    }
+
+    function testGetterAndSetterFailsIfSetToZero() external {
+        uint amount = 0;
+
+        vm.expectRevert(
+            IVirtualTokenSupply
+                .VirtualTokenSupply__VirtualSupplyCannotBeZero
+                .selector
+        );
+        virtualTokenSupplyBase.setVirtualTokenSupply(amount);
+
+        assertEq(
+            virtualTokenSupplyBase.getVirtualTokenSupply(), (INITIAL_SUPPLY)
+        );
     }
 }
