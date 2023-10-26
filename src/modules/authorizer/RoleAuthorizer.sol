@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 // External Libraries
 
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
 import {Module, IModule} from "src/modules/base/Module.sol";
@@ -116,6 +117,18 @@ contract RoleAuthorizer is
 
     //--------------------------------------------------------------------------
     // Public functions
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module, AccessControlEnumerableUpgradeable)
+        returns (bool)
+    {
+        bytes4 interfaceId_IAuthorizer = type(IAuthorizer).interfaceId;
+        return interfaceId == interfaceId_IAuthorizer
+            || super.supportsInterface(interfaceId);
+    }
 
     /// @inheritdoc IAuthorizer
     function hasModuleRole(bytes32 role, address who)

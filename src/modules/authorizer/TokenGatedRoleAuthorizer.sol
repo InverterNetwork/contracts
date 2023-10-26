@@ -65,6 +65,19 @@ contract TokenGatedRoleAuthorizer is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(RoleAuthorizer)
+        returns (bool)
+    {
+        bytes4 interfaceId_ITokenGatedRoleAuthorizer =
+            type(ITokenGatedRoleAuthorizer).interfaceId;
+        return interfaceId == interfaceId_ITokenGatedRoleAuthorizer
+            || super.supportsInterface(interfaceId);
+    }
+
     function hasRole(bytes32 roleId, address account)
         public
         view

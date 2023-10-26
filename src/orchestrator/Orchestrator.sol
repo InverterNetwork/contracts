@@ -257,4 +257,16 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     function version() external pure returns (string memory) {
         return "1";
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ModuleManager)
+        returns (bool)
+    {
+        bytes4 interfaceId_IOrchestrator = type(IOrchestrator).interfaceId;
+        return interfaceId == interfaceId_IOrchestrator
+            || super.supportsInterface(interfaceId);
+    }
 }

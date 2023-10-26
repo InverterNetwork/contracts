@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 // External Dependencies
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Interfaces
 import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
@@ -27,7 +28,8 @@ import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 abstract contract ModuleManager is
     IModuleManager,
     Initializable,
-    ContextUpgradeable
+    ContextUpgradeable,
+    ERC165
 {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -142,6 +144,18 @@ abstract contract ModuleManager is
 
     //--------------------------------------------------------------------------
     // Public View Functions
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IModuleManager = type(IModuleManager).interfaceId;
+        return interfaceId == interfaceId_IModuleManager
+            || super.supportsInterface(interfaceId);
+    }
 
     /// @inheritdoc IModuleManager
     function isModule(address module)
