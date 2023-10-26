@@ -97,7 +97,6 @@ contract RoleAuthorizer is
             _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
             renounceRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
         }
-
     }
 
     //--------------------------------------------------------------------------
