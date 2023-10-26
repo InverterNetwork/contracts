@@ -460,4 +460,16 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
 
         emit ClaimVerified(claimId);
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC20PaymentClient)
+        returns (bool)
+    {
+        bytes4 interfaceId_IBountyManager = type(IBountyManager).interfaceId;
+        return interfaceId == interfaceId_IBountyManager
+            || super.supportsInterface(interfaceId);
+    }
 }

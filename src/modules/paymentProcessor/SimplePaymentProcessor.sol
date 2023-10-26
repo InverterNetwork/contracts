@@ -109,4 +109,17 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         //Since we pay out on processing, this function does nothing
         return;
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IPaymentProcessor =
+            type(IPaymentProcessor).interfaceId;
+        return interfaceId == interfaceId_IPaymentProcessor
+            || super.supportsInterface(interfaceId);
+    }
 }

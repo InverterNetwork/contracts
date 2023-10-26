@@ -46,6 +46,18 @@ contract MetadataManager is IMetadataManager, Module {
     //--------------------------------------------------------------------------
     // Getter Functions
 
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IMetadataManager = type(IMetadataManager).interfaceId;
+        return interfaceId == interfaceId_IMetadataManager
+            || super.supportsInterface(interfaceId);
+    }
+
     function getManagerMetadata()
         external
         view

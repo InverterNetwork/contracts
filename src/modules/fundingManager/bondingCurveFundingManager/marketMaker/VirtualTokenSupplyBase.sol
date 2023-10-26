@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
+// External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
 import {IVirtualTokenSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualTokenSupply.sol";
 
@@ -10,7 +13,7 @@ import {IVirtualTokenSupply} from
 /// add, and subtract the virtual supply.
 /// @dev This abstract contract uses internal state variables for the virtual token supply and employs
 /// various internal and external functions for managing it.
-abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
+abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply, ERC165 {
     //--------------------------------------------------------------------------
     // Storage
 
@@ -69,5 +72,18 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
     /// @return The current virtual token supply as a uint.
     function _getVirtualTokenSupply() internal view returns (uint) {
         return virtualTokenSupply;
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IVirtualTokenSupply =
+            type(IVirtualTokenSupply).interfaceId;
+        return interfaceId == interfaceId_IVirtualTokenSupply
+            || super.supportsInterface(interfaceId);
     }
 }

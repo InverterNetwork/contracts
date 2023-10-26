@@ -1,5 +1,9 @@
 pragma solidity 0.8.19;
 
+// External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
+
 import {IBancorFormula} from 
     'src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol';
 import {SafeMath} from 
@@ -12,7 +16,7 @@ import {Utils} from
 /// @notice The sole modification applied to these contracts involves the alteration of the Solidity
 ///         version and the version-specific removal of the 'public' keyword from the constructor,
 ///         coinciding with adjustments in the contract import methodology.
-contract BancorFormula is IBancorFormula, Utils {
+contract BancorFormula is IBancorFormula, Utils, ERC165 {
     using SafeMath for uint256;
 
 
@@ -537,5 +541,17 @@ contract BancorFormula is IBancorFormula, Utils {
         if ((x & 0x400000000000000000000000000000000) != 0) res = res * 0x0002bf84208204f5977f9a8cf01fdc307 / 0x0000003c6ab775dd0b95b4cbee7e65d11; // multiply by e^2^(+3)
 
         return res;
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IBancorFormula = type(IBancorFormula).interfaceId;
+        return interfaceId == interfaceId_IBancorFormula
+            || super.supportsInterface(interfaceId);
     }
 }

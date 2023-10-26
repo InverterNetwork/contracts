@@ -28,4 +28,14 @@ abstract contract ElasticReceiptTokenUpgradeable is ElasticReceiptTokenBase {
         // during burn, bits are transferred to the zero address.
         _accountBits[address(0)] = TOTAL_BITS;
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ElasticReceiptTokenBase)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
 }

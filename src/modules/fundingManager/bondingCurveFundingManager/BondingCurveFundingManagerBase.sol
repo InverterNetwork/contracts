@@ -251,4 +251,20 @@ abstract contract BondingCurveFundingManagerBase is
 
         emit TransferOrchestratorToken(to, amount);
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IBondingCurveFundingManagerBase =
+            type(IBondingCurveFundingManagerBase).interfaceId;
+        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
+
+        return interfaceId == interfaceId_IBondingCurveFundingManagerBase
+            || interfaceId == interfaceId_IFundingManager
+            || super.supportsInterface(interfaceId);
+    }
 }

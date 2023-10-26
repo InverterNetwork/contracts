@@ -224,4 +224,17 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
     {
         return __Module_orchestrator.paymentProcessor() == who;
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IERC20PaymentClient =
+            type(IERC20PaymentClient).interfaceId;
+        return interfaceId == interfaceId_IERC20PaymentClient
+            || super.supportsInterface(interfaceId);
+    }
 }

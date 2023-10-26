@@ -28,7 +28,6 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 contract RebasingFundingManager is
     IFundingManager,
-    IRebasingERC20,
     ContextUpgradeable,
     ElasticReceiptTokenUpgradeable,
     Module
@@ -160,5 +159,17 @@ contract RebasingFundingManager is
         token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ElasticReceiptTokenUpgradeable, Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
+        return interfaceId == interfaceId_IFundingManager
+            || super.supportsInterface(interfaceId);
     }
 }

@@ -332,4 +332,17 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
         emit MotionExecuted(motionId);
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_ISingleVoteGovernor =
+            type(ISingleVoteGovernor).interfaceId;
+        return interfaceId == interfaceId_ISingleVoteGovernor
+            || super.supportsInterface(interfaceId);
+    }
 }

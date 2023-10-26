@@ -195,4 +195,19 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     {
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
     }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(BondingCurveFundingManagerBase)
+        returns (bool)
+    {
+        bytes4 interfaceId_IRedeemingBondingCurveFundingManagerBase =
+            type(IRedeemingBondingCurveFundingManagerBase).interfaceId;
+
+        return interfaceId
+            == interfaceId_IRedeemingBondingCurveFundingManagerBase
+            || super.supportsInterface(interfaceId);
+    }
 }
