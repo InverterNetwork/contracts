@@ -163,10 +163,6 @@ abstract contract ModuleManager is
         return uint8(_modules.length);
     }
 
-    function getInterfaceId() external pure returns (bytes4) {
-        return type(IModuleManager).interfaceId;
-    }
-
     //--------------------------------------------------------------------------
     // onlyOrchestratorOwner Functions
 
