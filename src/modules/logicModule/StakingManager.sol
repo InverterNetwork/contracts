@@ -51,15 +51,15 @@ contract StakingManager is
 
     uint public rewardsEnd;
 
-    uint private rewardValue;
+    uint internal rewardValue;
 
-    uint private lastUpdate;
+    uint internal lastUpdate;
 
-    mapping(address => uint) private _balances;
+    mapping(address => uint) internal _balances;
 
-    mapping(address => uint) private userRewardValue;
+    mapping(address => uint) internal userRewardValue;
 
-    mapping(address => uint) private rewards;
+    mapping(address => uint) internal rewards;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -95,8 +95,8 @@ contract StakingManager is
         address sender = _msgSender();
         _update(sender);
 
-        //If the user has already staked
-        if (_balances[sender] != 0) {
+        //If the user has already earned something
+        if (rewards[sender] != 0) {
             _distributeRewards(sender);
         }
 
@@ -160,7 +160,7 @@ contract StakingManager is
     // Private Functions
 
     /// @dev This has to trigger on every major change of the state of the contract
-    function _update(address triggerAddress) private {
+    function _update(address triggerAddress) internal {
         //Set a new reward value
         rewardValue = _calculateRewardValue();
 
@@ -179,7 +179,7 @@ contract StakingManager is
     /// A "single" reward value or with the lack of a better word "reward period" is the rewardRate (so the rewards per second for the whole contract)
     /// multiplied by the time period it was active and dividing that with the total supply
     /// This "single" value is essentially what a single token would have earned in that time period
-    function _calculateRewardValue() private view returns (uint) {
+    function _calculateRewardValue() internal view returns (uint) {
         //In case the totalSupply is 0 the rewardValue doesnt change
         if (totalSupply == 0) {
             return rewardValue;
@@ -195,7 +195,7 @@ contract StakingManager is
     /// @dev The function returns either the current timestamp or the last timestamp where rewards will be distributed, based on which one is earlier
     /// Is necessary to calculate the exact rewardValue at the end of the reward lifespan
     /// If not included rewards would be distributed forever
-    function _getRewardDistributionTimestamp() private view returns (uint) {
+    function _getRewardDistributionTimestamp() internal view returns (uint) {
         return rewardsEnd <= block.timestamp ? rewardsEnd : block.timestamp;
     }
 
@@ -203,7 +203,7 @@ contract StakingManager is
     /// Uses the difference between the current Reward Value and the reward value when the user staked their tokens
     /// in combination with their current balance to calculate their earnings
     function _earned(address user, uint providedRewardValue)
-        private
+        internal
         view
         returns (uint)
     {
@@ -214,7 +214,7 @@ contract StakingManager is
     }
 
     ///@dev direct distribution of earned rewards via the payment processor
-    function _distributeRewards(address recipient) private {
+    function _distributeRewards(address recipient) internal {
         //Check what recipient has earned
         uint amount = _earned(recipient, rewardValue);
         //Set rewards to zero

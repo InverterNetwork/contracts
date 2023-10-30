@@ -5,6 +5,7 @@ interface IStakingManager {
     // Errors
 
     //@todo look into how paymentprocessor takes funds. Do Staking Tokens and Reward tokens have to be different
+    //Payment Processor my route funds through StakingManger, which could mess up stuff
 
     /// @notice Given Duration is invalid.
     error Module__StakingManager__InvalidDuration();
