@@ -437,25 +437,12 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test _setDecimals function
-        ├── When decimal is set to zero
-        |   └── it should revert
-        └── when decimal is bigger than zero
+       
+        └── when setting decimals
             └── it should succeed
     */
-    function testSetDecimals_FailsIfZero() public {
-        uint8 _newDecimals = 0;
-        vm.expectRevert(
-            IBondingCurveFundingManagerBase
-                .BondingCurveFundingManager__InvalidDecimals
-                .selector
-        );
-        // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
-    }
 
     function testSetDecimals(uint8 _newDecimals) public {
-        vm.assume(_newDecimals > 0);
-        // No authentication since it's an internal function exposed by the mock contract
         bondingCurveFundingManager.call_setDecimals(_newDecimals);
 
         assertEq(bondingCurveFundingManager.decimals(), _newDecimals);

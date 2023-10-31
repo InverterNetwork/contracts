@@ -1060,6 +1060,31 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Internal Functions
 
+    /* Test _setDecimals function
+        ├── When decimal is set to lower than seven
+        |   └── it should revert
+        └── when decimal is bigger than zero
+            └── it should succeed
+    */
+    function testSetDecimals_FailsIfLowerThanSeven(uint8 _newDecimals) public {
+        vm.assume(_newDecimals < 7);
+        vm.expectRevert(
+            IBancorVirtualSupplyBondingCurveFundingManager
+                .BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal
+                .selector
+        );
+        // No authentication since it's an internal function exposed by the mock contract
+        bondingCurveFundingManager.call_setDecimals(_newDecimals);
+    }
+
+    function testSetDecimals(uint8 _newDecimals) public {
+        vm.assume(_newDecimals > 7);
+        // No authentication since it's an internal function exposed by the mock contract
+        bondingCurveFundingManager.call_setDecimals(_newDecimals);
+
+        assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
+    }
+
     /* Test _convertAmountToRequiredDecimal function
         ├── when the token decimals and the required decimals are the same
         │       └── it should return the amount without change
