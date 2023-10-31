@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2eTest} from "test/e2e/E2eTest.sol";
+import {E2ETest} from "test/e2e/E2ETest.sol";
 
 import {IModule} from "src/modules/base/IModule.sol";
 import {SimplePaymentProcessor} from
@@ -12,7 +12,7 @@ import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 /**
  * E2e test demonstrating how to register a new module at the ModuleFactory.
  */
-contract RegisterModuleAtFactory is E2eTest {
+contract RegisterModuleAtFactory is E2ETest {
     function test_e2e_RegisterModuleAtModuleFactory() public {
         // First deploy a new Module implementation.
         // We will use the SimplePaymentProcessor module as example.

@@ -30,7 +30,7 @@ import {ModuleImplementationV2Mock} from
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract ModuleUpdateTest is Test {
+contract Beacon_ModuleUpdateTest is Test {
     // SuT
     ModuleFactory factory;
 

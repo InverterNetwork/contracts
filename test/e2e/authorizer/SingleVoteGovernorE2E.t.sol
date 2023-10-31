@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2eTest} from "test/e2e/E2eTest.sol";
+import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
 //Internal Dependencies
@@ -37,7 +37,7 @@ import {
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract SingleVoteGovernorE2E is E2eTest {
+contract SingleVoteGovernorE2E is E2ETest {
     // voters
     address voter1 = makeAddr("voter1");
     address voter2 = makeAddr("voter2");

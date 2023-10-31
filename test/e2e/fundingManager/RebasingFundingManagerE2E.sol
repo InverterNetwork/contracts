@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2eTest} from "test/e2e/E2eTest.sol";
+import {E2ETest} from "test/e2e/E2ETest.sol";
 
 import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
 import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
@@ -21,7 +21,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * receipt tokens to the total amount of funds left in the fundingmanager.
  */
 
-contract FundManagement is E2eTest {
+contract RebasingFundingManagerE2E is E2ETest {
     address alice = address(0xA11CE);
     address bob = address(0x606);
 
