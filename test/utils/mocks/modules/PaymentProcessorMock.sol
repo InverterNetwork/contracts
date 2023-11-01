@@ -9,10 +9,14 @@ import {IERC20PaymentClient} from
     "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
 contract PaymentProcessorMock is IPaymentProcessor {
+    uint public processPaymentsTriggered;
+
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 
-    function processPayments(IERC20PaymentClient client) external {}
+    function processPayments(IERC20PaymentClient) external {
+        processPaymentsTriggered += 1;
+    }
 
     function cancelRunningPayments(IERC20PaymentClient client) external {}
 

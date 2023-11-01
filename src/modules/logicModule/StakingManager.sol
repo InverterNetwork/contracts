@@ -97,11 +97,16 @@ contract StakingManager is
 
         //If the user has already earned something
         if (rewards[sender] != 0) {
+            //distribute rewards for previous reward period
             _distributeRewards(sender);
         }
 
+        //Increase balance accordingly
         _balances[sender] += amount;
+        //Total supply too
         totalSupply += amount;
+
+        //transfer funds to stakingManager
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
 
         emit Staked(sender, amount);
@@ -115,10 +120,13 @@ contract StakingManager is
 
         //Reduce balances accordingly
         _balances[sender] -= amount;
-        //Total value too
+        //Total supply too
         totalSupply -= amount;
+
+        //Transfer funds back to sender
         IERC20(stakingToken).safeTransfer(sender, amount);
 
+        //distribute rewards accordingly
         _distributeRewards(sender);
 
         emit Withdrawn(sender, amount);
