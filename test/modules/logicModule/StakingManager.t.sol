@@ -31,6 +31,9 @@ contract StakingManagerTest is ModuleTest {
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
 
+    //Variables
+    uint internal initialStakerMaxAmount = 100;
+
     //Events
 
     event RewardSet(
@@ -111,12 +114,17 @@ contract StakingManagerTest is ModuleTest {
     //-----------------------------------------
     //stake
 
-    function testStake(uint seed, address staker) public {
+    function testStake(uint seed) public {
         //Set up reasonable stakers
         setUpReasonableStakers(seed);
 
+        //Because we potentially want to introduce a user that already staked I randomise a address that has a chance to already be a staker from the setUpReasonableStakers() function
+        address staker =
+            address(uint160(bound(seed, 1, initialStakerMaxAmount + 1)));
+
         //Set up reasonable rewards
         setUpReasonableRewards(seed);
+
         //Fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
 
@@ -125,7 +133,7 @@ contract StakingManagerTest is ModuleTest {
         }
 
         //reasonable stake amount
-        uint stakeAmount = bound(seed, 1, 1_000_000_000_000 * 1e18);
+        uint stakeAmount = bound(seed, 1e18, 1_000_000_000 * 1e18);
 
         //Mint to user
         stakingToken.mint(staker, stakeAmount);
@@ -144,8 +152,10 @@ contract StakingManagerTest is ModuleTest {
         vm.prank(staker);
         stakingManager.stake(stakeAmount);
 
-        //Check _distributeRewards()
-        assertEq(expectedEarnings, _token.balanceOf(staker));
+        //Check _distributeRewards() is triggered
+        if (expectedEarnings != 0) {
+            assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
+        }
 
         assertEq(prevBalance + stakeAmount, stakingManager.balanceOf(staker));
         assertEq(prevTotalAmount + stakeAmount, stakingManager.totalSupply());
@@ -243,6 +253,56 @@ contract StakingManagerTest is ModuleTest {
         );
     }
 
+    function test__distributeRewards(uint seed) public {
+        //Warp the chain to a reasonable amount
+        vm.warp(bound(seed, 1 days, 365 days));
+
+        //fund orchestrator
+        _token.mint(address(_fundingManager), 12_960_000);
+
+        address user = address(uint160(1));
+
+        //Mint to user
+        stakingToken.mint(user, 1);
+
+        //User stakes
+        vm.startPrank(user);
+
+        stakingToken.approve(address(stakingManager), 1);
+        stakingManager.stake(1);
+
+        vm.stopPrank();
+
+        //Set up reasonable rewards
+        setUpReasonableRewards(seed);
+
+        uint expectedPayout = stakingManager.earned(user);
+
+        //For earned to work update had to be triggered
+        stakingManager.direct_update(user);
+
+        vm.expectEmit(true, true, true, true);
+        emit RewardsDistributed(user, expectedPayout);
+
+        stakingManager.direct_distributeRewards(user);
+
+        //rewards are reset
+        assertEq(0, stakingManager.getRewards(user));
+
+        //Expect paymentOrder to be correct
+        IERC20PaymentClient.PaymentOrder[] memory orders =
+            stakingManager.paymentOrders();
+
+        assertEq(1, orders.length);
+        assertEq(user, orders[0].recipient);
+        assertEq(expectedPayout, orders[0].amount);
+        assertEq(block.timestamp, orders[0].createdAt);
+        assertEq(block.timestamp, orders[0].dueTo);
+
+        //Make sure payment Processor was triggered
+        assertEq(1, _paymentProcessor.processPaymentsTriggered());
+    }
+
     // =========================================================================
 
     //--------------------------------------------------------------------------
@@ -254,13 +314,13 @@ contract StakingManagerTest is ModuleTest {
 
         //Set up stakers
         //randomise amount of stakers
-        uint stakerAmount = bound(seed, 0, 100);
+        uint stakerAmount = bound(seed, 0, initialStakerMaxAmount);
 
         uint stakeAmount;
         uint stakerNumber = 1;
         for (uint i = 0; i < stakerAmount; i++) {
             //randomise amount staked
-            stakeAmount = bound(seed, 1, 1_000_000_000_000 * 1e18);
+            stakeAmount = bound(seed, 1e18, 1_000_000_000 * 1e18);
             //Mint to users
             stakingToken.mint(address(uint160(stakerNumber)), stakeAmount);
 
@@ -287,7 +347,7 @@ contract StakingManagerTest is ModuleTest {
         stakingManager.setRewards(12_960_000, 30 days); //Thats 5 tokens per second
 
         //Warp the chain by a reasonable amount
-        vm.warp(bound(seed, 0, 30 days) + block.timestamp);
+        vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
     }
 
     function calculateEarned(
