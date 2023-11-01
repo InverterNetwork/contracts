@@ -166,11 +166,90 @@ contract StakingManagerTest is ModuleTest {
     }
 
     function testStakeModifierInPosition() public {
-        /* vm.expectRevert(
-            IStakingManager.Module__StakingManager__InvalidDuration.selector
-        ); */
+        //validAmount
+        vm.expectRevert(
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__InvalidAmount
+                .selector
+        );
 
-        //Module__ERC20PaymentClient__InvalidAmount
+        stakingManager.stake(0);
+
+        //@todo How to test nonReentrant?
+    }
+
+    //-----------------------------------------
+    //withdraw
+
+    function testWithdraw(uint seed, uint withdrawSeed, address staker)
+        public
+    {
+        if (staker == address(0)) {
+            staker = address(uint160(1));
+        }
+
+        //Set up reasonable rewards
+        setUpReasonableRewards(seed);
+
+        //Fund orchestrator
+        _token.mint(address(_fundingManager), 12_960_000);
+
+        //reasonable stake amount
+        uint stakeAmount = bound(seed, 1e18, 1_000_000_000 * 1e18);
+
+        //reasonable withdraw amount
+        uint withdrawAmount = bound(withdrawSeed, 1e18, stakeAmount);
+
+        //Mint to user
+        stakingToken.mint(staker, stakeAmount);
+
+        //Approve usage
+        vm.prank(staker);
+        stakingToken.approve(address(stakingManager), stakeAmount);
+
+        //Stake
+        vm.prank(staker);
+        stakingManager.stake(stakeAmount);
+
+        //Warp the chain by a reasonable amount
+        vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
+
+        uint prevTotalAmount = stakingManager.totalSupply();
+        uint prevBalance = stakingManager.balanceOf(staker);
+        uint expectedEarnings = stakingManager.earned(staker);
+
+        vm.expectEmit(true, true, true, true);
+        emit Withdrawn(staker, withdrawAmount);
+
+        //Withdraw
+        vm.prank(staker);
+        stakingManager.withdraw(withdrawAmount);
+
+        //Check _distributeRewards() is triggered
+        if (expectedEarnings != 0) {
+            assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
+        }
+
+        assertEq(prevBalance - withdrawAmount, stakingManager.balanceOf(staker));
+        assertEq(prevTotalAmount - withdrawAmount, stakingManager.totalSupply());
+        assertEq(
+            stakingToken.balanceOf(address(stakingManager)),
+            stakingManager.totalSupply()
+        );
+    }
+
+    function testWithdrawModifierInPosition() public {
+        //validAmount
+        vm.expectRevert(
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__InvalidAmount
+                .selector
+        );
+
+        stakingManager.withdraw(0);
+
+        //@todo How to test nonReentrant?
+        //internal set true
     }
 
     //--------------------------------------------------------------------------
@@ -181,6 +260,8 @@ contract StakingManagerTest is ModuleTest {
         setUpReasonableStakers(seed);
         //Set up reasonable rewards
         setUpReasonableRewards(seed);
+        //Warp the chain by a reasonable amount
+        vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
         uint expectedRewards;
         uint expectedUserRewardValue;
@@ -276,6 +357,9 @@ contract StakingManagerTest is ModuleTest {
         //Set up reasonable rewards
         setUpReasonableRewards(seed);
 
+        //Warp the chain by a reasonable amount
+        vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
+
         uint expectedPayout = stakingManager.earned(user);
 
         //For earned to work update had to be triggered
@@ -320,7 +404,7 @@ contract StakingManagerTest is ModuleTest {
         uint stakerNumber = 1;
         for (uint i = 0; i < stakerAmount; i++) {
             //randomise amount staked
-            stakeAmount = bound(seed, 1e18, 1_000_000_000 * 1e18);
+            stakeAmount = bound(seed, 1e18, 1_000_000_000 * 1e18); //@todo 1e18 should be a variable so it can be changed properly
             //Mint to users
             stakingToken.mint(address(uint160(stakerNumber)), stakeAmount);
 
@@ -345,9 +429,6 @@ contract StakingManagerTest is ModuleTest {
     function setUpReasonableRewards(uint seed) internal {
         //Set up reasonable rewards
         stakingManager.setRewards(12_960_000, 30 days); //Thats 5 tokens per second
-
-        //Warp the chain by a reasonable amount
-        vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
     }
 
     function calculateEarned(

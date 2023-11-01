@@ -49,6 +49,8 @@ interface IStakingManager {
     //I could return the "reward Value" but that also isnt the correct thing
     //Maybe over a timeperiod, but that wouldnt be supported in the logic, when we dont save past "rewardValues"
 
+    //Maybe take integral??
+
     /// @notice Returns when the rewards will not be distributed anymore
     function rewardsEnd() external view returns (uint);
 
