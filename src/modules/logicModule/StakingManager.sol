@@ -114,6 +114,7 @@ contract StakingManager is
 
     /// @inheritdoc IStakingManager
     function withdraw(uint amount) external nonReentrant validAmount(amount) {
+        //@note should this be validWithdrawAmount? Function will break anyway if _balance is
         address sender = _msgSender();
         //Update rewardValue, updatedTimestamp and earned values
         _update(sender);
@@ -126,15 +127,18 @@ contract StakingManager is
         //Transfer funds back to sender
         IERC20(stakingToken).safeTransfer(sender, amount);
 
-        //distribute rewards accordingly
-        _distributeRewards(sender);
+        //If the user has earned something
+        if (rewards[sender] != 0) {
+            //distribute rewards
+            _distributeRewards(sender);
+        }
 
         emit Withdrawn(sender, amount);
     }
 
     /// @inheritdoc IStakingManager
     function setRewards(uint amount, uint duration)
-        external
+        external //@todo implement to internal + exposing
         onlyOrchestratorOwnerOrManager //@note is this okay? // Should i add another role?
         validAmount(amount)
         validDuration(duration)
