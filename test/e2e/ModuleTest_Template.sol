@@ -1,0 +1,69 @@
+/* // SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.0;
+
+import "forge-std/console.sol";
+
+// SuT
+import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+
+//Internal Dependencies
+import {
+    E2ETest, IOrchestratorFactory, IOrchestrator
+} from "test/e2e/E2ETest.sol";
+
+// Import modules that are used in this E2E test
+
+
+contract RoleAuthorizerE2E is E2ETest {
+
+    // Module Configurations for the current E2E test. Should be filled during setUp() call.
+    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+
+    // E2E Test Variables
+
+
+    function setUp() public override {
+        // Setup common E2E framework
+        super.setUp();
+
+        // Set Up individual Modules the E2E test is going to use and store their configurations:
+        // NOTE: It's important to store the module configurations in order, since _create_E2E_Orchestrator() will copy from the array.
+        // The order should be:
+        //      moduleConfigurations[0]  => FundingManager
+        //      moduleConfigurations[1]  => Authorizer
+        //      moduleConfigurations[2]  => PaymentProcessor
+        //      moduleConfigurations[3:] => Additional Logic Modules
+
+        // FundingManager
+        
+        // Authorizer
+
+        // PaymentProcessor
+
+        // Additional Logic Modules
+      
+    }
+
+    function test_e2e_RoleAuthorizer() public {
+
+        //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
+
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: token
+        });
+
+        IOrchestrator orchestrator =
+            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
+
+
+        //--------------------------------------------------------------------------------
+        // Module E2E Test
+        //--------------------------------------------------------------------------------
+
+    }
+}
+ */

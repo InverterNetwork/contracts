@@ -100,8 +100,9 @@ contract RecurringPaymentManagerE2E is E2ETest {
         paymentAmount = bound(paymentAmount, 1, 1e18);
         RecurringPaymentManager recurringPaymentManager;
 
-        // -----------INIT
-        // address(this) creates a new orchestrator.
+        //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
             owner: address(this),
@@ -111,7 +112,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         IOrchestrator orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-                RebasingFundingManager fundingManager =
+        RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
 
         // ------------------ FROM ModuleTest.sol

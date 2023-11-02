@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-
 //Internal Dependencies
 import {
     E2ETest, IOrchestratorFactory, IOrchestrator
 } from "test/e2e/E2ETest.sol";
-
 
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
@@ -19,21 +17,17 @@ import {
 import {StreamingPaymentProcessor} from
     "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
-import {
-    IStreamingPaymentProcessor
-} from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
-
+import {IStreamingPaymentProcessor} from
+    "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
 contract StreamingPaymentProcessorE2E is E2ETest {
-
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
-
 
     //---------------------------------------------------------------------------------------------------
     // Test variables
 
-    // Users 
+    // Users
     address alice = makeAddr("Alice");
     address bob = makeAddr("Bob");
     address charlie = makeAddr("Charlie");
@@ -103,8 +97,9 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     }
 
     function init() private {
-        // -----------INIT
-        // address(this) creates a new orchestrator.
+        //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
             owner: address(this),

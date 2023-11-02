@@ -92,8 +92,9 @@ contract SingleVoteGovernorE2E is E2ETest {
     }
 
     function test_e2e_SingleVoteGovernor() public {
-        // -----------INIT
-        // address(this) creates a new orchestrator.
+        //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
             owner: address(this),

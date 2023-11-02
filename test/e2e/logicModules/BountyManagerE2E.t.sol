@@ -11,9 +11,8 @@ import {
     BountyManager,
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
-import {
-    RebasingFundingManager
-} from "src/modules/fundingManager/RebasingFundingManager.sol";
+import {RebasingFundingManager} from
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 
 contract BountyManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -85,8 +84,9 @@ contract BountyManagerE2E is E2ETest {
     }
 
     function test_e2e_BountyManagerLifecycle() public {
-        // -----------INIT
-        // address(this) creates a new orchestrator.
+        //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
             owner: address(this),
@@ -96,7 +96,7 @@ contract BountyManagerE2E is E2ETest {
         IOrchestrator orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-                RebasingFundingManager fundingManager =
+        RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
 
         BountyManager bountyManager;
