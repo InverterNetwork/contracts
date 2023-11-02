@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2ETest} from "test/e2e/E2ETest.sol";
+//Internal Dependencies
+import {
+    E2ETest, IOrchestratorFactory, IOrchestrator
+} from "test/e2e/E2ETest.sol";
 
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
-import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
-
+//SuT
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 
-// Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 /**
  * E2e test demonstrating a orchestrator's fund management.
  *

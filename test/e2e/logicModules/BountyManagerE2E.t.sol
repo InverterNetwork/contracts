@@ -1,35 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2ETest} from "test/e2e/E2ETest.sol";
-import "forge-std/console.sol";
-
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+import {
+    E2ETest, IOrchestratorFactory, IOrchestrator
+} from "test/e2e/E2ETest.sol";
 
-// External Libraries
-import {Clones} from "@oz/proxy/Clones.sol";
-
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
 // SuT
 import {
     BountyManager,
-    IBountyManager,
-    IERC20PaymentClient
+    IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
-
-import {StreamingPaymentProcessor} from
-    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
-
 import {
-    IStreamingPaymentProcessor,
-    IERC20PaymentClient
-} from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
-
-// Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+    RebasingFundingManager
+} from "src/modules/fundingManager/RebasingFundingManager.sol";
 
 contract BountyManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -112,7 +96,7 @@ contract BountyManagerE2E is E2ETest {
         IOrchestrator orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        RebasingFundingManager fundingManager =
+                RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
 
         BountyManager bountyManager;

@@ -1,39 +1,26 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2ETest} from "test/e2e/E2ETest.sol";
-import "forge-std/console.sol";
-
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+import {
+    E2ETest,
+    IOrchestratorFactory,
+    IOrchestrator,
+    ERC20Mock
+} from "test/e2e/E2ETest.sol";
+
+// SuT
 import {TokenGatedRoleAuthorizer} from
     "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
 
-// External Libraries
-import {Clones} from "@oz/proxy/Clones.sol";
-
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
-// SuT
+// Modules that are used in this E2E test
 import {
     BountyManager,
-    IBountyManager,
-    IERC20PaymentClient
+    IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
-
-import {StreamingPaymentProcessor} from
-    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
-
 import {
-    IStreamingPaymentProcessor,
-    IERC20PaymentClient
-} from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
-
-// Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-
-//Todo DONE
+    RebasingFundingManager
+} from "src/modules/fundingManager/RebasingFundingManager.sol";
 
 contract TokenGatedRoleAuthorizerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -111,11 +98,11 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         IOrchestrator orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
-
         TokenGatedRoleAuthorizer authorizer =
             TokenGatedRoleAuthorizer(address(orchestrator.authorizer()));
+
+        RebasingFundingManager fundingManager =
+            RebasingFundingManager(address(orchestrator.fundingManager()));
 
         // Find BountyManager
         BountyManager bountyManager;

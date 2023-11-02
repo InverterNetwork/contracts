@@ -1,25 +1,17 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
-
-import {E2ETest} from "test/e2e/E2ETest.sol";
-
-// External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-
-// Internal Dependencies
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
+//Internal Dependencies
+import {
+    E2ETest,
+    IOrchestratorFactory,
+    IOrchestrator,
+    ModuleFactory
+} from "test/e2e/E2ETest.sol";
+import {IModuleFactory, IModule} from "src/factories/IModuleFactory.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
-
-// Internal Interfaces
-import {
-    IModuleFactory,
-    IModule,
-    IOrchestrator
-} from "src/factories/IModuleFactory.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -29,12 +21,7 @@ import {ModuleImplementationV1Mock} from
 import {ModuleImplementationV2Mock} from
     "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
 
-// Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
-
 contract Beacon_ModuleUpdateTest is E2ETest {
-    // TODO: review + refactor
-
     // Mocks
     ModuleMock module;
     BeaconMock beacon;

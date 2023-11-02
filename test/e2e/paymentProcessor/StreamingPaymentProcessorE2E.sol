@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2ETest} from "test/e2e/E2ETest.sol";
-import "forge-std/console.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+import {
+    E2ETest, IOrchestratorFactory, IOrchestrator
+} from "test/e2e/E2ETest.sol";
 
-// External Libraries
-import {Clones} from "@oz/proxy/Clones.sol";
 
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
@@ -23,17 +20,20 @@ import {StreamingPaymentProcessor} from
     "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 
 import {
-    IStreamingPaymentProcessor,
-    IERC20PaymentClient
+    IStreamingPaymentProcessor
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
-// Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract StreamingPaymentProcessorE2E is E2ETest {
-    // TODO: in-depth refactoring
 
-    // Let's create a list of PaymentReceivers
+    // Module Configurations for the current E2E test. Should be filled during setUp() call.
+    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+
+
+    //---------------------------------------------------------------------------------------------------
+    // Test variables
+
+    // Users 
     address alice = makeAddr("Alice");
     address bob = makeAddr("Bob");
     address charlie = makeAddr("Charlie");
@@ -43,18 +43,11 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     uint epochLength = 1 weeks; // 1 week;
     uint epochsAmount = 10;
 
+    // Modules, for reference between functions
     IOrchestrator orchestrator;
     RebasingFundingManager fundingManager;
     RecurringPaymentManager recurringPaymentManager;
     StreamingPaymentProcessor streamingPaymentProcessor;
-
-    uint paymentReceiver1InitialBalance;
-    uint paymentReceiver2InitialBalance;
-
-    function fetchReferences() private {}
-
-    // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
     function setUp() public override {
         // Setup common E2E framework

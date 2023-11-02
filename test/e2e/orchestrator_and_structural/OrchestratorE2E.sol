@@ -1,55 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
-
-import {E2ETest} from "test/e2e/E2ETest.sol";
-
-//Modules
+//Internal Dependencies
 import {
-    IFundingManager,
-    RebasingFundingManager
-} from "src/modules/fundingManager/RebasingFundingManager.sol";
+    E2ETest, IOrchestratorFactory, IOrchestrator, ModuleFactory
+} from "test/e2e/E2ETest.sol";
 
-import {
-    IAuthorizer,
-    RoleAuthorizer
-} from "src/modules/authorizer/RoleAuthorizer.sol";
 
-import {
-    IPaymentProcessor,
-    SimplePaymentProcessor
-} from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
-
-import {
-    IMetadataManager,
-    MetadataManager
-} from "src/modules/utils/MetadataManager.sol";
-
-//Beacon
-import {IBeacon, Beacon} from "src/factories/beacon/Beacon.sol";
-
-//IModule
-import {IModule} from "src/modules/base/IModule.sol";
-
-//Module Factory
-import {IModuleFactory, ModuleFactory} from "src/factories/ModuleFactory.sol";
-
-//Orchestrator Factory
-import {
-    IOrchestratorFactory,
-    OrchestratorFactory
-} from "src/factories/OrchestratorFactory.sol";
-
-//Token import
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
-//Orchestrator
+//SuT
 import {IOrchestrator, Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
-//Base Modules
+// Modules that are used in this E2E test
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
@@ -58,6 +19,13 @@ import {
     IBountyManager,
     BountyManager
 } from "src/modules/logicModule/BountyManager.sol";
+import {
+    IMetadataManager,
+    MetadataManager
+} from "src/modules/utils/MetadataManager.sol";
+
+//Beacon
+import {Beacon} from "src/factories/beacon/Beacon.sol";
 
 /**
  * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory}.

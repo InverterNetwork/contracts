@@ -1,29 +1,17 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2ETest} from "test/e2e/E2ETest.sol";
-
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
-import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
-
+//Internal Dependencies
 import {
-    BancorFormula,
+    E2ETest, IOrchestratorFactory, IOrchestrator
+} from "test/e2e/E2ETest.sol";
+
+//SuT
+import {
     BancorVirtualSupplyBondingCurveFundingManager,
     IBancorVirtualSupplyBondingCurveFundingManager
 } from
     "test/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.t.sol";
-
-// Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-/**
- * E2e test demonstrating a orchestrator's fund management.
- *
- * Funding of a orchestrator is managed via a fundingmanager.
- *
- * Upon deposit of funds, users receive receipt token.
- * The withdrawal amount of funds is _always_ in relation of the amount of
- * receipt tokens to the total amount of funds left in the fundingmanager.
- */
 
 contract BondingCurveFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -55,7 +43,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 decimals: uint8(18)
             });
 
-        BancorFormula formula = new BancorFormula();
+        //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 
         IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
             memory bc_properties =

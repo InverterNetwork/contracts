@@ -4,16 +4,13 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Factories
-import {ModuleFactory, IModuleFactory} from "src/factories/ModuleFactory.sol";
+import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 import {
-    OrchestratorFactory,
     IOrchestratorFactory
-} from "src/factories/OrchestratorFactory.sol";
+} from "src/factories/IOrchestratorFactory.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
-import {IBancorVirtualSupplyBondingCurveFundingManager} from
-    "src/modules/fundingManager/bondingCurveFundingManager/IBancorVirtualSupplyBondingCurveFundingManager.sol";
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 import {BancorVirtualSupplyBondingCurveFundingManager} from
@@ -44,7 +41,7 @@ contract E2EModuleRegistry is Test {
     bool constant HAS_NO_DEPENDENCIES = false;
     string[] EMPTY_DEPENDENCY_LIST = new string[](0);
 
-    // TODO: Properly format and comment
+
 
     //--------------------------------------------------------------------------
     // General Module Information
@@ -66,21 +63,37 @@ contract E2EModuleRegistry is Test {
     //          abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     //      );
     // */
+    // Followed by the  setUpModule() function.
     //--------------------------------------------------------------------------
 
-    // FundingManager
+    //--------------------------------------------------------------------------
+    // Funding Managers
+    //--------------------------------------------------------------------------
+
 
     // RebasingFundingManager
 
     RebasingFundingManager rebasingFundingManagerImpl;
+
     Beacon rebasingFundingManagerBeacon;
+
     address rebasingFundingManagerBeaconOwner = DEFAULT_BEACON_OWNER;
+
     IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/funding-manager",
         "RebasingFundingManager"
     );
+
+/*
+    IOrchestratorFactory.ModuleConfig rebasingFundingManagerFactoryConfig =
+        IOrchestratorFactory.ModuleConfig(
+            rebasingFundingManagerMetadata,
+            abi.encode(address(token)),
+            abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        )
+*/
 
     function setUpRebasingFundingManager() internal {
         // Deploy module implementations.
@@ -105,11 +118,17 @@ contract E2EModuleRegistry is Test {
 
     // BancorVirtualSupplyBondingCurveFundingManager
 
+    BancorFormula formula = new BancorFormula();
+
     BancorVirtualSupplyBondingCurveFundingManager
+
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
+
     Beacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
+
     address bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner =
         DEFAULT_BEACON_OWNER;
+
     IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule.Metadata(
         1,
@@ -117,6 +136,39 @@ contract E2EModuleRegistry is Test {
         "https://github.com/inverter/bonding-curve-funding-manager",
         "BancorVirtualSupplyBondingCurveFundingManager"
     );
+
+/*
+        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
+            issuanceToken = IBancorVirtualSupplyBondingCurveFundingManager
+                .IssuanceToken({
+                name: bytes32(abi.encodePacked("Bonding Curve Token")),
+                symbol: bytes32(abi.encodePacked("BCT")),
+                decimals: uint8(18)
+            });
+
+        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
+            memory bc_properties =
+            IBancorVirtualSupplyBondingCurveFundingManager
+                .BondingCurveProperties({
+                formula: address(formula),
+                reserveRatioForBuying: 200_000,
+                reserveRatioForSelling: 200_000,
+                buyFee: 0,
+                sellFee: 0,
+                buyIsOpen: true,
+                sellIsOpen: true,
+                initialTokenSupply: 100,
+                initialCollateralSupply: 100
+            });
+
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                abi.encode(issuanceToken, bc_properties, token),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+*/
 
     function setUpBancorVirtualSupplyBondingCurveFundingManager() internal {
         // Deploy module implementations.
@@ -141,49 +193,22 @@ contract E2EModuleRegistry is Test {
     }
 
     //--------------------------------------------------------------------------
-    // authorizer
-
-    /*     // AuthorizerMock
-
-    AuthorizerMock authorizerImpl;
-    Beacon authorizerBeacon;
-    address authorizerBeaconOwner = DEFAULT_BEACON_OWNER;
-    IModule.Metadata authorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/authorizer", "Authorizer"
-    );
-    // Note that the IAuthorizer's first authorized address is address(this).
-    IOrchestratorFactory.ModuleConfig authorizerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
-        authorizerMetadata,
-        abi.encode(address(this)),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
-    );
-
-    function setUpAuthorizerMock() internal {
-        // Deploy module implementations.
-        authorizerImpl = new AuthorizerMock();
-
-        // Deploy module beacons.
-        vm.prank(authorizerBeaconOwner);
-        authorizerBeacon = new Beacon();
-
-        // Set beacon's implementations.
-        vm.prank(authorizerBeaconOwner);
-        authorizerBeacon.upgradeTo(address(authorizerImpl));
-
-        // Register modules at moduleFactory.
-        moduleFactory.registerMetadata(
-            authorizerMetadata, IBeacon(authorizerBeacon)
-        );
-    } */
+    // Authorizers
+    //--------------------------------------------------------------------------
 
     // Role Authorizer
+
     RoleAuthorizer roleAuthorizerImpl;
+
     Beacon roleAuthorizerBeacon;
+
     address roleAuthorizerBeaconOwner = DEFAULT_BEACON_OWNER;
+
     IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
     );
+
+/* 
     // Note that RoleAuthorizer owner and manager are the same
     IOrchestratorFactory.ModuleConfig roleAuthorizerFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
@@ -191,7 +216,7 @@ contract E2EModuleRegistry is Test {
         abi.encode(address(this), address(this)),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     );
-
+ */
     function setUpRoleAuthorizer() internal {
         // Deploy module implementations.
         roleAuthorizerImpl = new RoleAuthorizer();
@@ -210,22 +235,30 @@ contract E2EModuleRegistry is Test {
         );
     }
 
+    // Token Gated Role Authorizer
+
     TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
+
     Beacon tokenRoleAuthorizerBeacon;
+
     address tokenRoleAuthorizerBeaconOwner = DEFAULT_BEACON_OWNER;
+
     IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/tokenRoleAuthorizer",
         "TokenGatedRoleAuthorizer"
     );
+
+/* 
     // Note that RoleAuthorizer owner and manager are the same
     IOrchestratorFactory.ModuleConfig tokenRoleAuthorizerFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
         tokenRoleAuthorizerMetadata,
         abi.encode(address(this), address(this)),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
-    );
+    ); 
+*/
 
     function setUpTokenGatedRoleAuthorizer() internal {
         // Deploy module implementations.
@@ -246,26 +279,32 @@ contract E2EModuleRegistry is Test {
     }
 
     //--------------------------------------------------------------------------
-    // paymentProcessor
+    // Payment Processors
+    //--------------------------------------------------------------------------
 
     // SimplePaymentProcessor
 
     SimplePaymentProcessor simplePaymentProcessorImpl;
+
     Beacon simplePaymentProcessorBeacon;
+
     address simplePaymentProcessorBeaconOwner = DEFAULT_BEACON_OWNER;
+
     IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/payment-processor",
         "SimplePaymentProcessor"
     );
-    IOrchestratorFactory.ModuleConfig simplePaymentProcessorFactoryConfig =
+
+/*
+     IOrchestratorFactory.ModuleConfig simplePaymentProcessorFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
         simplePaymentProcessorMetadata,
         bytes(""),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     );
-
+ */
     function setUpSimplePaymentProcessor() internal {
         // Deploy module implementations.
         simplePaymentProcessorImpl = new SimplePaymentProcessor();
@@ -290,21 +329,26 @@ contract E2EModuleRegistry is Test {
     // StreamingPaymentProcessor
 
     StreamingPaymentProcessor streamingPaymentProcessorImpl;
+
     Beacon streamingPaymentProcessorBeacon;
+
     address streamingPaymentProcessorBeaconOwner = DEFAULT_BEACON_OWNER;
+
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/streaming-payment-processor",
         "StreamingPaymentProcessor"
     );
-    IOrchestratorFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
+
+/*
+     IOrchestratorFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
         streamingPaymentProcessorMetadata,
         bytes(""),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     );
-
+*/
     function setUpStreamingPaymentProcessor() internal {
         // Deploy module implementations.
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
@@ -332,20 +376,25 @@ contract E2EModuleRegistry is Test {
     // RecurringPaymentManager
 
     RecurringPaymentManager recurringPaymentManagerImpl;
+
     Beacon recurringPaymentManagerBeacon;
+
     address recurringPaymentManagerBeaconOwner = DEFAULT_BEACON_OWNER;
+
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/recurring-payment-manager",
         "RecurringPaymentManager"
     );
+/*
     IOrchestratorFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
         recurringPaymentManagerMetadata,
         abi.encode(1 weeks),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     );
+ */
 
     function setUpRecurringPaymentManager() internal {
         // Deploy module implementations.
@@ -371,17 +420,22 @@ contract E2EModuleRegistry is Test {
     // BountyManager
 
     BountyManager bountyManagerImpl;
+
     Beacon bountyManagerBeacon;
+
     address bountyManagerBeaconOwner = DEFAULT_BEACON_OWNER;
+
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
-    IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
+/*
+     IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
         bountyManagerMetadata,
         bytes(""),
         abi.encode(true, EMPTY_DEPENDENCY_LIST)
-    );
+    ); 
+*/
 
     function setUpBountyManager() internal {
         // Deploy module implementations.
@@ -407,8 +461,11 @@ contract E2EModuleRegistry is Test {
     // SingleVoteGovernor
 
     SingleVoteGovernor singleVoteGovernorImpl;
+
     Beacon singleVoteGovernorBeacon;
+
     address singleVoteGovernorBeaconOwner = DEFAULT_BEACON_OWNER;
+
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
         1,
         1,
@@ -416,16 +473,17 @@ contract E2EModuleRegistry is Test {
         "SingleVoteGovernor"
     );
 
-    /*    // TODO move to appropriate place
+/*    
     address[] initialVoters =
-        [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")]; */
+        [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
 
-    /*     IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
+    IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
         singleVoteGovernorMetadata,
         abi.encode(initialVoters, 2, 3 days),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
-    ); */
+    ); 
+*/
 
     function setUpSingleVoteGovernor() internal {
         // Deploy module implementations.
