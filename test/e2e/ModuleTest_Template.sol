@@ -1,4 +1,4 @@
-/* // SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
@@ -13,14 +13,11 @@ import {
 
 // Import modules that are used in this E2E test
 
-
 contract RoleAuthorizerE2E is E2ETest {
-
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
     // E2E Test Variables
-
 
     function setUp() public override {
         // Setup common E2E framework
@@ -35,17 +32,15 @@ contract RoleAuthorizerE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        
+
         // Authorizer
 
         // PaymentProcessor
 
         // Additional Logic Modules
-      
     }
 
     function test_e2e_RoleAuthorizer() public {
-
         //--------------------------------------------------------------------------------
         // Orchestrator Initialization
         //--------------------------------------------------------------------------------
@@ -59,11 +54,8 @@ contract RoleAuthorizerE2E is E2ETest {
         IOrchestrator orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-
         //--------------------------------------------------------------------------------
         // Module E2E Test
         //--------------------------------------------------------------------------------
-
     }
 }
- */
