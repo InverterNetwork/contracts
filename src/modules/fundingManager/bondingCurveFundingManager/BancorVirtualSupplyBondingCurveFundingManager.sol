@@ -146,9 +146,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// Transactions exceeding this limit will be reverted.
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buyOrderFor(address _receiver, uint _depositAmount)
+    function buyFor(address _receiver, uint _depositAmount)
         external
-        payable
         override(BondingCurveFundingManagerBase)
         validReceiver(_receiver)
         buyingIsEnabled
@@ -165,9 +164,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// While this is substantially large, it is crucial to be aware of this constraint.
     /// Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buyOrder(uint _depositAmount)
+    function buy(uint _depositAmount)
         external
-        payable
         override(BondingCurveFundingManagerBase)
         buyingIsEnabled
     {
@@ -183,9 +181,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _receiver The address that will receive the redeemed tokens.
     /// @param _depositAmount The amount of issued token to deposited.
-    function sellOrderFor(address _receiver, uint _depositAmount)
+    function sellFor(address _receiver, uint _depositAmount)
         external
-        payable
         override(RedeemingBondingCurveFundingManagerBase)
         validReceiver(_receiver)
         sellingIsEnabled
@@ -201,9 +198,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of issued token depoisited.
-    function sellOrder(uint _depositAmount)
+    function sell(uint _depositAmount)
         external
-        payable
         override(RedeemingBondingCurveFundingManagerBase)
         sellingIsEnabled
     {
@@ -340,6 +336,25 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     //--------------------------------------------------------------------------
     // Internal Functions
+
+    /// @dev Sets the number of decimals for the token.
+    /// This function overrides the internal function set in BondingCurveFundingManagerBase, adding
+    /// an input validation specific for the Bancor Formula utilizing implementation, after which
+    /// it updates the `tokenDecimals` state variable.
+    /// @param _decimals The number of decimals to set for the token.
+    function _setTokenDecimals(uint8 _decimals)
+        internal
+        override(BondingCurveFundingManagerBase)
+    {
+        // An input verification is needed here since the Bancor formula, which determines the
+        // issucance price, utilizes PPM for its computations. This leads to a precision loss
+        // that's too significant to be acceptable for tokens with fewer than 7 decimals.
+        if (_decimals < 7) {
+            revert
+                BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal();
+        }
+        tokenDecimals = _decimals;
+    }
 
     /// @dev Executes a buy order and updates the virtual supply of tokens and collateral.
     /// This function internally calls `_buyOrder` to get the issuing amount and updates the
