@@ -339,7 +339,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     /// @dev Sets the number of decimals for the token.
     /// This function overrides the internal function set in BondingCurveFundingManagerBase, adding
-    /// an input validation specific for the Bancor Formula untilizing implementation, after which
+    /// an input validation specific for the Bancor Formula utilizing implementation, after which
     /// it updates the `tokenDecimals` state variable.
     /// @param _decimals The number of decimals to set for the token.
     function _setTokenDecimals(uint8 _decimals)

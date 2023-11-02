@@ -1063,7 +1063,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     /* Test _setDecimals function
         ├── When decimal is set to lower than seven
         |   └── it should revert
-        └── when decimal is bigger than zero
+        └── when decimal is bequal or bigger than seven
             └── it should succeed
     */
     function testSetDecimals_FailsIfLowerThanSeven(uint8 _newDecimals) public {
@@ -1078,7 +1078,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     function testSetDecimals(uint8 _newDecimals) public {
-        vm.assume(_newDecimals > 7);
+        vm.assume(_newDecimals >= 7);
         // No authentication since it's an internal function exposed by the mock contract
         bondingCurveFundingManager.call_setDecimals(_newDecimals);
 
