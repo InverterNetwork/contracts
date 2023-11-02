@@ -107,7 +107,6 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             token: token
         });
 
-        // @todo init will fail because of the new structs that have been introduced
         IOrchestrator orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 

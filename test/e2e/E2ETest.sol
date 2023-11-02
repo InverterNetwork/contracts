@@ -17,7 +17,6 @@ import {
 // Orchestrator
 import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 
-// TODO: Clean up imports when creator flow is finished
 import {IBancorVirtualSupplyBondingCurveFundingManager} from
     "src/modules/fundingManager/bondingCurveFundingManager/IBancorVirtualSupplyBondingCurveFundingManager.sol";
 import {BancorFormula} from
@@ -58,8 +57,12 @@ contract E2ETest is E2EModuleRegistry {
 
     // Creates an orchestrator with the supplied config and the stored module config.
     // Can be overriden, shouldn't need to
-    // TODO: comment about moduleconfig order
-    // TODO: make sending of moduleconfig explicit. Maybe if we make it calldata it even allows slicing?
+    // NOTE: It's important to send the module configurations in order, since it will copy from the array.
+    // The order should be:
+    //      moduleConfigurations[0]  => FundingManager
+    //      moduleConfigurations[1]  => Authorizer
+    //      moduleConfigurations[2]  => PaymentProcessor
+    //      moduleConfigurations[3:] => Additional Logic Modules
     function _create_E2E_Orchestrator(
         IOrchestratorFactory.OrchestratorConfig memory _config,
         IOrchestratorFactory.ModuleConfig[] memory _moduleConfigurations
