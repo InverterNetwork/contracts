@@ -137,35 +137,11 @@ contract StakingManager is
     }
 
     /// @inheritdoc IStakingManager
-    function setRewards(uint amount, uint duration)
-        external //@todo implement to internal + exposing
-        onlyOrchestratorOwnerOrManager //@note is this okay? // Should i add another role?
-        validAmount(amount)
-        validDuration(duration)
+    function setRewards(uint amount, uint duration)//@todo is this then even needed in the interface?
+        external
+        onlyOrchestratorOwnerOrManager //@todo is this in the right position?
     {
-        _update(address(0));
-        //If rewardsEnd is already reached
-        if (block.timestamp >= rewardsEnd) {
-            //Dont include previous reward Rate
-            rewardRate = amount / duration;
-        } else {
-            //Calculate remaind rewards supposed to go into the pool
-            uint remainingRewards = (rewardsEnd - block.timestamp) * rewardRate;
-            //Add new Amount to previous amount and calculate rate
-            rewardRate = (amount + remainingRewards) / duration;
-        }
-
-        //RewardRate cant be zero
-        if (rewardRate == 0) {
-            revert Module__StakingManager__InvalidRewardRate();
-        }
-
-        //Rewards end is now plus duration
-        rewardsEnd = block.timestamp + duration;
-        //Update lastUpdate or calculation of rewards would include timeperiod where no rewards should have been distributed
-        lastUpdate = block.timestamp;
-
-        emit RewardSet(amount, duration, rewardRate, rewardsEnd);
+        _setRewards(amount, duration);
     }
 
     //--------------------------------------------------------------------------
@@ -246,5 +222,37 @@ contract StakingManager is
         );
 
         emit RewardsDistributed(recipient, amount);
+    }
+    
+
+    /// @dev for contracts that inherit  
+    function _setRewards(uint amount, uint duration)
+        internal
+        validAmount(amount)
+        validDuration(duration)
+    {
+        _update(address(0));
+        //If rewardsEnd is already reached
+        if (block.timestamp >= rewardsEnd) {
+            //Dont include previous reward Rate
+            rewardRate = amount / duration;
+        } else {
+            //Calculate remaining rewards supposed to go back into the pool
+            uint remainingRewards = (rewardsEnd - block.timestamp) * rewardRate;
+            //Add new Amount to previous amount and calculate rate
+            rewardRate = (amount + remainingRewards) / duration;
+        }
+
+        //RewardRate cant be zero
+        if (rewardRate == 0) {
+            revert Module__StakingManager__InvalidRewardRate();
+        }
+
+        //Rewards end is now plus duration
+        rewardsEnd = block.timestamp + duration;
+        //Update lastUpdate or calculation of rewards would include timeperiod where no rewards should have been distributed
+        lastUpdate = block.timestamp;
+
+        emit RewardSet(amount, duration, rewardRate, rewardsEnd);
     }
 }
