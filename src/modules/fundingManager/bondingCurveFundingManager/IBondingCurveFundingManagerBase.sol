@@ -24,9 +24,6 @@ interface IBondingCurveFundingManagerBase {
     /// Bonding Curve Funding Manager itself
     error BondingCurveFundingManagerBase__InvalidRecipient();
 
-    /// @notice Token decimals can not be zero
-    error BondingCurveFundingManager__InvalidDecimals();
-
     //--------------------------------------------------------------------------
     // Events
 
@@ -53,15 +50,13 @@ interface IBondingCurveFundingManagerBase {
     /// @notice Buy tokens on behalf of a specified receiver address.
     /// @dev Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
     /// @param _receiver The address that will receive the bought tokens.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    function buyOrderFor(address _receiver, uint _depositAmount)
-        external
-        payable;
+    /// @param _depositAmount The amount of collateral token deposited.
+    function buyFor(address _receiver, uint _depositAmount) external;
 
     /// @notice Buy tokens for the sender's address.
     /// @dev Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buyOrder(uint _depositAmount) external payable;
+    function buy(uint _depositAmount) external;
 
     /// @notice Opens the buying functionality for the token.
     /// @dev Only callable by the Orchestrator owner, or Manager.
