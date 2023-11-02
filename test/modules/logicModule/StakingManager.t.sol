@@ -123,7 +123,7 @@ contract StakingManagerTest is ModuleTest {
             address(uint160(bound(seed, 1, initialStakerMaxAmount + 1)));
 
         //Set up reasonable rewards
-        setUpReasonableRewards(seed);
+        setUpReasonableRewards();
 
         //Fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
@@ -189,7 +189,7 @@ contract StakingManagerTest is ModuleTest {
         }
 
         //Set up reasonable rewards
-        setUpReasonableRewards(seed);
+        setUpReasonableRewards();
 
         //Fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
@@ -249,7 +249,107 @@ contract StakingManagerTest is ModuleTest {
         stakingManager.withdraw(0);
 
         //@todo How to test nonReentrant?
-        //internal set true
+    }
+
+    function testSetRewards(
+        uint seed,
+        uint amount,
+        uint duration,
+        uint secondAmount,
+        uint secondDuration
+    ) public {
+        duration = bound(duration, 1, 365 days);
+        amount = bound(amount, 1, 1_000_000_000_000_000 * 1e18);
+
+        secondAmount = bound(secondAmount, 1, 1_000_000_000_000_000 * 1e18);
+        secondDuration = bound(secondDuration, 1, 365 days);
+
+        //Intial timestamp cant be 0
+        //Warp the chain by a reasonable amount
+        vm.warp(bound(seed, 1 days, 30 days));
+
+        uint expectedRewardRate = calculateRewardRate(amount, duration, 0, 0);
+        uint expectedRewardsEnd = block.timestamp + duration;
+
+        if (expectedRewardRate == 0) {
+            vm.expectRevert(
+                IStakingManager
+                    .Module__StakingManager__InvalidRewardRate
+                    .selector
+            );
+            stakingManager.setRewards(amount, duration);
+            //No need to test further, because the rest of the unit test doesnt make sense otherwise
+            return;
+        }
+
+        vm.expectEmit(true, true, true, true);
+        emit RewardSet(amount, duration, expectedRewardRate, expectedRewardsEnd);
+
+        stakingManager.setRewards(amount, duration);
+
+        assertEq(expectedRewardRate, stakingManager.rewardRate());
+        assertEq(expectedRewardsEnd, stakingManager.rewardsEnd());
+
+        //Test when rewards were already set
+
+        //Warp the chain by a reasonable amount, but reward period should still be active
+        vm.warp(bound(seed, 0, duration - 1) + block.timestamp);
+
+        expectedRewardRate = calculateRewardRate(
+            secondAmount, secondDuration, expectedRewardsEnd, expectedRewardRate
+        );
+        expectedRewardsEnd = block.timestamp + secondDuration;
+
+        if (expectedRewardRate == 0) {
+            vm.expectRevert(
+                IStakingManager
+                    .Module__StakingManager__InvalidRewardRate
+                    .selector
+            );
+            stakingManager.setRewards(secondAmount, secondDuration);
+            //No need to test further, because the rest of the unit test doesnt make sense otherwise
+            return;
+        }
+
+        vm.expectEmit(true, true, true, true);
+        emit RewardSet(
+            secondAmount, secondDuration, expectedRewardRate, expectedRewardsEnd
+        );
+
+        stakingManager.setRewards(secondAmount, secondDuration);
+
+        assertEq(expectedRewardRate, stakingManager.rewardRate());
+        assertEq(expectedRewardsEnd, stakingManager.rewardsEnd());
+    }
+
+    function testSetRewardsModifierInPosition() public {
+        //onlyOrchestratorOwnerOrManager
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule.Module__CallerNotAuthorized.selector,
+                _authorizer.getManagerRole(),
+                address(0xBEEF)
+            )
+        );
+
+        vm.prank(address(0xBEEF));
+        stakingManager.setRewards(1, 1);
+
+        //validAmount
+        vm.expectRevert(
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__InvalidAmount
+                .selector
+        );
+
+        stakingManager.setRewards(0, 1);
+
+        //validDuration
+        vm.expectRevert(
+            IStakingManager.Module__StakingManager__InvalidDuration.selector
+        );
+
+        stakingManager.setRewards(1, 0);
     }
 
     //--------------------------------------------------------------------------
@@ -259,7 +359,7 @@ contract StakingManagerTest is ModuleTest {
         //Set up reasonable stakers
         setUpReasonableStakers(seed);
         //Set up reasonable rewards
-        setUpReasonableRewards(seed);
+        setUpReasonableRewards();
         //Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
@@ -334,7 +434,7 @@ contract StakingManagerTest is ModuleTest {
         );
     }
 
-    function test__distributeRewards(uint seed) public {
+    function test_distributeRewards(uint seed) public {
         //Warp the chain to a reasonable amount
         vm.warp(bound(seed, 1 days, 365 days));
 
@@ -355,7 +455,7 @@ contract StakingManagerTest is ModuleTest {
         vm.stopPrank();
 
         //Set up reasonable rewards
-        setUpReasonableRewards(seed);
+        setUpReasonableRewards();
 
         //Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
@@ -426,7 +526,7 @@ contract StakingManagerTest is ModuleTest {
         }
     }
 
-    function setUpReasonableRewards(uint seed) internal {
+    function setUpReasonableRewards() internal {
         //Set up reasonable rewards
         stakingManager.setRewards(12_960_000, 30 days); //Thats 5 tokens per second
     }
@@ -454,5 +554,22 @@ contract StakingManagerTest is ModuleTest {
 
         return (rewardDistributionTimestamp - lastUpdate) * rewardRate * 1e18
             / totalSupply + rewardValue;
+    }
+
+    function calculateRewardRate(
+        uint amount,
+        uint duration,
+        uint rewardsEnd,
+        uint alreadyExistingRewardRate
+    ) internal view returns (uint) {
+        if (block.timestamp >= rewardsEnd) {
+            return amount / duration;
+        } else {
+            //Calculate remaind rewards supposed to go into the pool
+            uint remainingRewards =
+                (rewardsEnd - block.timestamp) * alreadyExistingRewardRate;
+            //Add new Amount to previous amount and calculate rate
+            return (amount + remainingRewards) / duration;
+        }
     }
 }
