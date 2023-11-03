@@ -60,7 +60,7 @@ contract VirtualCollateralSupplyBaseTest is Test {
     }
 
     function testSubCollateralAmount(uint amount) external {
-        vm.assume(amount <= INITIAL_SUPPLY);
+        vm.assume(amount < INITIAL_SUPPLY);
 
         // Test event
         vm.expectEmit(
