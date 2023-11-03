@@ -43,7 +43,10 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
         if (_amount > (MAX_UINT - virtualTokenSupply)) {
             revert VirtualTokenSupply_AddResultsInOverflow();
         }
-        virtualTokenSupply += _amount;
+        unchecked {
+            virtualTokenSupply += _amount;
+        }
+
         emit VirtualTokenAmountAdded(_amount, virtualTokenSupply);
     }
 
@@ -54,13 +57,22 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply {
         if (_amount > virtualTokenSupply) {
             revert VirtualTokenSupply__SubtractResultsInUnderflow();
         }
-        virtualTokenSupply -= _amount;
+
+        if (_amount == virtualTokenSupply) {
+            revert VirtualTokenSupply__VirtualSupplyCannotBeZero();
+        }
+        unchecked {
+            virtualTokenSupply -= _amount;
+        }
         emit VirtualTokenAmountSubtracted(_amount, virtualTokenSupply);
     }
 
     /// @dev Internal function to directly set the virtual token supply to a new value.
     /// @param _virtualSupply The new value to set for the virtual token supply.
     function _setVirtualTokenSupply(uint _virtualSupply) internal {
+        if (_virtualSupply == 0) {
+            revert VirtualTokenSupply__VirtualSupplyCannotBeZero();
+        }
         emit VirtualTokenSupplySet(_virtualSupply, virtualTokenSupply);
         virtualTokenSupply = _virtualSupply;
     }

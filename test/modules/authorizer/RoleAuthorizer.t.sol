@@ -99,7 +99,8 @@ contract RoleAuthorizerTest is Test {
         address authImpl = address(new RoleAuthorizer());
         RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
 
-        assumeValidAuth(initialAuth);
+        vm.assume(initialAuth != address(0));
+        vm.assume(initialAuth != address(this));
 
         testAuthorizer.init(
             IOrchestrator(_orchestrator),
@@ -135,6 +136,30 @@ contract RoleAuthorizerTest is Test {
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
         assertEq(testAuthorizer.hasRole("0x01", address(this)), true);
+        assertEq(
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
+        );
+    }
+
+    function testInitWithInitialOwnerSameAsDeployer() public {
+        //Checks that address list gets correctly stored on initialization
+        // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
+
+        address authImpl = address(new RoleAuthorizer());
+        RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
+
+        address initialAuth = address(this);
+
+        testAuthorizer.init(
+            IOrchestrator(_orchestrator),
+            _METADATA,
+            abi.encode(initialAuth, address(this))
+        );
+
+        assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
+
+        assertEq(testAuthorizer.hasRole("0x01", initialAuth), true);
+
         assertEq(
             testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
