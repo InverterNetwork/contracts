@@ -9,9 +9,11 @@ import {Utils} from
 
 /// @title  Aragon Bancor Formula
 /// @author https://github.com/AragonBlack/fundraising/blob/master/apps/bancor-formula/contracts/BancorFormula.sol
-/// @notice The sole modification applied to these contracts involves the alteration of the Solidity
-///         version and the version-specific removal of the 'public' keyword from the constructor,
-///         coinciding with adjustments in the contract import methodology.
+/// @notice The sole modification applied to these contracts involves:
+///         1. Changing the imports
+///         2. Updating the Solidity version
+///         3. The version-specific removal of the 'public' keyword from the constructor
+///         4. The adjustments in the contract import methodology
 contract BancorFormula is IBancorFormula, Utils {
     using SafeMath for uint256;
 

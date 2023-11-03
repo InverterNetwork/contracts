@@ -6,6 +6,9 @@ interface IVirtualCollateralSupply {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice The virtual supply cannot be zero.
+    error VirtualCollateralSupply__VirtualSupplyCannotBeZero();
+
     // @notice Subtracting would result in an underflow.
     error VirtualCollateralSupply__SubtractResultsInUnderflow();
 
