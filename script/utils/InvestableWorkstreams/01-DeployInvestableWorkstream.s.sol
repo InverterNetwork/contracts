@@ -166,7 +166,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         assert(address(_orchestrator) != address(0));
 
         address orchestratorToken =
-            address(IOrchestrator(_orchestrator).token());
+            address(IOrchestrator(_orchestrator).fundingManager().token());
         assertEq(orchestratorToken, address(collateralToken));
 
         // Now we need to find the MilestoneManager. ModuleManager has a function called `listModules` that returns a list of
