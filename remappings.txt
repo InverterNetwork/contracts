@@ -1,3 +1,4 @@
 @oz-up/=lib/openzeppelin-contracts-upgradeable/contracts/
 @oz/=lib/openzeppelin-contracts/contracts/
 @openzeppelin/=lib/openzeppelin-contracts/
+@uma/=lib/protocol/packages/core/contracts/
