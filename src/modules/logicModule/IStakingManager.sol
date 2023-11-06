@@ -44,12 +44,6 @@ interface IStakingManager {
 
     /// @notice Returns how much Tokens will be distributed per second to all users that staked in this contract
     function rewardRate() external view returns (uint);
-    //@todo how to tell people how much rewards over time they actually get?
-    // RewardRate isnt really cutting it
-    //I could return the "reward Value" but that also isnt the correct thing
-    //Maybe over a timeperiod, but that wouldnt be supported in the logic, when we dont save past "rewardValues"
-
-    //Maybe take integral??
 
     /// @notice Returns when the rewards will not be distributed anymore
     function rewardsEnd() external view returns (uint);
@@ -61,6 +55,16 @@ interface IStakingManager {
     /// @notice Returns the amount of tokens earned up until now by the current stake of a user
     /// @param user The address of a user that staked
     function earned(address user) external view returns (uint);
+
+    /// @notice Returns a estimation of how much rewards will be earned with the current state of the staking contract
+    /// @dev this calculation uses the current reward rate and the current totalSupply to calculate the rewards
+    /// @dev the estimated result could be 0 if the estimated rewards are not high enough
+    /// @param amount : how much token are staked
+    /// @param duration : how long the tokens will be staked
+    function estimateReward(uint amount, uint duration)
+        external
+        view
+        returns (uint);
 
     //--------------------------------------------------------------------------
     // Mutating Functions
