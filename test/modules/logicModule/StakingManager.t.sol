@@ -33,6 +33,7 @@ contract StakingManagerTest is ModuleTest {
 
     //Variables
     uint internal initialStakerMaxAmount = 100;
+    uint internal tokenMultiplicator = 1e18;
 
     //Events
 
@@ -108,6 +109,53 @@ contract StakingManagerTest is ModuleTest {
         assertEq(calculatedEarnings, stakingManager.earned(user));
     }
 
+    function testEstimateReward(uint seed, uint amount, uint duration) public {
+        amount = bound(amount, 1, 1_000_000_000 * tokenMultiplicator);
+        duration = bound(duration, 1, 31_536_000_000);
+
+        //Set up reasonable stakers
+        setUpReasonableStakers(seed);
+
+        //Set up reasonable rewards
+        stakingManager.setRewards(
+            bound(seed, 1, 10_000) * 30 days, //This guarantees that 1 to 10_000 tokesn per second are distributed
+            30 days
+        );
+
+        uint rewardRate = stakingManager.rewardRate();
+        uint totalSupply = stakingManager.totalSupply();
+
+        uint calculatedEstimation;
+        if (totalSupply == 0) {
+            calculatedEstimation = amount * duration * rewardRate;
+        } else {
+            calculatedEstimation = amount * duration * rewardRate / totalSupply;
+        }
+
+        assertEq(
+            calculatedEstimation,
+            stakingManager.estimateReward(amount, duration)
+        );
+    }
+
+    function testEstimateRewardModifierInPosition() public {
+        //validAmount
+        vm.expectRevert(
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__InvalidAmount
+                .selector
+        );
+
+        stakingManager.estimateReward(0, 1);
+
+        //validDuration
+        vm.expectRevert(
+            IStakingManager.Module__StakingManager__InvalidDuration.selector
+        );
+
+        stakingManager.estimateReward(1, 0);
+    }
+
     //--------------------------------------------------------------------------
     // Mutating Functions
 
@@ -133,7 +181,8 @@ contract StakingManagerTest is ModuleTest {
         }
 
         //reasonable stake amount
-        uint stakeAmount = bound(seed, 1e18, 1_000_000_000 * 1e18);
+        uint stakeAmount =
+            bound(seed, tokenMultiplicator, 1_000_000_000 * tokenMultiplicator);
 
         //Mint to user
         stakingToken.mint(staker, stakeAmount);
@@ -175,7 +224,34 @@ contract StakingManagerTest is ModuleTest {
 
         stakingManager.stake(0);
 
-        //@todo How to test nonReentrant?
+        //Check for reentrancy
+
+        //Set it so that the stakingToken does a reentrancy call on the stakingManager
+        stakingToken.setReentrancyOnTransfer(
+            abi.encodeWithSignature("stake(uint256)", 1)
+        );
+
+        //Mint to user
+        stakingToken.mint(address(0xBeef), 1);
+
+        //Approve
+        vm.prank(address(0xBeef));
+        stakingToken.approve(address(stakingManager), 1);
+
+        vm.prank(address(0xBeef));
+        stakingManager.stake(1);
+
+        //Check if the call failed
+        assertFalse(stakingToken.callSuccessful());
+
+        //Check if return error was correct
+        assertEq(
+            abi.encodeWithSelector(
+                0x08c379a0,
+                "ReentrancyGuard: reentrant call" // This is the encoding for a non custom error
+            ),
+            stakingToken.callData()
+        );
     }
 
     //-----------------------------------------
@@ -195,10 +271,12 @@ contract StakingManagerTest is ModuleTest {
         _token.mint(address(_fundingManager), 12_960_000);
 
         //reasonable stake amount
-        uint stakeAmount = bound(seed, 1e18, 1_000_000_000 * 1e18);
+        uint stakeAmount =
+            bound(seed, tokenMultiplicator, 1_000_000_000 * tokenMultiplicator);
 
         //reasonable withdraw amount
-        uint withdrawAmount = bound(withdrawSeed, 1e18, stakeAmount);
+        uint withdrawAmount =
+            bound(withdrawSeed, tokenMultiplicator, stakeAmount);
 
         //Mint to user
         stakingToken.mint(staker, stakeAmount);
@@ -248,7 +326,50 @@ contract StakingManagerTest is ModuleTest {
 
         stakingManager.withdraw(0);
 
-        //@todo How to test nonReentrant?
+        //Check for reentrancy
+
+        //Set it so that the stakingToken does a reentrancy call on the stakingManager
+        stakingToken.setReentrancyOnTransfer(
+            abi.encodeWithSignature("stake(uint256)", 1)
+        );
+
+        //Warp time appropriately
+        vm.warp(365 days);
+
+        //Fund orchestrator
+        _token.mint(address(_fundingManager), 12_960_000);
+
+        //Set up reasonable rewards
+        setUpReasonableRewards();
+
+        //Mint to user
+        stakingToken.mint(address(0xBeef), 1);
+
+        //Approve
+        vm.prank(address(0xBeef));
+        stakingToken.approve(address(stakingManager), 1);
+
+        //Stake tokens
+        vm.prank(address(0xBeef));
+        stakingManager.stake(1);
+
+        //Warp so staker would get rewarded
+        vm.warp(block.timestamp + 1 days);
+
+        vm.prank(address(0xBeef));
+        stakingManager.withdraw(1);
+
+        //Check if the call failed
+        assertFalse(stakingToken.callSuccessful());
+
+        //Check if return error was correct
+        assertEq(
+            abi.encodeWithSelector(
+                0x08c379a0,
+                "ReentrancyGuard: reentrant call" // This is the encoding for a non custom error
+            ),
+            stakingToken.callData()
+        );
     }
 
     function testSetRewards(
@@ -259,9 +380,10 @@ contract StakingManagerTest is ModuleTest {
         uint secondDuration
     ) public {
         duration = bound(duration, 1, 365 days);
-        amount = bound(amount, 1, 1_000_000_000_000_000 * 1e18);
+        amount = bound(amount, 1, 1_000_000_000_000_000 * tokenMultiplicator);
 
-        secondAmount = bound(secondAmount, 1, 1_000_000_000_000_000 * 1e18);
+        secondAmount =
+            bound(secondAmount, 1, 1_000_000_000_000_000 * tokenMultiplicator);
         secondDuration = bound(secondDuration, 1, 365 days);
 
         //Intial timestamp cant be 0
@@ -504,7 +626,9 @@ contract StakingManagerTest is ModuleTest {
         uint stakerNumber = 1;
         for (uint i = 0; i < stakerAmount; i++) {
             //randomise amount staked
-            stakeAmount = bound(seed, 1e18, 1_000_000_000 * 1e18); //@todo 1e18 should be a variable so it can be changed properly
+            stakeAmount = bound(
+                seed, tokenMultiplicator, 1_000_000_000 * tokenMultiplicator
+            );
             //Mint to users
             stakingToken.mint(address(uint160(stakerNumber)), stakeAmount);
 

@@ -87,6 +87,20 @@ contract StakingManager is
         return _earned(user, _calculateRewardValue());
     }
 
+    /// @inheritdoc IStakingManager
+    function estimateReward(uint amount, uint duration)
+        external
+        view
+        validAmount(amount)
+        validDuration(duration)
+        returns (uint)
+    {
+        if (totalSupply == 0) {
+            return amount * duration * rewardRate;
+        }
+        return amount * duration * rewardRate / totalSupply;
+    }
+
     //--------------------------------------------------------------------------
     // Mutating Functions
 
@@ -137,9 +151,9 @@ contract StakingManager is
     }
 
     /// @inheritdoc IStakingManager
-    function setRewards(uint amount, uint duration)//@todo is this then even needed in the interface?
+    function setRewards(uint amount, uint duration)
         external
-        onlyOrchestratorOwnerOrManager //@todo is this in the right position?
+        onlyOrchestratorOwnerOrManager
     {
         _setRewards(amount, duration);
     }
@@ -223,9 +237,8 @@ contract StakingManager is
 
         emit RewardsDistributed(recipient, amount);
     }
-    
 
-    /// @dev for contracts that inherit  
+    /// @dev for contracts that inherit
     function _setRewards(uint amount, uint duration)
         internal
         validAmount(amount)
