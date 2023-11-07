@@ -14,11 +14,11 @@ import {
 
 // External Dependencies
 import {OptimisticOracleV3CallbackRecipientInterface} from
-    "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+    "@uma/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
 import {OptimisticOracleV3Interface} from
-    "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+    "@uma/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 import {ClaimData} from
-    "src/modules/logicModule/oracle/optimistic-oracle-v3/ClaimData.sol";
+    "@uma/optimistic-oracle-v3/implementation/ClaimData.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
