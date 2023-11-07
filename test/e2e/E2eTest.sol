@@ -16,6 +16,8 @@ import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
+import {IBancorVirtualSupplyBondingCurveFundingManager} from
+    "src/modules/fundingManager/bondingCurveFundingManager/IBancorVirtualSupplyBondingCurveFundingManager.sol";
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 import {BancorVirtualSupplyBondingCurveFundingManager} from
@@ -31,6 +33,8 @@ import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {TokenGatedRoleAuthorizer} from
+    "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
 
 //Mocks
@@ -195,6 +199,41 @@ contract E2eTest is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             roleAuthorizerMetadata, IBeacon(roleAuthorizerBeacon)
+        );
+    }
+
+    TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
+    Beacon tokenRoleAuthorizerBeacon;
+    address tokenRoleAuthorizerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/tokenRoleAuthorizer",
+        "TokenGatedRoleAuthorizer"
+    );
+    // Note that RoleAuthorizer owner and manager are the same
+    IOrchestratorFactory.ModuleConfig tokenRoleAuthorizerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
+        tokenRoleAuthorizerMetadata,
+        abi.encode(address(this), address(this)),
+        abi.encode(hasDependency, dependencies)
+    );
+
+    function setUpTokenGatedRoleAuthorizer() private {
+        // Deploy module implementations.
+        tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer();
+
+        // Deploy module beacons.
+        vm.prank(tokenRoleAuthorizerBeaconOwner);
+        tokenRoleAuthorizerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(tokenRoleAuthorizerBeaconOwner);
+        tokenRoleAuthorizerBeacon.upgradeTo(address(tokenRoleAuthorizerImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            tokenRoleAuthorizerMetadata, IBeacon(tokenRoleAuthorizerBeacon)
         );
     }
 
@@ -440,6 +479,8 @@ contract E2eTest is Test {
         //Authorizer
         setUpAuthorizerMock();
         setUpRoleAuthorizer();
+        setUpTokenGatedRoleAuthorizer();
+
         //PaymentProcessor
         setUpSimplePaymentProcessor();
         setUpStreamingPaymentProcessor();
@@ -471,7 +512,7 @@ contract E2eTest is Test {
         return orchestratorFactory.createOrchestrator(
             config,
             rebasingFundingManagerFactoryConfig,
-            authorizerFactoryConfig,
+            roleAuthorizerFactoryConfig,
             paymentProcessorFactoryConfig,
             optionalModules
         );
@@ -558,31 +599,38 @@ contract E2eTest is Test {
     }
 
     function _createNewOrchestratorWithAllModules_withBondingCurveFundingManager(
-        IOrchestratorFactory.OrchestratorConfig memory config
+        IOrchestratorFactory.OrchestratorConfig memory config,
+        address acceptedToken
     ) internal returns (IOrchestrator) {
         IOrchestratorFactory.ModuleConfig[] memory optionalModules =
             new IOrchestratorFactory.ModuleConfig[](1);
         optionalModules[0] = bountyManagerFactoryConfig;
 
+        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
+            issuanceToken;
+        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
+            memory bc_properties;
         BancorFormula formula = new BancorFormula();
+
+        issuanceToken.name = bytes32(abi.encodePacked("Bonding Curve Token"));
+        issuanceToken.symbol = bytes32(abi.encodePacked("BCT"));
+        issuanceToken.decimals = uint8(18);
+
+        bc_properties.formula = address(formula);
+        bc_properties.reserveRatioForBuying = 200_000;
+        bc_properties.reserveRatioForSelling = 200_000;
+        bc_properties.buyFee = 0;
+        bc_properties.sellFee = 0;
+        bc_properties.buyIsOpen = true;
+        bc_properties.sellIsOpen = true;
+        bc_properties.initialTokenSupply = 100;
+        bc_properties.initialCollateralSupply = 100;
 
         IOrchestratorFactory.ModuleConfig memory
             bancorVirtualSupplyBondingCurveFundingManagerConfig =
             IOrchestratorFactory.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(
-                    bytes32(abi.encodePacked("Bonding Curve Token")),
-                    bytes32(abi.encodePacked("BCT")),
-                    address(formula),
-                    100,
-                    100,
-                    200_000,
-                    200_000,
-                    0,
-                    0,
-                    true,
-                    true
-                ),
+                abi.encode(issuanceToken, bc_properties, acceptedToken),
                 abi.encode(hasDependency, dependencies)
             );
         return orchestratorFactory.createOrchestrator(

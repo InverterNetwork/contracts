@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
-// External Dependencies
-import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
-
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
@@ -73,8 +70,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Storage
 
-    IERC20 private _token;
-
     /// @inheritdoc IOrchestrator
     uint public override(IOrchestrator) orchestratorId;
 
@@ -97,7 +92,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function init(
         uint orchestratorId_,
-        IERC20 token_,
         address[] calldata modules,
         IFundingManager fundingManager_,
         IAuthorizer authorizer_,
@@ -108,8 +102,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
 
         // Set storage variables.
         orchestratorId = orchestratorId_;
-
-        _token = token_;
 
         fundingManager = fundingManager_;
         authorizer = authorizer_;
@@ -324,11 +316,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
 
     //--------------------------------------------------------------------------
     // View Functions
-
-    /// @inheritdoc IOrchestrator
-    function token() public view override(IOrchestrator) returns (IERC20) {
-        return _token;
-    }
 
     /// @inheritdoc IOrchestrator
     function version() external pure returns (string memory) {

@@ -79,12 +79,13 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     uint32 internal reserveRatioForSelling;
     /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
     uint32 internal constant PPM = 1_000_000;
+    /// @dev Token that is accepted by this funding manager for deposits.
+    IERC20 private _token;
 
     //--------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module
-    // @todo This function crosses stack-too-deep threshold when we uncomment the decimals. It needs a refactor
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,
@@ -92,61 +93,44 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
-        (
-            bytes32 _name, // The name of the issuance token
-            bytes32 _symbol, // The symbol of the issuance token
-            //uint8 _decimals, // The decimals used within the issuance token
-            address _formula, // The formula contract used to calculate the issucance and redemption rate
-            uint _initalTokenSupply, // The initial virtual issuance token supply
-            uint _initialCollateralSupply, // The initial virtual collateral token supply
-            uint32 _reserveRatioForBuying, // The reserve ratio, expressed in PPM, used for issuance on the bonding curve
-            uint32 _reserveRatioForSelling, // The reserve ratio, expressed in PPM, used for redeeming on the bonding curve
-            uint _buyFee, // The buy fee expressed in base points
-            uint _sellFee, // The sell fee expressed in base points
-            bool _buyIsOpen, // The indicator used for enabling/disabling the buying functionalities on deployment
-            bool _sellIsOpen // The indicator used for enabling/disabling the selling functionalties on deployment
-        ) = abi.decode(
-            configData,
-            (
-                bytes32,
-                bytes32,
-                //uint8,
-                address,
-                uint,
-                uint,
-                uint32,
-                uint32,
-                uint,
-                uint,
-                bool,
-                bool
-            )
+        address _acceptedToken;
+        IssuanceToken memory issuanceToken;
+        BondingCurveProperties memory bondingCurveProperties;
+
+        (issuanceToken, bondingCurveProperties, _acceptedToken) = abi.decode(
+            configData, (IssuanceToken, BondingCurveProperties, address)
         );
 
         __ERC20_init(
-            string(abi.encodePacked(_name)), string(abi.encodePacked(_symbol))
+            string(abi.encodePacked(issuanceToken.name)),
+            string(abi.encodePacked(issuanceToken.symbol))
         );
+
+        _token = IERC20(_acceptedToken);
         // Set token decimals for issuance token
-        //_setTokenDecimals(_decimals);
-        _setTokenDecimals(18);
+        _setTokenDecimals(issuanceToken.decimals);
         // Set formula contract
-        formula = IBancorFormula(_formula);
+        formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
-        _setVirtualTokenSupply(_initalTokenSupply);
+        _setVirtualTokenSupply(bondingCurveProperties.initialTokenSupply);
         // Set virtual collateral supply
-        _setVirtualCollateralSupply(_initialCollateralSupply);
+        _setVirtualCollateralSupply(
+            bondingCurveProperties.initialCollateralSupply
+        );
         // Set reserve ratio for buying
-        _setReserveRatioForBuying(_reserveRatioForBuying);
+        _setReserveRatioForBuying(bondingCurveProperties.reserveRatioForBuying);
         // Set reserve ratio for selling
-        _setReserveRatioForSelling(_reserveRatioForSelling);
+        _setReserveRatioForSelling(
+            bondingCurveProperties.reserveRatioForSelling
+        );
         // Set buy fee percentage
-        _setBuyFee(_buyFee);
+        _setBuyFee(bondingCurveProperties.buyFee);
         // Set sell fee percentage
-        _setSellFee(_sellFee);
+        _setSellFee(bondingCurveProperties.sellFee);
         // Set buying functionality to open if true. By default buying is false
-        if (_buyIsOpen == true) _openBuy();
+        if (bondingCurveProperties.buyIsOpen == true) _openBuy();
         // Set selling functionality to open if true. By default selling is false
-        if (_sellIsOpen == true) _openSell();
+        if (bondingCurveProperties.sellIsOpen == true) _openSell();
     }
 
     //--------------------------------------------------------------------------
@@ -162,9 +146,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// Transactions exceeding this limit will be reverted.
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buyOrderFor(address _receiver, uint _depositAmount)
+    function buyFor(address _receiver, uint _depositAmount)
         external
-        payable
         override(BondingCurveFundingManagerBase)
         validReceiver(_receiver)
         buyingIsEnabled
@@ -181,9 +164,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// While this is substantially large, it is crucial to be aware of this constraint.
     /// Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buyOrder(uint _depositAmount)
+    function buy(uint _depositAmount)
         external
-        payable
         override(BondingCurveFundingManagerBase)
         buyingIsEnabled
     {
@@ -199,9 +181,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _receiver The address that will receive the redeemed tokens.
     /// @param _depositAmount The amount of issued token to deposited.
-    function sellOrderFor(address _receiver, uint _depositAmount)
+    function sellFor(address _receiver, uint _depositAmount)
         external
-        payable
         override(RedeemingBondingCurveFundingManagerBase)
         validReceiver(_receiver)
         sellingIsEnabled
@@ -217,9 +198,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of issued token depoisited.
-    function sellOrder(uint _depositAmount)
+    function sell(uint _depositAmount)
         external
-        payable
         override(RedeemingBondingCurveFundingManagerBase)
         sellingIsEnabled
     {
@@ -241,7 +221,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     /// @inheritdoc IFundingManager
     function token() public view returns (IERC20) {
-        return __Module_orchestrator.token();
+        return _token;
     }
 
     //--------------------------------------------------------------------------
@@ -356,6 +336,25 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     //--------------------------------------------------------------------------
     // Internal Functions
+
+    /// @dev Sets the number of decimals for the token.
+    /// This function overrides the internal function set in BondingCurveFundingManagerBase, adding
+    /// an input validation specific for the Bancor Formula utilizing implementation, after which
+    /// it updates the `tokenDecimals` state variable.
+    /// @param _decimals The number of decimals to set for the token.
+    function _setTokenDecimals(uint8 _decimals)
+        internal
+        override(BondingCurveFundingManagerBase)
+    {
+        // An input verification is needed here since the Bancor formula, which determines the
+        // issucance price, utilizes PPM for its computations. This leads to a precision loss
+        // that's too significant to be acceptable for tokens with fewer than 7 decimals.
+        if (_decimals < 7) {
+            revert
+                BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal();
+        }
+        tokenDecimals = _decimals;
+    }
 
     /// @dev Executes a buy order and updates the virtual supply of tokens and collateral.
     /// This function internally calls `_buyOrder` to get the issuing amount and updates the

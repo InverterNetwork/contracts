@@ -45,7 +45,6 @@ interface IOrchestrator is IModuleManager {
     /// @notice Initialization function.
     function init(
         uint orchestratorId,
-        IERC20 token,
         address[] calldata modules,
         IFundingManager fundingManager,
         IAuthorizer authorizer,
@@ -90,10 +89,6 @@ interface IOrchestrator is IModuleManager {
     /// @notice The {IPaymentProcessor} implementation used to process module
     ///         payments.
     function paymentProcessor() external view returns (IPaymentProcessor);
-
-    /// @notice The orchestrator's {IERC20} token accepted for fundings and used
-    ///         for payments.
-    function token() external view returns (IERC20);
 
     /// @notice The version of the orchestrator instance.
     function version() external pure returns (string memory);

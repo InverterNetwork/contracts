@@ -51,9 +51,8 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     // Public Functions
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function sellOrderFor(address _receiver, uint _depositAmount)
+    function sellFor(address _receiver, uint _depositAmount)
         external
-        payable
         virtual
         sellingIsEnabled
         validReceiver(_receiver)
@@ -62,12 +61,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     }
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function sellOrder(uint _depositAmount)
-        external
-        payable
-        virtual
-        sellingIsEnabled
-    {
+    function sell(uint _depositAmount) external virtual sellingIsEnabled {
         _sellOrder(_msgSender(), _depositAmount);
     }
 
@@ -99,6 +93,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @return uint Return the amount of collateral to be redeemed
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
+        view
         virtual
         returns (uint);
 
@@ -113,9 +108,9 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// to be possible. No further functionality is implemented which would manages the outflow of
     /// collateral, e.g., restricting max redeemable amount per user, or a redeemable amount which
     /// differes from the actual balance.
-    /// @param _receiver The address receiving the redeem amount after the sell order is processed.
+    /// @param _receiver The address receiving the redeem amount.
     /// @param _depositAmount The amount of tokens being sold by the receiver.
-    /// @return redeemAmount The amount of tokens the receiver will get after selling `_depositAmount`.
+    /// @return redeemAmount The amount of tokens that are transfered to the receiver in exchange for _depositAmount.
     /// Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
     /// contract for redemption.
     function _sellOrder(address _receiver, uint _depositAmount)
@@ -126,7 +121,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
         // Calculate redeem amount based on upstream formula
-        redeemAmount = _redeemTokens(_depositAmount);
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
 
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
@@ -139,14 +134,18 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         // Require that enough collateral token is held to be redeemable
         if (
             redeemAmount
-                > __Module_orchestrator.token().balanceOf(address(this))
+                > __Module_orchestrator.fundingManager().token().balanceOf(
+                    address(this)
+                )
         ) {
             revert
                 RedeemingBondingCurveFundingManager__InsufficientCollateralForRedemption(
             );
         }
         // Transfer tokens to receiver
-        __Module_orchestrator.token().transfer(_receiver, redeemAmount);
+        __Module_orchestrator.fundingManager().token().transfer(
+            _receiver, redeemAmount
+        );
         // Emit event
         emit TokensSold(_receiver, _depositAmount, redeemAmount, _msgSender());
     }
@@ -177,18 +176,5 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
-    }
-
-    /// @dev Redeems collateral based on the deposit amount.
-    /// This function utilizes another internal function, `_redeemTokensFormulaWrapper`,
-    /// to determine how many collateral tokens should be redeemed.
-    /// @param _depositAmount The amount of issued tokens deposited for which collateral are to
-    /// be redeemed.
-    /// @return redeemAmount The number of collateral tokens to be redeemed.
-    function _redeemTokens(uint _depositAmount)
-        internal
-        returns (uint redeemAmount)
-    {
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
     }
 }

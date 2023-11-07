@@ -134,7 +134,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         ├── when sell is not open
         │       └── it should revert
         └── when sell is open
-                └── it should not revert (tested in sellOrder tests)
+                └── it should not revert (tested in sell tests)
 
     */
     function testSellingIsEnabled_FailsIfSellNotOpen() public {
@@ -147,10 +147,10 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 .RedeemingBondingCurveFundingManager__SellingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManager.sellOrderFor(non_owner_address, 100);
+        bondingCurveFundingManager.sellFor(non_owner_address, 100);
     }
 
-    // test modifier on sellOrderFor function
+    // test modifier on sellFor function
 
     function testPassingModifiersOnSellOrderFor(uint sellAmount) public {
         // Setup
@@ -171,7 +171,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sellOrderFor(receiver, sellAmount);
+        bondingCurveFundingManager.sellFor(receiver, sellAmount);
 
         // Post-checks
         uint redeemAmount = _token.balanceOf(receiver) - receiverBalanceBefore;
@@ -183,7 +183,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_token.balanceOf(seller), 0);
     }
 
-    /* Test sellOrder and _sellOrder function
+    /* Test sell and _sellOrder function
         ├── when the sell amount is 0
         │       └── it should revert 
         └── when the sell amount is not 0
@@ -214,7 +214,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                     .RedeemingBondingCurveFundingManager__InvalidDepositAmount
                     .selector
             );
-            bondingCurveFundingManager.sellOrder(0);
+            bondingCurveFundingManager.sell(0);
         }
         vm.stopPrank();
     }
@@ -238,7 +238,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                     .RedeemingBondingCurveFundingManager__InsufficientCollateralForRedemption
                     .selector
             );
-            bondingCurveFundingManager.sellOrder(amount);
+            bondingCurveFundingManager.sell(amount);
         }
         vm.stopPrank();
     }
@@ -265,7 +265,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sellOrder(amount);
+        bondingCurveFundingManager.sell(amount);
 
         // Post-checks
         assertEq(
@@ -313,7 +313,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sellOrder(amount);
+        bondingCurveFundingManager.sell(amount);
 
         // Post-checks
         assertEq(
@@ -460,7 +460,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         vm.startPrank(seller);
         {
             _token.approve(address(bondingCurveFundingManager), amount);
-            bondingCurveFundingManager.buyOrder(amount);
+            bondingCurveFundingManager.buy(amount);
 
             bondingCurveFundingManager.approve(
                 address(bondingCurveFundingManager), amount

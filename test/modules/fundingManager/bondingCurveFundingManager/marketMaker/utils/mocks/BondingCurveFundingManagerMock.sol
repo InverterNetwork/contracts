@@ -55,7 +55,7 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
 
     function _issueTokensFormulaWrapper(uint _depositAmount)
         internal
-        view
+        pure
         override(BondingCurveFundingManagerBase)
         returns (uint)
     {
@@ -88,6 +88,6 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
 
     /// @inheritdoc IFundingManager
     function token() public view returns (IERC20) {
-        return __Module_orchestrator.token();
+        return __Module_orchestrator.fundingManager().token();
     }
 }

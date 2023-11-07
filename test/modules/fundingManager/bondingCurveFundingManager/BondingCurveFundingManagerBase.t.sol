@@ -121,7 +121,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         ├── when buy is not open
         │       └── it should revert
         └── when buy is open
-                └── it should not revert (tested in buyOrder tests)
+                └── it should not revert (tested in buy tests)
 
     */
     function testBuyingIsEnabled_FailsIfBuyNotOpen() public {
@@ -134,7 +134,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManager__BuyingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManager.buyOrderFor(non_owner_address, 100);
+        bondingCurveFundingManager.buyFor(non_owner_address, 100);
     }
 
     /* Test validReceiver modifier
@@ -143,7 +143,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         ├── when receiver is address itself
         │       └── it should revert
         └── when address is not in the cases above
-                └── it should not revert (tested in buyOrder tests)
+                └── it should not revert (tested in buy tests)
     */
     function testValidReceiver_FailsForInvalidAddresses() public {
         vm.startPrank(non_owner_address);
@@ -154,7 +154,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManagerBase__InvalidRecipient
                 .selector
         );
-        bondingCurveFundingManager.buyOrderFor(address(0), 100);
+        bondingCurveFundingManager.buyFor(address(0), 100);
 
         // Test for its own address)
         vm.expectRevert(
@@ -162,14 +162,14 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManagerBase__InvalidRecipient
                 .selector
         );
-        bondingCurveFundingManager.buyOrderFor(
+        bondingCurveFundingManager.buyFor(
             address(bondingCurveFundingManager), 100
         );
 
         vm.stopPrank();
     }
 
-    //  Test modifiers on buyOrderFor function
+    //  Test modifiers on buyFor function
 
     function testPassingModifiersOnBuyOrderFor(uint amount) public {
         // Setup
@@ -189,7 +189,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buyOrderFor(receiver, amount);
+        bondingCurveFundingManager.buyFor(receiver, amount);
 
         // Post-checks
         assertEq(
@@ -201,7 +201,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(bondingCurveFundingManager.balanceOf(receiver), amount);
     }
 
-    /* Test buyOrder and _buyOrder function
+    /* Test buy and _buyOrder function
         ├── when the deposit amount is 0
         │       └── it should revert 
         └── when the deposit amount is not 0
@@ -227,7 +227,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManager__InvalidDepositAmount
                 .selector
         );
-        bondingCurveFundingManager.buyOrder(0);
+        bondingCurveFundingManager.buy(0);
     }
 
     function testBuyOrderWithZeroFee(uint amount) public {
@@ -251,7 +251,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buyOrder(amount);
+        bondingCurveFundingManager.buy(amount);
 
         // Post-checks
         assertEq(
@@ -294,7 +294,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buyOrder(amount);
+        bondingCurveFundingManager.buy(amount);
 
         // Post-checks
         assertEq(
@@ -416,26 +416,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test _calculateFeeDeductedDepositAmount function
-        ├── when feePct is higher than the BPS
-        │      └── it should return zero 
         └── when feePct is lower than the BPS
                 └── it should return the deposit amount with the fee deducted
     */
-    function testCalculateFeeDeductedDepositAmount_ZeroIfFeeHigherThanBPS(
-        uint _depositAmount,
-        uint _fee
-    ) public {
-        vm.assume(_fee > bondingCurveFundingManager.call_BPS()); // fetch the BPS value through the mock
-        vm.expectRevert(
-            IBondingCurveFundingManagerBase
-                .BondingCurveFundingManager__InvalidFeePercentage
-                .selector
-        );
-        bondingCurveFundingManager.call_calculateFeeDeductedDepositAmount(
-            _depositAmount, _fee
-        );
-    }
-
     function testCalculateFeeDeductedDepositAmount(uint _amount, uint _fee)
         public
     {
@@ -454,32 +437,19 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test _setDecimals function
-        ├── When decimal is set to zero
-        |   └── it should revert
-        └── when decimal is bigger than zero
+       
+        └── when setting decimals
             └── it should succeed
     */
-    function testSetDecimals_FailsIfZero() public {
-        uint8 _newDecimals = 0;
-        vm.expectRevert(
-            IBondingCurveFundingManagerBase
-                .BondingCurveFundingManager__InvalidDecimals
-                .selector
-        );
-        // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
-    }
 
     function testSetDecimals(uint8 _newDecimals) public {
-        vm.assume(_newDecimals > 0);
-        // No authentication since it's an internal function exposed by the mock contract
         bondingCurveFundingManager.call_setDecimals(_newDecimals);
 
         assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
     }
 
     // Test _issueTokens function
-    // this is tested in the buyOrder tests
+    // this is tested in the buy tests
 
     //--------------------------------------------------------------------------
     // Helper functions
