@@ -256,7 +256,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     */
     //Maybe better here?
-/*     function testAssertDataFor_whenCallerDoesNotHaveAsserterRole(address who) public {
+    /*     function testAssertDataFor_whenCallerDoesNotHaveAsserterRole(address who) public {
         
         vm.assume(authorizer.)
         vm.expectRevert(); // TODO: exact revert message
@@ -285,8 +285,6 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         assertEq(_token.balanceOf(prankUser), userBalanceBefore - 1e18);
         //assert OO balance has ben increased by $bond
         assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore + 1e18);
-
-
     }
 
     function testAssertDataForFails_whenCallerDoesNotHaveEnoughFundsForBond()
@@ -315,7 +313,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     }
 
     function testAssertDataFor_whenAsserterAddressIsNotZero() public {
-                address prankUser = address(0x987654321);
+        address prankUser = address(0x987654321);
         _token.mint(prankUser, 1e18);
         vm.prank(prankUser);
         _token.approve(address(ooIntegrator), 1e20);
@@ -334,7 +332,6 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         assertEq(_token.balanceOf(prankUser), userBalanceBefore - 1e18);
         //assert OO balance has ben increased by $bond
         assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore + 1e18);
-
     }
 
     /*
@@ -354,7 +351,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         );
 
         vm.expectRevert(); // TODO: exact revert message
-       
+
         ooIntegrator.assertionResolvedCallback(assertionId, true);
     }
 

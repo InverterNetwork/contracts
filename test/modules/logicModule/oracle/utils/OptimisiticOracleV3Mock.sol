@@ -13,8 +13,7 @@ import {OptimisticOracleV3CallbackRecipientInterface} from
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-import {ClaimData} from
-    "@uma/optimistic-oracle-v3/implementation/ClaimData.sol";
+import {ClaimData} from "@uma/optimistic-oracle-v3/implementation/ClaimData.sol";
 
 /**
  * @title Optimistic Oracle V3.
