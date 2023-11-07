@@ -113,12 +113,6 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
             revert Module__ERC20PaymentClient__CallerNotAuthorized();
         }
 
-        // Ensure payment processor is able to fetch the tokens from
-        // address(this).
-        _ensureTokenAllowance(
-            IPaymentProcessor(_msgSender()), _outstandingTokenAmount
-        );
-
         // Create a copy of all orders to return.
         uint ordersLength = _orders.length;
         PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);
@@ -134,6 +128,12 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
 
         // Set outstanding token amount to zero.
         _outstandingTokenAmount = 0;
+
+        // Ensure payment processor is able to fetch the tokens from
+        // address(this).
+        _ensureTokenAllowance(
+            IPaymentProcessor(_msgSender()), outstandingTokenAmountCache
+        );
 
         //Ensure that the Client will have sufficient funds.
         // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
