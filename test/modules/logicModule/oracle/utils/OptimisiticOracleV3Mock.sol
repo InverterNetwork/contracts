@@ -4,16 +4,17 @@ pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {OptimisticOracleV3Interface} from
-    "@uma/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+    "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 // External Dependencies
 import {OptimisticOracleV3CallbackRecipientInterface} from
-    "@uma/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+    "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-import {ClaimData} from "@uma/optimistic-oracle-v3/implementation/ClaimData.sol";
+import {AncillaryData} from
+    "src/modules/logicModule/oracle/optimistic-oracle-v3/AncillaryData.sol";
 
 /**
  * @title Optimistic Oracle V3.
@@ -347,8 +348,8 @@ contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
         view
         returns (bytes memory)
     {
-        return ClaimData.appendKeyValueAddress(
-            ClaimData.appendKeyValueBytes32("", "assertionId", assertionId),
+        return AncillaryData.appendKeyValueAddress(
+            AncillaryData.appendKeyValueBytes32("", "assertionId", assertionId),
             "ooAsserter",
             assertions[assertionId].asserter
         );

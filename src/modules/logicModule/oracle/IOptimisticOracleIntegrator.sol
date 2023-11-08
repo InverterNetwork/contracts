@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {OptimisticOracleV3CallbackRecipientInterface} from
-    "@uma/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+    "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
 
 interface IOptimisticOracleIntegrator is
     OptimisticOracleV3CallbackRecipientInterface
