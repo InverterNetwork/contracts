@@ -276,27 +276,25 @@ contract ERC20PaymentClientTest is Test {
         );
     }
 
-    function testEnsureTokenAllowance(uint initialAllowance, uint postAllowance)
+    function testEnsureTokenAllowance(uint initialAllowance, uint amount)
         public
     {
         setupInternalFunctionTest();
+
+        //Set up reasonable boundaries
+        initialAllowance = bound(initialAllowance, 0, type(uint).max / 2);
+        amount = bound(amount, 0, type(uint).max / 2);
 
         //Set up initial allowance
         vm.prank(address(paymentClient));
         token.approve(address(paymentProcessor), initialAllowance);
 
-        paymentClient.originalEnsureTokenAllowance(
-            paymentProcessor, postAllowance
-        );
+        paymentClient.originalEnsureTokenAllowance(paymentProcessor, amount);
 
         uint currentAllowance =
             token.allowance(address(paymentClient), address(paymentProcessor));
 
-        if (initialAllowance > postAllowance) {
-            assertEq(currentAllowance, initialAllowance);
-        } else {
-            assertEq(currentAllowance, postAllowance);
-        }
+        assertEq(currentAllowance, initialAllowance + amount);
     }
 
     function testIsAuthorizedPaymentProcessor(address addr) public {
