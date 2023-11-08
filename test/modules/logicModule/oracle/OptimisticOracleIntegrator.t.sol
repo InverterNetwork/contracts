@@ -270,12 +270,14 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     function testAssertDataFor_whenCallerDoesNotHaveAsserterRole(address who)
         public
     {
-        bytes32 roleId = _authorizer.generateRoleId(address(ooIntegrator), ooIntegrator.ASSERTER_ROLE());
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(ooIntegrator), ooIntegrator.ASSERTER_ROLE()
+        );
         _authorizer.setAllAuthorized(false);
         vm.prank(address(0xBEEF));
         vm.expectRevert(
-// TODO correctly parse revert message
-/*             abi.encodePacked(
+            // TODO correctly parse revert message
+            /*             abi.encodePacked(
                 IModule.Module__CallerNotAuthorized.selector,
                 roleId,
                 address(0xBEEF)
