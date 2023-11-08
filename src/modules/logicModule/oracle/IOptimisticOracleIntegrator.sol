@@ -34,6 +34,15 @@ interface IOptimisticOracleIntegrator is
     //==========================================================================
     // Errors
 
+    /// @notice Invalid default currency
+    error Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
+
+    /// @notice Invalid default liveness
+    error Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
+
+    /// @notice Invalid Optimistic Oracle instance
+    error Module__OptimisticOracleIntegrator__InvalidOOInstance();
+
     //==========================================================================
     // Functions
 

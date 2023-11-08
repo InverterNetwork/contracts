@@ -20,12 +20,7 @@ import {OptimisticOracleV3Interface} from
 import {ClaimData} from
     "src/modules/logicModule/oracle/optimistic-oracle-v3/ClaimData.sol";
 
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-
 contract OptimisticOracleIntegratorMock is OptimisticOracleIntegrator {
-    // TODO: If we end up removing Module inheritance in Mixin, reintroduce it here.
-
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully

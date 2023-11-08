@@ -27,7 +27,6 @@ abstract contract OptimisticOracleIntegrator is
     IOptimisticOracleIntegrator,
     Module
 {
-    // TODO: think about removing the Module dependency from mixin, and have it only in the inheriting contract.
     using SafeERC20 for IERC20;
 
     //==========================================================================
@@ -56,19 +55,13 @@ abstract contract OptimisticOracleIntegrator is
         Metadata memory metadata,
         bytes memory configData
     ) external virtual override initializer {
-        //ToDo remove logs
-        //console.log("Orchestrator address:", address(orchestrator_));
         __Module_init(orchestrator_, metadata);
 
         (address currencyAddr, address ooAddr) =
             abi.decode(configData, (address, address));
-        //console.log("Currency address:",currencyAddr);
-        //console.log("Optimistic Oracle address:", ooAddr);
 
         oo = OptimisticOracleV3Interface(ooAddr);
         defaultIdentifier = oo.defaultIdentifier();
-        //console.log("Default Identifier data (next line): ");
-        //console.logBytes32(defaultIdentifier);
 
         setDefaultCurrency(currencyAddr);
         setOptimisticOracle(ooAddr);
@@ -92,15 +85,18 @@ abstract contract OptimisticOracleIntegrator is
         onlyOrchestratorOwner
     {
         if (address(_newCurrency) == address(0)) {
-            revert(); //TODO add revert type
+            revert Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
         }
         defaultCurrency = IERC20(_newCurrency);
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
     function setOptimisticOracle(address _newOO) public onlyOrchestratorOwner {
+        if (address(_newOO) == address(0)) {
+            revert Module__OptimisticOracleIntegrator__InvalidOOInstance();
+        }
         oo = OptimisticOracleV3Interface(_newOO);
-        defaultIdentifier = oo.defaultIdentifier();
+        defaultIdentifier = oo.defaultIdentifier(); // TODO Awaiting ERC-165 check for Interface Validation
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
@@ -108,7 +104,9 @@ abstract contract OptimisticOracleIntegrator is
         public
         onlyOrchestratorOwner
     {
-        require(_newLiveness > 0); //TODO clean up
+        if (_newLiveness == 0) {
+            revert Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
+        }
         assertionLiveness = _newLiveness;
     }
 

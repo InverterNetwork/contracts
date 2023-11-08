@@ -39,7 +39,6 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     // Setup + Init
 
     function setUp() public {
-        // TODO
         ooV3 = new OptimisticOracleV3Mock(_token, DEFAULT_LIVENESS);
         // we whitelist the default currency
         ooV3.whitelistCurrency(address(_token), 5e17);
@@ -163,7 +162,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     */
 
     function testSetDefaultCurrencyFails_whenNewCurrencyIsZero() public {
-        vm.expectRevert(); // TODO: exact revert message
+        vm.expectRevert(
+            IOptimisticOracleIntegrator
+                .Module__OptimisticOracleIntegrator__InvalidDefaultCurrency
+                .selector
+        );
         ooIntegrator.setDefaultCurrency(address(0));
     }
 
@@ -190,7 +193,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
                 emits an event
     */
     function testSetOptimisticOracleFails_WhenNewOracleIsZero() public {
-        vm.expectRevert(); // TODO: exact revert message
+        vm.expectRevert(
+            IOptimisticOracleIntegrator
+                .Module__OptimisticOracleIntegrator__InvalidOOInstance
+                .selector
+        ); // TODO: exact revert message
         ooIntegrator.setOptimisticOracle(address(0));
     }
 
@@ -198,7 +205,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         address notOracle
     ) public {
         _validateAddress(notOracle);
-        vm.expectRevert(); // TODO: exact revert message
+        vm.expectRevert(); // TODO Awaiting ERC-165 check for revert message validation
         ooIntegrator.setOptimisticOracle(notOracle);
     }
 
@@ -221,7 +228,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     */
 
     function testSetDefaultAssertionLivenessFails_whenLivenessIsZero() public {
-        vm.expectRevert(); // TODO: exact revert message
+        vm.expectRevert(
+            IOptimisticOracleIntegrator
+                .Module__OptimisticOracleIntegrator__InvalidDefaultLiveness
+                .selector
+        ); // TODO: exact revert message
         ooIntegrator.setDefaultAssertionLiveness(0);
     }
 
@@ -233,7 +244,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     /*
         When the caller does not have asserter role
-            reverts // TODO tested in integration
+            reverts 
         when the caller has the asserter role
             when the asserter address is 0
                 it uses msgSender as asserter address
@@ -256,14 +267,24 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     */
     //Maybe better here?
-    /*     function testAssertDataFor_whenCallerDoesNotHaveAsserterRole(address who) public {
-        
-        vm.assume(authorizer.)
-        vm.expectRevert(); // TODO: exact revert message
+    function testAssertDataFor_whenCallerDoesNotHaveAsserterRole(address who)
+        public
+    {
+        bytes32 roleId = _authorizer.generateRoleId(address(ooIntegrator), ooIntegrator.ASSERTER_ROLE());
+        _authorizer.setAllAuthorized(false);
+        vm.prank(address(0xBEEF));
+        vm.expectRevert(
+// TODO correctly parse revert message
+/*             abi.encodePacked(
+                IModule.Module__CallerNotAuthorized.selector,
+                roleId,
+                address(0xBEEF)
+            ) */
+        );
         ooIntegrator.assertDataFor(
             MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, MOCK_ASSERTER_ADDRESS
         );
-    } */
+    }
 
     function testAssertDataFor_whenAsserterAddressIsZero() public {
         address prankUser = address(0x987654321);
