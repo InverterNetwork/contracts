@@ -17,7 +17,7 @@ _How to section, please remove before submitting issue_
 1. Chose category of issue, delete the rest
 1. Add context, if applicable
 1. Link PR comment and mark them as done once implemented. This can be sees as acceptance criteria.
-   1. **Important:** when adding a PR comment to an issue please make sure to mark the comment so it is clear that it has been captured within an issue. An example of marking could be reacting with a :thump
+   1. **Important:** when adding a PR comment to an issue please make sure to mark the comment so it is clear that it has been captured within an issue. An example of marking could be reacting with a :+1:
 1. Tag relevant people in the comment section
 
 ---
