@@ -42,6 +42,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
         return reserveRatioForSelling;
     }
 
+    function call_collateralTokenDecimals() external view returns (uint8) {
+        return collateralTokenDecimals;
+    }
+
     // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
     function call_setDecimals(uint8 _newDecimals) external {
         _setTokenDecimals(_newDecimals);

@@ -185,6 +185,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             "Decimals has not been set correctly"
         );
         assertEq(
+            bondingCurveFundingManager.call_collateralTokenDecimals(),
+            _token.decimals(),
+            "Collateral token decimals has not been set correctly"
+        );
+        assertEq(
             address(bondingCurveFundingManager.formula()),
             formula,
             "Formula has not been set correctly"

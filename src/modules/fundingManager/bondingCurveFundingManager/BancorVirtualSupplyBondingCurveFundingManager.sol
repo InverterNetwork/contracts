@@ -81,6 +81,9 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     uint32 internal constant PPM = 1_000_000;
     /// @dev Token that is accepted by this funding manager for deposits.
     IERC20 private _token;
+    /// @dev Token decimals of the Orchestrator token, which is used as collateral and stores within
+    /// implementation for gas saving.
+    uint8 internal collateralTokenDecimals;
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -109,6 +112,9 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _token = IERC20(_acceptedToken);
         // Set token decimals for issuance token
         _setTokenDecimals(issuanceToken.decimals);
+        // Store token decimals for collateral
+        collateralTokenDecimals =
+            IERC20MetadataUpgradeable(address(token())).decimals();
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
@@ -286,9 +292,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     {
         // Convert depositAmount to 18 decimals, which is required by Bancor formula
         uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
-            _depositAmount,
-            IERC20MetadataUpgradeable(address(token())).decimals(),
-            eighteenDecimals
+            _depositAmount, collateralTokenDecimals, eighteenDecimals
         );
         // Calculate mint amount through bonding curve
         mintAmount = formula.calculatePurchaseReturn(
@@ -328,9 +332,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
         // Convert redeem amount to collateral decimals
         redeemAmount = _convertAmountToRequiredDecimal(
-            redeemAmount,
-            eighteenDecimals,
-            IERC20MetadataUpgradeable(address(token())).decimals()
+            redeemAmount, eighteenDecimals, collateralTokenDecimals
         );
     }
 
