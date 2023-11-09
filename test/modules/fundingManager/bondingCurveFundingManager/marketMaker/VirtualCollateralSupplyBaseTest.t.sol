@@ -60,7 +60,7 @@ contract VirtualCollateralSupplyBaseTest is Test {
     }
 
     function testSubCollateralAmount(uint amount) external {
-        vm.assume(amount <= INITIAL_SUPPLY);
+        vm.assume(amount < INITIAL_SUPPLY);
 
         // Test event
         vm.expectEmit(
@@ -76,7 +76,7 @@ contract VirtualCollateralSupplyBaseTest is Test {
         );
     }
 
-    function testSubCollateralAmountFails(uint amount) external {
+    function testSubCollateralAmountFailsIfUnderflow(uint amount) external {
         vm.assume(amount > INITIAL_SUPPLY);
 
         vm.expectRevert(
@@ -87,8 +87,19 @@ contract VirtualCollateralSupplyBaseTest is Test {
         virtualCollateralSupplyBase.subVirtualCollateralAmount(amount);
     }
 
+    function testSubCollateralAmountFailsIfZero() external {
+        uint amount = INITIAL_SUPPLY;
+
+        vm.expectRevert(
+            IVirtualCollateralSupply
+                .VirtualCollateralSupply__VirtualSupplyCannotBeZero
+                .selector
+        );
+        virtualCollateralSupplyBase.subVirtualCollateralAmount(amount);
+    }
+
     function testGetterAndSetter(uint amount) external {
-        vm.assume(amount <= MAX_UINT);
+        amount = bound(amount, 1, MAX_UINT);
 
         assertEq(
             virtualCollateralSupplyBase.getVirtualCollateralSupply(),
@@ -103,6 +114,22 @@ contract VirtualCollateralSupplyBaseTest is Test {
 
         assertEq(
             virtualCollateralSupplyBase.getVirtualCollateralSupply(), (amount)
+        );
+    }
+
+    function testGetterAndSetterFailsIfSetToZero() external {
+        uint amount = 0;
+
+        vm.expectRevert(
+            IVirtualCollateralSupply
+                .VirtualCollateralSupply__VirtualSupplyCannotBeZero
+                .selector
+        );
+        virtualCollateralSupplyBase.setVirtualCollateralSupply(amount);
+
+        assertEq(
+            virtualCollateralSupplyBase.getVirtualCollateralSupply(),
+            (INITIAL_SUPPLY)
         );
     }
 }
