@@ -440,7 +440,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             true, true, true, true, address(bondingCurveFundingManager)
         );
         emit VirtualCollateralAmountAdded(
-            amount, (INITIAL_TOKEN_SUPPLY + amount)
+            buyAmountMinusFee, (INITIAL_TOKEN_SUPPLY + buyAmountMinusFee)
         );
         bondingCurveFundingManager.buy(amount);
 

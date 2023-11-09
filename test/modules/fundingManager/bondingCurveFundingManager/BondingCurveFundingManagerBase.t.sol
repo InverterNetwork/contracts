@@ -415,7 +415,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(bondingCurveFundingManager.buyFee(), newFee);
     }
 
-    /* Test _calculateFeeDeductedDepositAmount function
+    /* Test _calculateNetAmountAndFee function
         └── when feePct is lower than the BPS
                 └── it should return the deposit amount with the fee deducted
     */
@@ -428,12 +428,14 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
         _amount = bound(_amount, 1, maxAmount);
 
-        uint amountMinusFee = _amount - (_amount * _fee / _bps);
+        uint feeAmount = _amount * _fee / _bps;
+        uint amountMinusFee = _amount - feeAmount;
 
-        uint res = bondingCurveFundingManager
-            .call_calculateFeeDeductedDepositAmount(_amount, _fee);
+        (uint _amountMinusFee, uint _feeAmount) = bondingCurveFundingManager
+            .call_calculateNetAmountAndFee(_amount, _fee);
 
-        assertEq(res, amountMinusFee);
+        assertEq(_amountMinusFee, amountMinusFee);
+        assertEq(_feeAmount, feeAmount);
     }
 
     /* Test _setDecimals function

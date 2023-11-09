@@ -108,14 +108,15 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// to be possible. No further functionality is implemented which would manages the outflow of
     /// collateral, e.g., restricting max redeemable amount per user, or a redeemable amount which
     /// differes from the actual balance.
+    /// Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
+    /// contract for redemption.
     /// @param _receiver The address receiving the redeem amount.
     /// @param _depositAmount The amount of tokens being sold by the receiver.
     /// @return redeemAmount The amount of tokens that are transfered to the receiver in exchange for _depositAmount.
-    /// Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
-    /// contract for redemption.
+    /// @return feeAmount The amount of collateral token subtracted as fee
     function _sellOrder(address _receiver, uint _depositAmount)
         internal
-        returns (uint redeemAmount)
+        returns (uint redeemAmount, uint feeAmount)
     {
         if (_depositAmount == 0) {
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
@@ -126,10 +127,12 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
 
-        // Subtract fee from redeem amount
         if (sellFee > 0) {
-            redeemAmount =
-                _calculateFeeDeductedDepositAmount(redeemAmount, sellFee);
+            // Calculate fee amount and redeem amount subtracted by fee
+            (redeemAmount, feeAmount) =
+                _calculateNetAmountAndFee(redeemAmount, sellFee);
+            // Add fee amount to total collected fee
+            tradeFeeCollected += feeAmount;
         }
         // Require that enough collateral token is held to be redeemable
         if (

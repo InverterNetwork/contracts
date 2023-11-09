@@ -51,6 +51,9 @@ abstract contract BondingCurveFundingManagerBase is
     uint public buyFee;
     /// @dev Base Points used for percentage calculation. This value represents 100%
     uint internal constant BPS = 10_000;
+    /// @notice Accumulated trading fees collected from deposits made by users
+    /// when engaging with the bonding curve-based funding manager.
+    uint internal tradeFeeCollected;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -141,9 +144,11 @@ abstract contract BondingCurveFundingManagerBase is
     /// deducts any applicable fees, and mints new tokens for the buyer.
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral to deposit for buying tokens.
+    /// @return mintAmount The amount of issuance token minted to the receiver address
+    /// @return feeAmount The amount of collateral token subtracted as fee
     function _buyOrder(address _receiver, uint _depositAmount)
         internal
-        returns (uint mintAmount)
+        returns (uint mintAmount, uint feeAmount)
     {
         if (_depositAmount == 0) {
             revert BondingCurveFundingManager__InvalidDepositAmount();
@@ -152,10 +157,12 @@ abstract contract BondingCurveFundingManagerBase is
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
             _msgSender(), address(this), _depositAmount
         );
-        // Calculate deposit amount minus fee percentage
         if (buyFee > 0) {
-            _depositAmount =
-                _calculateFeeDeductedDepositAmount(_depositAmount, buyFee);
+            // Calculate fee amount and deposit amount subtracted by fee
+            (_depositAmount, feeAmount) =
+                _calculateNetAmountAndFee(_depositAmount, buyFee);
+            // Add fee amount to total collected fee
+            tradeFeeCollected += feeAmount;
         }
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
@@ -193,20 +200,21 @@ abstract contract BondingCurveFundingManagerBase is
         buyFee = _fee;
     }
 
-    /// @dev Calculates the deposit amount after deducting the fee.
-    /// The function takes a deposit amount and a fee percentage to calculate
-    /// the net deposit amount after fee deduction.
-    /// @param _depositAmount The original amount to be deposited.
-    /// @param _feePct The fee percentage to be deducted, represented in basis points.
-    /// @return depositAmountMinusFee The deposit amount after fee has been deducted.
-    function _calculateFeeDeductedDepositAmount(
-        uint _depositAmount,
-        uint _feePct
-    ) internal pure returns (uint depositAmountMinusFee) {
+    /// @dev Calculates the net amount after fee deduction and the fee amount based on
+    /// a transaction amount and a specified fee percentage.
+    /// @param _transactionAmount The amount involved in the transaction before fee deduction.
+    /// @param _feePct The fee percentage to be deducted, represented in basis points (BPS).
+    /// @return netAmount The transaction amount after fee deduction.
+    /// @return feeAmount The amount of fee deducted from the transaction amount.
+    function _calculateNetAmountAndFee(uint _transactionAmount, uint _feePct)
+        internal
+        pure
+        returns (uint netAmount, uint feeAmount)
+    {
         // Calculate fee amount
-        uint feeAmount = (_depositAmount * _feePct) / BPS;
-        // Subtract fee amount from deposit amount
-        depositAmountMinusFee = _depositAmount - feeAmount;
+        feeAmount = (_transactionAmount * _feePct) / BPS;
+        // Calculate net amount after fee deduction
+        netAmount = _transactionAmount - feeAmount;
     }
 
     /// @dev Sets the number of decimals for the token.

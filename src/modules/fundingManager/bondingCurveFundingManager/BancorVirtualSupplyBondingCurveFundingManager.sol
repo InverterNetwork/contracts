@@ -366,9 +366,10 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     function _virtualBuyOrder(address _receiver, uint _depositAmount)
         internal
     {
-        uint amountIssued = _buyOrder(_receiver, _depositAmount);
+        (uint amountIssued, uint feeAmount) =
+            _buyOrder(_receiver, _depositAmount);
         _addVirtualTokenAmount(amountIssued);
-        _addVirtualCollateralAmount(_depositAmount);
+        _addVirtualCollateralAmount(_depositAmount - feeAmount);
     }
 
     /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
@@ -379,7 +380,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     function _virtualSellOrder(address _receiver, uint _depositAmount)
         internal
     {
-        uint redeemAmount = _sellOrder(_receiver, _depositAmount);
+        (uint redeemAmount,) = _sellOrder(_receiver, _depositAmount);
         _subVirtualTokenAmount(_depositAmount);
         _subVirtualCollateralAmount(redeemAmount);
     }
