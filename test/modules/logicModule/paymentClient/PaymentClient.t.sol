@@ -5,9 +5,9 @@ import "forge-std/Test.sol";
 
 // SuT
 import {
-    ERC20PaymentClientMock,
+    ERC20PaymentClientAccessMock,
     IERC20PaymentClient
-} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientAccessMock.sol";
 
 import {OrchestratorMock} from
     "test/utils/mocks/orchestrator/OrchestratorMock.sol";
@@ -26,7 +26,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ERC20PaymentClientTest is Test {
     // SuT
-    ERC20PaymentClientMock paymentClient;
+    ERC20PaymentClientAccessMock paymentClient;
     OrchestratorMock orchestrator;
     PaymentProcessorMock paymentProcessor;
     FundingManagerMock fundingManager;
@@ -37,7 +37,7 @@ contract ERC20PaymentClientTest is Test {
     function setUp() public {
         token = new ERC20Mock("Mock", "MOCK");
 
-        paymentClient = new ERC20PaymentClientMock(token);
+        paymentClient = new ERC20PaymentClientAccessMock(token);
         paymentClient.setIsAuthorized(address(this), true);
     }
 

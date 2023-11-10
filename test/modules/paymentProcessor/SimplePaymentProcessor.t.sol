@@ -16,7 +16,7 @@ import {
 import {
     IERC20PaymentClient,
     ERC20PaymentClientMock
-} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
