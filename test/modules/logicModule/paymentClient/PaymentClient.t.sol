@@ -259,32 +259,40 @@ contract ERC20PaymentClientTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test internal functions
 
-    event trigger(uint);
-    event trigger(address);
-    event trigger(bool);
+    function testEnsureTokenBalance(uint amountRequired, uint currentFunds)
+        public
+    {
+        //prep paymentClient
+        _token.mint(address(paymentClient), currentFunds);
 
-    function testEnsureTokenBalance(uint amountRequired) public {
         _orchestrator.setInterceptData(true);
 
-        //Check that Error works correctly
-        vm.expectRevert(
-            IERC20PaymentClient
-                .Module__ERC20PaymentClient__TokenTransferFailed
-                .selector
-        );
-        paymentClient.originalEnsureTokenBalance(amountRequired);
+        if (currentFunds >= amountRequired) {
+            _orchestrator.setExecuteTxBoolReturn(true);
+            //NoOp as we already have enough funds
+            assertEq(bytes(""), _orchestrator.executeTxData());
+        } else {
+            //Check that Error works correctly
+            vm.expectRevert(
+                IERC20PaymentClient
+                    .Module__ERC20PaymentClient__TokenTransferFailed
+                    .selector
+            );
+            paymentClient.originalEnsureTokenBalance(amountRequired);
 
-        _orchestrator.setExecuteTxBoolReturn(true);
+            _orchestrator.setExecuteTxBoolReturn(true);
 
-        paymentClient.originalEnsureTokenBalance(amountRequired);
+            paymentClient.originalEnsureTokenBalance(amountRequired);
 
-        assertEq(
-            abi.encodeCall(
-                IFundingManager.transferOrchestratorToken,
-                (address(paymentClient), amountRequired)
-            ),
-            _orchestrator.executeTxData()
-        );
+            //callback from orchestrator to transfer tokens has to be in this form
+            assertEq(
+                abi.encodeCall(
+                    IFundingManager.transferOrchestratorToken,
+                    (address(paymentClient), amountRequired - currentFunds)
+                ),
+                _orchestrator.executeTxData()
+            );
+        }
     }
 
     function testEnsureTokenAllowance(uint initialAllowance, uint amount)
