@@ -192,7 +192,7 @@ abstract contract ModuleManager is
     /// @inheritdoc IModuleManager
     function executeTxFromModule(address to, bytes memory data)
         external
-        override(IModuleManager)
+        virtual
         onlyModule
         returns (bool, bytes memory)
     {

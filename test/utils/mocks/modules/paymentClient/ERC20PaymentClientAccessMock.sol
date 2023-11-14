@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
+import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
+
 // SuT
 import {
     ERC20PaymentClient,
@@ -17,23 +19,14 @@ import {IPaymentProcessor} from
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ERC20PaymentClientAccessMock is ERC20PaymentClient {
-    ERC20Mock token;
-
     mapping(address => bool) authorized;
 
-    constructor(ERC20Mock token_) {
-        token = token_;
-    }
-
-    //--------------------------------------------------------------------------
-    // Mock Functions
-
-    function setIsAuthorized(address who, bool to) external {
-        authorized[who] = to;
-    }
-
-    function setOrchestrator(IOrchestrator orchestrator) external {
-        __Module_orchestrator = orchestrator;
+    function init(
+        IOrchestrator orchestrator_,
+        Metadata memory metadata,
+        bytes memory //configData
+    ) external override(Module) initializer {
+        __Module_init(orchestrator_, metadata);
     }
 
     //--------------------------------------------------------------------------
@@ -61,14 +54,14 @@ contract ERC20PaymentClientAccessMock is ERC20PaymentClient {
     //for testing the original functionality of the internal functions I created these placeholders
 
     function originalEnsureTokenBalance(uint amount) external {
-        return super._ensureTokenBalance(amount);
+        return _ensureTokenBalance(amount);
     }
 
     function originalEnsureTokenAllowance(
         IPaymentProcessor spender,
         uint amount
     ) external {
-        return super._ensureTokenAllowance(spender, amount);
+        return _ensureTokenAllowance(spender, amount);
     }
 
     function originalIsAuthorizedPaymentProcessor(IPaymentProcessor processor)
@@ -76,6 +69,6 @@ contract ERC20PaymentClientAccessMock is ERC20PaymentClient {
         view
         returns (bool)
     {
-        return super._isAuthorizedPaymentProcessor(processor);
+        return _isAuthorizedPaymentProcessor(processor);
     }
 }
