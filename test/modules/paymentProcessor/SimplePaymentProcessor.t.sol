@@ -114,6 +114,8 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+
+        assertEq(amount, paymentClient.amountPaidCounter());
     }
 
     function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)

@@ -153,7 +153,7 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
     }
 
     /// @inheritdoc IERC20PaymentClient
-    function amountPaid(uint amount) external {
+    function amountPaid(uint amount) external virtual {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(_msgSender()))) {
             revert Module__ERC20PaymentClient__CallerNotAuthorized();
