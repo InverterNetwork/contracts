@@ -71,4 +71,8 @@ contract ERC20PaymentClientAccessMock is ERC20PaymentClient {
     {
         return _isAuthorizedPaymentProcessor(processor);
     }
+
+    function set_outstandingTokenAmount(uint amount) external {
+        _outstandingTokenAmount = amount;
+    }
 }

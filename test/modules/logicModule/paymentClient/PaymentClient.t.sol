@@ -59,19 +59,11 @@ contract ERC20PaymentClientTest is ModuleTest {
         uint dueTo
     ) public {
         // Note to stay reasonable.
-        orderAmount = bound(orderAmount, 0, 10);
+        orderAmount = bound(orderAmount, 0, 100);
+        amount = bound(amount, 1, 1_000_000_000_000_000_000);
 
         _assumeValidRecipient(recipient);
         _assumeValidAmount(amount);
-
-        // Sum of all token amounts should not overflow.
-        uint sum;
-        for (uint i; i < orderAmount; ++i) {
-            unchecked {
-                sum += amount;
-            }
-            vm.assume(sum > amount);
-        }
 
         for (uint i; i < orderAmount; ++i) {
             paymentClient.addPaymentOrder(
@@ -191,19 +183,13 @@ contract ERC20PaymentClientTest is ModuleTest {
         uint dueTo
     ) public {
         // Note to stay reasonable.
-        orderAmount = bound(orderAmount, 0, 10);
+        orderAmount = bound(orderAmount, 0, 100);
+        amount = bound(amount, 1, 1_000_000_000_000_000_000);
 
         _assumeValidRecipient(recipient);
-        _assumeValidAmount(amount);
 
-        // Sum of all token amounts should not overflow.
-        uint sum;
-        for (uint i; i < orderAmount; ++i) {
-            unchecked {
-                sum += amount;
-            }
-            vm.assume(sum > amount);
-        }
+        //prep paymentClient
+        _token.mint(address(_fundingManager), orderAmount * amount);
 
         for (uint i; i < orderAmount; ++i) {
             paymentClient.addPaymentOrder(
@@ -237,12 +223,12 @@ contract ERC20PaymentClientTest is ModuleTest {
         updatedOrders = paymentClient.paymentOrders();
         assertEq(updatedOrders.length, 0);
 
-        // Check that outstanding token amount in ERC20PaymentClient got reset.
-        assertEq(paymentClient.outstandingTokenAmount(), 0);
+        // Check that outstanding token amount is still the same afterwards.
+        assertEq(paymentClient.outstandingTokenAmount(), totalOutstandingAmount);
 
         // Check that we received allowance to fetch tokens from ERC20PaymentClient.
         assertTrue(
-            _token.allowance(address(paymentClient), address(this))
+            _token.allowance(address(paymentClient), address(_paymentProcessor))
                 >= totalOutstandingAmount
         );
     }
@@ -254,6 +240,34 @@ contract ERC20PaymentClientTest is ModuleTest {
                 .selector
         );
         paymentClient.collectPaymentOrders();
+    }
+
+    //----------------------------------
+    // Test: amountPaid()
+
+    function testAmountPaid(uint preAmount, uint amount) public {
+        vm.assume(preAmount >= amount);
+        paymentClient.set_outstandingTokenAmount(preAmount);
+
+        vm.prank(address(_paymentProcessor));
+        paymentClient.amountPaid(amount);
+
+        assertEq(preAmount - amount, paymentClient.outstandingTokenAmount());
+    }
+
+    function testAmountPaidModifierInPosition(address caller) public {
+        paymentClient.set_outstandingTokenAmount(1);
+
+        if (caller != address(_paymentProcessor)) {
+            vm.expectRevert(
+                IERC20PaymentClient
+                    .Module__ERC20PaymentClient__CallerNotAuthorized
+                    .selector
+            );
+        }
+
+        vm.prank(address(caller));
+        paymentClient.amountPaid(1);
     }
 
     //--------------------------------------------------------------------------
@@ -352,19 +366,23 @@ contract ERC20PaymentClientTest is ModuleTest {
         view
         returns (address[] memory)
     {
-        address[] memory invalids = new address[](2);
+        address[] memory invalids = new address[](5);
 
         invalids[0] = address(0);
         invalids[1] = address(paymentClient);
+        invalids[2] = address(_fundingManager);
+        invalids[3] = address(_paymentProcessor);
+        invalids[4] = address(_orchestrator);
 
         return invalids;
     }
 
     /// @dev Returns all invalid amounts.
     function _createInvalidAmounts() internal pure returns (uint[] memory) {
-        uint[] memory invalids = new uint[](1);
+        uint[] memory invalids = new uint[](2);
 
         invalids[0] = 0;
+        invalids[1] = type(uint).max / 100_000;
 
         return invalids;
     }
