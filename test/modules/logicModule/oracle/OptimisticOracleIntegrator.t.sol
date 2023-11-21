@@ -68,38 +68,32 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
+        //set up new orchestrator
+        address impl = address(new OptimisticOracleIntegratorMock());
+        ooIntegrator = OptimisticOracleIntegratorMock(Clones.clone(impl));
+        _setUpOrchestrator(ooIntegrator);
+
         bytes memory _configData = abi.encode(address(_token), address(ooV3));
 
-        //TODO:
-        // Assert that all the variables are correctly set or test if wrong inits fail?
-        /*         vm.expectRevert(
-            IModule
-                .Module__InvalidOrchestratorAddress
-                .selector
-        );
-
         //Init Module wrongly
-        ooIntegrator.init(
-            _orchestrator, _METADATA, abi.encode(1 weeks - 1)
-        );
+        vm.expectRevert(IModule.Module__InvalidOrchestratorAddress.selector);
+        ooIntegrator.init(IOrchestrator(address(0)), _METADATA, _configData);
 
+        // Test invalid token
         vm.expectRevert(
             IOptimisticOracleIntegrator
-                .Module__RecurringPaymentManager__InvalidEpochLength
+                .Module__OptimisticOracleIntegrator__InvalidDefaultCurrency
                 .selector
         );
-
-        //Init Module wrongly
         ooIntegrator.init(
-            _orchestrator, _METADATA, abi.encode(52 weeks + 1)
+            _orchestrator, _METADATA, abi.encode(address(0), address(ooV3))
         );
 
-        //Init Module correct
+        // Test invalid OOAddress. See comment in OOIntegrator contract
+        vm.expectRevert();
         ooIntegrator.init(
-            _orchestrator, _METADATA, abi.encode(1 weeks)
+            _orchestrator, _METADATA, abi.encode(address(_token), address(0))
         );
-
-        assertEq(ooIntegrator.getEpochLength(), 1 weeks); */
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -197,7 +191,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
             IOptimisticOracleIntegrator
                 .Module__OptimisticOracleIntegrator__InvalidOOInstance
                 .selector
-        ); // TODO: exact revert message
+        );
         ooIntegrator.setOptimisticOracle(address(0));
     }
 
@@ -232,7 +226,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
             IOptimisticOracleIntegrator
                 .Module__OptimisticOracleIntegrator__InvalidDefaultLiveness
                 .selector
-        ); // TODO: exact revert message
+        );
         ooIntegrator.setDefaultAssertionLiveness(0);
     }
 
@@ -276,12 +270,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         _authorizer.setAllAuthorized(false);
         vm.prank(address(0xBEEF));
         vm.expectRevert(
-            // TODO correctly parse revert message
-            /*             abi.encodePacked(
+            abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
                 roleId,
                 address(0xBEEF)
-            ) */
+            )
         );
         ooIntegrator.assertDataFor(
             MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, MOCK_ASSERTER_ADDRESS
@@ -373,8 +366,13 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
             MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, MOCK_ASSERTER_ADDRESS
         );
 
-        vm.expectRevert(); // TODO: exact revert message
-
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOptimisticOracleIntegrator
+                    .Module__OptimisticOracleIntegrator__CallerNotOO
+                    .selector
+            )
+        );
         ooIntegrator.assertionResolvedCallback(assertionId, true);
     }
 
@@ -432,12 +430,12 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     // make sure an address doesn't collide with addresses in use by the test
 
     function _validateAddress(address validate) internal view {
-        // TODO checks for
+        // Checks for:
+        // address 0
         vm.assume(validate != address(0));
         // OO
         vm.assume(validate != address(ooV3));
         // Integrator
         vm.assume(validate != address(ooIntegrator));
-        // etc
     }
 }

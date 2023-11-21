@@ -43,6 +43,9 @@ interface IOptimisticOracleIntegrator is
     /// @notice Invalid Optimistic Oracle instance
     error Module__OptimisticOracleIntegrator__InvalidOOInstance();
 
+    /// @notice Caller is not Optimistic Oracle instance
+    error Module__OptimisticOracleIntegrator__CallerNotOO();
+
     //==========================================================================
     // Functions
 

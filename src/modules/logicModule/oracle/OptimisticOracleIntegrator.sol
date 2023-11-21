@@ -60,6 +60,7 @@ abstract contract OptimisticOracleIntegrator is
         (address currencyAddr, address ooAddr) =
             abi.decode(configData, (address, address));
 
+        // TODO ERC165 Interface Validation for the OO, for now it just reverts
         oo = OptimisticOracleV3Interface(ooAddr);
         defaultIdentifier = oo.defaultIdentifier();
 
@@ -171,7 +172,9 @@ abstract contract OptimisticOracleIntegrator is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public virtual {
-        require(_msgSender() == address(oo));
+        if (_msgSender() != address(oo)) {
+            revert Module__OptimisticOracleIntegrator__CallerNotOO();
+        }
         // If the assertion was true, then the data assertion is resolved.
         if (assertedTruthfully) {
             assertionsData[assertionId].resolved = true;
