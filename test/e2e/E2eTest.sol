@@ -31,6 +31,7 @@ import {StreamingPaymentProcessor} from
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
+import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {TokenGatedRoleAuthorizer} from
     "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
@@ -389,6 +390,34 @@ contract E2eTest is Test {
         );
     }
 
+    // StakingManager
+
+    StakingManager stakingManagerImpl;
+    Beacon stakingManagerBeacon;
+    address stakingManagerBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata stakingManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/inverter/staking-manager", "StakingManager"
+    );
+    IOrchestratorFactory.ModuleConfig stakingManagerFactoryConfig;
+
+    function setUpStakingManager() private {
+        // Deploy module implementations.
+        stakingManagerImpl = new StakingManager();
+
+        // Deploy module beacons.
+        vm.prank(stakingManagerBeaconOwner);
+        stakingManagerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(stakingManagerBeaconOwner);
+        stakingManagerBeacon.upgradeTo(address(stakingManagerImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            stakingManagerMetadata, IBeacon(stakingManagerBeacon)
+        );
+    }
+
     //--------------------------------------------------------------------------
     // utils
 
@@ -459,6 +488,7 @@ contract E2eTest is Test {
         //LogicModule
         setUpRecurringPaymentManager();
         setUpBountyManager();
+        setUpStakingManager();
 
         //utils
         setSingleVoteGovernor();
@@ -518,6 +548,38 @@ contract E2eTest is Test {
         IOrchestratorFactory.ModuleConfig[] memory optionalModules =
             new IOrchestratorFactory.ModuleConfig[](1);
         optionalModules[0] = bountyManagerFactoryConfig;
+
+        IOrchestratorFactory.ModuleConfig memory
+            rebasingFundingManagerFactoryConfig = IOrchestratorFactory
+                .ModuleConfig(
+                rebasingFundingManagerMetadata,
+                abi.encode(address(config.token)),
+                abi.encode(hasDependency, dependencies)
+            );
+
+        return orchestratorFactory.createOrchestrator(
+            config,
+            rebasingFundingManagerFactoryConfig,
+            roleAuthorizerFactoryConfig,
+            paymentProcessorFactoryConfig,
+            optionalModules
+        );
+    }
+
+    function _createNewOrchestratorWithAllModules_StakingManager(
+        IOrchestratorFactory.OrchestratorConfig memory config,
+        address stakingToken
+    ) internal returns (IOrchestrator) {
+        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory.ModuleConfig[](1);
+
+        stakingManagerFactoryConfig = IOrchestratorFactory.ModuleConfig(
+            stakingManagerMetadata,
+            abi.encode(stakingToken),
+            abi.encode(true, dependencies)
+        );
+
+        optionalModules[0] = stakingManagerFactoryConfig;
 
         IOrchestratorFactory.ModuleConfig memory
             rebasingFundingManagerFactoryConfig = IOrchestratorFactory
