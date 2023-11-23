@@ -72,9 +72,9 @@ abstract contract ModuleTest is Test {
     //
     // MUST be implemented in downstream contract.
 
-    function testInit() public virtual;
+    function testInit() public virtual {}
 
-    function testReinitFails() public virtual;
+    function testReinitFails() public virtual {}
 
     //--------------------------------------------------------------------------------
     // Assertion Helper Functions
