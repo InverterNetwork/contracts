@@ -42,23 +42,25 @@ contract StakingManager is
 
     //--------------------------------------------------------------------------
     // Storage
-
+    /// @dev address of the token that can be staked here
     address public stakingToken;
-
+    /// @dev total supply of the token that is staked here
     uint public totalSupply;
-
+    /// @dev rate of how many reward tokens are distributed from the fundingmanager to the whole staking pool in seconds
     uint public rewardRate;
-
+    /// @dev timestamp of when the reward period will end
     uint public rewardsEnd;
-
+    /// @dev internal value that is needed to calculate the reard each user will receive
     uint internal rewardValue;
-
+    /// @dev timestamp of when the rewardValue was last updated
     uint internal lastUpdate;
 
+    /// @dev mapping of balances of each user in the staking token
     mapping(address => uint) internal _balances;
-
+    /// @dev mapping of reward Values that are needed to calculate the rewards that a user should receive
+    /// @dev should change everytime the user stakes or withdraws funds
     mapping(address => uint) internal userRewardValue;
-
+    /// @dev mapping of how many reward tokens the user accumulated
     mapping(address => uint) internal rewards;
 
     //--------------------------------------------------------------------------
@@ -71,7 +73,7 @@ contract StakingManager is
         bytes memory configData
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
-        stakingToken = abi.decode(configData, (address)); //@note currently there is no way to change the staking token address
+        stakingToken = abi.decode(configData, (address));
     }
 
     //--------------------------------------------------------------------------
@@ -127,8 +129,8 @@ contract StakingManager is
     }
 
     /// @inheritdoc IStakingManager
+    /// @dev this function will revert with a Over/Underflow error in case amount is higher than balance
     function withdraw(uint amount) external nonReentrant validAmount(amount) {
-        //@note should this be validWithdrawAmount? Function will break anyway if _balance is
         address sender = _msgSender();
         //Update rewardValue, updatedTimestamp and earned values
         _update(sender);
