@@ -51,8 +51,9 @@ contract E2ETest is E2EModuleRegistry {
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
 
-        orchestratorFactory =
-        new OrchestratorFactory(address(orchestratorImpl), address(moduleFactory));
+        orchestratorFactory = new OrchestratorFactory(
+            address(orchestratorImpl), address(moduleFactory)
+        );
     }
 
     // Creates an orchestrator with the supplied config and the stored module config.
