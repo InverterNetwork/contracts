@@ -440,8 +440,9 @@ contract E2eTest is Test {
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
 
-        orchestratorFactory =
-        new OrchestratorFactory(address(orchestratorImpl), address(moduleFactory));
+        orchestratorFactory = new OrchestratorFactory(
+            address(orchestratorImpl), address(moduleFactory)
+        );
 
         //FundingManager
         setUpRebasingFundingManager();
