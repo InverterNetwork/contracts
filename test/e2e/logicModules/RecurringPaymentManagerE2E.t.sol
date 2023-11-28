@@ -1,19 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2eTest} from "test/e2e/E2eTest.sol";
-import "forge-std/console.sol";
-
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
-import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
+import {
+    E2ETest, IOrchestratorFactory, IOrchestrator
+} from "test/e2e/E2ETest.sol";
 
-// External Libraries
-import {Clones} from "@oz/proxy/Clones.sol";
-
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
 // SuT
 import {
     RecurringPaymentManager,
@@ -21,18 +13,19 @@ import {
     IERC20PaymentClient
 } from "src/modules/logicModule/RecurringPaymentManager.sol";
 
-import {StreamingPaymentProcessor} from
-    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
-
+// Modules that are used in this E2E test
 import {
+    StreamingPaymentProcessor,
     IStreamingPaymentProcessor,
     IERC20PaymentClient
-} from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
+} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
+import {RebasingFundingManager} from
+    "src/modules/fundingManager/RebasingFundingManager.sol";
 
-// Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+contract RecurringPaymentManagerE2E is E2ETest {
+    // Module Configurations for the current E2E test. Should be filled during setUp() call.
+    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
-contract RecurringPayments is E2eTest {
     // Let's create a list of paymentReceivers
     address paymentReceiver1 = makeAddr("paymentReceiver 1");
     address paymentReceiver2 = makeAddr("paymentReceiver 2");
@@ -47,17 +40,69 @@ contract RecurringPayments is E2eTest {
     // Constants
     uint constant _SENTINEL = type(uint).max;
 
-    ERC20Mock token = new ERC20Mock("Mock", "MOCK");
-
     uint paymentReceiver1InitialBalance;
     uint paymentReceiver2InitialBalance;
+
+    function setUp() public override {
+        // Setup common E2E framework
+        super.setUp();
+
+        // Set Up individual Modules the E2E test is going to use and store their configurations:
+        // NOTE: It's important to store the module configurations in order, since _create_E2E_Orchestrator() will copy from the array.
+        // The order should be:
+        //      moduleConfigurations[0]  => FundingManager
+        //      moduleConfigurations[1]  => Authorizer
+        //      moduleConfigurations[2]  => PaymentProcessor
+        //      moduleConfigurations[3:] => Additional Logic Modules
+
+        // FundingManager
+        setUpRebasingFundingManager();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                rebasingFundingManagerMetadata,
+                abi.encode(address(token)),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // Authorizer
+        setUpRoleAuthorizer();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                roleAuthorizerMetadata,
+                abi.encode(address(this), address(this)),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // PaymentProcessor
+        setUpStreamingPaymentProcessor();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                streamingPaymentProcessorMetadata,
+                bytes(""),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // Additional Logic Modules
+        setUpRecurringPaymentManager();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                recurringPaymentManagerMetadata,
+                abi.encode(1 weeks),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+    }
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {
         paymentAmount = bound(paymentAmount, 1, 1e18);
         RecurringPaymentManager recurringPaymentManager;
 
-        // -----------INIT
-        // address(this) creates a new orchestrator.
+        //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
             owner: address(this),
@@ -65,9 +110,7 @@ contract RecurringPayments is E2eTest {
         });
 
         IOrchestrator orchestrator =
-        _createNewOrchestratorWithAllModules_withRecurringPaymentManagerAndStreamingPaymentProcessor(
-            orchestratorConfig
-        );
+            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
