@@ -1044,7 +1044,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.cancelRunningPayments(paymentClient);
 
         // measure recipients balances before attempting second claim.
-        uint[] memory balancesBefore = new uint256[](recipients.length);
+        uint[] memory balancesBefore = new uint[](recipients.length);
         for (uint i; i < recipients.length; i++) {
             vm.prank(recipients[i]);
             balancesBefore[i] = _token.balanceOf(recipients[i]);

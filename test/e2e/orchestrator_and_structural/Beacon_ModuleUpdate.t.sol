@@ -1,23 +1,17 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
-
-// External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-
-// Internal Dependencies
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
+//Internal Dependencies
+import {
+    E2ETest,
+    IOrchestratorFactory,
+    IOrchestrator,
+    ModuleFactory
+} from "test/e2e/E2ETest.sol";
+import {IModuleFactory, IModule} from "src/factories/IModuleFactory.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
-
-// Internal Interfaces
-import {
-    IModuleFactory,
-    IModule,
-    IOrchestrator
-} from "src/factories/IModuleFactory.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -27,18 +21,12 @@ import {ModuleImplementationV1Mock} from
 import {ModuleImplementationV2Mock} from
     "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
 
-// Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
-
-contract ModuleUpdateTest is Test {
-    // SuT
-    ModuleFactory factory;
-
+contract Beacon_ModuleUpdateTest is E2ETest {
     // Mocks
     ModuleMock module;
     BeaconMock beacon;
 
-    // Constants
+    // Mock Metadata
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 1;
     string constant URL = "https://github.com/organization/module";
@@ -47,23 +35,23 @@ contract ModuleUpdateTest is Test {
     IModule.Metadata DATA =
         IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
-    function setUp() public {
+    function setUp() public override {
+        super.setUp();
+
         module = new ModuleMock();
         beacon = new BeaconMock();
-
-        factory = new ModuleFactory();
     }
 
     function testDeploymentInvariants() public {
         // Invariants: Ownable2Step
-        assertEq(factory.owner(), address(this));
-        assertEq(factory.pendingOwner(), address(0));
+        assertEq(moduleFactory.owner(), address(this));
+        assertEq(moduleFactory.pendingOwner(), address(0));
     }
 
     //--------------------------------------------------------------------------
     // Tests: Beacon Upgrades
 
-    function testBeaconUpgrade(
+    function test_e2e_BeaconUpgrade(
         IModule.Metadata memory metadata,
         address orchestrator,
         bytes memory configData
@@ -77,10 +65,10 @@ contract ModuleUpdateTest is Test {
         beacon.overrideImplementation(address(implementationV1));
 
         // Register beacon as Module.
-        factory.registerMetadata(metadata, beacon);
+        moduleFactory.registerMetadata(metadata, beacon);
 
         //Create Module Proxy in Factory
-        address proxyImplementationAddress1 = factory.createModule(
+        address proxyImplementationAddress1 = moduleFactory.createModule(
             metadata, IOrchestrator(orchestrator), configData
         );
 

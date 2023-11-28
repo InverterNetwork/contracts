@@ -113,9 +113,7 @@ contract OrchestratorFactoryTest is Test {
 
         // Create optional ModuleConfig instances.
         IOrchestratorFactory.ModuleConfig[] memory moduleConfigs =
-        new IOrchestratorFactory.ModuleConfig[](
-                modulesLen
-            );
+            new IOrchestratorFactory.ModuleConfig[](modulesLen);
         for (uint i; i < modulesLen; ++i) {
             moduleConfigs[i] = moduleConfig;
         }
