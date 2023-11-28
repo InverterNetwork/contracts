@@ -64,6 +64,13 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         return _depositAmount;
     }
 
+    function getStaticPriceForBuying()
+        external
+        view
+        override(BondingCurveFundingManagerBase)
+        returns (uint)
+    {}
+
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 

@@ -84,6 +84,12 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     }
 
     //--------------------------------------------------------------------------
+    // Public Functions Implemented in Downstream Contract
+
+    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    function getStaticPriceForSelling() external virtual returns (uint);
+
+    //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
     /// @dev Function used for wrapping the call to the external contract responsible for

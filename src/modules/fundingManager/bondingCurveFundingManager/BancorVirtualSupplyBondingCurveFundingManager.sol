@@ -222,6 +222,34 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         return reserveRatioForBuying;
     }
 
+    /// @notice Calculates and returns the static price for buying the issuance token.
+    /// The return value is formatted in PPM.
+    /// @return uint The static price for buying the issuance token
+    function getStaticPriceForBuying()
+        external
+        view
+        override(BondingCurveFundingManagerBase)
+        returns (uint)
+    {
+        return _staticPricePPM(
+            virtualTokenSupply, virtualCollateralSupply, reserveRatioForBuying
+        );
+    }
+
+    /// @notice Calculates and returns the static price for selling the issuance token.
+    /// The return value is formatted in PPM.
+    /// @return uint The static price for selling the issuance token
+    function getStaticPriceForSelling()
+        external
+        view
+        override(RedeemingBondingCurveFundingManagerBase)
+        returns (uint)
+    {
+        return _staticPricePPM(
+            virtualTokenSupply, virtualCollateralSupply, reserveRatioForSelling
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
@@ -305,6 +333,25 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         mintAmount = _convertAmountToRequiredDecimal(
             mintAmount, eighteenDecimals, decimals()
         );
+    }
+
+    /// @dev Calculates the static price for either selling or buying the issuance token,
+    /// based on the provided issuance token supply, collateral supply, and buy or sell reserve ratio.
+    /// Note: The reserve ratio specifies whether the sell or buy price is returned.
+    /// The formula used is: PPM * PPM * collateralSupply / (issuanceTokenSupply * reserveRatio).
+    /// The formula is based on Aragon's BatchedBancorMarketMaker, which can be found here:
+    /// https://github.com/AragonBlack/fundraising/blob/5ad1332955bab9d36cfad345ae92b7ad7dc0bdbe/apps/batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol#L415
+    /// @param _issuanceTokenSupply The total supply of the issuance tokens.
+    /// @param _collateralSupply The total supply of the collateral held by the FundingManager.
+    /// @param _reserveRatio The reserve ratio, specified as either sell or buy reserve ratio.
+    /// @return uint The calculated static price for the specified operation, formatted in PPM
+    function _staticPricePPM(
+        uint _issuanceTokenSupply,
+        uint _collateralSupply,
+        uint32 _reserveRatio
+    ) internal pure returns (uint) {
+        return uint(PPM) * uint(PPM) * _collateralSupply
+            / (_issuanceTokenSupply * uint(_reserveRatio));
     }
 
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.

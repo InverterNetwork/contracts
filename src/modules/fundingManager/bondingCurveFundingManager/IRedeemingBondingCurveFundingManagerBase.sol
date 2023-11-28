@@ -73,4 +73,8 @@ interface IRedeemingBondingCurveFundingManagerBase {
     ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setSellFee(uint _fee) external;
+
+    /// @notice Calculates and returns the static price for selling the issuance token.
+    /// @return uint The static price for selling the issuance token.
+    function getStaticPriceForSelling() external returns (uint);
 }

@@ -123,6 +123,12 @@ abstract contract BondingCurveFundingManagerBase is
     }
 
     //--------------------------------------------------------------------------
+    // Public Functions Implemented in Downstream Contract
+
+    /// @inheritdoc IBondingCurveFundingManagerBase
+    function getStaticPriceForBuying() external virtual returns (uint);
+
+    //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
     /// @dev Function used for wrapping the call to the external contract responsible for

@@ -51,6 +51,16 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
         _setTokenDecimals(_newDecimals);
     }
 
+    function call_staticPricePPM(
+        uint _issuanceTokenSupply,
+        uint _collateralSupply,
+        uint32 _reserveRatio
+    ) external pure returns (uint) {
+        return _staticPricePPM(
+            _issuanceTokenSupply, _collateralSupply, _reserveRatio
+        );
+    }
+
     function call_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,

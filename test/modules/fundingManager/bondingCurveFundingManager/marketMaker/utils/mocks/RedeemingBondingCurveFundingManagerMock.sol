@@ -12,6 +12,9 @@ import {
     IRedeemingBondingCurveFundingManagerBase
 } from
     "src/modules/fundingManager/bondingCurveFundingManager/RedeemingBondingCurveFundingManagerBase.sol";
+import {BondingCurveFundingManagerBase} from
+    "src/modules/fundingManager/bondingCurveFundingManager/BondingCurveFundingManagerBase.sol";
+
 import {IBancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";
 import {Module} from "src/modules/base/Module.sol";
@@ -79,6 +82,20 @@ contract RedeemingBondingCurveFundingManagerMock is
         // Integration tests using the actual Formula can be found in the BancorFormulaFundingManagerTest.t.sol
         return _depositAmount;
     }
+
+    function getStaticPriceForSelling()
+        external
+        view
+        override(RedeemingBondingCurveFundingManagerBase)
+        returns (uint)
+    {}
+
+    function getStaticPriceForBuying()
+        external
+        view
+        override(BondingCurveFundingManagerBase)
+        returns (uint)
+    {}
 
     //--------------------------------------------------------------------------
     // Mock access for internal functions

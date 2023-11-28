@@ -884,6 +884,31 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
+    /* Test getStaticPriceForBuying() */
+
+    function testgetStaticPriceForBuying() public {
+        uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForBuying()
+        );
+        assertEq(
+            bondingCurveFundingManager.getStaticPriceForBuying(), returnValue
+        );
+    }
+    /* Test getStaticPriceForSelling() */
+
+    function testgetStaticPriceForSelling() public {
+        uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForBuying()
+        );
+        assertEq(
+            bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
+        );
+    }
+
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
@@ -1129,6 +1154,55 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
     }
 
+    /* Test _staticPricePPM function
+        ├── When calling with reserve ratio for selling
+        |   └── it should return the right value
+        ├── When calling with reserve ratio for buying
+        |   └── it should return the right value
+    */
+    function testStaticPriceWithSellReserveRatio() public {
+        // Create internal values for readability
+        uint _ppm = uint(bondingCurveFundingManager.call_PPM());
+        uint _virtualTokenSupply =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupply =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        uint32 _reserveRatioSelling =
+            bondingCurveFundingManager.call_reserveRatioForSelling();
+        // Calculate return value outside of function
+        uint calculatedValue = _ppm * _ppm * _virtualCollateralSupply
+            / (_virtualTokenSupply * uint(_reserveRatioSelling));
+        // Call internal function
+        uint functionReturnValue = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupply, _virtualCollateralSupply, _reserveRatioSelling
+        );
+
+        assertEq(calculatedValue, functionReturnValue);
+    }
+
+    function testStaticPriceWithBuyReserveRatio() public {
+        // Create internal values for readability
+        uint _ppm = uint(bondingCurveFundingManager.call_PPM());
+        uint _virtualTokenSupply =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupply =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        uint32 _reserveRatioBuying =
+            bondingCurveFundingManager.call_reserveRatioForBuying();
+
+        // Calculate return value outside of function
+        uint calculatedValue = _ppm * _ppm * _virtualCollateralSupply
+            / (_virtualTokenSupply * uint(_reserveRatioBuying));
+        // Call internal function
+        uint functionReturnValue = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupply, _virtualCollateralSupply, _reserveRatioBuying
+        );
+
+        assertEq(calculatedValue, functionReturnValue);
+    }
+
     /* Test _convertAmountToRequiredDecimal function
         ├── when the token decimals and the required decimals are the same
         │       └── it should return the amount without change
@@ -1136,7 +1210,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         │       └── it should cut the excess decimals from the amount and return it
         └── when caller is the Orchestrator owner
                 └── it should pad the amount by the missing decimals and return it
-
         */
     function testConvertAmountToRequiredDecimals_whenEqual(
         uint _amount,
