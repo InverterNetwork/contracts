@@ -1,7 +1,10 @@
 # Compiler files
 cache/
 out/
+
+# Test files
 coverage/
+lcov.info
 
 # Ignores development broadcast logs
 !/broadcast
