@@ -152,13 +152,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// Transactions exceeding this limit will be reverted.
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buyFor(address _receiver, uint _depositAmount)
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
         override(BondingCurveFundingManagerBase)
         validReceiver(_receiver)
         buyingIsEnabled
     {
-        _virtualBuyOrder(_receiver, _depositAmount);
+        _virtualBuyOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Buy tokens for the sender's address. This function is subject
@@ -170,12 +171,13 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// While this is substantially large, it is crucial to be aware of this constraint.
     /// Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buy(uint _depositAmount)
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function buy(uint _depositAmount, uint _minAmountOut)
         external
         override(BondingCurveFundingManagerBase)
         buyingIsEnabled
     {
-        _virtualBuyOrder(_msgSender(), _depositAmount);
+        _virtualBuyOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     /// @notice Redeem tokens on behalf of a specified receiver address. This function is subject
@@ -187,13 +189,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _receiver The address that will receive the redeemed tokens.
     /// @param _depositAmount The amount of issued token to deposited.
-    function sellFor(address _receiver, uint _depositAmount)
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
         override(RedeemingBondingCurveFundingManagerBase)
         validReceiver(_receiver)
         sellingIsEnabled
     {
-        _virtualSellOrder(_receiver, _depositAmount);
+        _virtualSellOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Sell collateral for the sender's address. This function is subject
@@ -204,12 +207,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of issued token depoisited.
-    function sell(uint _depositAmount)
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function sell(uint _depositAmount, uint _minAmountOut)
         external
         override(RedeemingBondingCurveFundingManagerBase)
         sellingIsEnabled
     {
-        _virtualSellOrder(_msgSender(), _depositAmount);
+        _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
@@ -248,6 +253,43 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         return _staticPricePPM(
             virtualTokenSupply, virtualCollateralSupply, reserveRatioForSelling
         );
+    }
+
+    /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
+    function calculatePurchaseReturn(uint _depositAmount)
+        external
+        view
+        returns (uint mintAmount)
+    {
+        if (_depositAmount == 0) {
+            revert
+                BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount(
+            );
+        }
+        if (buyFee > 0) {
+            (_depositAmount, /* feeAmount */ ) =
+                _calculateNetAmountAndFee(_depositAmount, buyFee);
+        }
+        return _issueTokensFormulaWrapper(_depositAmount);
+    }
+
+    /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
+    function calculateSaleReturn(uint _depositAmount)
+        external
+        view
+        returns (uint redeemAmount)
+    {
+        if (_depositAmount == 0) {
+            revert
+                BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount(
+            );
+        }
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
+        if (sellFee > 0) {
+            (redeemAmount, /* feeAmount */ ) =
+                _calculateNetAmountAndFee(redeemAmount, sellFee);
+        }
+        return redeemAmount;
     }
 
     //--------------------------------------------------------------------------
@@ -410,11 +452,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// virtual balances accordingly.
     /// @param _receiver The address of the recipient of the issued tokens.
     /// @param _depositAmount The amount of collateral deposited for the buy order.
-    function _virtualBuyOrder(address _receiver, uint _depositAmount)
-        internal
-    {
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function _virtualBuyOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal {
         (uint amountIssued, uint feeAmount) =
-            _buyOrder(_receiver, _depositAmount);
+            _buyOrder(_receiver, _depositAmount, _minAmountOut);
         _addVirtualTokenAmount(amountIssued);
         _addVirtualCollateralAmount(_depositAmount - feeAmount);
     }
@@ -424,10 +469,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// virtual balances accordingly.
     /// @param _receiver The address that will receive the redeem amount.
     /// @param _depositAmount The amount of tokens that are being sold.
-    function _virtualSellOrder(address _receiver, uint _depositAmount)
-        internal
-    {
-        (uint redeemAmount,) = _sellOrder(_receiver, _depositAmount);
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function _virtualSellOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal {
+        (uint redeemAmount,) =
+            _sellOrder(_receiver, _depositAmount, _minAmountOut);
         _subVirtualTokenAmount(_depositAmount);
         _subVirtualCollateralAmount(redeemAmount);
     }

@@ -77,18 +77,22 @@ abstract contract BondingCurveFundingManagerBase is
     // Public Functions
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function buyFor(address _receiver, uint _depositAmount)
+    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
         virtual
         buyingIsEnabled
         validReceiver(_receiver)
     {
-        _buyOrder(_receiver, _depositAmount);
+        _buyOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function buy(uint _depositAmount) external virtual buyingIsEnabled {
-        _buyOrder(_msgSender(), _depositAmount);
+    function buy(uint _depositAmount, uint _minAmountOut)
+        external
+        virtual
+        buyingIsEnabled
+    {
+        _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     //--------------------------------------------------------------------------
@@ -150,12 +154,14 @@ abstract contract BondingCurveFundingManagerBase is
     /// deducts any applicable fees, and mints new tokens for the buyer.
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral to deposit for buying tokens.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     /// @return mintAmount The amount of issuance token minted to the receiver address
     /// @return feeAmount The amount of collateral token subtracted as fee
-    function _buyOrder(address _receiver, uint _depositAmount)
-        internal
-        returns (uint mintAmount, uint feeAmount)
-    {
+    function _buyOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal returns (uint mintAmount, uint feeAmount) {
         if (_depositAmount == 0) {
             revert BondingCurveFundingManager__InvalidDepositAmount();
         }
@@ -172,6 +178,10 @@ abstract contract BondingCurveFundingManagerBase is
         }
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+        // Revert when the mint amount is lower than minimum amount the user expects
+        if (mintAmount < _minAmountOut) {
+            revert BondingCurveFundingManagerBase__InsufficientOutputAmount();
+        }
         // Mint tokens to address
         _mint(_receiver, mintAmount);
         // Emit event

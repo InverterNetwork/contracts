@@ -134,7 +134,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManager__BuyingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManager.buyFor(non_owner_address, 100);
+        bondingCurveFundingManager.buyFor(non_owner_address, 100, 100);
     }
 
     /* Test validReceiver modifier
@@ -154,7 +154,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManagerBase__InvalidRecipient
                 .selector
         );
-        bondingCurveFundingManager.buyFor(address(0), 100);
+        bondingCurveFundingManager.buyFor(address(0), 100, 100);
 
         // Test for its own address)
         vm.expectRevert(
@@ -163,7 +163,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .selector
         );
         bondingCurveFundingManager.buyFor(
-            address(bondingCurveFundingManager), 100
+            address(bondingCurveFundingManager), 100, 100
         );
 
         vm.stopPrank();
@@ -189,7 +189,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buyFor(receiver, amount);
+        bondingCurveFundingManager.buyFor(receiver, amount, amount);
 
         // Post-checks
         assertEq(
@@ -205,6 +205,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         ├── when the deposit amount is 0
         │       └── it should revert 
         └── when the deposit amount is not 0
+                ├── when the return amount is lower than minimum expected amount out
+                │       └── it should revert 
                 ├── when the fee is higher than 0
                 │       └── it should substract the fee from the deposit amount
                 │               ├── it should pull the buy amount from the caller  
@@ -227,7 +229,27 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManager__InvalidDepositAmount
                 .selector
         );
-        bondingCurveFundingManager.buy(0);
+        bondingCurveFundingManager.buy(0, 0);
+    }
+
+    function testBuyOrder_FailsIfReturnAmountIsLowerThanMinAmount(uint amount)
+        public
+    {
+        // Setup
+        vm.assume(amount > 0 && amount < UINT256_MAX - 1); // Assume no max Uint because 1 is added for minAmountOut
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+        // Mock formula contract returns amount in as amount out. Add 1 to trigger revert
+        uint minAmountOut = amount + 1;
+
+        vm.startPrank(buyer);
+        vm.expectRevert(
+            IBondingCurveFundingManagerBase
+                .BondingCurveFundingManagerBase__InsufficientOutputAmount
+                .selector
+        );
+        bondingCurveFundingManager.buy(amount, minAmountOut);
     }
 
     function testBuyOrderWithZeroFee(uint amount) public {
@@ -251,7 +273,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount);
+        bondingCurveFundingManager.buy(amount, amount);
 
         // Post-checks
         assertEq(
@@ -294,7 +316,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount);
+        bondingCurveFundingManager.buy(amount, amountMinusFee);
 
         // Post-checks
         assertEq(

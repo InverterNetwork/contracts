@@ -147,7 +147,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 .RedeemingBondingCurveFundingManager__SellingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManager.sellFor(non_owner_address, 100);
+        bondingCurveFundingManager.sellFor(non_owner_address, 100, 100);
     }
 
     // test modifier on sellFor function
@@ -171,7 +171,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sellFor(receiver, sellAmount);
+        bondingCurveFundingManager.sellFor(receiver, sellAmount, sellAmount);
 
         // Post-checks
         uint redeemAmount = _token.balanceOf(receiver) - receiverBalanceBefore;
@@ -187,6 +187,8 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         ├── when the sell amount is 0
         │       └── it should revert 
         └── when the sell amount is not 0
+                ├── when the return amount is lower than minimum expected amount out
+                │       └── it should revert 
                 ├── when the fee is higher than 0
                 │               ├── it should burn the sell amount from the caller
                 │               ├── it should determine the redeem amount of the sent tokens 
@@ -214,7 +216,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                     .RedeemingBondingCurveFundingManager__InvalidDepositAmount
                     .selector
             );
-            bondingCurveFundingManager.sell(0);
+            bondingCurveFundingManager.sell(0, 0);
         }
         vm.stopPrank();
     }
@@ -238,9 +240,29 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                     .RedeemingBondingCurveFundingManager__InsufficientCollateralForRedemption
                     .selector
             );
-            bondingCurveFundingManager.sell(amount);
+            bondingCurveFundingManager.sell(amount, amount);
         }
         vm.stopPrank();
+    }
+
+    function testSellOrder_FailsIfReturnAmountIsLowerThanMinAmount(uint amount)
+        public
+    {
+        // Setup
+        vm.assume(amount > 0 && amount < UINT256_MAX - 1); // Assume no max Uint because 1 is added for minAmountOut
+
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, amount);
+        // Mock formula contract returns amount in as amount out. Add 1 to trigger revert
+        uint minAmountOut = amount + 1;
+
+        vm.startPrank(seller);
+        vm.expectRevert(
+            IRedeemingBondingCurveFundingManagerBase
+                .RedeemingBondingCurveFundingManager__InsufficientOutputAmount
+                .selector
+        );
+        bondingCurveFundingManager.sell(amount, minAmountOut);
     }
 
     function testSellOrderWithZeroFee(uint amount) public {
@@ -265,7 +287,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sell(amount);
+        bondingCurveFundingManager.sell(amount, amount);
 
         // Post-checks
         assertEq(
@@ -313,7 +335,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sell(amount);
+        bondingCurveFundingManager.sell(amount, amountMinusFee);
 
         // Post-checks
         assertEq(
@@ -460,7 +482,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         vm.startPrank(seller);
         {
             _token.approve(address(bondingCurveFundingManager), amount);
-            bondingCurveFundingManager.buy(amount);
+            bondingCurveFundingManager.buy(amount, amount);
 
             bondingCurveFundingManager.approve(
                 address(bondingCurveFundingManager), amount

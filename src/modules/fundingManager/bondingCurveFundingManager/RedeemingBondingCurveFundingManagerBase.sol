@@ -51,18 +51,22 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     // Public Functions
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function sellFor(address _receiver, uint _depositAmount)
+    function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
         virtual
         sellingIsEnabled
         validReceiver(_receiver)
     {
-        _sellOrder(_receiver, _depositAmount);
+        _sellOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function sell(uint _depositAmount) external virtual sellingIsEnabled {
-        _sellOrder(_msgSender(), _depositAmount);
+    function sell(uint _depositAmount, uint _minAmountOut)
+        external
+        virtual
+        sellingIsEnabled
+    {
+        _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     //--------------------------------------------------------------------------
@@ -118,12 +122,14 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// contract for redemption.
     /// @param _receiver The address receiving the redeem amount.
     /// @param _depositAmount The amount of tokens being sold by the receiver.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     /// @return redeemAmount The amount of tokens that are transfered to the receiver in exchange for _depositAmount.
     /// @return feeAmount The amount of collateral token subtracted as fee
-    function _sellOrder(address _receiver, uint _depositAmount)
-        internal
-        returns (uint redeemAmount, uint feeAmount)
-    {
+    function _sellOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal returns (uint redeemAmount, uint feeAmount) {
         if (_depositAmount == 0) {
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
@@ -139,6 +145,11 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
                 _calculateNetAmountAndFee(redeemAmount, sellFee);
             // Add fee amount to total collected fee
             tradeFeeCollected += feeAmount;
+        }
+        // Revert when the redeem amount is lower than minimum amount the user expects
+        if (redeemAmount < _minAmountOut) {
+            revert RedeemingBondingCurveFundingManager__InsufficientOutputAmount(
+            );
         }
         // Require that enough collateral token is held to be redeemable
         if (
