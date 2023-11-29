@@ -16,7 +16,7 @@ import {
     MetadataManager
 } from "src/modules/utils/MetadataManager.sol";
 
-contract RoleAuthorizerE2E is E2ETest {
+contract MetadataManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
@@ -165,7 +165,7 @@ contract RoleAuthorizerE2E is E2ETest {
 
         // Or the title of the Project
         assertEq(
-            metadataManager.getOrchestratorMetadata().title, "InverterProject"
+            metadataManager.getOrchestratorMetadata().title, "Inverter Project"
         );
 
         // In case there is a change in the project behind the scenes we want to adapt the metadata accordingly
