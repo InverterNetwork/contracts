@@ -44,4 +44,32 @@ interface IMetadataManager {
 
     /// @notice Event emitted when the team metadata changed.
     event TeamMetadataUpdated(MemberMetadata[] members);
+
+    function getManagerMetadata()
+        external
+        view
+        returns (ManagerMetadata memory);
+
+    function getOrchestratorMetadata()
+        external
+        view
+        returns (OrchestratorMetadata memory);
+
+    function getTeamMetadata()
+        external
+        view
+        returns (MemberMetadata[] memory);
+
+    //--------------------------------------------------------------------------
+    // Setter Functions
+
+    function setManagerMetadata(ManagerMetadata calldata managerMetadata_)
+        external;
+
+    function setOrchestratorMetadata(
+        OrchestratorMetadata calldata orchestratorMetadata_
+    ) external;
+
+    function setTeamMetadata(MemberMetadata[] calldata teamMetadata_)
+        external;
 }
