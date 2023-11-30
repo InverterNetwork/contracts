@@ -85,6 +85,10 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     //--------------------------------------------------------------------------
     // Init Function
 
+    constructor(address _trustedForwarder)
+        RedeemingBondingCurveFundingManagerBase(_trustedForwarder)
+    {}
+
     /// @inheritdoc Module
     function init(
         IOrchestrator orchestrator_,

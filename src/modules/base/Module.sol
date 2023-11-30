@@ -2,15 +2,14 @@
 pragma solidity 0.8.19;
 
 // External Dependencies
-import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+import {ERC2771ContextUpgradeable} from
+    "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
 /**
@@ -31,7 +30,7 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
  *
  * @author Inverter Network
  */
-abstract contract Module is IModule, Initializable, ContextUpgradeable {
+abstract contract Module is IModule, ERC2771ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Storage
     //
@@ -138,9 +137,9 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Initialization
 
-    constructor() {
-        _disableInitializers();
-    }
+    constructor(address _trustedForwarder)
+        ERC2771ContextUpgradeable(_trustedForwarder)
+    {}
 
     /// @inheritdoc IModule
     function init(
@@ -268,5 +267,25 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         } catch {
             return false;
         }
+    }
+
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
+        return super._msgSender();
+    }
+
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return super._msgData();
     }
 }

@@ -70,6 +70,8 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
     // Initialization
 
+    constructor(address _trustedForwarder) Module(_trustedForwarder) {}
+
     /// @inheritdoc Module
     function init(
         IOrchestrator orchestrator_,

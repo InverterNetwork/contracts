@@ -2,8 +2,10 @@
 pragma solidity 0.8.19;
 // External Libraries
 
-import {AccessControlEnumerableUpgradeable} from
-    "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
+import {
+    AccessControlEnumerableUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
 import {Module, IModule} from "src/modules/base/Module.sol";
 import {IAuthorizer} from "./IAuthorizer.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
@@ -48,7 +50,7 @@ contract RoleAuthorizer is
     //--------------------------------------------------------------------------
     // Constructor and initialization
 
-    constructor() {
+    constructor(address _trustedForwarder) Module(_trustedForwarder) {
         // make the BURN_ADMIN_ROLE immutable
         _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
     }
@@ -200,5 +202,29 @@ contract RoleAuthorizer is
     /// @inheritdoc IAuthorizer
     function getManagerRole() public pure returns (bytes32) {
         return ORCHESTRATOR_MANAGER_ROLE;
+    }
+
+    /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
+    /// as via the Module -> ERC2771ContextUpgradeable
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Module, ContextUpgradeable)
+        returns (address sender)
+    {
+        return super._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
+    /// as via the Module -> ERC2771ContextUpgradeable
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Module, ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return super._msgData();
     }
 }

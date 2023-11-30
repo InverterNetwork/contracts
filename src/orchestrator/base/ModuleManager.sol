@@ -2,8 +2,8 @@
 pragma solidity 0.8.19;
 
 // External Dependencies
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
-import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ERC2771ContextUpgradeable} from
+    "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 
 // Interfaces
 import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
@@ -24,11 +24,7 @@ import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
  * @author Adapted from Gnosis Safe
  * @author Inverter Network
  */
-abstract contract ModuleManager is
-    IModuleManager,
-    Initializable,
-    ContextUpgradeable
-{
+abstract contract ModuleManager is IModuleManager, ERC2771ContextUpgradeable {
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -97,6 +93,10 @@ abstract contract ModuleManager is
 
     //--------------------------------------------------------------------------
     // Initializer
+
+    constructor(address _trustedForwarder)
+        ERC2771ContextUpgradeable(_trustedForwarder)
+    {}
 
     function __ModuleManager_init(address[] calldata modules)
         internal

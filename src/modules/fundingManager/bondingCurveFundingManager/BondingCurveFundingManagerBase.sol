@@ -9,7 +9,6 @@ import {IBondingCurveFundingManagerBase} from
 
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -17,7 +16,10 @@ import {IERC20MetadataUpgradeable} from
     "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 // External Dependencies
-import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
+import {
+    ERC20Upgradeable,
+    ContextUpgradeable
+} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -33,7 +35,6 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 abstract contract BondingCurveFundingManagerBase is
     IBondingCurveFundingManagerBase,
     IFundingManager,
-    ContextUpgradeable,
     ERC20Upgradeable,
     Module
 {
@@ -69,6 +70,11 @@ abstract contract BondingCurveFundingManagerBase is
         }
         _;
     }
+
+    //--------------------------------------------------------------------------
+    // Initialization
+
+    constructor(address _trustedForwarder) Module(_trustedForwarder) {}
 
     //--------------------------------------------------------------------------
     // Public Functions
@@ -228,5 +234,29 @@ abstract contract BondingCurveFundingManagerBase is
         __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
+    }
+
+    /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
+    /// as via the Module -> ERC2771ContextUpgradeable
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Module, ContextUpgradeable)
+        returns (address sender)
+    {
+        return super._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
+    /// as via the Module -> ERC2771ContextUpgradeable
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Module, ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return super._msgData();
     }
 }

@@ -7,8 +7,6 @@ import {
     ElasticReceiptTokenUpgradeable,
     ElasticReceiptTokenBase
 } from "src/modules/fundingManager/token/ElasticReceiptTokenUpgradeable.sol";
-import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
@@ -29,7 +27,6 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 contract RebasingFundingManager is
     IFundingManager,
     IRebasingERC20,
-    ContextUpgradeable,
     ElasticReceiptTokenUpgradeable,
     Module
 {
@@ -59,6 +56,8 @@ contract RebasingFundingManager is
 
     //--------------------------------------------------------------------------
     // Init Function
+
+    constructor(address _trustedForwarder) Module(_trustedForwarder) {}
 
     /// @inheritdoc Module
     function init(

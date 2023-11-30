@@ -63,6 +63,11 @@ contract TokenGatedRoleAuthorizer is
     mapping(bytes32 => uint) public thresholdMap;
 
     //--------------------------------------------------------------------------
+    // Constructor and initialization
+
+    constructor(address _trustedForwarder) RoleAuthorizer(_trustedForwarder) {}
+
+    //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
     function hasRole(bytes32 roleId, address account)

@@ -81,6 +81,16 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         _;
     }
 
+    //--------------------------------------------------------------------------
+    // Initialization
+
+    constructor(address _trustedForwarder)
+        ERC20PaymentClient(_trustedForwarder)
+    {}
+
+    //--------------------------------------------------------------------------
+    // Internal functions
+
     function validContributorsForBounty(
         Contributor[] memory contributors,
         Bounty memory bounty

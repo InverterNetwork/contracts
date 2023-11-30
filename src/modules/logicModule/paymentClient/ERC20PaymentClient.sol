@@ -8,7 +8,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
+import {Module} from "src/modules/base/Module.sol";
 import {
     IERC20PaymentClient,
     IPaymentProcessor
@@ -53,6 +53,11 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
 
     /// @dev The current cumulative amount of tokens outstanding.
     uint internal _outstandingTokenAmount;
+
+    //--------------------------------------------------------------------------
+    // Initialization
+
+    constructor(address _trustedForwarder) Module(_trustedForwarder) {}
 
     //--------------------------------------------------------------------------
     // Internal Mutating Functions

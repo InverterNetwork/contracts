@@ -85,9 +85,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Initializer
 
-    constructor() {
-        _disableInitializers();
-    }
+    constructor(address _trustedForwarder) ModuleManager(_trustedForwarder) {}
 
     /// @inheritdoc IOrchestrator
     function init(

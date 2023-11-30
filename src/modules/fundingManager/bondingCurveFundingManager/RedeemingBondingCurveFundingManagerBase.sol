@@ -48,6 +48,13 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     }
 
     //--------------------------------------------------------------------------
+    // Initialization
+
+    constructor(address _trustedForwarder)
+        BondingCurveFundingManagerBase(_trustedForwarder)
+    {}
+
+    //--------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase

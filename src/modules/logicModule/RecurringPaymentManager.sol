@@ -74,6 +74,10 @@ contract RecurringPaymentManager is
     //--------------------------------------------------------------------------
     // Initialization
 
+    constructor(address _trustedForwarder)
+        ERC20PaymentClient(_trustedForwarder)
+    {}
+
     /// @inheritdoc Module
     function init(
         IOrchestrator orchestrator_,

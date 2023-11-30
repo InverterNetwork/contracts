@@ -79,7 +79,9 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     }
 
     //--------------------------------------------------------------------------
-    // External Functions
+    // Initialization
+
+    constructor(address _trustedForwarder) Module(_trustedForwarder) {}
 
     /// @inheritdoc Module
     function init(
@@ -89,6 +91,9 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
     }
+
+    //--------------------------------------------------------------------------
+    // External Functions
 
     /// @inheritdoc IStreamingPaymentProcessor
     function claimAll(address client) external {
