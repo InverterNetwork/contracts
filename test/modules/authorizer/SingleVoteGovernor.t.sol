@@ -312,7 +312,7 @@ contract SingleVoteGovernorTest is ModuleTest {
     function testReinitFails() public override {
         //Create a mock new orchestrator
         Orchestrator newOrchestrator =
-            Orchestrator(Clones.clone(address(new Orchestrator())));
+            Orchestrator(Clones.clone(address(new Orchestrator(address(0)))));
 
         address[] memory testVoters = new address[](1);
         testVoters[0] = address(this);

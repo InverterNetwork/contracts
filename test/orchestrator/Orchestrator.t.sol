@@ -59,7 +59,7 @@ contract OrchestratorTest is Test {
         paymentProcessor = new PaymentProcessorMock();
         token = new ERC20Mock("TestToken", "TST");
 
-        address impl = address(new Orchestrator());
+        address impl = address(new Orchestrator(address(0))); //@todo add forwarder correctly
         orchestrator = Orchestrator(Clones.clone(impl));
 
         types = new TypeSanityHelper(address(orchestrator));

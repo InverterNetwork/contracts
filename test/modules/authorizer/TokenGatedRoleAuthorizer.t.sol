@@ -40,7 +40,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
         //==========================================================================
 
-        address propImpl = address(new Orchestrator());
+        address propImpl = address(new Orchestrator(address(0)));
         _orchestrator = Orchestrator(Clones.clone(propImpl));
         ModuleMock module = new ModuleMock();
         address[] memory modules = new address[](1);
@@ -79,7 +79,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
     // Mocks
     TokenGatedRoleAuthorizer _authorizer;
-    Orchestrator internal _orchestrator = new Orchestrator();
+    Orchestrator internal _orchestrator = new Orchestrator(address(0));
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
@@ -112,7 +112,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
     function setUp() public {
         address authImpl = address(new TokenGatedRoleAuthorizer());
         _authorizer = TokenGatedRoleAuthorizer(Clones.clone(authImpl));
-        address propImpl = address(new Orchestrator());
+        address propImpl = address(new Orchestrator(address(0)));
         _orchestrator = Orchestrator(Clones.clone(propImpl));
         address[] memory modules = new address[](1);
         modules[0] = address(mockModule);

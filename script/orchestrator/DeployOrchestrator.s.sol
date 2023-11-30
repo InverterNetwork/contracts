@@ -17,6 +17,7 @@ contract DeployOrchestrator is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    address forwarderAddress = vm.envAddress("FORWARDER_ADDRESS");
     address deployer = vm.addr(deployerPrivateKey);
 
     Orchestrator orchestrator;
@@ -26,7 +27,7 @@ contract DeployOrchestrator is Script {
         {
             // Deploy the orchestrator.
 
-            orchestrator = new Orchestrator();
+            orchestrator = new Orchestrator(forwarderAddress);
         }
 
         vm.stopBroadcast();

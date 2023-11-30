@@ -68,7 +68,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Initializer
 
-    constructor() {
+    constructor(address _trustedForwarder) ModuleManager(_trustedForwarder) {
         _disableInitializers();
     }
 

@@ -29,7 +29,7 @@ contract RoleAuthorizerTest is Test {
 
     // Mocks
     RoleAuthorizer _authorizer;
-    Orchestrator internal _orchestrator = new Orchestrator();
+    Orchestrator internal _orchestrator = new Orchestrator(address(0));
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
@@ -53,7 +53,7 @@ contract RoleAuthorizerTest is Test {
     function setUp() public virtual {
         address authImpl = address(new RoleAuthorizer());
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
-        address propImpl = address(new Orchestrator());
+        address propImpl = address(new Orchestrator(address(0))); //@todo add forwarder correctly
         _orchestrator = Orchestrator(Clones.clone(propImpl));
         ModuleMock module = new ModuleMock();
         address[] memory modules = new address[](1);
@@ -168,7 +168,7 @@ contract RoleAuthorizerTest is Test {
     function testReinitFails() public {
         //Create a mock new orchestrator
         Orchestrator newOrchestrator =
-            Orchestrator(Clones.clone(address(new Orchestrator())));
+            Orchestrator(Clones.clone(address(new Orchestrator(address(0)))));
 
         address initialOwner = address(this);
         address initialManager = address(this);

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
-// External Dependencies
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+//External Dependencies
+import {ERC2771ContextUpgradeable} from
+    "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Interfaces
@@ -27,7 +28,7 @@ import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 abstract contract ModuleManager is
     IModuleManager,
     Initializable,
-    ContextUpgradeable
+    ERC2771ContextUpgradeable
 {
     //--------------------------------------------------------------------------
     // Modifiers
@@ -97,6 +98,10 @@ abstract contract ModuleManager is
 
     //--------------------------------------------------------------------------
     // Initializer
+
+    constructor(address _trustedForwarder)
+        ERC2771ContextUpgradeable(_trustedForwarder)
+    {}
 
     function __ModuleManager_init(address[] calldata modules)
         internal

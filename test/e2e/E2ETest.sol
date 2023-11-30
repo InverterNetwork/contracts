@@ -46,7 +46,7 @@ contract E2ETest is E2EModuleRegistry {
         token = new ERC20Mock("Mock", "MOCK");
 
         // Deploy Orchestrator implementation.
-        orchestratorImpl = new Orchestrator();
+        orchestratorImpl = new Orchestrator(address(0)); //@todo add forwarder correctly
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();
