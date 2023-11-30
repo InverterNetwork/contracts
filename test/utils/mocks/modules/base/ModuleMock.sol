@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
 
 contract ModuleMock is Module {
+    constructor() Module(address(0)) {}
+
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,

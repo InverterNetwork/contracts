@@ -51,7 +51,7 @@ contract RebasingFundingManagerTest is ModuleTest {
 
         //Add Module to Mock Orchestrator
 
-        address impl = address(new RebasingFundingManager());
+        address impl = address(new RebasingFundingManager(address(0)));
         fundingManager = RebasingFundingManager(Clones.clone(impl));
 
         _setUpOrchestrator(fundingManager);

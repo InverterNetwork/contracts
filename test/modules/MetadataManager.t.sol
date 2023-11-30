@@ -60,7 +60,7 @@ contract MetadataManagerTest is ModuleTest {
 
         //Add Module to Mock Orchestrator
 
-        address impl = address(new MetadataManager());
+        address impl = address(new MetadataManager(address(0)));
         metadataManager = MetadataManager(Clones.clone(impl));
 
         _setUpOrchestrator(metadataManager);

@@ -32,7 +32,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
     ERC20PaymentClientMock paymentClient = new ERC20PaymentClientMock(_token);
 
     function setUp() public {
-        address impl = address(new SimplePaymentProcessor());
+        address impl = address(new SimplePaymentProcessor(address(0)));
         paymentProcessor = SimplePaymentProcessor(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);

@@ -54,7 +54,7 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        address impl = address(new Orchestrator());
+        address impl = address(new Orchestrator(address(0)));
         _orchestrator = Orchestrator(Clones.clone(impl));
 
         _orchestrator.init(

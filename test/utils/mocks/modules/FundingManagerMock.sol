@@ -16,6 +16,8 @@ contract FundingManagerMock is IFundingManager, Module {
 
     IERC20 private _token;
 
+    constructor() Module(address(0)) {}
+
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,

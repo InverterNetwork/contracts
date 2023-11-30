@@ -62,7 +62,7 @@ contract BountyManagerTest is ModuleTest {
 
     function setUp() public {
         //Add Module to Mock Orchestrator
-        address impl = address(new BountyManager());
+        address impl = address(new BountyManager(address(0)));
         bountyManager = BountyManager(Clones.clone(impl));
 
         _setUpOrchestrator(bountyManager);

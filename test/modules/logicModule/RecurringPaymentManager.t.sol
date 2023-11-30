@@ -40,7 +40,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     function setUp() public {
         //Add Module to Mock Orchestrator
-        address impl = address(new RecurringPaymentManager());
+        address impl = address(new RecurringPaymentManager(address(0)));
         recurringPaymentManager = RecurringPaymentManager(Clones.clone(impl));
 
         _setUpOrchestrator(recurringPaymentManager);

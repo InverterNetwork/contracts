@@ -22,6 +22,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
     IBancorFormula public formula;
 
+    constructor() BondingCurveFundingManagerBase(address(0)) {}
+
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,

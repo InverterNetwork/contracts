@@ -29,7 +29,7 @@ contract RoleAuthorizerTest is Test {
 
     // Mocks
     RoleAuthorizer _authorizer;
-    Orchestrator internal _orchestrator = new Orchestrator();
+    Orchestrator internal _orchestrator = new Orchestrator(address(0));
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
@@ -51,9 +51,9 @@ contract RoleAuthorizerTest is Test {
         IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     function setUp() public virtual {
-        address authImpl = address(new RoleAuthorizer());
+        address authImpl = address(new RoleAuthorizer(address(0)));
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
-        address propImpl = address(new Orchestrator());
+        address propImpl = address(new Orchestrator(address(0)));
         _orchestrator = Orchestrator(Clones.clone(propImpl));
         ModuleMock module = new  ModuleMock();
         address[] memory modules = new address[](1);
@@ -96,7 +96,7 @@ contract RoleAuthorizerTest is Test {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new RoleAuthorizer());
+        address authImpl = address(new RoleAuthorizer(address(0)));
         RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
 
         vm.assume(initialAuth != address(0));
@@ -122,7 +122,7 @@ contract RoleAuthorizerTest is Test {
         //Checks that address list gets correctly stored on initialization if there are no owners given
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new RoleAuthorizer());
+        address authImpl = address(new RoleAuthorizer(address(0)));
         RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
 
         address initialAuth = address(0);
@@ -145,7 +145,7 @@ contract RoleAuthorizerTest is Test {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new RoleAuthorizer());
+        address authImpl = address(new RoleAuthorizer(address(0)));
         RoleAuthorizer testAuthorizer = RoleAuthorizer(Clones.clone(authImpl));
 
         address initialAuth = address(this);
@@ -168,7 +168,7 @@ contract RoleAuthorizerTest is Test {
     function testReinitFails() public {
         //Create a mock new orchestrator
         Orchestrator newOrchestrator =
-            Orchestrator(Clones.clone(address(new Orchestrator())));
+            Orchestrator(Clones.clone(address(new Orchestrator(address(0)))));
 
         address initialOwner = address(this);
         address initialManager = address(this);

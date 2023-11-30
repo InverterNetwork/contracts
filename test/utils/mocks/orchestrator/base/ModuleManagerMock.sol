@@ -20,6 +20,8 @@ contract ModuleManagerMock is ModuleManager {
         _allAuthorized = to;
     }
 
+    constructor() ModuleManager(address(0)) {}
+
     function init(address[] calldata modules) external initializer {
         __ModuleManager_init(modules);
     }

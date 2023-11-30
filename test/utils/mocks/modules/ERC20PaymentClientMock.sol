@@ -21,7 +21,7 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
 
     mapping(address => bool) authorized;
 
-    constructor(ERC20Mock token_) {
+    constructor(ERC20Mock token_) ERC20PaymentClient(address(0)) {
         token = token_;
     }
 

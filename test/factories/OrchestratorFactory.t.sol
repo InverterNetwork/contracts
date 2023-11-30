@@ -78,7 +78,7 @@ contract OrchestratorFactoryTest is Test {
     function setUp() public {
         moduleFactory = new ModuleFactoryMock();
 
-        target = new Orchestrator();
+        target = new Orchestrator(address(0));
 
         factory =
             new OrchestratorFactory(address(target), address(moduleFactory));

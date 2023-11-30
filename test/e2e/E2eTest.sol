@@ -76,7 +76,7 @@ contract E2eTest is Test {
 
     function setUpRebasingFundingManager() private {
         // Deploy module implementations.
-        rebasingFundingManagerImpl = new RebasingFundingManager();
+        rebasingFundingManagerImpl = new RebasingFundingManager(address(0));
 
         // Deploy module beacons.
         vm.prank(rebasingFundingManagerBeaconOwner);
@@ -113,7 +113,7 @@ contract E2eTest is Test {
     function setUpBancorVirtualSupplyBondingCurveFundingManager() private {
         // Deploy module implementations.
         bancorVirtualSupplyBondingCurveFundingManagerImpl =
-            new BancorVirtualSupplyBondingCurveFundingManager();
+            new BancorVirtualSupplyBondingCurveFundingManager(address(0));
 
         // Deploy module beacons.
         vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
@@ -185,7 +185,7 @@ contract E2eTest is Test {
 
     function setUpRoleAuthorizer() private {
         // Deploy module implementations.
-        roleAuthorizerImpl = new RoleAuthorizer();
+        roleAuthorizerImpl = new RoleAuthorizer(address(0));
 
         // Deploy module beacons.
         vm.prank(roleAuthorizerBeaconOwner);
@@ -220,7 +220,7 @@ contract E2eTest is Test {
 
     function setUpTokenGatedRoleAuthorizer() private {
         // Deploy module implementations.
-        tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer();
+        tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer(address(0));
 
         // Deploy module beacons.
         vm.prank(tokenRoleAuthorizerBeaconOwner);
@@ -259,7 +259,7 @@ contract E2eTest is Test {
 
     function setUpSimplePaymentProcessor() private {
         // Deploy module implementations.
-        paymentProcessorImpl = new SimplePaymentProcessor();
+        paymentProcessorImpl = new SimplePaymentProcessor(address(0));
 
         // Deploy module beacons.
         vm.prank(paymentProcessorBeaconOwner);
@@ -296,7 +296,8 @@ contract E2eTest is Test {
 
     function setUpStreamingPaymentProcessor() private {
         // Deploy module implementations.
-        streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
+        streamingPaymentProcessorImpl =
+            new StreamingPaymentProcessor(address(0));
 
         // Deploy module beacons.
         vm.prank(streamingPaymentProcessorBeaconOwner);
@@ -339,7 +340,7 @@ contract E2eTest is Test {
 
     function setUpRecurringPaymentManager() private {
         // Deploy module implementations.
-        recurringPaymentManagerImpl = new RecurringPaymentManager();
+        recurringPaymentManagerImpl = new RecurringPaymentManager(address(0));
 
         // Deploy module beacons.
         vm.prank(recurringPaymentManagerBeaconOwner);
@@ -373,7 +374,7 @@ contract E2eTest is Test {
 
     function setUpBountyManager() private {
         // Deploy module implementations.
-        bountyManagerImpl = new BountyManager();
+        bountyManagerImpl = new BountyManager(address(0));
 
         // Deploy module beacons.
         vm.prank(bountyManagerBeaconOwner);
@@ -417,7 +418,7 @@ contract E2eTest is Test {
 
     function setSingleVoteGovernor() private {
         // Deploy module implementations.
-        singleVoteGovernorImpl = new SingleVoteGovernor();
+        singleVoteGovernorImpl = new SingleVoteGovernor(address(0));
 
         // Deploy module beacons.
         vm.prank(singleVoteGovernorBeaconOwner);
@@ -435,7 +436,7 @@ contract E2eTest is Test {
 
     function setUp() public {
         // Deploy Orchestrator implementation.
-        orchestratorImpl = new Orchestrator();
+        orchestratorImpl = new Orchestrator(address(0));
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory();

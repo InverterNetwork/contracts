@@ -23,6 +23,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
     // The BancorVirtualSupplyBondingCurveFundingManager is not abstract, so all the necessary functions are already implemented
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
+    constructor() BancorVirtualSupplyBondingCurveFundingManager(address(0)) {}
+
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 

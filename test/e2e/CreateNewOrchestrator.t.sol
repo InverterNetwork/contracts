@@ -110,11 +110,11 @@ contract OrchestratorCreation is Test {
         //Create Beacons
 
         //Create Module Templates
-        fundingManagerTemplate = new RebasingFundingManager();
-        authorizerTemplate = new RoleAuthorizer();
-        paymentProcessorTemplate = new SimplePaymentProcessor();
-        bountyManagerTemplate = new BountyManager();
-        metadataManagerTemplate = new MetadataManager();
+        fundingManagerTemplate = new RebasingFundingManager(address(0));
+        authorizerTemplate = new RoleAuthorizer(address(0));
+        paymentProcessorTemplate = new SimplePaymentProcessor(address(0));
+        bountyManagerTemplate = new BountyManager(address(0));
+        metadataManagerTemplate = new MetadataManager(address(0));
 
         //Create Beacons for every Module
         fundingManagerBeacon = new Beacon();
@@ -214,7 +214,7 @@ contract OrchestratorCreation is Test {
         //Set up Orchestrator Factory
 
         //Create orchestrator template
-        orchestratorTemplate = new Orchestrator();
+        orchestratorTemplate = new Orchestrator(address(0));
 
         //Create OrchestratorFactory
         orchestratorFactory = new OrchestratorFactory(

@@ -24,6 +24,8 @@ contract AuthorizerMock is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // IModule Functions
 
+    constructor() Module(address(0)) {}
+
     function init(
         IOrchestrator orchestrator_,
         Metadata memory metadata,

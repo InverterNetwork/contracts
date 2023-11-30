@@ -54,7 +54,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new StreamingPaymentProcessor());
+        address impl = address(new StreamingPaymentProcessor(address(0)));
         paymentProcessor = StreamingPaymentProcessor(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);

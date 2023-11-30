@@ -53,7 +53,7 @@ contract SingleVoteGovernorTest is ModuleTest {
 
     function setUp() public {
         // Set up a orchestrator
-        address authImpl = address(new SingleVoteGovernor());
+        address authImpl = address(new SingleVoteGovernor(address(0)));
         _governor = SingleVoteGovernor(Clones.clone(authImpl));
 
         _setUpOrchestrator(_governor);
@@ -246,7 +246,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.assume(testVoters.length >= 2);
         _validateUserList(testVoters);
 
-        address authImpl = address(new SingleVoteGovernor());
+        address authImpl = address(new SingleVoteGovernor(address(0)));
         SingleVoteGovernor testAuthorizer =
             SingleVoteGovernor(Clones.clone(authImpl));
 
@@ -281,7 +281,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.assume(testVoters.length >= 2);
         position = uint8(bound(position, 1, testVoters.length - 1));
 
-        address authImpl = address(new SingleVoteGovernor());
+        address authImpl = address(new SingleVoteGovernor(address(0)));
         SingleVoteGovernor testAuthorizer =
             SingleVoteGovernor(Clones.clone(authImpl));
 
@@ -312,7 +312,7 @@ contract SingleVoteGovernorTest is ModuleTest {
     function testReinitFails() public override {
         //Create a mock new orchestrator
         Orchestrator newOrchestrator =
-            Orchestrator(Clones.clone(address(new Orchestrator())));
+            Orchestrator(Clones.clone(address(new Orchestrator(address(0)))));
 
         address[] memory testVoters = new address[](1);
         testVoters[0] = address(this);
@@ -343,7 +343,7 @@ contract SingleVoteGovernorTest is ModuleTest {
     function testInitWithInvalidInitialVotersFails() public {
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new SingleVoteGovernor());
+        address authImpl = address(new SingleVoteGovernor(address(0)));
         SingleVoteGovernor testAuthorizer =
             SingleVoteGovernor(Clones.clone(authImpl));
 

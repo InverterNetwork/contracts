@@ -16,7 +16,7 @@ contract RegisterModuleAtFactory is E2eTest {
     function test_e2e_RegisterModuleAtModuleFactory() public {
         // First deploy a new Module implementation.
         // We will use the SimplePaymentProcessor module as example.
-        SimplePaymentProcessor module = new SimplePaymentProcessor();
+        SimplePaymentProcessor module = new SimplePaymentProcessor(address(0));
 
         // We also need to defined the module's metadata.
         IModule.Metadata memory metadata = IModule.Metadata(
