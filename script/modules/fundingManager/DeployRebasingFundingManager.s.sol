@@ -26,7 +26,7 @@ contract DeployRebasingFundingManager is Script {
         {
             // Deploy the RebasingFundingManager.
 
-            fundingManager = new RebasingFundingManager();
+            fundingManager = new RebasingFundingManager(address(0));
         }
 
         vm.stopBroadcast();

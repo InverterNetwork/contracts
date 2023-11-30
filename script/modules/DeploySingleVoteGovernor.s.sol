@@ -26,7 +26,7 @@ contract DeploySingleVoteGovernor is Script {
         {
             // Deploy the singleVoteGovernor.
 
-            singleVoteGovernor = new SingleVoteGovernor();
+            singleVoteGovernor = new SingleVoteGovernor(address(0));
         }
 
         vm.stopBroadcast();

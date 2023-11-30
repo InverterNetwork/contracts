@@ -26,7 +26,7 @@ contract DeployStreamingPaymentProcessor is Script {
         {
             // Deploy the StreamingPaymentProcessor.
 
-            paymentProcessor = new StreamingPaymentProcessor();
+            paymentProcessor = new StreamingPaymentProcessor(address(0));
         }
         vm.stopBroadcast();
 

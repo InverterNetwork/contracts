@@ -27,7 +27,7 @@ contract DeployTokenGatedRoleAuthorizer is Script {
         {
             // Deploy the listAuthorizer.
 
-            tokenRoleAuthorizer = new TokenGatedRoleAuthorizer();
+            tokenRoleAuthorizer = new TokenGatedRoleAuthorizer(address(0));
         }
 
         vm.stopBroadcast();

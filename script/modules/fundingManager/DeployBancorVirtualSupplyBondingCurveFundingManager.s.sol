@@ -26,7 +26,8 @@ contract DeployBancorVirtualSupplyBondingCurveFundingManager is Script {
         {
             // Deploy the BancorVirtualSupplyBondingCurveFundingManager.
 
-            fundingManager = new BancorVirtualSupplyBondingCurveFundingManager();
+            fundingManager =
+                new BancorVirtualSupplyBondingCurveFundingManager(address(0));
         }
 
         vm.stopBroadcast();

@@ -26,7 +26,7 @@ contract DeployRoleAuthorizer is Script {
         {
             // Deploy the listAuthorizer.
 
-            roleAuthorizer = new RoleAuthorizer();
+            roleAuthorizer = new RoleAuthorizer(address(0));
         }
 
         vm.stopBroadcast();

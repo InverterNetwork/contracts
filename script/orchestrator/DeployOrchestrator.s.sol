@@ -26,7 +26,7 @@ contract DeployOrchestrator is Script {
         {
             // Deploy the orchestrator.
 
-            orchestrator = new Orchestrator();
+            orchestrator = new Orchestrator(address(0));
         }
 
         vm.stopBroadcast();

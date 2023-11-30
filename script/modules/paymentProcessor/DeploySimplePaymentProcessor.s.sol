@@ -26,7 +26,7 @@ contract DeploySimplePaymentProcessor is Script {
         {
             // Deploy the SimplePaymentProcessor.
 
-            paymentProcessor = new SimplePaymentProcessor();
+            paymentProcessor = new SimplePaymentProcessor(address(0));
         }
 
         vm.stopBroadcast();

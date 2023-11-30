@@ -26,7 +26,7 @@ contract DeployBountyManager is Script {
         {
             // Deploy the singleVoteGovernor.
 
-            bountyManager = new BountyManager();
+            bountyManager = new BountyManager(address(0));
         }
 
         vm.stopBroadcast();
