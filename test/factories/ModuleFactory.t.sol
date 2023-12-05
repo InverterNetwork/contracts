@@ -47,7 +47,7 @@ contract ModuleFactoryTest is Test {
         module = new ModuleMock();
         beacon = new BeaconMock();
 
-        factory = new ModuleFactory();
+        factory = new ModuleFactory(address(0));
     }
 
     function testDeploymentInvariants() public {

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
+//External Dependencies
+import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
+
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -27,7 +30,7 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
  *
  * @author Inverter Network
  */
-contract OrchestratorFactory is IOrchestratorFactory {
+contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context {
     //--------------------------------------------------------------------------
     // Immutables
 
@@ -61,7 +64,11 @@ contract OrchestratorFactory is IOrchestratorFactory {
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(address target_, address moduleFactory_) {
+    constructor(
+        address target_,
+        address moduleFactory_,
+        address _trustedForwarder //@todo should this be changeable?
+    ) ERC2771Context(_trustedForwarder) {
         target = target_;
         moduleFactory = moduleFactory_;
     }

@@ -29,7 +29,7 @@ contract DeployOrchestratorFactory is Script {
         address target = vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET");
         address moduleFactory =
             vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY");
-
+        address forwarder = vm.envAddress("FORWARDER_ADDRESS");
         // Check settings.
         require(
             target != address(0),
@@ -41,17 +41,18 @@ contract DeployOrchestratorFactory is Script {
         );
 
         // Deploy the orchestratorFactory.
-        return run(target, moduleFactory);
+        return run(target, moduleFactory, forwarder);
     }
 
-    function run(address target, address moduleFactory)
+    function run(address target, address moduleFactory, address forwarder)
         public
         returns (address)
     {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the orchestratorFactory.
-            orchestratorFactory = new OrchestratorFactory(target, moduleFactory);
+            orchestratorFactory =
+                new OrchestratorFactory(target, moduleFactory, forwarder);
         }
 
         vm.stopBroadcast();

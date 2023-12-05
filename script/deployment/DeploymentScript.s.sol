@@ -90,8 +90,9 @@ contract DeploymentScript is Script {
         authorizer = deployRoleAuthorizer.run();
 
         moduleFactory = deployModuleFactory.run();
-        orchestratorFactory =
-            deployOrchestratorFactory.run(orchestrator, moduleFactory);
+        orchestratorFactory = deployOrchestratorFactory.run(
+            orchestrator, moduleFactory, address(0)
+        ); //@todo add forwarder properly
 
         bountyManager = deployBountyManager.run();
 

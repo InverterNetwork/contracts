@@ -49,10 +49,12 @@ contract E2ETest is E2EModuleRegistry {
         orchestratorImpl = new Orchestrator(address(0)); //@todo add forwarder correctly
 
         // Deploy Factories.
-        moduleFactory = new ModuleFactory();
+        moduleFactory = new ModuleFactory(address(0)); //@todo add forwarder correctly
 
         orchestratorFactory = new OrchestratorFactory(
-            address(orchestratorImpl), address(moduleFactory)
+            address(orchestratorImpl),
+            address(moduleFactory),
+            address(0) //@todo add forwarder correctly
         );
     }
 
