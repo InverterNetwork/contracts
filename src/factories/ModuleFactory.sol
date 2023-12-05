@@ -34,7 +34,7 @@ import {
  *
  * @author Inverter Network
  */
-contract ModuleFactory is IModuleFactory, Ownable2Step, ERC2771Context {
+contract ModuleFactory is IModuleFactory, ERC2771Context, Ownable2Step {
     //--------------------------------------------------------------------------
     // Modifiers
 
