@@ -119,6 +119,12 @@ contract OrchestratorMock is IOrchestrator {
         returns (bool)
     {}
 
+    function isTrustedForwarder(address forwarder)
+        external
+        view
+        returns (bool)
+    {}
+
     //-------------------------------------------------------------------
     //Mock Helper Functions
     function setToken(IERC20 token_) external {

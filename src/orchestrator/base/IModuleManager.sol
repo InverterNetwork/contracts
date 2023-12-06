@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface IModuleManager {
+// Interfaces
+import {IERC2771Context} from "src/external/interfaces/IERC2771Context.sol";
+
+interface IModuleManager is IERC2771Context {
     //--------------------------------------------------------------------------
     // Errors
 
@@ -73,4 +76,15 @@ interface IModuleManager {
 
     /// @notice Returns the number of modules.
     function modulesSize() external view returns (uint8);
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+    // @dev We imitate here the EIP2771 Standard to enable metatransactions
+
+    // @notice Returns the trusted forwarder for metatransactions
+    // @dev Exposes the ERC2771 isTrusted Forwarder
+    function isTrustedForwarder(address forwarder)
+        external
+        view
+        returns (bool);
 }
