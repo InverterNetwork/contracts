@@ -73,6 +73,10 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         // Also should we set more than one KPI in one step?
     }
 
+    function returnExcessFunds() external onlyOrchestratorOwner() {
+        // TODO returns the excess funds to the FundingManager
+    }
+
     // StakingManager Overrides:
 
         /// @inheritdoc IStakingManager
