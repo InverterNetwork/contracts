@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
-// External Libraries
 
+// External Dependencies
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
+
+// Internal Dependencies
 import {Module, IModule} from "src/modules/base/Module.sol";
 import {IAuthorizer} from "./IAuthorizer.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract RoleAuthorizer is
     IAuthorizer,
-    AccessControlEnumerableUpgradeable,
-    Module
+    Module,
+    AccessControlEnumerableUpgradeable
 {
     //--------------------------------------------------------------------------
     // Storage
@@ -200,5 +203,30 @@ contract RoleAuthorizer is
     /// @inheritdoc IAuthorizer
     function getManagerRole() public pure returns (bytes32) {
         return ORCHESTRATOR_MANAGER_ROLE;
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, Module)
+        returns (address sender)
+    {
+        return super._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, Module)
+        returns (bytes calldata)
+    {
+        return super._msgData();
     }
 }
