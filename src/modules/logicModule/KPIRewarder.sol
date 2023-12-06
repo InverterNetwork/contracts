@@ -16,6 +16,34 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
     bytes32 public constant ASSERTION_MANAGER = "ASSERTION_MANAGER";
 
+    /*
+    Tranche Example:
+    trancheValues = [10000, 20000, 30000]
+    trancheRewards = [100, 200, 100]
+    continuous = false
+     ->   if KPI is 12345, reward is 100 for the tanche [0-10000]
+     ->   if KPI is 32198, reward is 400 for the tanches [0-10000, 10000-20000 and 20000-30000]
+
+    if continuous = true
+    ->    if KPI is 15000, reward is 200 for the tanches [100% 0-10000, 50% * 10000-15000]
+    ->    if KPI is 25000, reward is 350 for the tanches [100% 0-10000, 100% 10000-20000, 50% 20000-30000]
+
+    */
+    struct KPI {
+        uint creationTime; // timestamp the KPI was created // 
+        uint numOfTranches; // number of tranches the KPI is divided into
+        bool continuous; // should the tranche rewards be distributed continuously or in steps
+        uint[] trancheValues; // The value at which a tranche ends
+        uint[] trancheRewards; // The rewards to be dsitributed at completion of each tranche
+    }
+
+    struct Assertion {
+        uint creationTime; // timestamp the assertion was created
+        uint assertedValue; // the value that was asserted
+        uint KpiToUse; // the KPI to be used for distribution once the assertion confirms
+        // TODO: Necessary Data for UMA
+    }
+
     /// @inheritdoc Module
     function init(
         IOrchestrator orchestrator_,
