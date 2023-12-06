@@ -128,7 +128,7 @@ contract StakingManagerLifecycle is E2eTest {
 
         // 7. Withdraw for Staker 2
         vm.prank(staker2);
-        stakingManager.withdraw(10);
+        stakingManager.unstake(10);
 
         //Value staked  |   Value earned            |   Rewards claimed
         //Staker 1:10   |   Staker 1: 1/2 amount1   |   Staker 1:
@@ -178,7 +178,7 @@ contract StakingManagerLifecycle is E2eTest {
         // 12. Let 3 withdraw
 
         vm.prank(staker3);
-        stakingManager.withdraw(5);
+        stakingManager.unstake(5);
 
         //Value staked  |   Value earned                        |   Rewards claimed
         //Staker 1:10   |   Staker 1: 1/2 amount1 + 3/4 amount2 |   Staker 1:
@@ -233,10 +233,10 @@ contract StakingManagerLifecycle is E2eTest {
         // 16. Let 1 withdraw half and 4 withdraw full
 
         vm.prank(staker1);
-        stakingManager.withdraw(5);
+        stakingManager.unstake(5);
 
         vm.prank(staker4);
-        stakingManager.withdraw(10);
+        stakingManager.unstake(10);
 
         //Value staked  |   Value earned    |   Rewards claimed
         //Staker 1: 5   |   Staker 1:       |   Staker 1: 1/2 amount1 + 3/4 amount2 + 1 amount3

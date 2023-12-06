@@ -58,7 +58,7 @@ contract StakingManager is
     /// @dev mapping of balances of each user in the staking token
     mapping(address => uint) internal _balances;
     /// @dev mapping of reward Values that are needed to calculate the rewards that a user should receive
-    /// @dev should change everytime the user stakes or withdraws funds
+    /// @dev should change everytime the user stakes or unstakes funds
     mapping(address => uint) internal userRewardValue;
     /// @dev mapping of how many reward tokens the user accumulated
     mapping(address => uint) internal rewards;
@@ -71,7 +71,7 @@ contract StakingManager is
         IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module) initializer {
+    ) external override(Module) initializer virtual {
         __Module_init(orchestrator_, metadata);
         stakingToken = abi.decode(configData, (address));
     }
@@ -107,7 +107,7 @@ contract StakingManager is
     // Mutating Functions
 
     /// @inheritdoc IStakingManager
-    function stake(uint amount) external nonReentrant validAmount(amount) {
+    function stake(uint amount) external nonReentrant validAmount(amount) virtual {
         address sender = _msgSender();
         _update(sender);
 
@@ -130,7 +130,7 @@ contract StakingManager is
 
     /// @inheritdoc IStakingManager
     /// @dev this function will revert with a Over/Underflow error in case amount is higher than balance
-    function withdraw(uint amount) external nonReentrant validAmount(amount) {
+    function unstake(uint amount) external nonReentrant validAmount(amount) {
         address sender = _msgSender();
         //Update rewardValue, updatedTimestamp and earned values
         _update(sender);
@@ -149,7 +149,7 @@ contract StakingManager is
             _distributeRewards(sender);
         }
 
-        emit Withdrawn(sender, amount);
+        emit Unstaked(sender, amount);
     }
 
     /// @inheritdoc IStakingManager

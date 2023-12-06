@@ -42,7 +42,7 @@ contract StakingManagerTest is ModuleTest {
     );
     event RewardsDurationUpdated(uint newDuration);
     event Staked(address indexed user, uint amount);
-    event Withdrawn(address indexed user, uint amount);
+    event Unstaked(address indexed user, uint amount);
     event RewardsDistributed(address indexed user, uint amount);
 
     function setUp() public {
@@ -255,9 +255,9 @@ contract StakingManagerTest is ModuleTest {
     }
 
     //-----------------------------------------
-    //withdraw
+    //unstake
 
-    function testWithdraw(uint seed, uint withdrawSeed, address staker)
+    function testUnstake(uint seed, uint unstakeSeed, address staker)
         public
     {
         if (staker == address(0)) {
@@ -275,8 +275,8 @@ contract StakingManagerTest is ModuleTest {
             bound(seed, tokenMultiplicator, 1_000_000_000 * tokenMultiplicator);
 
         //reasonable withdraw amount
-        uint withdrawAmount =
-            bound(withdrawSeed, tokenMultiplicator, stakeAmount);
+        uint unstakeAmount =
+            bound(unstakeSeed, tokenMultiplicator, stakeAmount);
 
         //Mint to user
         stakingToken.mint(staker, stakeAmount);
@@ -297,26 +297,26 @@ contract StakingManagerTest is ModuleTest {
         uint expectedEarnings = stakingManager.earned(staker);
 
         vm.expectEmit(true, true, true, true);
-        emit Withdrawn(staker, withdrawAmount);
+        emit Unstaked(staker, unstakeAmount);
 
         //Withdraw
         vm.prank(staker);
-        stakingManager.withdraw(withdrawAmount);
+        stakingManager.unstake(unstakeAmount);
 
         //Check _distributeRewards() is triggered
         if (expectedEarnings != 0) {
             assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
         }
 
-        assertEq(prevBalance - withdrawAmount, stakingManager.balanceOf(staker));
-        assertEq(prevTotalAmount - withdrawAmount, stakingManager.totalSupply());
+        assertEq(prevBalance - unstakeAmount, stakingManager.balanceOf(staker));
+        assertEq(prevTotalAmount - unstakeAmount, stakingManager.totalSupply());
         assertEq(
             stakingToken.balanceOf(address(stakingManager)),
             stakingManager.totalSupply()
         );
     }
 
-    function testWithdrawModifierInPosition() public {
+    function testUnstakeModifierInPosition() public {
         //validAmount
         vm.expectRevert(
             IERC20PaymentClient
@@ -324,7 +324,7 @@ contract StakingManagerTest is ModuleTest {
                 .selector
         );
 
-        stakingManager.withdraw(0);
+        stakingManager.unstake(0);
 
         //Check for reentrancy
 
@@ -357,7 +357,7 @@ contract StakingManagerTest is ModuleTest {
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(address(0xBeef));
-        stakingManager.withdraw(1);
+        stakingManager.unstake(1);
 
         //Check if the call failed
         assertFalse(stakingToken.callSuccessful());

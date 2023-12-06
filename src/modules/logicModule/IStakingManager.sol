@@ -24,8 +24,8 @@ interface IStakingManager {
     /// @notice Event emitted when a user stakes an amount.
     event Staked(address indexed user, uint amount);
 
-    /// @notice Event emitted when a user withdraws an amount.
-    event Withdrawn(address indexed user, uint amount);
+    /// @notice Event emitted when a user unstakes an amount.
+    event Unstaked(address indexed user, uint amount);
 
     /// @notice Event emitted when a user receives Rewards.
     event RewardsDistributed(address indexed user, uint amount);
@@ -71,10 +71,10 @@ interface IStakingManager {
     /// @param amount : how much token should be staked
     function stake(uint amount) external;
 
-    /// @notice Withdraw a specified amount of tokens and collect rewards
+    /// @notice Unstake a specified amount of tokens and collect rewards
     /// @dev Reaps the rewards collected up to this point for the msg.Sender()
-    /// @param amount : how much token should be withdrawn
-    function withdraw(uint amount) external;
+    /// @param amount : how much token should be unstaked
+    function unstake(uint amount) external;
 
     /// @notice Sets the rewards that are to be distributed
     /// @dev Equally distributes the reward amount over the given time period
