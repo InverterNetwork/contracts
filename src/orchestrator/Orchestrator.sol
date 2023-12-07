@@ -248,7 +248,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     function _supportsInterfaceHelper(
         address _contractAddress,
         bytes4 _interfaceId
-    ) private returns (bool isSupported) {
+    ) private returns (bool) {
         require(
             _contractAddress.code.length != 0,
             "Contract Address need to passed here"
@@ -258,11 +258,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
             abi.encodeWithSignature("supportsInterface(bytes4)", _interfaceId)
         );
 
-        if (success && abi.decode(data, (bool))) {
-            isSupported = true;
-        } else {
-            isSupported = false;
-        }
+        return success && abi.decode(data, (bool));
     }
 
     /// @inheritdoc IOrchestrator
