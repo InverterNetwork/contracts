@@ -26,6 +26,20 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  */
 
 contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
+    
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IStreamingPaymentProcessor =
+            type(IStreamingPaymentProcessor).interfaceId;
+        return interfaceId == interfaceId_IStreamingPaymentProcessor
+            || super.supportsInterface(interfaceId);
+    }    
+    
     //--------------------------------------------------------------------------
     // Storage
 
@@ -726,18 +740,5 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @return True if uint is valid.
     function validStart(uint _start) internal view returns (bool) {
         return !(_start < block.timestamp || _start >= type(uint).max);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(Module)
-        returns (bool)
-    {
-        bytes4 interfaceId_IStreamingPaymentProcessor =
-            type(IStreamingPaymentProcessor).interfaceId;
-        return interfaceId == interfaceId_IStreamingPaymentProcessor
-            || super.supportsInterface(interfaceId);
     }
 }

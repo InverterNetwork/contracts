@@ -24,6 +24,20 @@ contract RecurringPaymentManager is
     IRecurringPaymentManager,
     ERC20PaymentClient
 {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC20PaymentClient)
+        returns (bool)
+    {
+        bytes4 interfaceId_IRecurringPaymentManager =
+            type(IRecurringPaymentManager).interfaceId;
+        return interfaceId == interfaceId_IRecurringPaymentManager
+            || super.supportsInterface(interfaceId);
+    }
+
     using LinkedIdList for LinkedIdList.List;
 
     //--------------------------------------------------------------------------
@@ -286,18 +300,5 @@ contract RecurringPaymentManager is
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClient(address(this))
         );
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC20PaymentClient)
-        returns (bool)
-    {
-        bytes4 interfaceId_IRecurringPaymentManager =
-            type(IRecurringPaymentManager).interfaceId;
-        return interfaceId == interfaceId_IRecurringPaymentManager
-            || super.supportsInterface(interfaceId);
     }
 }

@@ -5,6 +5,17 @@ import {ElasticReceiptTokenBase} from
     "src/modules/fundingManager/token/ElasticReceiptTokenBase.sol";
 
 abstract contract ElasticReceiptTokenUpgradeable is ElasticReceiptTokenBase {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ElasticReceiptTokenBase)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }    
+    
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -27,15 +38,5 @@ abstract contract ElasticReceiptTokenUpgradeable is ElasticReceiptTokenBase {
         // During mint, bits are transferred from the zero address and
         // during burn, bits are transferred to the zero address.
         _accountBits[address(0)] = TOTAL_BITS;
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ElasticReceiptTokenBase)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
     }
 }

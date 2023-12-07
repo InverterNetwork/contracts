@@ -32,6 +32,19 @@ contract RebasingFundingManager is
     ElasticReceiptTokenUpgradeable,
     Module
 {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ElasticReceiptTokenUpgradeable, Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
+        return interfaceId == interfaceId_IFundingManager
+            || super.supportsInterface(interfaceId);
+    }
+
     using Strings for uint;
     using SafeERC20 for IERC20;
 
@@ -159,17 +172,5 @@ contract RebasingFundingManager is
         token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ElasticReceiptTokenUpgradeable, Module)
-        returns (bool)
-    {
-        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
-        return interfaceId == interfaceId_IFundingManager
-            || super.supportsInterface(interfaceId);
     }
 }

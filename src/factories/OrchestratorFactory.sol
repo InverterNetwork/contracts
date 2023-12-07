@@ -29,6 +29,20 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
  * @author Inverter Network
  */
 contract OrchestratorFactory is IOrchestratorFactory, ERC165 {
+    
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IOrchestratorFactory =
+            type(IOrchestratorFactory).interfaceId;
+        return interfaceId == interfaceId_IOrchestratorFactory
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Immutables
 
@@ -192,18 +206,5 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC165 {
         } catch {
             return false;
         }
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165)
-        returns (bool)
-    {
-        bytes4 interfaceId_IOrchestratorFactory =
-            type(IOrchestratorFactory).interfaceId;
-        return interfaceId == interfaceId_IOrchestratorFactory
-            || super.supportsInterface(interfaceId);
     }
 }

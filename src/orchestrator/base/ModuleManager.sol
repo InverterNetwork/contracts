@@ -31,6 +31,19 @@ abstract contract ModuleManager is
     ContextUpgradeable,
     ERC165
 {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IModuleManager = type(IModuleManager).interfaceId;
+        return interfaceId == interfaceId_IModuleManager
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -144,18 +157,6 @@ abstract contract ModuleManager is
 
     //--------------------------------------------------------------------------
     // Public View Functions
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165)
-        returns (bool)
-    {
-        bytes4 interfaceId_IModuleManager = type(IModuleManager).interfaceId;
-        return interfaceId == interfaceId_IModuleManager
-            || super.supportsInterface(interfaceId);
-    }
 
     /// @inheritdoc IModuleManager
     function isModule(address module)

@@ -57,6 +57,26 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     VirtualCollateralSupplyBase,
     RedeemingBondingCurveFundingManagerBase
 {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(
+            VirtualTokenSupplyBase,
+            VirtualCollateralSupplyBase,
+            RedeemingBondingCurveFundingManagerBase
+        )
+        returns (bool)
+    {
+        bytes4 interfaceId_IBancorVirtualSupplyBondingCurveFundingManager =
+            type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId;
+
+        return interfaceId
+            == interfaceId_IBancorVirtualSupplyBondingCurveFundingManager
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
@@ -446,24 +466,5 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             uint conversionFactor = (10 ** (_requiredDecimals - _tokenDecimals));
             return (_amount * conversionFactor);
         }
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(
-            VirtualTokenSupplyBase,
-            VirtualCollateralSupplyBase,
-            RedeemingBondingCurveFundingManagerBase
-        )
-        returns (bool)
-    {
-        bytes4 interfaceId_IBancorVirtualSupplyBondingCurveFundingManager =
-            type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId;
-
-        return interfaceId
-            == interfaceId_IBancorVirtualSupplyBondingCurveFundingManager
-            || super.supportsInterface(interfaceId);
     }
 }

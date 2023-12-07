@@ -39,6 +39,19 @@ import {IModule} from "src/modules/base/IModule.sol";
  * @author Inverter Network
  */
 contract Orchestrator is IOrchestrator, ModuleManager {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ModuleManager)
+        returns (bool)
+    {
+        bytes4 interfaceId_IOrchestrator = type(IOrchestrator).interfaceId;
+        return interfaceId == interfaceId_IOrchestrator
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -284,17 +297,5 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function version() external pure returns (string memory) {
         return "1";
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ModuleManager)
-        returns (bool)
-    {
-        bytes4 interfaceId_IOrchestrator = type(IOrchestrator).interfaceId;
-        return interfaceId == interfaceId_IOrchestrator
-            || super.supportsInterface(interfaceId);
     }
 }

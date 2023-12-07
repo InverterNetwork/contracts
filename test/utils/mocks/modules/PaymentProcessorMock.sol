@@ -10,6 +10,20 @@ import {IERC20PaymentClient} from
 import {IModule} from "src/modules/base/Module.sol";
 
 contract PaymentProcessorMock is IPaymentProcessor {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        returns (bool)
+    {
+        bytes4 interfaceId_IPaymentProcessor =
+            type(IPaymentProcessor).interfaceId;
+        bytes4 interfaceId_IModule = type(IModule).interfaceId;
+        return interfaceId == interfaceId_IPaymentProcessor
+            || interfaceId == interfaceId_IModule;
+    }
+    
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 
@@ -23,18 +37,5 @@ contract PaymentProcessorMock is IPaymentProcessor {
 
     function deleteAllPayments(IERC20PaymentClient client) external {
         client.collectPaymentOrders();
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        returns (bool)
-    {
-        bytes4 interfaceId_IPaymentProcessor =
-            type(IPaymentProcessor).interfaceId;
-        bytes4 interfaceId_IModule = type(IModule).interfaceId;
-        return interfaceId == interfaceId_IPaymentProcessor
-            || interfaceId == interfaceId_IModule;
     }
 }

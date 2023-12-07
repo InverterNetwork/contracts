@@ -59,6 +59,19 @@ import {
  * @author merkleplant
  */
 abstract contract ElasticReceiptTokenBase is IRebasingERC20, ERC165 {
+    
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IRebasingERC20 = type(IRebasingERC20).interfaceId;
+        return interfaceId == interfaceId_IRebasingERC20
+            || super.supportsInterface(interfaceId);
+    }
+    
     //--------------------------------------------------------------------------
     // !!!        PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH         !!!
     //
@@ -581,17 +594,5 @@ abstract contract ElasticReceiptTokenBase is IRebasingERC20, ERC165 {
         if (_tokenAllowances[owner_][spender] != type(uint).max) {
             _tokenAllowances[owner_][spender] -= tokens;
         }
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165)
-        returns (bool)
-    {
-        bytes4 interfaceId_IRebasingERC20 = type(IRebasingERC20).interfaceId;
-        return interfaceId == interfaceId_IRebasingERC20
-            || super.supportsInterface(interfaceId);
     }
 }

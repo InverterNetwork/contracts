@@ -25,6 +25,22 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     IRedeemingBondingCurveFundingManagerBase,
     BondingCurveFundingManagerBase
 {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(BondingCurveFundingManagerBase)
+        returns (bool)
+    {
+        bytes4 interfaceId_IRedeemingBondingCurveFundingManagerBase =
+            type(IRedeemingBondingCurveFundingManagerBase).interfaceId;
+
+        return interfaceId
+            == interfaceId_IRedeemingBondingCurveFundingManagerBase
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
@@ -189,20 +205,5 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         returns (uint redeemAmount)
     {
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(BondingCurveFundingManagerBase)
-        returns (bool)
-    {
-        bytes4 interfaceId_IRedeemingBondingCurveFundingManagerBase =
-            type(IRedeemingBondingCurveFundingManagerBase).interfaceId;
-
-        return interfaceId
-            == interfaceId_IRedeemingBondingCurveFundingManagerBase
-            || super.supportsInterface(interfaceId);
-    }
+    }   
 }

@@ -34,6 +34,17 @@ import {
  * @author Inverter Network
  */
 contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
+    
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return type(IModuleFactory).interfaceId == interfaceId_IModuleFactory
+            || super.supportsInterface(interfaceId);
+    }
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -124,17 +135,6 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
         bytes32 id = LibMetadata.identifier(metadata);
 
         return (_beacons[id], id);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165)
-        returns (bool)
-    {
-        return type(IModuleFactory).interfaceId == interfaceId_IModuleFactory
-            || super.supportsInterface(interfaceId);
     }
 
     //--------------------------------------------------------------------------

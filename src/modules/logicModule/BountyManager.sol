@@ -25,6 +25,19 @@ import {
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
 contract BountyManager is IBountyManager, ERC20PaymentClient {
+    
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC20PaymentClient)
+        returns (bool)
+    {
+        bytes4 interfaceId_IBountyManager = type(IBountyManager).interfaceId;
+        return interfaceId == interfaceId_IBountyManager
+            || super.supportsInterface(interfaceId);
+    }
+    
     using EnumerableSet for EnumerableSet.UintSet;
     using LinkedIdList for LinkedIdList.List;
 
@@ -459,17 +472,5 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         _claimRegistry[claimId].claimed = true;
 
         emit ClaimVerified(claimId);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC20PaymentClient)
-        returns (bool)
-    {
-        bytes4 interfaceId_IBountyManager = type(IBountyManager).interfaceId;
-        return interfaceId == interfaceId_IBountyManager
-            || super.supportsInterface(interfaceId);
     }
 }

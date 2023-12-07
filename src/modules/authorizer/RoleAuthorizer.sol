@@ -14,6 +14,19 @@ contract RoleAuthorizer is
     AccessControlEnumerableUpgradeable,
     Module
 {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module, AccessControlEnumerableUpgradeable)
+        returns (bool)
+    {
+        bytes4 interfaceId_IAuthorizer = type(IAuthorizer).interfaceId;
+        return interfaceId == interfaceId_IAuthorizer
+            || super.supportsInterface(interfaceId);
+    }
+        
     //--------------------------------------------------------------------------
     // Storage
 
@@ -117,18 +130,6 @@ contract RoleAuthorizer is
 
     //--------------------------------------------------------------------------
     // Public functions
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(Module, AccessControlEnumerableUpgradeable)
-        returns (bool)
-    {
-        bytes4 interfaceId_IAuthorizer = type(IAuthorizer).interfaceId;
-        return interfaceId == interfaceId_IAuthorizer
-            || super.supportsInterface(interfaceId);
-    }
 
     /// @inheritdoc IAuthorizer
     function hasModuleRole(bytes32 role, address who)

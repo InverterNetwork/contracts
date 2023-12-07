@@ -9,6 +9,19 @@ import {IMetadataManager} from "src/modules/utils/IMetadataManager.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract MetadataManager is IMetadataManager, Module {
+    
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IMetadataManager = type(IMetadataManager).interfaceId;
+        return interfaceId == interfaceId_IMetadataManager
+            || super.supportsInterface(interfaceId);
+    }
+    
     //--------------------------------------------------------------------------
     // Storage
 
@@ -45,18 +58,6 @@ contract MetadataManager is IMetadataManager, Module {
 
     //--------------------------------------------------------------------------
     // Getter Functions
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(Module)
-        returns (bool)
-    {
-        bytes4 interfaceId_IMetadataManager = type(IMetadataManager).interfaceId;
-        return interfaceId == interfaceId_IMetadataManager
-            || super.supportsInterface(interfaceId);
-    }
 
     function getManagerMetadata()
         external

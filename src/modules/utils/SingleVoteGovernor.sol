@@ -8,6 +8,20 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {ISingleVoteGovernor} from "src/modules/utils/ISingleVoteGovernor.sol";
 
 contract SingleVoteGovernor is ISingleVoteGovernor, Module {
+   
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_ISingleVoteGovernor =
+            type(ISingleVoteGovernor).interfaceId;
+        return interfaceId == interfaceId_ISingleVoteGovernor
+            || super.supportsInterface(interfaceId);
+    }   
+   
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -328,18 +342,5 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         motion_.executionReturnData = returnData;
 
         emit MotionExecuted(motionId);
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(Module)
-        returns (bool)
-    {
-        bytes4 interfaceId_ISingleVoteGovernor =
-            type(ISingleVoteGovernor).interfaceId;
-        return interfaceId == interfaceId_ISingleVoteGovernor
-            || super.supportsInterface(interfaceId);
     }
 }

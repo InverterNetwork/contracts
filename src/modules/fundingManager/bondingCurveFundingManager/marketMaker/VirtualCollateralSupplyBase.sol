@@ -17,6 +17,20 @@ abstract contract VirtualCollateralSupplyBase is
     IVirtualCollateralSupply,
     ERC165
 {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IVirtualCollateralSupply =
+            type(IVirtualCollateralSupply).interfaceId;
+        return interfaceId == interfaceId_IVirtualCollateralSupply
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -87,18 +101,5 @@ abstract contract VirtualCollateralSupplyBase is
     /// @return The current virtual collateral supply as a uint.
     function _getVirtualCollateralSupply() internal view returns (uint) {
         return virtualCollateralSupply;
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165)
-        returns (bool)
-    {
-        bytes4 interfaceId_IVirtualCollateralSupply =
-            type(IVirtualCollateralSupply).interfaceId;
-        return interfaceId == interfaceId_IVirtualCollateralSupply
-            || super.supportsInterface(interfaceId);
     }
 }

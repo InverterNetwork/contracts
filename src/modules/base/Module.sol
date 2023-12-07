@@ -38,6 +38,19 @@ abstract contract Module is
     ContextUpgradeable,
     ERC165
 {
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IModule = type(IModule).interfaceId;
+        return interfaceId == interfaceId_IModule
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
     //
@@ -186,18 +199,6 @@ abstract contract Module is
 
     //--------------------------------------------------------------------------
     // Public View Functions
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165)
-        returns (bool)
-    {
-        bytes4 interfaceId_IModule = type(IModule).interfaceId;
-        return interfaceId == interfaceId_IModule
-            || super.supportsInterface(interfaceId);
-    }
 
     /// @inheritdoc IModule
     function identifier() public view returns (bytes32) {
