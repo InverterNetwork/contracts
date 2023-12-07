@@ -43,7 +43,8 @@ contract baseModuleTest is ModuleTest {
 
         _setUpOrchestrator(module);
 
-        _authorizer.setIsAuthorized(address(this), true);
+        //init authorizer and set this address as authorized
+        _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
 
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }

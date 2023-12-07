@@ -16,6 +16,8 @@ import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
 // Mocks
+import {OrchestratorMock} from
+    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
 import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -30,8 +32,8 @@ abstract contract ModuleTest is Test {
     Orchestrator _orchestrator;
 
     // Mocks
-    FundingManagerMock _fundingManager = new FundingManagerMock();
-    AuthorizerMock _authorizer = new AuthorizerMock();
+    FundingManagerMock _fundingManager;
+    AuthorizerMock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
 
@@ -54,8 +56,14 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        address impl = address(new Orchestrator(address(0))); //@todo add forwarder correctly
-        _orchestrator = Orchestrator(Clones.clone(impl));
+        address impl = address(new OrchestratorMock(address(0))); //@todo add forwarder correctly
+        _orchestrator = OrchestratorMock(Clones.clone(impl));
+
+        impl = address(new FundingManagerMock());
+        _fundingManager = FundingManagerMock(Clones.clone(impl));
+
+        impl = address(new AuthorizerMock());
+        _authorizer = AuthorizerMock(Clones.clone(impl));
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,
@@ -64,6 +72,7 @@ abstract contract ModuleTest is Test {
             _authorizer,
             _paymentProcessor
         );
+
         _fundingManager.setToken(IERC20(address(_token)));
     }
 
