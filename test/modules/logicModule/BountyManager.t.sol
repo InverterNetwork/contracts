@@ -80,6 +80,14 @@ contract BountyManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 bountyManagerInterface = type(IBountyManager).interfaceId;
+        bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
+        assertTrue(!bountyManager.supportsInterface(randomInterface));
+        assertTrue(bountyManager.supportsInterface(paymentClientInterface));
+        assertTrue(bountyManager.supportsInterface(bountyManagerInterface));
+    }
+
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {}
 

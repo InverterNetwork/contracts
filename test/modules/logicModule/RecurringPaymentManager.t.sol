@@ -50,6 +50,21 @@ contract RecurringPaymentManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 recurringPaymentManagerInterface =
+            type(IRecurringPaymentManager).interfaceId;
+        bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
+        assertTrue(!recurringPaymentManager.supportsInterface(randomInterface));
+        assertTrue(
+            recurringPaymentManager.supportsInterface(paymentClientInterface)
+        );
+        assertTrue(
+            recurringPaymentManager.supportsInterface(
+                recurringPaymentManagerInterface
+            )
+        );
+    }
+
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {
         vm.expectRevert(
