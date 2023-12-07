@@ -119,6 +119,12 @@ contract MetadataManagerTest is ModuleTest {
         assertMetadataManagerTeamMetadataEqualTo(TEAM_METADATA);
     }
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 metadataManagerInterface = type(IMetadataManager).interfaceId;
+        assertTrue(!metadataManager.supportsInterface(randomInterface));
+        assertTrue(metadataManager.supportsInterface(metadataManagerInterface));
+    }
+
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         metadataManager.init(_orchestrator, _METADATA, bytes(""));

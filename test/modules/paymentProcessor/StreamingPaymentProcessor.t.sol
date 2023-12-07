@@ -75,6 +75,15 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         assertEq(address(paymentProcessor.token()), address(_token));
     }
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 streamingPaymentInterface =
+            type(IStreamingPaymentProcessor).interfaceId;
+        assertTrue(!paymentProcessor.supportsInterface(randomInterface));
+        assertTrue(
+            paymentProcessor.supportsInterface(streamingPaymentInterface)
+        );
+    }
+
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         paymentProcessor.init(_orchestrator, _METADATA, bytes(""));

@@ -53,6 +53,12 @@ contract SimplePaymentProcessorTest is ModuleTest {
         assertEq(address(paymentProcessor.token()), address(_token));
     }
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 simplePaymentInterface = type(IPaymentProcessor).interfaceId;
+        assertTrue(!paymentProcessor.supportsInterface(randomInterface));
+        assertTrue(paymentProcessor.supportsInterface(simplePaymentInterface));
+    }
+
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
