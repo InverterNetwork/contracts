@@ -15,6 +15,7 @@ import {BancorFormula} from
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // Mocks
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {
     RedeemingBondingCurveFundingManagerMock,
     IRedeemingBondingCurveFundingManagerBase
@@ -71,6 +72,29 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 BUY_FEE,
                 BUY_IS_OPEN,
                 SELL_IS_OPEN
+            )
+        );
+    }
+
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 fundingManagerInterface = type(IFundingManager).interfaceId;
+        bytes4 redeemingFundingInterface =
+            type(IRedeemingBondingCurveFundingManagerBase).interfaceId;
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        assertTrue(
+            !bondingCurveFundingManager.supportsInterface(randomInterface)
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                fundingManagerInterface
+            )
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(moduleInterface)
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                redeemingFundingInterface
             )
         );
     }

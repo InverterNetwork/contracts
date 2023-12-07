@@ -20,6 +20,7 @@ import {
     IBondingCurveFundingManagerBase
 } from
     "test/modules/fundingManager/bondingCurveFundingManager/marketMaker/utils/mocks/BondingCurveFundingManagerMock.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 contract BondingCurveFundingManagerBaseTest is ModuleTest {
     string private constant NAME = "Bonding Curve Token";
@@ -69,6 +70,27 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 BUY_FEE,
                 BUY_IS_OPEN
             )
+        );
+    }
+
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 fundingManagerInterface = type(IFundingManager).interfaceId;
+        bytes4 bcFundingInterface =
+            type(IBondingCurveFundingManagerBase).interfaceId;
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        assertTrue(
+            !bondingCurveFundingManager.supportsInterface(randomInterface)
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                fundingManagerInterface
+            )
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(moduleInterface)
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(bcFundingInterface)
         );
     }
 

@@ -25,6 +25,17 @@ contract VirtualTokenSupplyBaseTest is Test {
         virtualTokenSupplyBase.setVirtualTokenSupply(INITIAL_SUPPLY);
     }
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 virtualTokenSupplyInterface =
+            type(IVirtualTokenSupply).interfaceId;
+        assertTrue(!virtualTokenSupplyBase.supportsInterface(randomInterface));
+        assertTrue(
+            virtualTokenSupplyBase.supportsInterface(
+                virtualTokenSupplyInterface
+            )
+        );
+    }
+
     function testAddTokenAmount(uint amount) external {
         amount = bound(amount, 0, (MAX_UINT - INITIAL_SUPPLY));
 

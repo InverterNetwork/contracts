@@ -29,6 +29,19 @@ contract VirtualCollateralSupplyBaseTest is Test {
         virtualCollateralSupplyBase.setVirtualCollateralSupply(INITIAL_SUPPLY);
     }
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 virtualCollateralInterface =
+            type(IVirtualCollateralSupply).interfaceId;
+        assertTrue(
+            !virtualCollateralSupplyBase.supportsInterface(randomInterface)
+        );
+        assertTrue(
+            virtualCollateralSupplyBase.supportsInterface(
+                virtualCollateralInterface
+            )
+        );
+    }
+
     function testAddCollateralAmount(uint amount) external {
         amount = bound(amount, 0, (MAX_UINT - INITIAL_SUPPLY));
         // Test event
