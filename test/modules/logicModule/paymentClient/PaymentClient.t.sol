@@ -8,6 +8,7 @@ import {
     ERC20PaymentClientMock,
     IERC20PaymentClient
 } from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
+import {Module, IModule} from "src/modules/base/Module.sol";
 
 import {OrchestratorMock} from
     "test/utils/mocks/orchestrator/OrchestratorMock.sol";
@@ -39,6 +40,14 @@ contract ERC20PaymentClientTest is Test {
 
         paymentClient = new ERC20PaymentClientMock(token);
         paymentClient.setIsAuthorized(address(this), true);
+    }
+
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        assertTrue(!paymentClient.supportsInterface(randomInterface));
+        assertTrue(paymentClient.supportsInterface(paymentClientInterface));
+        assertTrue(paymentClient.supportsInterface(moduleInterface));
     }
 
     //----------------------------------
