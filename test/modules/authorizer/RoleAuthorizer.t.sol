@@ -7,7 +7,8 @@ import "forge-std/console.sol";
 
 import {
     RoleAuthorizer,
-    IAuthorizer
+    IAuthorizer,
+    IModule
 } from "src/modules/authorizer/RoleAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -91,6 +92,14 @@ contract RoleAuthorizerTest is Test {
 
     //--------------------------------------------------------------------------------------
     // Tests Initialization
+
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 authorizerInterface = type(IAuthorizer).interfaceId;
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        assertTrue(!_authorizer.supportsInterface(randomInterface));
+        assertTrue(_authorizer.supportsInterface(moduleInterface));
+        assertTrue(_authorizer.supportsInterface(authorizerInterface));
+    }
 
     function testInitWithInitialOwner(address initialAuth) public {
         //Checks that address list gets correctly stored on initialization

@@ -51,6 +51,12 @@ contract baseModuleTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        assertTrue(!module.supportsInterface(randomInterface));
+        assertTrue(module.supportsInterface(moduleInterface));
+    }
+
     function testInit() public override {
         // Orchestrator correctly written to storage.
         assertEq(address(module.orchestrator()), address(_orchestrator));

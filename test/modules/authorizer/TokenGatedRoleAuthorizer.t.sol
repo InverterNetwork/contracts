@@ -150,6 +150,17 @@ contract TokenGatedRoleAuthorizerTest is Test {
         roleNft.mint(BOB);
     }
 
+    function testSupportsInterface(bytes4 randomInterface) public {
+        bytes4 tokenAuthorizerInterface =
+            type(ITokenGatedRoleAuthorizer).interfaceId;
+        bytes4 authorizerInterface = type(IAuthorizer).interfaceId;
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        assertTrue(!_authorizer.supportsInterface(randomInterface));
+        assertTrue(_authorizer.supportsInterface(moduleInterface));
+        assertTrue(_authorizer.supportsInterface(authorizerInterface));
+        assertTrue(_authorizer.supportsInterface(tokenAuthorizerInterface));
+    }
+
     //-------------------------------------------------
     // Helper Functions
 
