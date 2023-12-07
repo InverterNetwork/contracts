@@ -51,14 +51,12 @@ interface IRedeemingBondingCurveFundingManagerBase {
     /// @dev Redirects to the internal function `_sellOrder` by passing the receiver address and deposit amount.
     /// @param _receiver The address that will receive the redeemed tokens.
     /// @param _depositAmount The amount of issued token to deposited.
-    function sellOrderFor(address _receiver, uint _depositAmount)
-        external
-        payable;
+    function sellFor(address _receiver, uint _depositAmount) external;
 
     /// @notice Sell collateral for the sender's address.
     /// @dev Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
-    /// @param _depositAmount The amount of issued token depoisited.
-    function sellOrder(uint _depositAmount) external payable;
+    /// @param _depositAmount The amount of issued token deposited.
+    function sell(uint _depositAmount) external;
 
     /// @notice Opens the selling functionality for the collateral.
     /// @dev Only callable by the Orchestrator owner, or Manager.

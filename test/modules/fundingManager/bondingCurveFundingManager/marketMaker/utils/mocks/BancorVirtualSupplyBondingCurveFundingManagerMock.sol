@@ -42,6 +42,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
         return reserveRatioForSelling;
     }
 
+    // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
+    function call_setDecimals(uint8 _newDecimals) external {
+        _setTokenDecimals(_newDecimals);
+    }
+
     function call_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,

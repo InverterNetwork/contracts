@@ -74,9 +74,8 @@ abstract contract BondingCurveFundingManagerBase is
     // Public Functions
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function buyOrderFor(address _receiver, uint _depositAmount)
+    function buyFor(address _receiver, uint _depositAmount)
         external
-        payable
         virtual
         buyingIsEnabled
         validReceiver(_receiver)
@@ -85,12 +84,7 @@ abstract contract BondingCurveFundingManagerBase is
     }
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function buyOrder(uint _depositAmount)
-        external
-        payable
-        virtual
-        buyingIsEnabled
-    {
+    function buy(uint _depositAmount) external virtual buyingIsEnabled {
         _buyOrder(_msgSender(), _depositAmount);
     }
 
@@ -135,6 +129,7 @@ abstract contract BondingCurveFundingManagerBase is
     /// @return uint Return the amount of tokens to be issued
     function _issueTokensFormulaWrapper(uint _depositAmount)
         internal
+        view
         virtual
         returns (uint);
 
@@ -163,7 +158,7 @@ abstract contract BondingCurveFundingManagerBase is
                 _calculateFeeDeductedDepositAmount(_depositAmount, buyFee);
         }
         // Calculate mint amount based on upstream formula
-        mintAmount = _issueTokens(_depositAmount);
+        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
         // Mint tokens to address
         _mint(_receiver, mintAmount);
         // Emit event
@@ -208,34 +203,17 @@ abstract contract BondingCurveFundingManagerBase is
         uint _depositAmount,
         uint _feePct
     ) internal pure returns (uint depositAmountMinusFee) {
-        if (_feePct > BPS) {
-            revert BondingCurveFundingManager__InvalidFeePercentage();
-        }
         // Calculate fee amount
         uint feeAmount = (_depositAmount * _feePct) / BPS;
         // Subtract fee amount from deposit amount
         depositAmountMinusFee = _depositAmount - feeAmount;
     }
 
-    /// @dev Issues tokens based on the deposit amount.
-    /// This function utilizes another internal function, `_issueTokensFormulaWrapper`,
-    /// to determine how many tokens should be minted.
-    /// @param _depositAmount The amount of funds deposited for which tokens are to be issued.
-    /// @return mintAmount The number of tokens that will be minted.
-    function _issueTokens(uint _depositAmount)
-        internal
-        returns (uint mintAmount)
-    {
-        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
-    }
-
     /// @dev Sets the number of decimals for the token.
-    /// This function updates the `tokenDecimals` state variable.
+    /// This function updates the `tokenDecimals` state variable and should be be overriden by
+    /// the implementation contract if input validation is needed.
     /// @param _decimals The number of decimals to set for the token.
-    function _setTokenDecimals(uint8 _decimals) internal {
-        if (_decimals == 0) {
-            revert BondingCurveFundingManager__InvalidDecimals();
-        }
+    function _setTokenDecimals(uint8 _decimals) internal virtual {
         tokenDecimals = _decimals;
     }
 

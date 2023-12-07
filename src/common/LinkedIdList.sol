@@ -132,7 +132,7 @@ library LinkedIdList {
     /// @param self : the linked List from where the ids should be listed
     /// @return array of ids that are contained in the list
     function listIds(List storage self) internal view returns (uint[] memory) {
-        uint[] memory result = new uint256[](self.size);
+        uint[] memory result = new uint[](self.size);
 
         // Populate result array.
         uint index;

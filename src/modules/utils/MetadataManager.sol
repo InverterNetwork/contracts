@@ -105,7 +105,7 @@ contract MetadataManager is IMetadataManager, Module {
 
     function setOrchestratorMetadata(
         OrchestratorMetadata calldata orchestratorMetadata_
-    ) public onlyOrchestratorOwnerOrManager {
+    ) external onlyOrchestratorOwnerOrManager {
         _setOrchestratorMetadata(orchestratorMetadata_);
     }
 

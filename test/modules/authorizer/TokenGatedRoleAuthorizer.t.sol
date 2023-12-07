@@ -42,7 +42,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
 
         address propImpl = address(new Orchestrator());
         _orchestrator = Orchestrator(Clones.clone(propImpl));
-        ModuleMock module = new  ModuleMock();
+        ModuleMock module = new ModuleMock();
         address[] memory modules = new address[](1);
         modules[0] = address(module);
         _orchestrator.init(

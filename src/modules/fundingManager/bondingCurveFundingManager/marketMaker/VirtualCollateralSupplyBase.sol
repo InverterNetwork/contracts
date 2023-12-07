@@ -48,7 +48,10 @@ abstract contract VirtualCollateralSupplyBase is
         if (_amount > (MAX_UINT - virtualCollateralSupply)) {
             revert VirtualCollateralSupply_AddResultsInOverflow();
         }
-        virtualCollateralSupply += _amount;
+        unchecked {
+            virtualCollateralSupply += _amount;
+        }
+
         emit VirtualCollateralAmountAdded(_amount, virtualCollateralSupply);
     }
 
@@ -60,13 +63,22 @@ abstract contract VirtualCollateralSupplyBase is
             revert VirtualCollateralSupply__SubtractResultsInUnderflow();
         }
 
-        virtualCollateralSupply -= _amount;
+        if (_amount == virtualCollateralSupply) {
+            revert VirtualCollateralSupply__VirtualSupplyCannotBeZero();
+        }
+        unchecked {
+            virtualCollateralSupply -= _amount;
+        }
+
         emit VirtualCollateralAmountSubtracted(_amount, virtualCollateralSupply);
     }
 
     /// @dev Internal function to directly set the virtual collateral supply to a new value.
     /// @param _virtualSupply The new value to set for the virtual collateral supply.
     function _setVirtualCollateralSupply(uint _virtualSupply) internal {
+        if (_virtualSupply == 0) {
+            revert VirtualCollateralSupply__VirtualSupplyCannotBeZero();
+        }
         emit VirtualCollateralSupplySet(_virtualSupply, virtualCollateralSupply);
         virtualCollateralSupply = _virtualSupply;
     }

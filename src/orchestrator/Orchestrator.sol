@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
-// External Dependencies
-import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
-
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
@@ -45,29 +42,12 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable by authorized
+    /// @notice Modifier to guarantee function is only callable by the owner of the workflow
     ///         address.
     modifier onlyOrchestratorOwner() {
         bytes32 ownerRole = authorizer.getOwnerRole();
 
         if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
-        }
-        _;
-    }
-
-    // Once we merge the RoleAuthoirzer We can completely remove Ownable
-    // as import and rely on IAuthorizer to validate owners.
-
-    /// @notice Modifier to guarantee function is only callable by authorized
-    ///         address or manager.
-    modifier onlyOrchestratorOwnerOrManager() {
-        bytes32 ownerRole = authorizer.getOwnerRole();
-        bytes32 managerRole = authorizer.getManagerRole();
-
-        if (!authorizer.hasRole(managerRole, _msgSender())) {
-            revert Orchestrator__CallerNotAuthorized(managerRole, _msgSender());
-        } else if (!authorizer.hasRole(ownerRole, _msgSender())) {
             revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
         }
         _;

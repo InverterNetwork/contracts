@@ -5,10 +5,7 @@ import {Module, IModule} from "src/modules/base/Module.sol";
 
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
-import {
-    ISingleVoteGovernor,
-    IAuthorizer
-} from "src/modules/utils/ISingleVoteGovernor.sol";
+import {ISingleVoteGovernor} from "src/modules/utils/ISingleVoteGovernor.sol";
 
 contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
