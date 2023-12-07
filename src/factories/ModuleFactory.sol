@@ -133,8 +133,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
         override(ERC165)
         returns (bool)
     {
-        bytes4 interfaceId_IModuleFactory = type(IModuleFactory).interfaceId;
-        return interfaceId == interfaceId_IModuleFactory
+        return type(IModuleFactory).interfaceId == interfaceId_IModuleFactory
             || super.supportsInterface(interfaceId);
     }
 
