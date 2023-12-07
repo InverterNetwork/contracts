@@ -27,7 +27,6 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  * @author Inverter Network
  */
 contract SimplePaymentProcessor is Module, IPaymentProcessor {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view

@@ -39,7 +39,6 @@ import {IModule} from "src/modules/base/IModule.sol";
  * @author Inverter Network
  */
 contract Orchestrator is IOrchestrator, ModuleManager {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view

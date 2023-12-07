@@ -32,7 +32,6 @@ contract RebasingFundingManager is
     ElasticReceiptTokenUpgradeable,
     Module
 {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view

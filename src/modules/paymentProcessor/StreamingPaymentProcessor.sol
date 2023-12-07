@@ -26,7 +26,6 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  */
 
 contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -38,8 +37,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             type(IStreamingPaymentProcessor).interfaceId;
         return interfaceId == interfaceId_IStreamingPaymentProcessor
             || super.supportsInterface(interfaceId);
-    }    
-    
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 

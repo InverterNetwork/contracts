@@ -15,7 +15,6 @@ import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
  * @title Beacon
  */
 contract Beacon is IBeacon, ERC165, Ownable2Step {
-
     //--------------------------------------------------------------------------------
     // ERC-165 Public View Functions
 
@@ -30,7 +29,7 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
         return interfaceId == type(IBeacon).interfaceId
             || super.supportsInterface(interfaceId);
     }
-    
+
     //--------------------------------------------------------------------------------
     // Errors
 

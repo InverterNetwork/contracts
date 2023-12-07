@@ -37,7 +37,6 @@ abstract contract BondingCurveFundingManagerBase is
     ERC20Upgradeable,
     Module
 {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view

@@ -21,7 +21,6 @@ contract TokenGatedRoleAuthorizer is
     ITokenGatedRoleAuthorizer,
     RoleAuthorizer
 {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view

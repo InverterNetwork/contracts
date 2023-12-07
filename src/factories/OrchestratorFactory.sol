@@ -29,7 +29,6 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
  * @author Inverter Network
  */
 contract OrchestratorFactory is IOrchestratorFactory, ERC165 {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view

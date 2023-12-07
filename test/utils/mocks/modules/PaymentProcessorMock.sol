@@ -10,7 +10,6 @@ import {IERC20PaymentClient} from
 import {IModule} from "src/modules/base/Module.sol";
 
 contract PaymentProcessorMock is IPaymentProcessor {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -23,7 +22,7 @@ contract PaymentProcessorMock is IPaymentProcessor {
         return interfaceId == interfaceId_IPaymentProcessor
             || interfaceId == interfaceId_IModule;
     }
-    
+
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 

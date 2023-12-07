@@ -57,7 +57,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     VirtualCollateralSupplyBase,
     RedeemingBondingCurveFundingManagerBase
 {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view

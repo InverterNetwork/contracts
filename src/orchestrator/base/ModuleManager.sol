@@ -31,7 +31,6 @@ abstract contract ModuleManager is
     ContextUpgradeable,
     ERC165
 {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view

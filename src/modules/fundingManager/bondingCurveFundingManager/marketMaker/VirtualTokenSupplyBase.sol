@@ -14,7 +14,6 @@ import {IVirtualTokenSupply} from
 /// @dev This abstract contract uses internal state variables for the virtual token supply and employs
 /// various internal and external functions for managing it.
 abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply, ERC165 {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -27,7 +26,7 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply, ERC165 {
         return interfaceId == interfaceId_IVirtualTokenSupply
             || super.supportsInterface(interfaceId);
     }
-    
+
     //--------------------------------------------------------------------------
     // Storage
 

@@ -34,7 +34,6 @@ import {
  * @author Inverter Network
  */
 contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -42,8 +41,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
         override(ERC165)
         returns (bool)
     {
-        return type(IModuleFactory).interfaceId == interfaceId_IModuleFactory
-            || super.supportsInterface(interfaceId);
+        return super.supportsInterface(interfaceId);
     }
     //--------------------------------------------------------------------------
     // Modifiers

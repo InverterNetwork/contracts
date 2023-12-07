@@ -25,7 +25,6 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     IRedeemingBondingCurveFundingManagerBase,
     BondingCurveFundingManagerBase
 {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -202,8 +201,9 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @return redeemAmount The number of collateral tokens to be redeemed.
     function _redeemTokens(uint _depositAmount)
         internal
+        view
         returns (uint redeemAmount)
     {
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-    }   
+    }
 }

@@ -14,7 +14,6 @@ contract RoleAuthorizer is
     AccessControlEnumerableUpgradeable,
     Module
 {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -26,7 +25,7 @@ contract RoleAuthorizer is
         return interfaceId == interfaceId_IAuthorizer
             || super.supportsInterface(interfaceId);
     }
-        
+
     //--------------------------------------------------------------------------
     // Storage
 

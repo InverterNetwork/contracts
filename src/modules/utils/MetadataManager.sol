@@ -9,7 +9,6 @@ import {IMetadataManager} from "src/modules/utils/IMetadataManager.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract MetadataManager is IMetadataManager, Module {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -21,7 +20,7 @@ contract MetadataManager is IMetadataManager, Module {
         return interfaceId == interfaceId_IMetadataManager
             || super.supportsInterface(interfaceId);
     }
-    
+
     //--------------------------------------------------------------------------
     // Storage
 

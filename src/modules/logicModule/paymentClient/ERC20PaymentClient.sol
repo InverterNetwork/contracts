@@ -25,7 +25,6 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
  * @author Inverter Network
  */
 abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view

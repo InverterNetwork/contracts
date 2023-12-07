@@ -25,7 +25,6 @@ import {
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
 contract BountyManager is IBountyManager, ERC20PaymentClient {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -37,7 +36,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         return interfaceId == interfaceId_IBountyManager
             || super.supportsInterface(interfaceId);
     }
-    
+
     using EnumerableSet for EnumerableSet.UintSet;
     using LinkedIdList for LinkedIdList.List;
 

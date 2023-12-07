@@ -12,7 +12,6 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 contract FundingManagerMock is IFundingManager, Module {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view

@@ -5,7 +5,6 @@ import {ElasticReceiptTokenBase} from
     "src/modules/fundingManager/token/ElasticReceiptTokenBase.sol";
 
 abstract contract ElasticReceiptTokenUpgradeable is ElasticReceiptTokenBase {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -14,8 +13,8 @@ abstract contract ElasticReceiptTokenUpgradeable is ElasticReceiptTokenBase {
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
-    }    
-    
+    }
+
     //--------------------------------------------------------------------------
     // Initialization
 

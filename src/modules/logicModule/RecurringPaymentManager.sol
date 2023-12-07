@@ -24,7 +24,6 @@ contract RecurringPaymentManager is
     IRecurringPaymentManager,
     ERC20PaymentClient
 {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view

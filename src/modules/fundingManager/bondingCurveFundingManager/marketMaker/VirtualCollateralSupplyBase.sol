@@ -17,7 +17,6 @@ abstract contract VirtualCollateralSupplyBase is
     IVirtualCollateralSupply,
     ERC165
 {
-
     function supportsInterface(bytes4 interfaceId)
         public
         view

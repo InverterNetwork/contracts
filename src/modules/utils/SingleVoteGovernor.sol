@@ -8,7 +8,6 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {ISingleVoteGovernor} from "src/modules/utils/ISingleVoteGovernor.sol";
 
 contract SingleVoteGovernor is ISingleVoteGovernor, Module {
-   
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -20,8 +19,8 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
             type(ISingleVoteGovernor).interfaceId;
         return interfaceId == interfaceId_ISingleVoteGovernor
             || super.supportsInterface(interfaceId);
-    }   
-   
+    }
+
     //--------------------------------------------------------------------------
     // Modifiers
 

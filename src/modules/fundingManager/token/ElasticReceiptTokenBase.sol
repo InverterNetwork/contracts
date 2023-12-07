@@ -59,7 +59,6 @@ import {
  * @author merkleplant
  */
 abstract contract ElasticReceiptTokenBase is IRebasingERC20, ERC165 {
-    
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -71,7 +70,7 @@ abstract contract ElasticReceiptTokenBase is IRebasingERC20, ERC165 {
         return interfaceId == interfaceId_IRebasingERC20
             || super.supportsInterface(interfaceId);
     }
-    
+
     //--------------------------------------------------------------------------
     // !!!        PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH         !!!
     //
