@@ -26,16 +26,16 @@ contract VirtualTokenSupplyBaseTest is Test {
     }
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 virtualTokenSupplyInterface =
             type(IVirtualTokenSupply).interfaceId;
-        if (randomInterface == virtualTokenSupplyInterface) {
+        if (invalidInterface == virtualTokenSupplyInterface) {
             assertTrue(
-                virtualTokenSupplyBase.supportsInterface(randomInterface)
+                virtualTokenSupplyBase.supportsInterface(invalidInterface)
             );
         } else {
             assertTrue(
-                !virtualTokenSupplyBase.supportsInterface(randomInterface)
+                !virtualTokenSupplyBase.supportsInterface(invalidInterface)
             );
             assertTrue(
                 virtualTokenSupplyBase.supportsInterface(

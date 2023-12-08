@@ -52,12 +52,12 @@ contract baseModuleTest is ModuleTest {
     // Tests: Initialization
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 moduleInterface = type(IModule).interfaceId;
-        if (randomInterface == moduleInterface) {
-            assertTrue(module.supportsInterface(randomInterface));
+        if (invalidInterface == moduleInterface) {
+            assertTrue(module.supportsInterface(invalidInterface));
         } else {
-            assertTrue(!module.supportsInterface(randomInterface));
+            assertTrue(!module.supportsInterface(invalidInterface));
             assertTrue(module.supportsInterface(moduleInterface));
         }
     }

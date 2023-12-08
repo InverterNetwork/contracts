@@ -94,16 +94,16 @@ contract RoleAuthorizerTest is Test {
     // Tests Initialization
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 authorizerInterface = type(IAuthorizer).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (
-            randomInterface == authorizerInterface
-                || randomInterface == moduleInterface
+            invalidInterface == authorizerInterface
+                || invalidInterface == moduleInterface
         ) {
-            assertTrue(_authorizer.supportsInterface(randomInterface));
+            assertTrue(_authorizer.supportsInterface(invalidInterface));
         } else {
-            assertTrue(!_authorizer.supportsInterface(randomInterface));
+            assertTrue(!_authorizer.supportsInterface(invalidInterface));
             assertTrue(_authorizer.supportsInterface(moduleInterface));
             assertTrue(_authorizer.supportsInterface(authorizerInterface));
         }

@@ -87,16 +87,16 @@ contract SingleVoteGovernorTest is ModuleTest {
     }
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 authorizerInterface = type(ISingleVoteGovernor).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (
-            randomInterface == authorizerInterface
-                || randomInterface == moduleInterface
+            invalidInterface == authorizerInterface
+                || invalidInterface == moduleInterface
         ) {
-            assertTrue(_governor.supportsInterface(randomInterface));
+            assertTrue(_governor.supportsInterface(invalidInterface));
         } else {
-            assertTrue(!_governor.supportsInterface(randomInterface));
+            assertTrue(!_governor.supportsInterface(invalidInterface));
             assertTrue(_governor.supportsInterface(moduleInterface));
             assertTrue(_governor.supportsInterface(authorizerInterface));
         }

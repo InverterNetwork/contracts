@@ -120,12 +120,12 @@ contract MetadataManagerTest is ModuleTest {
     }
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 metadataManagerInterface = type(IMetadataManager).interfaceId;
-        if (randomInterface == metadataManagerInterface) {
-            assertTrue(metadataManager.supportsInterface(randomInterface));
+        if (invalidInterface == metadataManagerInterface) {
+            assertTrue(metadataManager.supportsInterface(invalidInterface));
         } else {
-            assertTrue(!metadataManager.supportsInterface(randomInterface));
+            assertTrue(!metadataManager.supportsInterface(invalidInterface));
             assertTrue(
                 metadataManager.supportsInterface(metadataManagerInterface)
             );

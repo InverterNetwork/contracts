@@ -30,16 +30,16 @@ contract VirtualCollateralSupplyBaseTest is Test {
     }
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 virtualCollateralInterface =
             type(IVirtualCollateralSupply).interfaceId;
-        if (randomInterface == virtualCollateralInterface) {
+        if (invalidInterface == virtualCollateralInterface) {
             assertTrue(
-                virtualCollateralSupplyBase.supportsInterface(randomInterface)
+                virtualCollateralSupplyBase.supportsInterface(invalidInterface)
             );
         } else {
             assertTrue(
-                !virtualCollateralSupplyBase.supportsInterface(randomInterface)
+                !virtualCollateralSupplyBase.supportsInterface(invalidInterface)
             );
             assertTrue(
                 virtualCollateralSupplyBase.supportsInterface(

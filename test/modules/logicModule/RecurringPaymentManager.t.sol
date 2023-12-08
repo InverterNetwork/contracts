@@ -51,22 +51,22 @@ contract RecurringPaymentManagerTest is ModuleTest {
     // Test: Initialization
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 recurringPaymentManagerInterface =
             type(IRecurringPaymentManager).interfaceId;
         bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (
-            randomInterface == moduleInterface
-                || randomInterface == paymentClientInterface
-                || randomInterface == recurringPaymentManagerInterface
+            invalidInterface == moduleInterface
+                || invalidInterface == paymentClientInterface
+                || invalidInterface == recurringPaymentManagerInterface
         ) {
             assertTrue(
-                recurringPaymentManager.supportsInterface(randomInterface)
+                recurringPaymentManager.supportsInterface(invalidInterface)
             );
         } else {
             assertTrue(
-                !recurringPaymentManager.supportsInterface(randomInterface)
+                !recurringPaymentManager.supportsInterface(invalidInterface)
             );
             assertTrue(
                 recurringPaymentManager.supportsInterface(

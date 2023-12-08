@@ -161,22 +161,22 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 fundingManagerInterface = type(IFundingManager).interfaceId;
         bytes4 bancorBCInterface =
             type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (
-            randomInterface == fundingManagerInterface
-                || randomInterface == bancorBCInterface
-                || randomInterface == moduleInterface
+            invalidInterface == fundingManagerInterface
+                || invalidInterface == bancorBCInterface
+                || invalidInterface == moduleInterface
         ) {
             assertTrue(
-                bondingCurveFundingManager.supportsInterface(randomInterface)
+                bondingCurveFundingManager.supportsInterface(invalidInterface)
             );
         } else {
             assertTrue(
-                !bondingCurveFundingManager.supportsInterface(randomInterface)
+                !bondingCurveFundingManager.supportsInterface(invalidInterface)
             );
             assertTrue(
                 bondingCurveFundingManager.supportsInterface(

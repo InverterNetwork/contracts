@@ -74,22 +74,22 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     function testSupportsInterface() public {
-        bytes4 randomInterface = 0xabcdef12;
+        bytes4 invalidInterface = 0xabcdef12;
         bytes4 fundingManagerInterface = type(IFundingManager).interfaceId;
         bytes4 bcFundingInterface =
             type(IBondingCurveFundingManagerBase).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (
-            randomInterface == fundingManagerInterface
-                || randomInterface == bcFundingInterface
-                || randomInterface == moduleInterface
+            invalidInterface == fundingManagerInterface
+                || invalidInterface == bcFundingInterface
+                || invalidInterface == moduleInterface
         ) {
             assertTrue(
-                bondingCurveFundingManager.supportsInterface(randomInterface)
+                bondingCurveFundingManager.supportsInterface(invalidInterface)
             );
         } else {
             assertTrue(
-                !bondingCurveFundingManager.supportsInterface(randomInterface)
+                !bondingCurveFundingManager.supportsInterface(invalidInterface)
             );
             assertTrue(
                 bondingCurveFundingManager.supportsInterface(
