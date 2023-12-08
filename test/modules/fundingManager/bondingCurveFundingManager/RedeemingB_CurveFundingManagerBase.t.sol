@@ -81,22 +81,32 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         bytes4 redeemingFundingInterface =
             type(IRedeemingBondingCurveFundingManagerBase).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
-        assertTrue(
-            !bondingCurveFundingManager.supportsInterface(randomInterface)
-        );
-        assertTrue(
-            bondingCurveFundingManager.supportsInterface(
-                fundingManagerInterface
-            )
-        );
-        assertTrue(
-            bondingCurveFundingManager.supportsInterface(moduleInterface)
-        );
-        assertTrue(
-            bondingCurveFundingManager.supportsInterface(
-                redeemingFundingInterface
-            )
-        );
+        if (
+            randomInterface == fundingManagerInterface
+                || randomInterface == redeemingFundingInterface
+                || randomInterface == moduleInterface
+        ) {
+            assertTrue(
+                bondingCurveFundingManager.supportsInterface(randomInterface)
+            );
+        } else {
+            assertTrue(
+                !bondingCurveFundingManager.supportsInterface(randomInterface)
+            );
+            assertTrue(
+                bondingCurveFundingManager.supportsInterface(
+                    fundingManagerInterface
+                )
+            );
+            assertTrue(
+                bondingCurveFundingManager.supportsInterface(moduleInterface)
+            );
+            assertTrue(
+                bondingCurveFundingManager.supportsInterface(
+                    redeemingFundingInterface
+                )
+            );
+        }
     }
 
     //--------------------------------------------------------------------------

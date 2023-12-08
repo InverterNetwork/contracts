@@ -11,7 +11,7 @@ optimizer_runs = 5_000
 via_ir = false
 
 [fuzz]
-runs = 256
+runs = 10240
 
 [fmt]
 line_length = 80

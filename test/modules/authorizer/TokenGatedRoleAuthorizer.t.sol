@@ -155,10 +155,17 @@ contract TokenGatedRoleAuthorizerTest is Test {
             type(ITokenGatedRoleAuthorizer).interfaceId;
         bytes4 authorizerInterface = type(IAuthorizer).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
-        assertTrue(!_authorizer.supportsInterface(randomInterface));
-        assertTrue(_authorizer.supportsInterface(moduleInterface));
-        assertTrue(_authorizer.supportsInterface(authorizerInterface));
-        assertTrue(_authorizer.supportsInterface(tokenAuthorizerInterface));
+        if (
+            randomInterface == tokenAuthorizerInterface
+                || randomInterface == moduleInterface
+        ) {
+            assertTrue(_authorizer.supportsInterface(randomInterface));
+        } else {
+            assertTrue(!_authorizer.supportsInterface(randomInterface));
+            assertTrue(_authorizer.supportsInterface(moduleInterface));
+            assertTrue(_authorizer.supportsInterface(authorizerInterface));
+            assertTrue(_authorizer.supportsInterface(tokenAuthorizerInterface));
+        }
     }
 
     //-------------------------------------------------

@@ -55,8 +55,19 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
     function testSupportsInterface(bytes4 randomInterface) public {
         bytes4 simplePaymentInterface = type(IPaymentProcessor).interfaceId;
-        assertTrue(!paymentProcessor.supportsInterface(randomInterface));
-        assertTrue(paymentProcessor.supportsInterface(simplePaymentInterface));
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        if (
+            randomInterface == simplePaymentInterface
+                || randomInterface == moduleInterface
+        ) {
+            assertTrue(paymentProcessor.supportsInterface(randomInterface));
+        } else {
+            assertTrue(!paymentProcessor.supportsInterface(randomInterface));
+            assertTrue(paymentProcessor.supportsInterface(moduleInterface));
+            assertTrue(
+                paymentProcessor.supportsInterface(simplePaymentInterface)
+            );
+        }
     }
 
     function testReinitFails() public override(ModuleTest) {

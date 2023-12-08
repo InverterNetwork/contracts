@@ -78,10 +78,19 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     function testSupportsInterface(bytes4 randomInterface) public {
         bytes4 streamingPaymentInterface =
             type(IStreamingPaymentProcessor).interfaceId;
-        assertTrue(!paymentProcessor.supportsInterface(randomInterface));
-        assertTrue(
-            paymentProcessor.supportsInterface(streamingPaymentInterface)
-        );
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        if (
+            randomInterface == streamingPaymentInterface
+                || randomInterface == moduleInterface
+        ) {
+            assertTrue(paymentProcessor.supportsInterface(randomInterface));
+        } else {
+            assertTrue(!paymentProcessor.supportsInterface(randomInterface));
+            assertTrue(
+                paymentProcessor.supportsInterface(streamingPaymentInterface)
+            );
+            assertTrue(paymentProcessor.supportsInterface(moduleInterface));
+        }
     }
 
     function testReinitFails() public override(ModuleTest) {

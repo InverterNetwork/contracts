@@ -54,15 +54,30 @@ contract RecurringPaymentManagerTest is ModuleTest {
         bytes4 recurringPaymentManagerInterface =
             type(IRecurringPaymentManager).interfaceId;
         bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
-        assertTrue(!recurringPaymentManager.supportsInterface(randomInterface));
-        assertTrue(
-            recurringPaymentManager.supportsInterface(paymentClientInterface)
-        );
-        assertTrue(
-            recurringPaymentManager.supportsInterface(
-                recurringPaymentManagerInterface
-            )
-        );
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        if (
+            randomInterface == moduleInterface
+                || randomInterface == paymentClientInterface
+                || randomInterface == recurringPaymentManagerInterface
+        ) {
+            assertTrue(
+                recurringPaymentManager.supportsInterface(randomInterface)
+            );
+        } else {
+            assertTrue(
+                !recurringPaymentManager.supportsInterface(randomInterface)
+            );
+            assertTrue(
+                recurringPaymentManager.supportsInterface(
+                    paymentClientInterface
+                )
+            );
+            assertTrue(
+                recurringPaymentManager.supportsInterface(
+                    recurringPaymentManagerInterface
+                )
+            );
+        }
     }
 
     //This function also tests all the getters

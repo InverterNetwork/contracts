@@ -45,9 +45,16 @@ contract ERC20PaymentClientTest is Test {
     function testSupportsInterface(bytes4 randomInterface) public {
         bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
-        assertTrue(!paymentClient.supportsInterface(randomInterface));
-        assertTrue(paymentClient.supportsInterface(paymentClientInterface));
-        assertTrue(paymentClient.supportsInterface(moduleInterface));
+        if (
+            randomInterface == paymentClientInterface
+                || randomInterface == moduleInterface
+        ) {
+            assertTrue(paymentClient.supportsInterface(randomInterface));
+        } else {
+            assertTrue(!paymentClient.supportsInterface(randomInterface));
+            assertTrue(paymentClient.supportsInterface(paymentClientInterface));
+            assertTrue(paymentClient.supportsInterface(moduleInterface));
+        }
     }
 
     //----------------------------------

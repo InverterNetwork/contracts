@@ -32,14 +32,20 @@ contract VirtualCollateralSupplyBaseTest is Test {
     function testSupportsInterface(bytes4 randomInterface) public {
         bytes4 virtualCollateralInterface =
             type(IVirtualCollateralSupply).interfaceId;
-        assertTrue(
-            !virtualCollateralSupplyBase.supportsInterface(randomInterface)
-        );
-        assertTrue(
-            virtualCollateralSupplyBase.supportsInterface(
-                virtualCollateralInterface
-            )
-        );
+        if (randomInterface == virtualCollateralInterface) {
+            assertTrue(
+                virtualCollateralSupplyBase.supportsInterface(randomInterface)
+            );
+        } else {
+            assertTrue(
+                !virtualCollateralSupplyBase.supportsInterface(randomInterface)
+            );
+            assertTrue(
+                virtualCollateralSupplyBase.supportsInterface(
+                    virtualCollateralInterface
+                )
+            );
+        }
     }
 
     function testAddCollateralAmount(uint amount) external {

@@ -65,9 +65,16 @@ contract RebasingFundingManagerTest is ModuleTest {
     function testSupportsInterface(bytes4 randomInterface) public {
         bytes4 rebasingInterface = type(IFundingManager).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
-        assertTrue(!fundingManager.supportsInterface(randomInterface));
-        assertTrue(fundingManager.supportsInterface(rebasingInterface));
-        assertTrue(fundingManager.supportsInterface(moduleInterface));
+        if (
+            randomInterface == rebasingInterface
+                || randomInterface == rebasingInterface
+        ) {
+            assertTrue(fundingManager.supportsInterface(randomInterface));
+        } else {
+            assertTrue(!fundingManager.supportsInterface(randomInterface));
+            assertTrue(fundingManager.supportsInterface(rebasingInterface));
+            assertTrue(fundingManager.supportsInterface(moduleInterface));
+        }
     }
 
     //--------------------------------------------------------------------------

@@ -96,9 +96,16 @@ contract RoleAuthorizerTest is Test {
     function testSupportsInterface(bytes4 randomInterface) public {
         bytes4 authorizerInterface = type(IAuthorizer).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
-        assertTrue(!_authorizer.supportsInterface(randomInterface));
-        assertTrue(_authorizer.supportsInterface(moduleInterface));
-        assertTrue(_authorizer.supportsInterface(authorizerInterface));
+        if (
+            randomInterface == authorizerInterface
+                || randomInterface == moduleInterface
+        ) {
+            assertTrue(_authorizer.supportsInterface(randomInterface));
+        } else {
+            assertTrue(!_authorizer.supportsInterface(randomInterface));
+            assertTrue(_authorizer.supportsInterface(moduleInterface));
+            assertTrue(_authorizer.supportsInterface(authorizerInterface));
+        }
     }
 
     function testInitWithInitialOwner(address initialAuth) public {

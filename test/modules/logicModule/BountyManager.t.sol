@@ -83,9 +83,19 @@ contract BountyManagerTest is ModuleTest {
     function testSupportsInterface(bytes4 randomInterface) public {
         bytes4 bountyManagerInterface = type(IBountyManager).interfaceId;
         bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
-        assertTrue(!bountyManager.supportsInterface(randomInterface));
-        assertTrue(bountyManager.supportsInterface(paymentClientInterface));
-        assertTrue(bountyManager.supportsInterface(bountyManagerInterface));
+        bytes4 moduleInterface = type(IModule).interfaceId;
+        if (
+            randomInterface == bountyManagerInterface
+                || randomInterface == paymentClientInterface
+                || randomInterface == moduleInterface
+        ) {
+            assertTrue(bountyManager.supportsInterface(randomInterface));
+        } else {
+            assertTrue(!bountyManager.supportsInterface(randomInterface));
+            assertTrue(bountyManager.supportsInterface(paymentClientInterface));
+            assertTrue(bountyManager.supportsInterface(bountyManagerInterface));
+            assertTrue(bountyManager.supportsInterface(moduleInterface));
+        }
     }
 
     //This function also tests all the getters

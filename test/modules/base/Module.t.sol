@@ -53,8 +53,12 @@ contract baseModuleTest is ModuleTest {
 
     function testSupportsInterface(bytes4 randomInterface) public {
         bytes4 moduleInterface = type(IModule).interfaceId;
-        assertTrue(!module.supportsInterface(randomInterface));
-        assertTrue(module.supportsInterface(moduleInterface));
+        if (randomInterface == moduleInterface) {
+            assertTrue(module.supportsInterface(randomInterface));
+        } else {
+            assertTrue(!module.supportsInterface(randomInterface));
+            assertTrue(module.supportsInterface(moduleInterface));
+        }
     }
 
     function testInit() public override {

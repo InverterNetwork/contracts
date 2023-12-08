@@ -165,20 +165,30 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         bytes4 bancorBCInterface =
             type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
-        assertTrue(
-            !bondingCurveFundingManager.supportsInterface(randomInterface)
-        );
-        assertTrue(
-            bondingCurveFundingManager.supportsInterface(
-                fundingManagerInterface
-            )
-        );
-        assertTrue(
-            bondingCurveFundingManager.supportsInterface(moduleInterface)
-        );
-        assertTrue(
-            bondingCurveFundingManager.supportsInterface(bancorBCInterface)
-        );
+        if (
+            randomInterface == fundingManagerInterface
+                || randomInterface == bancorBCInterface
+                || randomInterface == moduleInterface
+        ) {
+            assertTrue(
+                bondingCurveFundingManager.supportsInterface(randomInterface)
+            );
+        } else {
+            assertTrue(
+                !bondingCurveFundingManager.supportsInterface(randomInterface)
+            );
+            assertTrue(
+                bondingCurveFundingManager.supportsInterface(
+                    fundingManagerInterface
+                )
+            );
+            assertTrue(
+                bondingCurveFundingManager.supportsInterface(moduleInterface)
+            );
+            assertTrue(
+                bondingCurveFundingManager.supportsInterface(bancorBCInterface)
+            );
+        }
     }
 
     //--------------------------------------------------------------------------
