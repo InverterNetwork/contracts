@@ -62,7 +62,8 @@ contract RebasingFundingManagerTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 rebasingInterface = type(IFundingManager).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (

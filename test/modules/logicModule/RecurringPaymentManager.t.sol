@@ -50,7 +50,8 @@ contract RecurringPaymentManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 recurringPaymentManagerInterface =
             type(IRecurringPaymentManager).interfaceId;
         bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;

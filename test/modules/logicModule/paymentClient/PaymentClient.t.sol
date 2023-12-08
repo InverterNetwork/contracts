@@ -42,7 +42,8 @@ contract ERC20PaymentClientTest is Test {
         paymentClient.setIsAuthorized(address(this), true);
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (

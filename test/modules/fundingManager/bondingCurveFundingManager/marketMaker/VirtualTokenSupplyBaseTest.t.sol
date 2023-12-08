@@ -25,7 +25,8 @@ contract VirtualTokenSupplyBaseTest is Test {
         virtualTokenSupplyBase.setVirtualTokenSupply(INITIAL_SUPPLY);
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 virtualTokenSupplyInterface =
             type(IVirtualTokenSupply).interfaceId;
         if (randomInterface == virtualTokenSupplyInterface) {

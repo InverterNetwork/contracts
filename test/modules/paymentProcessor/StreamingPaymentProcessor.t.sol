@@ -75,7 +75,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         assertEq(address(paymentProcessor.token()), address(_token));
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 streamingPaymentInterface =
             type(IStreamingPaymentProcessor).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;

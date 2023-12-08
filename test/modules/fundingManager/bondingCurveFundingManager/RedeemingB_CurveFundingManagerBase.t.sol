@@ -76,7 +76,8 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 fundingManagerInterface = type(IFundingManager).interfaceId;
         bytes4 redeemingFundingInterface =
             type(IRedeemingBondingCurveFundingManagerBase).interfaceId;

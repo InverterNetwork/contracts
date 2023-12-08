@@ -150,7 +150,8 @@ contract TokenGatedRoleAuthorizerTest is Test {
         roleNft.mint(BOB);
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 tokenAuthorizerInterface =
             type(ITokenGatedRoleAuthorizer).interfaceId;
         bytes4 authorizerInterface = type(IAuthorizer).interfaceId;

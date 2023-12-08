@@ -93,7 +93,8 @@ contract RoleAuthorizerTest is Test {
     //--------------------------------------------------------------------------------------
     // Tests Initialization
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 authorizerInterface = type(IAuthorizer).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (

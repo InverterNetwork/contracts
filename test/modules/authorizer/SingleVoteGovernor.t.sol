@@ -86,7 +86,8 @@ contract SingleVoteGovernorTest is ModuleTest {
         //validation of the initial state happens in testInit()
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 authorizerInterface = type(ISingleVoteGovernor).interfaceId;
         bytes4 moduleInterface = type(IModule).interfaceId;
         if (

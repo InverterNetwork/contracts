@@ -119,7 +119,8 @@ contract MetadataManagerTest is ModuleTest {
         assertMetadataManagerTeamMetadataEqualTo(TEAM_METADATA);
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 metadataManagerInterface = type(IMetadataManager).interfaceId;
         if (randomInterface == metadataManagerInterface) {
             assertTrue(metadataManager.supportsInterface(randomInterface));

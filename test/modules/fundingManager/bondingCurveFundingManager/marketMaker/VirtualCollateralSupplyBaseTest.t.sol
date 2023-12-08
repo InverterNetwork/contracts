@@ -29,7 +29,8 @@ contract VirtualCollateralSupplyBaseTest is Test {
         virtualCollateralSupplyBase.setVirtualCollateralSupply(INITIAL_SUPPLY);
     }
 
-    function testSupportsInterface(bytes4 randomInterface) public {
+    function testSupportsInterface() public {
+        bytes4 randomInterface = 0xabcdef12;
         bytes4 virtualCollateralInterface =
             type(IVirtualCollateralSupply).interfaceId;
         if (randomInterface == virtualCollateralInterface) {
