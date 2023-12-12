@@ -29,13 +29,15 @@ import {PaymentProcessorMock} from
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
-    Orchestrator _orchestrator;
+    OrchestratorMock _orchestrator;
 
     // Mocks
     FundingManagerMock _fundingManager;
     AuthorizerMock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
+
+    address _forwarder = address(0); //@todo add forwarder correctly
 
     // Orchestrator Constants
     uint constant _ORCHESTRATOR_ID = 1;
@@ -56,7 +58,7 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        address impl = address(new OrchestratorMock(address(0))); //@todo add forwarder correctly
+        address impl = address(new OrchestratorMock(_forwarder));
         _orchestrator = OrchestratorMock(Clones.clone(impl));
 
         impl = address(new FundingManagerMock());
