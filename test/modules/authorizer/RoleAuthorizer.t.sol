@@ -23,6 +23,9 @@ import {FundingManagerMock} from
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 
+// External Dependencies
+import {MinimalForwarder} from "@oz/metatx/MinimalForwarder.sol";
+
 contract RoleAuthorizerTest is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
@@ -33,6 +36,7 @@ contract RoleAuthorizerTest is Test {
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
+    MinimalForwarder _forwarder = new MinimalForwarder();
     address ALBA = address(0xa1ba); //default authorized person
     address BOB = address(0xb0b); // example person to add
 
@@ -53,7 +57,7 @@ contract RoleAuthorizerTest is Test {
     function setUp() public virtual {
         address authImpl = address(new RoleAuthorizer());
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
-        address propImpl = address(new Orchestrator(address(0))); //@todo add forwarder correctly
+        address propImpl = address(new Orchestrator(address(_forwarder)));
         _orchestrator = Orchestrator(Clones.clone(propImpl));
         ModuleMock module = new ModuleMock();
         address[] memory modules = new address[](1);

@@ -36,6 +36,9 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 // Helper
 import {TypeSanityHelper} from "test/orchestrator/helper/TypeSanityHelper.sol";
 
+// External Dependencies
+import {MinimalForwarder} from "@oz/metatx/MinimalForwarder.sol";
+
 contract OrchestratorTest is Test {
     // SuT
     Orchestrator orchestrator;
@@ -48,6 +51,7 @@ contract OrchestratorTest is Test {
     AuthorizerMock authorizer;
     PaymentProcessorMock paymentProcessor;
     ERC20Mock token;
+    MinimalForwarder forwarder;
 
     event AuthorizerUpdated(address indexed _address);
     event FundingManagerUpdated(address indexed _address);
@@ -57,9 +61,10 @@ contract OrchestratorTest is Test {
         fundingManager = new FundingManagerMock();
         authorizer = new AuthorizerMock();
         paymentProcessor = new PaymentProcessorMock();
+        forwarder = new MinimalForwarder();
         token = new ERC20Mock("TestToken", "TST");
 
-        address impl = address(new Orchestrator(address(0))); //@todo add forwarder correctly
+        address impl = address(new Orchestrator(address(forwarder)));
         orchestrator = Orchestrator(Clones.clone(impl));
 
         types = new TypeSanityHelper(address(orchestrator));
@@ -110,6 +115,7 @@ contract OrchestratorTest is Test {
         assertEq(
             address(orchestrator.paymentProcessor()), address(paymentProcessor)
         );
+        assertTrue(orchestrator.isTrustedForwarder(address(forwarder)));
     }
 
     function testReinitFails(uint orchestratorId, address[] memory modules)

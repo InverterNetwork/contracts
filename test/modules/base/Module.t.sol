@@ -166,7 +166,7 @@ contract baseModuleTest is ModuleTest {
         bytes memory metaTxCallData = abi.encodePacked(originalCallData, signer);
 
         if (fromForwarder) {
-            sender = _forwarder;
+            sender = address(_forwarder);
         }
         //use call to properly use the added address at the end of the callData
         vm.prank(sender);
@@ -203,7 +203,7 @@ contract baseModuleTest is ModuleTest {
         bytes memory metaTxCallData = abi.encodePacked(originalCallData, signer);
 
         if (fromForwarder) {
-            sender = _forwarder;
+            sender = address(_forwarder);
         }
         //use call to properly use the added address at the end of the callData
         vm.prank(sender);

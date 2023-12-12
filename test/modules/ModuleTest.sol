@@ -25,6 +25,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 
+// External Dependencies
+import {MinimalForwarder} from "@oz/metatx/MinimalForwarder.sol";
+
 /**
  * @dev Base class for module implementation test contracts.
  */
@@ -37,7 +40,8 @@ abstract contract ModuleTest is Test {
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
 
-    address _forwarder = address(0); //@todo add forwarder correctly
+    //Deploy a forwarder used to enable metatransactions
+    MinimalForwarder _forwarder = new MinimalForwarder();
 
     // Orchestrator Constants
     uint constant _ORCHESTRATOR_ID = 1;
@@ -58,7 +62,7 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        address impl = address(new OrchestratorMock(_forwarder));
+        address impl = address(new OrchestratorMock(address(_forwarder)));
         _orchestrator = OrchestratorMock(Clones.clone(impl));
 
         impl = address(new FundingManagerMock());

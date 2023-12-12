@@ -25,6 +25,9 @@ import {BancorFormula} from
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
+// External Dependencies
+import {MinimalForwarder} from "@oz/metatx/MinimalForwarder.sol";
+
 /**
  * @dev Base contract for e2e tests.
  */
@@ -39,22 +42,28 @@ contract E2ETest is E2EModuleRegistry {
     // Mock token for funding.
     ERC20Mock token;
 
+    // Forwarder
+    MinimalForwarder forwarder;
+
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
         // Deploy a Mock funding token for testing.
         token = new ERC20Mock("Mock", "MOCK");
 
+        //Deploy a forwarder used to enable metatransactions
+        forwarder = new MinimalForwarder();
+
         // Deploy Orchestrator implementation.
-        orchestratorImpl = new Orchestrator(address(0)); //@todo add forwarder correctly
+        orchestratorImpl = new Orchestrator(address(forwarder));
 
         // Deploy Factories.
-        moduleFactory = new ModuleFactory(address(0)); //@todo add forwarder correctly
+        moduleFactory = new ModuleFactory(address(forwarder));
 
         orchestratorFactory = new OrchestratorFactory(
             address(orchestratorImpl),
             address(moduleFactory),
-            address(0) //@todo add forwarder correctly
+            address(forwarder)
         );
     }
 
