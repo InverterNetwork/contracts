@@ -1329,53 +1329,112 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
     /* Test _staticPricePPM function
         ├── When calling with reserve ratio for selling
-        |   └── it should return the right value
+        |   └── it should update return value after selling
         ├── When calling with reserve ratio for buying
-        |   └── it should return the right value
+        |   └── it should update return value after buying
     */
     function testStaticPriceWithSellReserveRatio() public {
-        // Create internal values for readability
-        uint _ppm = uint(bondingCurveFundingManager.call_PPM());
-        uint _virtualTokenSupply =
+        uint amount = 1;
+
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, (amount * 10));
+        // Set virtual supply to some number above _sellAmount
+        // Set virtual collateral to some number
+        uint newVirtualTokenSupply = amount * 2;
+        uint newVirtualCollateral = amount * 2;
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setVirtualTokenSupply(
+                newVirtualTokenSupply
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                newVirtualCollateral
+            );
+        }
+        vm.stopPrank();
+        uint minAmountOut =
+            bondingCurveFundingManager.calculateSaleReturn(amount);
+
+        uint _virtualTokenSupplyBeforeSell =
             bondingCurveFundingManager.getVirtualTokenSupply();
-        uint _virtualCollateralSupply =
+        uint _virtualCollateralSupplyBeforeSell =
             bondingCurveFundingManager.getVirtualCollateralSupply();
         uint32 _reserveRatioSelling =
             bondingCurveFundingManager.call_reserveRatioForSelling();
-        // Calculate return value outside of function
-        uint calculatedValue = _ppm * _ppm * _virtualCollateralSupply
-            / (_virtualTokenSupply * uint(_reserveRatioSelling));
         // Call internal function
-        uint functionReturnValue = bondingCurveFundingManager
+        uint staticPriceBeforeSell = bondingCurveFundingManager
             .call_staticPricePPM(
-            _virtualTokenSupply, _virtualCollateralSupply, _reserveRatioSelling
+            _virtualTokenSupplyBeforeSell,
+            _virtualCollateralSupplyBeforeSell,
+            _reserveRatioSelling
         );
 
-        assertEq(calculatedValue, functionReturnValue);
+        vm.prank(seller);
+        bondingCurveFundingManager.sell(amount, minAmountOut);
+
+        uint _virtualTokenSupplyAfterSell =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupplyAfterSell =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        uint staticPriceAfterSell = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupplyAfterSell,
+            _virtualCollateralSupplyAfterSell,
+            _reserveRatioSelling
+        );
+
+        // Static price has decreased after sell
+        assertLt(staticPriceAfterSell, staticPriceBeforeSell);
     }
 
     function testStaticPriceWithBuyReserveRatio() public {
-        // Create internal values for readability
-        uint _ppm = uint(bondingCurveFundingManager.call_PPM());
-        uint _virtualTokenSupply =
+        uint amount = 1;
+        uint minAmountOut =
+            bondingCurveFundingManager.calculatePurchaseReturn(amount);
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Get virtual supply before buy
+        uint _virtualTokenSupplyBeforeBuy =
             bondingCurveFundingManager.getVirtualTokenSupply();
-        uint _virtualCollateralSupply =
+        uint _virtualCollateralSupplyBeforeBuy =
             bondingCurveFundingManager.getVirtualCollateralSupply();
         uint32 _reserveRatioBuying =
             bondingCurveFundingManager.call_reserveRatioForBuying();
-
-        // Calculate return value outside of function
-        uint calculatedValue = _ppm * _ppm * _virtualCollateralSupply
-            / (_virtualTokenSupply * uint(_reserveRatioBuying));
-        // Call internal function
-        uint functionReturnValue = bondingCurveFundingManager
+        // Calculate static price before buy
+        uint staticPriceBeforeBuy = bondingCurveFundingManager
             .call_staticPricePPM(
-            _virtualTokenSupply, _virtualCollateralSupply, _reserveRatioBuying
+            _virtualTokenSupplyBeforeBuy,
+            _virtualCollateralSupplyBeforeBuy,
+            _reserveRatioBuying
         );
 
-        assertEq(calculatedValue, functionReturnValue);
-    }
+        // Buy tokens
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, minAmountOut);
 
+        // Get virtual supply after buy
+        uint _virtualTokenSupplyAfterBuy =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupplyAfterBuy =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        // Calculate static price after buy
+        uint staticPriceAfterBuy = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupplyAfterBuy,
+            _virtualCollateralSupplyAfterBuy,
+            _reserveRatioBuying
+        );
+
+        // Static price has increased after buy
+        assertGt(staticPriceAfterBuy, staticPriceBeforeBuy);
+        // Price has risen less than 1 * PPM
+        assertApproxEqAbs(
+            staticPriceAfterBuy,
+            staticPriceBeforeBuy,
+            1 * bondingCurveFundingManager.call_PPM()
+        );
+    }
     /* Test _convertAmountToRequiredDecimal function
         ├── when the token decimals and the required decimals are the same
         │       └── it should return the amount without change
