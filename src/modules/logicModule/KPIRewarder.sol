@@ -14,7 +14,18 @@ import {IOptimisticOracleIntegrator, OptimisticOracleIntegrator} from "./oracle/
 contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
 
+    error Module__KPIRewarder__InvalidTrancheNumber();
+    error Module__KPIRewarder__InvalidKPIValueLengths();
+    error Module__KPIRewarder__InvalidKPIValues();
+
+
     bytes32 public constant ASSERTION_MANAGER = "ASSERTION_MANAGER";
+
+    uint activeKPI;
+    uint KPICounter;
+    Assertion activeAssertion;
+    mapping(uint => KPI) registryOfKPIs;
+
 
     /*
     Tranche Example:
@@ -67,10 +78,33 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
     // Owner functions:
 
-    function setKPI() external onlyOrchestratorOwner() {
+    function createKPI(uint _numOfTranches, bool _continuous, uint[] calldata _trancheValues, uint[] calldata _trancheRewards) external onlyOrchestratorOwner() {
         // TODO sets the KPI that will be used to calculate the reward
         // Should it be only the owner, or do we create a separate role for this?
         // Also should we set more than one KPI in one step?
+        if (_numOfTranches < 1 || _numOfTranches > 20) {
+            revert Module__KPIRewarder__InvalidTrancheNumber();
+        }
+
+        if (_numOfTranches != _trancheValues.length || _numOfTranches != _trancheRewards.length) {
+            revert Module__KPIRewarder__InvalidKPIValueLengths();
+        }
+
+        for(uint i = 0; i < _numOfTranches - 1; i++) {
+            if (_trancheValues[i] >= _trancheValues[i+1]) {
+                revert Module__KPIRewarder__InvalidKPIValues();
+            }
+        }
+
+        registryOfKPIs[KPICounter] = KPI(block.timestamp, _numOfTranches, _continuous, _trancheValues, _trancheRewards);
+        KPICounter++;
+
+
+    }
+
+    function setKPI(uint _KPINumber) external onlyOrchestratorOwner(){
+        //TODO: Input validation
+        activeKPI = _KPINumber;
     }
 
     function returnExcessFunds() external onlyOrchestratorOwner() {
@@ -84,6 +118,13 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
        // TODO implement the delayed stake
     }
 
+    function unstake(uint amount) external nonReentrant validAmount(amount) override {
+        // TODO implement the delayed unstake
+    }
+
+    function withdraw(uint amount) external nonReentrant validAmount(amount) override {
+        // TODO withdraw unstaked funds
+    }
 
     // Optimistic Oracle Overrides:
 
