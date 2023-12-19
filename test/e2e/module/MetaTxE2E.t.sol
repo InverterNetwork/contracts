@@ -155,51 +155,58 @@ contract MetaTxE2E is E2ETest {
             depositAmount
         );
 
-        /* //-----------------------------------------------------
+        //-----------------------------------------------------
         //Call Function with role
         //In this example we're gonna call the bountyManagers createBounty Function
         //The function needs a role to access it
 
         //Lets get the bountyManager address
-        address bountyManager;
+        BountyManager bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
                 bool
             ) {
-                bountyManager = modulesList[i];
+                bountyManager = BountyManager(modulesList[i]);
                 break;
             } catch {
                 continue;
             }
         }
-        //Give the signer address the accoring role
-        //@todo
-
-        //lets define what bounty the signer wants to create
-        uint bounty = 1000; //@todo
+        //Give the signer address the according role
+        bountyManager.grantModuleRole(
+            bountyManager.BOUNTY_ISSUER_ROLE(), signer
+        );
 
         //Then we need to create the ForwardRequest
-        MinimalForwarder.ForwardRequest req = MinimalForwarder.ForwardRequest({
+        req = MinimalForwarder.ForwardRequest({
             from: signer,
-            to: fundingManager,
+            to: address(bountyManager),
             value: 0,
-            gas: 0, //@todo What gas to use
-            nonce: 0, //@todo What nonce to use
-            data: abi.encodeWithSignature("") //@todo
+            //This should be approximately be the gas value of the called function in this case the addBounty function
+            gas: 1_000_000,
+            nonce: 1, //!!! Nonce has to be 1, because nonce 0 was used for the previous request
+            data: abi.encodeWithSignature(
+                "addBounty(uint256,uint256,bytes)",
+                100e18, //minimumPayoutAmount
+                500e18, //maximumPayoutAmount
+                bytes("This is a test bounty") //details
+            )
         });
 
-        //Create signature
+        //Use the signatureHelper to get the digest needed for the encoding
+        digest = signatureHelper.getDigest(req);
 
-        //@todo ?????
+        //Create signature
+        vm.prank(signer);
+        (v, r, s) = vm.sign(signerPrivateKey, digest);
+        signature = abi.encodePacked(r, s, v);
 
         //Do call
         forwarder.execute(req, signature);
 
         //Check if successful
-        assertEq(
-            //@ŧodo is bounty created
-        ); */
+        assertTrue(bountyManager.isExistingBountyId(1));
     }
 }
