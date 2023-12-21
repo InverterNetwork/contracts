@@ -12,7 +12,6 @@ import {SimplePaymentProcessor} from
  *
  * @author Inverter Network
  */
-
 contract DeploySimplePaymentProcessor is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

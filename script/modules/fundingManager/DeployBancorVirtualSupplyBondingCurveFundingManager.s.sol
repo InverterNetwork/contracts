@@ -12,7 +12,6 @@ import {BancorVirtualSupplyBondingCurveFundingManager} from
  *
  * @author Inverter Network
  */
-
 contract DeployBancorVirtualSupplyBondingCurveFundingManager is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

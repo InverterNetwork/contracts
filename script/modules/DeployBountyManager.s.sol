@@ -12,7 +12,6 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
  *
  * @author Inverter Network
  */
-
 contract DeployBountyManager is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
