@@ -73,7 +73,7 @@ contract DeploymentScript is Script {
     );
 
     IModule.Metadata authorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/authorizer", "RoleAuthorizer"
+        1, 1, "https://github.com/inverter/RoleAuthorizer", "RoleAuthorizer"
     );
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
