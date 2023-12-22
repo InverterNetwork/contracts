@@ -69,7 +69,7 @@ contract DeploymentScript is Script {
     );
 
     IModule.Metadata fundingManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/funding-manager", "FundingManager"
+        1, 1, "https://github.com/inverter/funding-manager", "RebasingFundingManager"
     );
 
     IModule.Metadata authorizerMetadata = IModule.Metadata(
