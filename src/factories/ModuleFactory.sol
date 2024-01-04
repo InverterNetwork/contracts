@@ -3,9 +3,7 @@ pragma solidity 0.8.19;
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
-import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
-import {Ownable} from "@oz/access/Ownable.sol";
-import {Context} from "@oz/utils/Context.sol";
+import {Context, Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
