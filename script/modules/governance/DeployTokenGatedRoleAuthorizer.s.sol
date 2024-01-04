@@ -13,7 +13,6 @@ import {TokenGatedRoleAuthorizer} from
  *
  * @author Inverter Network
  */
-
 contract DeployTokenGatedRoleAuthorizer is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

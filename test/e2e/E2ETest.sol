@@ -31,7 +31,6 @@ import {MinimalForwarder} from "@oz/metatx/MinimalForwarder.sol";
 /**
  * @dev Base contract for e2e tests.
  */
-
 contract E2ETest is E2EModuleRegistry {
     // Factory instances.
     OrchestratorFactory orchestratorFactory;

@@ -12,7 +12,6 @@ import {RebasingFundingManager} from
  *
  * @author Inverter Network
  */
-
 contract DeployRebasingFundingManager is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

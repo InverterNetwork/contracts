@@ -12,7 +12,6 @@ import {ModuleFactory} from "src/factories/ModuleFactory.sol";
  *
  * @author Inverter Network
  */
-
 contract DeployModuleFactory is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
