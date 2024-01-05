@@ -24,22 +24,17 @@ contract UpgradeBeacon is Script {
 
     Beacon beacon;
 
-    function run(
-    ) external returns (address) {
-
+    function run() external returns (address) {
         address implementation = 0x5c335736fD2ec911C56803C75401BecBDd6Ba6E0;
-        address moduleFactory =  	0x349D52589aF62Ba1b35DB871F54FA2c5aFcA6B5B;
-        IModule.Metadata memory metadata =  IModule.Metadata(
-        1, 1, "https://github.com/inverter/funding-manager", "RebasingFundingManager"
-    );
+        address moduleFactory = 0x349D52589aF62Ba1b35DB871F54FA2c5aFcA6B5B;
+        IModule.Metadata memory metadata = IModule.Metadata(
+            1,
+            1,
+            "https://github.com/inverter/funding-manager",
+            "RebasingFundingManager"
+        );
 
-
-
-        return run(
-         implementation,
-         moduleFactory,
-         metadata);
-
+        return run(implementation, moduleFactory, metadata);
     }
 
     function run(
