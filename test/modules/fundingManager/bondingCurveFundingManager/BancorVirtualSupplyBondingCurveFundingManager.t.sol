@@ -1328,20 +1328,25 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     /* Test _staticPricePPM function
-        ├── When calling with reserve ratio for selling
+        ├── When calling with reserve ratio for selling without fuzzing
         |   └── it should update return value after selling
-        ├── When calling with reserve ratio for buying
+        ├── When calling with reserve ratio for selling with fuzzing
+        |   └── it should update return value after selling
+        ├── When calling with reserve ratio for buying without fuzzing
         |   └── it should update return value after buying
+        └── When calling with reserve ratio for buying with fuzzing
+            └── it should update return value after buying
     */
-    function testStaticPriceWithSellReserveRatio() public {
-        uint amount = 1;
-
+    function testStaticPriceWithSellReserveRatioNonFuzzing() public {
+        uint amount = 10;
         address seller = makeAddr("seller");
-        _prepareSellConditions(seller, (amount * 10));
+        _prepareSellConditions(seller, amount * 10); // Multiply amount to ensure that user has enough tokens, because return amount when buying less than amount
         // Set virtual supply to some number above _sellAmount
         // Set virtual collateral to some number
         uint newVirtualTokenSupply = amount * 2;
         uint newVirtualCollateral = amount * 2;
+
+        // Set virtual supplies
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setVirtualTokenSupply(
@@ -1352,16 +1357,20 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             );
         }
         vm.stopPrank();
+
+        // Calculate min amount out for selling
         uint minAmountOut =
             bondingCurveFundingManager.calculateSaleReturn(amount);
 
+        // Get virtual supplies before selling
         uint _virtualTokenSupplyBeforeSell =
             bondingCurveFundingManager.getVirtualTokenSupply();
         uint _virtualCollateralSupplyBeforeSell =
             bondingCurveFundingManager.getVirtualCollateralSupply();
         uint32 _reserveRatioSelling =
             bondingCurveFundingManager.call_reserveRatioForSelling();
-        // Call internal function
+
+        // Calculate static price before selling
         uint staticPriceBeforeSell = bondingCurveFundingManager
             .call_staticPricePPM(
             _virtualTokenSupplyBeforeSell,
@@ -1369,32 +1378,106 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             _reserveRatioSelling
         );
 
+        // Sell tokens
         vm.prank(seller);
         bondingCurveFundingManager.sell(amount, minAmountOut);
 
+        // Get virtual supplies after selling
         uint _virtualTokenSupplyAfterSell =
             bondingCurveFundingManager.getVirtualTokenSupply();
         uint _virtualCollateralSupplyAfterSell =
             bondingCurveFundingManager.getVirtualCollateralSupply();
+
+        // Calculate static price after selling
         uint staticPriceAfterSell = bondingCurveFundingManager
             .call_staticPricePPM(
             _virtualTokenSupplyAfterSell,
             _virtualCollateralSupplyAfterSell,
             _reserveRatioSelling
         );
+        // Static price has decreased after sell
+        assertLt(staticPriceAfterSell, staticPriceBeforeSell);
+    }
+
+    function testStaticPriceWithSellReserveRatioWithFuzzing(
+        uint _amount,
+        uint _virtualTokenSupply,
+        uint _virtualCollateralSupply,
+        uint32 _reserveRatioForSelling
+    ) public {
+        uint amount = bound(_amount, 10, 1e26); // Large enough number to create variation, but not to high that the virtual supplies cause overflows
+        address seller = makeAddr("seller");
+        // Set virtual supply in range of amount such that the sell amount creates a change in static price.
+        // If virtual supplies are to high in relation to sell amount than the static price change will be 0.
+        // The lowest value != amount, because this would result in virtual supply being 0, which will revert.
+        _virtualTokenSupply =
+            bound(_virtualTokenSupply, amount + 1, amount * 10_000);
+        _virtualCollateralSupply =
+            bound(_virtualCollateralSupply, amount + 1, amount * 10_000);
+
+        // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
+        _reserveRatioForSelling = (
+            _reserveRatioForSelling % bondingCurveFundingManager.call_PPM()
+        ) + 1;
+        _prepareSellConditions(seller, amount * 10);
+
+        // Set virtual supply
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setReserveRatioForSelling(
+                _reserveRatioForSelling
+            );
+            bondingCurveFundingManager.setVirtualTokenSupply(
+                _virtualTokenSupply
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                _virtualCollateralSupply
+            );
+        }
+        vm.stopPrank();
+
+        // Get minimum amount out for selling
+        uint minAmountOut =
+            bondingCurveFundingManager.calculateSaleReturn(amount);
+
+        // Calculate static price before sell
+        uint staticPriceBeforeSell = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupply,
+            _virtualCollateralSupply,
+            _reserveRatioForSelling
+        );
+
+        // Buy tokens
+        vm.prank(seller);
+        bondingCurveFundingManager.sell(amount, minAmountOut);
+
+        // Get virtual supply after sell
+        uint _virtualTokenSupplyAfterSell =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupplyAfterSell =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+
+        // Calculate static price after sell
+        uint staticPriceAfterSell = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupplyAfterSell,
+            _virtualCollateralSupplyAfterSell,
+            _reserveRatioForSelling
+        );
 
         // Static price has decreased after sell
         assertLt(staticPriceAfterSell, staticPriceBeforeSell);
     }
 
-    function testStaticPriceWithBuyReserveRatio() public {
+    function testStaticPriceWithBuyReserveRatioNonFuzzing() public {
         uint amount = 1;
         uint minAmountOut =
             bondingCurveFundingManager.calculatePurchaseReturn(amount);
         address buyer = makeAddr("buyer");
         _prepareBuyConditions(buyer, amount);
 
-        // Get virtual supply before buy
+        // Get virtual supplies before buying
         uint _virtualTokenSupplyBeforeBuy =
             bondingCurveFundingManager.getVirtualTokenSupply();
         uint _virtualCollateralSupplyBeforeBuy =
@@ -1408,7 +1491,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             _virtualCollateralSupplyBeforeBuy,
             _reserveRatioBuying
         );
-
         // Buy tokens
         vm.prank(buyer);
         bondingCurveFundingManager.buy(amount, minAmountOut);
@@ -1435,6 +1517,75 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             1 * bondingCurveFundingManager.call_PPM()
         );
     }
+
+    function testStaticPriceWithBuyReserveRatioWithFuzzing(
+        uint _amount,
+        uint _virtualTokenSupply,
+        uint _virtualCollateralSupply,
+        uint32 _reserveRatioForBuying
+    ) public {
+        uint amount = bound(_amount, 10, 1e26); // Large enough number to create variation, but not to high that the virtual supplies cause overflows
+        address buyer = makeAddr("buyer");
+        // Set virtual supply in range of amount such that the buy amount creates a change in static price.
+        // If virtual supplies are to high in relation to buy amount than the static price change will be 0
+        _virtualTokenSupply =
+            bound(_virtualTokenSupply, amount, amount * 10_000);
+        _virtualCollateralSupply =
+            bound(_virtualCollateralSupply, amount, amount * 10_000);
+
+        // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
+        _reserveRatioForBuying =
+            (_reserveRatioForBuying % bondingCurveFundingManager.call_PPM()) + 1;
+        // Prepare buy conditions
+        _prepareBuyConditions(buyer, amount);
+
+        // Set virtual supply
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setReserveRatioForBuying(
+                _reserveRatioForBuying
+            );
+            bondingCurveFundingManager.setVirtualTokenSupply(
+                _virtualTokenSupply
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                _virtualCollateralSupply
+            );
+        }
+        vm.stopPrank();
+
+        // Get minimum amount out for buying
+        uint minAmountOut =
+            bondingCurveFundingManager.calculatePurchaseReturn(amount);
+
+        // Calculate static price before buy
+        uint staticPriceBeforeBuy = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupply,
+            _virtualCollateralSupply,
+            _reserveRatioForBuying
+        );
+
+        // Buy tokens
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, minAmountOut);
+
+        // Get virtual supply after buy
+        uint _virtualTokenSupplyAfterBuy =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupplyAfterBuy =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        // Calculate static price after buy
+        uint staticPriceAfterBuy = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupplyAfterBuy,
+            _virtualCollateralSupplyAfterBuy,
+            _reserveRatioForBuying
+        );
+
+        // Static price has increased after buy
+        assertGt(staticPriceAfterBuy, staticPriceBeforeBuy);
+    }
     /* Test _convertAmountToRequiredDecimal function
         ├── when the token decimals and the required decimals are the same
         │       └── it should return the amount without change
@@ -1443,6 +1594,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         └── when caller is the Orchestrator owner
                 └── it should pad the amount by the missing decimals and return it
         */
+
     function testConvertAmountToRequiredDecimals_whenEqual(
         uint _amount,
         uint8 _decimals

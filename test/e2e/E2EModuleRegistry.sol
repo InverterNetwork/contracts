@@ -26,6 +26,7 @@ import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {TokenGatedRoleAuthorizer} from
     "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
 import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
+import {MetadataManager} from "src/modules/utils/MetadataManager.sol";
 
 // Beacon
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
@@ -494,6 +495,36 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             singleVoteGovernorMetadata, IBeacon(singleVoteGovernorBeacon)
+        );
+    }
+
+    // MetadataManager
+
+    MetadataManager metadataManagerImpl;
+
+    Beacon metadataManagerBeacon;
+
+    address metadataManagerBeaconOwner = DEFAULT_BEACON_OWNER;
+
+    IModule.Metadata metadataManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/inverter/metadata-manager", "MetadataManager"
+    );
+
+    function setUpMetadataManager() internal {
+        // Deploy module implementations.
+        metadataManagerImpl = new MetadataManager();
+
+        // Deploy module beacons.
+        vm.prank(metadataManagerBeaconOwner);
+        metadataManagerBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(metadataManagerBeaconOwner);
+        metadataManagerBeacon.upgradeTo(address(metadataManagerImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            metadataManagerMetadata, IBeacon(metadataManagerBeacon)
         );
     }
 }
