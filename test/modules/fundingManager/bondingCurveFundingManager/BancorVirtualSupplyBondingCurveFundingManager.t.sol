@@ -1524,20 +1524,20 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint _virtualCollateralSupply,
         uint32 _reserveRatioForBuying
     ) public {
-        uint amount = bound(_amount, 10, 1e26); // Large enough number to create variation, but not to high that the virtual supplies cause overflows
+        _amount = bound(_amount, 10, 1e26); // Large enough number to create variation, but not to high that the virtual supplies cause overflows
         address buyer = makeAddr("buyer");
         // Set virtual supply in range of amount such that the buy amount creates a change in static price.
         // If virtual supplies are to high in relation to buy amount than the static price change will be 0
         _virtualTokenSupply =
-            bound(_virtualTokenSupply, amount, amount * 10_000);
+            bound(_virtualTokenSupply, _amount, _amount * 10_000);
         _virtualCollateralSupply =
-            bound(_virtualCollateralSupply, amount, amount * 10_000);
+            bound(_virtualCollateralSupply, _amount, _amount * 10_000);
 
         // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
         _reserveRatioForBuying =
             (_reserveRatioForBuying % bondingCurveFundingManager.call_PPM()) + 1;
         // Prepare buy conditions
-        _prepareBuyConditions(buyer, amount);
+        _prepareBuyConditions(buyer, _amount);
 
         // Set virtual supply
         vm.startPrank(owner_address);
@@ -1556,7 +1556,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Get minimum amount out for buying
         uint minAmountOut =
-            bondingCurveFundingManager.calculatePurchaseReturn(amount);
+            bondingCurveFundingManager.calculatePurchaseReturn(_amount);
 
         // Calculate static price before buy
         uint staticPriceBeforeBuy = bondingCurveFundingManager
@@ -1568,7 +1568,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Buy tokens
         vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount, minAmountOut);
+        bondingCurveFundingManager.buy(_amount, minAmountOut);
 
         // Get virtual supply after buy
         uint _virtualTokenSupplyAfterBuy =
