@@ -16,7 +16,6 @@ import {DeployBeacon} from "script/proxies/DeployBeacon.s.sol";
  *
  * @author Inverter Network
  */
-
 contract DeployAndSetUpBeacon is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
