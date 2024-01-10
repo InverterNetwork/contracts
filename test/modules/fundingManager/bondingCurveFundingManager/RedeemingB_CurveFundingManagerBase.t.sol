@@ -12,6 +12,9 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IBondingCurveFundingManagerBase} from
+    "src/modules/fundingManager/bondingCurveFundingManager/IBondingCurveFundingManagerBase.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -79,10 +82,11 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IFundingManager).interfaceId
-            == interfaceId
-            || type(IRedeemingBondingCurveFundingManagerBase).interfaceId
-                == interfaceId || type(IModule).interfaceId == interfaceId
+        bool shouldBeInterface = type(IRedeemingBondingCurveFundingManagerBase)
+            .interfaceId == interfaceId
+            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
+            || type(IFundingManager).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
             || type(IERC165).interfaceId == interfaceId;
 
         assertEq(

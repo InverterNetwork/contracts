@@ -10,6 +10,8 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {IRebasingERC20} from
+    "src/modules/fundingManager/token/IRebasingERC20.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -66,8 +68,8 @@ contract RebasingFundingManagerTest is ModuleTest {
 
     function testSupportsInterface(bytes4 interfaceId) public {
         bool shouldBeInterface = type(IFundingManager).interfaceId
-            == interfaceId || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId
+            == interfaceId || type(IRebasingERC20).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
             || type(IERC165).interfaceId == interfaceId;
 
         assertEq(
