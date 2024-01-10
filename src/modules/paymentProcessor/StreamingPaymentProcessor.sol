@@ -24,7 +24,6 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  *
  * @author Inverter Network
  */
-
 contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     function supportsInterface(bytes4 interfaceId)
         public
@@ -33,9 +32,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         override(Module)
         returns (bool)
     {
-        bytes4 interfaceId_IStreamingPaymentProcessor =
-            type(IStreamingPaymentProcessor).interfaceId;
-        return interfaceId == interfaceId_IStreamingPaymentProcessor
+        return interfaceId == type(IStreamingPaymentProcessor).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

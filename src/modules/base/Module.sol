@@ -45,8 +45,7 @@ abstract contract Module is
         override(ERC165)
         returns (bool)
     {
-        bytes4 interfaceId_IModule = type(IModule).interfaceId;
-        return interfaceId == interfaceId_IModule
+        return interfaceId == type(IModule).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

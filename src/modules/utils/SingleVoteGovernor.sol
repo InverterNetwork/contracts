@@ -15,9 +15,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
         override(Module)
         returns (bool)
     {
-        bytes4 interfaceId_ISingleVoteGovernor =
-            type(ISingleVoteGovernor).interfaceId;
-        return interfaceId == interfaceId_ISingleVoteGovernor
+        return interfaceId == type(ISingleVoteGovernor).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

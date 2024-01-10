@@ -44,12 +44,8 @@ abstract contract BondingCurveFundingManagerBase is
         override(Module)
         returns (bool)
     {
-        bytes4 interfaceId_IBondingCurveFundingManagerBase =
-            type(IBondingCurveFundingManagerBase).interfaceId;
-        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
-
-        return interfaceId == interfaceId_IBondingCurveFundingManagerBase
-            || interfaceId == interfaceId_IFundingManager
+        return interfaceId == type(IBondingCurveFundingManagerBase).interfaceId
+            || interfaceId == type(IFundingManager).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

@@ -16,8 +16,7 @@ contract MetadataManager is IMetadataManager, Module {
         override(Module)
         returns (bool)
     {
-        bytes4 interfaceId_IMetadataManager = type(IMetadataManager).interfaceId;
-        return interfaceId == interfaceId_IMetadataManager
+        return interfaceId == type(IMetadataManager).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

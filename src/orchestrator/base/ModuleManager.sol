@@ -38,8 +38,7 @@ abstract contract ModuleManager is
         override(ERC165)
         returns (bool)
     {
-        bytes4 interfaceId_IModuleManager = type(IModuleManager).interfaceId;
-        return interfaceId == interfaceId_IModuleManager
+        return interfaceId == type(IModuleManager).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

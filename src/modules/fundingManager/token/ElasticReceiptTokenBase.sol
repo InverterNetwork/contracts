@@ -66,8 +66,7 @@ abstract contract ElasticReceiptTokenBase is IRebasingERC20, ERC165 {
         override(ERC165)
         returns (bool)
     {
-        bytes4 interfaceId_IRebasingERC20 = type(IRebasingERC20).interfaceId;
-        return interfaceId == interfaceId_IRebasingERC20
+        return interfaceId == type(IRebasingERC20).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

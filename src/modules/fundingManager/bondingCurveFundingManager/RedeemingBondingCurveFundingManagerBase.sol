@@ -32,11 +32,8 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         override(BondingCurveFundingManagerBase)
         returns (bool)
     {
-        bytes4 interfaceId_IRedeemingBondingCurveFundingManagerBase =
-            type(IRedeemingBondingCurveFundingManagerBase).interfaceId;
-
         return interfaceId
-            == interfaceId_IRedeemingBondingCurveFundingManagerBase
+            == type(IRedeemingBondingCurveFundingManagerBase).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

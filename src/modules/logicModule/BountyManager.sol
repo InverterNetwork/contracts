@@ -32,8 +32,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         override(ERC20PaymentClient)
         returns (bool)
     {
-        bytes4 interfaceId_IBountyManager = type(IBountyManager).interfaceId;
-        return interfaceId == interfaceId_IBountyManager
+        return interfaceId == type(IBountyManager).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

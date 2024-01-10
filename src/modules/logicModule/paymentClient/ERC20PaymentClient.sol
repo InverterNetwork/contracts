@@ -32,9 +32,7 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         override(Module)
         returns (bool)
     {
-        bytes4 interfaceId_IERC20PaymentClient =
-            type(IERC20PaymentClient).interfaceId;
-        return interfaceId == interfaceId_IERC20PaymentClient
+        return interfaceId == type(IERC20PaymentClient).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

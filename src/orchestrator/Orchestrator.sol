@@ -46,8 +46,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         override(ModuleManager)
         returns (bool)
     {
-        bytes4 interfaceId_IOrchestrator = type(IOrchestrator).interfaceId;
-        return interfaceId == interfaceId_IOrchestrator
+        return interfaceId == type(IOrchestrator).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

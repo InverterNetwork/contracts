@@ -34,9 +34,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         override(Module)
         returns (bool)
     {
-        bytes4 interfaceId_IPaymentProcessor =
-            type(IPaymentProcessor).interfaceId;
-        return interfaceId == interfaceId_IPaymentProcessor
+        return interfaceId == type(IPaymentProcessor).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

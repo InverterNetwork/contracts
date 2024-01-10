@@ -28,9 +28,7 @@ contract TokenGatedRoleAuthorizer is
         override(RoleAuthorizer)
         returns (bool)
     {
-        bytes4 interfaceId_ITokenGatedRoleAuthorizer =
-            type(ITokenGatedRoleAuthorizer).interfaceId;
-        return interfaceId == interfaceId_ITokenGatedRoleAuthorizer
+        return interfaceId == type(ITokenGatedRoleAuthorizer).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

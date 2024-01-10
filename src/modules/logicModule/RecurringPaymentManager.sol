@@ -31,9 +31,7 @@ contract RecurringPaymentManager is
         override(ERC20PaymentClient)
         returns (bool)
     {
-        bytes4 interfaceId_IRecurringPaymentManager =
-            type(IRecurringPaymentManager).interfaceId;
-        return interfaceId == interfaceId_IRecurringPaymentManager
+        return interfaceId == type(IRecurringPaymentManager).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

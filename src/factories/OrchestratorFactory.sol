@@ -36,9 +36,7 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC165 {
         override(ERC165)
         returns (bool)
     {
-        bytes4 interfaceId_IOrchestratorFactory =
-            type(IOrchestratorFactory).interfaceId;
-        return interfaceId == interfaceId_IOrchestratorFactory
+        return interfaceId == type(IOrchestratorFactory).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

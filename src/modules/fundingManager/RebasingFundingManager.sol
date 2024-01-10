@@ -39,8 +39,7 @@ contract RebasingFundingManager is
         override(ElasticReceiptTokenUpgradeable, Module)
         returns (bool)
     {
-        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
-        return interfaceId == interfaceId_IFundingManager
+        return interfaceId == type(IFundingManager).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

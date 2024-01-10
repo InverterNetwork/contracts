@@ -21,8 +21,7 @@ contract RoleAuthorizer is
         override(Module, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
-        bytes4 interfaceId_IAuthorizer = type(IAuthorizer).interfaceId;
-        return interfaceId == interfaceId_IAuthorizer
+        return interfaceId == type(IAuthorizer).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
