@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -50,35 +52,16 @@ contract RecurringPaymentManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 recurringPaymentManagerInterface =
-            type(IRecurringPaymentManager).interfaceId;
-        bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
-        bytes4 moduleInterface = type(IModule).interfaceId;
-        if (
-            invalidInterface == moduleInterface
-                || invalidInterface == paymentClientInterface
-                || invalidInterface == recurringPaymentManagerInterface
-        ) {
-            assertTrue(
-                recurringPaymentManager.supportsInterface(invalidInterface)
-            );
-        } else {
-            assertTrue(
-                !recurringPaymentManager.supportsInterface(invalidInterface)
-            );
-            assertTrue(
-                recurringPaymentManager.supportsInterface(
-                    paymentClientInterface
-                )
-            );
-            assertTrue(
-                recurringPaymentManager.supportsInterface(
-                    recurringPaymentManagerInterface
-                )
-            );
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IRecurringPaymentManager).interfaceId
+            == interfaceId || type(IERC20PaymentClient).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface,
+            recurringPaymentManager.supportsInterface(interfaceId)
+        );
     }
 
     //This function also tests all the getters

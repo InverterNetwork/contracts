@@ -19,6 +19,8 @@ import {
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 // Interfaces
@@ -150,23 +152,13 @@ contract TokenGatedRoleAuthorizerTest is Test {
         roleNft.mint(BOB);
     }
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 tokenAuthorizerInterface =
-            type(ITokenGatedRoleAuthorizer).interfaceId;
-        bytes4 authorizerInterface = type(IAuthorizer).interfaceId;
-        bytes4 moduleInterface = type(IModule).interfaceId;
-        if (
-            invalidInterface == tokenAuthorizerInterface
-                || invalidInterface == moduleInterface
-        ) {
-            assertTrue(_authorizer.supportsInterface(invalidInterface));
-        } else {
-            assertTrue(!_authorizer.supportsInterface(invalidInterface));
-            assertTrue(_authorizer.supportsInterface(moduleInterface));
-            assertTrue(_authorizer.supportsInterface(authorizerInterface));
-            assertTrue(_authorizer.supportsInterface(tokenAuthorizerInterface));
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(ITokenGatedRoleAuthorizer).interfaceId
+            == interfaceId || type(IAuthorizer).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(shouldBeInterface, _authorizer.supportsInterface(interfaceId));
     }
 
     //-------------------------------------------------

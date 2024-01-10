@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
@@ -76,38 +78,17 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 fundingManagerInterface = type(IFundingManager).interfaceId;
-        bytes4 redeemingFundingInterface =
-            type(IRedeemingBondingCurveFundingManagerBase).interfaceId;
-        bytes4 moduleInterface = type(IModule).interfaceId;
-        if (
-            invalidInterface == fundingManagerInterface
-                || invalidInterface == redeemingFundingInterface
-                || invalidInterface == moduleInterface
-        ) {
-            assertTrue(
-                bondingCurveFundingManager.supportsInterface(invalidInterface)
-            );
-        } else {
-            assertTrue(
-                !bondingCurveFundingManager.supportsInterface(invalidInterface)
-            );
-            assertTrue(
-                bondingCurveFundingManager.supportsInterface(
-                    fundingManagerInterface
-                )
-            );
-            assertTrue(
-                bondingCurveFundingManager.supportsInterface(moduleInterface)
-            );
-            assertTrue(
-                bondingCurveFundingManager.supportsInterface(
-                    redeemingFundingInterface
-                )
-            );
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IFundingManager).interfaceId
+            == interfaceId
+            || type(IRedeemingBondingCurveFundingManagerBase).interfaceId
+                == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface,
+            bondingCurveFundingManager.supportsInterface(interfaceId)
+        );
     }
 
     //--------------------------------------------------------------------------

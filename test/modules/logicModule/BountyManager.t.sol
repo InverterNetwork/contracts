@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -80,23 +82,15 @@ contract BountyManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 bountyManagerInterface = type(IBountyManager).interfaceId;
-        bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
-        bytes4 moduleInterface = type(IModule).interfaceId;
-        if (
-            invalidInterface == bountyManagerInterface
-                || invalidInterface == paymentClientInterface
-                || invalidInterface == moduleInterface
-        ) {
-            assertTrue(bountyManager.supportsInterface(invalidInterface));
-        } else {
-            assertTrue(!bountyManager.supportsInterface(invalidInterface));
-            assertTrue(bountyManager.supportsInterface(paymentClientInterface));
-            assertTrue(bountyManager.supportsInterface(bountyManagerInterface));
-            assertTrue(bountyManager.supportsInterface(moduleInterface));
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IBountyManager).interfaceId == interfaceId
+            || type(IERC20PaymentClient).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface, bountyManager.supportsInterface(interfaceId)
+        );
     }
 
     //This function also tests all the getters

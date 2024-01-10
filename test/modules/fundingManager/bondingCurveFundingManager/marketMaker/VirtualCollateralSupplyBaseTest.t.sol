@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {VirtualCollateralSupplyBaseMock} from
     "./utils/mocks/VirtualCollateralSupplyBaseMock.sol";
 import {IVirtualCollateralSupply} from
@@ -29,24 +31,14 @@ contract VirtualCollateralSupplyBaseTest is Test {
         virtualCollateralSupplyBase.setVirtualCollateralSupply(INITIAL_SUPPLY);
     }
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 virtualCollateralInterface =
-            type(IVirtualCollateralSupply).interfaceId;
-        if (invalidInterface == virtualCollateralInterface) {
-            assertTrue(
-                virtualCollateralSupplyBase.supportsInterface(invalidInterface)
-            );
-        } else {
-            assertTrue(
-                !virtualCollateralSupplyBase.supportsInterface(invalidInterface)
-            );
-            assertTrue(
-                virtualCollateralSupplyBase.supportsInterface(
-                    virtualCollateralInterface
-                )
-            );
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IVirtualCollateralSupply).interfaceId
+            == interfaceId || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface,
+            virtualCollateralSupplyBase.supportsInterface(interfaceId)
+        );
     }
 
     function testAddCollateralAmount(uint amount) external {

@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -62,20 +64,15 @@ contract RebasingFundingManagerTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 rebasingInterface = type(IFundingManager).interfaceId;
-        bytes4 moduleInterface = type(IModule).interfaceId;
-        if (
-            invalidInterface == rebasingInterface
-                || invalidInterface == rebasingInterface
-        ) {
-            assertTrue(fundingManager.supportsInterface(invalidInterface));
-        } else {
-            assertTrue(!fundingManager.supportsInterface(invalidInterface));
-            assertTrue(fundingManager.supportsInterface(rebasingInterface));
-            assertTrue(fundingManager.supportsInterface(moduleInterface));
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IFundingManager).interfaceId
+            == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface, fundingManager.supportsInterface(interfaceId)
+        );
     }
 
     //--------------------------------------------------------------------------

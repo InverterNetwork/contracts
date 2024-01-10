@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {VirtualTokenSupplyBaseMock} from
     "./utils/mocks/VirtualTokenSupplyBaseMock.sol";
 import {IVirtualTokenSupply} from
@@ -25,24 +27,14 @@ contract VirtualTokenSupplyBaseTest is Test {
         virtualTokenSupplyBase.setVirtualTokenSupply(INITIAL_SUPPLY);
     }
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 virtualTokenSupplyInterface =
-            type(IVirtualTokenSupply).interfaceId;
-        if (invalidInterface == virtualTokenSupplyInterface) {
-            assertTrue(
-                virtualTokenSupplyBase.supportsInterface(invalidInterface)
-            );
-        } else {
-            assertTrue(
-                !virtualTokenSupplyBase.supportsInterface(invalidInterface)
-            );
-            assertTrue(
-                virtualTokenSupplyBase.supportsInterface(
-                    virtualTokenSupplyInterface
-                )
-            );
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IVirtualTokenSupply).interfaceId
+            == interfaceId || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface,
+            virtualTokenSupplyBase.supportsInterface(interfaceId)
+        );
     }
 
     function testAddTokenAmount(uint amount) external {

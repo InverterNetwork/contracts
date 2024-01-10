@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // SuT
@@ -53,22 +55,14 @@ contract SimplePaymentProcessorTest is ModuleTest {
         assertEq(address(paymentProcessor.token()), address(_token));
     }
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 simplePaymentInterface = type(IPaymentProcessor).interfaceId;
-        bytes4 moduleInterface = type(IModule).interfaceId;
-        if (
-            invalidInterface == simplePaymentInterface
-                || invalidInterface == moduleInterface
-        ) {
-            assertTrue(paymentProcessor.supportsInterface(invalidInterface));
-        } else {
-            assertTrue(!paymentProcessor.supportsInterface(invalidInterface));
-            assertTrue(paymentProcessor.supportsInterface(moduleInterface));
-            assertTrue(
-                paymentProcessor.supportsInterface(simplePaymentInterface)
-            );
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IPaymentProcessor).interfaceId
+            == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface, paymentProcessor.supportsInterface(interfaceId)
+        );
     }
 
     function testReinitFails() public override(ModuleTest) {

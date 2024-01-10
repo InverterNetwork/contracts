@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // SuT
 import {
     ERC20PaymentClientMock,
@@ -42,20 +44,14 @@ contract ERC20PaymentClientTest is Test {
         paymentClient.setIsAuthorized(address(this), true);
     }
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 paymentClientInterface = type(IERC20PaymentClient).interfaceId;
-        bytes4 moduleInterface = type(IModule).interfaceId;
-        if (
-            invalidInterface == paymentClientInterface
-                || invalidInterface == moduleInterface
-        ) {
-            assertTrue(paymentClient.supportsInterface(invalidInterface));
-        } else {
-            assertTrue(!paymentClient.supportsInterface(invalidInterface));
-            assertTrue(paymentClient.supportsInterface(paymentClientInterface));
-            assertTrue(paymentClient.supportsInterface(moduleInterface));
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IERC20PaymentClient).interfaceId
+            == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface, paymentClient.supportsInterface(interfaceId)
+        );
     }
 
     //----------------------------------

@@ -12,6 +12,8 @@ import {
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // Internal Dependencies
@@ -86,20 +88,12 @@ contract SingleVoteGovernorTest is ModuleTest {
         //validation of the initial state happens in testInit()
     }
 
-    function testSupportsInterface() public {
-        bytes4 invalidInterface = 0xabcdef12;
-        bytes4 authorizerInterface = type(ISingleVoteGovernor).interfaceId;
-        bytes4 moduleInterface = type(IModule).interfaceId;
-        if (
-            invalidInterface == authorizerInterface
-                || invalidInterface == moduleInterface
-        ) {
-            assertTrue(_governor.supportsInterface(invalidInterface));
-        } else {
-            assertTrue(!_governor.supportsInterface(invalidInterface));
-            assertTrue(_governor.supportsInterface(moduleInterface));
-            assertTrue(_governor.supportsInterface(authorizerInterface));
-        }
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(ISingleVoteGovernor).interfaceId
+            == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(shouldBeInterface, _governor.supportsInterface(interfaceId));
     }
 
     //--------------------------------------------------------------------------
