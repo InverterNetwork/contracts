@@ -12,7 +12,6 @@ import {Beacon} from "src/factories/beacon/Beacon.sol";
  *
  * @author Inverter Network
  */
-
 contract DeployBeacon is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

@@ -8,6 +8,18 @@ import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
 contract AuthorizerMock is IAuthorizer, Module {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IAuthorizer = type(IAuthorizer).interfaceId;
+        return interfaceId == interfaceId_IAuthorizer
+            || super.supportsInterface(interfaceId);
+    }
+
     mapping(address => bool) private _authorized;
     mapping(bytes32 => mapping(address => bool)) private _roleAuthorized;
 

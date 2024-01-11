@@ -57,6 +57,22 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     VirtualCollateralSupplyBase,
     RedeemingBondingCurveFundingManagerBase
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(
+            VirtualTokenSupplyBase,
+            VirtualCollateralSupplyBase,
+            RedeemingBondingCurveFundingManagerBase
+        )
+        returns (bool)
+    {
+        return interfaceId
+            == type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------

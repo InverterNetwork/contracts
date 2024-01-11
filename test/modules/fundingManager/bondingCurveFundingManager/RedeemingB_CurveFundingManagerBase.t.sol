@@ -6,15 +6,21 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IBondingCurveFundingManagerBase} from
+    "src/modules/fundingManager/bondingCurveFundingManager/IBondingCurveFundingManagerBase.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // Mocks
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {
     RedeemingBondingCurveFundingManagerMock,
     IRedeemingBondingCurveFundingManagerBase
@@ -72,6 +78,20 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
                 BUY_IS_OPEN,
                 SELL_IS_OPEN
             )
+        );
+    }
+
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IRedeemingBondingCurveFundingManagerBase)
+            .interfaceId == interfaceId
+            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
+            || type(IFundingManager).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface,
+            bondingCurveFundingManager.supportsInterface(interfaceId)
         );
     }
 

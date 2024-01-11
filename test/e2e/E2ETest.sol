@@ -28,7 +28,6 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 /**
  * @dev Base contract for e2e tests.
  */
-
 contract E2ETest is E2EModuleRegistry {
     // Factory instances.
     OrchestratorFactory orchestratorFactory;
