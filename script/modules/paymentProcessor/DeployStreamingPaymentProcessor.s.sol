@@ -12,7 +12,6 @@ import {StreamingPaymentProcessor} from
  *
  * @author Inverter Network
  */
-
 contract DeployStreamingPaymentProcessor is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

@@ -6,6 +6,8 @@ import "forge-std/Test.sol";
 // External Libraries
 import "@oz/utils/Address.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // SuT
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 
@@ -77,7 +79,10 @@ contract BeaconTest is Test {
     //--------------------------------------------------------------------------------
     // Test: ERC-165's supportInterface()
 
-    function testSupportsInterface() public {
-        assertTrue(beacon.supportsInterface(type(IBeacon).interfaceId));
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IBeacon).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(shouldBeInterface, beacon.supportsInterface(interfaceId));
     }
 }
