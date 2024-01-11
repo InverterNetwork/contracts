@@ -55,10 +55,10 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // First we deploy a mock ERC20 to act as funding token for the orchestrator. It has a public mint function.
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            token = new ERC20Mock("BloomMock", "BLMOCK");
+            token = new ERC20Mock("Inverter USD", "iUSD");
         }
         vm.stopBroadcast();
-        //token = ERC20Mock(0x61a4ABC15311EE7F2fe02b5F5b2e8B15c1E907be);
+        //token = ERC20Mock(0xFb4DC4067900C3e5b37eD0476c9c866864e0C759);
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
         address orchestratorFactory = DeploymentScript.run();

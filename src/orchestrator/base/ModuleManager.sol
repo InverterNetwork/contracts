@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 // External Dependencies
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Interfaces
 import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
@@ -27,8 +28,20 @@ import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 abstract contract ModuleManager is
     IModuleManager,
     Initializable,
-    ContextUpgradeable
+    ContextUpgradeable,
+    ERC165
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IModuleManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Modifiers
 

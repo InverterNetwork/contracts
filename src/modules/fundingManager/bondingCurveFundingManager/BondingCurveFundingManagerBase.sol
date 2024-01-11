@@ -36,6 +36,18 @@ abstract contract BondingCurveFundingManagerBase is
     ERC20Upgradeable,
     Module
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IBondingCurveFundingManagerBase).interfaceId
+            || interfaceId == type(IFundingManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------

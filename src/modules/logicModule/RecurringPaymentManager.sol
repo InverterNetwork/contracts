@@ -24,6 +24,17 @@ contract RecurringPaymentManager is
     IRecurringPaymentManager,
     ERC20PaymentClient
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC20PaymentClient)
+        returns (bool)
+    {
+        return interfaceId == type(IRecurringPaymentManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using LinkedIdList for LinkedIdList.List;
 
     //--------------------------------------------------------------------------

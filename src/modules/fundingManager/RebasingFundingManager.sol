@@ -27,11 +27,21 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 contract RebasingFundingManager is
     IFundingManager,
-    IRebasingERC20,
     ContextUpgradeable,
     ElasticReceiptTokenUpgradeable,
     Module
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ElasticReceiptTokenUpgradeable, Module)
+        returns (bool)
+    {
+        return interfaceId == type(IFundingManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using Strings for uint;
     using SafeERC20 for IERC20;
 

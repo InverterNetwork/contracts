@@ -9,6 +9,9 @@ import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {ModuleManager} from "src/orchestrator/base/ModuleManager.sol";
 
+// Internal Libraries
+import {LibInterfaceId} from "src/modules/lib/LibInterfaceId.sol";
+
 // Internal Interfaces
 import {
     IOrchestrator,
@@ -36,6 +39,17 @@ import {IModule} from "src/modules/base/IModule.sol";
  * @author Inverter Network
  */
 contract Orchestrator is IOrchestrator, ModuleManager {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ModuleManager)
+        returns (bool)
+    {
+        return interfaceId == type(IOrchestrator).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -152,73 +166,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     }
 
     //--------------------------------------------------------------------------
-    // Module address verification functions
-    // Note These set of functions are not mandatory for the functioning of the protocol, however they
-    //      are provided for the convenience of the users since matching the names of the modules does not
-    //      fully guarantee that the returned address is the address of the exact module the user was looking for
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsAuthorizerModule(address authModule)
-        public
-        view
-        returns (bool)
-    {
-        IAuthorizer authorizerModule = IAuthorizer(authModule);
-
-        try authorizerModule.getOwnerRole() returns (bytes32) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsFundingManager(address fundingManagerAddress)
-        public
-        view
-        returns (bool)
-    {
-        IFundingManager fundingManagerModule =
-            IFundingManager(fundingManagerAddress);
-
-        try fundingManagerModule.token() returns (IERC20) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsRecurringPaymentManager(
-        address recurringPaymentManager
-    ) public view returns (bool) {
-        RecurringPaymentManager paymentManager =
-            RecurringPaymentManager(recurringPaymentManager);
-
-        try paymentManager.getEpochLength() returns (uint) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
-        public
-        view
-        returns (bool)
-    {
-        IPaymentProcessor paymentProcessorModule =
-            IPaymentProcessor(paymentProcessorAddress);
-
-        try paymentProcessorModule.token() returns (IERC20) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
     /// @dev Only addresses authorized via the {IAuthorizer} instance can manage
@@ -240,7 +187,16 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        if (verifyAddressIsAuthorizerModule(address(authorizer_))) {
+        address authorizerContract = address(authorizer_);
+        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
+        bytes4 authorizerInterfaceId =
+            LibInterfaceId.getInterfaceId_IAuthorizer();
+        if (
+            _supportsInterfaceHelper(authorizerContract, moduleInterfaceId)
+                && _supportsInterfaceHelper(
+                    authorizerContract, authorizerInterfaceId
+                )
+        ) {
             addModule(address(authorizer_));
             removeModule(address(authorizer));
             authorizer = authorizer_;
@@ -255,7 +211,16 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        if (verifyAddressIsFundingManager(address(fundingManager_))) {
+        address fundingManagerContract = address(fundingManager_);
+        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
+        bytes4 fundingManagerInterfaceId =
+            LibInterfaceId.getInterfaceId_IFundingManager();
+        if (
+            _supportsInterfaceHelper(fundingManagerContract, moduleInterfaceId)
+                && _supportsInterfaceHelper(
+                    fundingManagerContract, fundingManagerInterfaceId
+                )
+        ) {
             addModule(address(fundingManager_));
             removeModule(address(fundingManager));
             fundingManager = fundingManager_;
@@ -270,7 +235,18 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        if (verifyAddressIsPaymentProcessor(address(paymentProcessor_))) {
+        address paymentProcessorContract = address(paymentProcessor_);
+        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
+        bytes4 paymentProcessorInterfaceId =
+            LibInterfaceId.getInterfaceId_IPaymentProcessor();
+        if (
+            _supportsInterfaceHelper(
+                paymentProcessorContract, moduleInterfaceId
+            )
+                && _supportsInterfaceHelper(
+                    paymentProcessorContract, paymentProcessorInterfaceId
+                )
+        ) {
             addModule(address(paymentProcessor_));
             removeModule(address(paymentProcessor));
             paymentProcessor = paymentProcessor_;
@@ -278,6 +254,22 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         } else {
             revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
         }
+    }
+
+    function _supportsInterfaceHelper(
+        address _contractAddress,
+        bytes4 _interfaceId
+    ) private returns (bool) {
+        require(
+            _contractAddress.code.length != 0,
+            "Contract Address need to passed here"
+        );
+
+        (bool success, bytes memory data) = _contractAddress.call(
+            abi.encodeWithSignature("supportsInterface(bytes4)", _interfaceId)
+        );
+
+        return success && abi.decode(data, (bool));
     }
 
     /// @inheritdoc IOrchestrator
