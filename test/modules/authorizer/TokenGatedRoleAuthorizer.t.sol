@@ -19,6 +19,8 @@ import {
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 // Interfaces
@@ -148,6 +150,15 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
         //Then, a ERC721 for BOB
         roleNft.mint(BOB);
+    }
+
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(ITokenGatedRoleAuthorizer).interfaceId
+            == interfaceId || type(IAuthorizer).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(shouldBeInterface, _authorizer.supportsInterface(interfaceId));
     }
 
     //-------------------------------------------------

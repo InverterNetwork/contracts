@@ -7,8 +7,22 @@ import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 import {IERC20PaymentClient} from
     "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
+import {IModule} from "src/modules/base/Module.sol";
 
 contract PaymentProcessorMock is IPaymentProcessor {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        returns (bool)
+    {
+        bytes4 interfaceId_IPaymentProcessor =
+            type(IPaymentProcessor).interfaceId;
+        bytes4 interfaceId_IModule = type(IModule).interfaceId;
+        return interfaceId == interfaceId_IPaymentProcessor
+            || interfaceId == interfaceId_IModule;
+    }
+
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 

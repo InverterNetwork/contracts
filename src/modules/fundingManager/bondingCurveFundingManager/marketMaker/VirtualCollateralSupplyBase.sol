@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
+// External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
 import {IVirtualCollateralSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualCollateralSupply.sol";
 
@@ -10,7 +13,23 @@ import {IVirtualCollateralSupply} from
 /// add, and subtract the virtual supply.
 /// @dev This abstract contract uses internal state variables for the virtual collateral supply and employs
 /// various internal and external functions for managing it.
-abstract contract VirtualCollateralSupplyBase is IVirtualCollateralSupply {
+abstract contract VirtualCollateralSupplyBase is
+    IVirtualCollateralSupply,
+    ERC165
+{
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IVirtualCollateralSupply =
+            type(IVirtualCollateralSupply).interfaceId;
+        return interfaceId == interfaceId_IVirtualCollateralSupply
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
