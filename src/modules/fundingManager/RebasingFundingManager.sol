@@ -15,8 +15,8 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from
+    "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {IRebasingERC20} from
     "src/modules/fundingManager/token/IRebasingERC20.sol";
 
@@ -80,7 +80,7 @@ contract RebasingFundingManager is
         __ElasticReceiptToken_init(
             _name,
             _symbol,
-            IERC20MetadataUpgradeable(orchestratorTokenAddress).decimals()
+            IERC20Metadata(orchestratorTokenAddress).decimals()
         );
     }
 

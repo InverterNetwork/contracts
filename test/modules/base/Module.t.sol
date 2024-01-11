@@ -81,7 +81,7 @@ contract baseModuleTest is ModuleTest {
     }
 
     function testReinitFails() public override {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 

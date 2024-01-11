@@ -18,6 +18,9 @@ import {ModuleImplementationV2Mock} from
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
+import {Ownable} from "@oz/access/Ownable.sol";
+
+
 contract BeaconTest is Test {
     // SuT
     Beacon beacon;
@@ -64,7 +67,7 @@ contract BeaconTest is Test {
         vm.assume(caller != address(this));
         vm.prank(caller);
 
-        vm.expectRevert(OZErrors.Ownable2Step__CallerNotOwner);
+        vm.expectRevert(abi.encodeWithSelector(OZErrors.Ownable__UnauthorizedAccount, caller));
         beacon.upgradeTo(address(0));
     }
 

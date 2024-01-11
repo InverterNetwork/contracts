@@ -9,9 +9,10 @@ import {
     AccessControlEnumerableUpgradeable
 } from "./RoleAuthorizer.sol";
 import {
-    AccessControlUpgradeable,
-    IAccessControlUpgradeable
+    AccessControlUpgradeable
 } from "@oz-up/access/AccessControlUpgradeable.sol";
+
+import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
 interface TokenInterface {
     function balanceOf(address _owner) external view returns (uint balance);
@@ -69,7 +70,7 @@ contract TokenGatedRoleAuthorizer is
         public
         view
         virtual
-        override(AccessControlUpgradeable, IAccessControlUpgradeable)
+        override(AccessControlUpgradeable, IAccessControl)
         returns (bool)
     {
         if (isTokenGated[roleId]) {
@@ -82,11 +83,13 @@ contract TokenGatedRoleAuthorizer is
     /// @notice Grants a role to an address
     /// @param role The role to grant
     /// @param account The address to grant the role to
+    /// @return bool Returns if the role has been granted succesful
     /// @dev Overrides {_grantRole} from AccesControl to enforce interface implementation when role is token-gated
     function _grantRole(bytes32 role, address account)
         internal
         virtual
         override
+        returns (bool)
     {
         if (isTokenGated[role]) {
             try TokenInterface(account).balanceOf(address(this)) {}
@@ -95,7 +98,7 @@ contract TokenGatedRoleAuthorizer is
             }
         }
 
-        super._grantRole(role, account);
+        return super._grantRole(role, account);
     }
 
     //--------------------------------------------------------------------------

@@ -6,12 +6,13 @@ pragma solidity ^0.8.0;
  */
 library OZErrors {
     // Contract: Initializable
-    bytes public constant Initializable__NotInitializing =
-        bytes("Initializable: contract is not initializing");
-    bytes internal constant Initializable__AlreadyInitialized =
-        bytes("Initializable: contract is already initialized");
+    bytes4 public constant Initializable__NotInitializing =
+        bytes4(keccak256("NotInitializing()"));
+    bytes4 internal constant Initializable__InvalidInitialization =
+        bytes4(keccak256("InvalidInitialization()"));
 
-    // Contract: Ownable2Step (inherits the error from Ownable)
-    bytes internal constant Ownable2Step__CallerNotOwner =
-        bytes("Ownable: caller is not the owner");
+    // Contract: Ownable
+    bytes4 internal constant Ownable__UnauthorizedAccount =
+        bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+
 }

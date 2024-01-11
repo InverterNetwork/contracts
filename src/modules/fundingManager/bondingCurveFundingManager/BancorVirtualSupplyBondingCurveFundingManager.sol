@@ -30,8 +30,8 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from
+    "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -287,7 +287,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // Convert depositAmount to 18 decimals, which is required by Bancor formula
         uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
             _depositAmount,
-            IERC20MetadataUpgradeable(address(token())).decimals(),
+            IERC20Metadata(address(token())).decimals(),
             eighteenDecimals
         );
         // Calculate mint amount through bonding curve
@@ -330,7 +330,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         redeemAmount = _convertAmountToRequiredDecimal(
             redeemAmount,
             eighteenDecimals,
-            IERC20MetadataUpgradeable(address(token())).decimals()
+            IERC20Metadata(address(token())).decimals()
         );
     }
 

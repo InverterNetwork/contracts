@@ -87,7 +87,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         recurringPaymentManager.init(_orchestrator, _METADATA, bytes(""));
     }
 

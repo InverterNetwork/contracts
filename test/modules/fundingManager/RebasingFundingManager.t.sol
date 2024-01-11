@@ -81,7 +81,7 @@ contract RebasingFundingManagerTest is ModuleTest {
     }
 
     function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         fundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 

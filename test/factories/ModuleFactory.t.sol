@@ -63,7 +63,7 @@ contract ModuleFactoryTest is Test {
         vm.assume(caller != address(this));
         vm.prank(caller);
 
-        vm.expectRevert(OZErrors.Ownable2Step__CallerNotOwner);
+        vm.expectRevert(abi.encodeWithSelector(OZErrors.Ownable__UnauthorizedAccount, caller));
         factory.registerMetadata(DATA, beacon);
     }
 

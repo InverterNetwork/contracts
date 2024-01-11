@@ -136,7 +136,7 @@ contract OrchestratorTest is Test {
                 paymentProcessor
             );
 
-            vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+            vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
             orchestrator.init(
                 orchestratorId,
                 truncatedModules,
@@ -158,7 +158,7 @@ contract OrchestratorTest is Test {
                 paymentProcessor
             );
 
-            vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+            vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
             orchestrator.init(
                 orchestratorId,
                 modules,
