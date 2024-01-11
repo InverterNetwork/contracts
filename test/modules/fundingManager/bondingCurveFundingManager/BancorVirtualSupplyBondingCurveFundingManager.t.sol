@@ -14,6 +14,8 @@ import {
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
@@ -157,6 +159,19 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
+        );
+    }
+
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IFundingManager).interfaceId
+            == interfaceId
+            || type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
+                == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface,
+            bondingCurveFundingManager.supportsInterface(interfaceId)
         );
     }
 

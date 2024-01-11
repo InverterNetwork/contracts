@@ -27,6 +27,17 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  * @author Inverter Network
  */
 contract SimplePaymentProcessor is Module, IPaymentProcessor {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IPaymentProcessor).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
