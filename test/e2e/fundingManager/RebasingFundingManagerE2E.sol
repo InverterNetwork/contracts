@@ -19,7 +19,6 @@ import {RebasingFundingManager} from
  * The withdrawal amount of funds is _always_ in relation of the amount of
  * receipt tokens to the total amount of funds left in the fundingmanager.
  */
-
 contract RebasingFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory.ModuleConfig[] moduleConfigurations;

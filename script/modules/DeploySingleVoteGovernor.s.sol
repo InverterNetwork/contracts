@@ -12,7 +12,6 @@ import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
  *
  * @author Inverter Network
  */
-
 contract DeploySingleVoteGovernor is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

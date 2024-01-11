@@ -24,7 +24,6 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  *
  * @author Inverter Network
  */
-
 contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     //--------------------------------------------------------------------------
     // Storage

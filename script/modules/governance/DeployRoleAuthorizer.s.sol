@@ -12,7 +12,6 @@ import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
  *
  * @author Inverter Network
  */
-
 contract DeployRoleAuthorizer is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

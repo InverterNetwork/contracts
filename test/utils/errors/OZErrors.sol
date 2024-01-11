@@ -14,5 +14,4 @@ library OZErrors {
     // Contract: Ownable
     bytes4 internal constant Ownable__UnauthorizedAccount =
         bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
-
 }

@@ -6,7 +6,6 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
-
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
@@ -35,8 +34,7 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor() Ownable(_msgSender()) {
-    }
+    constructor() Ownable(_msgSender()) {}
 
     //--------------------------------------------------------------------------------
     // Public View Functions

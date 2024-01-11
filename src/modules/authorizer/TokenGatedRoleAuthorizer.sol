@@ -8,9 +8,8 @@ import {
     RoleAuthorizer,
     AccessControlEnumerableUpgradeable
 } from "./RoleAuthorizer.sol";
-import {
-    AccessControlUpgradeable
-} from "@oz-up/access/AccessControlUpgradeable.sol";
+import {AccessControlUpgradeable} from
+    "@oz-up/access/AccessControlUpgradeable.sol";
 
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 

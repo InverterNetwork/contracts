@@ -20,7 +20,6 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 import {Ownable} from "@oz/access/Ownable.sol";
 
-
 contract BeaconTest is Test {
     // SuT
     Beacon beacon;
@@ -67,7 +66,11 @@ contract BeaconTest is Test {
         vm.assume(caller != address(this));
         vm.prank(caller);
 
-        vm.expectRevert(abi.encodeWithSelector(OZErrors.Ownable__UnauthorizedAccount, caller));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OZErrors.Ownable__UnauthorizedAccount, caller
+            )
+        );
         beacon.upgradeTo(address(0));
     }
 
