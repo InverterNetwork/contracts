@@ -1,4 +1,4 @@
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 /// @title  Aragon Bancor Formula Utils
 /// @author https://github.com/AragonBlack/fundraising/blob/master/apps/bancor-formula/contracts/utility/Utils.sol
