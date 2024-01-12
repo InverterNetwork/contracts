@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Interfaces
 import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
@@ -27,8 +28,20 @@ import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 abstract contract ModuleManager is
     IModuleManager,
     Initializable,
-    ERC2771Context
+    ERC2771Context,
+    ERC165
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IModuleManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Modifiers
 

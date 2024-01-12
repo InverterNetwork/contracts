@@ -78,6 +78,7 @@ testScripts: ## Run e2e test suite
 
 	@forge script script/factories/DeployModuleFactory.s.sol
 	@forge script script/factories/DeployOrchestratorFactory.s.sol
+	@forge script script/factories/DeployOrchestratorFactory.s.sol
 
 	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol
 	@forge script script/modules/DeploySingleVoteGovernor.s.sol
@@ -86,11 +87,14 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
 
 	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
+	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
 
+	@forge script script/orchestrator/DeployOrchestrator.s.sol
 	@forge script script/orchestrator/DeployOrchestrator.s.sol
 
 	@forge script script/proxies/DeployBeacon.s.sol
 
+	@forge script script/setup/SetupToyOrchestratorScript.s.sol
 	@forge script script/setup/SetupToyOrchestratorScript.s.sol
 
 # -----------------------------------------------------------------------------

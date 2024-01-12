@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
@@ -12,8 +12,7 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Dependencies
 import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
@@ -36,6 +35,18 @@ abstract contract BondingCurveFundingManagerBase is
     ERC20Upgradeable,
     Module
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IBondingCurveFundingManagerBase).interfaceId
+            || interfaceId == type(IFundingManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
@@ -90,7 +101,7 @@ abstract contract BondingCurveFundingManagerBase is
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IERC20MetadataUpgradeable
+    /// @inheritdoc IERC20Metadata
     function decimals()
         public
         view

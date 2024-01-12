@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
@@ -9,6 +9,17 @@ import {IMetadataManager} from "src/modules/utils/IMetadataManager.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract MetadataManager is IMetadataManager, Module {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IMetadataManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 

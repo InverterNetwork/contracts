@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -25,6 +25,17 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
  * @author Inverter Network
  */
 abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IERC20PaymentClient).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
     //--------------------------------------------------------------------------
     // Modifiers

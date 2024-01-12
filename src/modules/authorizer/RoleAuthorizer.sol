@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
+// External Libraries
 
 // External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {AccessControlEnumerableUpgradeable} from
-    "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
+    "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
 // Internal Dependencies
 import {Module, IModule} from "src/modules/base/Module.sol";
@@ -13,9 +15,20 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 contract RoleAuthorizer is
     IAuthorizer,
-    Module,
-    AccessControlEnumerableUpgradeable
+    AccessControlEnumerableUpgradeable,
+    Module
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module, AccessControlEnumerableUpgradeable)
+        returns (bool)
+    {
+        return interfaceId == type(IAuthorizer).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -108,13 +121,15 @@ contract RoleAuthorizer is
     /// @notice Overrides {_revokeRole} to prevent having an empty OWNER role
     /// @param role The id number of the role
     /// @param who The user we want to check on
+    /// @return bool Returns if revoke has been succesful
     function _revokeRole(bytes32 role, address who)
         internal
         virtual
         override
         notLastOwner(role)
+        returns (bool)
     {
-        super._revokeRole(role, who);
+        return super._revokeRole(role, who);
     }
 
     //--------------------------------------------------------------------------

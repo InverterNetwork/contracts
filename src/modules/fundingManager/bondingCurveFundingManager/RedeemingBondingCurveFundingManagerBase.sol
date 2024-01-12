@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // Internal Dependencies
 import {BondingCurveFundingManagerBase} from
@@ -25,6 +25,18 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     IRedeemingBondingCurveFundingManagerBase,
     BondingCurveFundingManagerBase
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(BondingCurveFundingManagerBase)
+        returns (bool)
+    {
+        return interfaceId
+            == type(IRedeemingBondingCurveFundingManagerBase).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
@@ -176,5 +188,19 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
+    }
+
+    /// @dev Redeems collateral based on the deposit amount.
+    /// This function utilizes another internal function, `_redeemTokensFormulaWrapper`,
+    /// to determine how many collateral tokens should be redeemed.
+    /// @param _depositAmount The amount of issued tokens deposited for which collateral are to
+    /// be redeemed.
+    /// @return redeemAmount The number of collateral tokens to be redeemed.
+    function _redeemTokens(uint _depositAmount)
+        internal
+        view
+        returns (uint redeemAmount)
+    {
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
     }
 }

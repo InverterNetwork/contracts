@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 // External Libraries
 
 import {ITokenGatedRoleAuthorizer} from "./ITokenGatedRoleAuthorizer.sol";
@@ -8,10 +8,10 @@ import {
     RoleAuthorizer,
     AccessControlEnumerableUpgradeable
 } from "./RoleAuthorizer.sol";
-import {
-    AccessControlUpgradeable,
-    IAccessControlUpgradeable
-} from "@oz-up/access/AccessControlUpgradeable.sol";
+import {AccessControlUpgradeable} from
+    "@oz-up/access/AccessControlUpgradeable.sol";
+
+import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
 interface TokenInterface {
     function balanceOf(address _owner) external view returns (uint balance);
@@ -21,6 +21,17 @@ contract TokenGatedRoleAuthorizer is
     ITokenGatedRoleAuthorizer,
     RoleAuthorizer
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(RoleAuthorizer)
+        returns (bool)
+    {
+        return interfaceId == type(ITokenGatedRoleAuthorizer).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     /*
     * This Module expands on the RoleAuthorizer by adding the possibility to set a role as "Token-Gated"
     * Instead of whitelisting a user address, the whitelisted addresses will correspond to a token address, and on authotrization the contract will check on ownership
@@ -69,7 +80,7 @@ contract TokenGatedRoleAuthorizer is
         public
         view
         virtual
-        override(AccessControlUpgradeable, IAccessControlUpgradeable)
+        override(AccessControlUpgradeable, IAccessControl)
         returns (bool)
     {
         if (isTokenGated[roleId]) {
@@ -82,11 +93,13 @@ contract TokenGatedRoleAuthorizer is
     /// @notice Grants a role to an address
     /// @param role The role to grant
     /// @param account The address to grant the role to
+    /// @return bool Returns if the role has been granted succesful
     /// @dev Overrides {_grantRole} from AccesControl to enforce interface implementation when role is token-gated
     function _grantRole(bytes32 role, address account)
         internal
         virtual
         override
+        returns (bool)
     {
         if (isTokenGated[role]) {
             try TokenInterface(account).balanceOf(address(this)) {}
@@ -95,7 +108,7 @@ contract TokenGatedRoleAuthorizer is
             }
         }
 
-        super._grantRole(role, account);
+        return super._grantRole(role, account);
     }
 
     //--------------------------------------------------------------------------

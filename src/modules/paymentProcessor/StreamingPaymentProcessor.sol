@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // Internal Dependencies
 import {
@@ -25,6 +25,17 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  * @author Inverter Network
  */
 contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IStreamingPaymentProcessor).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // Internal Dependencies
 import {
@@ -24,6 +24,17 @@ contract RecurringPaymentManager is
     IRecurringPaymentManager,
     ERC20PaymentClient
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC20PaymentClient)
+        returns (bool)
+    {
+        return interfaceId == type(IRecurringPaymentManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using LinkedIdList for LinkedIdList.List;
 
     //--------------------------------------------------------------------------

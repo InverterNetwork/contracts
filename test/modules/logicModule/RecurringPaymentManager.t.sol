@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -50,6 +52,18 @@ contract RecurringPaymentManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IRecurringPaymentManager).interfaceId
+            == interfaceId || type(IERC20PaymentClient).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface,
+            recurringPaymentManager.supportsInterface(interfaceId)
+        );
+    }
+
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {
         vm.expectRevert(
@@ -87,7 +101,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         recurringPaymentManager.init(_orchestrator, _METADATA, bytes(""));
     }
 

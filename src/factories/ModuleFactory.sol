@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Context, Ownable2Step} from "@oz/access/Ownable2Step.sol";
+import {Ownable} from "@oz/access/Ownable.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Dependencies
 import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
@@ -32,7 +34,22 @@ import {
  *
  * @author Inverter Network
  */
-contract ModuleFactory is IModuleFactory, ERC2771Context, Ownable2Step {
+contract ModuleFactory is
+    IModuleFactory,
+    ERC2771Context,
+    Ownable2Step,
+    ERC165
+{
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IModuleFactory).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -65,7 +82,10 @@ contract ModuleFactory is IModuleFactory, ERC2771Context, Ownable2Step {
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
+    constructor(address _trustedForwarder)
+        ERC2771Context(_trustedForwarder)
+        Ownable(_msgSender())
+    {
         // NO-OP
     }
 

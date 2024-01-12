@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -31,7 +32,23 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
  *
  * @author Inverter Network
  */
-abstract contract Module is IModule, Initializable, ContextUpgradeable {
+abstract contract Module is
+    IModule,
+    Initializable,
+    ContextUpgradeable,
+    ERC165
+{
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IModule).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
     //

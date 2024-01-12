@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
+
+// External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 //Internal Interface
 import {
@@ -55,7 +58,18 @@ import {
  * @author Buttonwood Foundation
  * @author merkleplant
  */
-abstract contract ElasticReceiptTokenBase is IRebasingERC20 {
+abstract contract ElasticReceiptTokenBase is IRebasingERC20, ERC165 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IRebasingERC20).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // !!!        PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH         !!!
     //

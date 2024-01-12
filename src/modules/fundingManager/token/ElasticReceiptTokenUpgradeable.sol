@@ -1,10 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 import {ElasticReceiptTokenBase} from
     "src/modules/fundingManager/token/ElasticReceiptTokenBase.sol";
 
 abstract contract ElasticReceiptTokenUpgradeable is ElasticReceiptTokenBase {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ElasticReceiptTokenBase)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Initialization
 

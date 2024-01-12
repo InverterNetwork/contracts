@@ -8,6 +8,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -52,6 +54,13 @@ contract baseModuleTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(shouldBeInterface, module.supportsInterface(interfaceId));
+    }
+
     function testInit() public override {
         // Orchestrator correctly written to storage.
         assertEq(address(module.orchestrator()), address(_orchestrator));
@@ -82,7 +91,7 @@ contract baseModuleTest is ModuleTest {
     }
 
     function testReinitFails() public override {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 

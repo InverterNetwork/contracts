@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
@@ -9,6 +9,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Interfaces
 import {
@@ -30,7 +31,18 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
  *
  * @author Inverter Network
  */
-contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context {
+contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IOrchestratorFactory).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Immutables
 

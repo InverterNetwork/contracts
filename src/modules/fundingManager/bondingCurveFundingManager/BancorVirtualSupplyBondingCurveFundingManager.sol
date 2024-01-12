@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
@@ -30,8 +30,7 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -57,6 +56,22 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     VirtualCollateralSupplyBase,
     RedeemingBondingCurveFundingManagerBase
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(
+            VirtualTokenSupplyBase,
+            VirtualCollateralSupplyBase,
+            RedeemingBondingCurveFundingManagerBase
+        )
+        returns (bool)
+    {
+        return interfaceId
+            == type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
@@ -287,7 +302,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // Convert depositAmount to 18 decimals, which is required by Bancor formula
         uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
             _depositAmount,
-            IERC20MetadataUpgradeable(address(token())).decimals(),
+            IERC20Metadata(address(token())).decimals(),
             eighteenDecimals
         );
         // Calculate mint amount through bonding curve
@@ -330,7 +345,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         redeemAmount = _convertAmountToRequiredDecimal(
             redeemAmount,
             eighteenDecimals,
-            IERC20MetadataUpgradeable(address(token())).decimals()
+            IERC20Metadata(address(token())).decimals()
         );
     }
 

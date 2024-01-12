@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.20;
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -27,6 +27,17 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  * @author Inverter Network
  */
 contract SimplePaymentProcessor is Module, IPaymentProcessor {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IPaymentProcessor).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------

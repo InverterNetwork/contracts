@@ -6,6 +6,8 @@ import "forge-std/Test.sol";
 // External Libraries
 import "@oz/utils/Address.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // SuT
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 
@@ -17,6 +19,8 @@ import {ModuleImplementationV2Mock} from
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
+import {Ownable} from "@oz/access/Ownable.sol";
 
 contract BeaconTest is Test {
     // SuT
@@ -64,7 +68,11 @@ contract BeaconTest is Test {
         vm.assume(caller != address(this));
         vm.prank(caller);
 
-        vm.expectRevert(OZErrors.Ownable2Step__CallerNotOwner);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OZErrors.Ownable__UnauthorizedAccount, caller
+            )
+        );
         beacon.upgradeTo(address(0));
     }
 
@@ -77,7 +85,10 @@ contract BeaconTest is Test {
     //--------------------------------------------------------------------------------
     // Test: ERC-165's supportInterface()
 
-    function testSupportsInterface() public {
-        assertTrue(beacon.supportsInterface(type(IBeacon).interfaceId));
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IBeacon).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(shouldBeInterface, beacon.supportsInterface(interfaceId));
     }
 }

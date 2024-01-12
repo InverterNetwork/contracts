@@ -80,7 +80,7 @@ contract ModuleManagerTest is Test {
     }
 
     function testReinitFails() public {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         moduleManager.init(EMPTY_LIST);
     }
 

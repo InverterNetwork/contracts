@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
@@ -20,6 +22,7 @@ import {
     IBondingCurveFundingManagerBase
 } from
     "test/modules/fundingManager/bondingCurveFundingManager/marketMaker/utils/mocks/BondingCurveFundingManagerMock.sol";
+import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 contract BondingCurveFundingManagerBaseTest is ModuleTest {
     string private constant NAME = "Bonding Curve Token";
@@ -72,6 +75,19 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         );
     }
 
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IFundingManager).interfaceId
+            == interfaceId
+            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface,
+            bondingCurveFundingManager.supportsInterface(interfaceId)
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Test: Initialization
 
@@ -113,7 +129,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     function testReinitFails() public override {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 
