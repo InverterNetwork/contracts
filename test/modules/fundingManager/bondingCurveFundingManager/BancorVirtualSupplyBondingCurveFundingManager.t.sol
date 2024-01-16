@@ -15,6 +15,7 @@ import {
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
@@ -166,7 +167,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         bool shouldBeInterface = type(IFundingManager).interfaceId
             == interfaceId
             || type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
-                == interfaceId || type(IModule).interfaceId == interfaceId
+                == interfaceId
+            || type(IVirtualTokenSupply).interfaceId == interfaceId
+            || type(IVirtualCollateralSupply).interfaceId == interfaceId
+            || type(IRedeemingBondingCurveFundingManagerBase).interfaceId
+                == interfaceId || type(IFundingManager).interfaceId == interfaceId
+            || type(IFundingManager).interfaceId == interfaceId
+            || type(IERC20).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
             || type(IERC165).interfaceId == interfaceId;
 
         assertEq(
