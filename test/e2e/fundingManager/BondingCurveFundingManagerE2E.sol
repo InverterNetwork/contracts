@@ -128,6 +128,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // Mint some tokens to alice and bob in order to fund the fundingmanager.
         token.mint(alice, 1000e18);
         token.mint(bob, 5000e18);
+        uint minAmountOut = fundingManager.calculatePurchaseReturn(1000e18);
 
         // Alice funds the fundingmanager with 1k tokens.
         vm.startPrank(alice);
@@ -136,13 +137,14 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             token.approve(address(fundingManager), 1000e18);
 
             // Deposit tokens, i.e. fund the fundingmanager.
-            fundingManager.buy(1000e18);
+            fundingManager.buy(1000e18, minAmountOut);
 
             // After the deposit, alice received some amount of receipt tokens
             // from the fundingmanager.
             assertTrue(fundingManager.balanceOf(alice) > 0);
         }
         vm.stopPrank();
+        minAmountOut = fundingManager.calculatePurchaseReturn(5000e18);
 
         // Bob funds the fundingmanager with 5k tokens.
         vm.startPrank(bob);
@@ -151,7 +153,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             token.approve(address(fundingManager), 5000e18);
 
             // Deposit tokens, i.e. fund the fundingmanager.
-            fundingManager.buy(5000e18);
+            fundingManager.buy(5000e18, minAmountOut);
 
             // After the deposit, bob received some amount of receipt tokens
             // from the fundingmanager.
@@ -174,7 +176,9 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 address(fundingManager), fundingManager.balanceOf(bob)
             );
 
-            fundingManager.sell(fundingManager.balanceOf(bob));
+            fundingManager.sell(
+                fundingManager.balanceOf(bob), fundingManager.balanceOf(bob)
+            );
             assertApproxEqRel(token.balanceOf(bob), 2500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
@@ -187,7 +191,9 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 address(fundingManager), fundingManager.balanceOf(alice)
             );
 
-            fundingManager.sell(fundingManager.balanceOf(alice));
+            fundingManager.sell(
+                fundingManager.balanceOf(alice), fundingManager.balanceOf(alice)
+            );
             assertApproxEqRel(token.balanceOf(alice), 500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
