@@ -70,4 +70,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
             _amount, _tokenDecimals, _requiredDecimals
         );
     }
+
+    function call_mintIssuanceToken(uint _amount, address _receiver) external {
+        _mint(_receiver, _amount);
+    }
 }
