@@ -97,6 +97,9 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     uint32 internal constant PPM = 1_000_000;
     /// @dev Token that is accepted by this funding manager for deposits.
     IERC20 private _token;
+    /// @dev Token decimals of the Orchestrator token, which is used as collateral and stores within
+    /// implementation for gas saving.
+    uint8 internal collateralTokenDecimals;
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -125,6 +128,9 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _token = IERC20(_acceptedToken);
         // Set token decimals for issuance token
         _setTokenDecimals(issuanceToken.decimals);
+        // Store token decimals for collateral
+        collateralTokenDecimals =
+            IERC20MetadataUpgradeable(address(token())).decimals();
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
@@ -162,13 +168,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// Transactions exceeding this limit will be reverted.
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buyFor(address _receiver, uint _depositAmount)
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
         override(BondingCurveFundingManagerBase)
         validReceiver(_receiver)
         buyingIsEnabled
     {
-        _virtualBuyOrder(_receiver, _depositAmount);
+        _virtualBuyOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Buy tokens for the sender's address. This function is subject
@@ -180,12 +187,13 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// While this is substantially large, it is crucial to be aware of this constraint.
     /// Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buy(uint _depositAmount)
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function buy(uint _depositAmount, uint _minAmountOut)
         external
         override(BondingCurveFundingManagerBase)
         buyingIsEnabled
     {
-        _virtualBuyOrder(_msgSender(), _depositAmount);
+        _virtualBuyOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     /// @notice Redeem tokens on behalf of a specified receiver address. This function is subject
@@ -197,13 +205,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _receiver The address that will receive the redeemed tokens.
     /// @param _depositAmount The amount of issued token to deposited.
-    function sellFor(address _receiver, uint _depositAmount)
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
         override(RedeemingBondingCurveFundingManagerBase)
         validReceiver(_receiver)
         sellingIsEnabled
     {
-        _virtualSellOrder(_receiver, _depositAmount);
+        _virtualSellOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Sell collateral for the sender's address. This function is subject
@@ -214,12 +223,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of issued token depoisited.
-    function sell(uint _depositAmount)
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function sell(uint _depositAmount, uint _minAmountOut)
         external
         override(RedeemingBondingCurveFundingManagerBase)
         sellingIsEnabled
     {
-        _virtualSellOrder(_msgSender(), _depositAmount);
+        _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
@@ -230,6 +241,71 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function getReserveRatioForSelling() external view returns (uint32) {
         return reserveRatioForBuying;
+    }
+
+    /// @notice Calculates and returns the static price for buying the issuance token.
+    /// The return value is formatted in PPM.
+    /// @return uint The static price for buying the issuance token
+    function getStaticPriceForBuying()
+        external
+        view
+        override(BondingCurveFundingManagerBase)
+        returns (uint)
+    {
+        return _staticPricePPM(
+            virtualTokenSupply, virtualCollateralSupply, reserveRatioForBuying
+        );
+    }
+
+    /// @notice Calculates and returns the static price for selling the issuance token.
+    /// The return value is formatted in PPM.
+    /// @return uint The static price for selling the issuance token
+    function getStaticPriceForSelling()
+        external
+        view
+        override(RedeemingBondingCurveFundingManagerBase)
+        returns (uint)
+    {
+        return _staticPricePPM(
+            virtualTokenSupply, virtualCollateralSupply, reserveRatioForSelling
+        );
+    }
+
+    /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
+    function calculatePurchaseReturn(uint _depositAmount)
+        external
+        view
+        returns (uint mintAmount)
+    {
+        if (_depositAmount == 0) {
+            revert
+                BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount(
+            );
+        }
+        if (buyFee > 0) {
+            (_depositAmount, /* feeAmount */ ) =
+                _calculateNetAmountAndFee(_depositAmount, buyFee);
+        }
+        return _issueTokensFormulaWrapper(_depositAmount);
+    }
+
+    /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
+    function calculateSaleReturn(uint _depositAmount)
+        external
+        view
+        returns (uint redeemAmount)
+    {
+        if (_depositAmount == 0) {
+            revert
+                BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount(
+            );
+        }
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
+        if (sellFee > 0) {
+            (redeemAmount, /* feeAmount */ ) =
+                _calculateNetAmountAndFee(redeemAmount, sellFee);
+        }
+        return redeemAmount;
     }
 
     //--------------------------------------------------------------------------
@@ -302,9 +378,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     {
         // Convert depositAmount to 18 decimals, which is required by Bancor formula
         uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
-            _depositAmount,
-            IERC20MetadataUpgradeable(address(token())).decimals(),
-            eighteenDecimals
+            _depositAmount, collateralTokenDecimals, eighteenDecimals
         );
         // Calculate mint amount through bonding curve
         mintAmount = formula.calculatePurchaseReturn(
@@ -317,6 +391,25 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         mintAmount = _convertAmountToRequiredDecimal(
             mintAmount, eighteenDecimals, decimals()
         );
+    }
+
+    /// @dev Calculates the static price for either selling or buying the issuance token,
+    /// based on the provided issuance token supply, collateral supply, and buy or sell reserve ratio.
+    /// Note: The reserve ratio specifies whether the sell or buy price is returned.
+    /// The formula used is: PPM * PPM * collateralSupply / (issuanceTokenSupply * reserveRatio).
+    /// The formula is based on Aragon's BatchedBancorMarketMaker, which can be found here:
+    /// https://github.com/AragonBlack/fundraising/blob/5ad1332955bab9d36cfad345ae92b7ad7dc0bdbe/apps/batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol#L415
+    /// @param _issuanceTokenSupply The total supply of the issuance tokens.
+    /// @param _collateralSupply The total supply of the collateral held by the FundingManager.
+    /// @param _reserveRatio The reserve ratio, specified as either sell or buy reserve ratio.
+    /// @return uint The calculated static price for the specified operation, formatted in PPM
+    function _staticPricePPM(
+        uint _issuanceTokenSupply,
+        uint _collateralSupply,
+        uint32 _reserveRatio
+    ) internal pure returns (uint) {
+        return uint(PPM) * uint(PPM) * _collateralSupply
+            / (_issuanceTokenSupply * uint(_reserveRatio));
     }
 
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
@@ -344,9 +437,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
         // Convert redeem amount to collateral decimals
         redeemAmount = _convertAmountToRequiredDecimal(
-            redeemAmount,
-            eighteenDecimals,
-            IERC20MetadataUpgradeable(address(token())).decimals()
+            redeemAmount, eighteenDecimals, collateralTokenDecimals
         );
     }
 
@@ -377,12 +468,16 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// virtual balances accordingly.
     /// @param _receiver The address of the recipient of the issued tokens.
     /// @param _depositAmount The amount of collateral deposited for the buy order.
-    function _virtualBuyOrder(address _receiver, uint _depositAmount)
-        internal
-    {
-        uint amountIssued = _buyOrder(_receiver, _depositAmount);
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function _virtualBuyOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal {
+        (uint amountIssued, uint feeAmount) =
+            _buyOrder(_receiver, _depositAmount, _minAmountOut);
         _addVirtualTokenAmount(amountIssued);
-        _addVirtualCollateralAmount(_depositAmount);
+        _addVirtualCollateralAmount(_depositAmount - feeAmount);
     }
 
     /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
@@ -390,10 +485,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// virtual balances accordingly.
     /// @param _receiver The address that will receive the redeem amount.
     /// @param _depositAmount The amount of tokens that are being sold.
-    function _virtualSellOrder(address _receiver, uint _depositAmount)
-        internal
-    {
-        uint redeemAmount = _sellOrder(_receiver, _depositAmount);
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function _virtualSellOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal {
+        (uint redeemAmount,) =
+            _sellOrder(_receiver, _depositAmount, _minAmountOut);
         _subVirtualTokenAmount(_depositAmount);
         _subVirtualCollateralAmount(redeemAmount);
     }
