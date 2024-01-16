@@ -64,14 +64,22 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         return _depositAmount;
     }
 
+    function getStaticPriceForBuying()
+        external
+        view
+        override(BondingCurveFundingManagerBase)
+        returns (uint)
+    {}
+
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 
-    function call_calculateFeeDeductedDepositAmount(
-        uint _depositAmount,
-        uint _feePct
-    ) external pure returns (uint) {
-        return _calculateFeeDeductedDepositAmount(_depositAmount, _feePct);
+    function call_calculateNetAmountAndFee(uint _depositAmount, uint _feePct)
+        external
+        pure
+        returns (uint, uint)
+    {
+        return _calculateNetAmountAndFee(_depositAmount, _feePct);
     }
 
     function call_BPS() external pure returns (uint) {
