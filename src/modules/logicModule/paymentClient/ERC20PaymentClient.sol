@@ -25,6 +25,17 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
  * @author Inverter Network
  */
 abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IERC20PaymentClient).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
     //--------------------------------------------------------------------------
     // Modifiers

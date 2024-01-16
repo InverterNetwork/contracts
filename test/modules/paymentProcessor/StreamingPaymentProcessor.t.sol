@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // SuT
@@ -73,6 +75,16 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
     function testInit() public override(ModuleTest) {
         assertEq(address(paymentProcessor.token()), address(_token));
+    }
+
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IStreamingPaymentProcessor).interfaceId
+            == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface, paymentProcessor.supportsInterface(interfaceId)
+        );
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -1045,7 +1057,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.cancelRunningPayments(paymentClient);
 
         // measure recipients balances before attempting second claim.
-        uint[] memory balancesBefore = new uint256[](recipients.length);
+        uint[] memory balancesBefore = new uint[](recipients.length);
         for (uint i; i < recipients.length; i++) {
             vm.prank(recipients[i]);
             balancesBefore[i] = _token.balanceOf(recipients[i]);

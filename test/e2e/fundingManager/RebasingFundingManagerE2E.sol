@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {E2eTest} from "test/e2e/E2eTest.sol";
+//Internal Dependencies
+import {
+    E2ETest, IOrchestratorFactory, IOrchestrator
+} from "test/e2e/E2ETest.sol";
 
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
-import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
-
+//SuT
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 
-// Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 /**
  * E2e test demonstrating a orchestrator's fund management.
  *
@@ -20,12 +19,65 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * The withdrawal amount of funds is _always_ in relation of the amount of
  * receipt tokens to the total amount of funds left in the fundingmanager.
  */
+contract RebasingFundingManagerE2E is E2ETest {
+    // Module Configurations for the current E2E test. Should be filled during setUp() call.
+    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
-contract FundManagement is E2eTest {
     address alice = address(0xA11CE);
     address bob = address(0x606);
 
-    ERC20Mock token = new ERC20Mock("Mock", "MOCK");
+    function setUp() public override {
+        // Setup common E2E framework
+        super.setUp();
+
+        // Set Up individual Modules the E2E test is going to use and store their configurations:
+        // NOTE: It's important to store the module configurations in order, since _create_E2E_Orchestrator() will copy from the array.
+        // The order should be:
+        //      moduleConfigurations[0]  => FundingManager
+        //      moduleConfigurations[1]  => Authorizer
+        //      moduleConfigurations[2]  => PaymentProcessor
+        //      moduleConfigurations[3:] => Additional Logic Modules
+
+        // FundingManager
+        setUpRebasingFundingManager();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                rebasingFundingManagerMetadata,
+                abi.encode(address(token)),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // Authorizer
+        setUpRoleAuthorizer();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                roleAuthorizerMetadata,
+                abi.encode(address(this), address(this)),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // PaymentProcessor
+        setUpSimplePaymentProcessor();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                simplePaymentProcessorMetadata,
+                bytes(""),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // Additional Logic Modules
+        setUpBountyManager();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                bountyManagerMetadata,
+                bytes(""),
+                abi.encode(true, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+    }
 
     function test_e2e_OrchestratorFundManagement() public {
         // address(this) creates a new orchestrator.
@@ -36,7 +88,7 @@ contract FundManagement is E2eTest {
         });
 
         IOrchestrator orchestrator =
-            _createNewOrchestratorWithAllModules(orchestratorConfig);
+            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));

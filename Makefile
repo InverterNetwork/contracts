@@ -52,20 +52,24 @@ testFuzz: ## Run whole testsuite with a custom amount of fuzz runs
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
-.PHONY: testOrchestrator
-testOrchestrator: ## Run orchestrator/ package tests
-	@forge test -vvv --match-path "*/orchestrator/*"
+.PHONY: testProposal
+testProposal: ## Run proposal/ package tests
+	@make pre-test
+	@forge test -vvv --match-path "*/proposal/*"
 
 .PHONY: testModules
 testModules: ## Run modules/ package tests
+	@make pre-test
 	@forge test -vvv --match-path "*/modules/*"
 
 .PHONY: testFactories
 testFactories: ## Run factories/ package tests
+	@make pre-test
 	@forge test -vvv --match-path "*/factories/*"
 
 .PHONY: testE2e
 testE2e: ## Run e2e test suite
+	@make pre-test
 	@forge test -vvv --match-path "*/e2e/*"
 
 .PHONY: testScripts
@@ -74,7 +78,7 @@ testScripts: ## Run e2e test suite
 
 	@forge script script/factories/DeployModuleFactory.s.sol
 	@forge script script/factories/DeployOrchestratorFactory.s.sol
-	
+
 	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol
 	@forge script script/modules/DeploySingleVoteGovernor.s.sol
 	
@@ -82,8 +86,6 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
 
 	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
-	@forge script script/modules/fundingManager/DeployBancorVirtualSupplyBondingCurveFundingManager.s.sol
-
 
 	@forge script script/orchestrator/DeployOrchestrator.s.sol
 
@@ -102,7 +104,7 @@ analyze-slither: ## Run slither analyzer against project (requires solc-select)
 	slither --ignore-compile src/factories || \
 	slither --ignore-compile src/generated || \
 	slither --ignore-compile src/modules   || \
-	slither --ignore-compile src/orchestrator
+	slither --ignore-compile src/proposal
 
 .PHONY: analyze-c4udit
 analyze-c4udit: ## Run c4udit analyzer against project
@@ -117,7 +119,10 @@ report-gas: ## Print gas report
 
 .PHONY: report-cov
 report-cov: ## Print coverage report
-	@forge coverage
+	@echo "### Running tests & generating the coverage report..."
+	@forge coverage --report lcov
+	@genhtml lcov.info --branch-coverage --output-dir coverage
+	@forge snapshot
 
 # -----------------------------------------------------------------------------
 # Formatting
@@ -133,13 +138,9 @@ fmt-check: ## Check whether code formatted correctly
 # -----------------------------------------------------------------------------
 # Git
 
-.PHONY: pre-commit
-pre-commit: ## Git pre-commit hook
+pre-test: # format and export correct data
 	@echo "### Formatting..."
 	@forge fmt
-
-	@echo "### Running the scripts..."
-	@make testScripts
 
 	# Env variables to make sure the local tests runs
 	# equally long compared to the CI tests
@@ -149,22 +150,29 @@ pre-commit: ## Git pre-commit hook
 	# Env variables required for the tests
 	@export WALLET_DEPLOYER=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
 	@export WALLET_DEPLOYER_PK=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-	@export DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET=0x0000000000000000000000000000000000000001
-	@export DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000001
+	@export DEPLOYMENT_PROPOSAL_FACTORY_TARGET=0x0000000000000000000000000000000000000001
+	@export DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000001
 	@export ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 	@export PPBO_PRIVATE_KEY=0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
 	@export MMBO_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
 	@export FMBO_PRIVATE_KEY=0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6
 	@export ABO_PRIVATE_KEY=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
-	@export ORCHESTRATOR_OWNER_PRIVATE_KEY=0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
+	@export PROPOSAL_OWNER_PRIVATE_KEY=0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
 	@export FUNDER_1_PRIVATE_KEY=0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e
-	@export DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET=0x0000000000000000000000000000000000000001
-	@export DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000002
+	@export DEPLOYMENT_PROPOSAL_FACTORY_TARGET=0x0000000000000000000000000000000000000001
+	@export DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000002
 
-	@echo "### Running tests & generating the coverage report..."
-	@forge coverage --report lcov
-	@genhtml lcov.info --branch-coverage --output-dir coverage
-	@forge snapshot
+.PHONY: pre-commit
+pre-commit: ## Git pre-commit hook
+
+	@echo "### Configure tests"
+	@make pre-test
+	
+	@echo "### Running the scripts..."
+	@make testScripts
+
+	@echo "### Start running tests"
+	@forge test
 
 # -----------------------------------------------------------------------------
 # Help Command

@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -117,6 +119,16 @@ contract MetadataManagerTest is ModuleTest {
         // TEAM_METADATA
         metadataManager.setTeamMetadata(TEAM_METADATA);
         assertMetadataManagerTeamMetadataEqualTo(TEAM_METADATA);
+    }
+
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IMetadataManager).interfaceId
+            == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface, metadataManager.supportsInterface(interfaceId)
+        );
     }
 
     function testReinitFails() public override(ModuleTest) {

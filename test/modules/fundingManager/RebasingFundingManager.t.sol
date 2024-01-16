@@ -6,8 +6,12 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {IRebasingERC20} from
+    "src/modules/fundingManager/token/IRebasingERC20.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -59,6 +63,17 @@ contract RebasingFundingManagerTest is ModuleTest {
         //Init Module
         fundingManager.init(
             _orchestrator, _METADATA, abi.encode(address(_token))
+        );
+    }
+
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IFundingManager).interfaceId
+            == interfaceId || type(IRebasingERC20).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface, fundingManager.supportsInterface(interfaceId)
         );
     }
 

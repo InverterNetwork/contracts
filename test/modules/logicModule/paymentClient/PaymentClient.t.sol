@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
@@ -12,6 +14,7 @@ import {
     ERC20PaymentClientAccessMock,
     IERC20PaymentClient
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientAccessMock.sol";
+import {Module, IModule} from "src/modules/base/Module.sol";
 
 import {OrchestratorMock} from
     "test/utils/mocks/orchestrator/OrchestratorMock.sol";
@@ -48,6 +51,16 @@ contract ERC20PaymentClientTest is ModuleTest {
     function testInit() public override {}
 
     function testReinitFails() public override {}
+
+    function testSupportsInterface(bytes4 interfaceId) public {
+        bool shouldBeInterface = type(IERC20PaymentClient).interfaceId
+            == interfaceId || type(IModule).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
+
+        assertEq(
+            shouldBeInterface, paymentClient.supportsInterface(interfaceId)
+        );
+    }
 
     //----------------------------------
     // Test: addPaymentOrder()
