@@ -67,7 +67,7 @@ interface IERC20PaymentClient {
 
     /// @notice Notifies the PaymentClient, that tokens have been paid out accordingly
     /// @dev Payment Client will reduce the total amount of tokens it will stock up by the given amount
-    /// @dev This has to be called by a paymentProcessor
+    /// This has to be called by a paymentProcessor
     /// @param amount amount of tokens that have been paid out
     function amountPaid(uint amount) external;
 }
