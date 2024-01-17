@@ -12,6 +12,7 @@ import {
 } from "src/modules/authorizer/RoleAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 import {IERC165Upgradeable} from
     "@oz-up/utils/introspection/IERC165Upgradeable.sol";
@@ -107,7 +108,8 @@ contract RoleAuthorizerTest is Test {
             || type(IAccessControlUpgradeable).interfaceId == interfaceId
             || type(IAuthorizer).interfaceId == interfaceId
             || type(IModule).interfaceId == interfaceId
-            || type(IERC165Upgradeable).interfaceId == interfaceId;
+            || type(IERC165Upgradeable).interfaceId == interfaceId
+            || type(IERC165).interfaceId == interfaceId;
 
         assertEq(shouldBeInterface, _authorizer.supportsInterface(interfaceId));
     }
