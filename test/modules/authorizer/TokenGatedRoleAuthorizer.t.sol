@@ -20,7 +20,8 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {IERC165Upgradeable} from
+    "@oz-up/utils/introspection/IERC165Upgradeable.sol";
 
 import {
     IAccessControlEnumerableUpgradeable,
@@ -164,7 +165,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
             || type(IAccessControlUpgradeable).interfaceId == interfaceId
             || type(IAuthorizer).interfaceId == interfaceId
             || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
+            || type(IERC165Upgradeable).interfaceId == interfaceId;
 
         assertEq(shouldBeInterface, _authorizer.supportsInterface(interfaceId));
     }
