@@ -12,6 +12,9 @@ interface IModule {
         string title;
     }
 
+    /// TODO consider adding init event
+
+
     //--------------------------------------------------------------------------
     // Errors
 

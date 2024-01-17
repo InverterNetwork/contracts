@@ -39,6 +39,8 @@ interface IOrchestrator is IModuleManager {
     /// @notice PaymentProcessor updated to new address.
     event PaymentProcessorUpdated(address indexed _address);
 
+    /// TODO Add OrchetratorInitialized event
+
     //--------------------------------------------------------------------------
     // Functions
 

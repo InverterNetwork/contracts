@@ -21,6 +21,12 @@ interface IOrchestratorFactory {
     error OrchestratorFactory__OrchestratorOwnerIsInvalid();
 
     //--------------------------------------------------------------------------
+    // Events
+
+    /// TODO add all events
+
+
+    //--------------------------------------------------------------------------
     // Structs
 
     struct OrchestratorConfig {

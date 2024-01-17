@@ -518,6 +518,8 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             .length - 1];
 
         activeVestingWallets[client][paymentReceiver].pop();
+
+        //TODO check if event is missing?
     }
 
     /// @notice used to remove the vesting info of the payment order with id = walletId.

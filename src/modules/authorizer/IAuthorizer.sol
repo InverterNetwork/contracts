@@ -13,6 +13,8 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     /// @param newValue The new value of the self management flag.
     event setRoleSelfManagement(address who, bool newValue);
 
+    /// TODO add roleGranted, roleRevoked, roleAdminChanged, roleAdminBurned events
+
     //--------------------------------------------------------------------------
     // Errors
 
