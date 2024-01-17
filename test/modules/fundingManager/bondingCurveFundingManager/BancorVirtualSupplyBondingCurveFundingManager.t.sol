@@ -15,7 +15,10 @@ import {
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+import {IERC20Upgradeable} from "@oz-up/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20MetadataUpgradeable} from
+    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
@@ -25,6 +28,8 @@ import {IVirtualTokenSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualTokenSupply.sol";
 import {IVirtualCollateralSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualCollateralSupply.sol";
+import {IBondingCurveFundingManagerBase} from
+    "src/modules/fundingManager/bondingCurveFundingManager/IBondingCurveFundingManagerBase.sol";
 import {
     IRedeemingBondingCurveFundingManagerBase,
     IRedeemingBondingCurveFundingManagerBase
@@ -171,9 +176,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             || type(IVirtualTokenSupply).interfaceId == interfaceId
             || type(IVirtualCollateralSupply).interfaceId == interfaceId
             || type(IRedeemingBondingCurveFundingManagerBase).interfaceId
-                == interfaceId || type(IFundingManager).interfaceId == interfaceId
+                == interfaceId
+            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
             || type(IFundingManager).interfaceId == interfaceId
-            || type(IERC20).interfaceId == interfaceId
+            || type(IFundingManager).interfaceId == interfaceId
             || type(IModule).interfaceId == interfaceId
             || type(IERC165).interfaceId == interfaceId;
 
