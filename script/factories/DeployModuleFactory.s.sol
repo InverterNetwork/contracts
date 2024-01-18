@@ -17,6 +17,7 @@ contract DeployModuleFactory is Script {
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
+    address forwarder = vm.envAddress("FORWARDER_ADDRESS");
 
     ModuleFactory moduleFactory;
 
@@ -24,7 +25,7 @@ contract DeployModuleFactory is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the moduleFactory.
-            moduleFactory = new ModuleFactory();
+            moduleFactory = new ModuleFactory(forwarder);
         }
 
         vm.stopBroadcast();

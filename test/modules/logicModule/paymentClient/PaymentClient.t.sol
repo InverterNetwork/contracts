@@ -5,43 +5,61 @@ import "forge-std/Test.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-// SuT
+// External Libraries
+import {Clones} from "@oz/proxy/Clones.sol";
+
+//Internal Dependencies
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
+// Mocks
+import {OrchestratorAccessMock} from
+    "test/utils/mocks/orchestrator/OrchestratorAccessMock.sol";
 import {
     ERC20PaymentClientMock,
     IERC20PaymentClient
 } from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
-import {Module, IModule} from "src/modules/base/Module.sol";
-
-import {OrchestratorMock} from
-    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
 
 import {
     PaymentProcessorMock,
     IPaymentProcessor
 } from "test/utils/mocks/modules/PaymentProcessorMock.sol";
-
 import {
     IFundingManager,
     FundingManagerMock
 } from "test/utils/mocks/modules/FundingManagerMock.sol";
-// Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract ERC20PaymentClientTest is Test {
+contract ERC20PaymentClientTest is ModuleTest {
     // SuT
     ERC20PaymentClientMock paymentClient;
-    OrchestratorMock orchestrator;
+    OrchestratorAccessMock orchestrator;
     PaymentProcessorMock paymentProcessor;
     FundingManagerMock fundingManager;
 
-    // Mocks
-    ERC20Mock token;
-
     function setUp() public {
-        token = new ERC20Mock("Mock", "MOCK");
+        //Add Module to Mock Orchestrator
+        address impl = address(new ERC20PaymentClientMock());
+        paymentClient = ERC20PaymentClientMock(Clones.clone(impl));
 
-        paymentClient = new ERC20PaymentClientMock(token);
+        _setUpOrchestrator(paymentClient);
+
+        _authorizer.setIsAuthorized(address(this), true);
+
+        paymentClient.init(_orchestrator, _METADATA, bytes(""));
+
         paymentClient.setIsAuthorized(address(this), true);
+        paymentClient.setToken(_token);
+    }
+
+    //This function also tests all the getters
+    function testInit() public override(ModuleTest) {}
+
+    function testReinitFails() public override(ModuleTest) {
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        paymentClient.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testSupportsInterface(bytes4 interfaceId) public {
@@ -246,7 +264,7 @@ contract ERC20PaymentClientTest is Test {
 
         // Check that we received allowance to fetch tokens from ERC20PaymentClient.
         assertTrue(
-            token.allowance(address(paymentClient), address(this))
+            _token.allowance(address(paymentClient), address(this))
                 >= totalOutstandingAmount
         );
     }
@@ -296,14 +314,14 @@ contract ERC20PaymentClientTest is Test {
 
         //Set up initial allowance
         vm.prank(address(paymentClient));
-        token.approve(address(paymentProcessor), initialAllowance);
+        _token.approve(address(paymentProcessor), initialAllowance);
 
         paymentClient.originalEnsureTokenAllowance(
             paymentProcessor, postAllowance
         );
 
         uint currentAllowance =
-            token.allowance(address(paymentClient), address(paymentProcessor));
+            _token.allowance(address(paymentClient), address(paymentProcessor));
 
         if (initialAllowance > postAllowance) {
             assertEq(currentAllowance, initialAllowance);
@@ -345,13 +363,13 @@ contract ERC20PaymentClientTest is Test {
     function setupInternalFunctionTest() internal {
         paymentProcessor = new PaymentProcessorMock();
         fundingManager = new FundingManagerMock();
-        orchestrator = new OrchestratorMock();
+        orchestrator = new OrchestratorAccessMock();
         orchestrator.setPaymentProcessor(paymentProcessor);
         orchestrator.setFundingManager(fundingManager);
         paymentClient.setOrchestrator(orchestrator);
 
-        fundingManager.setToken(token);
-        orchestrator.setToken(token);
+        fundingManager.setToken(_token);
+        orchestrator.setToken(_token);
     }
 
     //--------------------------------------------------------------------------

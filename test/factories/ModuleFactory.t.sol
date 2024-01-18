@@ -47,7 +47,7 @@ contract ModuleFactoryTest is Test {
         module = new ModuleMock();
         beacon = new BeaconMock();
 
-        factory = new ModuleFactory();
+        factory = new ModuleFactory(address(0));
     }
 
     function testDeploymentInvariants() public {
@@ -61,6 +61,7 @@ contract ModuleFactoryTest is Test {
 
     function testRegisterMetadataOnlyCallableByOwner(address caller) public {
         vm.assume(caller != address(this));
+        vm.assume(caller != address(0));
         vm.prank(caller);
 
         vm.expectRevert(

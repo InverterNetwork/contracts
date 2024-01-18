@@ -42,6 +42,8 @@ contract DeploymentScript is Script {
 
     DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
 
+    address forwarder = vm.envAddress("FORWARDER_ADDRESS");
+
     // ------------------------------------------------------------------------
     // Deployed Contracts
 
@@ -93,8 +95,9 @@ contract DeploymentScript is Script {
         authorizer = deployRoleAuthorizer.run();
 
         moduleFactory = deployModuleFactory.run();
-        orchestratorFactory =
-            deployOrchestratorFactory.run(orchestrator, moduleFactory);
+        orchestratorFactory = deployOrchestratorFactory.run(
+            orchestrator, moduleFactory, forwarder
+        );
 
         bountyManager = deployBountyManager.run();
 

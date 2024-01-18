@@ -78,19 +78,23 @@ testScripts: ## Run e2e test suite
 
 	@forge script script/factories/DeployModuleFactory.s.sol
 	@forge script script/factories/DeployOrchestratorFactory.s.sol
+	@forge script script/factories/DeployOrchestratorFactory.s.sol
 
 	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol
 	@forge script script/modules/DeploySingleVoteGovernor.s.sol
-	
+
 	@forge script script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol
 	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
 
 	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
+	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
 
+	@forge script script/orchestrator/DeployOrchestrator.s.sol
 	@forge script script/orchestrator/DeployOrchestrator.s.sol
 
 	@forge script script/proxies/DeployBeacon.s.sol
 
+	@forge script script/setup/SetupToyOrchestratorScript.s.sol
 	@forge script script/setup/SetupToyOrchestratorScript.s.sol
 
 # -----------------------------------------------------------------------------
@@ -161,6 +165,7 @@ pre-test: # format and export correct data
 	@export FUNDER_1_PRIVATE_KEY=0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e
 	@export DEPLOYMENT_PROPOSAL_FACTORY_TARGET=0x0000000000000000000000000000000000000001
 	@export DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000002
+	@export FORWARDER_ADDRESS=0x0000000000000000000000000000000000000003
 
 .PHONY: pre-commit
 pre-commit: ## Git pre-commit hook

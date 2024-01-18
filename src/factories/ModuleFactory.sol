@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.20;
 
-// External Dependencies
-import {Context} from "@oz/utils/Context.sol";
+//External Dependencies
+import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
-import {Ownable} from "@oz/access/Ownable.sol";
+import {Context, Ownable} from "@oz/access/Ownable.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
@@ -34,7 +34,12 @@ import {
  *
  * @author Inverter Network
  */
-contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
+contract ModuleFactory is
+    IModuleFactory,
+    ERC2771Context,
+    Ownable2Step,
+    ERC165
+{
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -77,7 +82,10 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor() Ownable(_msgSender()) {
+    constructor(address _trustedForwarder)
+        ERC2771Context(_trustedForwarder)
+        Ownable(_msgSender())
+    {
         // NO-OP
     }
 
@@ -159,5 +167,40 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
         // Register Metadata for beacon.
         _beacons[id] = beacon;
         emit MetadataRegistered(metadata, beacon);
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
+        return super._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
+        return super._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (uint)
+    {
+        return 20;
     }
 }

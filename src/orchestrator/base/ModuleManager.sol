@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.20;
 
-// External Dependencies
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+//External Dependencies
+import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
@@ -28,7 +28,7 @@ import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 abstract contract ModuleManager is
     IModuleManager,
     Initializable,
-    ContextUpgradeable,
+    ERC2771Context,
     ERC165
 {
     function supportsInterface(bytes4 interfaceId)
@@ -111,12 +111,12 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // Initializer
 
+    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {}
+
     function __ModuleManager_init(address[] calldata modules)
         internal
         onlyInitializing
     {
-        __Context_init();
-
         address module;
         uint len = modules.length;
 
@@ -270,5 +270,19 @@ abstract contract ModuleManager is
         if (isModule(module)) {
             revert Orchestrator__ModuleManager__IsModule();
         }
+    }
+
+    // IERC2771Context
+    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator
+    // we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
+
+    function isTrustedForwarder(address forwarder)
+        public
+        view
+        virtual
+        override(IModuleManager, ERC2771Context)
+        returns (bool)
+    {
+        return super.isTrustedForwarder(forwarder);
     }
 }

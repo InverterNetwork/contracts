@@ -21,10 +21,6 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
 
     mapping(address => bool) authorized;
 
-    constructor(ERC20Mock token_) {
-        token = token_;
-    }
-
     //--------------------------------------------------------------------------
     // Mock Functions
 
@@ -34,6 +30,10 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
 
     function setOrchestrator(IOrchestrator orchestrator) external {
         __Module_orchestrator = orchestrator;
+    }
+
+    function setToken(ERC20Mock token_) external {
+        token = token_;
     }
 
     //--------------------------------------------------------------------------
