@@ -22,7 +22,7 @@ import {
 } from "src/modules/logicModule/BountyManager.sol";
 
 // External Dependencies
-import {MinimalForwarder} from "@oz/metatx/MinimalForwarder.sol";
+import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
 
 contract MetaTxE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -81,7 +81,7 @@ contract MetaTxE2E is E2ETest {
         );
     }
 
-    function test_e2e_MetadataManager() public {
+    function test_e2e_SendMetaTransaction() public {
         //--------------------------------------------------------------------------------
         // Orchestrator Initialization
         //--------------------------------------------------------------------------------
@@ -120,32 +120,29 @@ contract MetaTxE2E is E2ETest {
         vm.prank(signer);
         token.approve(fundingManager, depositAmount);
 
-        //Then we need to create the ForwardRequest
-        MinimalForwarder.ForwardRequest memory req = MinimalForwarder
-            .ForwardRequest({
+        //Because the creation of the signature and the ForwardRequestData is kind of messy I created a Helper that handles that
+        ForwarderSignatureHelper signatureHelper =
+            new ForwarderSignatureHelper(address(forwarder));
+
+        //We create a simplyfied ForwardRequest without the signature
+        ForwarderSignatureHelper.HelperForwardRequest memory req =
+        ForwarderSignatureHelper.HelperForwardRequest({
             from: signer,
             to: fundingManager,
             value: 0,
             //This should be approximately be the gas value of the called function in this case the deposit function
             gas: 1_000_000,
-            nonce: 0,
+            //This is the timestamp after which the request is not executable anymore.
+            deadline: uint48(block.timestamp + 1 weeks),
             data: abi.encodeWithSignature("deposit(uint256)", depositAmount)
         });
 
-        //Because the creation of the signature is kind of messy I created a Helper that handles that
-        ForwarderSignatureHelper signatureHelper =
-            new ForwarderSignatureHelper(address(forwarder));
-
-        bytes32 digest = signatureHelper.getDigest(req);
-
-        //Create signature
-
-        vm.prank(signer);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, digest);
-        bytes memory signature = abi.encodePacked(r, s, v);
+        //We use the helper to create the sinature
+        ERC2771Forwarder.ForwardRequestData memory finalReq =
+            signatureHelper.getForwardRequestData(req, signer, signerPrivateKey);
 
         //Do call
-        forwarder.execute(req, signature);
+        forwarder.execute(finalReq);
 
         //Check if successful
         assertEq(
@@ -180,13 +177,13 @@ contract MetaTxE2E is E2ETest {
         );
 
         //Then we need to create the ForwardRequest
-        req = MinimalForwarder.ForwardRequest({
+        req = ForwarderSignatureHelper.HelperForwardRequest({
             from: signer,
             to: address(bountyManager),
             value: 0,
             //This should be approximately be the gas value of the called function in this case the addBounty function
             gas: 1_000_000,
-            nonce: 1, //!!! Nonce has to be 1, because nonce 0 was used for the previous request
+            deadline: uint48(block.timestamp + 1 weeks),
             data: abi.encodeWithSignature(
                 "addBounty(uint256,uint256,bytes)",
                 100e18, //minimumPayoutAmount
@@ -195,16 +192,12 @@ contract MetaTxE2E is E2ETest {
             )
         });
 
-        //Use the signatureHelper to get the digest needed for the encoding
-        digest = signatureHelper.getDigest(req);
-
-        //Create signature
-        vm.prank(signer);
-        (v, r, s) = vm.sign(signerPrivateKey, digest);
-        signature = abi.encodePacked(r, s, v);
+        //We use the helper to create the sinature
+        finalReq =
+            signatureHelper.getForwardRequestData(req, signer, signerPrivateKey);
 
         //Do call
-        forwarder.execute(req, signature);
+        forwarder.execute(finalReq);
 
         //Check if successful
         assertTrue(bountyManager.isExistingBountyId(1));

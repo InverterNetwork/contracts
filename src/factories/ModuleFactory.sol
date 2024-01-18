@@ -3,8 +3,8 @@ pragma solidity 0.8.20;
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
-import {Context, Ownable2Step} from "@oz/access/Ownable2Step.sol";
-import {Ownable} from "@oz/access/Ownable.sol";
+import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
+import {Context, Ownable} from "@oz/access/Ownable.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
@@ -192,5 +192,15 @@ contract ModuleFactory is
         returns (bytes calldata)
     {
         return super._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (uint)
+    {
+        return 20;
     }
 }

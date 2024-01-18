@@ -26,7 +26,7 @@ import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 
 // External Dependencies
-import {MinimalForwarder} from "@oz/metatx/MinimalForwarder.sol";
+import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
 
 /**
  * @dev Base class for module implementation test contracts.
@@ -41,7 +41,7 @@ abstract contract ModuleTest is Test {
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
 
     //Deploy a forwarder used to enable metatransactions
-    MinimalForwarder _forwarder = new MinimalForwarder();
+    ERC2771Forwarder _forwarder = new ERC2771Forwarder("ERC2771Forwarder");
 
     // Orchestrator Constants
     uint constant _ORCHESTRATOR_ID = 1;

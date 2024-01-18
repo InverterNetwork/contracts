@@ -37,7 +37,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {TypeSanityHelper} from "test/orchestrator/helper/TypeSanityHelper.sol";
 
 // External Dependencies
-import {MinimalForwarder} from "@oz/metatx/MinimalForwarder.sol";
+import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
 
 contract OrchestratorTest is Test {
     // SuT
@@ -51,7 +51,7 @@ contract OrchestratorTest is Test {
     AuthorizerMock authorizer;
     PaymentProcessorMock paymentProcessor;
     ERC20Mock token;
-    MinimalForwarder forwarder;
+    ERC2771Forwarder forwarder;
 
     event AuthorizerUpdated(address indexed _address);
     event FundingManagerUpdated(address indexed _address);
@@ -61,7 +61,7 @@ contract OrchestratorTest is Test {
         fundingManager = new FundingManagerMock();
         authorizer = new AuthorizerMock();
         paymentProcessor = new PaymentProcessorMock();
-        forwarder = new MinimalForwarder();
+        forwarder = new ERC2771Forwarder("ERC2771Forwarder");
         token = new ERC20Mock("TestToken", "TST");
 
         address impl = address(new Orchestrator(address(forwarder)));

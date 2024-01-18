@@ -292,6 +292,15 @@ abstract contract Module is
     // @dev We imitate here the EIP2771 Standard to enable metatransactions
     // As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
 
+    function isTrustedForwarder(address forwarder)
+        public
+        view
+        virtual
+        returns (bool)
+    {
+        return __Module_orchestrator.isTrustedForwarder(forwarder);
+    }
+
     function _msgSender()
         internal
         view

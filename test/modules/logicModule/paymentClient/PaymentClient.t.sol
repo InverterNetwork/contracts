@@ -58,7 +58,7 @@ contract ERC20PaymentClientTest is ModuleTest {
     function testInit() public override(ModuleTest) {}
 
     function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         paymentClient.init(_orchestrator, _METADATA, bytes(""));
     }
 

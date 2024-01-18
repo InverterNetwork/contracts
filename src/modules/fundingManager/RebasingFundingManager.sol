@@ -26,7 +26,6 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 contract RebasingFundingManager is
     IFundingManager,
-    ContextUpgradeable,
     ElasticReceiptTokenUpgradeable,
     Module
 {
