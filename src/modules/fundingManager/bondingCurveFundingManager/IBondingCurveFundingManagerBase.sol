@@ -47,6 +47,10 @@ interface IBondingCurveFundingManagerBase {
         address buyer
     );
 
+    event TokenDecimalsUpdated(
+        uint8 indexed oldDecimals, uint8 indexed newDecimals
+    );
+
     //--------------------------------------------------------------------------
     // Functions
 

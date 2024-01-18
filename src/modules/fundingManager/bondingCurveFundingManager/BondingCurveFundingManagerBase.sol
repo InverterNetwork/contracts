@@ -250,8 +250,9 @@ abstract contract BondingCurveFundingManagerBase is
     /// the implementation contract if input validation is needed.
     /// @param _decimals The number of decimals to set for the token.
     function _setTokenDecimals(uint8 _decimals) internal virtual {
+        uint8 oldDecimals = tokenDecimals;
         tokenDecimals = _decimals;
-        //TODO add event??
+        emit TokenDecimalsUpdated(oldDecimals, tokenDecimals);
     }
 
     //--------------------------------------------------------------------------

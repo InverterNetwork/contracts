@@ -15,6 +15,9 @@ interface IAuthorizer is IAccessControlEnumerableUpgradeable {
 
     /// TODO add roleGranted, roleRevoked, roleAdminChanged, roleAdminBurned events
 
+    event RoleGranted(
+        bytes32 indexed role, address indexed account, address indexed sender
+    );
     //--------------------------------------------------------------------------
     // Errors
 
