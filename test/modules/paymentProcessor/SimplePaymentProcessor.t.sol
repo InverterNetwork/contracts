@@ -18,7 +18,7 @@ import {
 import {
     IERC20PaymentClient,
     ERC20PaymentClientMock
-} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -126,6 +126,8 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+
+        assertEq(amount, paymentClient.amountPaidCounter());
     }
 
     function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)

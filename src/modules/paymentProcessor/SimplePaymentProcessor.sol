@@ -110,6 +110,8 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
                 orders[i].dueTo
             );
         }
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        client.amountPaid(totalAmount);
     }
 
     function cancelRunningPayments(IERC20PaymentClient client)

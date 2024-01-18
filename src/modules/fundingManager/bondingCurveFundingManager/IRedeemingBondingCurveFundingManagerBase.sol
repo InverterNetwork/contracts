@@ -24,6 +24,9 @@ interface IRedeemingBondingCurveFundingManagerBase {
     error RedeemingBondingCurveFundingManager__InsufficientCollateralForRedemption(
     );
 
+    /// @notice Actual redeem amount is lower than the minimum acceptable amount
+    error RedeemingBondingCurveFundingManager__InsufficientOutputAmount();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -51,12 +54,15 @@ interface IRedeemingBondingCurveFundingManagerBase {
     /// @dev Redirects to the internal function `_sellOrder` by passing the receiver address and deposit amount.
     /// @param _receiver The address that will receive the redeemed tokens.
     /// @param _depositAmount The amount of issued token to deposited.
-    function sellFor(address _receiver, uint _depositAmount) external;
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
+        external;
 
     /// @notice Sell collateral for the sender's address.
     /// @dev Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
     /// @param _depositAmount The amount of issued token deposited.
-    function sell(uint _depositAmount) external;
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function sell(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the selling functionality for the collateral.
     /// @dev Only callable by the Orchestrator owner, or Manager.
@@ -73,4 +79,8 @@ interface IRedeemingBondingCurveFundingManagerBase {
     ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setSellFee(uint _fee) external;
+
+    /// @notice Calculates and returns the static price for selling the issuance token.
+    /// @return uint The static price for selling the issuance token.
+    function getStaticPriceForSelling() external returns (uint);
 }

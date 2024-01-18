@@ -16,6 +16,10 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
+import {IERC20Upgradeable} from "@oz-up/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20MetadataUpgradeable} from
+    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
@@ -24,6 +28,8 @@ import {IVirtualTokenSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualTokenSupply.sol";
 import {IVirtualCollateralSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualCollateralSupply.sol";
+import {IBondingCurveFundingManagerBase} from
+    "src/modules/fundingManager/bondingCurveFundingManager/IBondingCurveFundingManagerBase.sol";
 import {
     IRedeemingBondingCurveFundingManagerBase,
     IRedeemingBondingCurveFundingManagerBase
@@ -166,7 +172,15 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         bool shouldBeInterface = type(IFundingManager).interfaceId
             == interfaceId
             || type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
-                == interfaceId || type(IModule).interfaceId == interfaceId
+                == interfaceId
+            || type(IVirtualTokenSupply).interfaceId == interfaceId
+            || type(IVirtualCollateralSupply).interfaceId == interfaceId
+            || type(IRedeemingBondingCurveFundingManagerBase).interfaceId
+                == interfaceId
+            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
+            || type(IFundingManager).interfaceId == interfaceId
+            || type(IFundingManager).interfaceId == interfaceId
+            || type(IModule).interfaceId == interfaceId
             || type(IERC165).interfaceId == interfaceId;
 
         assertEq(
@@ -198,6 +212,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             //DECIMALS,
             18,
             "Decimals has not been set correctly"
+        );
+        assertEq(
+            bondingCurveFundingManager.call_collateralTokenDecimals(),
+            _token.decimals(),
+            "Collateral token decimals has not been set correctly"
         );
         assertEq(
             address(bondingCurveFundingManager.formula()),
@@ -307,7 +326,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             vm.expectRevert(
                 // This results in an overflow of the bonding curve math
             );
-            bondingCurveFundingManager.buy(amount);
+            bondingCurveFundingManager.buy(amount, amount);
         }
         vm.stopPrank();
     }
@@ -333,7 +352,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             vm.expectRevert(
                 // This results in an overflow of the bonding curve math
             );
-            bondingCurveFundingManager.buy(amount);
+            bondingCurveFundingManager.buy(amount, amount);
         }
         vm.stopPrank();
     }
@@ -385,7 +404,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         emit VirtualCollateralAmountAdded(
             amount, (INITIAL_COLLATERAL_SUPPLY + amount)
         );
-        bondingCurveFundingManager.buy(amount);
+        bondingCurveFundingManager.buy(amount, formulaReturn);
 
         // Post-checks
         assertEq(
@@ -450,9 +469,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             true, true, true, true, address(bondingCurveFundingManager)
         );
         emit VirtualCollateralAmountAdded(
-            amount, (INITIAL_TOKEN_SUPPLY + amount)
+            buyAmountMinusFee, (INITIAL_TOKEN_SUPPLY + buyAmountMinusFee)
         );
-        bondingCurveFundingManager.buy(amount);
+        bondingCurveFundingManager.buy(amount, formulaReturn);
 
         // Post-checks
         assertEq(
@@ -498,7 +517,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buyFor(to, amount);
+        bondingCurveFundingManager.buyFor(to, amount, formulaReturn);
 
         // Post-checks
         assertEq(
@@ -573,7 +592,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectRevert(); //The formula reverts
-            bondingCurveFundingManager.sell(userSellAmount);
+            bondingCurveFundingManager.sell(userSellAmount, userSellAmount);
         }
         vm.stopPrank();
     }
@@ -593,7 +612,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectRevert(); //The formula reverts
-            bondingCurveFundingManager.sell(amount);
+            bondingCurveFundingManager.sell(amount, amount);
         }
         vm.stopPrank();
     }
@@ -662,7 +681,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             emit VirtualCollateralAmountSubtracted(
                 formulaReturn, newVirtualCollateral - formulaReturn
             );
-            bondingCurveFundingManager.sell(userSellAmount);
+            bondingCurveFundingManager.sell(userSellAmount, formulaReturn);
         }
         vm.stopPrank();
 
@@ -760,7 +779,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             emit VirtualCollateralAmountSubtracted(
                 sellAmountMinusFee, newVirtualCollateral - sellAmountMinusFee
             );
-            bondingCurveFundingManager.sell(userSellAmount);
+            bondingCurveFundingManager.sell(userSellAmount, sellAmountMinusFee);
         }
         vm.stopPrank();
 
@@ -834,7 +853,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Perform the sell
         vm.startPrank(seller);
         {
-            bondingCurveFundingManager.sellFor(to, userSellAmount);
+            bondingCurveFundingManager.sellFor(
+                to, userSellAmount, formulaReturn
+            );
         }
         vm.stopPrank();
 
@@ -892,6 +913,202 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             bondingCurveFundingManager.getReserveRatioForSelling(),
             bondingCurveFundingManager.call_reserveRatioForSelling()
         );
+    }
+
+    /* Test getStaticPriceForBuying() */
+
+    function testgetStaticPriceForBuying() public {
+        uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForBuying()
+        );
+        assertEq(
+            bondingCurveFundingManager.getStaticPriceForBuying(), returnValue
+        );
+    }
+    /* Test getStaticPriceForSelling() */
+
+    function testgetStaticPriceForSelling() public {
+        uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForBuying()
+        );
+        assertEq(
+            bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
+        );
+    }
+
+    /* Test calculatePurchaseReturn function
+        ├── When deposit amount is 0
+        │       └── it should revert 
+        └── When deposit amount is not 0
+                ├── when the fee is 0
+                │       └── it should succeed 
+                └── when the fee is not 0
+                        └── it should succeed 
+    */
+
+    function testCalculatePurchaseReturn_FailsIfDepositAmountZero() public {
+        uint depositAmount = 0;
+
+        vm.expectRevert(
+            IBancorVirtualSupplyBondingCurveFundingManager
+                .BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount
+                .selector
+        );
+        bondingCurveFundingManager.calculatePurchaseReturn(depositAmount);
+    }
+
+    function testCalculatePurchaseReturnWithZeroFee(uint _depositAmount)
+        public
+    {
+        // Above an amount of 1e38 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e38);
+
+        // Use formula to get expected return values
+        uint formulaReturn = bondingCurveFundingManager.formula()
+            .calculatePurchaseReturn(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForBuying(),
+            _depositAmount
+        );
+        uint functionReturn =
+            bondingCurveFundingManager.calculatePurchaseReturn(_depositAmount);
+        assertEq(functionReturn, formulaReturn);
+    }
+
+    function testCalculatePurchaseReturnWithFee(uint _depositAmount, uint _fee)
+        public
+    {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+
+        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
+            // Above an amount of 1e38 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e38);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(_fee);
+
+        // We calculate how much the real deposit amount will be after fees
+        uint feeAmount =
+            (_depositAmount * _fee) / bondingCurveFundingManager.call_BPS();
+        uint buyAmountMinusFee = _depositAmount - feeAmount;
+
+        // Use formula to get expected return values
+        uint formulaReturn = bondingCurveFundingManager.formula()
+            .calculatePurchaseReturn(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForBuying(),
+            buyAmountMinusFee
+        );
+        uint functionReturn =
+            bondingCurveFundingManager.calculatePurchaseReturn(_depositAmount);
+        assertEq(functionReturn, formulaReturn);
+    }
+
+    /* Test calculateSaleReturn function
+        ├── When deposit amount is 0
+        │       └── it should revert 
+        └── When deposit amount is not 0
+                ├── when the fee is 0
+                │       └── it should succeed 
+                └── when the fee is not 0
+                        └── it should succeed 
+    */
+
+    function testCalculateSaleReturn_FailsIfDepositAmountZero() public {
+        uint depositAmount = 0;
+
+        vm.expectRevert(
+            IBancorVirtualSupplyBondingCurveFundingManager
+                .BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount
+                .selector
+        );
+        bondingCurveFundingManager.calculateSaleReturn(depositAmount);
+    }
+
+    function testCalculateSaleReturnWithZeroFee(uint _depositAmount) public {
+        // Above an amount of 1e26 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e26);
+
+        // Set virtual supply to some number above collateral supply
+        // Set virtual collateral to some number
+        uint newVirtualTokenSupply = _depositAmount * 4;
+        uint newVirtualCollateral = _depositAmount * 2;
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setVirtualTokenSupply(
+                newVirtualTokenSupply
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                newVirtualCollateral
+            );
+        }
+        vm.stopPrank();
+
+        // Use formula to get expected return values
+        uint formulaReturn = bondingCurveFundingManager.formula()
+            .calculateSaleReturn(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForBuying(),
+            _depositAmount
+        );
+        uint functionReturn =
+            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
+        assertEq(functionReturn, formulaReturn);
+    }
+
+    function testCalculateSaleReturnWithFee(uint _depositAmount, uint _fee)
+        public
+    {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+
+        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
+            // Above an amount of 1e26 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e26);
+
+        // Set sell Fee
+        // Set virtual supply to some number above collateral supply
+        // Set virtual collateral to some number
+        uint newVirtualTokenSupply = _depositAmount * 4;
+        uint newVirtualCollateral = _depositAmount * 2;
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setSellFee(_fee);
+            bondingCurveFundingManager.setVirtualTokenSupply(
+                newVirtualTokenSupply
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                newVirtualCollateral
+            );
+        }
+        vm.stopPrank();
+
+        // Use formula to get expected return values
+        uint formulaReturn = bondingCurveFundingManager.formula()
+            .calculateSaleReturn(
+            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_reserveRatioForSelling(),
+            _depositAmount
+        );
+
+        // We calculate how much if the initial deposit we should get back based on the fee
+        uint feeAmount =
+            (formulaReturn * _fee) / bondingCurveFundingManager.call_BPS();
+        uint sellAmountMinusFee = formulaReturn - feeAmount;
+
+        uint functionReturn =
+            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
+
+        assertEq(functionReturn, sellAmountMinusFee);
     }
 
     //--------------------------------------------------------------------------
@@ -1139,6 +1356,137 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
     }
 
+    /* Test _staticPricePPM function
+        ├── When calling with reserve ratio for selling without fuzzing
+        |   └── it should update return value after selling
+        ├── When calling with reserve ratio for selling with fuzzing
+        |   └── it should update return value after selling
+        ├── When calling with reserve ratio for buying without fuzzing
+        |   └── it should update return value after buying
+        └── When calling with reserve ratio for buying with fuzzing
+            └── it should update return value after buying
+    */
+    function testStaticPriceWithSellReserveRatioNonFuzzing() public {
+        uint amount = 10;
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, amount * 10); // Multiply amount to ensure that user has enough tokens, because return amount when buying less than amount
+        // Set virtual supply to some number above _sellAmount
+        // Set virtual collateral to some number
+        uint newVirtualTokenSupply = amount * 2;
+        uint newVirtualCollateral = amount * 2;
+
+        // Set virtual supplies
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setVirtualTokenSupply(
+                newVirtualTokenSupply
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                newVirtualCollateral
+            );
+        }
+        vm.stopPrank();
+
+        // Calculate min amount out for selling
+        uint minAmountOut =
+            bondingCurveFundingManager.calculateSaleReturn(amount);
+
+        // Get virtual supplies before selling
+        uint _virtualTokenSupplyBeforeSell =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupplyBeforeSell =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        uint32 _reserveRatioSelling =
+            bondingCurveFundingManager.call_reserveRatioForSelling();
+
+        // Calculate static price before selling
+        uint staticPriceBeforeSell = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupplyBeforeSell,
+            _virtualCollateralSupplyBeforeSell,
+            _reserveRatioSelling
+        );
+
+        // Sell tokens
+        vm.prank(seller);
+        bondingCurveFundingManager.sell(amount, minAmountOut);
+
+        // Get virtual supplies after selling
+        uint _virtualTokenSupplyAfterSell =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupplyAfterSell =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+
+        // Calculate static price after selling
+        uint staticPriceAfterSell = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupplyAfterSell,
+            _virtualCollateralSupplyAfterSell,
+            _reserveRatioSelling
+        );
+
+        // Assert that supply has changed
+        assertLt(_virtualTokenSupplyAfterSell, _virtualTokenSupplyBeforeSell);
+        assertLt(
+            _virtualCollateralSupplyAfterSell,
+            _virtualCollateralSupplyBeforeSell
+        );
+
+        // Static price has decreased after sell
+        assertLt(staticPriceAfterSell, staticPriceBeforeSell);
+    }
+
+    function testStaticPriceWithBuyReserveRatioNonFuzzing() public {
+        uint amount = 1;
+        uint minAmountOut =
+            bondingCurveFundingManager.calculatePurchaseReturn(amount);
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Get virtual supplies before buying
+        uint _virtualTokenSupplyBeforeBuy =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupplyBeforeBuy =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        uint32 _reserveRatioBuying =
+            bondingCurveFundingManager.call_reserveRatioForBuying();
+        // Calculate static price before buy
+        uint staticPriceBeforeBuy = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupplyBeforeBuy,
+            _virtualCollateralSupplyBeforeBuy,
+            _reserveRatioBuying
+        );
+        // Buy tokens
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, minAmountOut);
+
+        // Get virtual supply after buy
+        uint _virtualTokenSupplyAfterBuy =
+            bondingCurveFundingManager.getVirtualTokenSupply();
+        uint _virtualCollateralSupplyAfterBuy =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        // Calculate static price after buy
+        uint staticPriceAfterBuy = bondingCurveFundingManager
+            .call_staticPricePPM(
+            _virtualTokenSupplyAfterBuy,
+            _virtualCollateralSupplyAfterBuy,
+            _reserveRatioBuying
+        );
+        // Collateral has been added to the supply
+        assertGt(
+            _virtualCollateralSupplyAfterBuy, _virtualCollateralSupplyBeforeBuy
+        );
+        // Static price has increased after buy
+        assertGt(staticPriceAfterBuy, staticPriceBeforeBuy);
+        // Price has risen less than 1 * PPM
+        assertApproxEqAbs(
+            staticPriceAfterBuy,
+            staticPriceBeforeBuy,
+            1 * bondingCurveFundingManager.call_PPM()
+        );
+    }
+
     /* Test _convertAmountToRequiredDecimal function
         ├── when the token decimals and the required decimals are the same
         │       └── it should return the amount without change
@@ -1146,8 +1494,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         │       └── it should cut the excess decimals from the amount and return it
         └── when caller is the Orchestrator owner
                 └── it should pad the amount by the missing decimals and return it
-
         */
+
     function testConvertAmountToRequiredDecimals_whenEqual(
         uint _amount,
         uint8 _decimals
@@ -1255,11 +1603,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many toknes as they deposit
     function _prepareSellConditions(address seller, uint amount) internal {
         _token.mint(seller, amount);
-
+        uint minAmountOut =
+            bondingCurveFundingManager.calculatePurchaseReturn(amount);
         vm.startPrank(seller);
         {
             _token.approve(address(bondingCurveFundingManager), amount);
-            bondingCurveFundingManager.buy(amount);
+            bondingCurveFundingManager.buy(amount, minAmountOut);
             uint userSellAmount = bondingCurveFundingManager.balanceOf(seller);
 
             bondingCurveFundingManager.approve(
