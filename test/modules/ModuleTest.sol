@@ -10,7 +10,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {OrchestratorMock} from
+    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
 
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
@@ -27,7 +28,7 @@ import {PaymentProcessorMock} from
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
-    Orchestrator _orchestrator;
+    OrchestratorMock _orchestrator;
 
     // Mocks
     FundingManagerMock _fundingManager = new FundingManagerMock();
@@ -54,8 +55,8 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        address impl = address(new Orchestrator());
-        _orchestrator = Orchestrator(Clones.clone(impl));
+        address impl = address(new OrchestratorMock());
+        _orchestrator = OrchestratorMock(Clones.clone(impl));
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,

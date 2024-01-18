@@ -64,4 +64,10 @@ interface IERC20PaymentClient {
     function collectPaymentOrders()
         external
         returns (PaymentOrder[] memory, uint);
+
+    /// @notice Notifies the PaymentClient, that tokens have been paid out accordingly
+    /// @dev Payment Client will reduce the total amount of tokens it will stock up by the given amount
+    /// This has to be called by a paymentProcessor
+    /// @param amount amount of tokens that have been paid out
+    function amountPaid(uint amount) external;
 }
