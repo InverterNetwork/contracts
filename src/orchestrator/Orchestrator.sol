@@ -111,7 +111,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         __ModuleManager_addModule(address(authorizer_));
         __ModuleManager_addModule(address(paymentProcessor_));
 
-        emit OrchstratorInitialized(
+        emit OrchestratorInitialized(
             orchestratorId_,
             address(fundingManager_),
             address(authorizer_),

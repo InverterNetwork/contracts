@@ -23,11 +23,9 @@ interface IOrchestratorFactory {
     //--------------------------------------------------------------------------
     // Events
 
-    /// TODO add all events
-
     /// @notice Event emitted when a new orchestrator is created.
     /// @param orchestratorId The id of the orchestrator.
-    /// @param orchestrtorAddress The address of the orchestrator.
+    /// @param orchestratorAddress The address of the orchestrator.
     event OrchestratorCreated(
         uint indexed orchestratorId, address indexed orchestratorAddress
     );

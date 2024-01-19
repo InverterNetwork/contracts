@@ -33,7 +33,7 @@ interface IModuleFactory {
 
     /// @notice Event emitted when new module created for a orchestrator.
     event ModuleCreated(
-        address indexed orchestrator, address indexed module, string moduleTitle
+        address indexed orchestrator, address indexed module, bytes32 identifier
     );
 
     //--------------------------------------------------------------------------

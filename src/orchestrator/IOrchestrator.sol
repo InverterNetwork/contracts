@@ -45,7 +45,7 @@ interface IOrchestrator is IModuleManager {
     /// @param authorizer The address of the authorizer module.
     /// @param paymentProcessor The address of the payment processor module.
     /// @param modules The addresses of the other modules used in the orchestrator.
-    event OrchstratorInitialized(
+    event OrchestratorInitialized(
         uint indexed orchestratorId_,
         address fundingManager,
         address authorizer,
