@@ -3,8 +3,13 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+//Internal Dependencies
+import {
+    TransactionForwarder,
+    ERC2771Forwarder
+} from "src/external/forwarder/TransactionForwarder.sol";
+
 // External Dependencies
-import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
 import {Nonces} from "@oz/utils/Nonces.sol";
 
 contract ForwarderSignatureHelper is Nonces, Test {
@@ -20,7 +25,7 @@ contract ForwarderSignatureHelper is Nonces, Test {
     //Domain Seperator
     constructor(address _forwarder) {
         forwarder = _forwarder;
-        string memory name = "ERC2771Forwarder";
+        string memory name = "TransactionForwarder";
         string memory version = "1";
         bytes32 hashedName = keccak256(bytes(name));
         bytes32 hashedVersion = keccak256(bytes(version));

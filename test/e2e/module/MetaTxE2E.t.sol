@@ -20,9 +20,8 @@ import {
     BountyManager,
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
-
-// External Dependencies
-import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
+import {TransactionForwarder} from
+    "src/external/forwarder/TransactionForwarder.sol";
 
 contract MetaTxE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -138,7 +137,7 @@ contract MetaTxE2E is E2ETest {
         });
 
         //We use the helper to create the sinature
-        ERC2771Forwarder.ForwardRequestData memory finalReq =
+        TransactionForwarder.ForwardRequestData memory finalReq =
             signatureHelper.getForwardRequestData(req, signer, signerPrivateKey);
 
         //Do call

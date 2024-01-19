@@ -16,6 +16,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {TransactionForwarder} from
+    "src/external/forwarder/TransactionForwarder.sol";
 // Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 // Mocks
@@ -25,9 +27,6 @@ import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
-
-// External Dependencies
-import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
 
 contract RoleAuthorizerTest is Test {
     bool hasDependency;
@@ -39,7 +38,8 @@ contract RoleAuthorizerTest is Test {
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
-    ERC2771Forwarder _forwarder = new ERC2771Forwarder("ERC2771Forwarder");
+    TransactionForwarder _forwarder =
+        new TransactionForwarder("TransactionForwarder");
     address ALBA = address(0xa1ba); //default authorized person
     address BOB = address(0xb0b); // example person to add
 

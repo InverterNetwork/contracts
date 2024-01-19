@@ -7,6 +7,9 @@ import "forge-std/console.sol";
 // Internal Dependencies:
 import {E2EModuleRegistry} from "test/e2e/E2EModuleRegistry.sol";
 
+import {TransactionForwarder} from
+    "src/external/forwarder/TransactionForwarder.sol";
+
 // Factories
 import {ModuleFactory, IModuleFactory} from "src/factories/ModuleFactory.sol";
 import {
@@ -25,9 +28,6 @@ import {BancorFormula} from
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-// External Dependencies
-import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
-
 /**
  * @dev Base contract for e2e tests.
  */
@@ -42,7 +42,7 @@ contract E2ETest is E2EModuleRegistry {
     ERC20Mock token;
 
     // Forwarder
-    ERC2771Forwarder forwarder;
+    TransactionForwarder forwarder;
 
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
@@ -51,7 +51,7 @@ contract E2ETest is E2EModuleRegistry {
         token = new ERC20Mock("Mock", "MOCK");
 
         //Deploy a forwarder used to enable metatransactions
-        forwarder = new ERC2771Forwarder("ERC2771Forwarder");
+        forwarder = new TransactionForwarder("TransactionForwarder");
 
         // Deploy Orchestrator implementation.
         orchestratorImpl = new Orchestrator(address(forwarder));
