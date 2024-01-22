@@ -31,12 +31,15 @@ interface IOrchestrator is IModuleManager {
     // Events
 
     /// @notice Authorizer updated to new address.
+    /// @param _address The new address.
     event AuthorizerUpdated(address indexed _address);
 
     /// @notice FundingManager updated to new address.
+    /// @param _address The new address.
     event FundingManagerUpdated(address indexed _address);
 
     /// @notice PaymentProcessor updated to new address.
+    /// @param _address The new address.
     event PaymentProcessorUpdated(address indexed _address);
 
     /// @notice Orchestrator has been initialized with the corresponding modules

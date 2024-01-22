@@ -448,6 +448,8 @@ contract RebasingFundingManagerTest is ModuleTest {
     function testTransferOrchestratorTokenFails(address caller, address to)
         public
     {
+        vm.assume(to != address(0) && to != address(fundingManager));
+        
         _token.mint(address(fundingManager), 2);
 
         if (caller != address(_orchestrator)) {

@@ -79,6 +79,10 @@ interface IBountyManager is IERC20PaymentClient {
     // Events
 
     /// @notice Event emitted when a new Bounty is added.
+    /// @param bountyId The id of the newly added Bounty.
+    /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed
+    /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed
+    /// @param details The Bounty's details.
     event BountyAdded(
         uint indexed bountyId,
         uint minimumPayoutAmount,
@@ -87,12 +91,19 @@ interface IBountyManager is IERC20PaymentClient {
     );
 
     /// @notice Event emitted when a Bounty got updated.
+    /// @param bountyId The id of the updated Bounty.
+    /// @param details The Bounty's details.
     event BountyUpdated(uint indexed bountyId, bytes indexed details);
 
     /// @notice Event emitted when a Bounty gets locked.
+    /// @param bountyId The id of the locked Bounty.
     event BountyLocked(uint indexed bountyId);
 
     /// @notice Event emitted when a new Claim is added.
+    /// @param claimId The id of the newly added Claim.
+    /// @param bountyId The id of the Bounty that got claimed.
+    /// @param contributors The contributor information for the Claim.
+    /// @param details The Claim's details.
     event ClaimAdded(
         uint indexed claimId,
         uint indexed bountyId,
@@ -101,13 +112,19 @@ interface IBountyManager is IERC20PaymentClient {
     );
 
     /// @notice Event emitted when Claim Contributors got updated.
+    /// @param claimId The id of the Claim that got updated.
+    /// @param contributors The contributor information for the Claim.
     event ClaimContributorsUpdated(
         uint indexed claimId, Contributor[] indexed contributors
     );
+
     /// @notice Event emitted when Claim Details got updated.
+    /// @param claimId The id of the Claim that got updated.
+    /// @param details The Claim's details.
     event ClaimDetailsUpdated(uint indexed claimId, bytes details);
 
     /// @notice Event emitted when a Claim is verified.
+    /// @param claimId The id of the Claim that got verified.
     event ClaimVerified(uint indexed claimId);
 
     //--------------------------------------------------------------------------
