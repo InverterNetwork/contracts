@@ -53,6 +53,44 @@ contract RoleAuthorizerTest is Test {
     IModule.Metadata _METADATA =
         IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /**
+     * @dev Emitted when `newAdminRole` is set as ``role``'s admin role, replacing `previousAdminRole`
+     *
+     * `DEFAULT_ADMIN_ROLE` is the starting admin for all roles, despite
+     * {RoleAdminChanged} not being emitted signaling this.
+     *
+     * _Available since v3.1._
+     */
+    event RoleAdminChanged(
+        bytes32 indexed role,
+        bytes32 indexed previousAdminRole,
+        bytes32 indexed newAdminRole
+    );
+
+    /**
+     * @dev Emitted when `account` is granted `role`.
+     *
+     * `sender` is the account that originated the contract call, an admin role
+     * bearer except when using {AccessControl-_setupRole}.
+     */
+    event RoleGranted(
+        bytes32 indexed role, address indexed account, address indexed sender
+    );
+
+    /**
+     * @dev Emitted when `account` is revoked `role`.
+     *
+     * `sender` is the account that originated the contract call:
+     *   - if using `revokeRole`, it is the admin role bearer
+     *   - if using `renounceRole`, it is the role bearer (i.e. `account`)
+     */
+    event RoleRevoked(
+        bytes32 indexed role, address indexed account, address indexed sender
+    );
+
     function setUp() public virtual {
         address authImpl = address(new RoleAuthorizer());
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
@@ -236,6 +274,11 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(address(ALBA));
         for (uint i; i < newAuthorized.length; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit RoleGranted(
+                _authorizer.getOwnerRole(), newAuthorized[i], address(ALBA)
+            );
+
             _authorizer.grantRole(_authorizer.getOwnerRole(), newAuthorized[i]);
         }
         vm.stopPrank();
@@ -265,6 +308,12 @@ contract RoleAuthorizerTest is Test {
             _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
 
         vm.startPrank(address(ALBA));
+
+        vm.expectEmit(true, true, true, true);
+        emit RoleRevoked(
+            _authorizer.getOwnerRole(), address(ALBA), address(ALBA)
+        );
+
         _authorizer.revokeRole(_authorizer.getOwnerRole(), ALBA);
         vm.stopPrank();
 
@@ -307,6 +356,8 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(address(ALBA));
         for (uint i; i < newAuthorized.length; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit RoleGranted(managerRole, newAuthorized[i], address(ALBA));
             _authorizer.grantRole(managerRole, newAuthorized[i]);
         }
         vm.stopPrank();
@@ -376,6 +427,9 @@ contract RoleAuthorizerTest is Test {
 
         vm.startPrank(address(ALBA));
         for (uint i; i < newAuthorized.length; ++i) {
+            vm.expectEmit(true, true, true, true);
+            emit RoleRevoked(managerRole, newAuthorized[i], address(ALBA));
+
             _authorizer.revokeRole(managerRole, newAuthorized[i]);
         }
         vm.stopPrank();
@@ -425,23 +479,18 @@ contract RoleAuthorizerTest is Test {
 
     function testGrantRoleFromModule() public {
         address newModule = _setupMockSelfManagedModule();
+        bytes32 role0_module = _authorizer.generateRoleId(newModule, ROLE_0);
 
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
-            ),
-            false
-        );
+        assertEq(_authorizer.hasRole(role0_module, ALBA), false);
 
         vm.prank(newModule);
+
+        vm.expectEmit(true, true, true, true);
+        emit RoleGranted(role0_module, ALBA, newModule);
+
         _authorizer.grantRoleFromModule(ROLE_0, ALBA);
 
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
-            ),
-            true
-        );
+        assertEq(_authorizer.hasRole(role0_module, ALBA), true);
     }
 
     function testGrantRoleFromModuleFailsIfCalledByNonModule() public {
@@ -507,33 +556,24 @@ contract RoleAuthorizerTest is Test {
 
     function testRevokeRoleFromModule() public {
         address newModule = _setupMockSelfManagedModule();
+        bytes32 role0_module = _authorizer.generateRoleId(newModule, ROLE_0);
 
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, ROLE_0), BOB
-            ),
-            false
-        );
+        assertEq(_authorizer.hasRole(role0_module, BOB), false);
 
         vm.prank(newModule);
+
         _authorizer.grantRoleFromModule(ROLE_0, address(BOB));
 
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, ROLE_0), BOB
-            ),
-            true
-        );
+        assertEq(_authorizer.hasRole(role0_module, BOB), true);
 
         vm.prank(newModule);
+
+        vm.expectEmit(true, true, true, true);
+        emit RoleRevoked(role0_module, BOB, newModule);
+
         _authorizer.revokeRoleFromModule(ROLE_0, address(BOB));
 
-        assertEq(
-            _authorizer.hasRole(
-                _authorizer.generateRoleId(newModule, ROLE_0), BOB
-            ),
-            false
-        );
+        assertEq(_authorizer.hasRole(role0_module, BOB), false);
     }
 
     function testRevokeRoleFromModuleFailsIfCalledByNonModule() public {
@@ -599,6 +639,10 @@ contract RoleAuthorizerTest is Test {
         bytes32 globalRole =
             _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
         vm.prank(ALBA);
+
+        vm.expectEmit(true, true, true, true);
+        emit RoleGranted(globalRole, BOB, ALBA);
+
         _authorizer.grantGlobalRole(bytes32("0x03"), BOB);
         assertTrue(_authorizer.hasRole(globalRole, BOB));
     }
@@ -619,6 +663,9 @@ contract RoleAuthorizerTest is Test {
         vm.startPrank(ALBA);
         _authorizer.grantGlobalRole(bytes32("0x03"), BOB);
         assertTrue(_authorizer.hasRole(globalRole, BOB));
+
+        vm.expectEmit(true, true, true, true);
+        emit RoleRevoked(globalRole, BOB, ALBA);
 
         _authorizer.revokeGlobalRole(bytes32("0x03"), BOB);
         assertEq(_authorizer.hasRole(globalRole, BOB), false);
@@ -645,6 +692,10 @@ contract RoleAuthorizerTest is Test {
     function testGrantAdminRole() public {
         bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
         vm.prank(ALBA);
+
+        vm.expectEmit(true, true, true, true);
+        emit RoleGranted(adminRole, BOB, ALBA);
+
         _authorizer.grantRole(adminRole, BOB);
         assertTrue(_authorizer.hasRole(adminRole, BOB));
     }
@@ -775,6 +826,14 @@ contract RoleAuthorizerTest is Test {
         _orchestrator.addModule(address(mockModule));
 
         vm.startPrank(address(mockModule));
+
+        vm.expectEmit(true, true, true, true);
+        emit RoleAdminChanged(
+            _authorizer.generateRoleId(address(mockModule), ROLE_1),
+            bytes32(0x0),
+            _authorizer.BURN_ADMIN_ROLE()
+        );
+
         _authorizer.burnAdminFromModuleRole(ROLE_1);
 
         vm.stopPrank();

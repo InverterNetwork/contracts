@@ -18,8 +18,6 @@ interface ITokenGatedRoleAuthorizer is IAuthorizer {
     /// @param newValue The new value of the threshold.
     event ChangedTokenThreshold(bytes32 role, address token, uint newValue);
 
-    /// TODO add tokenRoleGranted, tokenRoleRevoked, (roleAdminChanged, roleAdminBurned) events
-
     //--------------------------------------------------------------------------
     // Errors
 
