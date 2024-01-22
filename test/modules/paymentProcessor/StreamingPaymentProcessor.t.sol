@@ -36,10 +36,15 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     // Mocks
     ERC20PaymentClientMock paymentClient = new ERC20PaymentClientMock(_token);
 
-    event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint dueTo
-    );
+    //--------------------------------------------------------------------------
+    // Events
 
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param dueTo Timestamp at which the full amount should be claimable.
+    /// @param walletId ID of the payment order that was added
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
@@ -49,10 +54,38 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint walletId
     );
 
+    /// @notice Emitted when the vesting to an address is removed.
+    /// @param recipient The address that will stop receiving payment.
+    /// @param walletId ID of the payment order removed
     event StreamingPaymentRemoved(
         address indexed paymentClient,
         address indexed recipient,
         uint indexed walletId
+    );
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param dueTo Timestamp at which the full amount should be claimable.
+    event InvalidStreamingOrderDiscarded(
+        address indexed recipient, uint amount, uint start, uint dueTo
+    );
+
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param createdAt Timestamp at which the order was created.
+    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    /// @param walletId ID of the payment order that was processed
+    event PaymentOrderProcessed(
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint createdAt,
+        uint dueTo,
+        uint walletId
     );
 
     function setUp() public {
@@ -159,6 +192,27 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Call processPayments.
         vm.prank(address(paymentClient));
+
+        for (uint i; i < recipients.length; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit StreamingPaymentAdded(
+                address(paymentClient),
+                recipients[i],
+                amounts[i],
+                block.timestamp,
+                block.timestamp + durations[i],
+                1
+            );
+            emit PaymentOrderProcessed(
+                address(paymentClient),
+                recipients[i],
+                amounts[i],
+                block.timestamp,
+                block.timestamp + durations[i],
+                1
+            );
+        }
+
         paymentProcessor.processPayments(paymentClient);
 
         for (uint i; i < recipients.length;) {
@@ -894,6 +948,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i = 0; i < length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
+                address(paymentClient),
+                recipients[i],
+                amounts[i],
+                block.timestamp,
+                duration + block.timestamp,
+                1
+            );
+            emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 amounts[i],

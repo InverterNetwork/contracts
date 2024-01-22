@@ -27,6 +27,7 @@ interface IStreamingPaymentProcessor is IPaymentProcessor {
         uint _vestingWalletID;
     }
 
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Emitted when a payment gets processed for execution.
@@ -52,12 +53,6 @@ interface IStreamingPaymentProcessor is IPaymentProcessor {
         address indexed recipient,
         uint indexed walletId
     );
-
-    /// @notice Emitted when a running vesting schedule gets updated.
-    /// @param recipient The address that will receive the payment.
-    /// @param newSalary The new amount of tokens the payment consists of.
-    /// @param newDueTo The new Timestamp at which the full amount should be claimable.
-    event PaymentUpdated(address recipient, uint newSalary, uint newDueTo);
 
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
