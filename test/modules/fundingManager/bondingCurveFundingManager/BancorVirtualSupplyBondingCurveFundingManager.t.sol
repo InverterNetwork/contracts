@@ -16,9 +16,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {IERC20Upgradeable} from "@oz-up/token/ERC20/IERC20Upgradeable.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+// import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// import {IERC20Metadata} from
+//     "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
