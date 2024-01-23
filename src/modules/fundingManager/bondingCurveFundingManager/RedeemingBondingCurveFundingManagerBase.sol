@@ -209,7 +209,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         uint oldSellFee = sellFee;
 
         sellFee = _fee;
-        
+
         emit SellFeeUpdated(_fee, oldSellFee);
     }
 

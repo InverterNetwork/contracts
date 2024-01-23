@@ -28,7 +28,7 @@ interface IModuleFactory {
 
     /// @notice Event emitted when new beacon registered for metadata.
     /// @param metadata The registered Metadata
-    /// @param beacon The registered Beacon 
+    /// @param beacon The registered Beacon
     event MetadataRegistered(
         IModule.Metadata indexed metadata, IBeacon indexed beacon
     );

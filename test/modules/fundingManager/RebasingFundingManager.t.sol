@@ -449,7 +449,7 @@ contract RebasingFundingManagerTest is ModuleTest {
         public
     {
         vm.assume(to != address(0) && to != address(fundingManager));
-        
+
         _token.mint(address(fundingManager), 2);
 
         if (caller != address(_orchestrator)) {
