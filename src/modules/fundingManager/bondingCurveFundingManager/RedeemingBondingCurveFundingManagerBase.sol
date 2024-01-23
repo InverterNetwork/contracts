@@ -206,11 +206,8 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         if (_fee > BPS) {
             revert RedeemingBondingCurveFundingManager__InvalidFeePercentage();
         }
-        uint oldSellFee = sellFee;
-
+        emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
-
-        emit SellFeeUpdated(_fee, oldSellFee);
     }
 
     /// @dev Redeems collateral based on the deposit amount.
