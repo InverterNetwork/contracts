@@ -20,10 +20,12 @@ import {
     BountyManager,
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
-import {TransactionForwarder} from
-    "src/external/forwarder/TransactionForwarder.sol";
+import {
+    TransactionForwarder,
+    ITransactionForwarder
+} from "src/external/forwarder/TransactionForwarder.sol";
 
-contract MetaTxE2E is E2ETest {
+contract MetaTxAndMulticallE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
@@ -199,6 +201,116 @@ contract MetaTxE2E is E2ETest {
         forwarder.execute(finalReq);
 
         //Check if successful
+        assertTrue(bountyManager.isExistingBountyId(1));
+    }
+
+    function test_e2e_SendMulticall() public {
+        //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
+
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: token
+        });
+
+        IOrchestrator orchestrator =
+            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
+
+        //lets use this example user
+        address user = address(0xBEEF);
+
+        // for the multicall to work we need to collect all the individual calls we want to make
+        // For this we use an array of Singlecall Structs from the Transaction Forwarder
+        ITransactionForwarder.SingleCall[] memory callCollection =
+            new ITransactionForwarder.SingleCall[](2);
+
+        //-----------------------------------------------------
+        // Call Function without role
+        //In this example we're gonna call the rebasing fundingmanagers deposit function
+
+        //Lets get the fundingmanager address
+        address fundingManager = address(orchestrator.fundingManager());
+
+        //lets define how much he wants to deposit
+        uint depositAmount = 1000;
+        //For this to work the signer would have to have that amount of tokens
+        token.mint(user, depositAmount);
+        //and the token transferal approved before
+        vm.prank(user);
+        token.approve(fundingManager, depositAmount);
+
+        //We create a call struct containing the call we want to make
+        ITransactionForwarder.SingleCall memory call1 = ITransactionForwarder
+            .SingleCall({
+            //target of the call should be the fundingmanager
+            target: fundingManager,
+            //We dont allow the call to fail. In some circumstances this might be useful though
+            allowFailure: false,
+            //The encoded data of the call we want to make
+            callData: abi.encodeWithSignature("deposit(uint256)", depositAmount)
+        });
+
+        //Put the call into our call collection
+        callCollection[0] = call1;
+
+        //-----------------------------------------------------
+        //Call Function with role
+        //In this example we're gonna call the bountyManagers createBounty Function
+        //The function needs a role to access it
+
+        //Lets get the bountyManager address
+        BountyManager bountyManager;
+
+        address[] memory modulesList = orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
+                bool
+            ) {
+                bountyManager = BountyManager(modulesList[i]);
+                break;
+            } catch {
+                continue;
+            }
+        }
+
+        //Give the signer address the according role
+        bountyManager.grantModuleRole(bountyManager.BOUNTY_ISSUER_ROLE(), user);
+
+        //We create a call struct containing the call we want to make
+        ITransactionForwarder.SingleCall memory call2 = ITransactionForwarder
+            .SingleCall({
+            //target of the call should be the fundingmanager
+            target: address(bountyManager),
+            //We dont allow the call to fail. In some circumstances this might be useful though
+            allowFailure: false,
+            //The encoded data of the call we want to make
+            callData: abi.encodeWithSignature(
+                "addBounty(uint256,uint256,bytes)",
+                100e18, //minimumPayoutAmount
+                500e18, //maximumPayoutAmount
+                bytes("This is a test bounty") //details
+            )
+        });
+
+        //Put the call into our call collection
+        callCollection[1] = call2;
+
+        //Do the multiCall
+        //!!! the user has to make the call
+        vm.prank(user);
+        forwarder.executeMulticall(callCollection);
+
+        //Check if successful
+        //For the fundingmanager
+        assertEq(
+            RebasingFundingManager(fundingManager).token().balanceOf(
+                fundingManager
+            ),
+            depositAmount
+        );
+        //For the bountyManager
         assertTrue(bountyManager.isExistingBountyId(1));
     }
 }
