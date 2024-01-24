@@ -55,6 +55,9 @@ contract TransactionForwarder is
             //Do the call
             (result.success, result.returnData) = calli.target.call(data);
 
+            emit fire(calli.target);
+            emit fireData(result.returnData);
+
             //In case call fails check if it its allowed to fail
             if (!result.success && !calli.allowFailure) {
                 revert CallFailed(calli);
@@ -67,7 +70,16 @@ contract TransactionForwarder is
                 ++i;
             }
         }
+
+        for (uint j = 0; i < returnData.length; j++) {
+            emit resultEmit(returnData[j].success, returnData[j].returnData);
+        }
     }
+
+    event fire(address);
+    event fireData(bytes);
+
+    event resultEmit(bool, bytes);
 
     // Copied from the ERC2771Forwarder as it isnt declared internal ಠ_ಠ
     // Just added a _ because i cant override it
