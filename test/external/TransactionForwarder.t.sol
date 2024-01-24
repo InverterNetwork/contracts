@@ -106,10 +106,6 @@ contract TransactionForwarderTest is Test {
             calls[i] = createSingleCall(seeds[i], address(intercepter[i]));
         }
 
-        for (uint i = 0; i < amount; i++) {
-            console.log("target: ", calls[i].target);
-        }
-
         bool[] memory shouldEmit = new bool[](amount);
 
         //Check for each call
