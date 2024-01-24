@@ -110,6 +110,8 @@ contract TransactionForwarderTest is Test {
             console.log("target: ", calls[i].target);
         }
 
+        bool[] memory shouldEmit = new bool[](amount);
+
         //Check for each call
         for (uint i = 0; i < amount; i++) {
             //if call is allowed to fail we wanna check if it behaves correctly in case it should fail
@@ -120,13 +122,22 @@ contract TransactionForwarderTest is Test {
                     continue;
                 }
             }
-            //In case it doesnt fail we want to receive the correct emit
-            vm.expectEmit(true, true, true, true);
-            emit CallReceived(
-                address(intercepter[i]),
-                abi.encodePacked(calls[i].callData, address(this)),
-                address(forwarder)
-            );
+            //All that dont fail should later emit
+            shouldEmit[i] = true;
+        }
+
+        //Check for proper events
+        //Note I put this in a different section, because the flipCallShouldBreak() function triggered the expectEmit before
+        for (uint i = 0; i < amount; i++) {
+            if (shouldEmit[i]) {
+                //In case it doesnt fail we want to receive the correct emit
+                vm.expectEmit(true, true, true, true);
+                emit CallReceived(
+                    address(intercepter[i]),
+                    abi.encodePacked(calls[i].callData, address(this)),
+                    address(forwarder)
+                );
+            }
         }
 
         //execute multicall
@@ -140,14 +151,6 @@ contract TransactionForwarderTest is Test {
 
         //check if returndata is correct
         for (uint i = 0; i < resultLength; i++) {
-            console.log("i: ", i);
-            console.log("result.success", results[i].success);
-            console.log("result.returnData: ");
-            console.logBytes(results[i].returnData);
-            console.log("intercepter.address", address(intercepter[i]));
-            console.log("calls.callData: ");
-            console.logBytes(calls[i].callData);
-
             //if call was a success
             if (results[i].success) {
                 assertEq(results[i].returnData, abi.encode("Call Successful"));

@@ -28,21 +28,17 @@ contract TransactionForwarder is
     /// @inheritdoc ITransactionForwarder
     function executeMulticall(SingleCall[] calldata calls)
         external
-        returns (Result[] memory returnData)
+        returns (Result[] memory results)
     {
         uint length = calls.length;
-        returnData = new Result[](length);
+        results = new Result[](length);
 
-        Result memory result;
         SingleCall calldata calli;
         bytes memory data;
 
-        uint i = 0;
         //run through all of the calls
-        for (i; i < length;) {
-            returnData[i];
+        for (uint i = 0; i < length; i++) {
             calli = calls[i];
-
             //Check if the target actually trusts the forwarder
             if (!__isTrustedByTarget(calli.target)) {
                 revert ERC2771UntrustfulTarget(calli.target, address(this));
@@ -53,33 +49,19 @@ contract TransactionForwarder is
             data = abi.encodePacked(calli.callData, _msgSender());
 
             //Do the call
-            (result.success, result.returnData) = calli.target.call(data);
-
-            emit fire(calli.target);
-            emit fireData(result.returnData);
+            (bool success, bytes memory returnData) = calli.target.call(data);
 
             //In case call fails check if it its allowed to fail
-            if (!result.success && !calli.allowFailure) {
+            if (!success && !calli.allowFailure) {
                 revert CallFailed(calli);
             }
-            //set returndata correctly
-            returnData[i] = result;
 
-            //count up loop variable
-            unchecked {
-                ++i;
-            }
-        }
+            for (uint j = 0; j < length; j++) {}
 
-        for (uint j = 0; i < returnData.length; j++) {
-            emit resultEmit(returnData[j].success, returnData[j].returnData);
+            //set result correctly
+            results[i] = Result(success, returnData);
         }
     }
-
-    event fire(address);
-    event fireData(bytes);
-
-    event resultEmit(bool, bytes);
 
     // Copied from the ERC2771Forwarder as it isnt declared internal ಠ_ಠ
     // Just added a _ because i cant override it
