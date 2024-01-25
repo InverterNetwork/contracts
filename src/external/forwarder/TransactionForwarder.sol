@@ -56,8 +56,6 @@ contract TransactionForwarder is
                 revert CallFailed(calli);
             }
 
-            for (uint j = 0; j < length; j++) {}
-
             //set result correctly
             results[i] = Result(success, returnData);
         }
