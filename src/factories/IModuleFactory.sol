@@ -27,13 +27,18 @@ interface IModuleFactory {
     // Events
 
     /// @notice Event emitted when new beacon registered for metadata.
+    /// @param metadata The registered Metadata
+    /// @param beacon The registered Beacon
     event MetadataRegistered(
         IModule.Metadata indexed metadata, IBeacon indexed beacon
     );
 
     /// @notice Event emitted when new module created for a orchestrator.
+    /// @param orchestrator The corresponding orchestrator.
+    /// @param module The created module instance.
+    /// @param identifier The module's identifier.
     event ModuleCreated(
-        address indexed orchestrator, address indexed module, string moduleTitle
+        address indexed orchestrator, address indexed module, bytes32 identifier
     );
 
     //--------------------------------------------------------------------------

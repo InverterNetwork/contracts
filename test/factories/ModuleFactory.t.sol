@@ -34,6 +34,19 @@ contract ModuleFactoryTest is Test {
     ModuleMock module;
     BeaconMock beacon;
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when new beacon registered for metadata.
+    event MetadataRegistered(
+        IModule.Metadata indexed metadata, IBeacon indexed beacon
+    );
+
+    /// @notice Event emitted when new module created for a orchestrator.
+    event ModuleCreated(
+        address indexed orchestrator, address indexed module, bytes32 identifier
+    );
+
     // Constants
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 1;
@@ -71,6 +84,11 @@ contract ModuleFactoryTest is Test {
         _assumeValidMetadata(metadata);
 
         beacon.overrideImplementation(address(module));
+
+        vm.expectEmit(true, true, true, true);
+
+        // We emit the event we expect to see.
+        emit MetadataRegistered(metadata, beacon);
 
         factory.registerMetadata(metadata, beacon);
 
@@ -130,6 +148,14 @@ contract ModuleFactoryTest is Test {
 
         // Register ModuleMock for given metadata.
         factory.registerMetadata(metadata, beacon);
+
+        // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
+        vm.expectEmit(true, false, false, false);
+
+        // We emit the event we expect to see.
+        emit ModuleCreated(
+            orchestrator, address(0), LibMetadata.identifier(metadata)
+        );
 
         // Create new module instance.
         IModule newModule = IModule(

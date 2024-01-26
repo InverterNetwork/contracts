@@ -40,11 +40,22 @@ interface IBondingCurveFundingManagerBase {
     event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
 
     /// @notice Event emitted when tokens have been succesfully issued
+    /// @param receiver The address that will receive the issued tokens.
+    /// @param depositAmount The amount of collateral token deposited.
+    /// @param receivedAmount The amount of issued token received.
+    /// @param buyer The address that initiated the buy order.
     event TokensBought(
         address indexed receiver,
         uint indexed depositAmount,
         uint indexed receivedAmount,
         address buyer
+    );
+
+    /// @notice Event emitted when the decimals of the issuance token are updated
+    /// @param oldDecimals The old decimals of the issuance token
+    /// @param newDecimals The new decimals of the issuance token
+    event TokenDecimalsUpdated(
+        uint8 indexed oldDecimals, uint8 indexed newDecimals
     );
 
     //--------------------------------------------------------------------------
