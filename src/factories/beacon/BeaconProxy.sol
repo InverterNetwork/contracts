@@ -15,6 +15,7 @@ contract BeaconProxy is Proxy {
     // Events
 
     /// @notice Proxy upgraded to new {IBeacon} instance.
+    /// @param beacon The new {IBeacon} instance.
     event BeaconUpgraded(IBeacon indexed beacon);
 
     //--------------------------------------------------------------------------------

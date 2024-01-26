@@ -30,6 +30,11 @@ interface IRecurringPaymentManager {
     // Events
 
     /// @notice Event emitted when a new milestone added.
+    /// @param recurringPaymentId The id of the RecurringPayment.
+    /// @param amount The amount of tokens that should be sent to the recipient address.
+    /// @param startEpoch The epoch in which the payment starts.
+    /// @param lastTriggeredEpoch The epoch in which the payment was last triggered.
+    /// @param recipient The recipient address that should receive tokens.
     event RecurringPaymentAdded(
         uint indexed recurringPaymentId,
         uint amount,
@@ -39,9 +44,11 @@ interface IRecurringPaymentManager {
     );
 
     /// @notice Event emitted when a new milestone added.
+    /// @param recurringPaymentId The id of the RecurringPayment.
     event RecurringPaymentRemoved(uint indexed recurringPaymentId);
 
     /// @notice Event emitted when a new milestone added.
+    /// @param currentEpoch The current epoch.
     event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
     //--------------------------------------------------------------------------

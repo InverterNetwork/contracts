@@ -37,9 +37,15 @@ interface IRedeemingBondingCurveFundingManagerBase {
     event SellingDisabled();
 
     /// @notice Event emitted when sell fee is updated
+    /// @param newSellFee The new sell fee
+    /// @param oldSellFee The old sell fee
     event SellFeeUpdated(uint indexed newSellFee, uint indexed oldSellFee);
 
     /// @notice Event emitted when tokens have been succesfully redeemed
+    /// @param receiver The address that will receive the redeemed tokens.
+    /// @param depositAmount The amount of issued token deposited.
+    /// @param receivedAmount The amount of collateral token received.
+    /// @param seller The address that initiated the sell order.
     event TokensSold(
         address indexed receiver,
         uint indexed depositAmount,

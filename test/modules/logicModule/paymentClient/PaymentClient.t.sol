@@ -36,6 +36,17 @@ contract ERC20PaymentClientTest is ModuleTest {
     ERC20PaymentClientAccessMock paymentClient;
     FundingManagerMock fundingManager;
 
+    // Mocks
+    ERC20Mock token;
+
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Added a payment order.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    event PaymentOrderAdded(address indexed recipient, uint amount);
+
     function setUp() public {
         address impl = address(new ERC20PaymentClientAccessMock());
         paymentClient = ERC20PaymentClientAccessMock(Clones.clone(impl));
@@ -79,6 +90,9 @@ contract ERC20PaymentClientTest is ModuleTest {
         _assumeValidAmount(amount);
 
         for (uint i; i < orderAmount; ++i) {
+            vm.expectEmit();
+            emit PaymentOrderAdded(recipient, amount);
+
             paymentClient.addPaymentOrder(
                 IERC20PaymentClient.PaymentOrder({
                     recipient: recipient,
@@ -170,6 +184,11 @@ contract ERC20PaymentClientTest is ModuleTest {
             createdAt: block.timestamp,
             dueTo: block.timestamp + 2
         });
+
+        vm.expectEmit();
+        emit PaymentOrderAdded(address(0xCAFE1), 100e18);
+        emit PaymentOrderAdded(address(0xCAFE2), 100e18);
+        emit PaymentOrderAdded(address(0xCAFE3), 100e18);
 
         paymentClient.addPaymentOrders(ordersToAdd);
 

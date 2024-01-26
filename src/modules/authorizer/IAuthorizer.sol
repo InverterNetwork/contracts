@@ -6,14 +6,6 @@ import {IAccessControlEnumerableUpgradeable} from
 
 interface IAuthorizer is IAccessControlEnumerableUpgradeable {
     //--------------------------------------------------------------------------
-    // Events
-
-    /// @notice Event emitted when a module toggles self management
-    /// @param who The module.
-    /// @param newValue The new value of the self management flag.
-    event setRoleSelfManagement(address who, bool newValue);
-
-    //--------------------------------------------------------------------------
     // Errors
 
     /// @notice The function is only callable by an active Module.

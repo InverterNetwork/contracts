@@ -40,6 +40,7 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     // Events
 
     /// @notice Beacon upgraded to new implementation address.
+    /// @param implementation The new implementation address.
     event Upgraded(address indexed implementation);
 
     //--------------------------------------------------------------------------------
