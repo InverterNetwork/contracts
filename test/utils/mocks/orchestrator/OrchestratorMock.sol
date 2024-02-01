@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import {
+    ModuleManager,
+    IModuleManager
+} from "src/orchestrator/base/ModuleManager.sol";
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
 contract OrchestratorMock is Orchestrator {

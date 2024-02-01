@@ -32,7 +32,7 @@ import {PaymentProcessorMock} from
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
-    OrchestratorMockMock _orchestrator;
+    OrchestratorMock _orchestrator;
 
     // Mocks
     FundingManagerMock _fundingManager;
