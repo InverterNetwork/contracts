@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.20;
+pragma solidity 0.8.23;
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";

@@ -5,6 +5,9 @@ import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
 contract OrchestratorMock is Orchestrator {
     bool connectToTrustedForwarder = false;
+    bool public interceptData;
+    bool public executeTxBoolReturn;
+    bytes public executeTxData;
 
     constructor(address _trustedForwarder) Orchestrator(_trustedForwarder) {}
 
@@ -24,5 +27,34 @@ contract OrchestratorMock is Orchestrator {
         } else {
             return false;
         }
+    }
+
+    function executeTxFromModule(address to, bytes memory data)
+        external
+        override(IModuleManager, ModuleManager)
+        onlyModule
+        returns (bool, bytes memory)
+    {
+        if (interceptData) {
+            executeTxData = data;
+            return (executeTxBoolReturn, bytes(""));
+        } else {
+            bool ok;
+            bytes memory returnData;
+
+            (ok, returnData) = to.call(data);
+
+            return (ok, returnData);
+        }
+    }
+
+    function setInterceptData(bool b) external {
+        interceptData = b;
+    }
+
+    function setExecuteTxBoolReturn(
+        bool boo //<--- this is a scary function
+    ) external {
+        executeTxBoolReturn = boo;
     }
 }

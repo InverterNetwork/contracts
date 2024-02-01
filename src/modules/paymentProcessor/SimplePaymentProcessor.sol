@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.20;
+pragma solidity 0.8.23;
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -110,6 +110,8 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
                 orders[i].dueTo
             );
         }
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        client.amountPaid(totalAmount);
     }
 
     function cancelRunningPayments(IERC20PaymentClient client)

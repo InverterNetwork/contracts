@@ -1,4 +1,4 @@
-pragma solidity 0.8.20;
+pragma solidity 0.8.23;
 
 /// @title  Aragon SafeMath Library
 /// @author https://github.com/AragonBlack/fundraising/blob/master/apps/bancor-formula/contracts/utility/SafeMath.sol

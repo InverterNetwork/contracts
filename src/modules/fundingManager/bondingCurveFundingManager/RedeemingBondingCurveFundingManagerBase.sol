@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.20;
+pragma solidity 0.8.23;
 
 // Internal Dependencies
 import {BondingCurveFundingManagerBase} from
@@ -63,18 +63,22 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     // Public Functions
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function sellFor(address _receiver, uint _depositAmount)
+    function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
         virtual
         sellingIsEnabled
         validReceiver(_receiver)
     {
-        _sellOrder(_receiver, _depositAmount);
+        _sellOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function sell(uint _depositAmount) external virtual sellingIsEnabled {
-        _sellOrder(_msgSender(), _depositAmount);
+    function sell(uint _depositAmount, uint _minAmountOut)
+        external
+        virtual
+        sellingIsEnabled
+    {
+        _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     //--------------------------------------------------------------------------
@@ -94,6 +98,12 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     function setSellFee(uint _fee) external onlyOrchestratorOwner {
         _setSellFee(_fee);
     }
+
+    //--------------------------------------------------------------------------
+    // Public Functions Implemented in Downstream Contract
+
+    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    function getStaticPriceForSelling() external virtual returns (uint);
 
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
@@ -120,15 +130,18 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// to be possible. No further functionality is implemented which would manages the outflow of
     /// collateral, e.g., restricting max redeemable amount per user, or a redeemable amount which
     /// differes from the actual balance.
-    /// @param _receiver The address receiving the redeem amount.
-    /// @param _depositAmount The amount of tokens being sold by the receiver.
-    /// @return redeemAmount The amount of tokens that are transfered to the receiver in exchange for _depositAmount.
     /// Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
     /// contract for redemption.
-    function _sellOrder(address _receiver, uint _depositAmount)
-        internal
-        returns (uint redeemAmount)
-    {
+    /// @param _receiver The address receiving the redeem amount.
+    /// @param _depositAmount The amount of tokens being sold by the receiver.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @return redeemAmount The amount of tokens that are transfered to the receiver in exchange for _depositAmount.
+    /// @return feeAmount The amount of collateral token subtracted as fee
+    function _sellOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal returns (uint redeemAmount, uint feeAmount) {
         if (_depositAmount == 0) {
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
@@ -138,10 +151,17 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
 
-        // Subtract fee from redeem amount
         if (sellFee > 0) {
-            redeemAmount =
-                _calculateFeeDeductedDepositAmount(redeemAmount, sellFee);
+            // Calculate fee amount and redeem amount subtracted by fee
+            (redeemAmount, feeAmount) =
+                _calculateNetAmountAndFee(redeemAmount, sellFee);
+            // Add fee amount to total collected fee
+            tradeFeeCollected += feeAmount;
+        }
+        // Revert when the redeem amount is lower than minimum amount the user expects
+        if (redeemAmount < _minAmountOut) {
+            revert RedeemingBondingCurveFundingManager__InsufficientOutputAmount(
+            );
         }
         // Require that enough collateral token is held to be redeemable
         if (

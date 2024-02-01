@@ -13,7 +13,12 @@ import {
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {IERC165} from "@oz/interfaces/IERC165.sol";
+
+import {IAccessControlEnumerable} from
+    "@oz/access/extensions/IAccessControlEnumerable.sol";
+
+import {IAccessControl} from "@oz/access/IAccessControl.sol";
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 import {TransactionForwarder} from
@@ -100,7 +105,9 @@ contract RoleAuthorizerTest is Test {
     // Tests Initialization
 
     function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IAuthorizer).interfaceId == interfaceId
+        bool shouldBeInterface = type(IAccessControlEnumerable).interfaceId
+            == interfaceId || type(IAccessControl).interfaceId == interfaceId
+            || type(IAuthorizer).interfaceId == interfaceId
             || type(IModule).interfaceId == interfaceId
             || type(IERC165).interfaceId == interfaceId;
 

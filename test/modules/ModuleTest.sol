@@ -10,7 +10,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {OrchestratorMock} from
+    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
 import {TransactionForwarder} from
     "src/external/forwarder/TransactionForwarder.sol";
 
@@ -31,7 +32,7 @@ import {PaymentProcessorMock} from
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
-    OrchestratorMock _orchestrator;
+    OrchestratorMockMock _orchestrator;
 
     // Mocks
     FundingManagerMock _fundingManager;

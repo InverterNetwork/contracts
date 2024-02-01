@@ -21,7 +21,7 @@ import {
 import {
     IERC20PaymentClient,
     ERC20PaymentClientMock
-} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -286,6 +286,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 ++i;
             }
         }
+        assertEq(totalAmount, paymentClient.amountPaidCounter());
     }
 
     // @dev Assume recipient can withdraw full amount immediately if dueTo is less than or equal to block.timestamp.
@@ -1167,15 +1168,24 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.warp(block.timestamp + 52 weeks);
 
         speedRunStreamingAndClaim(recipients, amounts, durations);
-
+        address recipient;
+        uint amount;
+        uint totalAmount;
         for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = uint(amounts[i]) * 2; //we paid two rounds
+            recipient = recipients[i];
+            amount = uint(amounts[i]) * 2; //we paid two rounds
+            totalAmount += amount;
 
             assertEq(_token.balanceOf(address(recipient)), amount);
             assertEq(
                 paymentProcessor.releasableForSpecificWalletId(
                     address(paymentClient), address(recipient), 1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient), address(recipient), 2
                 ),
                 0
             );
@@ -1186,6 +1196,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+
+        assertEq(totalAmount, paymentClient.amountPaidCounter());
     }
 
     // Verifies our contract corectly handles ERC20 revertion.

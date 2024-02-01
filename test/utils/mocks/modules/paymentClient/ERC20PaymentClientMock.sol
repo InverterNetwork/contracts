@@ -19,6 +19,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 contract ERC20PaymentClientMock is ERC20PaymentClient {
     ERC20Mock token;
 
+    uint public amountPaidCounter;
     mapping(address => bool) authorized;
 
     //--------------------------------------------------------------------------
@@ -77,7 +78,8 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
         internal
         override(ERC20PaymentClient)
     {
-        token.approve(address(spender), amount);
+        uint currentAllowance = token.allowance(_msgSender(), address(spender));
+        token.approve(address(spender), amount + currentAllowance);
     }
 
     function _isAuthorizedPaymentProcessor(IPaymentProcessor)
@@ -89,24 +91,8 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
         return authorized[_msgSender()];
     }
 
-    //for testing the original functionality of the internal functions I created this placeholders
-
-    function originalEnsureTokenBalance(uint amount) external {
-        return super._ensureTokenBalance(amount);
-    }
-
-    function originalEnsureTokenAllowance(
-        IPaymentProcessor spender,
-        uint amount
-    ) external {
-        return super._ensureTokenAllowance(spender, amount);
-    }
-
-    function originalIsAuthorizedPaymentProcessor(IPaymentProcessor processor)
-        external
-        view
-        returns (bool)
-    {
-        return super._isAuthorizedPaymentProcessor(processor);
+    function amountPaid(uint amount) external override(ERC20PaymentClient) {
+        amountPaidCounter += amount;
+        _outstandingTokenAmount -= amount;
     }
 }

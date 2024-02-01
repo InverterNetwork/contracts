@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.20;
+pragma solidity ^0.8.0;
 
 interface IBondingCurveFundingManagerBase {
     //--------------------------------------------------------------------------
@@ -23,6 +23,9 @@ interface IBondingCurveFundingManagerBase {
     /// @notice Receiver address can not be zero address or
     /// Bonding Curve Funding Manager itself
     error BondingCurveFundingManagerBase__InvalidRecipient();
+
+    /// @notice Actual buy amount is lower than the minimum acceptable amount
+    error BondingCurveFundingManagerBase__InsufficientOutputAmount();
 
     //--------------------------------------------------------------------------
     // Events
@@ -51,12 +54,15 @@ interface IBondingCurveFundingManagerBase {
     /// @dev Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral token deposited.
-    function buyFor(address _receiver, uint _depositAmount) external;
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
+        external;
 
     /// @notice Buy tokens for the sender's address.
     /// @dev Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
     /// @param _depositAmount The amount of collateral token depoisited.
-    function buy(uint _depositAmount) external;
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function buy(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the buying functionality for the token.
     /// @dev Only callable by the Orchestrator owner, or Manager.
@@ -73,4 +79,8 @@ interface IBondingCurveFundingManagerBase {
     ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setBuyFee(uint _fee) external;
+
+    /// @notice Calculates and returns the static price for buying the issuance token.
+    /// @return uint The static price for buying the issuance token.
+    function getStaticPriceForBuying() external returns (uint);
 }

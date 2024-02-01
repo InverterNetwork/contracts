@@ -1,4 +1,4 @@
-pragma solidity 0.8.20;
+pragma solidity ^0.8.0;
 
 import {IBancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";

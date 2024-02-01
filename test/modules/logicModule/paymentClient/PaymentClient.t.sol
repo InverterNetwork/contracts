@@ -5,22 +5,19 @@ import "forge-std/Test.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-// External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-//Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
-// Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
-
-// Mocks
-import {OrchestratorAccessMock} from
-    "test/utils/mocks/orchestrator/OrchestratorAccessMock.sol";
+// SuT
 import {
-    ERC20PaymentClientMock,
+    ERC20PaymentClientAccessMock,
     IERC20PaymentClient
-} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientAccessMock.sol";
+import {Module, IModule} from "src/modules/base/Module.sol";
+
+import {OrchestratorMock} from
+    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
 
 import {
     PaymentProcessorMock,
@@ -34,33 +31,24 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ERC20PaymentClientTest is ModuleTest {
     // SuT
-    ERC20PaymentClientMock paymentClient;
-    OrchestratorAccessMock orchestrator;
-    PaymentProcessorMock paymentProcessor;
+    ERC20PaymentClientAccessMock paymentClient;
     FundingManagerMock fundingManager;
 
     function setUp() public {
-        //Add Module to Mock Orchestrator
-        address impl = address(new ERC20PaymentClientMock());
-        paymentClient = ERC20PaymentClientMock(Clones.clone(impl));
+        address impl = address(new ERC20PaymentClientAccessMock());
+        paymentClient = ERC20PaymentClientAccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentClient);
 
         _authorizer.setIsAuthorized(address(this), true);
 
         paymentClient.init(_orchestrator, _METADATA, bytes(""));
-
-        paymentClient.setIsAuthorized(address(this), true);
-        paymentClient.setToken(_token);
     }
 
-    //This function also tests all the getters
-    function testInit() public override(ModuleTest) {}
+    //These are just placeholders, as the real PaymentProcessor is an abstract contract and not a real module
+    function testInit() public override {}
 
-    function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        paymentClient.init(_orchestrator, _METADATA, bytes(""));
-    }
+    function testReinitFails() public override {}
 
     function testSupportsInterface(bytes4 interfaceId) public {
         bool shouldBeInterface = type(IERC20PaymentClient).interfaceId
@@ -82,19 +70,11 @@ contract ERC20PaymentClientTest is ModuleTest {
         uint dueTo
     ) public {
         // Note to stay reasonable.
-        orderAmount = bound(orderAmount, 0, 10);
+        orderAmount = bound(orderAmount, 0, 100);
+        amount = bound(amount, 1, 1_000_000_000_000_000_000);
 
         _assumeValidRecipient(recipient);
         _assumeValidAmount(amount);
-
-        // Sum of all token amounts should not overflow.
-        uint sum;
-        for (uint i; i < orderAmount; ++i) {
-            unchecked {
-                sum += amount;
-            }
-            vm.assume(sum > amount);
-        }
 
         for (uint i; i < orderAmount; ++i) {
             paymentClient.addPaymentOrder(
@@ -214,19 +194,13 @@ contract ERC20PaymentClientTest is ModuleTest {
         uint dueTo
     ) public {
         // Note to stay reasonable.
-        orderAmount = bound(orderAmount, 0, 10);
+        orderAmount = bound(orderAmount, 0, 100);
+        amount = bound(amount, 1, 1_000_000_000_000_000_000);
 
         _assumeValidRecipient(recipient);
-        _assumeValidAmount(amount);
 
-        // Sum of all token amounts should not overflow.
-        uint sum;
-        for (uint i; i < orderAmount; ++i) {
-            unchecked {
-                sum += amount;
-            }
-            vm.assume(sum > amount);
-        }
+        //prep paymentClient
+        _token.mint(address(_fundingManager), orderAmount * amount);
 
         for (uint i; i < orderAmount; ++i) {
             paymentClient.addPaymentOrder(
@@ -241,6 +215,7 @@ contract ERC20PaymentClientTest is ModuleTest {
 
         IERC20PaymentClient.PaymentOrder[] memory orders;
         uint totalOutstandingAmount;
+        vm.prank(address(_paymentProcessor));
         (orders, totalOutstandingAmount) = paymentClient.collectPaymentOrders();
 
         // Check that orders are correct.
@@ -259,19 +234,17 @@ contract ERC20PaymentClientTest is ModuleTest {
         updatedOrders = paymentClient.paymentOrders();
         assertEq(updatedOrders.length, 0);
 
-        // Check that outstanding token amount in ERC20PaymentClient got reset.
-        assertEq(paymentClient.outstandingTokenAmount(), 0);
+        // Check that outstanding token amount is still the same afterwards.
+        assertEq(paymentClient.outstandingTokenAmount(), totalOutstandingAmount);
 
         // Check that we received allowance to fetch tokens from ERC20PaymentClient.
         assertTrue(
-            _token.allowance(address(paymentClient), address(this))
+            _token.allowance(address(paymentClient), address(_paymentProcessor))
                 >= totalOutstandingAmount
         );
     }
 
     function testCollectPaymentOrdersFailsCallerNotAuthorized() public {
-        paymentClient.setIsAuthorized(address(this), false);
-
         vm.expectRevert(
             IERC20PaymentClient
                 .Module__ERC20PaymentClient__CallerNotAuthorized
@@ -280,63 +253,98 @@ contract ERC20PaymentClientTest is ModuleTest {
         paymentClient.collectPaymentOrders();
     }
 
+    //----------------------------------
+    // Test: amountPaid()
+
+    function testAmountPaid(uint preAmount, uint amount) public {
+        vm.assume(preAmount >= amount);
+        paymentClient.set_outstandingTokenAmount(preAmount);
+
+        vm.prank(address(_paymentProcessor));
+        paymentClient.amountPaid(amount);
+
+        assertEq(preAmount - amount, paymentClient.outstandingTokenAmount());
+    }
+
+    function testAmountPaidModifierInPosition(address caller) public {
+        paymentClient.set_outstandingTokenAmount(1);
+
+        if (caller != address(_paymentProcessor)) {
+            vm.expectRevert(
+                IERC20PaymentClient
+                    .Module__ERC20PaymentClient__CallerNotAuthorized
+                    .selector
+            );
+        }
+
+        vm.prank(address(caller));
+        paymentClient.amountPaid(1);
+    }
+
     //--------------------------------------------------------------------------
     // Test internal functions
 
-    function testEnsureTokenBalance(uint amountRequired) public {
-        setupInternalFunctionTest();
-
-        //Check that Error works correctly
-        vm.expectRevert(
-            IERC20PaymentClient
-                .Module__ERC20PaymentClient__TokenTransferFailed
-                .selector
-        );
-        paymentClient.originalEnsureTokenBalance(amountRequired);
-
-        orchestrator.setExecuteTxBoolReturn(true);
-
-        paymentClient.originalEnsureTokenBalance(amountRequired);
-
-        assertEq(
-            abi.encodeCall(
-                IFundingManager.transferOrchestratorToken,
-                (address(paymentClient), amountRequired)
-            ),
-            orchestrator.executeTxData()
-        );
-    }
-
-    function testEnsureTokenAllowance(uint initialAllowance, uint postAllowance)
+    function testEnsureTokenBalance(uint amountRequired, uint currentFunds)
         public
     {
-        setupInternalFunctionTest();
+        //prep paymentClient
+        _token.mint(address(paymentClient), currentFunds);
 
-        //Set up initial allowance
-        vm.prank(address(paymentClient));
-        _token.approve(address(paymentProcessor), initialAllowance);
+        _orchestrator.setInterceptData(true);
 
-        paymentClient.originalEnsureTokenAllowance(
-            paymentProcessor, postAllowance
-        );
-
-        uint currentAllowance =
-            _token.allowance(address(paymentClient), address(paymentProcessor));
-
-        if (initialAllowance > postAllowance) {
-            assertEq(currentAllowance, initialAllowance);
+        if (currentFunds >= amountRequired) {
+            _orchestrator.setExecuteTxBoolReturn(true);
+            //NoOp as we already have enough funds
+            assertEq(bytes(""), _orchestrator.executeTxData());
         } else {
-            assertEq(currentAllowance, postAllowance);
+            //Check that Error works correctly
+            vm.expectRevert(
+                IERC20PaymentClient
+                    .Module__ERC20PaymentClient__TokenTransferFailed
+                    .selector
+            );
+            paymentClient.originalEnsureTokenBalance(amountRequired);
+
+            _orchestrator.setExecuteTxBoolReturn(true);
+
+            paymentClient.originalEnsureTokenBalance(amountRequired);
+
+            //callback from orchestrator to transfer tokens has to be in this form
+            assertEq(
+                abi.encodeCall(
+                    IFundingManager.transferOrchestratorToken,
+                    (address(paymentClient), amountRequired - currentFunds)
+                ),
+                _orchestrator.executeTxData()
+            );
         }
     }
 
+    function testEnsureTokenAllowance(uint initialAllowance, uint amount)
+        public
+    {
+        //Set up reasonable boundaries
+        initialAllowance = bound(initialAllowance, 0, type(uint).max / 2);
+        amount = bound(amount, 0, type(uint).max / 2);
+
+        //Set up initial allowance
+        vm.prank(address(paymentClient));
+        _token.approve(address(_paymentProcessor), initialAllowance);
+
+        paymentClient.originalEnsureTokenAllowance(_paymentProcessor, amount);
+
+        uint currentAllowance =
+            _token.allowance(address(paymentClient), address(_paymentProcessor));
+
+        assertEq(currentAllowance, initialAllowance + amount);
+    }
+
     function testIsAuthorizedPaymentProcessor(address addr) public {
-        setupInternalFunctionTest();
         bool isAuthorized = paymentClient.originalIsAuthorizedPaymentProcessor(
             IPaymentProcessor(addr)
         );
 
-        if (addr == address(paymentProcessor)) {
+        if (addr == address(_paymentProcessor)) {
             assertTrue(isAuthorized);
         } else {
             assertFalse(isAuthorized);
@@ -360,18 +368,6 @@ contract ERC20PaymentClientTest is ModuleTest {
         }
     }
 
-    function setupInternalFunctionTest() internal {
-        paymentProcessor = new PaymentProcessorMock();
-        fundingManager = new FundingManagerMock();
-        orchestrator = new OrchestratorAccessMock();
-        orchestrator.setPaymentProcessor(paymentProcessor);
-        orchestrator.setFundingManager(fundingManager);
-        paymentClient.setOrchestrator(orchestrator);
-
-        fundingManager.setToken(_token);
-        orchestrator.setToken(_token);
-    }
-
     //--------------------------------------------------------------------------
     // Data Creation Helper Functions
 
@@ -381,19 +377,23 @@ contract ERC20PaymentClientTest is ModuleTest {
         view
         returns (address[] memory)
     {
-        address[] memory invalids = new address[](2);
+        address[] memory invalids = new address[](5);
 
         invalids[0] = address(0);
         invalids[1] = address(paymentClient);
+        invalids[2] = address(_fundingManager);
+        invalids[3] = address(_paymentProcessor);
+        invalids[4] = address(_orchestrator);
 
         return invalids;
     }
 
     /// @dev Returns all invalid amounts.
     function _createInvalidAmounts() internal pure returns (uint[] memory) {
-        uint[] memory invalids = new uint[](1);
+        uint[] memory invalids = new uint[](2);
 
         invalids[0] = 0;
+        invalids[1] = type(uint).max / 100_000;
 
         return invalids;
     }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.20;
+pragma solidity 0.8.23;
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";

@@ -19,8 +19,11 @@ import {
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
-
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {IAccessControl} from "@oz/access/IAccessControl.sol";
+import {IAccessControlEnumerable} from
+    "@oz/access/extensions/IAccessControlEnumerable.sol";
+
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 // Interfaces
@@ -154,7 +157,10 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
     function testSupportsInterface(bytes4 interfaceId) public {
         bool shouldBeInterface = type(ITokenGatedRoleAuthorizer).interfaceId
-            == interfaceId || type(IAuthorizer).interfaceId == interfaceId
+            == interfaceId
+            || type(IAccessControlEnumerable).interfaceId == interfaceId
+            || type(IAccessControl).interfaceId == interfaceId
+            || type(IAuthorizer).interfaceId == interfaceId
             || type(IModule).interfaceId == interfaceId
             || type(IERC165).interfaceId == interfaceId;
 

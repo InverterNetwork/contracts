@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.20;
+pragma solidity 0.8.23;
 
 // Internal Dependencies
 import {
@@ -672,6 +672,9 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         if (success && (data.length == 0 || abi.decode(data, (bool)))) {
             emit TokensReleased(paymentReceiver, _token, amount);
+
+            //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+            IERC20PaymentClient(client).amountPaid(amount);
         } else {
             unclaimableAmounts[client][paymentReceiver] += amount;
         }
