@@ -93,7 +93,7 @@ interface IModule {
 
     /// @notice Checks if the provided address is the trusted forwarder
     /// @param forwarder The contract address to be verified.
-    /// @return Is the given address the trusted forwarder
+    /// @return bool Is the given address the trusted forwarder
     /// @dev We imitate here the EIP2771 Standard to enable metatransactions
     /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
     function isTrustedForwarder(address forwarder)
