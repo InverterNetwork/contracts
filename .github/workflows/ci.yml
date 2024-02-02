@@ -28,4 +28,6 @@ jobs:
         run: make testScripts
 
       - name: Run tests
-        run: make test
+        run:
+          - forge test
+          - make testScripts
