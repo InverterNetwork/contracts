@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
+pragma solidity 0.8.23;
 // External Libraries
 
 // External Dependencies
@@ -122,13 +123,16 @@ contract RoleAuthorizer is
     /// @param role The id number of the role
     /// @param who The user we want to check on
     /// @return bool Returns if revoke has been succesful
+    /// @return bool Returns if revoke has been succesful
     function _revokeRole(bytes32 role, address who)
         internal
         virtual
         override
         notLastOwner(role)
         returns (bool)
+        returns (bool)
     {
+        return super._revokeRole(role, who);
         return super._revokeRole(role, who);
     }
 
