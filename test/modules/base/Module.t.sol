@@ -39,6 +39,21 @@ contract baseModuleTest is ModuleTest {
 
     bytes _CONFIGDATA = bytes("");
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Module has been initialized.
+    /// @param parentOrchestrator The address of the orchestrator the module is linked to.
+    /// @param moduleTitle The title of the module.
+    /// @param majorVersion The major version of the module.
+    /// @param minorVersion The minor version of the module.
+    event ModuleInitialized(
+        address indexed parentOrchestrator,
+        string indexed moduleTitle,
+        uint majorVersion,
+        uint minorVersion
+    );
+
     function setUp() public {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
@@ -47,6 +62,11 @@ contract baseModuleTest is ModuleTest {
 
         //init authorizer and set this address as authorized
         _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
+
+        vm.expectEmit(true, true, true, false);
+        emit ModuleInitialized(
+            address(_orchestrator), _TITLE, _MAJOR_VERSION, _MINOR_VERSION
+        );
 
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }

@@ -19,14 +19,20 @@ interface IVirtualTokenSupply {
     // Events
 
     /// @notice Event emitted when virtual token supply has been set
+    /// @param newSupply The new virtual token supply
+    /// @param oldSupply The old virtual token supply
     event VirtualTokenSupplySet(uint indexed newSupply, uint indexed oldSupply);
 
     /// @notice Event emitted when virtual token amount has been added
+    /// @param amountAdded The amount added to the virtual token supply
+    /// @param newSupply The new virtual token supply
     event VirtualTokenAmountAdded(
         uint indexed amountAdded, uint indexed newSupply
     );
 
     /// @notice Event emitted when virtual token amount has ben subtracted
+    /// @param amountSubtracted The amount subtracted from the virtual token supply
+    /// @param newSupply The new virtual token supply
     event VirtualTokenAmountSubtracted(
         uint indexed amountSubtracted, uint indexed newSupply
     );

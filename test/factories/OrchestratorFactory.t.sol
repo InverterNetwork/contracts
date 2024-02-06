@@ -35,6 +35,16 @@ contract OrchestratorFactoryTest is Test {
 
     Orchestrator target;
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when a new orchestrator is created.
+    /// @param orchestratorId The id of the orchestrator.
+    /// @param orchestratorAddress The address of the orchestrator.
+    event OrchestratorCreated(
+        uint indexed orchestratorId, address indexed orchestratorAddress
+    );
+
     // Mocks
     ModuleFactoryMock moduleFactory;
 
@@ -119,6 +129,9 @@ contract OrchestratorFactoryTest is Test {
             moduleConfigs[i] = moduleConfig;
         }
 
+        vm.expectEmit(true, false, false, false);
+        emit OrchestratorCreated(1, address(0)); // Since we don't know the address of the orchestrator
+
         // Deploy Orchestrator with id=1
         IOrchestrator orchestrator = factory.createOrchestrator(
             orchestratorConfig,
@@ -132,6 +145,9 @@ contract OrchestratorFactoryTest is Test {
         assertEq(orchestrator.orchestratorId(), 1);
         assertTrue(address(orchestrator.authorizer()) != address(0));
         assertTrue(address(orchestrator.paymentProcessor()) != address(0));
+
+        vm.expectEmit(true, false, false, false);
+        emit OrchestratorCreated(2, address(0)); //since we don't know the address of the orchestrator
 
         // Deploy Orchestrator with id=2
         orchestrator = factory.createOrchestrator(
@@ -162,6 +178,9 @@ contract OrchestratorFactoryTest is Test {
         //Create Empty ModuleConfig
         IOrchestratorFactory.ModuleConfig[] memory moduleConfigs =
             new IOrchestratorFactory.ModuleConfig[](0);
+
+        vm.expectEmit(false, false, false, false);
+        emit OrchestratorCreated(0, address(0)); // Since we don't know the id/address of the orchestrator
 
         // Deploy Orchestrator
         IOrchestrator orchestrator = factory.createOrchestrator(

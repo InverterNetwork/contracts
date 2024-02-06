@@ -472,10 +472,12 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     function testSetSellFee(uint _fee) public callerIsOrchestratorOwner {
         vm.assume(_fee <= bondingCurveFundingManager.call_BPS());
 
+        uint oldSellFee = bondingCurveFundingManager.sellFee();
+
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit SellFeeUpdated(_fee, SELL_FEE);
+        emit SellFeeUpdated(_fee, oldSellFee);
         bondingCurveFundingManager.setSellFee(_fee);
 
         assertEq(bondingCurveFundingManager.sellFee(), _fee);

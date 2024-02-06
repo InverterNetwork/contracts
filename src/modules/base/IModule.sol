@@ -13,6 +13,21 @@ interface IModule {
     }
 
     //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Module has been initialized.
+    /// @param parentOrchestrator The address of the orchestrator the module is linked to.
+    /// @param moduleTitle The title of the module.
+    /// @param majorVersion The major version of the module.
+    /// @param minorVersion The minor version of the module.
+    event ModuleInitialized(
+        address indexed parentOrchestrator,
+        string indexed moduleTitle,
+        uint majorVersion,
+        uint minorVersion
+    );
+
+    //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by authorized caller.

@@ -56,6 +56,35 @@ contract SingleVoteGovernorTest is ModuleTest {
     address internal constant COBIE = address(0xc0b1e);
     ISingleVoteGovernor.Motion _bufMotion;
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when a new voter address gets added.
+    /// @param who The added address.
+    event VoterAdded(address indexed who);
+
+    /// @notice Event emitted when a voter address gets removed.
+    /// @param who The removed address.
+    event VoterRemoved(address indexed who);
+
+    /// @notice Event emitted when the required threshold changes.
+    /// @param oldThreshold The old threshold.
+    /// @param newThreshold The new threshold.
+    event ThresholdUpdated(uint oldThreshold, uint newThreshold);
+
+    /// @notice Event emitted when the voting duration changes.
+    /// @param oldVotingDuration The old voting duration.
+    /// @param newVotingDuration The new voting duration.
+    event VoteDurationUpdated(uint oldVotingDuration, uint newVotingDuration);
+
+    /// @notice Event emitted when a motion is created
+    /// @param motionId The motion ID.
+    event MotionCreated(uint indexed motionId);
+
+    /// @notice Event emitted when a motion is executed.
+    /// @param motionId The motion ID.
+    event MotionExecuted(uint indexed motionId);
+
     function setUp() public {
         // Set up a orchestrator
         address authImpl = address(new SingleVoteGovernor());
@@ -105,7 +134,12 @@ contract SingleVoteGovernorTest is ModuleTest {
         public
         returns (uint)
     {
+        uint countID = _governor.motionCount();
         vm.prank(callingUser);
+
+        vm.expectEmit(true, true, true, true);
+        emit MotionCreated(countID);
+
         uint _id = _governor.createMotion(_addr, _msg);
         return _id;
     }
@@ -864,6 +898,11 @@ contract SingleVoteGovernorTest is ModuleTest {
         );
 
         // 3) The vote gets executed (by anybody)
+
+        vm.expectEmit(true, true, true, true);
+        uint _oldDuration = _governor.voteDuration();
+        emit VoteDurationUpdated(_oldDuration, _newDuration);
+        emit MotionExecuted(_voteID);
         _governor.executeMotion(_voteID);
 
         // 4) The module state has changed
@@ -979,6 +1018,9 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         vm.startPrank(address(_governor));
         for (uint i; i < users.length; ++i) {
+            vm.expectEmit();
+            emit VoterAdded(users[i]);
+
             _governor.addVoter(users[i]);
         }
 
@@ -1003,6 +1045,9 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         vm.startPrank(address(_governor));
         for (uint i; i < users.length; ++i) {
+            vm.expectEmit();
+            emit VoterRemoved(users[i]);
+
             _governor.removeVoter(users[i]);
         }
 
@@ -1064,17 +1109,22 @@ contract SingleVoteGovernorTest is ModuleTest {
 
     // Set a new threshold
     function testMotionSetThreshold() public {
-        uint _newQ = 1;
+        uint oldThreshold = _governor.threshold();
+        uint newThreshold = 1;
 
         vm.prank(address(_governor));
-        _governor.setThreshold(_newQ);
 
-        assertEq(_governor.threshold(), _newQ);
+        vm.expectEmit(true, true, true, true);
+        emit ThresholdUpdated(oldThreshold, newThreshold);
+
+        _governor.setThreshold(newThreshold);
+
+        assertEq(_governor.threshold(), newThreshold);
     }
 
     // Fail to set a threshold that's too damn high
-    function testSetUnreachableThreshold(uint _newQ) public {
-        vm.assume(_newQ > _governor.voterCount());
+    function testSetUnreachableThreshold(uint newThreshold) public {
+        vm.assume(newThreshold > _governor.voterCount());
 
         vm.expectRevert(
             ISingleVoteGovernor
@@ -1082,7 +1132,7 @@ contract SingleVoteGovernorTest is ModuleTest {
                 .selector
         );
         vm.prank(address(_governor));
-        _governor.setThreshold(_newQ);
+        _governor.setThreshold(newThreshold);
     }
 
     // Fail to change threshold when not the module itself
@@ -1116,6 +1166,13 @@ contract SingleVoteGovernorTest is ModuleTest {
         );
 
         // 2) The vote gets executed by anybody
+
+        uint _oldThreshold = _governor.threshold();
+
+        vm.expectEmit(true, true, true, true);
+        emit ThresholdUpdated(_oldThreshold, _newThreshold);
+        emit MotionExecuted(_voteID);
+
         _governor.executeMotion(_voteID);
 
         // 3) The orchestrator state has changed
@@ -1132,12 +1189,17 @@ contract SingleVoteGovernorTest is ModuleTest {
 
     // Set new vote duration
     function testMotionSetVoteDuration() public {
-        uint _newDur = 3 days;
+        uint _oldDuration = _governor.voteDuration();
+        uint _newDuration = 3 days;
 
         vm.prank(address(_governor));
-        _governor.setVotingDuration(_newDur);
 
-        assertEq(_governor.voteDuration(), _newDur);
+        vm.expectEmit(true, true, true, true);
+        emit VoteDurationUpdated(_oldDuration, _newDuration);
+
+        _governor.setVotingDuration(_newDuration);
+
+        assertEq(_governor.voteDuration(), _newDuration);
     }
 
     // Fail to set vote durations out of bounds

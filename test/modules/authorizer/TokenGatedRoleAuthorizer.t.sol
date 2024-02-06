@@ -114,6 +114,20 @@ contract TokenGatedRoleAuthorizerTest is Test {
     IModule.Metadata _METADATA =
         IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when the token-gating of a role changes.
+    /// @param role The role that was modified.
+    /// @param newValue The new value of the role.
+    event ChangedTokenGating(bytes32 role, bool newValue);
+
+    /// @notice Event emitted when the threshold of a token-gated role changes.
+    /// @param role The role that was modified.
+    /// @param token The token for which the threshold was modified.
+    /// @param newValue The new value of the threshold.
+    event ChangedTokenThreshold(bytes32 role, address token, uint newValue);
+
     function setUp() public {
         address authImpl = address(new TokenGatedRoleAuthorizer());
         _authorizer = TokenGatedRoleAuthorizer(Clones.clone(authImpl));
@@ -180,6 +194,10 @@ contract TokenGatedRoleAuthorizerTest is Test {
         bytes32 roleId = _authorizer.generateRoleId(module, role);
         vm.startPrank(module);
 
+        vm.expectEmit();
+        emit ChangedTokenGating(roleId, true);
+        emit ChangedTokenThreshold(roleId, address(token), threshold);
+
         _authorizer.makeRoleTokenGatedFromModule(role);
         _authorizer.grantTokenRoleFromModule(role, address(token), threshold);
         vm.stopPrank();
@@ -234,12 +252,20 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
         //now we make it tokengated as admin
         vm.prank(CLOE);
+
+        vm.expectEmit();
+        emit ChangedTokenGating(roleId, true);
+
         _authorizer.setTokenGated(roleId, true);
 
         assertTrue(_authorizer.isTokenGated(roleId));
 
         //and revert the change
         vm.prank(CLOE);
+
+        vm.expectEmit();
+        emit ChangedTokenGating(roleId, false);
+
         _authorizer.setTokenGated(roleId, false);
 
         assertFalse(_authorizer.isTokenGated(roleId));

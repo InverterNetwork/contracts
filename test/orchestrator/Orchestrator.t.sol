@@ -56,6 +56,13 @@ contract OrchestratorTest is Test {
     event AuthorizerUpdated(address indexed _address);
     event FundingManagerUpdated(address indexed _address);
     event PaymentProcessorUpdated(address indexed _address);
+    event OrchestratorInitialized(
+        uint indexed orchestratorId_,
+        address fundingManager,
+        address authorizer,
+        address paymentProcessor,
+        address[] modules
+    );
 
     function setUp() public {
         fundingManager = new FundingManagerMock();
@@ -87,6 +94,15 @@ contract OrchestratorTest is Test {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(truncatedModules);
 
+            vm.expectEmit(true, true, true, false);
+            emit OrchestratorInitialized(
+                orchestratorId,
+                address(fundingManager),
+                address(authorizer),
+                address(paymentProcessor),
+                truncatedModules
+            );
+
             // Initialize orchestrator.
             orchestrator.init(
                 orchestratorId,
@@ -98,6 +114,15 @@ contract OrchestratorTest is Test {
         } else {
             // Make sure mock addresses are not in set of modules.
             assumeMockAreNotInSet(modules);
+
+            vm.expectEmit(true, true, true, false);
+            emit OrchestratorInitialized(
+                orchestratorId,
+                address(fundingManager),
+                address(authorizer),
+                address(paymentProcessor),
+                truncatedModules
+            );
 
             // Initialize orchestrator.
             orchestrator.init(

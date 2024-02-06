@@ -137,6 +137,8 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
             revert OrchestratorFactory__OrchestratorOwnerIsInvalid();
         }
 
+        emit OrchestratorCreated(_orchestratorIdCounter, clone);
+
         // Initialize orchestrator.
         IOrchestrator(clone).init(
             _orchestratorIdCounter,
