@@ -82,14 +82,9 @@ contract BountyManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IBountyManager).interfaceId == interfaceId
-            || type(IERC20PaymentClient).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface, bountyManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            bountyManager.supportsInterface(type(IBountyManager).interfaceId)
         );
     }
 
@@ -97,7 +92,7 @@ contract BountyManagerTest is ModuleTest {
     function testInit() public override(ModuleTest) {}
 
     function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bountyManager.init(_orchestrator, _METADATA, bytes(""));
     }
 

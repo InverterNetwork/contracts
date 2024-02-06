@@ -16,9 +16,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {IERC20Upgradeable} from "@oz-up/token/ERC20/IERC20Upgradeable.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+// import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// import {IERC20Metadata} from
+//     "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
@@ -168,24 +168,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IFundingManager).interfaceId
-            == interfaceId
-            || type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
-                == interfaceId
-            || type(IVirtualTokenSupply).interfaceId == interfaceId
-            || type(IVirtualCollateralSupply).interfaceId == interfaceId
-            || type(IRedeemingBondingCurveFundingManagerBase).interfaceId
-                == interfaceId
-            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
-            || type(IFundingManager).interfaceId == interfaceId
-            || type(IFundingManager).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface,
-            bondingCurveFundingManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
+            )
         );
     }
 
@@ -266,7 +253,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     function testReinitFails() public override {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 

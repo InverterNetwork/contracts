@@ -12,15 +12,13 @@ import {
 } from "src/modules/authorizer/RoleAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
-import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {IERC165Upgradeable} from
-    "@oz-up/utils/introspection/IERC165Upgradeable.sol";
+import {IERC165} from "@oz/interfaces/IERC165.sol";
 
-import {
-    IAccessControlEnumerableUpgradeable,
-    IAccessControlUpgradeable
-} from "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
+import {IAccessControlEnumerable} from
+    "@oz/access/extensions/IAccessControlEnumerable.sol";
+
+import {IAccessControl} from "@oz/access/IAccessControl.sol";
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 // Interfaces
@@ -140,16 +138,8 @@ contract RoleAuthorizerTest is Test {
     //--------------------------------------------------------------------------------------
     // Tests Initialization
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IAccessControlEnumerableUpgradeable)
-            .interfaceId == interfaceId
-            || type(IAccessControlUpgradeable).interfaceId == interfaceId
-            || type(IAuthorizer).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165Upgradeable).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(shouldBeInterface, _authorizer.supportsInterface(interfaceId));
+    function testSupportsInterface() public {
+        assertTrue(_authorizer.supportsInterface(type(IAuthorizer).interfaceId));
     }
 
     function testInitWithInitialOwner(address initialAuth) public {

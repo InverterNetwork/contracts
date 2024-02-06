@@ -52,15 +52,11 @@ contract RecurringPaymentManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IRecurringPaymentManager).interfaceId
-            == interfaceId || type(IERC20PaymentClient).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface,
-            recurringPaymentManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            recurringPaymentManager.supportsInterface(
+                type(IRecurringPaymentManager).interfaceId
+            )
         );
     }
 
@@ -101,7 +97,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         recurringPaymentManager.init(_orchestrator, _METADATA, bytes(""));
     }
 

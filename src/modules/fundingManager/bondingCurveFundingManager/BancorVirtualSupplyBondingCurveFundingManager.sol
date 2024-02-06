@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
 
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
@@ -30,8 +30,7 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -129,8 +128,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // Set token decimals for issuance token
         _setTokenDecimals(issuanceToken.decimals);
         // Store token decimals for collateral
-        collateralTokenDecimals =
-            IERC20MetadataUpgradeable(address(token())).decimals();
+        collateralTokenDecimals = IERC20Metadata(address(token())).decimals();
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
 
 // External Dependencies
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
+import {Ownable} from "@oz/access/Ownable.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
@@ -76,7 +77,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor() {
+    constructor() Ownable(_msgSender()) {
         // NO-OP
     }
 

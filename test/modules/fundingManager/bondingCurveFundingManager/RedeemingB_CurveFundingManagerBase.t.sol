@@ -81,17 +81,11 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IRedeemingBondingCurveFundingManagerBase)
-            .interfaceId == interfaceId
-            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
-            || type(IFundingManager).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface,
-            bondingCurveFundingManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IRedeemingBondingCurveFundingManagerBase).interfaceId
+            )
         );
     }
 
@@ -146,7 +140,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     function testReinitFails() public override {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 

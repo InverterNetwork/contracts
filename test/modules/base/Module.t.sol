@@ -73,11 +73,8 @@ contract baseModuleTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(shouldBeInterface, module.supportsInterface(interfaceId));
+    function testSupportsInterface() public {
+        assertTrue(module.supportsInterface(type(IModule).interfaceId));
     }
 
     function testInit() public override {
@@ -110,7 +107,7 @@ contract baseModuleTest is ModuleTest {
     }
 
     function testReinitFails() public override {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 

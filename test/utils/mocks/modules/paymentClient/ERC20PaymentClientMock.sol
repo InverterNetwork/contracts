@@ -78,7 +78,8 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
         internal
         override(ERC20PaymentClient)
     {
-        token.increaseAllowance(address(spender), amount);
+        uint currentAllowance = token.allowance(_msgSender(), address(spender));
+        token.approve(address(spender), amount + currentAllowance);
     }
 
     function _isAuthorizedPaymentProcessor(IPaymentProcessor)

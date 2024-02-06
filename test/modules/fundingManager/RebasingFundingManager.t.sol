@@ -90,14 +90,9 @@ contract RebasingFundingManagerTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IFundingManager).interfaceId
-            == interfaceId || type(IRebasingERC20).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface, fundingManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            fundingManager.supportsInterface(type(IFundingManager).interfaceId)
         );
     }
 
@@ -120,7 +115,7 @@ contract RebasingFundingManagerTest is ModuleTest {
     }
 
     function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         fundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 

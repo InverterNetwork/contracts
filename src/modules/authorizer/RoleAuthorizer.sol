@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
 // External Libraries
 
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {AccessControlEnumerableUpgradeable} from
-    "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
+    "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
 import {Module, IModule} from "src/modules/base/Module.sol";
 import {IAuthorizer} from "./IAuthorizer.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
@@ -117,13 +117,15 @@ contract RoleAuthorizer is
     /// @notice Overrides {_revokeRole} to prevent having an empty OWNER role
     /// @param role The id number of the role
     /// @param who The user we want to check on
+    /// @return bool Returns if revoke has been succesful
     function _revokeRole(bytes32 role, address who)
         internal
         virtual
         override
         notLastOwner(role)
+        returns (bool)
     {
-        super._revokeRole(role, who);
+        return super._revokeRole(role, who);
     }
 
     //--------------------------------------------------------------------------
