@@ -49,6 +49,30 @@ contract RebasingFundingManagerTest is ModuleTest {
     uint8 private constant DECIMALS = 18;
     uint private constant ORCHESTRATOR_ID = 1;
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when a deposit takes place.
+    /// @param _from The address depositing tokens.
+    /// @param _for The address that will receive the receipt tokens.
+    /// @param _amount The amount of tokens deposited.
+    event Deposit(
+        address indexed _from, address indexed _for, uint indexed _amount
+    );
+
+    /// @notice Event emitted when a withdrawal takes place.
+    /// @param _from The address supplying the receipt tokens.
+    /// @param _for The address that will receive the underlying tokens.
+    /// @param _amount The amount of underlying tokens withdrawn.
+    event Withdrawal(
+        address indexed _from, address indexed _for, uint indexed _amount
+    );
+
+    /// @notice Event emitted when a transferal of orchestrator tokens takes place.
+    /// @param _to The address that will receive the underlying tokens.
+    /// @param _amount The amount of underlying tokens transfered.
+    event TransferOrchestratorToken(address indexed _to, uint indexed _amount);
+
     function setUp() public {
         //because generateValidUserDeposits uses a mechanism to generate random numbers based on blocktimestamp we warp it
         vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
@@ -136,6 +160,10 @@ contract RebasingFundingManagerTest is ModuleTest {
         vm.startPrank(user);
         {
             _token.approve(address(fundingManager), type(uint).max);
+
+            vm.expectEmit();
+            emit Deposit(user, user, amount);
+
             fundingManager.deposit(amount);
         }
         vm.stopPrank();
@@ -219,6 +247,10 @@ contract RebasingFundingManagerTest is ModuleTest {
         uint undelierDeposited = 0; // keeps track of amount deposited so we can use it later
         for (uint i; i < (input.users.length / 2); ++i) {
             vm.prank(input.users[i]);
+
+            vm.expectEmit();
+            emit Deposit(input.users[i], input.users[i], input.deposits[i]);
+
             fundingManager.deposit(input.deposits[i]);
 
             assertEq(
@@ -300,6 +332,9 @@ contract RebasingFundingManagerTest is ModuleTest {
         // Half the users deposit their underliers.
         for (uint i; i < input.users.length / 2; ++i) {
             vm.prank(input.users[i]);
+            vm.expectEmit();
+            emit Deposit(input.users[i], input.users[i], input.deposits[i]);
+
             fundingManager.deposit(input.deposits[i]);
 
             assertEq(
@@ -330,6 +365,9 @@ contract RebasingFundingManagerTest is ModuleTest {
         // The other half of the users deposit their underliers.
         for (uint i = input.users.length / 2; i < input.users.length; ++i) {
             vm.prank(input.users[i]);
+            vm.expectEmit();
+            emit Deposit(input.users[i], input.users[i], input.deposits[i]);
+
             fundingManager.depositFor(input.users[i], input.deposits[i]);
 
             assertEq(
@@ -365,8 +403,12 @@ contract RebasingFundingManagerTest is ModuleTest {
                 vm.prank(input.users[i]);
                 //to test both withdraw and withdrawTo
                 if (i % 2 == 0) {
+                    vm.expectEmit();
+                    emit Withdrawal(input.users[i], input.users[i], balance);
                     fundingManager.withdraw(balance);
                 } else {
+                    vm.expectEmit();
+                    emit Withdrawal(input.users[i], input.users[i], balance);
                     fundingManager.withdrawTo(input.users[i], balance);
                 }
             }
@@ -381,6 +423,9 @@ contract RebasingFundingManagerTest is ModuleTest {
         for (uint i; i < input.users.length / 2; ++i) {
             if (remainingFunds[i] != 0) {
                 vm.prank(input.users[i]);
+                vm.expectEmit();
+                emit Deposit(input.users[i], input.users[i], remainingFunds[i]);
+
                 fundingManager.deposit(remainingFunds[i]);
 
                 assertEq(
@@ -398,6 +443,8 @@ contract RebasingFundingManagerTest is ModuleTest {
     function testTransferOrchestratorTokenFails(address caller, address to)
         public
     {
+        vm.assume(to != address(0) && to != address(fundingManager));
+
         _token.mint(address(fundingManager), 2);
 
         if (caller != address(_orchestrator)) {
@@ -413,6 +460,10 @@ contract RebasingFundingManagerTest is ModuleTest {
         }
 
         vm.prank(address(_orchestrator));
+
+        vm.expectEmit();
+        emit TransferOrchestratorToken(to, 1);
+
         fundingManager.transferOrchestratorToken(to, 1);
     }
 

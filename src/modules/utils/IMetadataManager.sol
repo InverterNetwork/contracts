@@ -29,11 +29,19 @@ interface IMetadataManager {
     // Events
 
     /// @notice Event emitted when the owner metadata changed.
+    /// @param name The name of the owner.
+    /// @param account The account of the owner.
+    /// @param twitterHandle The twitter handle of the owner.
     event ManagerMetadataUpdated(
         string name, address account, string twitterHandle
     );
 
     /// @notice Event emitted when the orchestrator metadata changed.
+    /// @param title The title of the orchestrator.
+    /// @param descriptionShort The short description of the orchestrator.
+    /// @param descriptionLong The long description of the orchestrator.
+    /// @param externalMedias The external medias of the orchestrator.
+    /// @param categories The categories of the orchestrator.
     event OrchestratorMetadataUpdated(
         string title,
         string descriptionShort,
@@ -43,6 +51,7 @@ interface IMetadataManager {
     );
 
     /// @notice Event emitted when the team metadata changed.
+    /// @param members The members of the team.
     event TeamMetadataUpdated(MemberMetadata[] members);
 
     function getManagerMetadata()

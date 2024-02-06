@@ -33,6 +33,30 @@ contract SimplePaymentProcessorTest is ModuleTest {
     // Mocks
     ERC20PaymentClientMock paymentClient = new ERC20PaymentClientMock(_token);
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param createdAt Timestamp at which the order was created.
+    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    event PaymentOrderProcessed(
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint createdAt,
+        uint dueTo
+    );
+
+    /// @notice Emitted when an amount of ERC20 tokens gets sent out of the contract.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    event TokensReleased(
+        address indexed recipient, address indexed token, uint amount
+    );
+
     function setUp() public {
         address impl = address(new SimplePaymentProcessor());
         paymentProcessor = SimplePaymentProcessor(Clones.clone(impl));
@@ -116,6 +140,17 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
         // Call processPayments.
         vm.prank(address(paymentClient));
+
+        vm.expectEmit(true, true, true, true);
+        emit PaymentOrderProcessed(
+            address(paymentClient),
+            recipient,
+            amount,
+            block.timestamp,
+            block.timestamp
+        );
+        emit TokensReleased(recipient, address(_token), amount);
+
         paymentProcessor.processPayments(paymentClient);
 
         // Check correct balances.

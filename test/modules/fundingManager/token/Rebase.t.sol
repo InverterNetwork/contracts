@@ -9,6 +9,11 @@ import "./Test.t.sol";
  *      Uses a table-driven test approach.
  */
 contract Rebase is ElasticReceiptTokenTest {
+    /// @notice Event emitted when the balance scalar is updated.
+    /// @param epoch The number of rebases since inception.
+    /// @param newScalar The new scalar.
+    event Rebase(uint indexed epoch, uint newScalar);
+
     struct TestCase {
         // The user balances.
         uint[2] balances;
@@ -64,6 +69,10 @@ contract Rebase is ElasticReceiptTokenTest {
             // Change the underlier's supply and execute rebase.
             underlier.burn(address(ertb), underlier.balanceOf(address(ertb)));
             underlier.mint(address(ertb), testCase.newSupplyTarget);
+
+            vm.expectEmit(false, false, false, false);
+            emit Rebase(0, 0); //we don't know the new values, so we just emit a dummy value
+
             ertb.rebase();
 
             // Check that the user balances rebased into the "right direction",
@@ -82,6 +91,10 @@ contract Rebase is ElasticReceiptTokenTest {
             // Execute second rebase to bring the supply back to initial.
             underlier.burn(address(ertb), underlier.balanceOf(address(ertb)));
             underlier.mint(address(ertb), totalSupply);
+
+            vm.expectEmit(false, false, false, false);
+            emit Rebase(0, 0); //we don't know the new values, so we just emit a dummy value
+
             ertb.rebase();
 
             // Check that user balances did not change compared to initial.

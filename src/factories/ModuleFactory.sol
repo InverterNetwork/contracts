@@ -117,7 +117,9 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
         IModule(implementation).init(orchestrator, metadata, configData);
 
         emit ModuleCreated(
-            address(orchestrator), implementation, metadata.title
+            address(orchestrator),
+            implementation,
+            LibMetadata.identifier(metadata)
         );
 
         return implementation;

@@ -186,6 +186,13 @@ abstract contract Module is
             revert Module__InvalidMetadata();
         }
         __Module_metadata = metadata;
+
+        emit ModuleInitialized(
+            address(orchestrator_),
+            metadata.title,
+            metadata.majorVersion,
+            metadata.minorVersion
+        );
     }
 
     function init2(IOrchestrator orchestrator_, bytes memory dependencyData)

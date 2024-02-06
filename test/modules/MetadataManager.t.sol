@@ -32,6 +32,26 @@ contract MetadataManagerTest is ModuleTest {
     IMetadataManager.OrchestratorMetadata ORCHESTRATOR_METADATA;
     IMetadataManager.MemberMetadata[] TEAM_METADATA;
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when the owner metadata changed.
+    event ManagerMetadataUpdated(
+        string name, address account, string twitterHandle
+    );
+
+    /// @notice Event emitted when the orchestrator metadata changed.
+    event OrchestratorMetadataUpdated(
+        string title,
+        string descriptionShort,
+        string descriptionLong,
+        string[] externalMedias,
+        string[] categories
+    );
+
+    /// @notice Event emitted when the team metadata changed.
+    event TeamMetadataUpdated(IMetadataManager.MemberMetadata[] members);
+
     function setUp() public {
         //Set up Preset Metadata
         MANAGER_METADATA = IMetadataManager.ManagerMetadata(
@@ -107,16 +127,37 @@ contract MetadataManagerTest is ModuleTest {
 
         //-----------------------
         // MANAGER_METADATA
+
+        vm.expectEmit();
+        emit ManagerMetadataUpdated(
+            MANAGER_METADATA.name,
+            MANAGER_METADATA.account,
+            MANAGER_METADATA.twitterHandle
+        );
         metadataManager.setManagerMetadata(MANAGER_METADATA);
         assertMetadataManagerManagerMetadataEqualTo(MANAGER_METADATA);
 
         //-----------------------
         // ORCHESTRATOR_METADATA
+
+        vm.expectEmit();
+        emit OrchestratorMetadataUpdated(
+            ORCHESTRATOR_METADATA.title,
+            ORCHESTRATOR_METADATA.descriptionShort,
+            ORCHESTRATOR_METADATA.descriptionLong,
+            ORCHESTRATOR_METADATA.externalMedias,
+            ORCHESTRATOR_METADATA.categories
+        );
+
         metadataManager.setOrchestratorMetadata(ORCHESTRATOR_METADATA);
         assertMetadataManagerOrchestratorMetadataEqualTo(ORCHESTRATOR_METADATA);
 
         //-----------------------
         // TEAM_METADATA
+
+        /// @notice Event emitted when the team metadata changed.
+        vm.expectEmit();
+        emit TeamMetadataUpdated(TEAM_METADATA);
         metadataManager.setTeamMetadata(TEAM_METADATA);
         assertMetadataManagerTeamMetadataEqualTo(TEAM_METADATA);
     }
