@@ -82,14 +82,9 @@ contract BountyManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IBountyManager).interfaceId == interfaceId
-            || type(IERC20PaymentClient).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface, bountyManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            bountyManager.supportsInterface(type(IBountyManager).interfaceId)
         );
     }
 

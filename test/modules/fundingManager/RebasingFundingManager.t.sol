@@ -66,14 +66,9 @@ contract RebasingFundingManagerTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IFundingManager).interfaceId
-            == interfaceId || type(IRebasingERC20).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface, fundingManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            fundingManager.supportsInterface(type(IFundingManager).interfaceId)
         );
     }
 

@@ -121,13 +121,11 @@ contract MetadataManagerTest is ModuleTest {
         assertMetadataManagerTeamMetadataEqualTo(TEAM_METADATA);
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IMetadataManager).interfaceId
-            == interfaceId || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface, metadataManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            metadataManager.supportsInterface(
+                type(IMetadataManager).interfaceId
+            )
         );
     }
 

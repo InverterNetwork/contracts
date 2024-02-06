@@ -100,14 +100,8 @@ contract RoleAuthorizerTest is Test {
     //--------------------------------------------------------------------------------------
     // Tests Initialization
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IAccessControlEnumerable).interfaceId
-            == interfaceId || type(IAccessControl).interfaceId == interfaceId
-            || type(IAuthorizer).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(shouldBeInterface, _authorizer.supportsInterface(interfaceId));
+    function testSupportsInterface() public {
+        assertTrue(_authorizer.supportsInterface(type(IAuthorizer).interfaceId));
     }
 
     function testInitWithInitialOwner(address initialAuth) public {

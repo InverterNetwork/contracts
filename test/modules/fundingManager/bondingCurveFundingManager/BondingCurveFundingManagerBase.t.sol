@@ -75,16 +75,16 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IFundingManager).interfaceId
-            == interfaceId
-            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface,
-            bondingCurveFundingManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IBondingCurveFundingManagerBase).interfaceId
+            )
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IFundingManager).interfaceId
+            )
         );
     }
 

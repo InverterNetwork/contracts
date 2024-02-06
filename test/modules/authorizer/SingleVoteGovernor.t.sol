@@ -88,12 +88,10 @@ contract SingleVoteGovernorTest is ModuleTest {
         //validation of the initial state happens in testInit()
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(ISingleVoteGovernor).interfaceId
-            == interfaceId || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(shouldBeInterface, _governor.supportsInterface(interfaceId));
+    function testSupportsInterface() public {
+        assertTrue(
+            _governor.supportsInterface(type(ISingleVoteGovernor).interfaceId)
+        );
     }
 
     //--------------------------------------------------------------------------

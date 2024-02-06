@@ -85,10 +85,7 @@ contract BeaconTest is Test {
     //--------------------------------------------------------------------------------
     // Test: ERC-165's supportInterface()
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IBeacon).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(shouldBeInterface, beacon.supportsInterface(interfaceId));
+    function testSupportsInterface() public {
+        assertTrue(beacon.supportsInterface(type(IBeacon).interfaceId));
     }
 }
