@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
-pragma solidity 0.8.23;
 // External Libraries
 
 // External Dependencies
@@ -11,8 +10,6 @@ import {
 } from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
-
-// Internal Dependencies
 import {Module, IModule} from "src/modules/base/Module.sol";
 import {IAuthorizer} from "./IAuthorizer.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
