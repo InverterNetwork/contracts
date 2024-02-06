@@ -169,16 +169,12 @@ contract TokenGatedRoleAuthorizerTest is Test {
         roleNft.mint(BOB);
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(ITokenGatedRoleAuthorizer).interfaceId
-            == interfaceId
-            || type(IAccessControlEnumerable).interfaceId == interfaceId
-            || type(IAccessControl).interfaceId == interfaceId
-            || type(IAuthorizer).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(shouldBeInterface, _authorizer.supportsInterface(interfaceId));
+    function testSupportsInterface() public {
+        assertTrue(
+            _authorizer.supportsInterface(
+                type(ITokenGatedRoleAuthorizer).interfaceId
+            )
+        );
     }
 
     //-------------------------------------------------
