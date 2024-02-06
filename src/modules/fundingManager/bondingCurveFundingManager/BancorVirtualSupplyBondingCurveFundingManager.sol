@@ -131,7 +131,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
         // Set token decimals for issuance token
         _setTokenDecimals(issuanceToken.decimals);
-
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
