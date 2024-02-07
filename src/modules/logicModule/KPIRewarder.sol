@@ -164,9 +164,9 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
 
     // not necessary?
-    function withdraw(uint amount) external nonReentrant validAmount(amount) override {
+    /*function withdraw(uint amount) external nonReentrant validAmount(amount) override {
         // TODO withdraw unstaked funds
-    }
+    }*/
 
     // Optimistic Oracle Overrides:
 

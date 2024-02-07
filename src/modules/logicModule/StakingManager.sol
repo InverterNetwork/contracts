@@ -109,28 +109,36 @@ contract StakingManager is
     /// @inheritdoc IStakingManager
     function stake(uint amount) external nonReentrant validAmount(amount) virtual {
         address sender = _msgSender();
-        _update(sender);
+
+        _stake(sender, amount);
+        
+    }
+
+    function _stake(address depositFor, uint amount) internal virtual {
+        _update(depositFor);
 
         //If the user has already earned something
-        if (rewards[sender] != 0) {
+        if (rewards[depositFor] != 0) {
             //distribute rewards for previous reward period
-            _distributeRewards(sender);
+            _distributeRewards(depositFor);
         }
 
         //Increase balance accordingly
-        _balances[sender] += amount;
+        _balances[depositFor] += amount;
         //Total supply too
         totalSupply += amount;
 
         //transfer funds to stakingManager
-        IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
+        IERC20(stakingToken).safeTransferFrom(depositFor, address(this), amount);
 
-        emit Staked(sender, amount);
+        emit Staked(depositFor, amount);
     }
+
+
 
     /// @inheritdoc IStakingManager
     /// @dev this function will revert with a Over/Underflow error in case amount is higher than balance
-    function unstake(uint amount) external nonReentrant validAmount(amount) {
+    function unstake(uint amount) external nonReentrant validAmount(amount) virtual {
         address sender = _msgSender();
         //Update rewardValue, updatedTimestamp and earned values
         _update(sender);
