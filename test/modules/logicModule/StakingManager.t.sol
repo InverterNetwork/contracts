@@ -257,9 +257,7 @@ contract StakingManagerTest is ModuleTest {
     //-----------------------------------------
     //unstake
 
-    function testUnstake(uint seed, uint unstakeSeed, address staker)
-        public
-    {
+    function testUnstake(uint seed, uint unstakeSeed, address staker) public {
         if (staker == address(0)) {
             staker = address(uint160(1));
         }
@@ -275,8 +273,7 @@ contract StakingManagerTest is ModuleTest {
             bound(seed, tokenMultiplicator, 1_000_000_000 * tokenMultiplicator);
 
         //reasonable withdraw amount
-        uint unstakeAmount =
-            bound(unstakeSeed, tokenMultiplicator, stakeAmount);
+        uint unstakeAmount = bound(unstakeSeed, tokenMultiplicator, stakeAmount);
 
         //Mint to user
         stakingToken.mint(staker, stakeAmount);

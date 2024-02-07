@@ -218,8 +218,7 @@ contract OrchestratorCreation is Test {
 
         //Create OrchestratorFactory
         orchestratorFactory = new OrchestratorFactory(
-            address(orchestratorTemplate),
-            address(moduleFactory)
+            address(orchestratorTemplate), address(moduleFactory)
         );
     }
 

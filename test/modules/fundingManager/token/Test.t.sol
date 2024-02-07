@@ -44,17 +44,11 @@ abstract contract ElasticReceiptTokenTest is Test {
         underlier = new ERC20Mock("Test ERC20", "TEST");
 
         ertb = new ElasticReceiptTokenBaseMock(
-            address(underlier),
-            NAME,
-            SYMBOL,
-            uint8(DECIMALS)
+            address(underlier), NAME, SYMBOL, uint8(DECIMALS)
         );
 
         ert = new ElasticReceiptTokenMock(
-            address(underlier),
-            NAME,
-            SYMBOL,
-            uint8(DECIMALS)
+            address(underlier), NAME, SYMBOL, uint8(DECIMALS)
         );
 
         ertUpgradeable = new ElasticReceiptTokenUpgradeableMock();

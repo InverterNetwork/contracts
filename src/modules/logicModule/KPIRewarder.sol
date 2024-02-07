@@ -7,17 +7,16 @@ import {Module} from "src/modules/base/Module.sol";
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
-
 import {IStakingManager, StakingManager} from "./StakingManager.sol";
-import {IOptimisticOracleIntegrator, OptimisticOracleIntegrator} from "./oracle/OptimisticOracleIntegrator.sol";
+import {
+    IOptimisticOracleIntegrator,
+    OptimisticOracleIntegrator
+} from "./oracle/OptimisticOracleIntegrator.sol";
 
 contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
-
-
     error Module__KPIRewarder__InvalidTrancheNumber();
     error Module__KPIRewarder__InvalidKPIValueLengths();
     error Module__KPIRewarder__InvalidKPIValues();
-
 
     bytes32 public constant ASSERTION_MANAGER = "ASSERTION_MANAGER";
     uint public constant MAX_QUEUE_LENGTH = 50;
@@ -32,9 +31,9 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         address stakerAddress;
         uint amount;
     }
+
     QueuedStake[] public stakingQueue;
     uint public totalQueuedFunds;
-
 
     /*
     Tranche Example:
@@ -50,7 +49,7 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
     */
     struct KPI {
-        uint creationTime; // timestamp the KPI was created // 
+        uint creationTime; // timestamp the KPI was created //
         uint numOfTranches; // number of tranches the KPI is divided into
         bool continuous; // should the tranche rewards be distributed continuously or in steps
         uint[] trancheValues; // The value at which a tranche ends
@@ -61,7 +60,7 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         uint creationTime; // timestamp the assertion was created
         uint assertedValue; // the value that was asserted
         uint KpiToUse; // the KPI to be used for distribution once the assertion confirms
-        // TODO: Necessary Data for UMA
+            // TODO: Necessary Data for UMA
     }
 
     /// @inheritdoc Module
@@ -69,9 +68,13 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external virtual override(StakingManager, OptimisticOracleIntegrator) initializer {
+    )
+        external
+        virtual
+        override(StakingManager, OptimisticOracleIntegrator)
+        initializer
+    {
         __Module_init(orchestrator_, metadata);
-
     }
 
     // Assertion Manager functions:
@@ -89,7 +92,12 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
     // Owner functions:
 
-    function createKPI(uint _numOfTranches, bool _continuous, uint[] calldata _trancheValues, uint[] calldata _trancheRewards) external onlyOrchestratorOwner() {
+    function createKPI(
+        uint _numOfTranches,
+        bool _continuous,
+        uint[] calldata _trancheValues,
+        uint[] calldata _trancheRewards
+    ) external onlyOrchestratorOwner {
         // TODO sets the KPI that will be used to calculate the reward
         // Should it be only the owner, or do we create a separate role for this?
         // Also should we set more than one KPI in one step?
@@ -97,44 +105,56 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
             revert Module__KPIRewarder__InvalidTrancheNumber();
         }
 
-        if (_numOfTranches != _trancheValues.length || _numOfTranches != _trancheRewards.length) {
+        if (
+            _numOfTranches != _trancheValues.length
+                || _numOfTranches != _trancheRewards.length
+        ) {
             revert Module__KPIRewarder__InvalidKPIValueLengths();
         }
 
-        for(uint i = 0; i < _numOfTranches - 1; i++) {
-            if (_trancheValues[i] >= _trancheValues[i+1]) {
+        for (uint i = 0; i < _numOfTranches - 1; i++) {
+            if (_trancheValues[i] >= _trancheValues[i + 1]) {
                 revert Module__KPIRewarder__InvalidKPIValues();
             }
         }
 
-        registryOfKPIs[KPICounter] = KPI(block.timestamp, _numOfTranches, _continuous, _trancheValues, _trancheRewards);
+        registryOfKPIs[KPICounter] = KPI(
+            block.timestamp,
+            _numOfTranches,
+            _continuous,
+            _trancheValues,
+            _trancheRewards
+        );
         KPICounter++;
-
-
     }
 
-    function setKPI(uint _KPINumber) external onlyOrchestratorOwner(){
+    function setKPI(uint _KPINumber) external onlyOrchestratorOwner {
         //TODO: Input validation
         activeKPI = _KPINumber;
     }
 
-    function returnExcessFunds() external onlyOrchestratorOwner() {
+    function returnExcessFunds() external onlyOrchestratorOwner {
         // TODO returns the excess funds to the FundingManager
     }
 
     // StakingManager Overrides:
 
-        /// @inheritdoc IStakingManager
-    function stake(uint amount) external nonReentrant validAmount(amount) override {
-       // TODO implement the delayed stake
+    /// @inheritdoc IStakingManager
+    function stake(uint amount)
+        external
+        override
+        nonReentrant
+        validAmount(amount)
+    {
+        // TODO implement the delayed stake
 
-       // add amount + sender to array of stakers
+        // add amount + sender to array of stakers
 
-       // update "totalAmountInQueue"
+        // update "totalAmountInQueue"
 
-       //take amount
+        //take amount
 
-       /*address sender = _msgSender();
+        /*address sender = _msgSender();
         _update(sender);
 
         //If the user has already earned something
@@ -152,16 +172,17 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
 
         emit Staked(sender, amount);*/
-
-
     }
-
 
     // just withdraw?
-    function unstake(uint amount) external nonReentrant validAmount(amount) override {
+    function unstake(uint amount)
+        external
+        override
+        nonReentrant
+        validAmount(amount)
+    {
         // TODO implement the delayed unstake
     }
-
 
     // not necessary?
     /*function withdraw(uint amount) external nonReentrant validAmount(amount) override {
@@ -183,9 +204,7 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
     /// @inheritdoc IOptimisticOracleIntegrator
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
-    function assertionDisputedCallback(bytes32 assertionId) public override{
+    function assertionDisputedCallback(bytes32 assertionId) public override {
         //TODO
- 
     }
-
 }

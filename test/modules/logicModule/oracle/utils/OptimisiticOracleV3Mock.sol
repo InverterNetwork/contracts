@@ -24,7 +24,6 @@ import {AncillaryData} from
  * configured, an escalation manager. Escalation managers enable integrations to define their own security properties and
  * tradeoffs, enabling the notion of "sovereign security".
  */
-
 contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
     using SafeERC20 for IERC20;
 
@@ -84,7 +83,6 @@ contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
      * any other account that the caller wants to receive the bond at settlement time.
      * @return assertionId unique identifier for this assertion.
      */
-
     function assertTruthWithDefaults(bytes calldata claim, address asserter)
         external
         returns (bytes32)

@@ -71,7 +71,7 @@ contract StakingManager is
         IOrchestrator orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module) initializer virtual {
+    ) external virtual override(Module) initializer {
         __Module_init(orchestrator_, metadata);
         stakingToken = abi.decode(configData, (address));
     }
@@ -107,38 +107,25 @@ contract StakingManager is
     // Mutating Functions
 
     /// @inheritdoc IStakingManager
-    function stake(uint amount) external nonReentrant validAmount(amount) virtual {
+    function stake(uint amount)
+        external
+        virtual
+        nonReentrant
+        validAmount(amount)
+    {
         address sender = _msgSender();
 
         _stake(sender, amount);
-        
     }
-
-    function _stake(address depositFor, uint amount) internal virtual {
-        _update(depositFor);
-
-        //If the user has already earned something
-        if (rewards[depositFor] != 0) {
-            //distribute rewards for previous reward period
-            _distributeRewards(depositFor);
-        }
-
-        //Increase balance accordingly
-        _balances[depositFor] += amount;
-        //Total supply too
-        totalSupply += amount;
-
-        //transfer funds to stakingManager
-        IERC20(stakingToken).safeTransferFrom(depositFor, address(this), amount);
-
-        emit Staked(depositFor, amount);
-    }
-
-
 
     /// @inheritdoc IStakingManager
     /// @dev this function will revert with a Over/Underflow error in case amount is higher than balance
-    function unstake(uint amount) external nonReentrant validAmount(amount) virtual {
+    function unstake(uint amount)
+        external
+        virtual
+        nonReentrant
+        validAmount(amount)
+    {
         address sender = _msgSender();
         //Update rewardValue, updatedTimestamp and earned values
         _update(sender);
@@ -170,6 +157,26 @@ contract StakingManager is
 
     //--------------------------------------------------------------------------
     // Private Functions
+
+    function _stake(address depositFor, uint amount) internal virtual {
+        _update(depositFor);
+
+        //If the user has already earned something
+        if (rewards[depositFor] != 0) {
+            //distribute rewards for previous reward period
+            _distributeRewards(depositFor);
+        }
+
+        //Increase balance accordingly
+        _balances[depositFor] += amount;
+        //Total supply too
+        totalSupply += amount;
+
+        //transfer funds to stakingManager
+        IERC20(stakingToken).safeTransferFrom(depositFor, address(this), amount);
+
+        emit Staked(depositFor, amount);
+    }
 
     /// @dev This has to trigger on every major change of the state of the contract
     function _update(address triggerAddress) internal {
