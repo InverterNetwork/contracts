@@ -20,11 +20,20 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
 
     bytes32 public constant ASSERTION_MANAGER = "ASSERTION_MANAGER";
+    uint public constant MAX_QUEUE_LENGTH = 50;
 
     uint activeKPI;
     uint KPICounter;
     Assertion activeAssertion;
     mapping(uint => KPI) registryOfKPIs;
+
+    // Deposit Queue
+    struct QueuedStake {
+        address stakerAddress;
+        uint amount;
+    }
+    QueuedStake[] public stakingQueue;
+    uint public totalQueuedFunds;
 
 
     /*
@@ -72,6 +81,8 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
     }
 
     function postAssertion() external onlyModuleRole(ASSERTION_MANAGER) {
+        // performs staking for all users in queue
+
         // TODO posts the assertion to the Optimistic Oracle
         // Takes the payout from the FundingManager
     }
@@ -116,12 +127,43 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         /// @inheritdoc IStakingManager
     function stake(uint amount) external nonReentrant validAmount(amount) override {
        // TODO implement the delayed stake
+
+       // add amount + sender to array of stakers
+
+       // update "totalAmountInQueue"
+
+       //take amount
+
+       /*address sender = _msgSender();
+        _update(sender);
+
+        //If the user has already earned something
+        if (rewards[sender] != 0) {
+            //distribute rewards for previous reward period
+            _distributeRewards(sender);
+        }
+
+        //Increase balance accordingly
+        _balances[sender] += amount;
+        //Total supply too
+        totalSupply += amount;
+
+        //transfer funds to stakingManager
+        IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
+
+        emit Staked(sender, amount);*/
+
+
     }
 
+
+    // just withdraw?
     function unstake(uint amount) external nonReentrant validAmount(amount) override {
         // TODO implement the delayed unstake
     }
 
+
+    // not necessary?
     function withdraw(uint amount) external nonReentrant validAmount(amount) override {
         // TODO withdraw unstaked funds
     }
