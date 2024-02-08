@@ -9,9 +9,6 @@ import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {ModuleManager} from "src/orchestrator/base/ModuleManager.sol";
 
-// Internal Libraries
-import {LibInterfaceId} from "src/modules/lib/LibInterfaceId.sol";
-
 // Internal Interfaces
 import {
     IOrchestrator,
@@ -196,9 +193,8 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         onlyOrchestratorOwner
     {
         address authorizerContract = address(authorizer_);
-        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
-        bytes4 authorizerInterfaceId =
-            LibInterfaceId.getInterfaceId_IAuthorizer();
+        bytes4 moduleInterfaceId = type(IModule).interfaceId;
+        bytes4 authorizerInterfaceId = type(IAuthorizer).interfaceId;
         if (
             _supportsInterfaceHelper(authorizerContract, moduleInterfaceId)
                 && _supportsInterfaceHelper(
@@ -220,9 +216,8 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         onlyOrchestratorOwner
     {
         address fundingManagerContract = address(fundingManager_);
-        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
-        bytes4 fundingManagerInterfaceId =
-            LibInterfaceId.getInterfaceId_IFundingManager();
+        bytes4 moduleInterfaceId = type(IModule).interfaceId;
+        bytes4 fundingManagerInterfaceId = type(IFundingManager).interfaceId;
         if (
             _supportsInterfaceHelper(fundingManagerContract, moduleInterfaceId)
                 && _supportsInterfaceHelper(
@@ -244,9 +239,8 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         onlyOrchestratorOwner
     {
         address paymentProcessorContract = address(paymentProcessor_);
-        bytes4 moduleInterfaceId = LibInterfaceId.getInterfaceId_IModule();
-        bytes4 paymentProcessorInterfaceId =
-            LibInterfaceId.getInterfaceId_IPaymentProcessor();
+        bytes4 moduleInterfaceId = type(IModule).interfaceId;
+        bytes4 paymentProcessorInterfaceId = type(IPaymentProcessor).interfaceId;
         if (
             _supportsInterfaceHelper(
                 paymentProcessorContract, moduleInterfaceId
