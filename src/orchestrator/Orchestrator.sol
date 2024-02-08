@@ -4,6 +4,9 @@ pragma solidity 0.8.19;
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+// External Libraries
+import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
+
 // Internal Dependencies
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
@@ -196,8 +199,10 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         bytes4 moduleInterfaceId = type(IModule).interfaceId;
         bytes4 authorizerInterfaceId = type(IAuthorizer).interfaceId;
         if (
-            _supportsInterfaceHelper(authorizerContract, moduleInterfaceId)
-                && _supportsInterfaceHelper(
+            ERC165Checker.supportsInterface(
+                authorizerContract, moduleInterfaceId
+            )
+                && ERC165Checker.supportsInterface(
                     authorizerContract, authorizerInterfaceId
                 )
         ) {
@@ -219,8 +224,10 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         bytes4 moduleInterfaceId = type(IModule).interfaceId;
         bytes4 fundingManagerInterfaceId = type(IFundingManager).interfaceId;
         if (
-            _supportsInterfaceHelper(fundingManagerContract, moduleInterfaceId)
-                && _supportsInterfaceHelper(
+            ERC165Checker.supportsInterface(
+                fundingManagerContract, moduleInterfaceId
+            )
+                && ERC165Checker.supportsInterface(
                     fundingManagerContract, fundingManagerInterfaceId
                 )
         ) {
@@ -242,10 +249,10 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         bytes4 moduleInterfaceId = type(IModule).interfaceId;
         bytes4 paymentProcessorInterfaceId = type(IPaymentProcessor).interfaceId;
         if (
-            _supportsInterfaceHelper(
+            ERC165Checker.supportsInterface(
                 paymentProcessorContract, moduleInterfaceId
             )
-                && _supportsInterfaceHelper(
+                && ERC165Checker.supportsInterface(
                     paymentProcessorContract, paymentProcessorInterfaceId
                 )
         ) {
@@ -256,22 +263,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         } else {
             revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
         }
-    }
-
-    function _supportsInterfaceHelper(
-        address _contractAddress,
-        bytes4 _interfaceId
-    ) private returns (bool) {
-        require(
-            _contractAddress.code.length != 0,
-            "Contract Address need to passed here"
-        );
-
-        (bool success, bytes memory data) = _contractAddress.call(
-            abi.encodeWithSignature("supportsInterface(bytes4)", _interfaceId)
-        );
-
-        return success && abi.decode(data, (bool));
     }
 
     /// @inheritdoc IOrchestrator
