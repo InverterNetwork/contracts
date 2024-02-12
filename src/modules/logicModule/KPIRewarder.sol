@@ -114,14 +114,14 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
     }
 
     // Assertion Manager functions:
-    function setAssertion(bytes32 dataId, bytes32 data, address asserter, uint targetValue, uint targetKPI) external onlyModuleRole(ASSERTION_MANAGER) {
+    function setAssertion(bytes32 dataId, bytes32 data, address asserter) external onlyModuleRole(ASSERTION_MANAGER) {
         // TODO stores the assertion that will be posted to the Optimistic Oracle
         // needs to store locally the numeric value to be asserted. the amount to distribute and the distribution time
         
         //TODO: inputs
         // TODO: what kind of checks do we want to implement? Technically the value in "data" wouldn't need to be the sam as assertedValue...
         
-        activeAssertion = new DataAssertion(bytes32 dataId, bytes32 data, address asserter, false);   
+        activeAssertion = DataAssertion( dataId,  data,  asserter, false);   
     }
 
     function postAssertion()
