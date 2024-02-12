@@ -7,24 +7,48 @@ import {Module} from "src/modules/base/Module.sol";
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
-import {IStakingManager, StakingManager} from "./StakingManager.sol";
+import {
+    IStakingManager,
+    StakingManager,
+    SafeERC20,
+    IERC20,
+    ReentrancyGuard
+} from "./StakingManager.sol";
+
 import {
     IOptimisticOracleIntegrator,
-    OptimisticOracleIntegrator
+    OptimisticOracleIntegrator,
+    OptimisticOracleV3CallbackRecipientInterface,
+    OptimisticOracleV3Interface,
+    ClaimData
 } from "./oracle/OptimisticOracleIntegrator.sol";
 
 contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
+    using SafeERC20 for IERC20;
+
+    event StakeEnqueued(address sender, uint amount);
+
     error Module__KPIRewarder__InvalidTrancheNumber();
     error Module__KPIRewarder__InvalidKPIValueLengths();
     error Module__KPIRewarder__InvalidKPIValues();
 
+    error Module__KPIRewarder__StakingQueueIsFull();
+
     bytes32 public constant ASSERTION_MANAGER = "ASSERTION_MANAGER";
     uint public constant MAX_QUEUE_LENGTH = 50;
 
-    uint activeKPI;
     uint KPICounter;
-    Assertion activeAssertion;
+
+    uint activeKPI;
+    uint activeTargetValue;
+
+    DataAssertion activeAssertion;
+
     mapping(uint => KPI) registryOfKPIs;
+    mapping(bytes32 => RewardRoundConfiguration) assertionConfig;
+
+    // assertionId => extra data for the rewarder
+    //mapping(bytes32 => RewarderAssertion) assertionRewarderRegistry;
 
     // Deposit Queue
     struct QueuedStake {
@@ -56,11 +80,11 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         uint[] trancheRewards; // The rewards to be dsitributed at completion of each tranche
     }
 
-    struct Assertion {
+    struct RewardRoundConfiguration {
         uint creationTime; // timestamp the assertion was created
         uint assertedValue; // the value that was asserted
         uint KpiToUse; // the KPI to be used for distribution once the assertion confirms
-            // TODO: Necessary Data for UMA
+        bool distributed;
     }
 
     /// @inheritdoc Module
@@ -75,39 +99,80 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         initializer
     {
         __Module_init(orchestrator_, metadata);
+
+        (address stakingTokenAddr, address currencyAddr, address ooAddr) =
+            abi.decode(configData, (address, address, address));
+
+        _setStakingToken(stakingTokenAddr);
+
+        // TODO ERC165 Interface Validation for the OO, for now it just reverts
+        oo = OptimisticOracleV3Interface(ooAddr);
+        defaultIdentifier = oo.defaultIdentifier();
+
+        setDefaultCurrency(currencyAddr);
+        setOptimisticOracle(ooAddr);
     }
 
     // Assertion Manager functions:
-    function setAssertion() external onlyModuleRole(ASSERTION_MANAGER) {
+    function setAssertion(bytes32 dataId, bytes32 data, address asserter, uint targetValue, uint targetKPI) external onlyModuleRole(ASSERTION_MANAGER) {
         // TODO stores the assertion that will be posted to the Optimistic Oracle
         // needs to store locally the numeric value to be asserted. the amount to distribute and the distribution time
+        
+        //TODO: inputs
+        // TODO: what kind of checks do we want to implement? Technically the value in "data" wouldn't need to be the sam as assertedValue...
+        
+        activeAssertion = new DataAssertion(bytes32 dataId, bytes32 data, address asserter, false);   
     }
 
-    function postAssertion() external onlyModuleRole(ASSERTION_MANAGER) {
+    function postAssertion()
+        external
+        onlyModuleRole(ASSERTION_MANAGER)
+        returns (bytes32 assertionId)
+    {
         // performs staking for all users in queue
+        for (uint i = 0; i < stakingQueue.length; i++) {
+            _stake(stakingQueue[i].stakerAddress, stakingQueue[i].amount);
+            totalQueuedFunds -= stakingQueue[i].amount;
+        }
+
+        // resets the queue
+        delete stakingQueue;
+        totalQueuedFunds = 0;
 
         // TODO posts the assertion to the Optimistic Oracle
         // Takes the payout from the FundingManager
+
+        assertionId = assertDataFor(
+            activeAssertion.dataId,
+            activeAssertion.data,
+            activeAssertion.asserter
+        );
+        assertionConfig[assertionId] = RewardRoundConfiguration(
+            block.timestamp,
+            activeTargetValue,
+            activeKPI,
+            false
+        );
     }
 
     // Owner functions:
 
     function createKPI(
-        uint _numOfTranches,
         bool _continuous,
         uint[] calldata _trancheValues,
         uint[] calldata _trancheRewards
     ) external onlyOrchestratorOwner {
         // TODO sets the KPI that will be used to calculate the reward
-        // Should it be only the owner, or do we create a separate role for this?
-        // Also should we set more than one KPI in one step?
+        // Should it be only the owner, or do we create a separate role for this? -> owner for now
+        // Also should we set more than one KPI in one step? -> nope. Multicall
+        uint _numOfTranches = _trancheValues.length;
+        
         if (_numOfTranches < 1 || _numOfTranches > 20) {
             revert Module__KPIRewarder__InvalidTrancheNumber();
         }
 
         if (
-            _numOfTranches != _trancheValues.length
-                || _numOfTranches != _trancheRewards.length
+            _numOfTranches != _trancheRewards.length
         ) {
             revert Module__KPIRewarder__InvalidKPIValueLengths();
         }
@@ -133,10 +198,12 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         activeKPI = _KPINumber;
     }
 
+    /*    
+    // Maybe not needed as standalone function, just implement it into the assertionResolvedCallback
     function returnExcessFunds() external onlyOrchestratorOwner {
         // TODO returns the excess funds to the FundingManager
     }
-
+    */
     // StakingManager Overrides:
 
     /// @inheritdoc IStakingManager
@@ -146,48 +213,33 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         nonReentrant
         validAmount(amount)
     {
-        // TODO implement the delayed stake
+        address sender = _msgSender();
 
-        // add amount + sender to array of stakers
+        QueuedStake memory newStake =
+            QueuedStake({stakerAddress: sender, amount: amount});
 
-        // update "totalAmountInQueue"
-
-        //take amount
-
-        /*address sender = _msgSender();
-        _update(sender);
-
-        //If the user has already earned something
-        if (rewards[sender] != 0) {
-            //distribute rewards for previous reward period
-            _distributeRewards(sender);
+        if (stakingQueue.length >= MAX_QUEUE_LENGTH) {
+            revert Module__KPIRewarder__StakingQueueIsFull();
         }
+        stakingQueue.push(newStake);
 
-        //Increase balance accordingly
-        _balances[sender] += amount;
-        //Total supply too
-        totalSupply += amount;
+        totalQueuedFunds += amount;
 
         //transfer funds to stakingManager
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
 
-        emit Staked(sender, amount);*/
+        emit StakeEnqueued(sender, amount);
     }
 
-    // just withdraw?
-    function unstake(uint amount)
+    // No need to override this
+    /*     function unstake(uint amount)
         external
         override
         nonReentrant
         validAmount(amount)
     {
-        // TODO implement the delayed unstake
-    }
-
-    // not necessary?
-    /*function withdraw(uint amount) external nonReentrant validAmount(amount) override {
-        // TODO withdraw unstaked funds
-    }*/
+        
+    } */
 
     // Optimistic Oracle Overrides:
 
@@ -198,8 +250,48 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         bool assertedTruthfully
     ) public override {
         // TODO
-        // If resolves to true, add rewards to staking contract
-        // If resolves to false, return payout funds to funding manager
+        if (assertedTruthfully) {
+            // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds
+            //calculate rewardamount from asserionId value
+            KPI memory resolvedKPI =
+                registryOfKPIs[assertionConfig[assertionId].KpiToUse];
+            uint rewardAmount;
+
+            for (uint i; i < resolvedKPI.numOfTranches; i++) {
+                if (
+                    resolvedKPI.trancheValues[i]
+                        <= assertionConfig[assertionId].assertedValue
+                ) {
+                    //the asserted value is above tranche end
+                    rewardAmount += resolvedKPI.trancheRewards[i];
+                } else {
+                    //tranche was not completed
+                    if (resolvedKPI.continuous) {
+                        //continuous distribution
+                        uint trancheRewardValue = resolvedKPI.trancheRewards[i];
+                        uint trancheStart =
+                            i == 0 ? 0 : resolvedKPI.trancheValues[i - 1];
+
+                        uint achievedReward = assertionConfig[assertionId]
+                            .assertedValue - trancheStart;
+                        uint trancheEnd =
+                            resolvedKPI.trancheValues[i] - trancheStart;
+
+                        rewardAmount +=
+                            achievedReward * (trancheRewardValue / trancheEnd); // since the trancheRewardValue will be a very big number.
+                    }
+                    //else -> no reward
+
+                    //exit the loop
+                    break;
+                }
+            }
+
+            _setRewards(rewardAmount, 1);
+            // emit DataAssertionResolved
+        } else {
+            // emit assertionReturnedFalse;
+        }
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator

@@ -73,7 +73,8 @@ contract StakingManager is
         bytes memory configData
     ) external virtual override(Module) initializer {
         __Module_init(orchestrator_, metadata);
-        stakingToken = abi.decode(configData, (address));
+
+        _setStakingToken(abi.decode(configData, (address)));
     }
 
     //--------------------------------------------------------------------------
@@ -116,6 +117,9 @@ contract StakingManager is
         address sender = _msgSender();
 
         _stake(sender, amount);
+
+        //transfer funds to stakingManager
+        IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
     }
 
     /// @inheritdoc IStakingManager
@@ -171,9 +175,6 @@ contract StakingManager is
         _balances[depositFor] += amount;
         //Total supply too
         totalSupply += amount;
-
-        //transfer funds to stakingManager
-        IERC20(stakingToken).safeTransferFrom(depositFor, address(this), amount);
 
         emit Staked(depositFor, amount);
     }
@@ -284,5 +285,12 @@ contract StakingManager is
         lastUpdate = block.timestamp;
 
         emit RewardSet(amount, duration, rewardRate, rewardsEnd);
+    }
+
+    function _setStakingToken(address _token) internal {
+        if (_token == address(0) ){
+                revert Module__StakingManager__InvalidStakingToken();
+        }
+        stakingToken = _token;
     }
 }

@@ -44,7 +44,7 @@ abstract contract OptimisticOracleIntegrator is
     bytes32 public defaultIdentifier; // The identifier used when creating the assertion. For most usecases, this will resolve to "ASSERT_TRUTH".
 
     // Assertion storage
-    mapping(bytes32 => DataAssertion) public assertionsData;
+    mapping(bytes32 => DataAssertion) public assertionData;
 
     //==========================================================================
     // Initialization
@@ -73,8 +73,8 @@ abstract contract OptimisticOracleIntegrator is
 
     /// @inheritdoc IOptimisticOracleIntegrator
     function getData(bytes32 assertionId) public view returns (bool, bytes32) {
-        if (!assertionsData[assertionId].resolved) return (false, 0);
-        return (true, assertionsData[assertionId].data);
+        if (!assertionData[assertionId].resolved) return (false, 0);
+        return (true, assertionData[assertionId].data);
     }
 
     //==========================================================================
@@ -158,7 +158,7 @@ abstract contract OptimisticOracleIntegrator is
             defaultIdentifier,
             bytes32(0) // No domain.
         );
-        assertionsData[assertionId] =
+        assertionData[assertionId] =
             DataAssertion(dataId, data, asserter, false);
         emit DataAsserted(dataId, data, asserter, assertionId);
     }
@@ -177,8 +177,8 @@ abstract contract OptimisticOracleIntegrator is
         }
         // If the assertion was true, then the data assertion is resolved.
         if (assertedTruthfully) {
-            assertionsData[assertionId].resolved = true;
-            DataAssertion memory dataAssertion = assertionsData[assertionId];
+            assertionData[assertionId].resolved = true;
+            DataAssertion memory dataAssertion = assertionData[assertionId];
             emit DataAssertionResolved(
                 dataAssertion.dataId,
                 dataAssertion.data,
@@ -186,7 +186,7 @@ abstract contract OptimisticOracleIntegrator is
                 assertionId
             );
         } else {
-            delete assertionsData[assertionId];
+            delete assertionData[assertionId];
         } // Else delete the data assertion if it was false to save gas.
     }
 

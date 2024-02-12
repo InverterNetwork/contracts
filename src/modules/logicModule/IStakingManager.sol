@@ -4,6 +4,9 @@ interface IStakingManager {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice Given stakinng token address is invalid.
+    error Module__StakingManager__InvalidStakingToken();
+
     /// @notice Given Duration is invalid.
     error Module__StakingManager__InvalidDuration();
 
