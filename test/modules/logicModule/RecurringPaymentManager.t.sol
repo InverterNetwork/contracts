@@ -52,15 +52,11 @@ contract RecurringPaymentManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IRecurringPaymentManager).interfaceId
-            == interfaceId || type(IERC20PaymentClient).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface,
-            recurringPaymentManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            recurringPaymentManager.supportsInterface(
+                type(IRecurringPaymentManager).interfaceId
+            )
         );
     }
 
