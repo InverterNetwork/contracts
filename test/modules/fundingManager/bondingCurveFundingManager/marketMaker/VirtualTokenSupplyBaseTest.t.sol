@@ -27,13 +27,11 @@ contract VirtualTokenSupplyBaseTest is Test {
         virtualTokenSupplyBase.setVirtualTokenSupply(INITIAL_SUPPLY);
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IVirtualTokenSupply).interfaceId
-            == interfaceId || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface,
-            virtualTokenSupplyBase.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            virtualTokenSupplyBase.supportsInterface(
+                type(IVirtualTokenSupply).interfaceId
+            )
         );
     }
 

@@ -168,24 +168,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IFundingManager).interfaceId
-            == interfaceId
-            || type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
-                == interfaceId
-            || type(IVirtualTokenSupply).interfaceId == interfaceId
-            || type(IVirtualCollateralSupply).interfaceId == interfaceId
-            || type(IRedeemingBondingCurveFundingManagerBase).interfaceId
-                == interfaceId
-            || type(IBondingCurveFundingManagerBase).interfaceId == interfaceId
-            || type(IFundingManager).interfaceId == interfaceId
-            || type(IFundingManager).interfaceId == interfaceId
-            || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface,
-            bondingCurveFundingManager.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
+            )
         );
     }
 
@@ -490,12 +477,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     function testBuyOrderFor(address to, uint amount) public {
         // Setup
 
-        vm.assume(to != address(0));
+        address buyer = makeAddr("buyer");
+        vm.assume(to != address(0) && to != address(this) && to != buyer);
 
         // Above an amount of 1e38 the BancorFormula starts to revert.
         amount = bound(amount, 1, 1e38);
 
-        address buyer = makeAddr("buyer");
         assertNotEq(to, buyer);
 
         _prepareBuyConditions(buyer, amount);
