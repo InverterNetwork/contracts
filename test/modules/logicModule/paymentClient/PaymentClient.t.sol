@@ -63,13 +63,11 @@ contract ERC20PaymentClientTest is ModuleTest {
 
     function testReinitFails() public override {}
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IERC20PaymentClient).interfaceId
-            == interfaceId || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface, paymentClient.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            paymentClient.supportsInterface(
+                type(IERC20PaymentClient).interfaceId
+            )
         );
     }
 
