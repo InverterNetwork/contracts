@@ -9,10 +9,13 @@ import {Ownable} from "@oz/access/Ownable.sol";
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
+//Internal Interfaces
+import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
 /**
  * @title Beacon
  */
-contract Beacon is IBeacon, ERC165, Ownable2Step {
+
+contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
     // ERC-165 Public View Functions
 
@@ -24,22 +27,10 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
         override
         returns (bool)
     {
-        return interfaceId == type(IBeacon).interfaceId
+        return interfaceId == type(IInverterBeacon).interfaceId
+            || interfaceId == type(IBeacon).interfaceId
             || super.supportsInterface(interfaceId);
     }
-
-    //--------------------------------------------------------------------------------
-    // Errors
-
-    /// @notice Given implementation invalid.
-    error Beacon__InvalidImplementation();
-
-    //--------------------------------------------------------------------------------
-    // Events
-
-    /// @notice Beacon upgraded to new implementation address.
-    /// @param implementation The new implementation address.
-    event Upgraded(address indexed implementation);
 
     //--------------------------------------------------------------------------------
     // State
@@ -47,10 +38,18 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     /// @dev The beacon's implementation address.
     address private _implementation;
 
+    /// @dev the major version of the implementation
+    uint majorVersion;
+
+    /// @dev the minor version of the implementation
+    uint minorVersion;
+
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor() Ownable(_msgSender()) {}
+    constructor(uint _majorVersion) Ownable(_msgSender()) {
+        majorVersion = _majorVersion;
+    }
 
     //--------------------------------------------------------------------------------
     // Public View Functions
@@ -60,16 +59,28 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
         return _implementation;
     }
 
+    /// @inheritdoc IInverterBeacon
+    function version() external view returns (uint, uint) {
+        return (majorVersion, minorVersion);
+    }
+
     //--------------------------------------------------------------------------------
     // onlyOwner Mutating Functions
 
-    /// @notice Upgrades the beacon to a new implementation address.
-    /// @dev Only callable by owner.
-    /// @dev Revert if new implementation invalid.
-    /// @param newImplementation The new implementation address.
-    function upgradeTo(address newImplementation) public onlyOwner {
+    /// @inheritdoc IInverterBeacon
+    function upgradeTo(address newImplementation, uint newMinorVersion)
+        public
+        onlyOwner
+    {
+        if (newMinorVersion <= minorVersion) {
+            revert Beacon__InvalidImplementationMinorVersion();
+        }
+
         _setImplementation(newImplementation);
-        emit Upgraded(newImplementation);
+
+        minorVersion = newMinorVersion;
+
+        emit Upgraded(newImplementation, newMinorVersion);
     }
 
     //--------------------------------------------------------------------------------
