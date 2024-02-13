@@ -9,7 +9,10 @@ import "@oz/utils/Address.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 // SuT
-import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
+import {
+    InverterBeacon,
+    IInverterBeacon
+} from "src/factories/beacon/InverterBeacon.sol";
 
 // Mocks
 import {ModuleImplementationV1Mock} from
@@ -22,15 +25,15 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 import {Ownable} from "@oz/access/Ownable.sol";
 
-contract BeaconTest is Test {
+contract InverterBeaconTest is Test {
     // SuT
-    Beacon beacon;
+    InverterBeacon beacon;
 
     // Events copied from SuT
     event Upgraded(address indexed implementation);
 
     function setUp() public {
-        beacon = new Beacon();
+        beacon = new InverterBeacon(0);
     }
 
     function testDeploymentInvariants() public {
@@ -40,6 +43,8 @@ contract BeaconTest is Test {
         // Ownable2Step:
         assertEq(beacon.owner(), address(this));
         assertEq(beacon.pendingOwner(), address(0));
+
+        //@todo Check for version
     }
 
     //--------------------------------------------------------------------------------
@@ -52,14 +57,14 @@ contract BeaconTest is Test {
         vm.expectEmit(true, true, true, true);
         emit Upgraded(address(toUpgrade1));
 
-        beacon.upgradeTo(address(toUpgrade1));
+        beacon.upgradeTo(address(toUpgrade1), 1); //@todo test version via loop
 
         assertEq(beacon.implementation(), address(toUpgrade1));
 
         vm.expectEmit(true, true, true, true);
         emit Upgraded(address(toUpgrade2));
 
-        beacon.upgradeTo(address(toUpgrade2));
+        beacon.upgradeTo(address(toUpgrade2), 2); //@todo test version via loop
 
         assertEq(beacon.implementation(), address(toUpgrade2));
     }
@@ -73,19 +78,19 @@ contract BeaconTest is Test {
                 OZErrors.Ownable__UnauthorizedAccount, caller
             )
         );
-        beacon.upgradeTo(address(0));
+        beacon.upgradeTo(address(0), 2);
     }
 
     function testUpgradeToFailsIfImplementationNotContract() public {
         // Note that address(0xCAFE) is EOA.
-        vm.expectRevert(Beacon.Beacon__InvalidImplementation.selector);
-        beacon.upgradeTo(address(0xCAFE));
+        vm.expectRevert(IInverterBeacon.Beacon__InvalidImplementation.selector);
+        beacon.upgradeTo(address(0xCAFE), 2);
     }
 
     //--------------------------------------------------------------------------------
     // Test: ERC-165's supportInterface()
 
     function testSupportsInterface() public {
-        assertTrue(beacon.supportsInterface(type(IBeacon).interfaceId));
+        assertTrue(beacon.supportsInterface(type(IInverterBeacon).interfaceId));
     }
 }

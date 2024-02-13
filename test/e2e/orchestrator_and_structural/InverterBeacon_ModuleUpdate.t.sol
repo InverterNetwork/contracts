@@ -15,16 +15,17 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
-import {BeaconMock} from "test/utils/mocks/factories/beacon/BeaconMock.sol";
+import {InverterBeaconMock} from
+    "test/utils/mocks/factories/beacon/InverterBeaconMock.sol";
 import {ModuleImplementationV1Mock} from
     "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
 import {ModuleImplementationV2Mock} from
     "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
 
-contract Beacon_ModuleUpdateTest is E2ETest {
+contract BInvertereacon_ModuleUpdateTest is E2ETest {
     // Mocks
     ModuleMock module;
-    BeaconMock beacon;
+    InverterBeaconMock beacon;
 
     // Mock Metadata
     uint constant MAJOR_VERSION = 1;
@@ -39,7 +40,7 @@ contract Beacon_ModuleUpdateTest is E2ETest {
         super.setUp();
 
         module = new ModuleMock();
-        beacon = new BeaconMock();
+        beacon = new InverterBeaconMock();
     }
 
     function testDeploymentInvariants() public {
@@ -49,9 +50,9 @@ contract Beacon_ModuleUpdateTest is E2ETest {
     }
 
     //--------------------------------------------------------------------------
-    // Tests: Beacon Upgrades
+    // Tests: InverterBeacon Upgrades
 
-    function test_e2e_BeaconUpgrade(
+    function test_e2e_InverterBeaconUpgrade(
         IModule.Metadata memory metadata,
         address orchestrator,
         bytes memory configData

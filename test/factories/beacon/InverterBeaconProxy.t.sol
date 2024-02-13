@@ -3,43 +3,44 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-// External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-
 // Internal Dependencies
-import {Beacon} from "src/factories/beacon/Beacon.sol";
-import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
+import {
+    InverterBeacon,
+    IInverterBeacon
+} from "src/factories/beacon/InverterBeacon.sol";
+import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
 
 // Mocks
-import {BeaconMock} from "test/utils/mocks/factories/beacon/BeaconMock.sol";
+import {InverterBeaconMock} from
+    "test/utils/mocks/factories/beacon/InverterBeaconMock.sol";
 import {ModuleImplementationV1Mock} from
     "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
 
-contract BeaconProxyTest is Test {
+contract InverterBeaconProxyTest is Test {
     // SuT
-    BeaconProxy proxy;
+    InverterBeaconProxy proxy;
 
     // Mocks
-    BeaconMock beacon;
+    InverterBeaconMock beacon;
     ModuleImplementationV1Mock implementation;
 
     // Events copied from SuT
-    event BeaconUpgraded(IBeacon indexed beacon);
+    event BeaconUpgraded(IInverterBeacon indexed beacon);
 
     function setUp() public {
-        beacon = new BeaconMock();
+        beacon = new InverterBeaconMock();
 
         implementation = new ModuleImplementationV1Mock();
         beacon.overrideImplementation(address(implementation));
 
-        proxy = new BeaconProxy(beacon);
+        proxy = new InverterBeaconProxy(beacon);
     }
 
     function testDeploymentInvariants() public {
         vm.expectEmit(true, true, true, true);
         emit BeaconUpgraded(beacon);
 
-        new BeaconProxy(beacon);
+        new InverterBeaconProxy(beacon);
     }
 
     //--------------------------------------------------------------------------------
