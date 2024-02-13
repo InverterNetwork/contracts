@@ -27,7 +27,7 @@ import {
 } from "src/modules/utils/MetadataManager.sol";
 
 //Beacon
-import {Beacon} from "src/factories/beacon/Beacon.sol";
+import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
 
 /**
  * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory}.

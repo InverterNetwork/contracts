@@ -29,7 +29,10 @@ import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
 import {MetadataManager} from "src/modules/utils/MetadataManager.sol";
 
 // Beacon
-import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
+import {
+    InverterBeacon,
+    IInverterBeacon
+} from "src/factories/beacon/InverterBeacon.sol";
 
 contract E2EModuleRegistry is Test {
     // General Storage and  QOL-constants
@@ -46,7 +49,7 @@ contract E2EModuleRegistry is Test {
     // # TEMPLATE
     // Each module should declare:
     //      Module moduleImpl;
-    //      Beacon moduleBeacon;
+    //      InverterBeacon moduleBeacon;
     //      address moduleBeaconOwner = DEFAULT_BEACON_OWNER;
     //      IModule.Metadata moduleMetadata = IModule.Metadata(
     //          1, 1, "https://github.com/inverter/module", "ModuleName"
@@ -71,7 +74,7 @@ contract E2EModuleRegistry is Test {
 
     RebasingFundingManager rebasingFundingManagerImpl;
 
-    Beacon rebasingFundingManagerBeacon;
+    InverterBeacon rebasingFundingManagerBeacon;
 
     address rebasingFundingManagerBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -97,18 +100,20 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(rebasingFundingManagerBeaconOwner);
-        rebasingFundingManagerBeacon = new Beacon();
+        rebasingFundingManagerBeacon =
+            new InverterBeacon(rebasingFundingManagerMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(rebasingFundingManagerBeaconOwner);
         rebasingFundingManagerBeacon.upgradeTo(
-            address(rebasingFundingManagerImpl)
+            address(rebasingFundingManagerImpl),
+            rebasingFundingManagerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             rebasingFundingManagerMetadata,
-            IBeacon(rebasingFundingManagerBeacon)
+            IInverterBeacon(rebasingFundingManagerBeacon)
         );
     }
 
@@ -119,7 +124,7 @@ contract E2EModuleRegistry is Test {
     BancorVirtualSupplyBondingCurveFundingManager
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
-    Beacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
+    InverterBeacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
 
     address bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner =
         DEFAULT_BEACON_OWNER;
@@ -132,7 +137,7 @@ contract E2EModuleRegistry is Test {
         "BancorVirtualSupplyBondingCurveFundingManager"
     );
 
-    /*
+    /*//@todo outcommented
         IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
             issuanceToken = IBancorVirtualSupplyBondingCurveFundingManager
                 .IssuanceToken({
@@ -172,18 +177,21 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
-        bancorVirtualSupplyBondingCurveFundingManagerBeacon = new Beacon();
+        bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon(
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata.majorVersion
+        );
 
         // Set beacon's implementations.
         vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
         bancorVirtualSupplyBondingCurveFundingManagerBeacon.upgradeTo(
-            address(bancorVirtualSupplyBondingCurveFundingManagerImpl)
+            address(bancorVirtualSupplyBondingCurveFundingManagerImpl),
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-            IBeacon(bancorVirtualSupplyBondingCurveFundingManagerBeacon)
+            IInverterBeacon(bancorVirtualSupplyBondingCurveFundingManagerBeacon)
         );
     }
 
@@ -195,7 +203,7 @@ contract E2EModuleRegistry is Test {
 
     RoleAuthorizer roleAuthorizerImpl;
 
-    Beacon roleAuthorizerBeacon;
+    InverterBeacon roleAuthorizerBeacon;
 
     address roleAuthorizerBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -218,15 +226,18 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(roleAuthorizerBeaconOwner);
-        roleAuthorizerBeacon = new Beacon();
+        roleAuthorizerBeacon =
+            new InverterBeacon(roleAuthorizerMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(roleAuthorizerBeaconOwner);
-        roleAuthorizerBeacon.upgradeTo(address(roleAuthorizerImpl));
+        roleAuthorizerBeacon.upgradeTo(
+            address(roleAuthorizerImpl), roleAuthorizerMetadata.minorVersion
+        );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            roleAuthorizerMetadata, IBeacon(roleAuthorizerBeacon)
+            roleAuthorizerMetadata, IInverterBeacon(roleAuthorizerBeacon)
         );
     }
 
@@ -234,7 +245,7 @@ contract E2EModuleRegistry is Test {
 
     TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
 
-    Beacon tokenRoleAuthorizerBeacon;
+    InverterBeacon tokenRoleAuthorizerBeacon;
 
     address tokenRoleAuthorizerBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -261,15 +272,20 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(tokenRoleAuthorizerBeaconOwner);
-        tokenRoleAuthorizerBeacon = new Beacon();
+        tokenRoleAuthorizerBeacon =
+            new InverterBeacon(tokenRoleAuthorizerMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(tokenRoleAuthorizerBeaconOwner);
-        tokenRoleAuthorizerBeacon.upgradeTo(address(tokenRoleAuthorizerImpl));
+        tokenRoleAuthorizerBeacon.upgradeTo(
+            address(tokenRoleAuthorizerImpl),
+            tokenRoleAuthorizerMetadata.minorVersion
+        );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            tokenRoleAuthorizerMetadata, IBeacon(tokenRoleAuthorizerBeacon)
+            tokenRoleAuthorizerMetadata,
+            IInverterBeacon(tokenRoleAuthorizerBeacon)
         );
     }
 
@@ -281,7 +297,7 @@ contract E2EModuleRegistry is Test {
 
     SimplePaymentProcessor simplePaymentProcessorImpl;
 
-    Beacon simplePaymentProcessorBeacon;
+    InverterBeacon simplePaymentProcessorBeacon;
 
     address simplePaymentProcessorBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -306,18 +322,20 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(simplePaymentProcessorBeaconOwner);
-        simplePaymentProcessorBeacon = new Beacon();
+        simplePaymentProcessorBeacon =
+            new InverterBeacon(simplePaymentProcessorMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(simplePaymentProcessorBeaconOwner);
         simplePaymentProcessorBeacon.upgradeTo(
-            address(simplePaymentProcessorImpl)
+            address(simplePaymentProcessorImpl),
+            simplePaymentProcessorMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             simplePaymentProcessorMetadata,
-            IBeacon(simplePaymentProcessorBeacon)
+            IInverterBeacon(simplePaymentProcessorBeacon)
         );
     }
 
@@ -325,7 +343,7 @@ contract E2EModuleRegistry is Test {
 
     StreamingPaymentProcessor streamingPaymentProcessorImpl;
 
-    Beacon streamingPaymentProcessorBeacon;
+    InverterBeacon streamingPaymentProcessorBeacon;
 
     address streamingPaymentProcessorBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -350,18 +368,20 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(streamingPaymentProcessorBeaconOwner);
-        streamingPaymentProcessorBeacon = new Beacon();
+        streamingPaymentProcessorBeacon =
+            new InverterBeacon(streamingPaymentProcessorMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(streamingPaymentProcessorBeaconOwner);
         streamingPaymentProcessorBeacon.upgradeTo(
-            address(streamingPaymentProcessorImpl)
+            address(streamingPaymentProcessorImpl),
+            streamingPaymentProcessorMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             streamingPaymentProcessorMetadata,
-            IBeacon(streamingPaymentProcessorBeacon)
+            IInverterBeacon(streamingPaymentProcessorBeacon)
         );
     }
 
@@ -372,7 +392,7 @@ contract E2EModuleRegistry is Test {
 
     RecurringPaymentManager recurringPaymentManagerImpl;
 
-    Beacon recurringPaymentManagerBeacon;
+    InverterBeacon recurringPaymentManagerBeacon;
 
     address recurringPaymentManagerBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -397,18 +417,20 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(recurringPaymentManagerBeaconOwner);
-        recurringPaymentManagerBeacon = new Beacon();
+        recurringPaymentManagerBeacon =
+            new InverterBeacon(recurringPaymentManagerMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(recurringPaymentManagerBeaconOwner);
         recurringPaymentManagerBeacon.upgradeTo(
-            address(recurringPaymentManagerImpl)
+            address(recurringPaymentManagerImpl),
+            recurringPaymentManagerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             recurringPaymentManagerMetadata,
-            IBeacon(recurringPaymentManagerBeacon)
+            IInverterBeacon(recurringPaymentManagerBeacon)
         );
     }
 
@@ -416,7 +438,7 @@ contract E2EModuleRegistry is Test {
 
     BountyManager bountyManagerImpl;
 
-    Beacon bountyManagerBeacon;
+    InverterBeacon bountyManagerBeacon;
 
     address bountyManagerBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -438,15 +460,18 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(bountyManagerBeaconOwner);
-        bountyManagerBeacon = new Beacon();
+        bountyManagerBeacon =
+            new InverterBeacon(bountyManagerMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(bountyManagerBeaconOwner);
-        bountyManagerBeacon.upgradeTo(address(bountyManagerImpl));
+        bountyManagerBeacon.upgradeTo(
+            address(bountyManagerImpl), bountyManagerMetadata.minorVersion
+        );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            bountyManagerMetadata, IBeacon(bountyManagerBeacon)
+            bountyManagerMetadata, IInverterBeacon(bountyManagerBeacon)
         );
     }
 
@@ -457,7 +482,7 @@ contract E2EModuleRegistry is Test {
 
     SingleVoteGovernor singleVoteGovernorImpl;
 
-    Beacon singleVoteGovernorBeacon;
+    InverterBeacon singleVoteGovernorBeacon;
 
     address singleVoteGovernorBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -486,15 +511,20 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(singleVoteGovernorBeaconOwner);
-        singleVoteGovernorBeacon = new Beacon();
+        singleVoteGovernorBeacon =
+            new InverterBeacon(singleVoteGovernorMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(singleVoteGovernorBeaconOwner);
-        singleVoteGovernorBeacon.upgradeTo(address(singleVoteGovernorImpl));
+        singleVoteGovernorBeacon.upgradeTo(
+            address(singleVoteGovernorImpl),
+            singleVoteGovernorMetadata.minorVersion
+        );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            singleVoteGovernorMetadata, IBeacon(singleVoteGovernorBeacon)
+            singleVoteGovernorMetadata,
+            IInverterBeacon(singleVoteGovernorBeacon)
         );
     }
 
@@ -502,7 +532,7 @@ contract E2EModuleRegistry is Test {
 
     MetadataManager metadataManagerImpl;
 
-    Beacon metadataManagerBeacon;
+    InverterBeacon metadataManagerBeacon;
 
     address metadataManagerBeaconOwner = DEFAULT_BEACON_OWNER;
 
@@ -516,15 +546,18 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         vm.prank(metadataManagerBeaconOwner);
-        metadataManagerBeacon = new Beacon();
+        metadataManagerBeacon =
+            new InverterBeacon(metadataManagerMetadata.majorVersion);
 
         // Set beacon's implementations.
         vm.prank(metadataManagerBeaconOwner);
-        metadataManagerBeacon.upgradeTo(address(metadataManagerImpl));
+        metadataManagerBeacon.upgradeTo(
+            address(metadataManagerImpl), metadataManagerMetadata.minorVersion
+        );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            metadataManagerMetadata, IBeacon(metadataManagerBeacon)
+            metadataManagerMetadata, IInverterBeacon(metadataManagerBeacon)
         );
     }
 }

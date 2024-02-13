@@ -8,7 +8,7 @@ import "./Test.t.sol";
  *
  *      Uses a table-driven test approach.
  */
-contract Rebase is ElasticReceiptTokenTest {
+contract RebaseTest is ElasticReceiptTokenTest {
     /// @notice Event emitted when the balance scalar is updated.
     /// @param epoch The number of rebases since inception.
     /// @param newScalar The new scalar.
