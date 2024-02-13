@@ -740,6 +740,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint feeAmount =
             (formulaReturn * fee) / bondingCurveFundingManager.call_BPS();
         uint sellAmountMinusFee = formulaReturn - feeAmount;
+        uint sellAmountPlusFee = feeAmount + sellAmountMinusFee;
 
         // Perform the sell
         vm.startPrank(seller);
@@ -764,7 +765,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 true, true, true, true, address(bondingCurveFundingManager)
             );
             emit VirtualCollateralAmountSubtracted(
-                sellAmountMinusFee, newVirtualCollateral - sellAmountMinusFee
+                sellAmountPlusFee, newVirtualCollateral - sellAmountPlusFee
             );
             bondingCurveFundingManager.sell(userSellAmount, sellAmountMinusFee);
         }
@@ -785,7 +786,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
         assertEq(
             bondingCurveFundingManager.getVirtualCollateralSupply(),
-            newVirtualCollateral - sellAmountMinusFee
+            newVirtualCollateral - sellAmountPlusFee
         );
     }
 
