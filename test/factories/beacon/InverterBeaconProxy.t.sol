@@ -40,7 +40,11 @@ contract InverterBeaconProxyTest is Test {
         vm.expectEmit(true, true, true, true);
         emit BeaconUpgraded(beacon);
 
-        new InverterBeaconProxy(beacon);
+        InverterBeaconProxy localProxy = new InverterBeaconProxy(beacon);
+
+        (uint majorVersion, uint minorVersion) = localProxy.version();
+        assertEq(majorVersion, 0);
+        assertEq(minorVersion, 0);
     }
 
     //--------------------------------------------------------------------------------
@@ -51,5 +55,12 @@ contract InverterBeaconProxyTest is Test {
 
         assertEq(ModuleImplementationV1Mock(address(proxy)).data(), data);
         assertEq(ModuleImplementationV1Mock(address(proxy)).getVersion(), 1);
+    }
+
+    function testVersion(uint majorVersion, uint minorVersion) public {
+        beacon.overrideVersion(majorVersion, minorVersion);
+        (uint localMajorVersion, uint localMinorVersion) = proxy.version();
+        assertEq(majorVersion, localMajorVersion);
+        assertEq(minorVersion, localMinorVersion);
     }
 }
