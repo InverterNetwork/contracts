@@ -39,10 +39,10 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     address private _implementation;
 
     /// @dev the major version of the implementation
-    uint majorVersion;
+    uint private majorVersion;
 
     /// @dev the minor version of the implementation
-    uint minorVersion;
+    uint private minorVersion;
 
     //--------------------------------------------------------------------------
     // Constructor
