@@ -30,7 +30,7 @@ contract InverterBeaconTest is Test {
     InverterBeacon beacon;
 
     // Events copied from SuT
-    event Upgraded(address indexed implementation);
+    event Upgraded(address indexed implementation, uint newMinorVersion);
 
     function setUp() public {
         beacon = new InverterBeacon(0);
@@ -55,14 +55,14 @@ contract InverterBeaconTest is Test {
         ModuleImplementationV2Mock toUpgrade2 = new ModuleImplementationV2Mock();
 
         vm.expectEmit(true, true, true, true);
-        emit Upgraded(address(toUpgrade1));
+        emit Upgraded(address(toUpgrade1), 1);
 
         beacon.upgradeTo(address(toUpgrade1), 1); //@todo test version via loop
 
         assertEq(beacon.implementation(), address(toUpgrade1));
 
         vm.expectEmit(true, true, true, true);
-        emit Upgraded(address(toUpgrade2));
+        emit Upgraded(address(toUpgrade2), 2);
 
         beacon.upgradeTo(address(toUpgrade2), 2); //@todo test version via loop
 
