@@ -31,13 +31,11 @@ contract VirtualCollateralSupplyBaseTest is Test {
         virtualCollateralSupplyBase.setVirtualCollateralSupply(INITIAL_SUPPLY);
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IVirtualCollateralSupply).interfaceId
-            == interfaceId || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface,
-            virtualCollateralSupplyBase.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            virtualCollateralSupplyBase.supportsInterface(
+                type(IVirtualCollateralSupply).interfaceId
+            )
         );
     }
 
