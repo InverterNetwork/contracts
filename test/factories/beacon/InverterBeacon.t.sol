@@ -45,8 +45,9 @@ contract InverterBeaconTest is Test {
         assertEq(beacon.pendingOwner(), address(0));
 
         //Check for version
-        (uint majorVersion,) = beacon.version();
+        (uint majorVersion, uint minorVersion) = beacon.version();
         assertEq(majorVersion, 0);
+        assertEq(minorVersion, 0);
     }
 
     //--------------------------------------------------------------------------------
