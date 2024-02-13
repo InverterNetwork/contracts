@@ -110,13 +110,11 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         assertEq(address(paymentProcessor.token()), address(_token));
     }
 
-    function testSupportsInterface(bytes4 interfaceId) public {
-        bool shouldBeInterface = type(IStreamingPaymentProcessor).interfaceId
-            == interfaceId || type(IModule).interfaceId == interfaceId
-            || type(IERC165).interfaceId == interfaceId;
-
-        assertEq(
-            shouldBeInterface, paymentProcessor.supportsInterface(interfaceId)
+    function testSupportsInterface() public {
+        assertTrue(
+            paymentProcessor.supportsInterface(
+                type(IStreamingPaymentProcessor).interfaceId
+            )
         );
     }
 
