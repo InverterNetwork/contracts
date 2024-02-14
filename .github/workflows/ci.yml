@@ -23,6 +23,7 @@ jobs:
         run: forge install
 
       - name: Run tests
-        run:
-          - forge test
-          - make testScripts
+        run: forge test
+
+      - name: Run scripts
+        run: make testScripts
