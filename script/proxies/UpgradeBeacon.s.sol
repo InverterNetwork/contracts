@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
 
 /**
- * @title Beacon Deployment Script
+ * @title Beacon Upgrade Script
  *
  * @dev Script to upgrade implementation in an existing beacon and update version
  *
