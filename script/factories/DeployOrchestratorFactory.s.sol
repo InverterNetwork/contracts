@@ -38,6 +38,10 @@ contract DeployOrchestratorFactory is Script {
             moduleFactory != address(0),
             "DeployOrchestratorFactory: Missing env variable: moduleFactory"
         );
+        require(
+            forwarder != address(0),
+            "DeployOrchestratorFactory: Missing env variable: forwarder"
+        );
 
         // Deploy the orchestratorFactory.
         return run(target, moduleFactory, forwarder);
