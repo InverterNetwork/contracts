@@ -64,6 +64,7 @@ contract E2EModuleRegistry is Test {
     //      );
     // */
     // Followed by the  setUpModule() function.
+    // This config can be copied to the setup function of each specific E2ETest contract and modified accordingly
     //--------------------------------------------------------------------------
 
     //--------------------------------------------------------------------------
@@ -137,7 +138,7 @@ contract E2EModuleRegistry is Test {
         "BancorVirtualSupplyBondingCurveFundingManager"
     );
 
-    /*//@todo outcommented
+    /*
         IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
             issuanceToken = IBancorVirtualSupplyBondingCurveFundingManager
                 .IssuanceToken({
