@@ -30,7 +30,8 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
     error Module__KPIRewarder__InvalidTrancheNumber();
     error Module__KPIRewarder__InvalidKPIValueLengths();
-    error Module__KPIRewarder__InvalidKPIValues();
+    error Module__KPIRewarder__InvalidKPITrancheValues();
+    error Module__KPIRewarder__InvalidKPINumber();
 
     error Module__KPIRewarder__StakingQueueIsFull();
 
@@ -114,14 +115,17 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
     }
 
     // Assertion Manager functions:
-    function setAssertion(bytes32 dataId, bytes32 data, address asserter) external onlyModuleRole(ASSERTION_MANAGER) {
+    function setAssertion(bytes32 dataId, bytes32 data, address asserter)
+        external
+        onlyModuleRole(ASSERTION_MANAGER)
+    {
         // TODO stores the assertion that will be posted to the Optimistic Oracle
         // needs to store locally the numeric value to be asserted. the amount to distribute and the distribution time
-        
+
         //TODO: inputs
         // TODO: what kind of checks do we want to implement? Technically the value in "data" wouldn't need to be the sam as assertedValue...
-        
-        activeAssertion = DataAssertion( dataId,  data,  asserter, false);   
+
+        activeAssertion = DataAssertion(dataId, data, asserter, false);
     }
 
     function postAssertion()
@@ -148,10 +152,7 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
             activeAssertion.asserter
         );
         assertionConfig[assertionId] = RewardRoundConfiguration(
-            block.timestamp,
-            activeTargetValue,
-            activeKPI,
-            false
+            block.timestamp, activeTargetValue, activeKPI, false
         );
     }
 
@@ -166,20 +167,18 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         // Should it be only the owner, or do we create a separate role for this? -> owner for now
         // Also should we set more than one KPI in one step? -> nope. Multicall
         uint _numOfTranches = _trancheValues.length;
-        
+
         if (_numOfTranches < 1 || _numOfTranches > 20) {
             revert Module__KPIRewarder__InvalidTrancheNumber();
         }
 
-        if (
-            _numOfTranches != _trancheRewards.length
-        ) {
+        if (_numOfTranches != _trancheRewards.length) {
             revert Module__KPIRewarder__InvalidKPIValueLengths();
         }
 
-        for (uint i = 0; i < _numOfTranches - 1; i++) {
-            if (_trancheValues[i] >= _trancheValues[i + 1]) {
-                revert Module__KPIRewarder__InvalidKPIValues();
+        for (uint i = 1; i < _numOfTranches; i++) {
+            if (_trancheValues[i - 1] >= _trancheValues[i]) {
+                revert Module__KPIRewarder__InvalidKPITrancheValues();
             }
         }
 
@@ -195,6 +194,9 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
 
     function setKPI(uint _KPINumber) external onlyOrchestratorOwner {
         //TODO: Input validation
+        if (_KPINumber >= KPICounter) {
+            revert Module__KPIRewarder__InvalidKPINumber();
+        }
         activeKPI = _KPINumber;
     }
 

@@ -288,8 +288,8 @@ contract StakingManager is
     }
 
     function _setStakingToken(address _token) internal {
-        if (_token == address(0) ){
-                revert Module__StakingManager__InvalidStakingToken();
+        if (_token == address(0)) {
+            revert Module__StakingManager__InvalidStakingToken();
         }
         stakingToken = _token;
     }

@@ -13,7 +13,11 @@ import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // SuT
-import {KPIRewarder, IOptimisticOracleIntegrator, IStakingManager} from "src/modules/logicModule/KPIRewarder.sol";
+import {
+    KPIRewarder,
+    IOptimisticOracleIntegrator,
+    IStakingManager
+} from "src/modules/logicModule/KPIRewarder.sol";
 
 import {OptimisticOracleV3Mock} from
     "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
@@ -58,7 +62,6 @@ contract KPIRewarderTest is ModuleTest {
             abi.encode(address(stakingToken), address(rewardToken), ooV3);
 
         kpiManager.init(_orchestrator, _METADATA, configData);
-    
     }
 
     //--------------------------------------------------------------------------
@@ -79,9 +82,7 @@ contract KPIRewarderTest is ModuleTest {
 
         // Test invalid staking token
         vm.expectRevert(
-            IStakingManager
-                .Module__StakingManager__InvalidStakingToken
-                .selector
+            IStakingManager.Module__StakingManager__InvalidStakingToken.selector
         );
         kpiManager.init(
             _orchestrator,
@@ -118,7 +119,7 @@ contract KPIRewarderTest is ModuleTest {
 postAssertionTest
 ├── when stakingQueue length is bigger than 0
 │   └── it should stake all orders in the stakingQueue
-├── it shoul delete the stakingQueue
+├── it should delete the stakingQueue
 ├── it should set the queued funds to zero
 ├── when there aren't enough funds to pay the assertion fee
 │   └── it should revert
@@ -140,7 +141,9 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
         // it should set the queued funds to zero
     }
 
-    function test_RevertWhen_ThereArentEnoughFundsToPayTheAssertionFee() external {
+    function test_RevertWhen_ThereArentEnoughFundsToPayTheAssertionFee()
+        external
+    {
         // it should revert
     }
 
@@ -169,23 +172,78 @@ createKPITest
 contract KPIRewarder_createKPITest is KPIRewarderTest {
     function test_RevertWhen_TheNumberOfTranchesIs0() external {
         // it should revert
+
+        uint[] memory trancheValues;
+        uint[] memory trancheRewards;
+
+        vm.expectRevert(
+            KPIRewarder.Module__KPIRewarder__InvalidTrancheNumber.selector
+        );
+        kpiManager.createKPI(true, trancheValues, trancheRewards);
     }
 
-    function test_RevertWhen_TheNumberOfTranchesIsBiggerThan20() external {
+    function test_RevertWhen_TheNumberOfTranchesIsBiggerThan20(
+        uint[] calldata trancheValues,
+        uint[] calldata trancheRewards
+    ) external {
         // it should revert
+        vm.assume(trancheValues.length >= 21);
+
+        vm.expectRevert(
+            KPIRewarder.Module__KPIRewarder__InvalidTrancheNumber.selector
+        );
+        kpiManager.createKPI(true, trancheValues, trancheRewards);
     }
 
-    function test_RevertWhen_TheLengthOfTheTrancheValueArrayAndTheTrancheRewardArrayDontMatch() external {
+    function test_RevertWhen_TheLengthOfTheTrancheValueArrayAndTheTrancheRewardArrayDontMatch(
+        uint rewardLength,
+        uint valueLength
+    ) external {
         // it should revert
+        rewardLength = bound(rewardLength, 1, 20);
+        valueLength = bound(valueLength, 1, 20);
+
+        vm.assume(rewardLength != valueLength);
+
+        if (rewardLength != valueLength) {
+            vm.expectRevert(
+                KPIRewarder.Module__KPIRewarder__InvalidKPIValueLengths.selector
+            );
+            kpiManager.createKPI(
+                true, new uint[](valueLength), new uint[](rewardLength)
+            );
+        }
     }
 
-    function test_RevertWhen_TheValuesInTheTrancheValueArrayArentIncremental() external {
+    function test_RevertWhen_TheValuesInTheTrancheValueArrayArentIncremental(
+        uint[] calldata trancheValues,
+        uint[] calldata trancheRewards
+    ) external {
+        vm.assume(trancheValues.length >= 2);
+        vm.assume(trancheRewards.length >= trancheValues.length);
+
+        uint length = bound(trancheValues.length, 2, 20);
+
+        uint[] memory valuesCapped = trancheValues[0:length];
+        uint[] memory rewardsCapped = trancheRewards[0:length];
+
+        console.log(valuesCapped.length);
+        console.log(rewardsCapped.length);
+
+        valuesCapped[length - 1] = valuesCapped[length - 2] / 2; // this avoids overflows etc, and also activates the case where two tranches have the same value
+
+        vm.expectRevert(
+            KPIRewarder.Module__KPIRewarder__InvalidKPITrancheValues.selector
+        );
+        kpiManager.createKPI(true, valuesCapped, rewardsCapped);
+
         // it should revert
     }
 
     function test_WhenTheInputIsValid() external {
         // it should create a KPI struct with the currentKPI counter as ID and increase the counter
-    }
+    
+    }   //TODO
 }
 
 /*
@@ -222,7 +280,8 @@ contract KPIRewarder_stakeTest is KPIRewarderTest {
         // it should revert
     }
 
-    function test_RevertWhen_TheLengthOfTheStakingQueueIsAlreadyAtMAX_QUEUE_LENGTH() external {
+    function test_RevertWhen_TheLengthOfTheStakingQueueIsAlreadyAtMAX_QUEUE_LENGTH(
+    ) external {
         // it should revert
     }
 
@@ -250,7 +309,6 @@ assertionresolvedCallbackTest
 
 */
 
-
 contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
     function test_WhenTheAssertionResolvedToFalse() external {
         // it should emit an event
@@ -260,17 +318,26 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         _;
     }
 
-    function test_WhenTheAssertionResolvedToTrue() external whenTheAssertionResolvedToTrue {
+    function test_WhenTheAssertionResolvedToTrue()
+        external
+        whenTheAssertionResolvedToTrue
+    {
         // it will go through all tranches until reaching the asserted amount
         // it should set the staking rewards to the calculated value with a duration of 1
         // it should emit an event
     }
 
-    function test_WhenTheRewardTypeIsContinuous() external whenTheAssertionResolvedToTrue {
+    function test_WhenTheRewardTypeIsContinuous()
+        external
+        whenTheAssertionResolvedToTrue
+    {
         // it should pay out an amount from the last tranche proportional to its level of completion
     }
 
-    function test_WhenTheRewardTypeIsNotContinuous() external whenTheAssertionResolvedToTrue {
+    function test_WhenTheRewardTypeIsNotContinuous()
+        external
+        whenTheAssertionResolvedToTrue
+    {
         // it should not pay out any amount from the uncompleted tranche at all
     }
 }
@@ -298,7 +365,3 @@ contract KPIRewarder_setAssertionTest is KPIRewarderTest {
         // it should revert
     }
 }
-
-
-
-
