@@ -271,7 +271,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
-                _authorizer.getManagerRole(),
+                _authorizer.getOwnerRole(),
                 address(0xBEEF)
             )
         );
@@ -398,7 +398,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
-                _authorizer.getManagerRole(),
+                _authorizer.getOwnerRole(),
                 address(0xBEEF)
             )
         );

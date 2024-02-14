@@ -97,23 +97,24 @@ abstract contract Module is
         bytes32 ownerRole = authorizer.getOwnerRole();
         bytes32 managerRole = authorizer.getManagerRole();
 
-        if (!authorizer.hasRole(managerRole, _msgSender())) {
-            revert Module__CallerNotAuthorized(managerRole, _msgSender());
-        } else if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
+        if (
+            authorizer.hasRole(ownerRole, _msgSender())
+                || authorizer.hasRole(managerRole, _msgSender())
+        ) {
+            _;
+        } else {
+            if (authorizer.hasRole(ownerRole, _msgSender())) {
+                revert Module__CallerNotAuthorized(managerRole, _msgSender());
+            } else {
+                revert Module__CallerNotAuthorized(ownerRole, _msgSender());
+            }
         }
-        _;
     }
 
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
         if (
-            !__Module_orchestrator.authorizer().hasRole(
-                __Module_orchestrator.authorizer().generateRoleId(
-                    address(this), role
-                ),
-                _msgSender()
-            )
+            !__Module_orchestrator.authorizer().hasModuleRole(role, _msgSender())
         ) {
             revert Module__CallerNotAuthorized(
                 __Module_orchestrator.authorizer().generateRoleId(
