@@ -12,7 +12,6 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
 /**
  * @title Module
