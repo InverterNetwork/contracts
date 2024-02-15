@@ -15,8 +15,10 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 // SuT
 import {
     KPIRewarder,
+    IKPIRewarder,
     IOptimisticOracleIntegrator,
-    IStakingManager
+    IStakingManager,
+    IERC20PaymentClient
 } from "src/modules/logicModule/KPIRewarder.sol";
 
 import {OptimisticOracleV3Mock} from
@@ -39,7 +41,7 @@ contract KPIRewarderTest is ModuleTest {
     // Mock data for assertions
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
     bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
-    address constant MOCK_ASSERTER_ADDRESS = address(0x0);
+    address constant MOCK_ASSERTER_ADDRESS = address(0x1);
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
     ERC20Mock rewardToken =
@@ -113,6 +115,21 @@ contract KPIRewarderTest is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
         kpiManager.init(_orchestrator, _METADATA, bytes(""));
     }
+
+    function createDummyKPI() public {
+        uint[] memory trancheValues = new uint[](3);
+        uint[] memory trancheRewards = new uint[](3);
+
+        trancheValues[0] = 100;
+        trancheValues[1] = 200;
+        trancheValues[2] = 300;
+
+        trancheRewards[0] = 100e18;
+        trancheRewards[1] = 100e18;
+        trancheRewards[2] = 100e18;
+
+        kpiManager.createKPI(true, trancheValues, trancheRewards);
+    }
 }
 
 /*
@@ -177,7 +194,7 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
         uint[] memory trancheRewards;
 
         vm.expectRevert(
-            KPIRewarder.Module__KPIRewarder__InvalidTrancheNumber.selector
+            IKPIRewarder.Module__KPIRewarder__InvalidTrancheNumber.selector
         );
         kpiManager.createKPI(true, trancheValues, trancheRewards);
     }
@@ -190,7 +207,7 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
         vm.assume(trancheValues.length >= 21);
 
         vm.expectRevert(
-            KPIRewarder.Module__KPIRewarder__InvalidTrancheNumber.selector
+            IKPIRewarder.Module__KPIRewarder__InvalidTrancheNumber.selector
         );
         kpiManager.createKPI(true, trancheValues, trancheRewards);
     }
@@ -207,7 +224,7 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
 
         if (rewardLength != valueLength) {
             vm.expectRevert(
-                KPIRewarder.Module__KPIRewarder__InvalidKPIValueLengths.selector
+                IKPIRewarder.Module__KPIRewarder__InvalidKPIValueLengths.selector
             );
             kpiManager.createKPI(
                 true, new uint[](valueLength), new uint[](rewardLength)
@@ -233,17 +250,50 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
         valuesCapped[length - 1] = valuesCapped[length - 2] / 2; // this avoids overflows etc, and also activates the case where two tranches have the same value
 
         vm.expectRevert(
-            KPIRewarder.Module__KPIRewarder__InvalidKPITrancheValues.selector
+            IKPIRewarder.Module__KPIRewarder__InvalidKPITrancheValues.selector
         );
         kpiManager.createKPI(true, valuesCapped, rewardsCapped);
 
         // it should revert
     }
 
-    function test_WhenTheInputIsValid() external {
+    function test_WhenTheInputIsValid(
+        bool continuous,
+        uint numOfTranches,
+        uint trancheSeed,
+        uint rewardSeed
+    ) external {
         // it should create a KPI struct with the currentKPI counter as ID and increase the counter
-    
-    }   //TODO
+
+        numOfTranches = bound(numOfTranches, 1, 20);
+        trancheSeed = bound(trancheSeed, 1, 10_000);
+        rewardSeed = bound(rewardSeed, 1e18, 1000e18);
+
+        uint[] memory trancheValues = new uint[](numOfTranches);
+        uint[] memory trancheRewards = new uint[](numOfTranches);
+
+        for (uint i = 0; i < numOfTranches; i++) {
+            trancheValues[i] = trancheSeed * (i + 1);
+            trancheRewards[i] = rewardSeed * (i + 1);
+        }
+
+        uint kpiNum =
+            kpiManager.createKPI(continuous, trancheValues, trancheRewards);
+
+        // TODO check event emission
+
+        IKPIRewarder.KPI memory generatedKPI = kpiManager.getKPI(kpiNum);
+
+        assertEq(generatedKPI.creationTime, block.timestamp);
+        assertEq(generatedKPI.trancheValues.length, numOfTranches);
+        assertEq(generatedKPI.trancheRewards.length, numOfTranches);
+        assertEq(generatedKPI.continuous, continuous);
+
+        for (uint i = 0; i < numOfTranches; i++) {
+            assertEq(generatedKPI.trancheValues[i], trancheValues[i]);
+            assertEq(generatedKPI.trancheRewards[i], trancheRewards[i]);
+        }
+    }
 }
 
 /*
@@ -255,16 +305,35 @@ setKPITest
 */
 
 contract KPIRewarder_setKPITest is KPIRewarderTest {
-    function test_RevertWhen_TheKPINumberIsAboveTheCurrentKPI() external {
+    function test_RevertWhen_TheKPINumberIsAboveTheCurrentKPI(uint KPInum)
+        external
+    {
         // it should revert
+        vm.assume(KPInum > kpiManager.KPICounter());
+
+        vm.expectRevert(
+            IKPIRewarder.Module__KPIRewarder__InvalidKPINumber.selector
+        );
+        kpiManager.setKPI(KPInum);
     }
 
-    function test_WhenTheKPINumberIsAmongTheExistingKPIs() external {
+    function test_WhenTheKPINumberIsAmongTheExistingKPIs(uint KPInum)
+        external
+    {
+        for (uint i = 0; i < 5; i++) {
+            createDummyKPI();
+        }
         // it should change the activeKPI to the given KPI
+        KPInum = bound(KPInum, 0, kpiManager.KPICounter() - 1);
+
+        kpiManager.setKPI(KPInum);
+
+        assertEq(kpiManager.activeKPI(), KPInum);
     }
 }
 
 /*
+//TODO review for changes in contract
 stakeTest
 ├── when the staked amount is 0
 │   └── it should revert
@@ -278,19 +347,85 @@ stakeTest
 contract KPIRewarder_stakeTest is KPIRewarderTest {
     function test_RevertWhen_TheStakedAmountIs0() external {
         // it should revert
+        address USER_1 = address(0xA1BA);
+
+        stakingToken.mint(USER_1, 1000e18);
+        vm.startPrank(USER_1);
+        stakingToken.approve(address(kpiManager), 1000e18);
+        vm.expectRevert(
+            IERC20PaymentClient
+                .Module__ERC20PaymentClient__InvalidAmount
+                .selector
+        );
+        kpiManager.stake(0);
     }
 
     function test_RevertWhen_TheLengthOfTheStakingQueueIsAlreadyAtMAX_QUEUE_LENGTH(
+        uint[] calldata amounts
     ) external {
         // it should revert
+        address USER;
+        vm.assume(amounts.length > kpiManager.MAX_QUEUE_LENGTH());
+        for (uint i = 0; i < kpiManager.MAX_QUEUE_LENGTH(); i++) {
+            USER = address(uint160(i + 1));
+            uint amount = bound(amounts[i], 1, 1_000_000e18);
+            stakingToken.mint(USER, amount);
+            vm.startPrank(USER);
+            stakingToken.approve(address(kpiManager), amount);
+
+            kpiManager.stake(amount);
+            vm.stopPrank();
+        }
+
+        USER = address(0x1337);
+        stakingToken.mint(USER, 1000e18);
+        vm.startPrank(USER);
+        stakingToken.approve(address(kpiManager), 1000e18);
+        vm.expectRevert(
+            IKPIRewarder.Module__KPIRewarder__StakingQueueIsFull.selector
+        );
+        kpiManager.stake(1000e18);
+        vm.stopPrank();
     }
 
     function test_RevertWhen_TheCallerDoesNotHaveSufficientFunds() external {
         // it should revert
+
+        address USER = address(0x1337);
+        stakingToken.mint(USER, 1e18);
+        vm.startPrank(USER);
+        stakingToken.approve(address(kpiManager), 1000e18);
+        vm.expectRevert();
+        kpiManager.stake(1000e18);
+        vm.stopPrank();
     }
 
-    function test_WhenTheCallerHasSufficientFunds() external {
+    function test_WhenTheCallerHasSufficientFunds(uint amount) external {
         // it should store the amount + caller in the staking Queue and increase the value of totalQueuedFunds by the staked amount
+
+        amount = bound(amount, 1, 100_000e18);
+        address USER = address(0x1337);
+
+        // state before
+        uint stakingQueueLengthBefore = kpiManager.getStakingQueue().length;
+        uint userStakeBalanceBefore = kpiManager.stakingQueueAmounts(USER);
+        uint totalQueuedFundsBefore = kpiManager.totalQueuedFunds();
+
+        stakingToken.mint(USER, amount);
+        vm.startPrank(USER);
+        stakingToken.approve(address(kpiManager), amount);
+        kpiManager.stake(amount);
+        vm.stopPrank();
+
+        // state after
+        assertEq(
+            kpiManager.getStakingQueue().length, stakingQueueLengthBefore + 1
+        );
+        assertEq(
+            kpiManager.stakingQueueAmounts(USER),
+            userStakeBalanceBefore + amount
+        );
+        assertEq(kpiManager.totalQueuedFunds(), totalQueuedFundsBefore + amount);
     }
 }
 
@@ -312,9 +447,15 @@ assertionresolvedCallbackTest
 contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
     function test_WhenTheAssertionResolvedToFalse() external {
         // it should emit an event
+
+        // TODO check event emission
     }
 
     modifier whenTheAssertionResolvedToTrue() {
+        // set up KPI
+        // set UP assertion
+        // speedrun assertion resolution
+
         _;
     }
 
@@ -322,6 +463,8 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         external
         whenTheAssertionResolvedToTrue
     {
+        // since its the first assertion, id should be zero.
+
         // it will go through all tranches until reaching the asserted amount
         // it should set the staking rewards to the calculated value with a duration of 1
         // it should emit an event
@@ -343,25 +486,39 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
 }
 
 /*
-setAssertionTest
-├── when the dataID is not valid
+prepareAsertionTest
+├── when the target KPI is not valid
 │   └── it should revert
-├── when the data is not valid
-│   └── it should revert
-└── when the asserter address is not valid
+└── when the asserter targetValue is not valid
     └── it should revert
 */
 
 contract KPIRewarder_setAssertionTest is KPIRewarderTest {
-    function test_RevertWhen_TheDataIDIsNotValid() external {
+    function test_RevertWhen_TheTargetKPIIsNotValid() external {
         // it should revert
+        vm.expectRevert(
+            IKPIRewarder.Module__KPIRewarder__InvalidKPINumber.selector
+        );
+        kpiManager.prepareAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            99_999
+        );
     }
 
-    function test_RevertWhen_TheDataIsNotValid() external {
+    function test_RevertWhen_TheTargetValueIsNotValid() external {
         // it should revert
-    }
-
-    function test_RevertWhen_TheAsserterAddressIsNotValid() external {
-        // it should revert
+        vm.expectRevert(
+            IKPIRewarder.Module__KPIRewarder__InvalidTargetValue.selector
+        );
+        kpiManager.prepareAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            0,
+            0
+        );
     }
 }

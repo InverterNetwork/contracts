@@ -7,11 +7,14 @@ import {Module} from "src/modules/base/Module.sol";
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
+import { IKPIRewarder} from "./IKPIRewarder.sol";
+
 import {
     IStakingManager,
     StakingManager,
     SafeERC20,
     IERC20,
+    IERC20PaymentClient,
     ReentrancyGuard
 } from "./StakingManager.sol";
 
@@ -23,41 +26,29 @@ import {
     ClaimData
 } from "./oracle/OptimisticOracleIntegrator.sol";
 
-contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
+contract KPIRewarder is
+    IKPIRewarder,
+    StakingManager,
+    OptimisticOracleIntegrator
+{
     using SafeERC20 for IERC20;
 
-    event StakeEnqueued(address sender, uint amount);
-
-    error Module__KPIRewarder__InvalidTrancheNumber();
-    error Module__KPIRewarder__InvalidKPIValueLengths();
-    error Module__KPIRewarder__InvalidKPITrancheValues();
-    error Module__KPIRewarder__InvalidKPINumber();
-
-    error Module__KPIRewarder__StakingQueueIsFull();
-
-    bytes32 public constant ASSERTION_MANAGER = "ASSERTION_MANAGER";
+    bytes32 public constant ASSERTION_POSTER = "ASSERTION_POSTER";
     uint public constant MAX_QUEUE_LENGTH = 50;
 
-    uint KPICounter;
+    uint public KPICounter;
 
-    uint activeKPI;
-    uint activeTargetValue;
+    uint public activeKPI;
+    uint public activeTargetValue;
 
-    DataAssertion activeAssertion;
+    DataAssertion public activeAssertion;
 
-    mapping(uint => KPI) registryOfKPIs;
-    mapping(bytes32 => RewardRoundConfiguration) assertionConfig;
-
-    // assertionId => extra data for the rewarder
-    //mapping(bytes32 => RewarderAssertion) assertionRewarderRegistry;
+    mapping(uint => KPI) public registryOfKPIs;
+    mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
     // Deposit Queue
-    struct QueuedStake {
-        address stakerAddress;
-        uint amount;
-    }
-
-    QueuedStake[] public stakingQueue;
+    address[] public stakingQueue;
+    mapping(address => uint) public stakingQueueAmounts;
     uint public totalQueuedFunds;
 
     /*
@@ -73,20 +64,6 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
     ->    if KPI is 25000, reward is 350 for the tanches [100% 0-10000, 100% 10000-20000, 50% 20000-30000]
 
     */
-    struct KPI {
-        uint creationTime; // timestamp the KPI was created //
-        uint numOfTranches; // number of tranches the KPI is divided into
-        bool continuous; // should the tranche rewards be distributed continuously or in steps
-        uint[] trancheValues; // The value at which a tranche ends
-        uint[] trancheRewards; // The rewards to be dsitributed at completion of each tranche
-    }
-
-    struct RewardRoundConfiguration {
-        uint creationTime; // timestamp the assertion was created
-        uint assertedValue; // the value that was asserted
-        uint KpiToUse; // the KPI to be used for distribution once the assertion confirms
-        bool distributed;
-    }
 
     /// @inheritdoc Module
     function init(
@@ -115,33 +92,51 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
     }
 
     // Assertion Manager functions:
+    function prepareAssertion(
+        bytes32 dataId,
+        bytes32 data,
+        address asserter,
+        uint targetValue,
+        uint targetKPI
+    ) external onlyOrchestratorOwner {
+        //sanitize asserter address
+        asserter = asserter == address(0) ? _msgSender() : asserter;
+
+        //we do not control the dataId and data inputs since they are external and just stored in the oracle
+
+        setActiveTargetValue(targetValue);
+        setKPI(targetKPI);
+        setAssertion(dataId, data, asserter);
+    }
+
     function setAssertion(bytes32 dataId, bytes32 data, address asserter)
-        external
-        onlyModuleRole(ASSERTION_MANAGER)
+        public
+        onlyOrchestratorOwner
     {
         // TODO stores the assertion that will be posted to the Optimistic Oracle
         // needs to store locally the numeric value to be asserted. the amount to distribute and the distribution time
 
         //TODO: inputs
-        // TODO: what kind of checks do we want to implement? Technically the value in "data" wouldn't need to be the sam as assertedValue...
-
+        // TODO: what kind of checks do we want to implement? Technically the value in "data" wouldn't need to be the same as assertedValue...
         activeAssertion = DataAssertion(dataId, data, asserter, false);
     }
 
     function postAssertion()
         external
-        onlyModuleRole(ASSERTION_MANAGER)
+        onlyModuleRole(ASSERTION_POSTER)
         returns (bytes32 assertionId)
     {
         // performs staking for all users in queue
         for (uint i = 0; i < stakingQueue.length; i++) {
-            _stake(stakingQueue[i].stakerAddress, stakingQueue[i].amount);
-            totalQueuedFunds -= stakingQueue[i].amount;
+            address user = stakingQueue[i];
+            _stake(user, stakingQueueAmounts[user]);
+            totalQueuedFunds -= stakingQueueAmounts[user];
+            stakingQueueAmounts[user] = 0;
         }
 
         // resets the queue
         delete stakingQueue;
-        totalQueuedFunds = 0;
+        //totalQueuedFunds = 0;
 
         // TODO posts the assertion to the Optimistic Oracle
         // Takes the payout from the FundingManager
@@ -162,7 +157,7 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         bool _continuous,
         uint[] calldata _trancheValues,
         uint[] calldata _trancheRewards
-    ) external onlyOrchestratorOwner {
+    ) external onlyOrchestratorOwner returns (uint) {
         // TODO sets the KPI that will be used to calculate the reward
         // Should it be only the owner, or do we create a separate role for this? -> owner for now
         // Also should we set more than one KPI in one step? -> nope. Multicall
@@ -181,8 +176,9 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
                 revert Module__KPIRewarder__InvalidKPITrancheValues();
             }
         }
+        uint KpiNum = KPICounter;
 
-        registryOfKPIs[KPICounter] = KPI(
+        registryOfKPIs[KpiNum] = KPI(
             block.timestamp,
             _numOfTranches,
             _continuous,
@@ -190,14 +186,27 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
             _trancheRewards
         );
         KPICounter++;
+
+        //todo emit event
+
+        return (KpiNum);
     }
 
-    function setKPI(uint _KPINumber) external onlyOrchestratorOwner {
-        //TODO: Input validation
+    function setKPI(uint _KPINumber) public onlyOrchestratorOwner {
         if (_KPINumber >= KPICounter) {
             revert Module__KPIRewarder__InvalidKPINumber();
         }
         activeKPI = _KPINumber;
+    }
+
+    function setActiveTargetValue(uint targetValue)
+        public
+        onlyOrchestratorOwner
+    {
+        if (targetValue == 0) {
+            revert Module__KPIRewarder__InvalidTargetValue();
+        }
+        activeTargetValue = targetValue;
     }
 
     /*    
@@ -215,16 +224,17 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
         nonReentrant
         validAmount(amount)
     {
-        address sender = _msgSender();
-
-        QueuedStake memory newStake =
-            QueuedStake({stakerAddress: sender, amount: amount});
-
         if (stakingQueue.length >= MAX_QUEUE_LENGTH) {
             revert Module__KPIRewarder__StakingQueueIsFull();
         }
-        stakingQueue.push(newStake);
 
+        address sender = _msgSender();
+
+        if (stakingQueueAmounts[sender] == 0) {
+            // new stake for queue
+            stakingQueue.push(sender);
+        }
+        stakingQueueAmounts[sender] += amount;
         totalQueuedFunds += amount;
 
         //transfer funds to stakingManager
@@ -300,5 +310,13 @@ contract KPIRewarder is StakingManager, OptimisticOracleIntegrator {
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
         //TODO
+    }
+
+    function getKPI(uint KPInum) public view returns (KPI memory) {
+        return registryOfKPIs[KPInum];
+    }
+
+    function getStakingQueue() public view returns (address[] memory) {
+        return stakingQueue;
     }
 }
