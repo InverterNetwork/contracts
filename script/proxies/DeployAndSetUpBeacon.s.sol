@@ -35,7 +35,9 @@ contract DeployAndSetUpBeacon is Script {
             beacon = new InverterBeacon(metadata.majorVersion);
 
             // Upgrade the Beacon to the chosen implementation
-            beacon.upgradeTo(address(implementation), metadata.minorVersion);
+            beacon.upgradeTo(
+                address(implementation), metadata.minorVersion, false
+            );
 
             // Register Metadata at the ModuleFactory
             ModuleFactory(moduleFactory).registerMetadata(metadata, beacon);

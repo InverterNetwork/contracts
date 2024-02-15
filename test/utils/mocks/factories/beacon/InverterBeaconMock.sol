@@ -5,6 +5,8 @@ import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
 contract InverterBeaconMock is IInverterBeacon {
     address public implementation;
 
+    bool public emergencyMode;
+
     uint public majorVersion;
     uint public minorVersion;
 
@@ -17,9 +19,21 @@ contract InverterBeaconMock is IInverterBeacon {
         minorVersion = minorVersion_;
     }
 
+    function overrideEmergencyMode(bool emergencyMode_) public {
+        emergencyMode = emergencyMode_;
+    }
+
     function version() external view returns (uint, uint) {
         return (majorVersion, minorVersion);
     }
 
-    function upgradeTo(address, uint) external {}
+    function emergencyModeActive() external view returns (bool) {
+        return emergencyMode;
+    }
+
+    function upgradeTo(address, uint, bool) external {}
+
+    function shutdownImplementation() external {}
+
+    function restartImplementation() external {}
 }

@@ -17,14 +17,17 @@ contract UpgradeBeacon is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    function run(address beacon, address implementation, uint minorVersion)
-        external
-    {
+    function run(
+        address beacon,
+        address implementation,
+        uint minorVersion,
+        bool overrideShutdown
+    ) external {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Upgrade the Beacon to the chosen implementation
             InverterBeacon(beacon).upgradeTo(
-                address(implementation), minorVersion
+                address(implementation), minorVersion, overrideShutdown
             );
         }
 

@@ -63,7 +63,7 @@ contract InverterBeaconTest is Test {
         vm.expectEmit(true, true, true, true);
         emit Upgraded(address(toUpgrade1), 1);
 
-        beacon.upgradeTo(address(toUpgrade1), 1);
+        beacon.upgradeTo(address(toUpgrade1), 1, false);
 
         assertEq(beacon.implementation(), address(toUpgrade1));
         (majorVersion, minorVersion) = beacon.version();
@@ -73,7 +73,7 @@ contract InverterBeaconTest is Test {
         vm.expectEmit(true, true, true, true);
         emit Upgraded(address(toUpgrade2), 2);
 
-        beacon.upgradeTo(address(toUpgrade2), 2);
+        beacon.upgradeTo(address(toUpgrade2), 2, false);
         (majorVersion, minorVersion) = beacon.version();
         assertEq(majorVersion, 0);
         assertEq(minorVersion, 2);
@@ -90,7 +90,7 @@ contract InverterBeaconTest is Test {
                 OZErrors.Ownable__UnauthorizedAccount, caller
             )
         );
-        beacon.upgradeTo(address(0), 1);
+        beacon.upgradeTo(address(0), 1, false);
     }
 
     function testUpgradeToFailsForFalseMinorVersion(
@@ -102,7 +102,7 @@ contract InverterBeaconTest is Test {
 
         //Upgrade to an initial Version
         if (initialMinorVersion != 0) {
-            beacon.upgradeTo(implementation, initialMinorVersion);
+            beacon.upgradeTo(implementation, initialMinorVersion, false);
         }
 
         if (newMinorVersion <= initialMinorVersion) {
@@ -112,13 +112,13 @@ contract InverterBeaconTest is Test {
                     .selector
             );
         }
-        beacon.upgradeTo(implementation, newMinorVersion);
+        beacon.upgradeTo(implementation, newMinorVersion, false);
     }
 
     function testUpgradeToFailsIfImplementationNotContract() public {
         // Note that address(0xCAFE) is EOA.
         vm.expectRevert(IInverterBeacon.Beacon__InvalidImplementation.selector);
-        beacon.upgradeTo(address(0xCAFE), 2);
+        beacon.upgradeTo(address(0xCAFE), 2, false);
     }
 
     //--------------------------------------------------------------------------------
