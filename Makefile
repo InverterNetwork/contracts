@@ -14,6 +14,9 @@
 
 # -----------------------------------------------------------------------------
 # Common
+.PHONY: install
+clean: ## Installs the required dependencies
+	@forge install
 
 .PHONY: clean
 clean: ## Remove build artifacts
@@ -168,10 +171,10 @@ pre-commit: ## Git pre-commit hook
 	@echo "### Configure tests"
 	@make pre-test
 	
-	@echo "### Running the scripts..."
+	@echo "### Running the scripts"
 	@make testScripts
 
-	@echo "### Start running tests"
+	@echo "### Running the tests"
 	@forge test
 
 # -----------------------------------------------------------------------------
