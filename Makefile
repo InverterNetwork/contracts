@@ -55,10 +55,10 @@ testFuzz: ## Run whole testsuite with a custom amount of fuzz runs
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
-.PHONY: testProposal
-testProposal: ## Run proposal/ package tests
+.PHONY: testOrchestrator
+testOrchestrator: ## Run orchestrator/ package tests
 	@make pre-test
-	@forge test -vvv --match-path "*/proposal/*"
+	@forge test -vvv --match-path "*/orchestrator/*"
 
 .PHONY: testModules
 testModules: ## Run modules/ package tests
