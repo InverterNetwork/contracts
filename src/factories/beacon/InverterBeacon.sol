@@ -38,10 +38,16 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     /// @dev The beacon's implementation address.
     address private _implementation;
 
-    /// @dev the major version of the implementation
+    /// @dev The beacon's current implementation pointer.
+    address private _currentImplementation;
+
+    /// @dev Is the beacon shut down / in emergency mode
+    bool public _emergencyMode;
+
+    /// @dev The major version of the implementation
     uint private majorVersion;
 
-    /// @dev the minor version of the implementation
+    /// @dev The minor version of the implementation
     uint private minorVersion;
 
     //--------------------------------------------------------------------------
@@ -56,7 +62,12 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
 
     /// @inheritdoc IBeacon
     function implementation() public view virtual override returns (address) {
-        return _implementation;
+        return _currentImplementation;
+    }
+
+    /// @inheritdoc IInverterBeacon
+    function emergencyModeActive() external view returns (bool) {
+        return _emergencyMode;
     }
 
     /// @inheritdoc IInverterBeacon
@@ -68,15 +79,16 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     // onlyOwner Mutating Functions
 
     /// @inheritdoc IInverterBeacon
-    function upgradeTo(address newImplementation, uint newMinorVersion)
-        public
-        onlyOwner
-    {
+    function upgradeTo(
+        address newImplementation,
+        uint newMinorVersion,
+        bool overrideShutdown
+    ) public onlyOwner {
         if (newMinorVersion <= minorVersion) {
             revert Beacon__InvalidImplementationMinorVersion();
         }
 
-        _setImplementation(newImplementation);
+        _setImplementation(newImplementation, overrideShutdown);
 
         minorVersion = newMinorVersion;
 
@@ -84,13 +96,55 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     }
 
     //--------------------------------------------------------------------------------
+    // onlyOwner Intervention Mechanism
+
+    /// @inheritdoc IInverterBeacon
+    function shutdownImplementation() external {
+        //Go into emergency mode
+        _emergencyMode = true;
+        //Set Implementation to address 0 and therefor halting the system
+        _currentImplementation = address(0);
+
+        emit ShutdownInitiated();
+    }
+
+    /// @inheritdoc IInverterBeacon
+    function restartImplementation() external {
+        //Reverse emergency mode
+        _emergencyMode = false;
+        //Set Implementation back to original implementation
+        _currentImplementation = _implementation;
+
+        emit ShutdownReversed();
+    }
+
+    //--------------------------------------------------------------------------------
     // Internal Mutating Functions
 
-    function _setImplementation(address newImplementation) private {
+    function _setImplementation(
+        address newImplementation,
+        bool overrideShutdown
+    ) private {
         if (!(newImplementation.code.length > 0)) {
             revert Beacon__InvalidImplementation();
         }
 
         _implementation = newImplementation;
+
+        //If the beacon is running normally
+        if (!_emergencyMode) {
+            //Change the _currentImplementation accordingly
+            _currentImplementation = newImplementation;
+        } else {
+            //If emergencyMode is active and overrideShutdown is true
+            if (overrideShutdown) {
+                //Change the _currentImplementation accordingly
+                _currentImplementation = newImplementation;
+                //And reverse emergency Mode
+                _emergencyMode = false;
+
+                emit ShutdownReversed();
+            }
+        }
     }
 }

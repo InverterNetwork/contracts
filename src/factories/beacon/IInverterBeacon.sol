@@ -29,6 +29,12 @@ interface IInverterBeacon is IBeacon {
     /// @param newMinorVersion The new minor version of the implementation contract.
     event Upgraded(address indexed implementation, uint newMinorVersion);
 
+    /// @notice The Beacon shutdown was initiated.
+    event ShutdownInitiated();
+
+    /// @notice The Beacon shutdown was reversed.
+    event ShutdownReversed();
+
     //--------------------------------------------------------------------------------
     // Public View Functions
 
@@ -37,13 +43,35 @@ interface IInverterBeacon is IBeacon {
     /// @return The minor version.
     function version() external view returns (uint, uint);
 
+    /// @notice Returns wether the beacon is in emergency mode or not.
+    /// @return Is the beacon in emergency mode.
+    function emergencyModeActive() external view returns (bool);
+
     //--------------------------------------------------------------------------------
     // onlyOwner Mutating Functions
 
     /// @notice Upgrades the beacon to a new implementation address.
     /// @dev Only callable by owner.
+    /// @dev overrideShutdown Doesnt do anything if Beacon is not in emergency mode
     /// @dev Revert if new implementation invalid.
     /// @param newImplementation The new implementation address.
-    function upgradeTo(address newImplementation, uint newMinorVersion)
-        external;
+    /// @param overrideShutdown Flag to enable upgradeTo function to override the shutdown.
+    function upgradeTo(
+        address newImplementation,
+        uint newMinorVersion,
+        bool overrideShutdown
+    ) external;
+
+    //--------------------------------------------------------------------------------
+    // onlyOwner Intervention Mechanism
+
+    /// @notice Shuts down the beacon and stops the system
+    /// @dev Only callable by owner.
+    /// @dev Changes the implementation address to address(0)
+    function shutdownImplementation() external;
+
+    /// @notice Restarts the beacon and the system
+    /// @dev Only callable by owner.
+    /// @dev Changes the implementation address from address(0) to the original implementation
+    function restartImplementation() external;
 }
