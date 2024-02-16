@@ -7,7 +7,6 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 // External Interfaces
-
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Dependencies

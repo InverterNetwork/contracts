@@ -42,7 +42,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     address private _currentImplementation;
 
     /// @dev Is the beacon shut down / in emergency mode
-    bool public _emergencyMode;
+    bool private _emergencyMode;
 
     /// @dev The major version of the implementation
     uint private majorVersion;
@@ -99,7 +99,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     // onlyOwner Intervention Mechanism
 
     /// @inheritdoc IInverterBeacon
-    function shutdownImplementation() external {
+    function shutDownImplementation() external {
         //Go into emergency mode
         _emergencyMode = true;
         //Set Implementation to address 0 and therefor halting the system

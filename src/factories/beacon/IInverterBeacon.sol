@@ -68,7 +68,7 @@ interface IInverterBeacon is IBeacon {
     /// @notice Shuts down the beacon and stops the system
     /// @dev Only callable by owner.
     /// @dev Changes the implementation address to address(0)
-    function shutdownImplementation() external;
+    function shutDownImplementation() external;
 
     /// @notice Restarts the beacon and the system
     /// @dev Only callable by owner.

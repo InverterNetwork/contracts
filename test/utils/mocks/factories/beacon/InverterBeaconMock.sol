@@ -33,7 +33,7 @@ contract InverterBeaconMock is IInverterBeacon {
 
     function upgradeTo(address, uint, bool) external {}
 
-    function shutdownImplementation() external {}
+    function shutDownImplementation() external {}
 
     function restartImplementation() external {}
 }
