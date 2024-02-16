@@ -22,8 +22,8 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
-import {BancorFormula} from
-    "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
+import {ToposFormula} from
+    "src/modules/fundingManager/bondingCurveFundingManager/formula/ToposFormula.sol";
 import {IBondingCurveFundingManagerBase} from
     "src/modules/fundingManager/bondingCurveFundingManager/IBondingCurveFundingManagerBase.sol";
 import {
@@ -62,8 +62,10 @@ import {RedeemingBondingCurveFundingManagerBaseTest} from
 contract ToposBondingCurveFundingManagerTest is ModuleTest {
     string private constant NAME = "Topos Token";
     string private constant SYMBOL = "TPG";
+    uint private constant initialCaptialRequirements = 1_000_000 * 1e18; // Taken from Topos repo test case
 
     ToposBondingCurveFundingManagerMock bondingCurveFundingManager;
+    address formula;
 
     address owner_address = address(0xA1BA);
     ILiquidityPool liquidityPool = ILiquidityPool(makeAddr("liquidityPool")); // TODO: Replace with Mock
@@ -74,9 +76,18 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         IToposBondingCurveFundingManager.BondingCurveProperties memory
             bc_properties;
 
+        // Deploy formula and cast to address for encoding
+        ToposFormula toposFormula = new ToposFormula();
+        formula = address(toposFormula);
+
+        // Set issuance token properties
         issuanceToken.name = bytes32(abi.encodePacked(NAME));
         issuanceToken.symbol = bytes32(abi.encodePacked(SYMBOL));
         issuanceToken.decimals = uint8(18);
+
+        // Set Formula contract properties
+        bc_properties.formula = formula;
+        bc_properties.capitalRequired = initialCaptialRequirements;
 
         address impl = address(new ToposBondingCurveFundingManagerMock());
 
