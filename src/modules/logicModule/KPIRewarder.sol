@@ -99,6 +99,10 @@ contract KPIRewarder is
         uint targetValue,
         uint targetKPI
     ) external onlyOrchestratorOwner {
+        // TODO stores the assertion that will be posted to the Optimistic Oracle
+        // needs to store locally the numeric value to be asserted. the amount to distribute and the distribution time
+
+
         //sanitize asserter address
         asserter = asserter == address(0) ? _msgSender() : asserter;
 
@@ -113,8 +117,6 @@ contract KPIRewarder is
         public
         onlyOrchestratorOwner
     {
-        // TODO stores the assertion that will be posted to the Optimistic Oracle
-        // needs to store locally the numeric value to be asserted. the amount to distribute and the distribution time
 
         //TODO: inputs
         // TODO: what kind of checks do we want to implement? Technically the value in "data" wouldn't need to be the same as assertedValue...
@@ -171,16 +173,20 @@ contract KPIRewarder is
             revert Module__KPIRewarder__InvalidKPIValueLengths();
         }
 
+        uint _totalKPIRewards;
         for (uint i = 1; i < _numOfTranches; i++) {
             if (_trancheValues[i - 1] >= _trancheValues[i]) {
                 revert Module__KPIRewarder__InvalidKPITrancheValues();
             }
+
+            _totalKPIRewards += _trancheRewards[i];
         }
         uint KpiNum = KPICounter;
 
         registryOfKPIs[KpiNum] = KPI(
             block.timestamp,
             _numOfTranches,
+            _totalKPIRewards,
             _continuous,
             _trancheValues,
             _trancheRewards
@@ -243,16 +249,6 @@ contract KPIRewarder is
         emit StakeEnqueued(sender, amount);
     }
 
-    // No need to override this
-    /*     function unstake(uint amount)
-        external
-        override
-        nonReentrant
-        validAmount(amount)
-    {
-        
-    } */
-
     // Optimistic Oracle Overrides:
 
     /// @inheritdoc IOptimisticOracleIntegrator
@@ -300,16 +296,21 @@ contract KPIRewarder is
             }
 
             _setRewards(rewardAmount, 1);
-            // emit DataAssertionResolved
-        } else {
-            // emit assertionReturnedFalse;
-        }
+            
+        }     
+        emit DataAssertionResolved(
+                assertedTruthfully,
+                assertionData[assertionId].dataId,
+                assertionData[assertionId].data,
+                assertionData[assertionId].asserter,
+                assertionId
+            );
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
-        //TODO
+        //Do nothing
     }
 
     function getKPI(uint KPInum) public view returns (KPI memory) {

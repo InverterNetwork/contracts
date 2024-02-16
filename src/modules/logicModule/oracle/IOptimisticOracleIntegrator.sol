@@ -25,6 +25,7 @@ interface IOptimisticOracleIntegrator is
     );
 
     event DataAssertionResolved(
+        bool assertedTruthfully,
         bytes32 indexed dataId,
         bytes32 data,
         address indexed asserter,

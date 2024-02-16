@@ -175,19 +175,25 @@ abstract contract OptimisticOracleIntegrator is
         if (_msgSender() != address(oo)) {
             revert Module__OptimisticOracleIntegrator__CallerNotOO();
         }
-        // If the assertion was true, then the data assertion is resolved.
-        if (assertedTruthfully) {
-            assertionData[assertionId].resolved = true;
-            DataAssertion memory dataAssertion = assertionData[assertionId];
-            emit DataAssertionResolved(
+
+        DataAssertion memory dataAssertion = assertionData[assertionId];
+
+         emit DataAssertionResolved(
+                assertedTruthfully,
                 dataAssertion.dataId,
                 dataAssertion.data,
                 dataAssertion.asserter,
                 assertionId
             );
+
+        // If the assertion was true, then the data assertion is resolved.
+        if (assertedTruthfully) {
+            assertionData[assertionId].resolved = true;
+           
         } else {
             delete assertionData[assertionId];
         } // Else delete the data assertion if it was false to save gas.
+
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator

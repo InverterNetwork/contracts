@@ -27,6 +27,7 @@ interface IKPIRewarder {
     struct KPI {
         uint creationTime; // timestamp the KPI was created //
         uint numOfTranches; // number of tranches the KPI is divided into
+        uint totalRewards; // total rewards to be distributed
         bool continuous; // should the tranche rewards be distributed continuously or in steps
         uint[] trancheValues; // The value at which a tranche ends
         uint[] trancheRewards; // The rewards to be dsitributed at completion of each tranche

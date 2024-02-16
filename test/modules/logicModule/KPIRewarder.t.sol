@@ -244,6 +244,12 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
         uint[] memory valuesCapped = trancheValues[0:length];
         uint[] memory rewardsCapped = trancheRewards[0:length];
 
+        for(uint i = 0; i < length; i++) {
+            //bound values to avoid overflows
+            valuesCapped[i] = bound(valuesCapped[i], 1, 1_000_000_000_000_000e18);
+            rewardsCapped[i] = bound(rewardsCapped[i], 1e18, 1_000_000_000_000_000e18);
+        }
+
         console.log(valuesCapped.length);
         console.log(rewardsCapped.length);
 
