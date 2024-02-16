@@ -95,7 +95,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     }
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function setSellFee(uint _fee) external onlyOrchestratorOwner {
+    function setSellFee(uint _fee) external virtual onlyOrchestratorOwner {
         _setSellFee(_fee);
     }
 

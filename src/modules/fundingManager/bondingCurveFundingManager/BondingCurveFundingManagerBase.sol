@@ -133,7 +133,7 @@ abstract contract BondingCurveFundingManagerBase is
     }
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function setBuyFee(uint _fee) external onlyOrchestratorOwner {
+    function setBuyFee(uint _fee) external virtual onlyOrchestratorOwner {
         _setBuyFee(_fee);
     }
 
