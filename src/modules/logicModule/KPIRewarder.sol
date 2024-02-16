@@ -7,7 +7,7 @@ import {Module} from "src/modules/base/Module.sol";
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
-import { IKPIRewarder} from "./IKPIRewarder.sol";
+import {IKPIRewarder} from "./IKPIRewarder.sol";
 
 import {
     IStakingManager,
@@ -65,6 +65,18 @@ contract KPIRewarder is
 
     */
 
+    modifier validBondSetup(address holder) {
+        if (holder == address(this)) {
+            //the module itself will be paying the bond
+            if (address(defaultCurrency) == stakingToken) {
+                // we need to ensure the token paid for bond is different than the one used for staking, since it could mess with the balances
+                revert Module__KPIRewarder__ModuleCannotUseStakingTokenAsBond();
+            }
+        }
+
+        _;
+    }
+
     /// @inheritdoc Module
     function init(
         IOrchestrator orchestrator_,
@@ -92,20 +104,16 @@ contract KPIRewarder is
     }
 
     // Assertion Manager functions:
+    // @dev about the asserter address: any address can be set as asserter, it will be expected to pay for the bond on posting.
+    // The bond tokens can also be deposited in the Module and used to pay for itself, but ONLY if the bond token is different from the one being used for staking.
+    // If the asserter is set to 0, whomever calling postAssertion will be paying the bond.
     function prepareAssertion(
         bytes32 dataId,
         bytes32 data,
         address asserter,
         uint targetValue,
         uint targetKPI
-    ) external onlyOrchestratorOwner {
-        // TODO stores the assertion that will be posted to the Optimistic Oracle
-        // needs to store locally the numeric value to be asserted. the amount to distribute and the distribution time
-
-
-        //sanitize asserter address
-        asserter = asserter == address(0) ? _msgSender() : asserter;
-
+    ) external onlyOrchestratorOwner validBondSetup(asserter) {
         //we do not control the dataId and data inputs since they are external and just stored in the oracle
 
         setActiveTargetValue(targetValue);
@@ -117,8 +125,6 @@ contract KPIRewarder is
         public
         onlyOrchestratorOwner
     {
-
-        //TODO: inputs
         // TODO: what kind of checks do we want to implement? Technically the value in "data" wouldn't need to be the same as assertedValue...
         activeAssertion = DataAssertion(dataId, data, asserter, false);
     }
@@ -126,6 +132,7 @@ contract KPIRewarder is
     function postAssertion()
         external
         onlyModuleRole(ASSERTION_POSTER)
+        validBondSetup(activeAssertion.asserter)
         returns (bytes32 assertionId)
     {
         // performs staking for all users in queue
@@ -140,9 +147,6 @@ contract KPIRewarder is
         delete stakingQueue;
         //totalQueuedFunds = 0;
 
-        // TODO posts the assertion to the Optimistic Oracle
-        // Takes the payout from the FundingManager
-
         assertionId = assertDataFor(
             activeAssertion.dataId,
             activeAssertion.data,
@@ -155,14 +159,23 @@ contract KPIRewarder is
 
     // Owner functions:
 
+    // Top up funds to pay the optimistic oracle fee
+    function depositFeeFunds(uint amount)
+        external
+        onlyOrchestratorOwner
+        nonReentrant
+        validAmount(amount)
+    {
+        defaultCurrency.safeTransferFrom(_msgSender(), address(this), amount);
+
+        emit FeeFundsDeposited(address(defaultCurrency), amount);
+    }
+
     function createKPI(
         bool _continuous,
         uint[] calldata _trancheValues,
         uint[] calldata _trancheRewards
     ) external onlyOrchestratorOwner returns (uint) {
-        // TODO sets the KPI that will be used to calculate the reward
-        // Should it be only the owner, or do we create a separate role for this? -> owner for now
-        // Also should we set more than one KPI in one step? -> nope. Multicall
         uint _numOfTranches = _trancheValues.length;
 
         if (_numOfTranches < 1 || _numOfTranches > 20) {
@@ -193,7 +206,14 @@ contract KPIRewarder is
         );
         KPICounter++;
 
-        //todo emit event
+        emit KPICreated(
+            KpiNum,
+            _numOfTranches,
+            _totalKPIRewards,
+            _continuous,
+            _trancheValues,
+            _trancheRewards
+        );
 
         return (KpiNum);
     }
@@ -215,12 +235,6 @@ contract KPIRewarder is
         activeTargetValue = targetValue;
     }
 
-    /*    
-    // Maybe not needed as standalone function, just implement it into the assertionResolvedCallback
-    function returnExcessFunds() external onlyOrchestratorOwner {
-        // TODO returns the excess funds to the FundingManager
-    }
-    */
     // StakingManager Overrides:
 
     /// @inheritdoc IStakingManager
@@ -257,9 +271,8 @@ contract KPIRewarder is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
-        // TODO
         if (assertedTruthfully) {
-            // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds
+            // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds. They
             //calculate rewardamount from asserionId value
             KPI memory resolvedKPI =
                 registryOfKPIs[assertionConfig[assertionId].KpiToUse];
@@ -296,15 +309,14 @@ contract KPIRewarder is
             }
 
             _setRewards(rewardAmount, 1);
-            
-        }     
+        }
         emit DataAssertionResolved(
-                assertedTruthfully,
-                assertionData[assertionId].dataId,
-                assertionData[assertionId].data,
-                assertionData[assertionId].asserter,
-                assertionId
-            );
+            assertedTruthfully,
+            assertionData[assertionId].dataId,
+            assertionData[assertionId].data,
+            assertionData[assertionId].asserter,
+            assertionId
+        );
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator

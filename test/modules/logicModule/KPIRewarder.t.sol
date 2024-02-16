@@ -145,6 +145,8 @@ postAssertionTest
     ├── it should store the RewardRound configuration
     └── it should return a correct assertionId
 */
+
+//TODO
 contract KPIRewarder_postAssertionTest is KPIRewarderTest {
     function test_WhenStakingQueueLengthIsBiggerThan0() external {
         // it should stake all orders in the stakingQueue
@@ -224,7 +226,9 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
 
         if (rewardLength != valueLength) {
             vm.expectRevert(
-                IKPIRewarder.Module__KPIRewarder__InvalidKPIValueLengths.selector
+                IKPIRewarder
+                    .Module__KPIRewarder__InvalidKPIValueLengths
+                    .selector
             );
             kpiManager.createKPI(
                 true, new uint[](valueLength), new uint[](rewardLength)
@@ -244,10 +248,12 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
         uint[] memory valuesCapped = trancheValues[0:length];
         uint[] memory rewardsCapped = trancheRewards[0:length];
 
-        for(uint i = 0; i < length; i++) {
+        for (uint i = 0; i < length; i++) {
             //bound values to avoid overflows
-            valuesCapped[i] = bound(valuesCapped[i], 1, 1_000_000_000_000_000e18);
-            rewardsCapped[i] = bound(rewardsCapped[i], 1e18, 1_000_000_000_000_000e18);
+            valuesCapped[i] =
+                bound(valuesCapped[i], 1, 1_000_000_000_000_000e18);
+            rewardsCapped[i] =
+                bound(rewardsCapped[i], 1e18, 1_000_000_000_000_000e18);
         }
 
         console.log(valuesCapped.length);
@@ -449,6 +455,7 @@ assertionresolvedCallbackTest
     └── it should emit an event
 
 */
+//TODO
 
 contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
     function test_WhenTheAssertionResolvedToFalse() external {

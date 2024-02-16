@@ -49,11 +49,23 @@ interface IKPIRewarder {
     error Module__KPIRewarder__InvalidKPINumber();
     error Module__KPIRewarder__InvalidTargetValue();
     error Module__KPIRewarder__StakingQueueIsFull();
+    error Module__KPIRewarder__ModuleCannotUseStakingTokenAsBond();
 
     //--------------------------------------------------------------------------
     // Events
 
     event StakeEnqueued(address sender, uint amount);
+
+    event KPICreated(
+        uint KPI_Id,
+        uint numOfTranches,
+        uint totalKPIRewards,
+        bool continuous,
+        uint[] trancheValues,
+        uint[] trancheRewards
+    );
+
+    event FeeFundsDeposited(address token, uint amount);
 
     //--------------------------------------------------------------------------
     // Functions
