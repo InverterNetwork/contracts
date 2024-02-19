@@ -33,7 +33,6 @@ contract KPIRewarder is
 {
     using SafeERC20 for IERC20;
 
-    bytes32 public constant ASSERTION_POSTER = "ASSERTION_POSTER";
     uint public constant MAX_QUEUE_LENGTH = 50;
 
     uint public KPICounter;
@@ -131,7 +130,7 @@ contract KPIRewarder is
 
     function postAssertion()
         external
-        onlyModuleRole(ASSERTION_POSTER)
+        onlyModuleRole(ASSERTER_ROLE)
         validBondSetup(activeAssertion.asserter)
         returns (bytes32 assertionId)
     {

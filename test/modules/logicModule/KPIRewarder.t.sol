@@ -21,7 +21,7 @@ import {
     IERC20PaymentClient
 } from "src/modules/logicModule/KPIRewarder.sol";
 
-import {OptimisticOracleV3Mock} from
+import {OptimisticOracleV3Mock,OptimisticOracleV3Interface} from
     "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
 
 import {StakingManagerAccessMock} from
@@ -42,15 +42,18 @@ contract KPIRewarderTest is ModuleTest {
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
     bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
     address constant MOCK_ASSERTER_ADDRESS = address(0x1);
+    address USER_1 = address(0xA1BA);
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
     ERC20Mock rewardToken =
         new ERC20Mock("KPI Reward Mock Token", "REWARD MOCK");
+    ERC20Mock feeToken =
+        new ERC20Mock("OOV3 Fee Mock Token", "FEE MOCK");
 
     function setUp() public {
-        ooV3 = new OptimisticOracleV3Mock(_token, DEFAULT_LIVENESS);
+        ooV3 = new OptimisticOracleV3Mock(feeToken, DEFAULT_LIVENESS);
         // we whitelist the default currency
-        ooV3.whitelistCurrency(address(_token), 5e17);
+        ooV3.whitelistCurrency(address(feeToken), 5e17);
 
         //Add Module to Mock Orchestrator
         address impl = address(new KPIRewarder());
@@ -61,7 +64,7 @@ contract KPIRewarderTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         bytes memory configData =
-            abi.encode(address(stakingToken), address(rewardToken), ooV3);
+            abi.encode(address(stakingToken), address(feeToken), ooV3);
 
         kpiManager.init(_orchestrator, _METADATA, configData);
     }
@@ -107,7 +110,7 @@ contract KPIRewarderTest is ModuleTest {
         // Test invalid OOAddress. See comment in OOIntegrator contract
         vm.expectRevert();
         kpiManager.init(
-            _orchestrator, _METADATA, abi.encode(address(_token), address(0))
+            _orchestrator, _METADATA, abi.encode(address(stakingToken), address(0))
         );
     }
 
@@ -150,6 +153,53 @@ postAssertionTest
 contract KPIRewarder_postAssertionTest is KPIRewarderTest {
     function test_WhenStakingQueueLengthIsBiggerThan0() external {
         // it should stake all orders in the stakingQueue
+        
+        // prepare conditions
+        createDummyKPI();
+        
+        kpiManager.prepareAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            0
+        );
+
+        // user funds
+        stakingToken.mint(USER_1, 1000e18);
+        vm.startPrank(USER_1);
+        stakingToken.approve(address(kpiManager), 1000e18);
+        kpiManager.stake(1000e18);
+        vm.stopPrank();
+
+        // bond and asserter authorization
+        kpiManager.grantModuleRole(kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS);
+        feeToken.mint(address(MOCK_ASSERTER_ADDRESS), ooV3.getMinimumBond(address(feeToken))); //
+        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
+        feeToken.approve(address(kpiManager), ooV3.getMinimumBond(address(feeToken)));
+        vm.stopPrank();
+
+
+
+        // state before
+        uint stakingQueueLengthBefore = kpiManager.getStakingQueue().length;
+
+        // SuT
+        //todo expectEmit
+        vm.prank(address(MOCK_ASSERTER_ADDRESS));
+        bytes32 assertionId = kpiManager.postAssertion();
+
+        // state after
+        assertEq(kpiManager.getStakingQueue().length, 0);
+        assertEq(stakingToken.balanceOf(USER_1), 0);
+        assertEq(feeToken.balanceOf(MOCK_ASSERTER_ADDRESS), 0);
+
+        //todo check mock for posted data
+        IOptimisticOracleIntegrator.DataAssertion memory assertion = kpiManager.assertionData(assertionId);
+        assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
+        assertEq(assertion.data, MOCK_ASSERTION_DATA);
+        assertEq(assertion.asserter, MOCK_ASSERTER_ADDRESS);
+
     }
 
     function test_ShoulDeleteTheStakingQueue() external {
@@ -359,7 +409,6 @@ stakeTest
 contract KPIRewarder_stakeTest is KPIRewarderTest {
     function test_RevertWhen_TheStakedAmountIs0() external {
         // it should revert
-        address USER_1 = address(0xA1BA);
 
         stakingToken.mint(USER_1, 1000e18);
         vm.startPrank(USER_1);
