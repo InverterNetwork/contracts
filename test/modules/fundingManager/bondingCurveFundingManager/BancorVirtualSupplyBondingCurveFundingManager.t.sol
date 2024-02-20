@@ -1546,7 +1546,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     */
 
     function testTransferOrchestratorToken(address to, uint amount) public {
-        vm.assume(to != address(0));
+        vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
 
         _token.mint(address(bondingCurveFundingManager), amount);
 
