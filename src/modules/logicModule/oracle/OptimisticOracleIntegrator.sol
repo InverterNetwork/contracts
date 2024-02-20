@@ -77,6 +77,15 @@ abstract contract OptimisticOracleIntegrator is
         return (true, assertionData[assertionId].data);
     }
 
+    /// @inheritdoc IOptimisticOracleIntegrator
+    function getAssertion(bytes32 assertionId)
+        public
+        view
+        returns (DataAssertion memory)
+    {
+        return assertionData[assertionId];
+    }
+
     //==========================================================================
     // Setter Functions
 

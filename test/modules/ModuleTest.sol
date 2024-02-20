@@ -134,4 +134,48 @@ abstract contract ModuleTest is Test {
             );
         }
     }
+
+    // Address Sanity Checkers
+    mapping(address => bool) addressCache;
+
+    function _assumeValidAddresses(address[] memory addresses) internal {
+        for (uint i; i < addresses.length; ++i) {
+            _assumeValidAddress(addresses[i]);
+
+            // Assume module unique.
+            vm.assume(!addressCache[addresses[i]]);
+
+            // Add module to cache.
+            addressCache[addresses[i]] = true;
+        }
+    }
+
+    function _assumeValidAddress(address user) internal view {
+        address[] memory invalids = _createInvalidAddresses();
+
+        for (uint i; i < invalids.length; ++i) {
+            vm.assume(user != invalids[i]);
+        }
+    }
+
+    function _createInvalidAddresses()
+        internal
+        view
+        returns (address[] memory)
+    {
+        address[] memory modules = _orchestrator.listModules();
+
+        address[] memory invalids = new address[](modules.length + 4);
+
+        for (uint i; i < modules.length; ++i) {
+            invalids[i] = modules[i];
+        }
+
+        invalids[invalids.length - 4] = address(0);
+        invalids[invalids.length - 3] = address(this);
+        invalids[invalids.length - 2] = address(_orchestrator);
+        invalids[invalids.length - 1] = address(_token);
+
+        return invalids;
+    }
 }

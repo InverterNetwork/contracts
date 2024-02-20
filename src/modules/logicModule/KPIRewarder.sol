@@ -328,6 +328,14 @@ contract KPIRewarder is
         return registryOfKPIs[KPInum];
     }
 
+    function getAssertionConfig(bytes32 assertionId)
+        public
+        view
+        returns (RewardRoundConfiguration memory)
+    {
+        return assertionConfig[assertionId];
+    }
+
     function getStakingQueue() public view returns (address[] memory) {
         return stakingQueue;
     }

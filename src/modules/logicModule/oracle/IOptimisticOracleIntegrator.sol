@@ -58,6 +58,14 @@ interface IOptimisticOracleIntegrator is
     /// @return bytes32 The Assertion Data.
     function getData(bytes32 assertionId) external returns (bool, bytes32);
 
+    /// @notice For a given assertionId, returns the assserion itself.
+    /// @param assertionId The id of the Assertion to return.
+    /// @return DataAssertion The Assertion.
+    function getAssertion(bytes32 assertionId)
+        external
+        view
+        returns (DataAssertion memory);
+
     // Setter Functions
 
     /// @notice Sets the default currency for the bond.

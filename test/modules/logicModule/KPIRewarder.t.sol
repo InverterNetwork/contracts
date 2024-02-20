@@ -21,8 +21,10 @@ import {
     IERC20PaymentClient
 } from "src/modules/logicModule/KPIRewarder.sol";
 
-import {OptimisticOracleV3Mock,OptimisticOracleV3Interface} from
-    "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
+import {
+    OptimisticOracleV3Mock,
+    OptimisticOracleV3Interface
+} from "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
 
 import {StakingManagerAccessMock} from
     "test/utils/mocks/modules/logicModules/StakingManagerAccessMock.sol";
@@ -47,8 +49,7 @@ contract KPIRewarderTest is ModuleTest {
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
     ERC20Mock rewardToken =
         new ERC20Mock("KPI Reward Mock Token", "REWARD MOCK");
-    ERC20Mock feeToken =
-        new ERC20Mock("OOV3 Fee Mock Token", "FEE MOCK");
+    ERC20Mock feeToken = new ERC20Mock("OOV3 Fee Mock Token", "FEE MOCK");
 
     function setUp() public {
         ooV3 = new OptimisticOracleV3Mock(feeToken, DEFAULT_LIVENESS);
@@ -110,7 +111,9 @@ contract KPIRewarderTest is ModuleTest {
         // Test invalid OOAddress. See comment in OOIntegrator contract
         vm.expectRevert();
         kpiManager.init(
-            _orchestrator, _METADATA, abi.encode(address(stakingToken), address(0))
+            _orchestrator,
+            _METADATA,
+            abi.encode(address(stakingToken), address(0))
         );
     }
 
@@ -151,12 +154,20 @@ postAssertionTest
 
 //TODO
 contract KPIRewarder_postAssertionTest is KPIRewarderTest {
-    function test_WhenStakingQueueLengthIsBiggerThan0() external {
+    function test_WhenStakingQueueLengthIsBiggerThan0(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
+        vm.assume(users.length < kpiManager.MAX_QUEUE_LENGTH());
+        vm.assume(amounts.length >= users.length);
+
+        _assumeValidAddresses(users);
+
         // it should stake all orders in the stakingQueue
-        
+
         // prepare conditions
         createDummyKPI();
-        
+
         kpiManager.prepareAssertion(
             MOCK_ASSERTION_DATA_ID,
             MOCK_ASSERTION_DATA,
@@ -165,24 +176,29 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
             0
         );
 
-        // user funds
-        stakingToken.mint(USER_1, 1000e18);
-        vm.startPrank(USER_1);
-        stakingToken.approve(address(kpiManager), 1000e18);
-        kpiManager.stake(1000e18);
-        vm.stopPrank();
-
-        // bond and asserter authorization
-        kpiManager.grantModuleRole(kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS);
-        feeToken.mint(address(MOCK_ASSERTER_ADDRESS), ooV3.getMinimumBond(address(feeToken))); //
+        // prepare  bond and asserter authorization
+        kpiManager.grantModuleRole(
+            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
+        );
+        feeToken.mint(
+            address(MOCK_ASSERTER_ADDRESS),
+            ooV3.getMinimumBond(address(feeToken))
+        ); //
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
-        feeToken.approve(address(kpiManager), ooV3.getMinimumBond(address(feeToken)));
+        feeToken.approve(
+            address(kpiManager), ooV3.getMinimumBond(address(feeToken))
+        );
         vm.stopPrank();
 
-
-
-        // state before
-        uint stakingQueueLengthBefore = kpiManager.getStakingQueue().length;
+        // stake user funds
+        for (uint i = 0; i < users.length; i++) {
+            amounts[i] = bound(amounts[i], 1, 100_000_000e18);
+            stakingToken.mint(users[i], amounts[i]);
+            vm.startPrank(users[i]);
+            stakingToken.approve(address(kpiManager), amounts[i]);
+            kpiManager.stake(amounts[i]);
+            vm.stopPrank();
+        }
 
         // SuT
         //todo expectEmit
@@ -191,35 +207,172 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
 
         // state after
         assertEq(kpiManager.getStakingQueue().length, 0);
-        assertEq(stakingToken.balanceOf(USER_1), 0);
+        assertEq(kpiManager.totalQueuedFunds(), 0);
+
+        for (uint i = 0; i < users.length; i++) {
+            assertEq(stakingToken.balanceOf(users[i]), 0);
+        }
+
         assertEq(feeToken.balanceOf(MOCK_ASSERTER_ADDRESS), 0);
 
         //todo check mock for posted data
-        IOptimisticOracleIntegrator.DataAssertion memory assertion = kpiManager.assertionData(assertionId);
+        IOptimisticOracleIntegrator.DataAssertion memory assertion =
+            kpiManager.getAssertion(assertionId);
+        IKPIRewarder.RewardRoundConfiguration memory rewardRoundConfig =
+            kpiManager.getAssertionConfig(assertionId);
+
         assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
         assertEq(assertion.data, MOCK_ASSERTION_DATA);
         assertEq(assertion.asserter, MOCK_ASSERTER_ADDRESS);
 
+        assertEq(rewardRoundConfig.creationTime, block.timestamp);
+        assertEq(rewardRoundConfig.assertedValue, 100);
+        assertEq(rewardRoundConfig.KpiToUse, 0);
+        assertEq(rewardRoundConfig.distributed, false);
     }
 
     function test_ShoulDeleteTheStakingQueue() external {
-        // it shoul delete the stakingQueue
+        // it should delete the stakingQueue
+
+        //tested in test_WhenStakingQueueLengthIsBiggerThan0
     }
 
     function test_ShouldSetTheQueuedFundsToZero() external {
         // it should set the queued funds to zero
+
+        //tested in test_WhenStakingQueueLengthIsBiggerThan0
     }
 
-    function test_RevertWhen_ThereArentEnoughFundsToPayTheAssertionFee()
-        external
-    {
+    function test_WhenStakingQueueLengthIsEmpty() external {
+        // prepare conditions
+        createDummyKPI();
+
+        kpiManager.prepareAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            0
+        );
+
+        // prepare  bond and asserter authorization
+        kpiManager.grantModuleRole(
+            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
+        );
+        feeToken.mint(
+            address(MOCK_ASSERTER_ADDRESS),
+            ooV3.getMinimumBond(address(feeToken))
+        ); //
+        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
+        feeToken.approve(
+            address(kpiManager), ooV3.getMinimumBond(address(feeToken))
+        );
+        vm.stopPrank();
+
+        // SuT
+        //todo expectEmit
+        vm.prank(address(MOCK_ASSERTER_ADDRESS));
+        bytes32 assertionId = kpiManager.postAssertion();
+
+        // state after
+        assertEq(kpiManager.getStakingQueue().length, 0);
+        assertEq(kpiManager.totalQueuedFunds(), 0);
+
+        assertEq(feeToken.balanceOf(MOCK_ASSERTER_ADDRESS), 0);
+
+        //todo check mock for posted data
+        IOptimisticOracleIntegrator.DataAssertion memory assertion =
+            kpiManager.getAssertion(assertionId);
+        IKPIRewarder.RewardRoundConfiguration memory rewardRoundConfig =
+            kpiManager.getAssertionConfig(assertionId);
+
+        assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
+        assertEq(assertion.data, MOCK_ASSERTION_DATA);
+        assertEq(assertion.asserter, MOCK_ASSERTER_ADDRESS);
+
+        assertEq(rewardRoundConfig.creationTime, block.timestamp);
+        assertEq(rewardRoundConfig.assertedValue, 100);
+        assertEq(rewardRoundConfig.KpiToUse, 0);
+        assertEq(rewardRoundConfig.distributed, false);
+    }
+
+    function test_RevertWhen_ThereArentEnoughFundsToPayTheAssertionFee(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
         // it should revert
+
+        vm.assume(users.length < kpiManager.MAX_QUEUE_LENGTH());
+        vm.assume(amounts.length >= users.length);
+
+        _assumeValidAddresses(users);
+
+        // it should stake all orders in the stakingQueue
+
+        // prepare conditions
+        createDummyKPI();
+
+        kpiManager.prepareAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            0
+        );
+
+        // prepare  bond and asserter authorization
+        kpiManager.grantModuleRole(
+            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
+        );
+        feeToken.mint(
+            address(MOCK_ASSERTER_ADDRESS),
+            ooV3.getMinimumBond(address(feeToken)) - 1
+        ); //
+        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
+        feeToken.approve(
+            address(kpiManager), ooV3.getMinimumBond(address(feeToken))
+        );
+        vm.stopPrank();
+
+        uint totalUserFunds = 0;
+
+        // stake user funds
+        for (uint i = 0; i < users.length; i++) {
+            amounts[i] = bound(amounts[i], 1, 100_000_000e18);
+            stakingToken.mint(users[i], amounts[i]);
+            vm.startPrank(users[i]);
+            stakingToken.approve(address(kpiManager), amounts[i]);
+            kpiManager.stake(amounts[i]);
+            totalUserFunds += amounts[i];
+            vm.stopPrank();
+        }
+
+        // SuT
+        vm.prank(address(MOCK_ASSERTER_ADDRESS));
+        vm.expectRevert(); // ERC20 insufficient balance revert
+        bytes32 assertionId = kpiManager.postAssertion();
+
+        // state after
+        assertEq(kpiManager.getStakingQueue().length, users.length);
+        assertEq(kpiManager.totalQueuedFunds(), totalUserFunds);
+
+        for (uint i = 0; i < users.length; i++) {
+            assertEq(kpiManager.stakingQueueAmounts(users[i]), amounts[i]);
+        }
+
+        assertEq(
+            feeToken.balanceOf(MOCK_ASSERTER_ADDRESS),
+            ooV3.getMinimumBond(address(feeToken)) - 1
+        );
     }
 
     function test_WhenThereAreEnoughFundsToPayTheAssertionFee() external {
         // it should post a valid assertion in the UMA oracle
         // it should store the RewardRound configuration
         // it should return a correct assertionId
+
+
+        //tested in test_WhenStakingQueueLengthIsBiggerThan0
     }
 }
 /*
