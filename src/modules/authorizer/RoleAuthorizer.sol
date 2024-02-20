@@ -100,8 +100,8 @@ contract RoleAuthorizer is
         // grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
-        // If there is no initial owner specfied or the initial owner is the same as the deployer, the initial setup is finished at this point
-        // If intialOwner corresponds to a different address, we need to set it up at this point and renounce the deployer
+        // If there is no initial owner specfied or the initial owner is the same as the deployer
+
         if (initialOwner != address(0)) {
             _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
         } else {

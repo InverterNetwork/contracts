@@ -103,11 +103,7 @@ abstract contract Module is
         ) {
             _;
         } else {
-            if (authorizer.hasRole(ownerRole, _msgSender())) {
-                revert Module__CallerNotAuthorized(managerRole, _msgSender());
-            } else {
-                revert Module__CallerNotAuthorized(ownerRole, _msgSender());
-            }
+            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
         }
     }
 
