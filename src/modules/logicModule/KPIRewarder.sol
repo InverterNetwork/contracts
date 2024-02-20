@@ -270,6 +270,10 @@ contract KPIRewarder is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
+        if (_msgSender() != address(oo)) {
+            revert Module__OptimisticOracleIntegrator__CallerNotOO();
+        }
+
         if (assertedTruthfully) {
             // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds. They
             //calculate rewardamount from asserionId value
