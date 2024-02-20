@@ -32,23 +32,40 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
             || super.supportsInterface(interfaceId);
     }
 
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier validNewMinorVersion(uint newMinorVersion) {
+        if (newMinorVersion <= minorVersion) {
+            revert Beacon__InvalidImplementationMinorVersion();
+        }
+        _;
+    }
+
+    modifier validImplementation(address newImplementation) {
+        if (!(newImplementation.code.length > 0)) {
+            revert Beacon__InvalidImplementation();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------------
     // State
 
     /// @dev The beacon's implementation address.
-    address private _implementation;
+    address internal _implementation;
 
     /// @dev The beacon's current implementation pointer.
-    address private _currentImplementation;
+    address internal _currentImplementation;
 
     /// @dev Is the beacon shut down / in emergency mode
-    bool private _emergencyMode;
+    bool internal _emergencyMode;
 
     /// @dev The major version of the implementation
-    uint private majorVersion;
+    uint internal majorVersion;
 
     /// @dev The minor version of the implementation
-    uint private minorVersion;
+    uint internal minorVersion;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -83,11 +100,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
         address newImplementation,
         uint newMinorVersion,
         bool overrideShutdown
-    ) public onlyOwner {
-        if (newMinorVersion <= minorVersion) {
-            revert Beacon__InvalidImplementationMinorVersion();
-        }
-
+    ) public onlyOwner validNewMinorVersion(newMinorVersion) {
         _setImplementation(newImplementation, overrideShutdown);
 
         minorVersion = newMinorVersion;
@@ -99,7 +112,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     // onlyOwner Intervention Mechanism
 
     /// @inheritdoc IInverterBeacon
-    function shutDownImplementation() external {
+    function shutDownImplementation() external onlyOwner {
         //Go into emergency mode
         _emergencyMode = true;
         //Set Implementation to address 0 and therefor halting the system
@@ -109,7 +122,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     }
 
     /// @inheritdoc IInverterBeacon
-    function restartImplementation() external {
+    function restartImplementation() external onlyOwner {
         //Reverse emergency mode
         _emergencyMode = false;
         //Set Implementation back to original implementation
@@ -124,11 +137,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     function _setImplementation(
         address newImplementation,
         bool overrideShutdown
-    ) private {
-        if (!(newImplementation.code.length > 0)) {
-            revert Beacon__InvalidImplementation();
-        }
-
+    ) internal virtual validImplementation(newImplementation) {
         _implementation = newImplementation;
 
         //If the beacon is running normally
