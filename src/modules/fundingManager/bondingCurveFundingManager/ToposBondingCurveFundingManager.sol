@@ -72,6 +72,9 @@ contract ToposBondingCurveFundingManager is
     /// @dev Time interval between seizes
     uint64 public constant SEIZE_DELAY = 7 days;
 
+    bytes32 public constant RISK_MANAGER_ROLE = "RISK_MANAGER";
+    bytes32 public constant COVER_MANAGER_ROLE = "COVER_MANAGER";
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -213,14 +216,12 @@ contract ToposBondingCurveFundingManager is
 
     /// @inheritdoc IToposBondingCurveFundingManager
     function burnIssuanceTokenFor(address _owner, uint _amount) external {
-        // ToDo: WIP
-        // uint allowanceAmount = allowance(_owner, _msgSender());
-        // if (_owner != _msgSender() && allowanceAmount != type(uint).max) {
-        //     allowanceAmount -= _amount;
-        //     approve(_msgSender(), allowanceAmount);
-        // }
-        // // Will revert if balance < amount
-        // _burn(_owner, _amount);
+        if (_owner != _msgSender()) {
+            // Does not update allowance if set to infinite
+            _spendAllowance(_owner, _msgSender(), _amount);
+        }
+        // Will revert if balance < amount
+        _burn(_owner, _amount);
     }
 
     /// @notice Calculates and returns the static price for buying the issuance token.
@@ -247,39 +248,6 @@ contract ToposBondingCurveFundingManager is
             formula.spotPrice(_getCaptialAvailable(), basePriceToCaptialRatio);
     }
 
-    // Todo: add comment. Waiting for questions to see if this needs to be added to Base/Redeem contracts and not implementation
-    function calculatePurchaseReturn(uint _depositAmount)
-        external
-        view
-        returns (uint mintAmount)
-    {
-        if (_depositAmount == 0) {
-            revert BondingCurveFundingManager__InvalidDepositAmount();
-        }
-        if (buyFee > 0) {
-            (_depositAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(_depositAmount, buyFee);
-        }
-        return _issueTokensFormulaWrapper(_depositAmount);
-    }
-
-    // Todo: add comment. Waiting for questions to see if this needs to be added to Base/Redeem contracts and not implementation
-    function calculateSaleReturn(uint _depositAmount)
-        external
-        view
-        returns (uint redeemAmount)
-    {
-        if (_depositAmount == 0) {
-            revert BondingCurveFundingManager__InvalidDepositAmount();
-        }
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-        if (sellFee > 0) {
-            (redeemAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(redeemAmount, sellFee);
-        }
-        return redeemAmount;
-    }
-
     /// @inheritdoc IToposBondingCurveFundingManager
     function getSaleFeeForAmount(uint _amountIn)
         external
@@ -298,6 +266,16 @@ contract ToposBondingCurveFundingManager is
     {
         ( /* netAmount */ , feeAmount) =
             _calculateNetAmountAndFee(_amountIn, buyFee);
+    }
+
+    /// @inheritdoc IToposBondingCurveFundingManager
+    function calculateBasePriceToCaptialRatio(
+        uint _capitalRequired,
+        uint _basePriceMultiplier
+    ) external pure returns (uint) {
+        return _calculateBasePriceToCaptialRatio(
+            _capitalRequired, _basePriceMultiplier
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -324,7 +302,7 @@ contract ToposBondingCurveFundingManager is
     }
 
     //--------------------------------------------------------------------------
-    // Only Liquidty Pool Functions
+    // OnlyLiquidtyPool Functions
 
     /// @inheritdoc IRepayer
     function transferRepayment(address _to, uint _amount)
@@ -341,10 +319,10 @@ contract ToposBondingCurveFundingManager is
     }
 
     //--------------------------------------------------------------------------
-    // OnlyOrchestrator Functions
+    // OnlyCoverManager Functions
 
     /// @inheritdoc IToposBondingCurveFundingManager
-    function seize(uint _amount) public onlyOrchestratorOwnerOrManager {
+    function seize(uint _amount) public onlyModuleRole(COVER_MANAGER_ROLE) {
         uint s = seizable();
         if (_amount > s) {
             revert ToposBondingCurveFundingManager__InvalidSeizeAmount(s);
@@ -364,14 +342,37 @@ contract ToposBondingCurveFundingManager is
 
         // solhint-disable-next-line not-rely-on-time
         lastSeizeTimestamp = uint64(block.timestamp);
-        _token.transfer(_msgSender(), _amount); //TODO: Add address of manager or owner
+        _token.transfer(_msgSender(), _amount);
         emit CollateralSeized(_amount);
+    }
+
+    /// @inheritdoc IToposBondingCurveFundingManager
+    function adjustSeize(uint64 _seize)
+        public
+        onlyModuleRole(COVER_MANAGER_ROLE)
+    {
+        if (_seize > MAX_SEIZE) {
+            revert ToposBondingCurveFundingManager__InvalidSeize(_seize);
+        }
+        currentSeize = _seize;
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    function setSellFee(uint _fee)
+        external
+        override(RedeemingBondingCurveFundingManagerBase)
+        onlyModuleRole(COVER_MANAGER_ROLE)
+    {
+        if (_fee > MAX_SELL_FEE) {
+            revert ToposBondingCurveFundingManager__InvalidFeePercentage(_fee);
+        }
+        _setSellFee(_fee);
     }
 
     /// @inheritdoc IRepayer
     function setRepayableAmount(uint _amount)
         external
-        onlyOrchestratorOwnerOrManager
+        onlyModuleRole(COVER_MANAGER_ROLE)
     {
         if (_amount > _getSmallerCaCr()) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();
@@ -383,7 +384,7 @@ contract ToposBondingCurveFundingManager is
     /// @inheritdoc IToposBondingCurveFundingManager
     function setLiquidityPoolContract(ILiquidityPool _lp)
         external
-        onlyOrchestratorOwnerOrManager
+        onlyModuleRole(COVER_MANAGER_ROLE)
     {
         if (address(_lp) == address(0)) {
             revert ToposBondingCurveFundingManager__InvalidInputAddress();
@@ -392,30 +393,13 @@ contract ToposBondingCurveFundingManager is
         liquidityPool = _lp;
     }
 
-    /// @inheritdoc IToposBondingCurveFundingManager
-    function adjustSeize(uint64 _seize) public onlyOrchestratorOwnerOrManager {
-        if (_seize > MAX_SEIZE) {
-            revert ToposBondingCurveFundingManager__InvalidSeize(_seize);
-        }
-        currentSeize = _seize;
-    }
-
-    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function setSellFee(uint _fee)
-        external
-        override(RedeemingBondingCurveFundingManagerBase)
-        onlyOrchestratorOwnerOrManager
-    {
-        if (_fee > MAX_SELL_FEE) {
-            revert ToposBondingCurveFundingManager__InvalidFeePercentage(_fee);
-        }
-        _setSellFee(_fee);
-    }
+    //--------------------------------------------------------------------------
+    // OnlyRiskManager Functions
 
     /// @inheritdoc IToposBondingCurveFundingManager
     function setCapitalRequired(uint _newCapitalRequired)
         public
-        onlyOrchestratorOwnerOrManager
+        onlyModuleRole(RISK_MANAGER_ROLE)
     {
         _setCaptialRequired(_newCapitalRequired);
     }
@@ -423,7 +407,7 @@ contract ToposBondingCurveFundingManager is
     /// @inheritdoc IToposBondingCurveFundingManager
     function setBaseMultiplier(uint _newBaseMultiplier)
         public
-        onlyOrchestratorOwnerOrManager
+        onlyModuleRole(RISK_MANAGER_ROLE)
     {
         _setBaseMultiplier(_newBaseMultiplier);
     }
@@ -514,12 +498,22 @@ contract ToposBondingCurveFundingManager is
         return _ca > _cr ? _cr : _ca;
     }
 
-    /// @dev Precomputes the base price multiplier to capital required ratio
+    /// @dev Precomputes and sets the price multiplier to captial ratio
     function _updateVariables() internal {
-        basePriceToCaptialRatio = FixedPointMathLib.fdiv(
-            basePriceMultiplier, capitalRequired, FixedPointMathLib.WAD
+        basePriceToCaptialRatio = _calculateBasePriceToCaptialRatio(
+            capitalRequired, basePriceMultiplier
         );
-        if (basePriceToCaptialRatio > 1e36) {
+    }
+
+    /// @dev Internal function which calculates the price multiplier to captial ratio
+    function _calculateBasePriceToCaptialRatio(
+        uint _capitalRequired,
+        uint _basePriceMultiplier
+    ) internal pure returns (uint _basePriceToCaptialRatio) {
+        _basePriceToCaptialRatio = FixedPointMathLib.fdiv(
+            _basePriceMultiplier, _capitalRequired, FixedPointMathLib.WAD
+        );
+        if (_basePriceToCaptialRatio > 1e36) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();
         }
     }
