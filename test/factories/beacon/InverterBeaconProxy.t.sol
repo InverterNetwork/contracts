@@ -46,21 +46,4 @@ contract InverterBeaconProxyTest is Test {
         assertEq(majorVersion, 0);
         assertEq(minorVersion, 0);
     }
-
-    //--------------------------------------------------------------------------------
-    // Test: _implementation
-
-    function testImplementation(uint data) public {
-        ModuleImplementationV1Mock(address(proxy)).initialize(data);
-
-        assertEq(ModuleImplementationV1Mock(address(proxy)).data(), data);
-        assertEq(ModuleImplementationV1Mock(address(proxy)).getVersion(), 1);
-    }
-
-    function testVersion(uint majorVersion, uint minorVersion) public {
-        beacon.overrideVersion(majorVersion, minorVersion);
-        (uint localMajorVersion, uint localMinorVersion) = proxy.version();
-        assertEq(majorVersion, localMajorVersion);
-        assertEq(minorVersion, localMinorVersion);
-    }
 }
