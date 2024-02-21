@@ -141,17 +141,9 @@ contract KPIRewarder is
 
         setActiveTargetValue(targetValue);
         setKPI(targetKPI);
-        setAssertion(dataId, data, asserter);
+        _setAssertion(dataId, data, asserter);
     }
 
-    /// @inheritdoc IKPIRewarder
-    function setAssertion(bytes32 dataId, bytes32 data, address asserter)
-        public
-        onlyOrchestratorOwner
-    {
-        // Question: what kind of checks do we want to or can we implement? Technically the value inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
-        activeAssertion = DataAssertion(dataId, data, asserter, false);
-    }
 
     function postAssertion()
         external
@@ -212,14 +204,17 @@ contract KPIRewarder is
             revert Module__KPIRewarder__InvalidKPIValueLengths();
         }
 
-        uint _totalKPIRewards;
-        for (uint i = 1; i < _numOfTranches; i++) {
-            if (_trancheValues[i - 1] >= _trancheValues[i]) {
-                revert Module__KPIRewarder__InvalidKPITrancheValues();
-            }
+        uint _totalKPIRewards = _trancheRewards[0];
+        if (_numOfTranches > 1) {
+            for (uint i = 1; i < _numOfTranches; i++) {
+                if (_trancheValues[i - 1] >= _trancheValues[i]) {
+                    revert Module__KPIRewarder__InvalidKPITrancheValues();
+                }
 
-            _totalKPIRewards += _trancheRewards[i];
+                _totalKPIRewards += _trancheRewards[i];
+            }
         }
+
         uint KpiNum = KPICounter;
 
         registryOfKPIs[KpiNum] = KPI(
@@ -261,6 +256,15 @@ contract KPIRewarder is
             revert Module__KPIRewarder__InvalidTargetValue();
         }
         activeTargetValue = targetValue;
+    }
+
+
+    /// @inheritdoc IKPIRewarder
+    function _setAssertion(bytes32 dataId, bytes32 data, address asserter)
+        internal
+    {
+        // Question: what kind of checks do we want to or can we implement? Technically the value inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
+        activeAssertion = DataAssertion(dataId, data, asserter, false);
     }
 
     // ===========================================================

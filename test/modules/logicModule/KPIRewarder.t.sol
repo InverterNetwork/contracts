@@ -543,6 +543,16 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
             totalRewards += trancheRewards[i];
         }
 
+        vm.expectEmit(true, true, true, true, address(kpiManager));
+        emit KPICreated(
+            0,
+            numOfTranches,
+            totalRewards,
+            continuous,
+            trancheValues,
+            trancheRewards
+        );
+
         uint kpiNum =
             kpiManager.createKPI(continuous, trancheValues, trancheRewards);
 
@@ -838,6 +848,10 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         }
 
         for (uint i; i < length; i++) {
+            //================================================
+            // THE PART THAT FAILS IS HERE (and smae place below)
+            //=================================================
+
             //uint userReward =
             //   ((200e18 * 1e18 * amounts[i]) / totalStakedFunds) / 1e18;
             uint userReward =
@@ -854,8 +868,7 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
             assertEq(kpiManager.earned(users[i]), 0);
             assertEq(stakingToken.balanceOf(users[i]), amounts[i]);
 
-            // NOTE TODO: CRITICAL ISSUE FOR THE INTEGRATION TEST: APPARENTLY THE REWARDS ARE NOT BEING SENT OUT
-            // The internal accounting gets updated, but the reward in _token from the Manager does not get sent and fails silently along the way. This may be because of the mocks, but needs to be solved
+            // TODO track created paymentOrder as subsititute for token payout (since we are using mocks)
             //assertEq(_token.balanceOf(users[i]), userReward);
         }
     }
