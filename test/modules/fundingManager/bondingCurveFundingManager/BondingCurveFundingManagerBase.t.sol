@@ -488,6 +488,63 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
     }
 
+    /* Test calculatePurchaseReturn and _calculatePurchaseReturn function
+        ├── When deposit amount is 0
+        │       └── it should revert 
+        └── When deposit amount is not 0
+                ├── when the fee is 0
+                │       └── it should succeed 
+                └── when the fee is not 0
+                        └── it should succeed 
+    */
+
+    function testCalculatePurchaseReturn_FailsIfDepositAmountZero() public {
+        uint depositAmount = 0;
+
+        vm.expectRevert(
+            IBondingCurveFundingManagerBase
+                .BondingCurveFundingManager__InvalidDepositAmount
+                .selector
+        );
+        bondingCurveFundingManager.calculatePurchaseReturn(depositAmount);
+    }
+
+    function testCalculatePurchaseReturnWithZeroFee(uint _depositAmount)
+        public
+    {
+        // Above an amount of 1e38 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e38);
+
+        // As the implementation is a mock, we return the deposit amount in a 1:1 ratio
+        uint functionReturn =
+            bondingCurveFundingManager.calculatePurchaseReturn(_depositAmount);
+        assertEq(functionReturn, _depositAmount);
+    }
+
+    function testCalculatePurchaseReturnWithFee(uint _depositAmount, uint _fee)
+        public
+    {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+
+        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
+            // Above an amount of 1e38 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e38);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(_fee);
+
+        // We calculate how much the real deposit amount will be after fees
+        uint feeAmount =
+            (_depositAmount * _fee) / bondingCurveFundingManager.call_BPS();
+        uint buyAmountMinusFee = _depositAmount - feeAmount;
+
+        // As the implementation is a mock, we return the deposit amount in a 1:1 ratio
+        uint functionReturn =
+            bondingCurveFundingManager.calculatePurchaseReturn(_depositAmount);
+        assertEq(functionReturn, buyAmountMinusFee);
+    }
+
     // Test _issueTokens function
     // this is tested in the buy tests
 

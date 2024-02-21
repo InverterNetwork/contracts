@@ -269,43 +269,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         );
     }
 
-    /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
-    function calculatePurchaseReturn(uint _depositAmount)
-        external
-        view
-        returns (uint mintAmount)
-    {
-        if (_depositAmount == 0) {
-            revert
-                BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount(
-            );
-        }
-        if (buyFee > 0) {
-            (_depositAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(_depositAmount, buyFee);
-        }
-        return _issueTokensFormulaWrapper(_depositAmount);
-    }
-
-    /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
-    function calculateSaleReturn(uint _depositAmount)
-        external
-        view
-        returns (uint redeemAmount)
-    {
-        if (_depositAmount == 0) {
-            revert
-                BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount(
-            );
-        }
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-        if (sellFee > 0) {
-            (redeemAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(redeemAmount, sellFee);
-        }
-        return redeemAmount;
-    }
-
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 

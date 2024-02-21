@@ -137,11 +137,24 @@ abstract contract BondingCurveFundingManagerBase is
         _setBuyFee(_fee);
     }
 
+    /// @inheritdoc IBondingCurveFundingManagerBase
+    function calculatePurchaseReturn(uint _depositAmount)
+        external
+        view
+        virtual
+        returns (uint mintAmount)
+    {
+        return _calculatePurchaseReturn(_depositAmount);
+    }
+
     //--------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function getStaticPriceForBuying() external virtual returns (uint);
+    function getStaticPriceForBuying()
+        external
+        virtual
+        returns (uint staticPrice);
 
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
@@ -225,6 +238,25 @@ abstract contract BondingCurveFundingManagerBase is
         }
         emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;
+    }
+
+    /// @dev This function takes into account any applicable buy fees before computing the
+    /// token amount to be minted. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
+    function _calculatePurchaseReturn(uint _depositAmount)
+        internal
+        view
+        returns (uint mintAmount)
+    {
+        if (_depositAmount == 0) {
+            revert BondingCurveFundingManager__InvalidDepositAmount();
+        }
+        if (buyFee > 0) {
+            (_depositAmount, /* feeAmount */ ) =
+                _calculateNetAmountAndFee(_depositAmount, buyFee);
+        }
+        return _issueTokensFormulaWrapper(_depositAmount);
     }
 
     /// @dev Calculates the net amount after fee deduction and the fee amount based on
