@@ -142,10 +142,10 @@ abstract contract ModuleTest is Test {
         for (uint i; i < addresses.length; ++i) {
             _assumeValidAddress(addresses[i]);
 
-            // Assume module unique.
+            // Assume address unique.
             vm.assume(!addressCache[addresses[i]]);
 
-            // Add module to cache.
+            // Add address to cache.
             addressCache[addresses[i]] = true;
         }
     }
