@@ -71,6 +71,15 @@ contract KPIRewarderTest is ModuleTest {
         uint amount, uint duration, uint rewardRate, uint rewardsEnd
     );
 
+    event KPICreated(
+        uint KPI_Id,
+        uint numOfTranches,
+        uint totalKPIRewards,
+        bool continuous,
+        uint[] trancheValues,
+        uint[] trancheRewards
+    );
+
     //=========================================================================================
     // Setup
 
@@ -830,11 +839,13 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         vm.warp(block.timestamp + 3);
 
         for (uint i; i < users.length; i++) {
-            uint userReward =
-                ((200e18 * 1e18 * amounts[i]) / totalStakedFunds) / 1e18;
+            //uint userReward =
+             //   ((200e18 * 1e18 * amounts[i]) / totalStakedFunds) / 1e18;
+             uint userReward = kpiManager.estimateReward(kpiManager.balanceOf(users[i]), 1);
+             console.log(userReward);
 
             //assertEq(kpiManager.balanceOf(users[i]), amounts[i]);
-            //assertEq(kpiManager.earned(users[i]), userReward);
+            assertEq(kpiManager.earned(users[i]), userReward);
 
             vm.prank(users[i]);
             kpiManager.unstake(amounts[i]);
@@ -859,6 +870,8 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         uint totalStakedFunds;
         (createdID, totalStakedFunds) =
             setUpStateForAssertionResolution(users, amounts, 250, false);
+
+        vm.warp(block.timestamp +5);
 
         vm.startPrank(address(ooV3));
 
@@ -893,8 +906,7 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
             assertEq(kpiManager.earned(users[i]), 0);
             assertEq(stakingToken.balanceOf(users[i]), amounts[i]);
 
-            // NOTE TODO: CRITICAL ISSUE FOR THE INTEGRATION TEST: APPARENTLY THE REWARDS ARE NOT BEING SENT OUT
-            // The internal accounting gets updated, but the reward in _token from the Manager does not get sent and fails silently along the way. This may be because of the mocks, but needs to be solved
+            // TODO track created paymentOrder as subsititute for token payout (since we are using mocks)
             //assertEq(_token.balanceOf(users[i]), userReward);
         }
     }

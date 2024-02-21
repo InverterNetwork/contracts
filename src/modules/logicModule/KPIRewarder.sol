@@ -263,7 +263,6 @@ contract KPIRewarder is
         activeTargetValue = targetValue;
     }
 
-
     // ===========================================================
     // StakingManager Overrides:
 
