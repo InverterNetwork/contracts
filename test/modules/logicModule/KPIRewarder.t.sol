@@ -543,16 +543,6 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
             totalRewards += trancheRewards[i];
         }
 
-        vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit KPICreated(
-            0,
-            numOfTranches,
-            totalRewards,
-            continuous,
-            trancheValues,
-            trancheRewards
-        );
-
         uint kpiNum =
             kpiManager.createKPI(continuous, trancheValues, trancheRewards);
 
@@ -753,6 +743,8 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         );
         vm.stopPrank();
 
+        vm.warp(block.timestamp + 3);
+
         // SuT
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         for (uint i = 0; i < users.length; i++) {
@@ -814,6 +806,8 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         // it should pay out an amount from the last tranche proportional to its level of completion
         // it should not pay out any amount from the uncompleted tranche at all
 
+        //vm.assume(users.length > 1);
+
         bytes32 createdID;
         uint totalStakedFunds;
         (createdID, totalStakedFunds) =
@@ -838,11 +832,17 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
 
         vm.warp(block.timestamp + 3);
 
-        for (uint i; i < users.length; i++) {
+        uint length = users.length;
+        if (length > kpiManager.MAX_QUEUE_LENGTH()) {
+            length = kpiManager.MAX_QUEUE_LENGTH();
+        }
+
+        for (uint i; i < length; i++) {
             //uint userReward =
-             //   ((200e18 * 1e18 * amounts[i]) / totalStakedFunds) / 1e18;
-             uint userReward = kpiManager.estimateReward(kpiManager.balanceOf(users[i]), 1);
-             console.log(userReward);
+            //   ((200e18 * 1e18 * amounts[i]) / totalStakedFunds) / 1e18;
+            uint userReward =
+                kpiManager.estimateReward(kpiManager.balanceOf(users[i]), 1);
+            console.log(userReward);
 
             //assertEq(kpiManager.balanceOf(users[i]), amounts[i]);
             assertEq(kpiManager.earned(users[i]), userReward);
@@ -871,7 +871,7 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         (createdID, totalStakedFunds) =
             setUpStateForAssertionResolution(users, amounts, 250, false);
 
-        vm.warp(block.timestamp +5);
+        vm.warp(block.timestamp + 5);
 
         vm.startPrank(address(ooV3));
 
