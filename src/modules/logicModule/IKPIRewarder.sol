@@ -25,7 +25,7 @@ interface IKPIRewarder {
     // Types
 
     struct KPI {
-        uint creationTime; // timestamp the KPI was created //
+        uint creationTime; // timestamp the KPI was created 
         uint numOfTranches; // number of tranches the KPI is divided into
         uint totalRewards; // total rewards to be distributed
         bool continuous; // should the tranche rewards be distributed continuously or in steps
@@ -70,6 +70,12 @@ interface IKPIRewarder {
     //--------------------------------------------------------------------------
     // Functions
 
+    /// @notice Prepares the assertion to be posted
+    /// @param dataId The id of the data to be asserted
+    /// @param data The data to be asserted
+    /// @param asserter The address of the asserter
+    /// @param targetValue The target value of the assertion
+    /// @param targetKPI The KPI to be used for distribution once the assertion confirms
     function prepareAssertion(
         bytes32 dataId,
         bytes32 data,

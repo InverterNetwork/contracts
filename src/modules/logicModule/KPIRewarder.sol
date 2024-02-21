@@ -33,15 +33,13 @@ contract KPIRewarder is
 {
     using SafeERC20 for IERC20;
 
-    uint public constant MAX_QUEUE_LENGTH = 50;
-
-    uint public KPICounter;
-
+    // Active KPI
     uint public activeKPI;
     uint public activeTargetValue;
-
     DataAssertion public activeAssertion;
 
+    // KPI Storage
+    uint public KPICounter;
     mapping(uint => KPI) public registryOfKPIs;
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
@@ -49,6 +47,7 @@ contract KPIRewarder is
     address[] public stakingQueue;
     mapping(address => uint) public stakingQueueAmounts;
     uint public totalQueuedFunds;
+    uint public constant MAX_QUEUE_LENGTH = 50;
 
     /*
     Tranche Example:
@@ -102,10 +101,35 @@ contract KPIRewarder is
         setOptimisticOracle(ooAddr);
     }
 
+    // ======================================================================
+    // View functions
+
+    /// @inheritdoc IKPIRewarder
+    function getKPI(uint KPInum) public view returns (KPI memory) {
+        return registryOfKPIs[KPInum];
+    }
+
+    /// @inheritdoc IKPIRewarder
+    function getAssertionConfig(bytes32 assertionId)
+        public
+        view
+        returns (RewardRoundConfiguration memory)
+    {
+        return assertionConfig[assertionId];
+    }
+
+    /// @inheritdoc IKPIRewarder
+    function getStakingQueue() public view returns (address[] memory) {
+        return stakingQueue;
+    }
+
+    // ========================================================================
     // Assertion Manager functions:
-    // @dev about the asserter address: any address can be set as asserter, it will be expected to pay for the bond on posting.
-    // The bond tokens can also be deposited in the Module and used to pay for itself, but ONLY if the bond token is different from the one being used for staking.
-    // If the asserter is set to 0, whomever calling postAssertion will be paying the bond.
+
+    /// @inheritdoc IKPIRewarder
+    /// @dev about the asserter address: any address can be set as asserter, it will be expected to pay for the bond on posting.
+    /// The bond tokens can also be deposited in the Module and used to pay for itself, but ONLY if the bond token is different from the one being used for staking.
+    /// If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
     function prepareAssertion(
         bytes32 dataId,
         bytes32 data,
@@ -120,11 +144,12 @@ contract KPIRewarder is
         setAssertion(dataId, data, asserter);
     }
 
+    /// @inheritdoc IKPIRewarder
     function setAssertion(bytes32 dataId, bytes32 data, address asserter)
         public
         onlyOrchestratorOwner
     {
-        // TODO: what kind of checks do we want to implement? Technically the value in "data" wouldn't need to be the same as assertedValue...
+        // Question: what kind of checks do we want to or can we implement? Technically the value inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
         activeAssertion = DataAssertion(dataId, data, asserter, false);
     }
 
@@ -159,6 +184,7 @@ contract KPIRewarder is
     // Owner functions:
 
     // Top up funds to pay the optimistic oracle fee
+    /// @inheritdoc IKPIRewarder
     function depositFeeFunds(uint amount)
         external
         onlyOrchestratorOwner
@@ -170,6 +196,7 @@ contract KPIRewarder is
         emit FeeFundsDeposited(address(defaultCurrency), amount);
     }
 
+    /// @inheritdoc IKPIRewarder
     function createKPI(
         bool _continuous,
         uint[] calldata _trancheValues,
@@ -216,6 +243,7 @@ contract KPIRewarder is
 
         return (KpiNum);
     }
+    /// @inheritdoc IKPIRewarder
 
     function setKPI(uint _KPINumber) public onlyOrchestratorOwner {
         if (_KPINumber >= KPICounter) {
@@ -223,6 +251,7 @@ contract KPIRewarder is
         }
         activeKPI = _KPINumber;
     }
+    /// @inheritdoc IKPIRewarder
 
     function setActiveTargetValue(uint targetValue)
         public
@@ -234,6 +263,8 @@ contract KPIRewarder is
         activeTargetValue = targetValue;
     }
 
+
+    // ===========================================================
     // StakingManager Overrides:
 
     /// @inheritdoc IStakingManager
@@ -262,6 +293,7 @@ contract KPIRewarder is
         emit StakeEnqueued(sender, amount);
     }
 
+    // ============================================================
     // Optimistic Oracle Overrides:
 
     /// @inheritdoc IOptimisticOracleIntegrator
@@ -326,21 +358,5 @@ contract KPIRewarder is
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
         //Do nothing
-    }
-
-    function getKPI(uint KPInum) public view returns (KPI memory) {
-        return registryOfKPIs[KPInum];
-    }
-
-    function getAssertionConfig(bytes32 assertionId)
-        public
-        view
-        returns (RewardRoundConfiguration memory)
-    {
-        return assertionConfig[assertionId];
-    }
-
-    function getStakingQueue() public view returns (address[] memory) {
-        return stakingQueue;
     }
 }
