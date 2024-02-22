@@ -89,15 +89,12 @@ contract InverterBeaconE2E is E2ETest {
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
         );
-        console2.log("1");
         //--------------------------------------------------------------------------
         // Beacon added to factory
 
         // Deploy module implementations.
         moduleImpl1 = new ModuleImplementationV1Mock();
         moduleImpl2 = new ModuleImplementationV2Mock();
-
-        console2.log("2");
 
         // Deploy module beacons.
         vm.prank(address(this)); //this will be the owner of the beacon
@@ -107,12 +104,8 @@ contract InverterBeaconE2E is E2ETest {
         vm.prank(address(this));
         beacon.upgradeTo(address(moduleImpl1), MINOR_VERSION, false);
 
-        console2.log("3");
-
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(DATA, InverterBeacon(beacon));
-
-        console2.log("4");
 
         //Add new Beacon to this moduleConfiguration
         moduleConfigurations.push(
@@ -122,8 +115,6 @@ contract InverterBeaconE2E is E2ETest {
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
         );
-
-        console2.log("11");
     }
 
     //--------------------------------------------------------------------------
@@ -171,6 +162,87 @@ contract InverterBeaconE2E is E2ETest {
         beacon.upgradeTo(address(moduleImpl2), MINOR_VERSION + 1, false);
 
         //Check that after the update
+        assertEq(moduleMock.getMockVersion(), 2);
+    }
+
+    function test_e2e_InverterBeaconShutdown() public {
+        //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
+
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: token
+        });
+
+        IOrchestrator orchestrator =
+            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
+
+        //--------------------------------------------------------------------------------
+        // Module E2E Test
+        //--------------------------------------------------------------------------------
+
+        // Find Implementation
+        IModuleImplementationMock moduleMock;
+
+        //Get all Modules
+        address[] memory modulesList = orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            //Find the one that can fulfill the IMetadataFunction
+            try IModuleImplementationMock(modulesList[i]).getMockVersion()
+            returns (uint) {
+                moduleMock = IModuleImplementationMock(modulesList[i]);
+                break;
+            } catch {
+                continue;
+            }
+        }
+
+        //Check that the Call of the implementation still works
+        assertEq(moduleMock.getMockVersion(), 1);
+
+        //Simulate Emergency by implementing shut-down
+        vm.prank(address(this));
+        beacon.shutDownImplementation();
+
+        //The call to the implementation should fail
+        //As a note: apparently a try catch still throws an EVM Error when the call doesnt find the correct function in the target address,
+        //because the target doesnt create a proper Revert when its called
+        //Thats why im wrapping it in a call to demonstrate
+        //Funnily enough the call doesnt return as a failure for some reason
+        //Because of the failure of the direct call we know that it actually fails if called
+        //I assume its a weird interaction between the delegatecall of the proxy and the call we are just doing here
+        //So just to make sure that we can actually check if the call fails
+        //We check if the returndata is 0, which it is not supposed to be with the getMockVersion function
+
+        bytes memory data =
+            abi.encodeCall(IModuleImplementationMock.getMockVersion, ());
+        (, bytes memory returnData) = address(moduleMock).call(data);
+        //Make sure returndata is 0 which means call didnt go through
+        assertEq(returnData.length, 0);
+
+        //Reverse shut-down
+        vm.prank(address(this));
+        beacon.restartImplementation();
+
+        //Check that the Call of the implementation works again
+        assertEq(moduleMock.getMockVersion(), 1);
+
+        //Lets do a upgrade that overrides the shutdown
+        //First shut-down
+        vm.prank(address(this));
+        beacon.shutDownImplementation();
+
+        // Upgrade beacon to point to the Version 2 implementation.
+        vm.prank(address(this));
+        beacon.upgradeTo(
+            address(moduleImpl2),
+            MINOR_VERSION + 1,
+            true //Set override shutdown to true, which should result in reversing the shutdown
+        );
+
+        //Check that the Call of the implementation works again and is properly upgraded
         assertEq(moduleMock.getMockVersion(), 2);
     }
 
