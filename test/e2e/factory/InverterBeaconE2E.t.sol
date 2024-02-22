@@ -17,8 +17,6 @@ import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Mocks
-import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
-
 import {
     IModuleImplementationMock,
     ModuleImplementationV1Mock
