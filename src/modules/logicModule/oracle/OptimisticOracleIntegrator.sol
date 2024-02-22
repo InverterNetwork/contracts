@@ -22,6 +22,7 @@ import {ClaimData} from
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
 abstract contract OptimisticOracleIntegrator is
     IOptimisticOracleIntegrator,
@@ -59,10 +60,6 @@ abstract contract OptimisticOracleIntegrator is
 
         (address currencyAddr, address ooAddr) =
             abi.decode(configData, (address, address));
-
-        // TODO ERC165 Interface Validation for the OO, for now it just reverts
-        oo = OptimisticOracleV3Interface(ooAddr);
-        defaultIdentifier = oo.defaultIdentifier();
 
         setDefaultCurrency(currencyAddr);
         setOptimisticOracle(ooAddr);
@@ -102,11 +99,12 @@ abstract contract OptimisticOracleIntegrator is
 
     /// @inheritdoc IOptimisticOracleIntegrator
     function setOptimisticOracle(address _newOO) public onlyOrchestratorOwner {
-        if (address(_newOO) == address(0)) {
+        if (_newOO == address(0)) {
             revert Module__OptimisticOracleIntegrator__InvalidOOInstance();
         }
+        //TODO  check interface support with ERC165Checker.supportsInterface()
         oo = OptimisticOracleV3Interface(_newOO);
-        defaultIdentifier = oo.defaultIdentifier(); // TODO Awaiting ERC-165 check for Interface Validation
+        defaultIdentifier = oo.defaultIdentifier();
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
