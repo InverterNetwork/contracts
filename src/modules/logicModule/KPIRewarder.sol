@@ -144,7 +144,6 @@ contract KPIRewarder is
         _setAssertion(dataId, data, asserter);
     }
 
-
     function postAssertion()
         external
         onlyModuleRole(ASSERTER_ROLE)
@@ -258,8 +257,6 @@ contract KPIRewarder is
         activeTargetValue = targetValue;
     }
 
-
-    /// @inheritdoc IKPIRewarder
     function _setAssertion(bytes32 dataId, bytes32 data, address asserter)
         internal
     {
