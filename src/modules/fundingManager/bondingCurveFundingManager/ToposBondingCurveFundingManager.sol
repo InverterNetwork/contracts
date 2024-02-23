@@ -232,8 +232,9 @@ contract ToposBondingCurveFundingManager is
         override(BondingCurveFundingManagerBase)
         returns (uint)
     {
-        return
-            formula.spotPrice(_getCaptialAvailable(), basePriceToCaptialRatio);
+        return formula.spotPrice(
+            _getCaptialAvailable(), capitalRequired, basePriceMultiplier
+        );
     }
 
     /// @notice Calculates and returns the static price for selling the issuance token.
@@ -244,8 +245,9 @@ contract ToposBondingCurveFundingManager is
         override(RedeemingBondingCurveFundingManagerBase)
         returns (uint)
     {
-        return
-            formula.spotPrice(_getCaptialAvailable(), basePriceToCaptialRatio);
+        return formula.spotPrice(
+            _getCaptialAvailable(), capitalRequired, basePriceMultiplier
+        );
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager

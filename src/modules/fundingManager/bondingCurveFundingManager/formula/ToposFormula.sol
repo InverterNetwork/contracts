@@ -34,9 +34,10 @@ contract ToposFormula is IToposFormula {
     // Public Functions
 
 	/// @inheritdoc IToposFormula
-	function spotPrice( uint256 _capitalAvailable, uint _basePriceToCaptialRatio) public pure returns (uint256) {
+	function spotPrice( uint256 _capitalAvailable, uint _capitalRequirements, uint _basePriceMultiplier) public pure returns (uint256) {
 		uint256 caSq = FixedPointMathLib.fmul(_capitalAvailable, _capitalAvailable, FixedPointMathLib.WAD); // C_a^2
-		return FixedPointMathLib.fmul(caSq, _basePriceToCaptialRatio, FixedPointMathLib.WAD); // C_a^2 * B / C_r
+		uint256 caSqCr = FixedPointMathLib.fdiv(caSq, _capitalRequirements, FixedPointMathLib.WAD);
+		return FixedPointMathLib.fmul(caSqCr, _basePriceMultiplier, FixedPointMathLib.WAD); // C_a^2 * B / C_r
 	}
 
 	/// @inheritdoc IToposFormula
@@ -68,6 +69,7 @@ contract ToposFormula is IToposFormula {
 	/// https://github.com/paulrberg/prb-math/blob/86c068e21f9ba229025a77b951bd3c4c4cf103da/contracts/PRBMathUD60x18.sol#L214
 	/// @param x 18 decimal fixed point number to inverse. 0 < x <= 1e36
 	function _inverse(uint256 x) internal pure returns (uint256 res) {
+		if (x == 0)revert ToposFormula__InvalidInputAmount();
 		unchecked {
 			res = 1e36 / x;
 		}
