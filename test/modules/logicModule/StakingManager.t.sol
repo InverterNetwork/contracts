@@ -171,7 +171,7 @@ contract StakingManagerTest is ModuleTest {
             address(uint160(bound(seed, 1, initialStakerMaxAmount + 1)));
 
         //Set up reasonable rewards
-        setUpReasonableRewards();
+        setUpReasonableRewards(seed);
 
         //Fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
@@ -263,7 +263,7 @@ contract StakingManagerTest is ModuleTest {
         }
 
         //Set up reasonable rewards
-        setUpReasonableRewards();
+        setUpReasonableRewards(seed);
 
         //Fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
@@ -337,7 +337,7 @@ contract StakingManagerTest is ModuleTest {
         _token.mint(address(_fundingManager), 12_960_000);
 
         //Set up reasonable rewards
-        setUpReasonableRewards();
+        setUpReasonableRewards(0);
 
         //Mint to user
         stakingToken.mint(address(0xBeef), 1);
@@ -478,7 +478,7 @@ contract StakingManagerTest is ModuleTest {
         //Set up reasonable stakers
         setUpReasonableStakers(seed);
         //Set up reasonable rewards
-        setUpReasonableRewards();
+        setUpReasonableRewards(seed);
         //Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
@@ -574,7 +574,7 @@ contract StakingManagerTest is ModuleTest {
         vm.stopPrank();
 
         //Set up reasonable rewards
-        setUpReasonableRewards();
+        setUpReasonableRewards(seed);
 
         //Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
@@ -647,9 +647,14 @@ contract StakingManagerTest is ModuleTest {
         }
     }
 
-    function setUpReasonableRewards() internal {
+    function setUpReasonableRewards(uint seed) internal {
+        uint tokens = bound(
+            seed,
+            12_960_000, //Thats 5 tokens per second
+            1000 * 12_960_000 //Thats 5000 tokens per second
+        );
         //Set up reasonable rewards
-        stakingManager.setRewards(12_960_000, 30 days); //Thats 5 tokens per second
+        stakingManager.setRewards(tokens, 30 days);
     }
 
     function calculateEarned(
