@@ -877,18 +877,15 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         for (uint i; i < length; i++) {
             assertEq(kpiManager.balanceOf(users[i]), amounts[i]);
 
-            /*
             //=========================================================
             // This is the place where imprecision issues arise. Needs review
             //=========================================================
 
             uint userReward =
-                kpiManager.estimateReward(kpiManager.balanceOf(users[i]), 1); 
+                kpiManager.estimateReward(kpiManager.balanceOf(users[i]), 1);
             console.log(userReward);
 
             assertApproxEqAbs(kpiManager.earned(users[i]), userReward, 10_000);
-
-            */
         }
 
         for (uint i; i < length; i++) {

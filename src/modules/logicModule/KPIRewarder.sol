@@ -54,12 +54,12 @@ contract KPIRewarder is
     trancheValues = [10000, 20000, 30000]
     trancheRewards = [100, 200, 100]
     continuous = false
-     ->   if KPI is 12345, reward is 100 for the tanche [0-10000]
-     ->   if KPI is 32198, reward is 400 for the tanches [0-10000, 10000-20000 and 20000-30000]
+     ->   if KPI is 12345, reward is 100 for the tranche [0-10000]
+     ->   if KPI is 32198, reward is 400 for the tranches [0-10000, 10000-20000 and 20000-30000]
 
     if continuous = true
-    ->    if KPI is 15000, reward is 200 for the tanches [100% 0-10000, 50% * 10000-15000]
-    ->    if KPI is 25000, reward is 350 for the tanches [100% 0-10000, 100% 10000-20000, 50% 20000-30000]
+    ->    if KPI is 15000, reward is 200 for the tranches [100% 0-10000, 50% * 10000-15000]
+    ->    if KPI is 25000, reward is 350 for the tranches [100% 0-10000, 100% 10000-20000, 50% 20000-30000]
 
     */
 
