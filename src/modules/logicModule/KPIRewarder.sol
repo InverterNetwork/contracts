@@ -160,7 +160,6 @@ contract KPIRewarder is
 
         // resets the queue
         delete stakingQueue;
-        //totalQueuedFunds = 0;
 
         assertionId = assertDataFor(
             activeAssertion.dataId,
@@ -237,16 +236,16 @@ contract KPIRewarder is
 
         return (KpiNum);
     }
-    /// @inheritdoc IKPIRewarder
 
+    /// @inheritdoc IKPIRewarder
     function setKPI(uint _KPINumber) public onlyOrchestratorOwner {
         if (_KPINumber >= KPICounter) {
             revert Module__KPIRewarder__InvalidKPINumber();
         }
         activeKPI = _KPINumber;
     }
-    /// @inheritdoc IKPIRewarder
 
+    /// @inheritdoc IKPIRewarder
     function setActiveTargetValue(uint targetValue)
         public
         onlyOrchestratorOwner
@@ -257,6 +256,10 @@ contract KPIRewarder is
         activeTargetValue = targetValue;
     }
 
+    /// @notice Sets the assertion to be posted to the Optimistic Oracle
+    /// @param dataId The dataId to be posted
+    /// @param data The data to be posted
+    /// @param asserter The address of the asserter
     function _setAssertion(bytes32 dataId, bytes32 data, address asserter)
         internal
     {
@@ -297,7 +300,6 @@ contract KPIRewarder is
     // Optimistic Oracle Overrides:
 
     /// @inheritdoc IOptimisticOracleIntegrator
-    /// @dev This updates status on local storage (or deletes the assertion if it was deemed false). Any additional functionalities can be appended by the inheriting contract.
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully
@@ -307,8 +309,9 @@ contract KPIRewarder is
         }
 
         if (assertedTruthfully) {
-            // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds. They
-            //calculate rewardamount from asserionId value
+            // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds.
+
+            // Calculate rewardamount from asserionId value
             KPI memory resolvedKPI =
                 registryOfKPIs[assertionConfig[assertionId].KpiToUse];
             uint rewardAmount;

@@ -651,10 +651,10 @@ contract StakingManagerTest is ModuleTest {
         uint tokens = bound(
             seed,
             12_960_000, //Thats 5 tokens per second
-            1000 * 12_960_000 //Thats 5000 tokens per second
+            1e22 * 12_960_000 //Thats 5000 tokens per second
         );
         //Set up reasonable rewards
-        stakingManager.setRewards(tokens, 30 days);
+        stakingManager.setRewards(tokens, 1 seconds);
     }
 
     function calculateEarned(

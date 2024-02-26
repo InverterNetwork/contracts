@@ -24,38 +24,65 @@ interface IKPIRewarder {
     //--------------------------------------------------------------------------
     // Types
 
+    /// @notice A KPI to be used for reward distribution
     struct KPI {
-        uint creationTime; // timestamp the KPI was created
-        uint numOfTranches; // number of tranches the KPI is divided into
-        uint totalRewards; // total rewards to be distributed
-        bool continuous; // should the tranche rewards be distributed continuously or in steps
-        uint[] trancheValues; // The value at which a tranche ends
-        uint[] trancheRewards; // The rewards to be dsitributed at completion of each tranche
+        /// @dev Timestamp the KPI was created at
+        uint creationTime;
+        /// @dev The number of tranches the KPI is divided into
+        uint numOfTranches; //
+        /// @dev  The total rewards to be distributed
+        uint totalRewards;
+        /// @dev  If the tranche rewards should be distributed continuously or in steps
+        bool continuous;
+        /// @dev The value at which each tranche ends
+        uint[] trancheValues; //
+        /// @dev The rewards to be dsitributed at completion of each tranche
+        uint[] trancheRewards;
     }
 
+    /// @notice The configuration of the reward round tied
     struct RewardRoundConfiguration {
+        /// @dev The timestamp the assertion was posted
         uint creationTime; // timestamp the assertion was created
-        uint assertedValue; // the value that was asserted
-        uint KpiToUse; // the KPI to be used for distribution once the assertion confirms
+        /// @dev The value that was asserted
+        uint assertedValue;
+        /// @dev The KPI to be used for distribution once the assertion confirms
+        uint KpiToUse;
+        /// @dev if the rewards have been distributed or not
         bool distributed;
     }
 
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice The KPI beinge created has either no tranches or too many
     error Module__KPIRewarder__InvalidTrancheNumber();
+
+    /// @notice The number of tranches in the KPI does not match the number of rewards
     error Module__KPIRewarder__InvalidKPIValueLengths();
+
+    /// @notice The values for the tranches are not in ascending order
     error Module__KPIRewarder__InvalidKPITrancheValues();
+
+    /// @notice The KPI number is invalid
     error Module__KPIRewarder__InvalidKPINumber();
+
+    /// @notice The target value for the assertion cannot be zero
     error Module__KPIRewarder__InvalidTargetValue();
+
+    /// @notice The Queue for new stakers is full
     error Module__KPIRewarder__StakingQueueIsFull();
+
+    /// @notice The Token used paying the bond cannot be the same that is being staked.
     error Module__KPIRewarder__ModuleCannotUseStakingTokenAsBond();
 
     //--------------------------------------------------------------------------
     // Events
 
+    /// @notice Event emitted when a user stake is enqueued
     event StakeEnqueued(address sender, uint amount);
 
+    /// @notice Event emitted when a KPI is created
     event KPICreated(
         uint KPI_Id,
         uint numOfTranches,
@@ -65,6 +92,7 @@ interface IKPIRewarder {
         uint[] trancheRewards
     );
 
+    /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract
     event FeeFundsDeposited(address token, uint amount);
 
     //--------------------------------------------------------------------------
