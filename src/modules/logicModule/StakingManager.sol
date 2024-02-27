@@ -98,7 +98,18 @@ contract StakingManager is
         validDuration(duration)
         returns (uint)
     {
+        //if rewardsend is reached you dont get any rewards
+        if (block.timestamp > rewardsEnd) {
+            return 0;
+        }
+        //If duration went over rewardsend
+        if (block.timestamp + duration > rewardsEnd) {
+            //change duration so that it goes until rewardsend
+            duration = rewardsEnd - block.timestamp;
+        }
+        //If no one else staked
         if (totalSupply == 0) {
+            //Get full amount back
             return amount * duration * rewardRate;
         }
         return amount * duration * rewardRate / totalSupply;
