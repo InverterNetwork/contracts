@@ -102,4 +102,17 @@ interface IModule {
     function grantModuleRole(bytes32 role, address addr) external;
 
     function revokeModuleRole(bytes32 role, address addr) external;
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// @notice Checks if the provided address is the trusted forwarder
+    /// @param forwarder The contract address to be verified.
+    /// @return bool Is the given address the trusted forwarder
+    /// @dev We imitate here the EIP2771 Standard to enable metatransactions
+    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
+    function isTrustedForwarder(address forwarder)
+        external
+        view
+        returns (bool);
 }

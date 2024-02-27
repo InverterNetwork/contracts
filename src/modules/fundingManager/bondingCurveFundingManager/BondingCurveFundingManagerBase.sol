@@ -16,10 +16,8 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Dependencies
 import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
-import {
-    ERC2771ContextUpgradeable,
-    ContextUpgradeable
-} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
@@ -276,7 +274,7 @@ abstract contract BondingCurveFundingManagerBase is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, Module)
         returns (address sender)
     {
         return super._msgSender();
@@ -287,19 +285,9 @@ abstract contract BondingCurveFundingManagerBase is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, Module)
         returns (bytes calldata)
     {
         return super._msgData();
-    }
-
-    function _contextSuffixLength()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (uint)
-    {
-        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }

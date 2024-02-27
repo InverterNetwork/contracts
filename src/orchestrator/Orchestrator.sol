@@ -303,16 +303,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         override(IModuleManager, ModuleManager)
         returns (bool)
     {
-        return ModuleManager.isTrustedForwarder(forwarder);
-    }
-
-    function trustedForwarder()
-        public
-        view
-        virtual
-        override(IModuleManager, ModuleManager)
-        returns (address)
-    {
-        return ModuleManager.trustedForwarder();
+        return super.isTrustedForwarder(forwarder);
     }
 }
