@@ -164,7 +164,7 @@ contract KPIRewarderTest is ModuleTest {
         kpiManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
-    // Creates  dummy incontnuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards
+    // Creates  dummy incontinuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards
     function createDummyIncontinuousKPI() public {
         uint[] memory trancheValues = new uint[](3);
         uint[] memory trancheRewards = new uint[](3);
@@ -180,7 +180,7 @@ contract KPIRewarderTest is ModuleTest {
         kpiManager.createKPI(false, trancheValues, trancheRewards);
     }
 
-    // Creates  dummy incontnuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards
+    // Creates  dummy continuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards
     function createDummyContinuousKPI() public {
         uint[] memory trancheValues = new uint[](3);
         uint[] memory trancheRewards = new uint[](3);
@@ -769,6 +769,7 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         kpiManager.grantModuleRole(
             kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
         );
+
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
