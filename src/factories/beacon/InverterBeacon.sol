@@ -53,10 +53,12 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     // State
 
     /// @dev The beacon's implementation address.
-    address internal _implementation;
+    /// Can only be changed via the _setImplementation() function
+    address internal _implementationAddress;
 
     /// @dev The beacon's current implementation pointer.
-    address internal _currentImplementation;
+    /// In case of emergency can be set to address(0) to pause functionality
+    address internal _implementationPointer;
 
     /// @dev Is the beacon shut down / in emergency mode
     bool internal _emergencyMode;
@@ -79,7 +81,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
 
     /// @inheritdoc IBeacon
     function implementation() public view virtual override returns (address) {
-        return _currentImplementation;
+        return _implementationPointer;
     }
 
     /// @inheritdoc IInverterBeacon
@@ -115,8 +117,8 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     function shutDownImplementation() external onlyOwner {
         //Go into emergency mode
         _emergencyMode = true;
-        //Set Implementation to address 0 and therefor halting the system
-        _currentImplementation = address(0);
+        //Set implementation pointer to address 0 and therefor halting the system
+        _implementationPointer = address(0);
 
         emit ShutdownInitiated();
     }
@@ -125,8 +127,8 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     function restartImplementation() external onlyOwner {
         //Reverse emergency mode
         _emergencyMode = false;
-        //Set Implementation back to original implementation
-        _currentImplementation = _implementation;
+        //Set implementation pointer back to original implementation address
+        _implementationPointer = _implementationAddress;
 
         emit ShutdownReversed();
     }
@@ -138,17 +140,17 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
         address newImplementation,
         bool overrideShutdown
     ) internal virtual validImplementation(newImplementation) {
-        _implementation = newImplementation;
+        _implementationAddress = newImplementation;
 
         //If the beacon is running normally
         if (!_emergencyMode) {
-            //Change the _currentImplementation accordingly
-            _currentImplementation = newImplementation;
+            //Change the _implementationPointer accordingly
+            _implementationPointer = newImplementation;
         } else {
             //If emergencyMode is active and overrideShutdown is true
             if (overrideShutdown) {
-                //Change the _currentImplementation accordingly
-                _currentImplementation = newImplementation;
+                //Change the _implementationPointer accordingly
+                _implementationPointer = newImplementation;
                 //And reverse emergency Mode
                 _emergencyMode = false;
 

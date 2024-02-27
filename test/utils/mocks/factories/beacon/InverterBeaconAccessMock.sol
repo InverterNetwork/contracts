@@ -8,7 +8,7 @@ contract InverterBeaconAccessMock is InverterBeacon {
     constructor(uint _majorVersion) InverterBeacon(_majorVersion) {}
 
     function get_implementation() public returns (address) {
-        return _implementation;
+        return _implementationAddress;
     }
 
     //_setImplementation
