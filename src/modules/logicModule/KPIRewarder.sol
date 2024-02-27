@@ -311,7 +311,7 @@ contract KPIRewarder is
         if (assertedTruthfully) {
             // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds.
 
-            // Calculate rewardamount from asserionId value
+            // Calculate rewardamount from assertionId value
             KPI memory resolvedKPI =
                 registryOfKPIs[assertionConfig[assertionId].KpiToUse];
             uint rewardAmount;
