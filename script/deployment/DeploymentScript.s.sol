@@ -15,6 +15,9 @@ import {DeployModuleFactory} from "script/factories/DeployModuleFactory.s.sol";
 import {DeployOrchestratorFactory} from
     "script/factories/DeployOrchestratorFactory.s.sol";
 import {DeployBountyManager} from "script/modules/DeployBountyManager.s.sol";
+
+import {DeployAndSetUpTransactionForwarder} from
+    "script/external/DeployAndSetUpTransactionForwarder.s.sol";
 import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
 import {DeploySimplePaymentProcessor} from
     "script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol";
@@ -26,6 +29,9 @@ import {DeployRoleAuthorizer} from
 contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Instances of Deployer Contracts
+
+    DeployAndSetUpTransactionForwarder deployAndSetUpTransactionForwarder =
+        new DeployAndSetUpTransactionForwarder();
 
     DeployModuleFactory deployModuleFactory = new DeployModuleFactory();
     DeployOrchestratorFactory deployOrchestratorFactory =
@@ -49,6 +55,8 @@ contract DeploymentScript is Script {
     address bountyManager;
     address fundingManager;
     address authorizer;
+
+    address forwarder;
 
     address moduleFactory;
     address orchestratorFactory;
@@ -91,9 +99,14 @@ contract DeploymentScript is Script {
         fundingManager = deployRebasingFundingManager.run();
         authorizer = deployRoleAuthorizer.run();
 
-        moduleFactory = deployModuleFactory.run();
-        orchestratorFactory =
-            deployOrchestratorFactory.run(orchestrator, moduleFactory);
+        //Deploy Transaction Forwarder
+        (,, forwarder) = deployAndSetUpTransactionForwarder.run();
+
+        //Deploy Factories
+        moduleFactory = deployModuleFactory.run(forwarder);
+        orchestratorFactory = deployOrchestratorFactory.run(
+            orchestrator, moduleFactory, forwarder
+        );
 
         bountyManager = deployBountyManager.run();
 

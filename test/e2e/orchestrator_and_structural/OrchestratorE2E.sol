@@ -86,8 +86,6 @@ contract OrchestratorE2E is E2ETest {
         // We also set up the BountyManager, even though we'll add it later
         setUpBountyManager();
 
-        // TODO: MetadataManager may be removed in the future
-
         //==========================================
         //Set up Orchestrator Metadata
 
