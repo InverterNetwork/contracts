@@ -21,6 +21,8 @@ import {IAccessControlEnumerable} from
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {TransactionForwarder} from
+    "src/external/forwarder/TransactionForwarder.sol";
 // Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 // Mocks
@@ -37,10 +39,12 @@ contract RoleAuthorizerTest is Test {
 
     // Mocks
     RoleAuthorizer _authorizer;
-    Orchestrator internal _orchestrator = new Orchestrator();
+    Orchestrator internal _orchestrator = new Orchestrator(address(0));
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
+    TransactionForwarder _forwarder =
+        new TransactionForwarder("TransactionForwarder");
     address ALBA = address(0xa1ba); //default authorized person
     address BOB = address(0xb0b); // example person to add
 
@@ -99,7 +103,7 @@ contract RoleAuthorizerTest is Test {
     function setUp() public virtual {
         address authImpl = address(new RoleAuthorizer());
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
-        address propImpl = address(new Orchestrator());
+        address propImpl = address(new Orchestrator(address(_forwarder)));
         _orchestrator = Orchestrator(Clones.clone(propImpl));
         ModuleMock module = new ModuleMock();
         address[] memory modules = new address[](1);
@@ -218,7 +222,7 @@ contract RoleAuthorizerTest is Test {
     function testReinitFails() public {
         //Create a mock new orchestrator
         Orchestrator newOrchestrator =
-            Orchestrator(Clones.clone(address(new Orchestrator())));
+            Orchestrator(Clones.clone(address(new Orchestrator(address(0)))));
 
         address initialOwner = address(this);
         address initialManager = address(this);

@@ -34,7 +34,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     StreamingPaymentProcessor paymentProcessor;
 
     // Mocks
-    ERC20PaymentClientMock paymentClient = new ERC20PaymentClientMock(_token);
+    ERC20PaymentClientMock paymentClient;
 
     //--------------------------------------------------------------------------
     // Events
@@ -94,13 +94,19 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         _setUpOrchestrator(paymentProcessor);
 
+        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
+
         _authorizer.setIsAuthorized(address(this), true);
+
+        //Set up PaymentClient Correctöy
+        impl = address(new ERC20PaymentClientMock());
+        paymentClient = ERC20PaymentClientMock(Clones.clone(impl));
 
         _orchestrator.addModule(address(paymentClient));
 
-        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
-
+        paymentClient.init(_orchestrator, _METADATA, bytes(""));
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
+        paymentClient.setToken(_token);
     }
 
     //--------------------------------------------------------------------------
@@ -909,7 +915,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.assume(nonModule != address(_fundingManager));
 
         ERC20PaymentClientMock otherERC20PaymentClient =
-            new ERC20PaymentClientMock(_token);
+            new ERC20PaymentClientMock();
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
@@ -1057,7 +1063,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.assume(nonModule != address(_fundingManager));
 
         ERC20PaymentClientMock otherERC20PaymentClient =
-            new ERC20PaymentClientMock(_token);
+            new ERC20PaymentClientMock();
 
         vm.prank(address(paymentClient));
         vm.expectRevert(

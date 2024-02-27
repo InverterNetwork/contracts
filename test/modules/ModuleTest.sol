@@ -12,11 +12,15 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Dependencies
 import {OrchestratorMock} from
     "test/utils/mocks/orchestrator/OrchestratorMock.sol";
+import {TransactionForwarder} from
+    "src/external/forwarder/TransactionForwarder.sol";
 
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
 // Mocks
+import {OrchestratorMock} from
+    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
 import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -31,10 +35,14 @@ abstract contract ModuleTest is Test {
     OrchestratorMock _orchestrator;
 
     // Mocks
-    FundingManagerMock _fundingManager = new FundingManagerMock();
-    AuthorizerMock _authorizer = new AuthorizerMock();
+    FundingManagerMock _fundingManager;
+    AuthorizerMock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
+
+    //Deploy a forwarder used to enable metatransactions
+    TransactionForwarder _forwarder =
+        new TransactionForwarder("TransactionForwarder");
 
     // Orchestrator Constants
     uint constant _ORCHESTRATOR_ID = 1;
@@ -55,8 +63,14 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        address impl = address(new OrchestratorMock());
+        address impl = address(new OrchestratorMock(address(_forwarder)));
         _orchestrator = OrchestratorMock(Clones.clone(impl));
+
+        impl = address(new FundingManagerMock());
+        _fundingManager = FundingManagerMock(Clones.clone(impl));
+
+        impl = address(new AuthorizerMock());
+        _authorizer = AuthorizerMock(Clones.clone(impl));
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,
@@ -65,6 +79,7 @@ abstract contract ModuleTest is Test {
             _authorizer,
             _paymentProcessor
         );
+
         _fundingManager.setToken(IERC20(address(_token)));
     }
 
