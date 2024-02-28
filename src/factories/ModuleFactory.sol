@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
-pragma solidity 0.8.23;
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
@@ -109,6 +108,18 @@ contract ModuleFactory is
         if (address(beacon) == address(0)) {
             revert ModuleFactory__UnregisteredMetadata();
         }
+
+        // Note that a beacon's implementation address can not be the zero
+        // address when the beacon is registered. The beacon must have been
+        // updated since then.
+        // As a zero address implementation indicates an unrecoverable state
+        // and faulty update from the beacon's owner, the beacon should be
+        // considered dangerous. We therefore make sure that nothing else can
+        // happen in this tx and burn all remaining gas.
+        // Note that while the inverter's beacon implementation forbids an
+        // implementation update to non-contract addresses, we can not ensure
+        // a module does not use a different beacon implementation.
+        assert(beacon.implementation() != address(0));
 
         address implementation = address(new InverterBeaconProxy(beacon));
 
