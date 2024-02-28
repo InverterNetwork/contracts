@@ -139,8 +139,9 @@ contract StakingManagerTest is ModuleTest {
         } else {
             uint calculatedEstimation;
 
-            //If duration went over rewardsend change
+            //If duration went over rewardsend
             if (block.timestamp + duration > stakingManager.rewardsEnd()) {
+                //Change duration so that it goes until rewardsend
                 duration = stakingManager.rewardsEnd() - block.timestamp;
             }
 
