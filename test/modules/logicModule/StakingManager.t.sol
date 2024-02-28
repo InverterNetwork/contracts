@@ -109,7 +109,12 @@ contract StakingManagerTest is ModuleTest {
         assertEq(calculatedEarnings, stakingManager.earned(user));
     }
 
-    function testEstimateReward(uint seed, uint amount, uint duration) public {
+    function testEstimateReward(
+        uint seed,
+        uint amount,
+        uint duration,
+        uint warp
+    ) public {
         amount = bound(amount, 1, 1_000_000_000 * tokenMultiplicator);
         duration = bound(duration, 1, 31_536_000_000);
 
@@ -122,20 +127,35 @@ contract StakingManagerTest is ModuleTest {
             30 days
         );
 
+        //There is a chance that the warp is higher than the reward period
+        vm.warp(bound(warp, 0, 35 days));
+
         uint rewardRate = stakingManager.rewardRate();
         uint totalSupply = stakingManager.totalSupply();
 
-        uint calculatedEstimation;
-        if (totalSupply == 0) {
-            calculatedEstimation = amount * duration * rewardRate;
+        if (block.timestamp > stakingManager.rewardsEnd()) {
+            //Assume that calculated reward is 0
+            assertEq(0, stakingManager.estimateReward(amount, duration));
         } else {
-            calculatedEstimation = amount * duration * rewardRate / totalSupply;
-        }
+            uint calculatedEstimation;
 
-        assertEq(
-            calculatedEstimation,
-            stakingManager.estimateReward(amount, duration)
-        );
+            //If duration went over rewardsend change
+            if (block.timestamp + duration > stakingManager.rewardsEnd()) {
+                duration = stakingManager.rewardsEnd() - block.timestamp;
+            }
+
+            if (totalSupply == 0) {
+                calculatedEstimation = amount * duration * rewardRate;
+            } else {
+                calculatedEstimation =
+                    amount * duration * rewardRate / totalSupply;
+            }
+
+            assertEq(
+                calculatedEstimation,
+                stakingManager.estimateReward(amount, duration)
+            );
+        }
     }
 
     function testEstimateRewardModifierInPosition() public {
