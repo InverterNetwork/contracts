@@ -87,9 +87,6 @@ contract RoleAuthorizer is
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        //We preliminarily grant admin role to the caller
-        _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
-
         // Set up OWNER role structure:
 
         // -> set OWNER as admin of itself
@@ -103,11 +100,12 @@ contract RoleAuthorizer is
         // grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
-        // If there is no initial owner specfied or the initial owner is the same as the deployer, the initial setup is finished at this point
-        // If intialOwner corresponds to a different address, we need to set it up at this point and renounce the deployer
-        if (initialOwner != address(0) && initialOwner != _msgSender()) {
+        // If there is no initial owner specfied or the initial owner is the same as the deployer
+
+        if (initialOwner != address(0)) {
             _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
-            renounceRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
+        } else {
+            _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
         }
     }
 
