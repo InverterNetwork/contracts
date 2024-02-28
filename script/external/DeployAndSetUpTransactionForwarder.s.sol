@@ -2,8 +2,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {Beacon} from "src/factories/beacon/Beacon.sol";
-import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
+import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
+import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
 import {TransactionForwarder} from
     "src/external/forwarder/TransactionForwarder.sol";
 
@@ -36,12 +36,12 @@ contract DeployAndSetUpTransactionForwarder is Script {
             );
 
             // Deploy the beacon.
-            beacon = address(new Beacon());
+            beacon = address(new InverterBeacon(1));
 
             // Upgrade the Beacon to the chosen implementation
-            Beacon(beacon).upgradeTo(address(implementation));
+            InverterBeacon(beacon).upgradeTo(address(implementation), 1, false);
 
-            forwarder = address(new BeaconProxy(Beacon(beacon)));
+            forwarder = address(new InverterBeaconProxy(InverterBeacon(beacon)));
         }
         vm.stopBroadcast();
 

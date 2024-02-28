@@ -5,13 +5,13 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 import {
     IModuleFactory,
-    IBeacon,
+    IInverterBeacon,
     IModule,
     IOrchestrator
 } from "src/factories/IModuleFactory.sol";
 
 contract ModuleFactoryMock is IModuleFactory {
-    IBeacon private _beacon;
+    IInverterBeacon private _beacon;
 
     // Note to not start too low as, e.g., modules are not allowed to have
     // address(0x1).
@@ -27,10 +27,12 @@ contract ModuleFactoryMock is IModuleFactory {
     function getBeaconAndId(IModule.Metadata memory metadata)
         external
         view
-        returns (IBeacon, bytes32)
+        returns (IInverterBeacon, bytes32)
     {
         return (_beacon, LibMetadata.identifier(metadata));
     }
 
-    function registerMetadata(IModule.Metadata memory, IBeacon) external {}
+    function registerMetadata(IModule.Metadata memory, IInverterBeacon)
+        external
+    {}
 }

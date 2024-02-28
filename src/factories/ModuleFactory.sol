@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
-pragma solidity 0.8.23;
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
@@ -8,11 +7,12 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Context, Ownable} from "@oz/access/Ownable.sol";
 
 // External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Dependencies
-import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
+import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
+
+import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -29,8 +29,8 @@ import {
  *
  * @dev An owned factory for deploying modules.
  *
- *      The owner can register module metadata's to an {IBeacon}
- *      implementations. Note that a metadata's registered {IBeacon}
+ *      The owner can register module metadata's to an {IInverterBeacon}
+ *      implementations. Note that a metadata's registered {IInverterBeacon}
  *      implementation can not be changed after registration!
  *
  * @author Inverter Network
@@ -64,11 +64,11 @@ contract ModuleFactory is
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         {IBeacon} instance.
-    modifier validBeacon(IBeacon beacon) {
+    ///         {IInverterBeacon} instance.
+    modifier validBeacon(IInverterBeacon beacon) {
         // Revert if beacon's implementation is zero address.
         if (beacon.implementation() == address(0)) {
-            revert ModuleFactory__InvalidBeacon();
+            revert ModuleFactory__InvalidInverterBeacon();
         }
         _;
     }
@@ -76,9 +76,9 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Mapping of metadata identifier to {IBeacon} instance.
-    /// @dev MetadataLib.identifier(metadata) => {IBeacon}
-    mapping(bytes32 => IBeacon) private _beacons;
+    /// @dev Mapping of metadata identifier to {IInverterBeacon} instance.
+    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon}
+    mapping(bytes32 => IInverterBeacon) private _beacons;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -102,7 +102,7 @@ contract ModuleFactory is
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
 
-        IBeacon beacon;
+        IInverterBeacon beacon;
         (beacon, /*id*/ ) = getBeaconAndId(metadata);
 
         if (address(beacon) == address(0)) {
@@ -121,7 +121,7 @@ contract ModuleFactory is
         // a module does not use a different beacon implementation.
         assert(beacon.implementation() != address(0));
 
-        address implementation = address(new BeaconProxy(beacon));
+        address implementation = address(new InverterBeaconProxy(beacon));
 
         IModule(implementation).init(orchestrator, metadata, configData);
 
@@ -141,7 +141,7 @@ contract ModuleFactory is
     function getBeaconAndId(IModule.Metadata memory metadata)
         public
         view
-        returns (IBeacon, bytes32)
+        returns (IInverterBeacon, bytes32)
     {
         bytes32 id = LibMetadata.identifier(metadata);
 
@@ -152,13 +152,11 @@ contract ModuleFactory is
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, IBeacon beacon)
-        external
-        onlyOwner
-        validMetadata(metadata)
-        validBeacon(beacon)
-    {
-        IBeacon oldBeacon;
+    function registerMetadata(
+        IModule.Metadata memory metadata,
+        IInverterBeacon beacon
+    ) external onlyOwner validMetadata(metadata) validBeacon(beacon) {
+        IInverterBeacon oldBeacon;
         bytes32 id;
         (oldBeacon, id) = getBeaconAndId(metadata);
 

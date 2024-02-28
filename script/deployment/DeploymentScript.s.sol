@@ -6,7 +6,6 @@ import "forge-std/Script.sol";
 // Import interfaces:
 
 import {IModule} from "src/modules/base/IModule.sol";
-import {IBeacon} from "src/factories/beacon/Beacon.sol";
 import {IModuleFactory} from "src/factories/ModuleFactory.sol";
 
 // Import scripts:
