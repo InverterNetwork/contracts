@@ -733,6 +733,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
             (expectedSalary / 2)
         );
+        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        assertEq(paymentClient.amountPaidCounter(), expectedSalary / 2);
         assertTrue(
             initialWalletIdAtIndex1
                 != paymentReceiverWallets[1]._vestingWalletID
@@ -742,6 +744,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     uint salary1;
     uint salary2;
     uint salary3;
+    uint amountPaidAlready;
 
     function test_removePaymentAndClaimForSpecificWalletId(
         uint randomDuration,
@@ -833,9 +836,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             salary1
         );
 
+        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        assertEq(paymentClient.amountPaidCounter(), salary1);
+        amountPaidAlready += paymentClient.amountPaidCounter();
+
         // Now we are interested in finding the details of the 2nd wallet of paymentReceiver1
         salary2 = (paymentReceiverWallets[1]._salary) / 2; // since we are at half the vesting duration
-        initialPaymentReceiverBalance += _token.balanceOf(paymentReceiver1);
+        initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         assertTrue(salary2 != 0);
 
@@ -846,6 +853,10 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             paymentReceiverWallets[1]._vestingWalletID,
             false
         );
+
+        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, salary2);
+        amountPaidAlready = paymentClient.amountPaidCounter();
 
         paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
@@ -872,6 +883,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             paymentReceiverWallets[0]._vestingWalletID,
             false
         );
+        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, salary3);
 
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
