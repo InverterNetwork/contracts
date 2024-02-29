@@ -1022,3 +1022,85 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         kpiManager.assertionResolvedCallback(createdID, true);
     }
 }
+
+/*
+testDequeue
+├── When the user has no funds in queue
+│   └── It should do nothing
+└── When the user has funds in queue
+    ├── It should set the queued amount to zero
+    ├── It should reduce the total queued amount
+    ├── It should remove the user from the queue
+    ├── It should emit an event
+    └── It should transfer the funds back
+*/
+contract KPIRewarder_dequeueTest is KPIRewarderTest {
+    function test_WhenTheUserHasNoFundsInQueue() external {
+        address[] memory users = new address[](3);
+        uint[] memory amounts = new uint[](3);
+
+        users[0] = address(0x1);
+        amounts[0] = 1000e18;
+
+        users[1] = address(0x2);
+        amounts[1] = 1000e18;
+
+        users[2] = address(0x3);
+        amounts[2] = 1000e18;
+
+        setUpStakers(users, amounts);
+
+        // It should do nothing
+
+        address USER = address(0x1337);
+
+        // state before
+        uint stakingQueueLengthBefore = kpiManager.getStakingQueue().length;
+        uint userStakeBalanceBefore = kpiManager.stakingQueueAmounts(USER);
+        uint totalQueuedFundsBefore = kpiManager.totalQueuedFunds();
+
+        // SuT
+        vm.prank(USER);
+        kpiManager.dequeueStake();
+
+        // state after
+        assertEq(kpiManager.getStakingQueue().length, stakingQueueLengthBefore);
+        assertEq(kpiManager.stakingQueueAmounts(USER), userStakeBalanceBefore);
+        assertEq(kpiManager.totalQueuedFunds(), totalQueuedFundsBefore);
+    }
+
+    function test_WhenTheUserHasFundsInQueue(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
+        (users, amounts, /* totalQueuedFunds*/ ) = setUpStakers(users, amounts);
+
+        for (uint i; i < users.length; i++) {
+            // state before
+            uint totalQueuedFundsBefore = kpiManager.totalQueuedFunds();
+            uint userStakeBalanceBefore =
+                kpiManager.stakingQueueAmounts(users[i]);
+            uint userTokenBalanceBefore = stakingToken.balanceOf(users[i]);
+            uint stakingQueueLengthBefore = kpiManager.getStakingQueue().length;
+
+            vm.startPrank(users[i]);
+            kpiManager.dequeueStake();
+            vm.stopPrank();
+
+            // state after
+            assertEq(
+                kpiManager.totalQueuedFunds(),
+                totalQueuedFundsBefore - userStakeBalanceBefore
+            );
+            assertEq(kpiManager.stakingQueueAmounts(users[i]), 0);
+            assertEq(
+                stakingToken.balanceOf(users[i]),
+                userTokenBalanceBefore + userStakeBalanceBefore
+            );
+            assertEq(
+                kpiManager.getStakingQueue().length,
+                stakingQueueLengthBefore - 1
+            );
+        }
+    }
+}

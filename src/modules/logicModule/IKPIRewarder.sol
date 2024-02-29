@@ -78,7 +78,10 @@ interface IKPIRewarder {
     // Events
 
     /// @notice Event emitted when a user stake is enqueued
-    event StakeEnqueued(address sender, uint amount);
+    event StakeEnqueued(address user, uint amount);
+
+    /// @notice Event emitted when a user stake is dequeued before staking
+    event StakeDequeued(address user, uint amount);
 
     /// @notice Event emitted when a KPI is created
     event KPICreated(
@@ -121,6 +124,13 @@ interface IKPIRewarder {
         uint[] calldata _trancheRewards
     ) external returns (uint);
 
+    /// @notice Deposits funds into the contract so it can pay for the oracle bond and fee itself
+    /// @param amount The amount to deposit
+    function depositFeeFunds(uint amount) external;
+
+    /// @notice Remove a users funds from the staking queue
+    function dequeueStake() external;
+
     /// @notice Returns the KPI with the given number
     /// @param KPInum The number of the KPI to return
     function getKPI(uint KPInum) external view returns (KPI memory);
@@ -134,8 +144,4 @@ interface IKPIRewarder {
         external
         view
         returns (RewardRoundConfiguration memory);
-
-    /// @notice Deposits funds into the contract so it can pay for the oracle bond and fee itself
-    /// @param amount The amount to deposit
-    function depositFeeFunds(uint amount) external;
 }

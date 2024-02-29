@@ -241,7 +241,7 @@ contract KPIRewarder is
     }
 
     // ===========================================================
-    // Deposit functions (stake() is a StakingManager override) :
+    // New user facing functions (stake() is a StakingManager override) :
 
     /// @inheritdoc IStakingManager
     function stake(uint amount)
@@ -267,6 +267,32 @@ contract KPIRewarder is
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
 
         emit StakeEnqueued(sender, amount);
+    }
+
+    /// @inheritdoc IStakingManager
+    function dequeueStake() public nonReentrant {
+        address user = _msgSender();
+
+        // keep it idempotent
+        if (stakingQueueAmounts[user] != 0) {
+            uint amount = stakingQueueAmounts[user];
+
+            stakingQueueAmounts[user] = 0;
+            totalQueuedFunds -= amount;
+
+            for (uint i; i < stakingQueue.length; i++) {
+                if (stakingQueue[i] == user) {
+                    stakingQueue[i] = stakingQueue[stakingQueue.length - 1];
+                    stakingQueue.pop();
+                    break;
+                }
+            }
+
+            emit StakeDequeued(user, amount);
+
+            //return funds to user
+            IERC20(stakingToken).safeTransfer(user, amount);
+        }
     }
 
     // ============================================================
