@@ -12,15 +12,21 @@ interface IBancorVirtualSupplyBondingCurveFundingManager {
     /// when using the Bancor Formula contract otherwise.
     error BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal();
 
+    error BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount();
+
     //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when the reserve ratio for buying is updated
+    /// @param newBuyReserveRatio The new reserve ratio for buying
+    /// @param oldBuyReserveRatio The old reserve ratio for buying
     event BuyReserveRatioSet(
         uint32 indexed newBuyReserveRatio, uint32 indexed oldBuyReserveRatio
     );
 
     /// @notice Event emitted when the reserve ratio for selling is updated
+    /// @param newSellReserveRatio The new reserve ratio for selling
+    /// @param oldSellReserveRatio The old reserve ratio for selling
     event SellReserveRatioSet(
         uint32 indexed newSellReserveRatio, uint32 indexed oldSellReserveRatio
     );
@@ -72,4 +78,23 @@ interface IBancorVirtualSupplyBondingCurveFundingManager {
     /// @notice Returns reserve ratio set for selling, used in the Bancor Formula contract
     /// @return Reserve Ratio for selling
     function getReserveRatioForSelling() external view returns (uint32);
+
+    /// @notice Calculates the amount of tokens to be minted based on a given deposit amount.
+    /// @dev This function takes into account any applicable buy fees before computing the
+    /// token amount to be minted. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
+    function calculatePurchaseReturn(uint _depositAmount)
+        external
+        returns (uint mintAmount);
+
+    /// @notice Calculates the amount of tokens to be redeemed based on a given deposit amount.
+    /// @dev This function takes into account any applicable sell fees before computing the
+    /// collateral amount to be redeemed. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
+    function calculateSaleReturn(uint _depositAmount)
+        external
+        view
+        returns (uint redeemAmount);
 }

@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // SuT
@@ -19,7 +21,7 @@ import {
 import {
     IERC20PaymentClient,
     ERC20PaymentClientMock
-} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -34,10 +36,15 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     // Mocks
     ERC20PaymentClientMock paymentClient = new ERC20PaymentClientMock(_token);
 
-    event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint dueTo
-    );
+    //--------------------------------------------------------------------------
+    // Events
 
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param dueTo Timestamp at which the full amount should be claimable.
+    /// @param walletId ID of the payment order that was added
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
@@ -47,10 +54,38 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         uint walletId
     );
 
+    /// @notice Emitted when the vesting to an address is removed.
+    /// @param recipient The address that will stop receiving payment.
+    /// @param walletId ID of the payment order removed
     event StreamingPaymentRemoved(
         address indexed paymentClient,
         address indexed recipient,
         uint indexed walletId
+    );
+
+    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param start Timestamp at which the vesting starts.
+    /// @param dueTo Timestamp at which the full amount should be claimable.
+    event InvalidStreamingOrderDiscarded(
+        address indexed recipient, uint amount, uint start, uint dueTo
+    );
+
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param createdAt Timestamp at which the order was created.
+    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    /// @param walletId ID of the payment order that was processed
+    event PaymentOrderProcessed(
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint createdAt,
+        uint dueTo,
+        uint walletId
     );
 
     function setUp() public {
@@ -73,6 +108,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
     function testInit() public override(ModuleTest) {
         assertEq(address(paymentProcessor.token()), address(_token));
+    }
+
+    function testSupportsInterface() public {
+        assertTrue(
+            paymentProcessor.supportsInterface(
+                type(IStreamingPaymentProcessor).interfaceId
+            )
+        );
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -147,6 +190,27 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Call processPayments.
         vm.prank(address(paymentClient));
+
+        for (uint i; i < recipients.length; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit StreamingPaymentAdded(
+                address(paymentClient),
+                recipients[i],
+                amounts[i],
+                block.timestamp,
+                block.timestamp + durations[i],
+                1
+            );
+            emit PaymentOrderProcessed(
+                address(paymentClient),
+                recipients[i],
+                amounts[i],
+                block.timestamp,
+                block.timestamp + durations[i],
+                1
+            );
+        }
+
         paymentProcessor.processPayments(paymentClient);
 
         for (uint i; i < recipients.length;) {
@@ -268,6 +332,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 ++i;
             }
         }
+        assertEq(totalAmount, paymentClient.amountPaidCounter());
     }
 
     // @dev Assume recipient can withdraw full amount immediately if dueTo is less than or equal to block.timestamp.
@@ -662,6 +727,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
             (expectedSalary / 2)
         );
+        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        assertEq(paymentClient.amountPaidCounter(), expectedSalary / 2);
         assertTrue(
             initialWalletIdAtIndex1
                 != paymentReceiverWallets[1]._vestingWalletID
@@ -671,6 +738,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     uint salary1;
     uint salary2;
     uint salary3;
+    uint amountPaidAlready;
 
     function test_removePaymentAndClaimForSpecificWalletId(
         uint randomDuration,
@@ -762,9 +830,13 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             salary1
         );
 
+        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        assertEq(paymentClient.amountPaidCounter(), salary1);
+        amountPaidAlready += paymentClient.amountPaidCounter();
+
         // Now we are interested in finding the details of the 2nd wallet of paymentReceiver1
         salary2 = (paymentReceiverWallets[1]._salary) / 2; // since we are at half the vesting duration
-        initialPaymentReceiverBalance += _token.balanceOf(paymentReceiver1);
+        initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         assertTrue(salary2 != 0);
 
@@ -775,6 +847,10 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             paymentReceiverWallets[1]._vestingWalletID,
             false
         );
+
+        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, salary2);
+        amountPaidAlready = paymentClient.amountPaidCounter();
 
         paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
@@ -801,6 +877,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             paymentReceiverWallets[0]._vestingWalletID,
             false
         );
+        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, salary3);
 
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
@@ -882,6 +960,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i = 0; i < length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
+                address(paymentClient),
+                recipients[i],
+                amounts[i],
+                block.timestamp,
+                duration + block.timestamp,
+                1
+            );
+            emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 amounts[i],
@@ -1044,7 +1130,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         paymentProcessor.cancelRunningPayments(paymentClient);
 
         // measure recipients balances before attempting second claim.
-        uint[] memory balancesBefore = new uint256[](recipients.length);
+        uint[] memory balancesBefore = new uint[](recipients.length);
         for (uint i; i < recipients.length; i++) {
             vm.prank(recipients[i]);
             balancesBefore[i] = _token.balanceOf(recipients[i]);
@@ -1149,15 +1235,24 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         vm.warp(block.timestamp + 52 weeks);
 
         speedRunStreamingAndClaim(recipients, amounts, durations);
-
+        address recipient;
+        uint amount;
+        uint totalAmount;
         for (uint i; i < recipients.length; i++) {
-            address recipient = recipients[i];
-            uint amount = uint(amounts[i]) * 2; //we paid two rounds
+            recipient = recipients[i];
+            amount = uint(amounts[i]) * 2; //we paid two rounds
+            totalAmount += amount;
 
             assertEq(_token.balanceOf(address(recipient)), amount);
             assertEq(
                 paymentProcessor.releasableForSpecificWalletId(
                     address(paymentClient), address(recipient), 1
+                ),
+                0
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificWalletId(
+                    address(paymentClient), address(recipient), 2
                 ),
                 0
             );
@@ -1168,6 +1263,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+
+        assertEq(totalAmount, paymentClient.amountPaidCounter());
     }
 
     // Verifies our contract corectly handles ERC20 revertion.

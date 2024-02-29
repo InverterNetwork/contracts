@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
 // SuT
@@ -16,7 +18,7 @@ import {
 import {
     IERC20PaymentClient,
     ERC20PaymentClientMock
-} from "test/utils/mocks/modules/ERC20PaymentClientMock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -30,6 +32,30 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
     // Mocks
     ERC20PaymentClientMock paymentClient = new ERC20PaymentClientMock(_token);
+
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Emitted when a payment gets processed for execution.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    /// @param createdAt Timestamp at which the order was created.
+    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    event PaymentOrderProcessed(
+        address indexed paymentClient,
+        address indexed recipient,
+        uint amount,
+        uint createdAt,
+        uint dueTo
+    );
+
+    /// @notice Emitted when an amount of ERC20 tokens gets sent out of the contract.
+    /// @param recipient The address that will receive the payment.
+    /// @param amount The amount of tokens the payment consists of.
+    event TokensReleased(
+        address indexed recipient, address indexed token, uint amount
+    );
 
     function setUp() public {
         address impl = address(new SimplePaymentProcessor());
@@ -51,6 +77,14 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
     function testInit() public override(ModuleTest) {
         assertEq(address(paymentProcessor.token()), address(_token));
+    }
+
+    function testSupportsInterface() public {
+        assertTrue(
+            paymentProcessor.supportsInterface(
+                type(IPaymentProcessor).interfaceId
+            )
+        );
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -106,6 +140,17 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
         // Call processPayments.
         vm.prank(address(paymentClient));
+
+        vm.expectEmit(true, true, true, true);
+        emit PaymentOrderProcessed(
+            address(paymentClient),
+            recipient,
+            amount,
+            block.timestamp,
+            block.timestamp
+        );
+        emit TokensReleased(recipient, address(_token), amount);
+
         paymentProcessor.processPayments(paymentClient);
 
         // Check correct balances.
@@ -114,6 +159,8 @@ contract SimplePaymentProcessorTest is ModuleTest {
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
+
+        assertEq(amount, paymentClient.amountPaidCounter());
     }
 
     function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)

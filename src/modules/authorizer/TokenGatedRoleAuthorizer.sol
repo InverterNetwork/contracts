@@ -21,6 +21,17 @@ contract TokenGatedRoleAuthorizer is
     ITokenGatedRoleAuthorizer,
     RoleAuthorizer
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(RoleAuthorizer)
+        returns (bool)
+    {
+        return interfaceId == type(ITokenGatedRoleAuthorizer).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     /*
     * This Module expands on the RoleAuthorizer by adding the possibility to set a role as "Token-Gated"
     * Instead of whitelisting a user address, the whitelisted addresses will correspond to a token address, and on authotrization the contract will check on ownership
@@ -103,7 +114,7 @@ contract TokenGatedRoleAuthorizer is
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
     function hasTokenRole(bytes32 role, address who)
-        public
+        external
         view
         onlyTokenGated(role)
         returns (bool)

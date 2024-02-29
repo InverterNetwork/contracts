@@ -6,6 +6,8 @@ import "forge-std/Test.sol";
 // External Libraries
 import "@oz/utils/Address.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // SuT
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 

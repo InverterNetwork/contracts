@@ -27,6 +27,17 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  * @author Inverter Network
  */
 contract SimplePaymentProcessor is Module, IPaymentProcessor {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IPaymentProcessor).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
@@ -75,6 +86,9 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         IERC20PaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
         (orders, totalAmount) = client.collectPaymentOrders();
+
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        client.amountPaid(totalAmount);
 
         // Cache token.
         IERC20 token_ = token();

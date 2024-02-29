@@ -4,6 +4,7 @@ pragma solidity 0.8.19;
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -31,7 +32,23 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
  *
  * @author Inverter Network
  */
-abstract contract Module is IModule, Initializable, ContextUpgradeable {
+abstract contract Module is
+    IModule,
+    Initializable,
+    ContextUpgradeable,
+    ERC165
+{
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IModule).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
     //
@@ -80,23 +97,20 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
         bytes32 ownerRole = authorizer.getOwnerRole();
         bytes32 managerRole = authorizer.getManagerRole();
 
-        if (!authorizer.hasRole(managerRole, _msgSender())) {
-            revert Module__CallerNotAuthorized(managerRole, _msgSender());
-        } else if (!authorizer.hasRole(ownerRole, _msgSender())) {
+        if (
+            authorizer.hasRole(ownerRole, _msgSender())
+                || authorizer.hasRole(managerRole, _msgSender())
+        ) {
+            _;
+        } else {
             revert Module__CallerNotAuthorized(ownerRole, _msgSender());
         }
-        _;
     }
 
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
         if (
-            !__Module_orchestrator.authorizer().hasRole(
-                __Module_orchestrator.authorizer().generateRoleId(
-                    address(this), role
-                ),
-                _msgSender()
-            )
+            !__Module_orchestrator.authorizer().hasModuleRole(role, _msgSender())
         ) {
             revert Module__CallerNotAuthorized(
                 __Module_orchestrator.authorizer().generateRoleId(
@@ -169,6 +183,13 @@ abstract contract Module is IModule, Initializable, ContextUpgradeable {
             revert Module__InvalidMetadata();
         }
         __Module_metadata = metadata;
+
+        emit ModuleInitialized(
+            address(orchestrator_),
+            metadata.title,
+            metadata.majorVersion,
+            metadata.minorVersion
+        );
     }
 
     function init2(IOrchestrator orchestrator_, bytes memory dependencyData)

@@ -25,6 +25,17 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
  * @author Inverter Network
  */
 abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IERC20PaymentClient).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
     //--------------------------------------------------------------------------
     // Modifiers
@@ -103,48 +114,6 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
     // IERC20PaymentClient Functions
 
     /// @inheritdoc IERC20PaymentClient
-    function collectPaymentOrders()
-        external
-        virtual
-        returns (PaymentOrder[] memory, uint)
-    {
-        // Ensure caller is authorized to act as payment processor.
-        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(_msgSender()))) {
-            revert Module__ERC20PaymentClient__CallerNotAuthorized();
-        }
-
-        // Ensure payment processor is able to fetch the tokens from
-        // address(this).
-        _ensureTokenAllowance(
-            IPaymentProcessor(_msgSender()), _outstandingTokenAmount
-        );
-
-        // Create a copy of all orders to return.
-        uint ordersLength = _orders.length;
-        PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);
-        for (uint i; i < ordersLength; ++i) {
-            copy[i] = _orders[i];
-        }
-
-        // Delete all outstanding orders.
-        delete _orders;
-
-        // Cache outstanding token amount.
-        uint outstandingTokenAmountCache = _outstandingTokenAmount;
-
-        // Set outstanding token amount to zero.
-        _outstandingTokenAmount = 0;
-
-        //Ensure that the Client will have sufficient funds.
-        // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
-        _ensureTokenBalance(outstandingTokenAmountCache);
-
-        // Return copy of orders and orders' total token amount to payment
-        // processor.
-        return (copy, outstandingTokenAmountCache);
-    }
-
-    /// @inheritdoc IERC20PaymentClient
     function paymentOrders()
         external
         view
@@ -157,6 +126,52 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
     /// @inheritdoc IERC20PaymentClient
     function outstandingTokenAmount() external view virtual returns (uint) {
         return _outstandingTokenAmount;
+    }
+
+    /// @inheritdoc IERC20PaymentClient
+    function collectPaymentOrders()
+        external
+        virtual
+        returns (PaymentOrder[] memory, uint)
+    {
+        // Ensure caller is authorized to act as payment processor.
+        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(_msgSender()))) {
+            revert Module__ERC20PaymentClient__CallerNotAuthorized();
+        }
+
+        // Create a copy of all orders to return.
+        uint totalAmount;
+        uint ordersLength = _orders.length;
+        PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);
+        for (uint i; i < ordersLength; ++i) {
+            copy[i] = _orders[i];
+            totalAmount += copy[i].amount;
+        }
+
+        // Delete all outstanding orders.
+        delete _orders;
+
+        // Ensure payment processor is able to fetch the tokens from address(this).
+        _ensureTokenAllowance(IPaymentProcessor(_msgSender()), totalAmount);
+
+        //Ensure that the Client will have sufficient funds.
+        // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
+        _ensureTokenBalance(_outstandingTokenAmount);
+
+        // Return copy of orders and orders' total token amount to payment
+        // processor.
+        return (copy, _outstandingTokenAmount);
+    }
+
+    /// @inheritdoc IERC20PaymentClient
+    function amountPaid(uint amount) external virtual {
+        // Ensure caller is authorized to act as payment processor.
+        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor(_msgSender()))) {
+            revert Module__ERC20PaymentClient__CallerNotAuthorized();
+        }
+
+        // reduce outstanding token amount by the given amount
+        _outstandingTokenAmount -= amount;
     }
 
     //--------------------------------------------------------------------------
@@ -186,19 +201,25 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
 
     /// @dev Ensures `amount` of payment tokens exist in address(this).
     function _ensureTokenBalance(uint amount) internal virtual {
-        // Trigger callback from orchestrator to transfer tokens
-        // to address(this).
-        bool ok;
-        (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
-            address(__Module_orchestrator.fundingManager()),
-            abi.encodeCall(
-                IFundingManager.transferOrchestratorToken,
-                (address(this), amount)
-            )
-        );
+        uint currentFunds = __Module_orchestrator.fundingManager().token()
+            .balanceOf(address(this));
 
-        if (!ok) {
-            revert Module__ERC20PaymentClient__TokenTransferFailed();
+        // If current funds are not enough
+        if (currentFunds < amount) {
+            // Trigger callback from orchestrator to transfer tokens
+            // to address(this).
+            bool ok;
+            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
+                address(__Module_orchestrator.fundingManager()),
+                abi.encodeCall(
+                    IFundingManager.transferOrchestratorToken,
+                    (address(this), amount - currentFunds)
+                )
+            );
+
+            if (!ok) {
+                revert Module__ERC20PaymentClient__TokenTransferFailed();
+            }
         }
     }
 
@@ -207,12 +228,9 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         internal
         virtual
     {
-        IERC20 token = __Module_orchestrator.fundingManager().token();
-        uint allowance = token.allowance(address(this), address(spender));
-
-        if (allowance < amount) {
-            token.safeIncreaseAllowance(address(spender), amount - allowance);
-        }
+        __Module_orchestrator.fundingManager().token().safeIncreaseAllowance(
+            address(spender), amount
+        );
     }
 
     /// @dev Returns whether address `who` is an authorized payment processor.

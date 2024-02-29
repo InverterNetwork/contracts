@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -79,6 +81,12 @@ contract BountyManagerTest is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Test: Initialization
+
+    function testSupportsInterface() public {
+        assertTrue(
+            bountyManager.supportsInterface(type(IBountyManager).interfaceId)
+        );
+    }
 
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {}

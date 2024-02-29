@@ -6,6 +6,8 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -49,6 +51,14 @@ contract RecurringPaymentManagerTest is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Test: Initialization
+
+    function testSupportsInterface() public {
+        assertTrue(
+            recurringPaymentManager.supportsInterface(
+                type(IRecurringPaymentManager).interfaceId
+            )
+        );
+    }
 
     //This function also tests all the getters
     function testInit() public override(ModuleTest) {
@@ -261,7 +271,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
-                _authorizer.getManagerRole(),
+                _authorizer.getOwnerRole(),
                 address(0xBEEF)
             )
         );
@@ -388,7 +398,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
-                _authorizer.getManagerRole(),
+                _authorizer.getOwnerRole(),
                 address(0xBEEF)
             )
         );

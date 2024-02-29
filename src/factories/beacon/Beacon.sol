@@ -16,6 +16,21 @@ import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
  */
 contract Beacon is IBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
+    // ERC-165 Public View Functions
+
+    /// @inheritdoc ERC165
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override
+        returns (bool)
+    {
+        return interfaceId == type(IBeacon).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
+    //--------------------------------------------------------------------------------
     // Errors
 
     /// @notice Given implementation invalid.
@@ -25,6 +40,7 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
     // Events
 
     /// @notice Beacon upgraded to new implementation address.
+    /// @param implementation The new implementation address.
     event Upgraded(address indexed implementation);
 
     //--------------------------------------------------------------------------------
@@ -62,20 +78,5 @@ contract Beacon is IBeacon, ERC165, Ownable2Step {
         }
 
         _implementation = newImplementation;
-    }
-
-    //--------------------------------------------------------------------------------
-    // ERC-165 Public View Functions
-
-    /// @inheritdoc ERC165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
-        return interfaceId == type(IBeacon).interfaceId
-            || super.supportsInterface(interfaceId);
     }
 }

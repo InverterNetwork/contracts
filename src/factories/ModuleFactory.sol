@@ -7,6 +7,7 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Dependencies
 import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
@@ -32,7 +33,17 @@ import {
  *
  * @author Inverter Network
  */
-contract ModuleFactory is IModuleFactory, Ownable2Step {
+contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IModuleFactory).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -105,7 +116,9 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
         IModule(implementation).init(orchestrator, metadata, configData);
 
         emit ModuleCreated(
-            address(orchestrator), implementation, metadata.title
+            address(orchestrator),
+            implementation,
+            LibMetadata.identifier(metadata)
         );
 
         return implementation;

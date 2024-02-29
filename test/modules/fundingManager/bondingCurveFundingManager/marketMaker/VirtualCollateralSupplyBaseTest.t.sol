@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {VirtualCollateralSupplyBaseMock} from
     "./utils/mocks/VirtualCollateralSupplyBaseMock.sol";
 import {IVirtualCollateralSupply} from
@@ -27,6 +29,14 @@ contract VirtualCollateralSupplyBaseTest is Test {
     function setUp() public {
         virtualCollateralSupplyBase = new VirtualCollateralSupplyBaseMock();
         virtualCollateralSupplyBase.setVirtualCollateralSupply(INITIAL_SUPPLY);
+    }
+
+    function testSupportsInterface() public {
+        assertTrue(
+            virtualCollateralSupplyBase.supportsInterface(
+                type(IVirtualCollateralSupply).interfaceId
+            )
+        );
     }
 
     function testAddCollateralAmount(uint amount) external {

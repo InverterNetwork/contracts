@@ -8,6 +8,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 
@@ -37,6 +39,21 @@ contract baseModuleTest is ModuleTest {
 
     bytes _CONFIGDATA = bytes("");
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Module has been initialized.
+    /// @param parentOrchestrator The address of the orchestrator the module is linked to.
+    /// @param moduleTitle The title of the module.
+    /// @param majorVersion The major version of the module.
+    /// @param minorVersion The minor version of the module.
+    event ModuleInitialized(
+        address indexed parentOrchestrator,
+        string indexed moduleTitle,
+        uint majorVersion,
+        uint minorVersion
+    );
+
     function setUp() public {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
@@ -45,11 +62,20 @@ contract baseModuleTest is ModuleTest {
 
         _authorizer.setIsAuthorized(address(this), true);
 
+        vm.expectEmit(true, true, true, false);
+        emit ModuleInitialized(
+            address(_orchestrator), _TITLE, _MAJOR_VERSION, _MINOR_VERSION
+        );
+
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
     //--------------------------------------------------------------------------
     // Tests: Initialization
+
+    function testSupportsInterface() public {
+        assertTrue(module.supportsInterface(type(IModule).interfaceId));
+    }
 
     function testInit() public override {
         // Orchestrator correctly written to storage.

@@ -19,6 +19,15 @@ import {
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
+import {IERC165Upgradeable} from
+    "@oz-up/utils/introspection/IERC165Upgradeable.sol";
+
+import {
+    IAccessControlEnumerableUpgradeable,
+    IAccessControlUpgradeable
+} from "@oz-up/access/AccessControlEnumerableUpgradeable.sol";
 // Internal Dependencies
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 // Interfaces
@@ -42,7 +51,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
 
         address propImpl = address(new Orchestrator());
         _orchestrator = Orchestrator(Clones.clone(propImpl));
-        ModuleMock module = new  ModuleMock();
+        ModuleMock module = new ModuleMock();
         address[] memory modules = new address[](1);
         modules[0] = address(module);
         _orchestrator.init(
@@ -109,6 +118,20 @@ contract TokenGatedRoleAuthorizerTest is Test {
     IModule.Metadata _METADATA =
         IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when the token-gating of a role changes.
+    /// @param role The role that was modified.
+    /// @param newValue The new value of the role.
+    event ChangedTokenGating(bytes32 role, bool newValue);
+
+    /// @notice Event emitted when the threshold of a token-gated role changes.
+    /// @param role The role that was modified.
+    /// @param token The token for which the threshold was modified.
+    /// @param newValue The new value of the threshold.
+    event ChangedTokenThreshold(bytes32 role, address token, uint newValue);
+
     function setUp() public {
         address authImpl = address(new TokenGatedRoleAuthorizer());
         _authorizer = TokenGatedRoleAuthorizer(Clones.clone(authImpl));
@@ -150,6 +173,14 @@ contract TokenGatedRoleAuthorizerTest is Test {
         roleNft.mint(BOB);
     }
 
+    function testSupportsInterface() public {
+        assertTrue(
+            _authorizer.supportsInterface(
+                type(ITokenGatedRoleAuthorizer).interfaceId
+            )
+        );
+    }
+
     //-------------------------------------------------
     // Helper Functions
 
@@ -162,6 +193,10 @@ contract TokenGatedRoleAuthorizerTest is Test {
     ) internal returns (bytes32) {
         bytes32 roleId = _authorizer.generateRoleId(module, role);
         vm.startPrank(module);
+
+        vm.expectEmit();
+        emit ChangedTokenGating(roleId, true);
+        emit ChangedTokenThreshold(roleId, address(token), threshold);
 
         _authorizer.makeRoleTokenGatedFromModule(role);
         _authorizer.grantTokenRoleFromModule(role, address(token), threshold);
@@ -217,12 +252,20 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
         //now we make it tokengated as admin
         vm.prank(CLOE);
+
+        vm.expectEmit();
+        emit ChangedTokenGating(roleId, true);
+
         _authorizer.setTokenGated(roleId, true);
 
         assertTrue(_authorizer.isTokenGated(roleId));
 
         //and revert the change
         vm.prank(CLOE);
+
+        vm.expectEmit();
+        emit ChangedTokenGating(roleId, false);
+
         _authorizer.setTokenGated(roleId, false);
 
         assertFalse(_authorizer.isTokenGated(roleId));

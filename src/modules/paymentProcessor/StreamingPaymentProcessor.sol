@@ -24,8 +24,18 @@ import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
  *
  * @author Inverter Network
  */
-
 contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IStreamingPaymentProcessor).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -500,6 +510,14 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             );
         }
 
+        uint stillReleasable =
+            releasableForSpecificWalletId(client, paymentReceiver, walletId);
+        //In case there is still something to be released
+        if (stillReleasable > 0) {
+            //Let PaymentClient know that the amount is not needed to be stored anymore
+            IERC20PaymentClient(client).amountPaid(stillReleasable);
+        }
+
         // Standard deletion process.
         // Unordered removal of PaymentReceiver payment with walletId WalletIdIndex
         // Move the last element to the index which is to be deleted and then pop the last element of the array.
@@ -662,6 +680,9 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         if (success && (data.length == 0 || abi.decode(data, (bool)))) {
             emit TokensReleased(paymentReceiver, _token, amount);
+
+            //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+            IERC20PaymentClient(client).amountPaid(amount);
         } else {
             unclaimableAmounts[client][paymentReceiver] += amount;
         }

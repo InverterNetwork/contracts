@@ -4,6 +4,9 @@ pragma solidity 0.8.19;
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+// External Libraries
+import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
+
 // Internal Dependencies
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
@@ -36,32 +39,26 @@ import {IModule} from "src/modules/base/IModule.sol";
  * @author Inverter Network
  */
 contract Orchestrator is IOrchestrator, ModuleManager {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ModuleManager)
+        returns (bool)
+    {
+        return interfaceId == type(IOrchestrator).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable by authorized
+    /// @notice Modifier to guarantee function is only callable by the owner of the workflow
     ///         address.
     modifier onlyOrchestratorOwner() {
         bytes32 ownerRole = authorizer.getOwnerRole();
 
         if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
-        }
-        _;
-    }
-
-    // Once we merge the RoleAuthoirzer We can completely remove Ownable
-    // as import and rely on IAuthorizer to validate owners.
-
-    /// @notice Modifier to guarantee function is only callable by authorized
-    ///         address or manager.
-    modifier onlyOrchestratorOwnerOrManager() {
-        bytes32 ownerRole = authorizer.getOwnerRole();
-        bytes32 managerRole = authorizer.getManagerRole();
-
-        if (!authorizer.hasRole(managerRole, _msgSender())) {
-            revert Orchestrator__CallerNotAuthorized(managerRole, _msgSender());
-        } else if (!authorizer.hasRole(ownerRole, _msgSender())) {
             revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
         }
         _;
@@ -113,6 +110,14 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         __ModuleManager_addModule(address(fundingManager_));
         __ModuleManager_addModule(address(authorizer_));
         __ModuleManager_addModule(address(paymentProcessor_));
+
+        emit OrchestratorInitialized(
+            orchestratorId_,
+            address(fundingManager_),
+            address(authorizer_),
+            address(paymentProcessor_),
+            modules
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -169,73 +174,6 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     }
 
     //--------------------------------------------------------------------------
-    // Module address verification functions
-    // Note These set of functions are not mandatory for the functioning of the protocol, however they
-    //      are provided for the convenience of the users since matching the names of the modules does not
-    //      fully guarantee that the returned address is the address of the exact module the user was looking for
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsAuthorizerModule(address authModule)
-        public
-        view
-        returns (bool)
-    {
-        IAuthorizer authorizerModule = IAuthorizer(authModule);
-
-        try authorizerModule.getOwnerRole() returns (bytes32) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsFundingManager(address fundingManagerAddress)
-        public
-        view
-        returns (bool)
-    {
-        IFundingManager fundingManagerModule =
-            IFundingManager(fundingManagerAddress);
-
-        try fundingManagerModule.token() returns (IERC20) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsRecurringPaymentManager(
-        address recurringPaymentManager
-    ) public view returns (bool) {
-        RecurringPaymentManager paymentManager =
-            RecurringPaymentManager(recurringPaymentManager);
-
-        try paymentManager.getEpochLength() returns (uint) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    /// @inheritdoc IOrchestrator
-    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
-        public
-        view
-        returns (bool)
-    {
-        IPaymentProcessor paymentProcessorModule =
-            IPaymentProcessor(paymentProcessorAddress);
-
-        try paymentProcessorModule.token() returns (IERC20) {
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
-    //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
     /// @dev Only addresses authorized via the {IAuthorizer} instance can manage
@@ -257,7 +195,17 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        if (verifyAddressIsAuthorizerModule(address(authorizer_))) {
+        address authorizerContract = address(authorizer_);
+        bytes4 moduleInterfaceId = type(IModule).interfaceId;
+        bytes4 authorizerInterfaceId = type(IAuthorizer).interfaceId;
+        if (
+            ERC165Checker.supportsInterface(
+                authorizerContract, moduleInterfaceId
+            )
+                && ERC165Checker.supportsInterface(
+                    authorizerContract, authorizerInterfaceId
+                )
+        ) {
             addModule(address(authorizer_));
             removeModule(address(authorizer));
             authorizer = authorizer_;
@@ -272,7 +220,17 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        if (verifyAddressIsFundingManager(address(fundingManager_))) {
+        address fundingManagerContract = address(fundingManager_);
+        bytes4 moduleInterfaceId = type(IModule).interfaceId;
+        bytes4 fundingManagerInterfaceId = type(IFundingManager).interfaceId;
+        if (
+            ERC165Checker.supportsInterface(
+                fundingManagerContract, moduleInterfaceId
+            )
+                && ERC165Checker.supportsInterface(
+                    fundingManagerContract, fundingManagerInterfaceId
+                )
+        ) {
             addModule(address(fundingManager_));
             removeModule(address(fundingManager));
             fundingManager = fundingManager_;
@@ -287,7 +245,17 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         external
         onlyOrchestratorOwner
     {
-        if (verifyAddressIsPaymentProcessor(address(paymentProcessor_))) {
+        address paymentProcessorContract = address(paymentProcessor_);
+        bytes4 moduleInterfaceId = type(IModule).interfaceId;
+        bytes4 paymentProcessorInterfaceId = type(IPaymentProcessor).interfaceId;
+        if (
+            ERC165Checker.supportsInterface(
+                paymentProcessorContract, moduleInterfaceId
+            )
+                && ERC165Checker.supportsInterface(
+                    paymentProcessorContract, paymentProcessorInterfaceId
+                )
+        ) {
             addModule(address(paymentProcessor_));
             removeModule(address(paymentProcessor));
             paymentProcessor = paymentProcessor_;

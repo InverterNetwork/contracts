@@ -31,13 +31,30 @@ interface IOrchestrator is IModuleManager {
     // Events
 
     /// @notice Authorizer updated to new address.
+    /// @param _address The new address.
     event AuthorizerUpdated(address indexed _address);
 
     /// @notice FundingManager updated to new address.
+    /// @param _address The new address.
     event FundingManagerUpdated(address indexed _address);
 
     /// @notice PaymentProcessor updated to new address.
+    /// @param _address The new address.
     event PaymentProcessorUpdated(address indexed _address);
+
+    /// @notice Orchestrator has been initialized with the corresponding modules
+    /// @param orchestratorId_ The id of the orchestrator.
+    /// @param fundingManager The address of the funding manager module.
+    /// @param authorizer The address of the authorizer module.
+    /// @param paymentProcessor The address of the payment processor module.
+    /// @param modules The addresses of the other modules used in the orchestrator.
+    event OrchestratorInitialized(
+        uint indexed orchestratorId_,
+        address fundingManager,
+        address authorizer,
+        address paymentProcessor,
+        address[] modules
+    );
 
     //--------------------------------------------------------------------------
     // Functions
@@ -98,27 +115,4 @@ interface IOrchestrator is IModuleManager {
         external
         view
         returns (address);
-
-    /// @notice Verify whether the given address is a payment processor
-    function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
-        external
-        view
-        returns (bool);
-
-    /// @notice Verify whether the given address is the recurring payment manager
-    function verifyAddressIsRecurringPaymentManager(
-        address recurringPaymentManager
-    ) external view returns (bool);
-
-    /// @notice Verify whether the given address is a funding manager
-    function verifyAddressIsFundingManager(address fundingManagerAddress)
-        external
-        view
-        returns (bool);
-
-    /// @notice Verify whether the given address is an IAuthorizer module
-    function verifyAddressIsAuthorizerModule(address authModule)
-        external
-        view
-        returns (bool);
 }
