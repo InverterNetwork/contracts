@@ -119,7 +119,7 @@ interface IKPIRewarder {
     /// @notice Creates a KPI for the Rewarder
     /// @param _continuous Should the tranche rewards be distributed continuously or in steps
     /// @param _trancheValues The value at which the tranches end
-    /// @param _trancheRewards The rewards to be diitributed at completion of each tranche
+    /// @param _trancheRewards The rewards to be distributed at completion of each tranche
     function createKPI(
         bool _continuous,
         uint[] calldata _trancheValues,

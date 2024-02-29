@@ -144,6 +144,7 @@ contract KPIRewarder is
         _setAssertion(dataId, data, asserter);
     }
 
+    /// @inheritdoc IKPIRewarder
     function postAssertion()
         external
         onlyModuleRole(ASSERTER_ROLE)
