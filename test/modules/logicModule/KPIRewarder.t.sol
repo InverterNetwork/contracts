@@ -244,10 +244,17 @@ contract KPIRewarderTest is ModuleTest {
 
 /*
 postAssertionTest
+├── when the Asserter is the Module itself
+│   └── when the default currency is the same as the staking token
+│        └── it should revert  
+├── when there are no stored KPIs
+│   └── it should revert 
+├── when the specified KPI does not exist
+│   └── it should revert 
 ├── when stakingQueue length is bigger than 0
-│   └── it should stake all orders in the stakingQueue
+│   ├── it should stake all orders in the stakingQueue
+│   └── it should remove the amount form the queued funds
 ├── it should delete the stakingQueue
-├── it should set the queued funds to zero
 ├── when there aren't enough funds to pay the assertion fee
 │   └── it should revert
 └── when there are enough funds to pay the assertion fee
@@ -256,6 +263,65 @@ postAssertionTest
     └── it should return a correct assertionId
 */
 contract KPIRewarder_postAssertionTest is KPIRewarderTest {
+    function test_RevertWhen_TheBondConfigurationIsInvalid() external {
+        // Since the setup has a correct KPI MAnager, we create a new one with stakingToken == FeeToken
+
+        address impl = address(new KPIRewarder());
+        KPIRewarder alt_kpiManager = KPIRewarder(Clones.clone(impl));
+
+        _orchestrator.addModule(address(alt_kpiManager));
+
+        bytes memory configData =
+            abi.encode(address(feeToken), address(feeToken), ooV3);
+
+        alt_kpiManager.init(_orchestrator, _METADATA, configData);
+
+        // it should revert
+
+        vm.expectRevert(
+            IKPIRewarder
+                .Module__KPIRewarder__ModuleCannotUseStakingTokenAsBond
+                .selector
+        );
+        alt_kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            address(alt_kpiManager),
+            100,
+            0
+        );
+    }
+
+    function test_RevertWhen_ThereAreNoKPIs() external {
+        // it should revert
+        vm.expectRevert(
+            IKPIRewarder.Module__KPIRewarder__InvalidKPINumber.selector
+        );
+        kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            99_999
+        );
+    }
+
+    function test_RevertWhen_TheTargetKPIIsNotValid() external {
+        createDummyContinuousKPI();
+
+        // it should revert
+        vm.expectRevert(
+            IKPIRewarder.Module__KPIRewarder__InvalidKPINumber.selector
+        );
+        kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            99_999
+        );
+    }
+
     function test_WhenStakingQueueLengthIsBiggerThan0(
         address[] memory users,
         uint[] memory amounts
@@ -266,14 +332,6 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
 
         // prepare conditions
         createDummyIncontinuousKPI();
-
-        kpiManager.prepareAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            0
-        );
 
         // prepare  bond and asserter authorization
         kpiManager.grantModuleRole(
@@ -303,7 +361,13 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
             0x0
         ); //we don't know the last one
 
-        bytes32 assertionId = kpiManager.postAssertion();
+        bytes32 assertionId = kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            0
+        );
         vm.stopPrank();
 
         // state after
@@ -336,14 +400,6 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
         // prepare conditions
         createDummyIncontinuousKPI();
 
-        kpiManager.prepareAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            0
-        );
-
         // prepare  bond and asserter authorization
         kpiManager.grantModuleRole(
             kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
@@ -367,7 +423,13 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
             0x0
         );
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
-        bytes32 assertionId = kpiManager.postAssertion();
+        bytes32 assertionId = kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            0
+        );
 
         // state after
         assertEq(kpiManager.getStakingQueue().length, 0);
@@ -403,14 +465,6 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
         // prepare conditions
         createDummyIncontinuousKPI();
 
-        kpiManager.prepareAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            0
-        );
-
         // prepare  bond and asserter authorization
         kpiManager.grantModuleRole(
             kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
@@ -428,7 +482,13 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
         // SuT
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         vm.expectRevert(); // ERC20 insufficient balance revert
-        bytes32 assertionId = kpiManager.postAssertion();
+        bytes32 assertionId = kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            0
+        );
 
         // state after
         assertEq(kpiManager.getStakingQueue().length, users.length);
@@ -576,7 +636,6 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
 
         IKPIRewarder.KPI memory generatedKPI = kpiManager.getKPI(kpiNum);
 
-        assertEq(generatedKPI.creationTime, block.timestamp);
         assertEq(generatedKPI.trancheValues.length, numOfTranches);
         assertEq(generatedKPI.trancheRewards.length, numOfTranches);
         assertEq(generatedKPI.continuous, continuous);
@@ -585,42 +644,6 @@ contract KPIRewarder_createKPITest is KPIRewarderTest {
             assertEq(generatedKPI.trancheValues[i], trancheValues[i]);
             assertEq(generatedKPI.trancheRewards[i], trancheRewards[i]);
         }
-    }
-}
-
-/*
-setKPITest
-├── when the KPI number is above the current KPI
-│   └── it should revert
-└── when the KPI number is among the existing KPIs
-    └── it should change the activeKPI to the given KPI
-*/
-
-contract KPIRewarder_setKPITest is KPIRewarderTest {
-    function test_RevertWhen_TheKPINumberIsAboveTheCurrentKPI(uint KPInum)
-        external
-    {
-        // it should revert
-        vm.assume(KPInum > kpiManager.KPICounter());
-
-        vm.expectRevert(
-            IKPIRewarder.Module__KPIRewarder__InvalidKPINumber.selector
-        );
-        kpiManager.setKPI(KPInum);
-    }
-
-    function test_WhenTheKPINumberIsAmongTheExistingKPIs(uint KPInum)
-        external
-    {
-        for (uint i = 0; i < 5; i++) {
-            createDummyIncontinuousKPI();
-        }
-        // it should change the activeKPI to the given KPI
-        KPInum = bound(KPInum, 0, kpiManager.KPICounter() - 1);
-
-        kpiManager.setKPI(KPInum);
-
-        assertEq(kpiManager.activeKPI(), KPInum);
     }
 }
 
@@ -757,14 +780,6 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
         if (continuous) createDummyContinuousKPI();
         else createDummyIncontinuousKPI();
 
-        kpiManager.prepareAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            valueToAssert,
-            0
-        );
-
         // prepare  bond and asserter authorization
         kpiManager.grantModuleRole(
             kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
@@ -797,7 +812,13 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
             0x0
         ); //we don't know the last one
 
-        assertionId = kpiManager.postAssertion();
+        assertionId = kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            valueToAssert,
+            0
+        );
         vm.stopPrank();
 
         return (assertionId, users, amounts, totalUserFunds);
@@ -999,43 +1020,5 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
                 .selector
         );
         kpiManager.assertionResolvedCallback(createdID, true);
-    }
-}
-
-/*
-prepareAsertionTest
-├── when the target KPI is not valid
-│   └── it should revert
-└── when the asserter targetValue is not valid
-    └── it should revert
-*/
-
-contract KPIRewarder_setAssertionTest is KPIRewarderTest {
-    function test_RevertWhen_TheTargetKPIIsNotValid() external {
-        // it should revert
-        vm.expectRevert(
-            IKPIRewarder.Module__KPIRewarder__InvalidKPINumber.selector
-        );
-        kpiManager.prepareAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            99_999
-        );
-    }
-
-    function test_RevertWhen_TheTargetValueIsNotValid() external {
-        // it should revert
-        vm.expectRevert(
-            IKPIRewarder.Module__KPIRewarder__InvalidTargetValue.selector
-        );
-        kpiManager.prepareAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            0,
-            0
-        );
     }
 }
