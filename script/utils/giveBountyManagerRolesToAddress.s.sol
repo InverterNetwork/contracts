@@ -10,19 +10,22 @@ import {
 import {ScriptConstants} from "../script-constants.sol";
 
 contract giveBountyManagerRoles is Script {
+    // ==============================================================================================================
+    // NOTE: This script is intended to give bounty manager roles to a specific address.
+    //       The address of the specific BountyManager or beneficiary should be specified in the enivronment variables or can be edited into the script manually.
+    // ==============================================================================================================
+
     uint orchestratorOwnerPrivateKey =
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
-    // ===============================================================================================================
-    // Introduce corresponding bounty manager and user addresses here
-    // ===============================================================================================================
-    address bountyManagerAddress = address(0); // Introduce deployed bounty manager address here
+    address bountyManagerAddress =
+        vm.envAddress("DEPLOYED_BOUNTY_MANAGER_ADDRESS"); // The exisiting Bounty Manager instance
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
-    function run() public {
-        address beneficiary = address(1); // Introduce address of the user to be granted roles here
+    address beneficiary = vm.envAddress("ROLE_BENEFICIARY_ADDRESS"); // The address that will be granted the roles
 
+    function run() public {
         vm.startBroadcast(orchestratorOwner);
 
         bountyManager.grantModuleRole(

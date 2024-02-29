@@ -21,8 +21,6 @@ import {BancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-//import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-//import {ScriptConstants} from "../script-constants.sol";
 
 contract SetupInvestableWorkstream is Test, DeploymentScript {
     //ScriptConstants scriptConstants = new ScriptConstants();
@@ -36,6 +34,9 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
+    // NOTE: In case the script should be run on a chain WITHOUT an already deployed formula or collateral token,
+    //       comment the following lines and uncomment the pre-steps in the run() function
+
     address collateralTokenAddress =
         vm.envAddress("BONDING_CURVE_COLLATERAL_TOKEN");
     ERC20 collateralToken = ERC20(collateralTokenAddress);
@@ -48,14 +49,16 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
 
     bytes32 CURVE_TOKEN_NAME = "Conding Burve Token";
     bytes32 CURVE_TOKEN_SYMBOL = "BCRG";
-    uint INITIAL_TOKEN_SUPPLY = 1;
-    uint INITIAL_COLLATERAL_SUPPLY = 1;
-    uint RESERVE_RATIO_FOR_BUYING = 330_000;
-    uint RESERVE_RATIO_FOR_SELLING = 330_000;
+    uint8 CURVE_TOKEN_DECIMALS = 18;
+
+    uint32 RESERVE_RATIO_FOR_BUYING = 330_000;
+    uint32 RESERVE_RATIO_FOR_SELLING = 330_000;
     uint BUY_FEE = 0;
     uint SELL_FEE = 100;
     bool BUY_IS_OPEN = true;
     bool SELL_IS_OPEN = false;
+    uint INITIAL_TOKEN_SUPPLY = 1;
+    uint INITIAL_COLLATERAL_SUPPLY = 1;
 
     // ========================================================================
 
@@ -75,10 +78,11 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         //If the factories aren't deployed on the target chain, we can run the deployment script to deploy the factories, implementations and Beacons.
         address orchestratorFactory = DeploymentScript.run();
 
-        //If there's no formula deployment on the chain, we deploy the Bancor Formula
+        //If there's no formula or token deployment on the chain, we deploy them
         /* vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
             formula = new BancorFormula();
+            collateralToken = new ERC20("MOCK" , "MCK"); 
         }
         vm.stopBroadcast();
         */
@@ -103,15 +107,17 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                 abi.encode(
                     CURVE_TOKEN_NAME,
                     CURVE_TOKEN_SYMBOL,
+                    CURVE_TOKEN_DECIMALS,
                     address(formula),
-                    INITIAL_TOKEN_SUPPLY,
-                    INITIAL_TOKEN_SUPPLY,
                     RESERVE_RATIO_FOR_BUYING,
                     RESERVE_RATIO_FOR_SELLING,
                     BUY_FEE,
                     SELL_FEE,
                     BUY_IS_OPEN,
-                    SELL_IS_OPEN
+                    SELL_IS_OPEN,
+                    INITIAL_TOKEN_SUPPLY,
+                    INITIAL_COLLATERAL_SUPPLY,
+                    address(collateralToken)
                 ),
                 abi.encode(hasDependency, dependencies)
             );
