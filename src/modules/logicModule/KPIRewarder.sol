@@ -33,11 +33,6 @@ contract KPIRewarder is
 {
     using SafeERC20 for IERC20;
 
-    // Active KPI
-    uint public activeKPI;
-    uint public activeTargetValue;
-    DataAssertion public activeAssertion;
-
     // KPI Storage
     uint public KPICounter;
     mapping(uint => KPI) public registryOfKPIs;
@@ -62,18 +57,6 @@ contract KPIRewarder is
     ->    if KPI is 25000, reward is 350 for the tranches [100% 0-10000, 100% 10000-20000, 50% 20000-30000]
 
     */
-
-    modifier validBondSetup(address holder) {
-        if (holder == address(this)) {
-            //the module itself will be paying the bond
-            if (address(defaultCurrency) == stakingToken) {
-                // we need to ensure the token paid for bond is different than the one used for staking, since it could mess with the balances
-                revert Module__KPIRewarder__ModuleCannotUseStakingTokenAsBond();
-            }
-        }
-
-        _;
-    }
 
     /// @inheritdoc Module
     function init(
@@ -130,28 +113,35 @@ contract KPIRewarder is
     /// @dev about the asserter address: any address can be set as asserter, it will be expected to pay for the bond on posting.
     /// The bond tokens can also be deposited in the Module and used to pay for itself, but ONLY if the bond token is different from the one being used for staking.
     /// If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
-    function prepareAssertion(
+    function postAssertion(
         bytes32 dataId,
         bytes32 data,
         address asserter,
-        uint targetValue,
+        uint assertedValue,
         uint targetKPI
-    ) external onlyOrchestratorOwner validBondSetup(asserter) {
-        //we do not control the dataId and data inputs since they are external and just stored in the oracle
+    ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
+        // =====================================================================
+        // Input Validation
 
-        setActiveTargetValue(targetValue);
-        setKPI(targetKPI);
-        _setAssertion(dataId, data, asserter);
-    }
+        //  If the asserter is the Module itself, we need to ensure the token paid for bond is different than the one used for staking, since it could mess with the balances
+        if (
+            asserter == address(this)
+                && address(defaultCurrency) == stakingToken
+        ) {
+            revert Module__KPIRewarder__ModuleCannotUseStakingTokenAsBond();
+        }
 
-    /// @inheritdoc IKPIRewarder
-    function postAssertion()
-        external
-        onlyModuleRole(ASSERTER_ROLE)
-        validBondSetup(activeAssertion.asserter)
-        returns (bytes32 assertionId)
-    {
-        // performs staking for all users in queue
+        // Make sure that we are targeting an existing KPI
+        if (KPICounter == 0 || targetKPI >= KPICounter) {
+            revert Module__KPIRewarder__InvalidKPINumber();
+        }
+
+        // Question: what kind of checks should or can we implement on the data side?
+        // Technically the value mentioned inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
+
+        // =====================================================================
+        // Staking Queue Management
+
         for (uint i = 0; i < stakingQueue.length; i++) {
             address user = stakingQueue[i];
             _stake(user, stakingQueueAmounts[user]);
@@ -159,20 +149,21 @@ contract KPIRewarder is
             stakingQueueAmounts[user] = 0;
         }
 
-        // resets the queue
-        delete stakingQueue;
+        delete stakingQueue; // reset the queue
 
-        assertionId = assertDataFor(
-            activeAssertion.dataId,
-            activeAssertion.data,
-            activeAssertion.asserter
-        );
+        // =====================================================================
+        // Assertion Posting
+
+        assertionId = assertDataFor(dataId, data, asserter);
         assertionConfig[assertionId] = RewardRoundConfiguration(
-            block.timestamp, activeTargetValue, activeKPI, false
+            block.timestamp, assertedValue, targetKPI, false
         );
+
+        // (return assertionId)
     }
 
-    // Owner functions:
+    // ========================================================================
+    // Owner Configuration Functions:
 
     // Top up funds to pay the optimistic oracle fee
     /// @inheritdoc IKPIRewarder
@@ -217,7 +208,6 @@ contract KPIRewarder is
         uint KpiNum = KPICounter;
 
         registryOfKPIs[KpiNum] = KPI(
-            block.timestamp,
             _numOfTranches,
             _totalKPIRewards,
             _continuous,
@@ -236,36 +226,6 @@ contract KPIRewarder is
         );
 
         return (KpiNum);
-    }
-
-    /// @inheritdoc IKPIRewarder
-    function setKPI(uint _KPINumber) public onlyOrchestratorOwner {
-        if (_KPINumber >= KPICounter) {
-            revert Module__KPIRewarder__InvalidKPINumber();
-        }
-        activeKPI = _KPINumber;
-    }
-
-    /// @inheritdoc IKPIRewarder
-    function setActiveTargetValue(uint targetValue)
-        public
-        onlyOrchestratorOwner
-    {
-        if (targetValue == 0) {
-            revert Module__KPIRewarder__InvalidTargetValue();
-        }
-        activeTargetValue = targetValue;
-    }
-
-    /// @notice Sets the assertion to be posted to the Optimistic Oracle
-    /// @param dataId The dataId to be posted
-    /// @param data The data to be posted
-    /// @param asserter The address of the asserter
-    function _setAssertion(bytes32 dataId, bytes32 data, address asserter)
-        internal
-    {
-        // Question: what kind of checks do we want to or can we implement? Technically the value inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
-        activeAssertion = DataAssertion(dataId, data, asserter, false);
     }
 
     // ===========================================================

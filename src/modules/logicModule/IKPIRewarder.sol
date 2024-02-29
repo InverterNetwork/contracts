@@ -26,8 +26,6 @@ interface IKPIRewarder {
 
     /// @notice A KPI to be used for reward distribution
     struct KPI {
-        /// @dev Timestamp the KPI was created at
-        uint creationTime;
         /// @dev The number of tranches the KPI is divided into
         uint numOfTranches; //
         /// @dev  The total rewards to be distributed
@@ -98,23 +96,20 @@ interface IKPIRewarder {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Prepares a full Assertion to be posted, including asserted value and KPI
+    /// @notice Posts an assertion to the Optimistic Oracle, specifying the KPI to use and the asserted value
     /// @param dataId The dataId to be posted
     /// @param data The data to be posted
     /// @param asserter The address of the asserter
-    /// @param targetValue The target value that will be asserted
+    /// @param assertedValue The target value that will be asserted
     /// @param targetKPI The KPI to be used for distribution once the assertion confirms
-    function prepareAssertion(
+    /// @return assertionId The assertionId received for the posted assertion
+    function postAssertion(
         bytes32 dataId,
         bytes32 data,
         address asserter,
-        uint targetValue,
+        uint assertedValue,
         uint targetKPI
-    ) external;
-
-    /// @notice Posts an assertion to the Optimistic Oracle
-    /// @return assertionId The assertionId received for the posted assertion
-    function postAssertion() external returns (bytes32 assertionId);
+    ) external returns (bytes32 assertionId);
 
     /// @notice Creates a KPI for the Rewarder
     /// @param _continuous Should the tranche rewards be distributed continuously or in steps
@@ -125,12 +120,6 @@ interface IKPIRewarder {
         uint[] calldata _trancheValues,
         uint[] calldata _trancheRewards
     ) external returns (uint);
-
-    /// @notice Sets the KPI to be used for the assertion
-    function setKPI(uint _KPINumber) external;
-
-    /// @notice Sets the target value used if the asserion confirms
-    function setActiveTargetValue(uint targetValue) external;
 
     /// @notice Returns the KPI with the given number
     /// @param KPInum The number of the KPI to return
@@ -146,6 +135,7 @@ interface IKPIRewarder {
         view
         returns (RewardRoundConfiguration memory);
 
-    /// @notice Deposits funds into the contract to pay for the oracle bond and fee
+    /// @notice Deposits funds into the contract so it can pay for the oracle bond and fee itself
+    /// @param amount The amount to deposit
     function depositFeeFunds(uint amount) external;
 }
