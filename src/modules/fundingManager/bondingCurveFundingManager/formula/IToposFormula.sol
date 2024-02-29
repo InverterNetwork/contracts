@@ -47,7 +47,7 @@ interface IToposFormula {
 	///         `_ca` of capital available and `_supply` TPG minted.
 	/// @param _out TPG to burn
 	/// @param _capitalAvailable Capital available to use for bonding curve burn.
-		/// @param _basePriceToCaptialRatio Precomputed factor which combines the base price multiplier with captial required
+	/// @param _basePriceToCaptialRatio Precomputed factor which combines the base price multiplier with captial required
     function tokenIn(uint256 _out, uint256 _capitalAvailable,uint _basePriceToCaptialRatio) external view returns (uint256);
 
 }

@@ -114,11 +114,11 @@ interface IToposBondingCurveFundingManager {
     function burnIssuanceTokenFor(address _owner, uint _amount) external;
 
     /// @notice Calculates the ratio of base price multiplier to capital required.
-    /// @dev Calls `_calculateBasePriceToCaptialRatio` internally. Reverts if ratio exceeds 1e36.
+    /// @dev Calls `_calculateBasePriceToCapitalRatio` internally. Reverts if ratio exceeds 1e36.
     /// @param _capitalRequired The capital required.
     /// @param _basePriceMultiplier The base price multiplier.
     /// @return _basePriceToCaptialRatio The calculated price to capital ratio.
-    function calculateBasePriceToCaptialRatio(
+    function calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
     ) external view returns (uint _basePriceToCaptialRatio);

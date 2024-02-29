@@ -132,7 +132,7 @@ contract ToposBondingCurveFundingManager is
         liquidityPool = ILiquidityPool(_liquidityPool);
         // Set formula contract
         formula = IToposFormula(bondingCurveProperties.formula);
-        _setCaptialRequired(bondingCurveProperties.capitalRequired);
+        _setCapitalRequired(bondingCurveProperties.capitalRequired);
         // Set sell fee to Max fee at initiation
         _setSellFee(MAX_SELL_FEE);
 
@@ -233,7 +233,7 @@ contract ToposBondingCurveFundingManager is
         returns (uint)
     {
         return
-            formula.spotPrice(_getCaptialAvailable(), basePriceToCaptialRatio);
+            formula.spotPrice(_getCapitalAvailable(), basePriceToCaptialRatio);
     }
 
     /// @notice Calculates and returns the static price for selling the issuance token.
@@ -245,7 +245,7 @@ contract ToposBondingCurveFundingManager is
         returns (uint)
     {
         return
-            formula.spotPrice(_getCaptialAvailable(), basePriceToCaptialRatio);
+            formula.spotPrice(_getCapitalAvailable(), basePriceToCaptialRatio);
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager
@@ -269,11 +269,11 @@ contract ToposBondingCurveFundingManager is
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager
-    function calculateBasePriceToCaptialRatio(
+    function calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
     ) external pure returns (uint) {
-        return _calculateBasePriceToCaptialRatio(
+        return _calculateBasePriceToCapitalRatio(
             _capitalRequired, _basePriceMultiplier
         );
     }
@@ -334,10 +334,10 @@ contract ToposBondingCurveFundingManager is
             );
         }
 
-        uint captialAvailable = _getCaptialAvailable();
+        uint capitalAvailable = _getCapitalAvailable();
         // The asset pool must never be empty.
-        if (captialAvailable - _amount < MIN_RESERVE) {
-            _amount = captialAvailable - MIN_RESERVE;
+        if (capitalAvailable - _amount < MIN_RESERVE) {
+            _amount = capitalAvailable - MIN_RESERVE;
         }
 
         // solhint-disable-next-line not-rely-on-time
@@ -401,7 +401,7 @@ contract ToposBondingCurveFundingManager is
         public
         onlyModuleRole(RISK_MANAGER_ROLE)
     {
-        _setCaptialRequired(_newCapitalRequired);
+        _setCapitalRequired(_newCapitalRequired);
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager
@@ -426,7 +426,7 @@ contract ToposBondingCurveFundingManager is
         returns (uint mintAmount)
     {
         // Subtract fee collected from capital held by contract
-        uint capitalAvailable = _getCaptialAvailable();
+        uint capitalAvailable = _getCapitalAvailable();
         mintAmount = formula.tokenOut(
             _depositAmount, capitalAvailable, basePriceToCaptialRatio
         );
@@ -443,7 +443,7 @@ contract ToposBondingCurveFundingManager is
         returns (uint redeemAmount)
     {
         // Subtract fee collected from capital held by contract
-        uint capitalAvailable = _getCaptialAvailable();
+        uint capitalAvailable = _getCapitalAvailable();
         redeemAmount = formula.tokenIn(
             _depositAmount, capitalAvailable, basePriceToCaptialRatio
         );
@@ -459,11 +459,11 @@ contract ToposBondingCurveFundingManager is
 
     /// @dev Returns the collateral available in this contract, subtracted by the fee collected
     /// @return uint Capital available in contract
-    function _getCaptialAvailable() internal view returns (uint) {
+    function _getCapitalAvailable() internal view returns (uint) {
         return _token.balanceOf(address(this)) - tradeFeeCollected;
     }
 
-    function _setCaptialRequired(uint _newCapitalRequired) internal {
+    function _setCapitalRequired(uint _newCapitalRequired) internal {
         if (_newCapitalRequired == 0) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();
         }
@@ -493,20 +493,20 @@ contract ToposBondingCurveFundingManager is
     /// @notice If the balance of the Capital Available (Ca) is larger than the Capital Requested (Cr), the repayable amount can be lte Cr
     /// @notice If the Ca is lt Cr, the max repayable amount is the Ca
     function _getSmallerCaCr() internal view returns (uint) {
-        uint _ca = _getCaptialAvailable();
+        uint _ca = _getCapitalAvailable();
         uint _cr = capitalRequired;
         return _ca > _cr ? _cr : _ca;
     }
 
     /// @dev Precomputes and sets the price multiplier to captial ratio
     function _updateVariables() internal {
-        basePriceToCaptialRatio = _calculateBasePriceToCaptialRatio(
+        basePriceToCaptialRatio = _calculateBasePriceToCapitalRatio(
             capitalRequired, basePriceMultiplier
         );
     }
 
     /// @dev Internal function which calculates the price multiplier to captial ratio
-    function _calculateBasePriceToCaptialRatio(
+    function _calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
     ) internal pure returns (uint _basePriceToCaptialRatio) {
