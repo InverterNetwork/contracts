@@ -17,13 +17,11 @@ contract giveBountyManagerRoles is Script {
     // ===============================================================================================================
     // Introduce corresponding bounty manager and user addresses here
     // ===============================================================================================================
-    address bountyManagerAddress =
-        address(0); // Introduce deployed bounty manager address here
+    address bountyManagerAddress = address(0); // Introduce deployed bounty manager address here
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
     function run() public {
-        address beneficiary =
-            address(1); // Introduce address of the user to be granted roles here
+        address beneficiary = address(1); // Introduce address of the user to be granted roles here
 
         vm.startBroadcast(orchestratorOwner);
 
