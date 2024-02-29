@@ -33,7 +33,19 @@ contract KPIRewarder is
 {
     using SafeERC20 for IERC20;
 
-    // KPI Storage
+    // =================================================================
+    // General Information about the working of this contract
+    // This module enable KPI based reward distribution into the staking manager by using UMAs Optimistic Oracle.
+
+    // It works in the following way:
+    // - The owner can create KPIs, which are a set of tranches with rewards assigned. These can be continuous or not (see below)
+    // - An external actor with the ASSERTER role can trigger the posting of an assertion to the UMA Oracle, specifying the value to be asserted and the KPI to use for the reward distrbution in case it resolves
+    // - To ensure fairness, all new staking requests are queued until the next KPI assertion is resolved. They will be added before posting the next assertion.
+    // - Once the assertion resolves, the UMA oracle triggers the assertionResolvedCallback() function. This will calculate the final reward value and distribute it to the stakers.
+
+    // =================================================================
+
+    // KPI and Configuration Storage
     uint public KPICounter;
     mapping(uint => KPI) public registryOfKPIs;
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
@@ -229,7 +241,7 @@ contract KPIRewarder is
     }
 
     // ===========================================================
-    // StakingManager Overrides:
+    // Deposit functions (stake() is a StakingManager override) :
 
     /// @inheritdoc IStakingManager
     function stake(uint amount)
