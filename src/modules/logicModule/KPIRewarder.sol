@@ -269,7 +269,7 @@ contract KPIRewarder is
         emit StakeEnqueued(sender, amount);
     }
 
-    /// @inheritdoc IStakingManager
+    /// @inheritdoc IKPIRewarder
     function dequeueStake() public nonReentrant {
         address user = _msgSender();
 
