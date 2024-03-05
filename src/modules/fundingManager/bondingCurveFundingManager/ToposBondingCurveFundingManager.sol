@@ -97,7 +97,7 @@ contract ToposBondingCurveFundingManager is
     /// @dev Base price multiplier in the bonding curve formula
     uint public basePriceMultiplier = 0.000001 ether;
     /// @dev (basePriceMultiplier / capitalRequired)
-    uint public basePriceToCaptialRatio;
+    uint public basePriceToCapitalRatio;
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -233,7 +233,7 @@ contract ToposBondingCurveFundingManager is
         returns (uint)
     {
         return
-            formula.spotPrice(_getCapitalAvailable(), basePriceToCaptialRatio);
+            formula.spotPrice(_getCapitalAvailable(), basePriceToCapitalRatio);
     }
 
     /// @notice Calculates and returns the static price for selling the issuance token.
@@ -245,7 +245,7 @@ contract ToposBondingCurveFundingManager is
         returns (uint)
     {
         return
-            formula.spotPrice(_getCapitalAvailable(), basePriceToCaptialRatio);
+            formula.spotPrice(_getCapitalAvailable(), basePriceToCapitalRatio);
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager
@@ -428,7 +428,7 @@ contract ToposBondingCurveFundingManager is
         // Subtract fee collected from capital held by contract
         uint capitalAvailable = _getCapitalAvailable();
         mintAmount = formula.tokenOut(
-            _depositAmount, capitalAvailable, basePriceToCaptialRatio
+            _depositAmount, capitalAvailable, basePriceToCapitalRatio
         );
     }
 
@@ -445,7 +445,7 @@ contract ToposBondingCurveFundingManager is
         // Subtract fee collected from capital held by contract
         uint capitalAvailable = _getCapitalAvailable();
         redeemAmount = formula.tokenIn(
-            _depositAmount, capitalAvailable, basePriceToCaptialRatio
+            _depositAmount, capitalAvailable, basePriceToCapitalRatio
         );
 
         // The asset pool must never be empty.
@@ -498,22 +498,22 @@ contract ToposBondingCurveFundingManager is
         return _ca > _cr ? _cr : _ca;
     }
 
-    /// @dev Precomputes and sets the price multiplier to captial ratio
+    /// @dev Precomputes and sets the price multiplier to capital ratio
     function _updateVariables() internal {
-        basePriceToCaptialRatio = _calculateBasePriceToCapitalRatio(
+        basePriceToCapitalRatio = _calculateBasePriceToCapitalRatio(
             capitalRequired, basePriceMultiplier
         );
     }
 
-    /// @dev Internal function which calculates the price multiplier to captial ratio
+    /// @dev Internal function which calculates the price multiplier to capital ratio
     function _calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
-    ) internal pure returns (uint _basePriceToCaptialRatio) {
-        _basePriceToCaptialRatio = FixedPointMathLib.fdiv(
+    ) internal pure returns (uint _basePriceToCapitalRatio) {
+        _basePriceToCapitalRatio = FixedPointMathLib.fdiv(
             _basePriceMultiplier, _capitalRequired, FixedPointMathLib.WAD
         );
-        if (_basePriceToCaptialRatio > 1e36) {
+        if (_basePriceToCapitalRatio > 1e36) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();
         }
     }

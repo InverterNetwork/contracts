@@ -62,7 +62,7 @@ import {RedeemingBondingCurveFundingManagerBaseTest} from
 contract ToposBondingCurveFundingManagerTest is ModuleTest {
     string private constant NAME = "Topos Token";
     string private constant SYMBOL = "TPG";
-    uint private constant initialCaptialRequirements = 1_000_000 * 1e18; // Taken from Topos repo test case
+    uint private constant initialCapitalRequirements = 1_000_000 * 1e18; // Taken from Topos repo test case
 
     ToposBondingCurveFundingManagerMock bondingCurveFundingManager;
     address formula;
@@ -87,7 +87,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
 
         // Set Formula contract properties
         bc_properties.formula = formula;
-        bc_properties.capitalRequired = initialCaptialRequirements;
+        bc_properties.capitalRequired = initialCapitalRequirements;
 
         address impl = address(new ToposBondingCurveFundingManagerMock());
 

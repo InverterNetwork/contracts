@@ -4,7 +4,7 @@ import {IToposFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IToposFormula.sol";
 
 contract ToposFormulaMock is IToposFormula {
-    function spotPrice(uint _capitalAvailable, uint _basePriceToCaptialRatio)
+    function spotPrice(uint _capitalAvailable, uint _basePriceToCapitalRatio)
         external
         view
         returns (uint)
@@ -13,12 +13,12 @@ contract ToposFormulaMock is IToposFormula {
     function tokenOut(
         uint _in,
         uint _capitalAvailable,
-        uint _basePriceToCaptialRatio
+        uint _basePriceToCapitalRatio
     ) external view returns (uint) {}
 
     function tokenIn(
         uint _out,
         uint _capitalAvailable,
-        uint _basePriceToCaptialRatio
+        uint _basePriceToCapitalRatio
     ) external view returns (uint) {}
 }
