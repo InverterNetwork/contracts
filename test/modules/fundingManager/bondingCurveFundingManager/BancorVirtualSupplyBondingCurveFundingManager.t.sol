@@ -477,12 +477,15 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     function testBuyOrderFor(address to, uint amount) public {
         // Setup
 
-        vm.assume(to != address(0));
+        address buyer = makeAddr("buyer");
+        vm.assume(
+            to != address(0) && to != address(bondingCurveFundingManager)
+                && to != buyer
+        );
 
         // Above an amount of 1e38 the BancorFormula starts to revert.
         amount = bound(amount, 1, 1e38);
 
-        address buyer = makeAddr("buyer");
         assertNotEq(to, buyer);
 
         _prepareBuyConditions(buyer, amount);
@@ -925,177 +928,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         assertEq(
             bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
         );
-    }
-
-    /* Test calculatePurchaseReturn function
-        ├── When deposit amount is 0
-        │       └── it should revert 
-        └── When deposit amount is not 0
-                ├── when the fee is 0
-                │       └── it should succeed 
-                └── when the fee is not 0
-                        └── it should succeed 
-    */
-
-    function testCalculatePurchaseReturn_FailsIfDepositAmountZero() public {
-        uint depositAmount = 0;
-
-        vm.expectRevert(
-            IBancorVirtualSupplyBondingCurveFundingManager
-                .BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount
-                .selector
-        );
-        bondingCurveFundingManager.calculatePurchaseReturn(depositAmount);
-    }
-
-    function testCalculatePurchaseReturnWithZeroFee(uint _depositAmount)
-        public
-    {
-        // Above an amount of 1e38 the BancorFormula starts to revert.
-        _depositAmount = bound(_depositAmount, 1, 1e38);
-
-        // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
-            .calculatePurchaseReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying(),
-            _depositAmount
-        );
-        uint functionReturn =
-            bondingCurveFundingManager.calculatePurchaseReturn(_depositAmount);
-        assertEq(functionReturn, formulaReturn);
-    }
-
-    function testCalculatePurchaseReturnWithFee(uint _depositAmount, uint _fee)
-        public
-    {
-        // Setup
-        uint _bps = bondingCurveFundingManager.call_BPS();
-
-        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
-            // Above an amount of 1e38 the BancorFormula starts to revert.
-        _depositAmount = bound(_depositAmount, 1, 1e38);
-
-        vm.prank(owner_address);
-        bondingCurveFundingManager.setBuyFee(_fee);
-
-        // We calculate how much the real deposit amount will be after fees
-        uint feeAmount =
-            (_depositAmount * _fee) / bondingCurveFundingManager.call_BPS();
-        uint buyAmountMinusFee = _depositAmount - feeAmount;
-
-        // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
-            .calculatePurchaseReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying(),
-            buyAmountMinusFee
-        );
-        uint functionReturn =
-            bondingCurveFundingManager.calculatePurchaseReturn(_depositAmount);
-        assertEq(functionReturn, formulaReturn);
-    }
-
-    /* Test calculateSaleReturn function
-        ├── When deposit amount is 0
-        │       └── it should revert 
-        └── When deposit amount is not 0
-                ├── when the fee is 0
-                │       └── it should succeed 
-                └── when the fee is not 0
-                        └── it should succeed 
-    */
-
-    function testCalculateSaleReturn_FailsIfDepositAmountZero() public {
-        uint depositAmount = 0;
-
-        vm.expectRevert(
-            IBancorVirtualSupplyBondingCurveFundingManager
-                .BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount
-                .selector
-        );
-        bondingCurveFundingManager.calculateSaleReturn(depositAmount);
-    }
-
-    function testCalculateSaleReturnWithZeroFee(uint _depositAmount) public {
-        // Above an amount of 1e26 the BancorFormula starts to revert.
-        _depositAmount = bound(_depositAmount, 1, 1e26);
-
-        // Set virtual supply to some number above collateral supply
-        // Set virtual collateral to some number
-        uint newVirtualTokenSupply = _depositAmount * 4;
-        uint newVirtualCollateral = _depositAmount * 2;
-        vm.startPrank(owner_address);
-        {
-            bondingCurveFundingManager.setVirtualTokenSupply(
-                newVirtualTokenSupply
-            );
-            bondingCurveFundingManager.setVirtualCollateralSupply(
-                newVirtualCollateral
-            );
-        }
-        vm.stopPrank();
-
-        // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
-            .calculateSaleReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying(),
-            _depositAmount
-        );
-        uint functionReturn =
-            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
-        assertEq(functionReturn, formulaReturn);
-    }
-
-    function testCalculateSaleReturnWithFee(uint _depositAmount, uint _fee)
-        public
-    {
-        // Setup
-        uint _bps = bondingCurveFundingManager.call_BPS();
-
-        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
-            // Above an amount of 1e26 the BancorFormula starts to revert.
-        _depositAmount = bound(_depositAmount, 1, 1e26);
-
-        // Set sell Fee
-        // Set virtual supply to some number above collateral supply
-        // Set virtual collateral to some number
-        uint newVirtualTokenSupply = _depositAmount * 4;
-        uint newVirtualCollateral = _depositAmount * 2;
-        vm.startPrank(owner_address);
-        {
-            bondingCurveFundingManager.setSellFee(_fee);
-            bondingCurveFundingManager.setVirtualTokenSupply(
-                newVirtualTokenSupply
-            );
-            bondingCurveFundingManager.setVirtualCollateralSupply(
-                newVirtualCollateral
-            );
-        }
-        vm.stopPrank();
-
-        // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
-            .calculateSaleReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForSelling(),
-            _depositAmount
-        );
-
-        // We calculate how much if the initial deposit we should get back based on the fee
-        uint feeAmount =
-            (formulaReturn * _fee) / bondingCurveFundingManager.call_BPS();
-        uint sellAmountMinusFee = formulaReturn - feeAmount;
-
-        uint functionReturn =
-            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
-
-        assertEq(functionReturn, sellAmountMinusFee);
     }
 
     //--------------------------------------------------------------------------

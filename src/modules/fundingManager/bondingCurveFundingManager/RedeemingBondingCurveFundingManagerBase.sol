@@ -95,8 +95,18 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     }
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function setSellFee(uint _fee) external onlyOrchestratorOwner {
+    function setSellFee(uint _fee) external virtual onlyOrchestratorOwner {
         _setSellFee(_fee);
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    function calculateSaleReturn(uint _depositAmount)
+        external
+        view
+        virtual
+        returns (uint redeemAmount)
+    {
+        return _calculateSaleReturn(_depositAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -165,7 +175,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
         // Require that enough collateral token is held to be redeemable
         if (
-            redeemAmount
+            redeemAmount + tradeFeeCollected
                 > __Module_orchestrator.fundingManager().token().balanceOf(
                     address(this)
                 )
@@ -208,6 +218,26 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
+    }
+
+    /// @dev This function takes into account any applicable sell fees before computing the
+    /// collateral amount to be redeemed. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
+    function _calculateSaleReturn(uint _depositAmount)
+        internal
+        view
+        returns (uint redeemAmount)
+    {
+        if (_depositAmount == 0) {
+            revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
+        }
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
+        if (sellFee > 0) {
+            (redeemAmount, /* feeAmount */ ) =
+                _calculateNetAmountAndFee(redeemAmount, sellFee);
+        }
+        return redeemAmount;
     }
 
     /// @dev Redeems collateral based on the deposit amount.

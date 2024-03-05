@@ -21,7 +21,7 @@ interface IRepayer {
     );
 
     /// @notice Event emitted when the repayable amount is updated
-    event RepayableChanged(uint newValue, uint oldValue);
+    event RepayableAmountChanged(uint newValue, uint oldValue);
 
     //--------------------------------------------------------------------------
     // Functions
