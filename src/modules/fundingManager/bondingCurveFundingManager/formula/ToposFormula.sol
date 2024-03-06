@@ -43,7 +43,7 @@ contract ToposFormula is IToposFormula {
 	/// @inheritdoc IToposFormula
 	function tokenOut(uint256 _in, uint256 _capitalAvailable, uint _basePriceToCaptialRatio) public pure returns (uint256) {
 		// If the input is bigger inverse will give us 0.
-		if (_capitalAvailable > 1e36 || _capitalAvailable + _in > 1e36) revert ToposFormula__InvalidInputAmount();
+		if (_capitalAvailable > 1e36 || _capitalAvailable + _in > 1e36 || _capitalAvailable == 0) revert ToposFormula__InvalidInputAmount();
 
 		uint256 inv1 = _inverse(_capitalAvailable);
 		uint256 inv2 = _inverse(_capitalAvailable + _in);
@@ -69,7 +69,6 @@ contract ToposFormula is IToposFormula {
 	/// https://github.com/paulrberg/prb-math/blob/86c068e21f9ba229025a77b951bd3c4c4cf103da/contracts/PRBMathUD60x18.sol#L214
 	/// @param x 18 decimal fixed point number to inverse. 0 < x <= 1e36
 	function _inverse(uint256 x) internal pure returns (uint256 res) {
-		if (x == 0)revert ToposFormula__InvalidInputAmount();
 		unchecked {
 			res = 1e36 / x;
 		}

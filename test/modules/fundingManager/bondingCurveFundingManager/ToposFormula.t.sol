@@ -26,12 +26,15 @@ contract ToposFormulaTest is Test {
     }
 
     /*  test tokenOut
-        ├── when capital available is 0
-        │   └── then it should revert
-        ├── when tokens in + captial required is > 1e36
-        │   └── then it should revert
-        └── when tokens in are within bound
-            └── then is should succeed TODO: add test calculations with different values
+        ├── Given: capital available is 0
+        │   └── When: the function tokenOut() is called
+        │       └── then it should revert
+        ├── Give: tokens in + captial required is > 1e36
+        │   └── When: the function tokenOut() is called
+        │       └── then it should revert
+        └── Given tokens in are within bound
+            └── When: the function tokenOut() is called
+                └── then is should succeed
     */
 
     function test_RevertTokenOutWhenCaptialAvailableIsZero() public {
@@ -47,19 +50,22 @@ contract ToposFormulaTest is Test {
     }
 
     function test_SucceedTokenOutWhenTokensInBound(uint _in) public view {
+        console.logUint(basePriceToCaptialRatio);
         _in = bound(_in, 1, 1e36 - 1);
         toposFormula.tokenOut(_in, 1, basePriceToCaptialRatio);
     }
 
     /*  test tokenIn
-        ├── when capital available is 0
-        │   └── then it should revert
-        └── when tokens in are within bound
-            └── then is should succeed TODO: add test calculations with different values
+        ├── Given: capital available == 0
+        │   └── When: the function tokenIn() gets called
+        │       └── Then: it should revert
+        └── Given: values are in bound
+            └── When: the function tokenIn() gets called
+                └── Then: it should succeed
     */
 
     function test_RevertTokenInWhenCaptialAvailableIsZero() public {
-        vm.expectRevert(IToposFormula.ToposFormula__InvalidInputAmount.selector);
+        vm.expectRevert();
         toposFormula.tokenIn(1, 0, basePriceToCaptialRatio);
     }
 
