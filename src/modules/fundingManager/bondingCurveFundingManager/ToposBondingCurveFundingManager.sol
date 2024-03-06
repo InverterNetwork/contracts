@@ -67,12 +67,14 @@ contract ToposBondingCurveFundingManager is
     uint public constant MIN_RESERVE = 1 ether;
     /// @dev Max seizable amount is 1% expressed in BPS
     uint64 public constant MAX_SEIZE = 100;
-    /// @dev Max fee for selling is TODO: See Qs, expressed in BPS
-    uint64 public constant MAX_SELL_FEE = 100; // BPS, 2.5%
+    /// @dev Max fee for selling is 1% expressed in BPS
+    uint64 public constant MAX_SELL_FEE = 100;
     /// @dev Time interval between seizes
     uint64 public constant SEIZE_DELAY = 7 days;
 
+    /// @dev Role associated with the managing of the bonding curve values
     bytes32 public constant RISK_MANAGER_ROLE = "RISK_MANAGER";
+    /// @dev Role associated with the managing of setting withdraw addresses and setting the fee
     bytes32 public constant COVER_MANAGER_ROLE = "COVER_MANAGER";
 
     //--------------------------------------------------------------------------
@@ -83,19 +85,19 @@ contract ToposBondingCurveFundingManager is
     /// @notice Repayable amount collateral which can be pulled from the contract by the liquidity pool
     uint public repayableAmount;
     /// @dev The current seize percentage expresses in BPS
-    uint64 public currentSeize = MAX_SEIZE;
+    uint64 public currentSeize;
     /// @dev Address of the liquidity pool who has access to the collateral held by the funding manager
     /// through the Repayer functionality
     ILiquidityPool public liquidityPool;
     /// @dev Token that is accepted by this funding manager for deposits.
     IERC20 private _token;
     /// @dev Tracks last seize timestamp to determine eligibility for subsequent seizures based on SEIZE_DELAY.
-    uint lastSeizeTimestamp; //TODO: Test if this needs to be initiated?
+    uint public lastSeizeTimestamp;
     /// @dev the amount of value that is needed to operate the Topos protocol according to market size
     /// and conditions
     uint public capitalRequired;
     /// @dev Base price multiplier in the bonding curve formula
-    uint public basePriceMultiplier = 0.000001 ether;
+    uint public basePriceMultiplier;
     /// @dev (basePriceMultiplier / capitalRequired)
     uint public basePriceToCaptialRatio;
 
@@ -132,13 +134,21 @@ contract ToposBondingCurveFundingManager is
         liquidityPool = ILiquidityPool(_liquidityPool);
         // Set formula contract
         formula = IToposFormula(bondingCurveProperties.formula);
-        _setCaptialRequired(bondingCurveProperties.capitalRequired);
+        // Set capital required
+        _setCapitalRequired(bondingCurveProperties.capitalRequired);
+        // Set current seize to MAX_SEIZE
+        _setSeize(bondingCurveProperties.seize);
+        // Set initial
+        _setBaseMultiplier(bondingCurveProperties.basePriceMultiplier);
         // Set sell fee to Max fee at initiation
-        _setSellFee(MAX_SELL_FEE);
+        _setSellFee(bondingCurveProperties.sellFee);
+        // Set buying functionality to open if true. By default buying is false
+        if (bondingCurveProperties.buyIsOpen == true) _openBuy();
+        // Set selling functionality to open if true. By default selling is false
+        if (bondingCurveProperties.sellIsOpen == true) _openSell();
 
         // TODO:
-        // - Add reserve address to init
-        // - Sort out if we need issuance token decimal and collateral decimal for calculations
+        // - Add reserve address to init. Waiting on answer of Topos on how to implement
     }
 
     //--------------------------------------------------------------------------
@@ -251,26 +261,6 @@ contract ToposBondingCurveFundingManager is
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager
-    function getSaleFeeForAmount(uint _amountIn)
-        external
-        view
-        returns (uint feeAmount)
-    {
-        ( /* netAmount */ , feeAmount) =
-            _calculateNetAmountAndFee(_amountIn, sellFee);
-    }
-
-    /// @inheritdoc IToposBondingCurveFundingManager
-    function getPurchaseFeeForAmount(uint _amountIn)
-        external
-        view
-        returns (uint feeAmount)
-    {
-        ( /* netAmount */ , feeAmount) =
-            _calculateNetAmountAndFee(_amountIn, buyFee);
-    }
-
-    /// @inheritdoc IToposBondingCurveFundingManager
     function calculateBasePriceToCaptialRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
@@ -290,9 +280,9 @@ contract ToposBondingCurveFundingManager is
 
     /// @inheritdoc IToposBondingCurveFundingManager
     function seizable() public view returns (uint) {
-        uint currentBalance = _token.balanceOf(address(this));
+        uint currentBalance = _getCaptialAvailable();
 
-        return (currentBalance * currentSeize) / 10_000;
+        return (currentBalance * currentSeize) / BPS;
     }
 
     //--------------------------------------------------------------------------
@@ -353,10 +343,7 @@ contract ToposBondingCurveFundingManager is
         public
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        if (_seize > MAX_SEIZE) {
-            revert ToposBondingCurveFundingManager__InvalidSeize(_seize);
-        }
-        currentSeize = _seize;
+        _setSeize(_seize);
     }
 
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
@@ -403,7 +390,7 @@ contract ToposBondingCurveFundingManager is
         public
         onlyModuleRole(RISK_MANAGER_ROLE)
     {
-        _setCaptialRequired(_newCapitalRequired);
+        _setCapitalRequired(_newCapitalRequired);
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager
@@ -427,8 +414,11 @@ contract ToposBondingCurveFundingManager is
         override(BondingCurveFundingManagerBase)
         returns (uint mintAmount)
     {
-        // Subtract fee collected from capital held by contract
         uint capitalAvailable = _getCaptialAvailable();
+        if (capitalAvailable == 0) {
+            revert ToposBondingCurveFundingManager__NoCapitalAvailable();
+        }
+
         mintAmount = formula.tokenOut(
             _depositAmount, capitalAvailable, basePriceToCaptialRatio
         );
@@ -446,6 +436,9 @@ contract ToposBondingCurveFundingManager is
     {
         // Subtract fee collected from capital held by contract
         uint capitalAvailable = _getCaptialAvailable();
+        if (capitalAvailable == 0) {
+            revert ToposBondingCurveFundingManager__NoCapitalAvailable();
+        }
         redeemAmount = formula.tokenIn(
             _depositAmount, capitalAvailable, basePriceToCaptialRatio
         );
@@ -459,13 +452,23 @@ contract ToposBondingCurveFundingManager is
     //--------------------------------------------------------------------------
     // Internal Functions
 
+    /// @dev Set the current seize state, which defines the percentage of seizable amount
+    function _setSeize(uint64 _seize) internal {
+        if (_seize > MAX_SEIZE) {
+            revert ToposBondingCurveFundingManager__InvalidSeize(_seize);
+        }
+        currentSeize = _seize;
+    }
+
     /// @dev Returns the collateral available in this contract, subtracted by the fee collected
     /// @return uint Capital available in contract
     function _getCaptialAvailable() internal view returns (uint) {
         return _token.balanceOf(address(this)) - tradeFeeCollected;
     }
 
-    function _setCaptialRequired(uint _newCapitalRequired) internal {
+    /// @dev Set the capital required state used in the bonding curve calculations.
+    /// _newCaptialRequired cannot be zero
+    function _setCapitalRequired(uint _newCapitalRequired) internal {
         if (_newCapitalRequired == 0) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();
         }
@@ -474,6 +477,8 @@ contract ToposBondingCurveFundingManager is
         _updateVariables();
     }
 
+    /// @dev Set the base multiplier used in the bonding curve calculations.
+    /// _newCaptialRequired cannot be zero.
     function _setBaseMultiplier(uint _newBasePriceMultiplier) internal {
         if (_newBasePriceMultiplier == 0) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();

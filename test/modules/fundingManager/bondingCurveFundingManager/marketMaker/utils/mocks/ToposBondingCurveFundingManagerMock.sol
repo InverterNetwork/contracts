@@ -30,4 +30,60 @@ contract ToposBondingCurveFundingManagerMock is
     function call_getRepayableAmount() external view returns (uint) {
         return _getRepayableAmount();
     }
+
+    function call_updateVariables() external {
+        _updateVariables();
+    }
+
+    function call__getRepayableAmount() external view returns (uint) {
+        return _getRepayableAmount();
+    }
+
+    function call_calculateBasePriceToCaptialRatio(
+        uint _capitalRequired,
+        uint _basePriceMultiplier
+    ) external pure returns (uint) {
+        return _calculateBasePriceToCaptialRatio(
+            _capitalRequired, _basePriceMultiplier
+        );
+    }
+
+    function call_getCaptialAvailable() external view returns (uint) {
+        return _getCaptialAvailable();
+    }
+
+    function call_setCaptialRequired(uint _newCapitalRequired) external {
+        _setCapitalRequired(_newCapitalRequired);
+    }
+
+    function call_setBaseMultiplier(uint _newBasePriceMultiplier) external {
+        _setBaseMultiplier(_newBasePriceMultiplier);
+    }
+
+    function call_setSeize(uint64 _seize) external {
+        _setSeize(_seize);
+    }
+
+    function call_issueTokensFormulaWrapper(uint _depositAmount)
+        external
+        view
+        returns (uint)
+    {
+        return _issueTokensFormulaWrapper(_depositAmount);
+    }
+
+    function call_redeemTokensFormulaWrapper(uint _depositAmount)
+        external
+        view
+        returns (uint)
+    {
+        return _redeemTokensFormulaWrapper(_depositAmount);
+    }
+
+    function call_mintIssuanceTokenToAddressHelper(
+        address _account,
+        uint _amount
+    ) public {
+        _mint(_account, _amount);
+    }
 }
