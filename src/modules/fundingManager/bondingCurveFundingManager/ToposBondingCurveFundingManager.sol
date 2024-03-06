@@ -99,7 +99,7 @@ contract ToposBondingCurveFundingManager is
     /// @dev Base price multiplier in the bonding curve formula
     uint public basePriceMultiplier;
     /// @dev (basePriceMultiplier / capitalRequired)
-    uint public basePriceToCaptialRatio;
+    uint public basePriceToCapitalRatio;
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -243,7 +243,7 @@ contract ToposBondingCurveFundingManager is
         returns (uint)
     {
         return formula.spotPrice(
-            _getCaptialAvailable(), capitalRequired, basePriceMultiplier
+            _getCapitalAvailable(), capitalRequired, basePriceMultiplier
         );
     }
 
@@ -256,16 +256,16 @@ contract ToposBondingCurveFundingManager is
         returns (uint)
     {
         return formula.spotPrice(
-            _getCaptialAvailable(), capitalRequired, basePriceMultiplier
+            _getCapitalAvailable(), capitalRequired, basePriceMultiplier
         );
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager
-    function calculateBasePriceToCaptialRatio(
+    function calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
     ) external pure returns (uint) {
-        return _calculateBasePriceToCaptialRatio(
+        return _calculateBasePriceToCapitalRatio(
             _capitalRequired, _basePriceMultiplier
         );
     }
@@ -280,7 +280,7 @@ contract ToposBondingCurveFundingManager is
 
     /// @inheritdoc IToposBondingCurveFundingManager
     function seizable() public view returns (uint) {
-        uint currentBalance = _getCaptialAvailable();
+        uint currentBalance = _getCapitalAvailable();
 
         return (currentBalance * currentSeize) / BPS;
     }
@@ -326,10 +326,10 @@ contract ToposBondingCurveFundingManager is
             );
         }
 
-        uint captialAvailable = _getCaptialAvailable();
+        uint capitalAvailable = _getCapitalAvailable();
         // The asset pool must never be empty.
-        if (captialAvailable - _amount < MIN_RESERVE) {
-            _amount = captialAvailable - MIN_RESERVE;
+        if (capitalAvailable - _amount < MIN_RESERVE) {
+            _amount = capitalAvailable - MIN_RESERVE;
         }
 
         // solhint-disable-next-line not-rely-on-time
@@ -414,13 +414,13 @@ contract ToposBondingCurveFundingManager is
         override(BondingCurveFundingManagerBase)
         returns (uint mintAmount)
     {
-        uint capitalAvailable = _getCaptialAvailable();
+        uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
             revert ToposBondingCurveFundingManager__NoCapitalAvailable();
         }
 
         mintAmount = formula.tokenOut(
-            _depositAmount, capitalAvailable, basePriceToCaptialRatio
+            _depositAmount, capitalAvailable, basePriceToCapitalRatio
         );
     }
 
@@ -435,12 +435,12 @@ contract ToposBondingCurveFundingManager is
         returns (uint redeemAmount)
     {
         // Subtract fee collected from capital held by contract
-        uint capitalAvailable = _getCaptialAvailable();
+        uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
             revert ToposBondingCurveFundingManager__NoCapitalAvailable();
         }
         redeemAmount = formula.tokenIn(
-            _depositAmount, capitalAvailable, basePriceToCaptialRatio
+            _depositAmount, capitalAvailable, basePriceToCapitalRatio
         );
 
         // The asset pool must never be empty.
@@ -462,12 +462,12 @@ contract ToposBondingCurveFundingManager is
 
     /// @dev Returns the collateral available in this contract, subtracted by the fee collected
     /// @return uint Capital available in contract
-    function _getCaptialAvailable() internal view returns (uint) {
+    function _getCapitalAvailable() internal view returns (uint) {
         return _token.balanceOf(address(this)) - tradeFeeCollected;
     }
 
     /// @dev Set the capital required state used in the bonding curve calculations.
-    /// _newCaptialRequired cannot be zero
+    /// _newCapitalRequired cannot be zero
     function _setCapitalRequired(uint _newCapitalRequired) internal {
         if (_newCapitalRequired == 0) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();
@@ -478,7 +478,7 @@ contract ToposBondingCurveFundingManager is
     }
 
     /// @dev Set the base multiplier used in the bonding curve calculations.
-    /// _newCaptialRequired cannot be zero.
+    /// _newCapitalRequired cannot be zero.
     function _setBaseMultiplier(uint _newBasePriceMultiplier) internal {
         if (_newBasePriceMultiplier == 0) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();
@@ -500,27 +500,27 @@ contract ToposBondingCurveFundingManager is
     /// @notice If the balance of the Capital Available (Ca) is larger than the Capital Requested (Cr), the repayable amount can be lte Cr
     /// @notice If the Ca is lt Cr, the max repayable amount is the Ca
     function _getSmallerCaCr() internal view returns (uint) {
-        uint _ca = _getCaptialAvailable();
+        uint _ca = _getCapitalAvailable();
         uint _cr = capitalRequired;
         return _ca > _cr ? _cr : _ca;
     }
 
-    /// @dev Precomputes and sets the price multiplier to captial ratio
+    /// @dev Precomputes and sets the price multiplier to capital ratio
     function _updateVariables() internal {
-        basePriceToCaptialRatio = _calculateBasePriceToCaptialRatio(
+        basePriceToCapitalRatio = _calculateBasePriceToCapitalRatio(
             capitalRequired, basePriceMultiplier
         );
     }
 
-    /// @dev Internal function which calculates the price multiplier to captial ratio
-    function _calculateBasePriceToCaptialRatio(
+    /// @dev Internal function which calculates the price multiplier to capital ratio
+    function _calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
-    ) internal pure returns (uint _basePriceToCaptialRatio) {
-        _basePriceToCaptialRatio = FixedPointMathLib.fdiv(
+    ) internal pure returns (uint _basePriceToCapitalRatio) {
+        _basePriceToCapitalRatio = FixedPointMathLib.fdiv(
             _basePriceMultiplier, _capitalRequired, FixedPointMathLib.WAD
         );
-        if (_basePriceToCaptialRatio > 1e36) {
+        if (_basePriceToCapitalRatio > 1e36) {
             revert ToposBondingCurveFundingManager__InvalidInputAmount();
         }
     }

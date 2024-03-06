@@ -39,20 +39,20 @@ contract ToposBondingCurveFundingManagerMock is
         return _getRepayableAmount();
     }
 
-    function call_calculateBasePriceToCaptialRatio(
+    function call_calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
     ) external pure returns (uint) {
-        return _calculateBasePriceToCaptialRatio(
+        return _calculateBasePriceToCapitalRatio(
             _capitalRequired, _basePriceMultiplier
         );
     }
 
-    function call_getCaptialAvailable() external view returns (uint) {
-        return _getCaptialAvailable();
+    function call_getCapitalAvailable() external view returns (uint) {
+        return _getCapitalAvailable();
     }
 
-    function call_setCaptialRequired(uint _newCapitalRequired) external {
+    function call_setCapitalRequired(uint _newCapitalRequired) external {
         _setCapitalRequired(_newCapitalRequired);
     }
 

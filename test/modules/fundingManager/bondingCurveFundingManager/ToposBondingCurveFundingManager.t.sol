@@ -446,33 +446,33 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
-    /*  Test calculateBasePriceToCaptialRatio()
-        └── When: the function calculateBasePriceToCaptialRatio() gets called
-            └── Then: it should return the return value of _calculateBasePriceToCaptialRatio()
+    /*  Test calculatebasePriceToCapitalRatio()
+        └── When: the function calculatebasePriceToCapitalRatio() gets called
+            └── Then: it should return the return value of _calculateBasePriceToCapitalRatio()
     */
 
-    function testCalculateBasePriceToCaptialRatio_worksGivenReturnValueInternalFunction(
-        uint _captialRequirements,
+    function testCalculatebasePriceToCapitalRatio_worksGivenReturnValueInternalFunction(
+        uint _capitalRequirements,
         uint _basePriceMultiplier
     ) public {
         // Set bounds so when values used for calculation, the result < 1e36
-        _captialRequirements = bound(_captialRequirements, 1, 1e18);
+        _capitalRequirements = bound(_capitalRequirements, 1, 1e18);
         _basePriceMultiplier = bound(_basePriceMultiplier, 1, 1e18);
 
         // Setup
         bondingCurveFundingManager.setBaseMultiplier(_basePriceMultiplier);
-        bondingCurveFundingManager.setCapitalRequired(_captialRequirements);
+        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
 
         // Use expected value from internal function
         uint expectedReturnValue = bondingCurveFundingManager
-            .call_calculateBasePriceToCaptialRatio(
-            _captialRequirements, _basePriceMultiplier
+            .call_calculateBasePriceToCapitalRatio(
+            _capitalRequirements, _basePriceMultiplier
         );
 
         // Execute Tx
         uint functionReturnValue = bondingCurveFundingManager
-            .call_calculateBasePriceToCaptialRatio(
-            _captialRequirements, _basePriceMultiplier
+            .call_calculateBasePriceToCapitalRatio(
+            _capitalRequirements, _basePriceMultiplier
         );
 
         // Assert expected return value
@@ -717,7 +717,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
             │       └── Then: it should revert
             ├── And: the capital available - _amount < MIN_RESERVE
             │   └── When: the function seize() gets called
-            │       └── Then: it should transfer the value of captialAvailable - MIN_RESERVE tokens to the msg.sender
+            │       └── Then: it should transfer the value of capitalAvailable - MIN_RESERVE tokens to the msg.sender
             │           ├── And: it should set the current timeStamp to lastSeizeTimestamp
             │           └── And: it should emit an event
             └── And: the capital available - _amount > MIN_RESERVE
@@ -804,7 +804,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         uint amount = 1e16; // 0.01 ether
         // Return value check for emit. Expected return is 0. Capital available - MIN_RESERVE
         uint expectedReturnValue =
-            bondingCurveFundingManager.call_getCaptialAvailable() - MIN_RESERVE;
+            bondingCurveFundingManager.call_getCapitalAvailable() - MIN_RESERVE;
         assertEq(expectedReturnValue, 0);
 
         //Get balance before seize
@@ -1186,14 +1186,14 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         _depositAmount = bound(
             _depositAmount,
             1,
-            1e36 - bondingCurveFundingManager.call_getCaptialAvailable()
+            1e36 - bondingCurveFundingManager.call_getCapitalAvailable()
         );
 
         // Get expected return value
         uint expectedReturnValue = IToposFormula(formula).tokenOut(
             _depositAmount,
-            bondingCurveFundingManager.call_getCaptialAvailable(),
-            bondingCurveFundingManager.basePriceToCaptialRatio()
+            bondingCurveFundingManager.call_getCapitalAvailable(),
+            bondingCurveFundingManager.basePriceToCapitalRatio()
         );
         // Actual return value
         uint functionReturnValue = bondingCurveFundingManager
@@ -1244,7 +1244,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         // triggers a change in return value as the balance may never dip below MIN_RESERVE, making the return
         // value 0
         uint expectedReturnValue =
-            bondingCurveFundingManager.call_getCaptialAvailable() - MIN_RESERVE;
+            bondingCurveFundingManager.call_getCapitalAvailable() - MIN_RESERVE;
 
         // Get return value
         uint functionReturnValue = bondingCurveFundingManager
@@ -1261,7 +1261,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         _depositAmount = bound(
             _depositAmount,
             1,
-            1e36 - bondingCurveFundingManager.call_getCaptialAvailable()
+            1e36 - bondingCurveFundingManager.call_getCapitalAvailable()
         );
         _mintCollateralTokenToAddressHelper(
             address(bondingCurveFundingManager), _depositAmount
@@ -1270,8 +1270,8 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         // Get expected return value
         uint redeemAmount = IToposFormula(formula).tokenIn(
             _depositAmount,
-            bondingCurveFundingManager.call_getCaptialAvailable(),
-            bondingCurveFundingManager.basePriceToCaptialRatio()
+            bondingCurveFundingManager.call_getCapitalAvailable(),
+            bondingCurveFundingManager.basePriceToCapitalRatio()
         );
         // Get return value
         uint functionReturnValue = bondingCurveFundingManager
@@ -1281,7 +1281,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         assertApproxEqRel(functionReturnValue, redeemAmount, 0.0000000001e18);
     }
 
-    /*  Test _getCaptialAvailable()
+    /*  Test _getCapitalAvailable()
         └── When: _getCapitalAvailable() gets called
             └── Then: it should return balance - tradeFeeCollected
     */
@@ -1309,7 +1309,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         uint expectedReturnValue =
             _token.balanceOf(address(bondingCurveFundingManager)) - feeCollected;
 
-        uint returnValue = bondingCurveFundingManager.call_getCaptialAvailable();
+        uint returnValue = bondingCurveFundingManager.call_getCapitalAvailable();
 
         // Assert value
         assertEq(returnValue, expectedReturnValue);
@@ -1323,10 +1323,10 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
             └── When: the function _setCapitalRequired() is called
                 └── Then: it should succeed in writing the new value to state
                     ├── And: it should emit an event
-                    └── And: it should call _updateVariables() to update basePriceToCaptialRatio
+                    └── And: it should call _updateVariables() to update basePriceToCapitalRatio
      */
 
-    function testInternalSetCaptialRequired_revertGivenValueIsZero() public {
+    function testInternalSetCapitalRequired_revertGivenValueIsZero() public {
         // Set invalid value
         uint capitalRequirements = 0;
         // Expect Revert
@@ -1338,13 +1338,13 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         bondingCurveFundingManager.call_setBaseMultiplier(capitalRequirements);
     }
 
-    function testInternalSetCaptialRequired_worksGivenValueIsNotZero(
+    function testInternalSetCapitalRequired_worksGivenValueIsNotZero(
         uint _capitalRequirements
     ) public {
         _capitalRequirements = bound(_capitalRequirements, 1, 1e18);
 
         // Get current value for expected emit
-        uint currentCaptialRequirements =
+        uint currentCapitalRequirements =
             bondingCurveFundingManager.capitalRequired();
 
         // Execute Tx
@@ -1352,25 +1352,25 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
             true, true, true, true, address(bondingCurveFundingManager)
         );
         emit IToposBondingCurveFundingManager.CapitalRequiredChanged(
-            currentCaptialRequirements, _capitalRequirements
+            currentCapitalRequirements, _capitalRequirements
         );
-        bondingCurveFundingManager.call_setCaptialRequired(_capitalRequirements);
+        bondingCurveFundingManager.call_setCapitalRequired(_capitalRequirements);
 
         // Get assert values
         uint expectUpdatedCapitalRequired =
             bondingCurveFundingManager.capitalRequired();
-        uint expectBasePriceToCaptialRatio = bondingCurveFundingManager
-            .call_calculateBasePriceToCaptialRatio(
+        uint expectbasePriceToCapitalRatio = bondingCurveFundingManager
+            .call_calculateBasePriceToCapitalRatio(
             _capitalRequirements,
             bondingCurveFundingManager.basePriceMultiplier()
         );
         uint actualBasePriceToCapitalRatio =
-            bondingCurveFundingManager.basePriceToCaptialRatio();
+            bondingCurveFundingManager.basePriceToCapitalRatio();
 
         // Assert value has been set succesfully
         assertEq(expectUpdatedCapitalRequired, _capitalRequirements);
         // Assert _updateVariables has been called succesfully
-        assertEq(expectBasePriceToCaptialRatio, actualBasePriceToCapitalRatio);
+        assertEq(expectbasePriceToCapitalRatio, actualBasePriceToCapitalRatio);
     }
 
     /*    Test _setSeize()
@@ -1419,7 +1419,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
             └── When: the function _setBaseMultiplier() is called
                 └── Then: it should succeed in writing the new value to state
                     ├── And: it should emit an event
-                    └── And: it should call _updateVariables() to update basePriceToCaptialRatio
+                    └── And: it should call _updateVariables() to update basePriceToCapitalRatio
      */
 
     function testInternalSetBasePriceMultiplier_revertGivenValueIsZero()
@@ -1462,33 +1462,33 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         // Get assert values
         uint expectUpdatedBasePriceMultiplier =
             bondingCurveFundingManager.basePriceMultiplier();
-        uint expectBasePriceToCaptialRatio = bondingCurveFundingManager
-            .call_calculateBasePriceToCaptialRatio(
+        uint expectbasePriceToCapitalRatio = bondingCurveFundingManager
+            .call_calculateBasePriceToCapitalRatio(
             capitalRequirement, _basePriceMultiplier
         );
         uint actualBasePriceToCapitalRatio =
-            bondingCurveFundingManager.basePriceToCaptialRatio();
+            bondingCurveFundingManager.basePriceToCapitalRatio();
 
         // Assert value has been set succesfully
         assertEq(expectUpdatedBasePriceMultiplier, _basePriceMultiplier);
         // Assert _updateVariables has been called succesfully
-        assertEq(expectBasePriceToCaptialRatio, actualBasePriceToCapitalRatio);
+        assertEq(expectbasePriceToCapitalRatio, actualBasePriceToCapitalRatio);
     }
 
-    /*    Test _calculateBasePriceToCaptialRatio()
-        └── Given: the function _calculateBasePriceToCaptialRatio() gets called
-            ├── When: the resulting _basePriceToCaptialRatio > 1e36
+    /*    Test _calculateBasePriceToCapitalRatio()
+        └── Given: the function _calculateBasePriceToCapitalRatio() gets called
+            ├── When: the resulting _basePriceToCapitalRatio > 1e36
             │   └── Then is should revert
-            └── When: the _basePriceToCaptialRatio < 1e36
-                └── Then: it should return _basePriceToCaptialRatio
+            └── When: the _basePriceToCapitalRatio < 1e36
+                └── Then: it should return _basePriceToCapitalRatio
     */
 
-    function testCalculateBasePriceToCaptialRatio_revertGivenCalculationResultBiggerThan1ToPower36(
-        uint _captialRequirements,
+    function testCalculatebasePriceToCapitalRatio_revertGivenCalculationResultBiggerThan1ToPower36(
+        uint _capitalRequirements,
         uint _basePriceMultiplier
     ) public {
         // Set bounds so when values used for calculation, the result is > 1e36
-        _captialRequirements = bound(_captialRequirements, 1, 1e18); // Lower minimum bound
+        _capitalRequirements = bound(_capitalRequirements, 1, 1e18); // Lower minimum bound
         _basePriceMultiplier = bound(_basePriceMultiplier, 1e37, 1e38); // Higher minimum bound
 
         vm.expectRevert(
@@ -1496,28 +1496,28 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
                 .ToposBondingCurveFundingManager__InvalidInputAmount
                 .selector
         );
-        bondingCurveFundingManager.call_calculateBasePriceToCaptialRatio(
-            _captialRequirements, _basePriceMultiplier
+        bondingCurveFundingManager.call_calculateBasePriceToCapitalRatio(
+            _capitalRequirements, _basePriceMultiplier
         );
     }
 
-    function testCalculateBasePriceToCaptialRatio_worksGivenCalculationResultLowerThan1ToPower36(
-        uint _captialRequirements,
+    function testCalculatebasePriceToCapitalRatio_worksGivenCalculationResultLowerThan1ToPower36(
+        uint _capitalRequirements,
         uint _basePriceMultiplier
     ) public {
         // Set bounds so when values used for calculation, the result < 1e36
-        _captialRequirements = bound(_captialRequirements, 1, 1e18);
+        _capitalRequirements = bound(_capitalRequirements, 1, 1e18);
         _basePriceMultiplier = bound(_basePriceMultiplier, 1, 1e18);
 
         // Use calculation for expected return value
         uint expectedReturnValue = FixedPointMathLib.fdiv(
-            _basePriceMultiplier, _captialRequirements, FixedPointMathLib.WAD
+            _basePriceMultiplier, _capitalRequirements, FixedPointMathLib.WAD
         );
 
         // Get function return value
         uint functionReturnValue = bondingCurveFundingManager
-            .call_calculateBasePriceToCaptialRatio(
-            _captialRequirements, _basePriceMultiplier
+            .call_calculateBasePriceToCapitalRatio(
+            _capitalRequirements, _basePriceMultiplier
         );
 
         // Assert expected return value
@@ -1526,89 +1526,89 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
 
     /*    Test _updateVariables()
         └── Given: the function _updateVariables() gets called
-            └── Then: it should update the state variable basePriceToCaptialRatio
+            └── Then: it should update the state variable basePriceToCapitalRatio
     */
 
     function testUpdateVariables_worksGivenBasePriceToCapitalRatioStateIsSet(
-        uint _captialRequirements,
+        uint _capitalRequirements,
         uint _basePriceMultiplier
     ) public {
         // Set bounds so when values used for calculation, the result < 1e36
-        _captialRequirements = bound(_captialRequirements, 1, 1e18);
+        _capitalRequirements = bound(_capitalRequirements, 1, 1e18);
         _basePriceMultiplier = bound(_basePriceMultiplier, 1, 1e18);
 
         // Setup
         bondingCurveFundingManager.setBaseMultiplier(_basePriceMultiplier);
-        bondingCurveFundingManager.setCapitalRequired(_captialRequirements);
+        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
 
         // Use calculation for expected return value
         uint expectedReturnValue = FixedPointMathLib.fdiv(
-            _basePriceMultiplier, _captialRequirements, FixedPointMathLib.WAD
+            _basePriceMultiplier, _capitalRequirements, FixedPointMathLib.WAD
         );
 
         // Execute Tx
         bondingCurveFundingManager.call_updateVariables();
         // Get set state value
         uint setStateValue =
-            bondingCurveFundingManager.basePriceToCaptialRatio();
+            bondingCurveFundingManager.basePriceToCapitalRatio();
 
         // Assert expected return value
         assertEq(setStateValue, expectedReturnValue);
     }
 
     /*  Test _getSmallerCaCr()
-        ├── Given: the captial available is > capitalRequirement
+        ├── Given: the capital available is > capitalRequirement
         │   └── When: the function _getSmallerCaCr() gets called
-        │       └── Then: it should return the captialRequirement
-        └── Given: the captial available is < capitalRequirement
+        │       └── Then: it should return the capitalRequirement
+        └── Given: the capital available is < capitalRequirement
             └── When: the function _getSmallerCaCr() gets called
-                └── Then: it should return the captialAvailable
+                └── Then: it should return the capitalAvailable
     */
 
     function testGetSmallerCaCr_worksGivenCapitalAvailableIsBiggerThanCapitalRequirements(
-        uint _captialAvailable,
-        uint _captialRequirements
+        uint _capitalAvailable,
+        uint _capitalRequirements
     ) public {
-        _captialAvailable =
-            bound(_captialAvailable, 1, UINT256_MAX - MIN_RESERVE); // protect agains overflow
-        _captialRequirements = bound(_captialRequirements, 1, _captialAvailable); // make captial requirements < capital available
+        _capitalAvailable =
+            bound(_capitalAvailable, 1, UINT256_MAX - MIN_RESERVE); // protect agains overflow
+        _capitalRequirements = bound(_capitalRequirements, 1, _capitalAvailable); // make capital requirements < capital available
         // Setup
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _captialAvailable
+            address(bondingCurveFundingManager), _capitalAvailable
         );
-        bondingCurveFundingManager.setCapitalRequired(_captialRequirements);
+        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
 
         uint returnValue = bondingCurveFundingManager.call_getSmallerCaCr();
 
         // Assert that the smaller value got returned
-        assertEq(returnValue, _captialRequirements);
+        assertEq(returnValue, _capitalRequirements);
     }
 
     function testGetSmallerCaCr_worksGivenCapitalRequirementsIsBiggerThanCapitalAvailable(
-        uint _captialAvailable,
-        uint _captialRequirements
+        uint _capitalAvailable,
+        uint _capitalRequirements
     ) public {
-        // Set capital requirement above MIN_RESERVE, which is the captial already available
-        _captialRequirements = bound(
-            _captialRequirements, MIN_RESERVE + 1, UINT256_MAX - MIN_RESERVE
-        ); // make captial requirements > capital available
-        // set captial available, i.e the to be minted amount for the the test
-        _captialAvailable =
-            bound(_captialAvailable, MIN_RESERVE, _captialRequirements);
+        // Set capital requirement above MIN_RESERVE, which is the capital already available
+        _capitalRequirements = bound(
+            _capitalRequirements, MIN_RESERVE + 1, UINT256_MAX - MIN_RESERVE
+        ); // make capital requirements > capital available
+        // set capital available, i.e the to be minted amount for the the test
+        _capitalAvailable =
+            bound(_capitalAvailable, MIN_RESERVE, _capitalRequirements);
         // Setup
         _mintCollateralTokenToAddressHelper(
             address(bondingCurveFundingManager),
             (
-                _captialAvailable
+                _capitalAvailable
                     - _token.balanceOf(address(bondingCurveFundingManager))
             )
         );
-        bondingCurveFundingManager.setCapitalRequired(_captialRequirements);
+        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
 
         uint returnValue = bondingCurveFundingManager.call_getSmallerCaCr();
 
         // Assert that the smaller value got returned
-        assertEq(returnValue, _captialAvailable);
+        assertEq(returnValue, _capitalAvailable);
     }
 
     /*  Test _getRepayableAmount()
@@ -1625,52 +1625,52 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
 
     function testInternalGetRepayableAmount_worksGivenRepayableAmountBiggerReturnGetSmallerCaCr(
         uint _repayableAmount,
-        uint _captialAvailable,
-        uint _captialRequirements
+        uint _capitalAvailable,
+        uint _capitalRequirements
     ) public {
         // Bound values
-        _captialAvailable =
-            bound(_captialAvailable, 2, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
-        _captialRequirements = bound(_captialRequirements, 2, _captialAvailable);
-        _repayableAmount = bound(_repayableAmount, 2, _captialRequirements);
+        _capitalAvailable =
+            bound(_capitalAvailable, 2, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
+        _capitalRequirements = bound(_capitalRequirements, 2, _capitalAvailable);
+        _repayableAmount = bound(_repayableAmount, 2, _capitalRequirements);
         // Setup
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _captialAvailable
+            address(bondingCurveFundingManager), _capitalAvailable
         );
-        bondingCurveFundingManager.setCapitalRequired(_captialRequirements);
+        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
         bondingCurveFundingManager.setRepayableAmount(_repayableAmount);
         // Set capital requirement < repayableAmount, which can only be done after
         // repayableAmount is set
-        _captialRequirements = _repayableAmount - 1;
-        bondingCurveFundingManager.setCapitalRequired(_captialRequirements);
+        _capitalRequirements = _repayableAmount - 1;
+        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
 
         // Get expected return value
         uint returnValueInternalFunction =
             bondingCurveFundingManager.call__getRepayableAmount();
 
         // Expected return value
-        uint expectedReturnValue = _captialAvailable > _captialRequirements
-            ? _captialRequirements
-            : _captialAvailable;
+        uint expectedReturnValue = _capitalAvailable > _capitalRequirements
+            ? _capitalRequirements
+            : _capitalAvailable;
 
         // Assert return value == as repayableAmount
         assertEq(returnValueInternalFunction, expectedReturnValue);
     }
 
     function testInternalGetRepayableAmount_worksGivenRepayableAmountIsZero(
-        uint _captialAvailable,
-        uint _captialRequirements
+        uint _capitalAvailable,
+        uint _capitalRequirements
     ) public {
         // Bound values
-        _captialAvailable =
-            bound(_captialAvailable, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
-        _captialRequirements = bound(_captialRequirements, 1, _captialAvailable);
+        _capitalAvailable =
+            bound(_capitalAvailable, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
+        _capitalRequirements = bound(_capitalRequirements, 1, _capitalAvailable);
         uint repayableAmount = 0;
         // Setup
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _captialAvailable
+            address(bondingCurveFundingManager), _capitalAvailable
         );
-        bondingCurveFundingManager.setCapitalRequired(_captialRequirements);
+        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
         bondingCurveFundingManager.setRepayableAmount(repayableAmount);
 
         // Get return value
@@ -1678,9 +1678,9 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
             bondingCurveFundingManager.call__getRepayableAmount();
 
         // Get expected return value
-        uint expectedReturnValue = _captialAvailable > _captialRequirements
-            ? _captialRequirements
-            : _captialAvailable;
+        uint expectedReturnValue = _capitalAvailable > _capitalRequirements
+            ? _capitalRequirements
+            : _capitalAvailable;
 
         // Assert return value == as repayableAmount
         assertEq(returnValueInternalFunction, expectedReturnValue);
@@ -1688,19 +1688,19 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
 
     function testInternalGetRepayableAmount_worksGivenRepayableAmountIsReturned(
         uint _repayableAmount,
-        uint _captialAvailable,
-        uint _captialRequirements
+        uint _capitalAvailable,
+        uint _capitalRequirements
     ) public {
         // Bound values
-        _captialAvailable =
-            bound(_captialAvailable, 1, UINT256_MAX - MIN_RESERVE);
-        _captialRequirements = bound(_captialRequirements, 1, _captialAvailable);
-        _repayableAmount = bound(_repayableAmount, 1, _captialRequirements);
+        _capitalAvailable =
+            bound(_capitalAvailable, 1, UINT256_MAX - MIN_RESERVE);
+        _capitalRequirements = bound(_capitalRequirements, 1, _capitalAvailable);
+        _repayableAmount = bound(_repayableAmount, 1, _capitalRequirements);
         // Setup
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _captialAvailable
+            address(bondingCurveFundingManager), _capitalAvailable
         );
-        bondingCurveFundingManager.setCapitalRequired(_captialRequirements);
+        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
         bondingCurveFundingManager.setRepayableAmount(_repayableAmount);
 
         // Get return value

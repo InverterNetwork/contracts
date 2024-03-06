@@ -41,7 +41,7 @@ contract ToposFormula is IToposFormula {
 	}
 
 	/// @inheritdoc IToposFormula
-	function tokenOut(uint256 _in, uint256 _capitalAvailable, uint _basePriceToCaptialRatio) public pure returns (uint256) {
+	function tokenOut(uint256 _in, uint256 _capitalAvailable, uint _basePriceToCapitalRatio) public pure returns (uint256) {
 		// If the input is bigger inverse will give us 0.
 		if (_capitalAvailable > 1e36 || _capitalAvailable + _in > 1e36 || _capitalAvailable == 0) revert ToposFormula__InvalidInputAmount();
 
@@ -49,13 +49,13 @@ contract ToposFormula is IToposFormula {
 		uint256 inv2 = _inverse(_capitalAvailable + _in);
 		uint256 inner = inv1 - inv2;
 
-		return FixedPointMathLib.fmul(_inverse(_basePriceToCaptialRatio), inner, FixedPointMathLib.WAD);
+		return FixedPointMathLib.fmul(_inverse(_basePriceToCapitalRatio), inner, FixedPointMathLib.WAD);
 	}
 
 	/// @inheritdoc IToposFormula
-	function tokenIn(uint256 _out, uint256 _capitalAvailable,uint _basePriceToCaptialRatio) public pure returns (uint256) {
+	function tokenIn(uint256 _out, uint256 _capitalAvailable,uint _basePriceToCapitalRatio) public pure returns (uint256) {
 		// m * (B / C_r)
-		uint256 BCrM = FixedPointMathLib.fmul(_basePriceToCaptialRatio, _out, FixedPointMathLib.WAD);
+		uint256 BCrM = FixedPointMathLib.fmul(_basePriceToCapitalRatio, _out, FixedPointMathLib.WAD);
 		// 1 / C_a_2
 		uint256 ca2inv = _inverse(_capitalAvailable);
 

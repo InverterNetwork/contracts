@@ -38,7 +38,7 @@ interface IToposBondingCurveFundingManager {
     /// @notice Emits when the collateral has been seized, with the amount
     event CollateralSeized(uint amount);
 
-    /// @notice Emits when the captial required gets updated
+    /// @notice Emits when the capital required gets updated
     event CapitalRequiredChanged(
         uint currentCapitalRequired, uint newCapitalRequired
     );
@@ -93,8 +93,8 @@ interface IToposBondingCurveFundingManager {
     /// @param _newBasePriceMultiplier Base price multiplier used for price calculation
     function setBaseMultiplier(uint _newBasePriceMultiplier) external;
 
-    /// @dev Update the captial required used for the bonding curve
-    /// @param _newCapitalRequired Captial required needed to operate the protocol
+    /// @dev Update the capital required used for the bonding curve
+    /// @param _newCapitalRequired Capital required needed to operate the protocol
     function setCapitalRequired(uint _newCapitalRequired) external;
 
     /// @notice Burn amount of tokens from message sender
@@ -107,12 +107,12 @@ interface IToposBondingCurveFundingManager {
     function burnIssuanceTokenFor(address _owner, uint _amount) external;
 
     /// @notice Calculates the ratio of base price multiplier to capital required.
-    /// @dev Calls `_calculateBasePriceToCaptialRatio` internally. Reverts if ratio exceeds 1e36.
+    /// @dev Calls `_calculateBasePriceToCapitalRatio` internally. Reverts if ratio exceeds 1e36.
     /// @param _capitalRequired The capital required.
     /// @param _basePriceMultiplier The base price multiplier.
-    /// @return _basePriceToCaptialRatio The calculated price to capital ratio.
-    function calculateBasePriceToCaptialRatio(
+    /// @return _basePriceToCapitalRatio The calculated price to capital ratio.
+    function calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
-    ) external view returns (uint _basePriceToCaptialRatio);
+    ) external view returns (uint _basePriceToCapitalRatio);
 }

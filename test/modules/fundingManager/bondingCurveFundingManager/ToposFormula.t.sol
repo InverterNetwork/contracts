@@ -16,7 +16,7 @@ import {IToposBondingCurveFundingManager} from
 contract ToposFormulaTest is Test {
     uint public basePriceMultiplier = 0.000001 ether;
     uint public capitalRequired = 1_000_000 * 1e18;
-    uint public basePriceToCaptialRatio;
+    uint public basePriceToCapitalRatio;
 
     ToposFormulaMock toposFormula;
 
@@ -29,7 +29,7 @@ contract ToposFormulaTest is Test {
         ├── Given: capital available is 0
         │   └── When: the function tokenOut() is called
         │       └── then it should revert
-        ├── Give: tokens in + captial required is > 1e36
+        ├── Give: tokens in + capital required is > 1e36
         │   └── When: the function tokenOut() is called
         │       └── then it should revert
         └── Given tokens in are within bound
@@ -37,22 +37,22 @@ contract ToposFormulaTest is Test {
                 └── then is should succeed
     */
 
-    function test_RevertTokenOutWhenCaptialAvailableIsZero() public {
+    function test_RevertTokenOutWhenCapitalAvailableIsZero() public {
         // If the input is bigger inverse will give us 0.
         vm.expectRevert(IToposFormula.ToposFormula__InvalidInputAmount.selector);
-        toposFormula.tokenOut(1e18, 0, basePriceToCaptialRatio);
+        toposFormula.tokenOut(1e18, 0, basePriceToCapitalRatio);
     }
 
     function test_RevertTokenOutWhenInputToBig() public {
         // If the input is bigger inverse will give us 0.
         vm.expectRevert(IToposFormula.ToposFormula__InvalidInputAmount.selector);
-        toposFormula.tokenOut(1e36, 1, basePriceToCaptialRatio);
+        toposFormula.tokenOut(1e36, 1, basePriceToCapitalRatio);
     }
 
     function test_SucceedTokenOutWhenTokensInBound(uint _in) public view {
-        console.logUint(basePriceToCaptialRatio);
+        console.logUint(basePriceToCapitalRatio);
         _in = bound(_in, 1, 1e36 - 1);
-        toposFormula.tokenOut(_in, 1, basePriceToCaptialRatio);
+        toposFormula.tokenOut(_in, 1, basePriceToCapitalRatio);
     }
 
     /*  test tokenIn
@@ -64,14 +64,14 @@ contract ToposFormulaTest is Test {
                 └── Then: it should succeed
     */
 
-    function test_RevertTokenInWhenCaptialAvailableIsZero() public {
+    function test_RevertTokenInWhenCapitalAvailableIsZero() public {
         vm.expectRevert();
-        toposFormula.tokenIn(1, 0, basePriceToCaptialRatio);
+        toposFormula.tokenIn(1, 0, basePriceToCapitalRatio);
     }
 
     function test_SucceedTokenInWhenTokensInBound(uint _in) public view {
         _in = bound(_in, 1, 1e36);
-        toposFormula.tokenIn(_in, 1 ether, basePriceToCaptialRatio);
+        toposFormula.tokenIn(_in, 1 ether, basePriceToCapitalRatio);
     }
 
     // Testing values are taken from matlab simulations
@@ -140,7 +140,7 @@ contract ToposFormulaTest is Test {
     //--------------------------------------------------------------------------
     // Helper functions
 
-    function _setCaptialRequired(uint _newCapitalRequired) internal {
+    function _setCapitalRequired(uint _newCapitalRequired) internal {
         if (_newCapitalRequired == 0) {
             revert
                 IToposBondingCurveFundingManager
@@ -160,23 +160,23 @@ contract ToposFormulaTest is Test {
         _updateVariables();
     }
 
-    /// @dev Precomputes and sets the price multiplier to captial ratio
+    /// @dev Precomputes and sets the price multiplier to capital ratio
     function _updateVariables() internal {
-        basePriceToCaptialRatio = _calculateBasePriceToCaptialRatio(
+        basePriceToCapitalRatio = _calculateBasePriceToCapitalRatio(
             capitalRequired, basePriceMultiplier
         );
     }
 
-    /// @dev Internal function which calculates the price multiplier to captial ratio
-    function _calculateBasePriceToCaptialRatio(
+    /// @dev Internal function which calculates the price multiplier to capital ratio
+    function _calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
-    ) internal pure returns (uint _basePriceToCaptialRatio) {
-        _basePriceToCaptialRatio = FixedPointMathLib.fdiv(
+    ) internal pure returns (uint _basePriceToCapitalRatio) {
+        _basePriceToCapitalRatio = FixedPointMathLib.fdiv(
             _basePriceMultiplier, _capitalRequired, FixedPointMathLib.WAD
         );
 
-        if (_basePriceToCaptialRatio > 1e36) {
+        if (_basePriceToCapitalRatio > 1e36) {
             revert
                 IToposBondingCurveFundingManager
                 .ToposBondingCurveFundingManager__InvalidInputAmount();

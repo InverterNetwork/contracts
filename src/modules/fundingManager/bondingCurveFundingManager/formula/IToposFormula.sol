@@ -32,8 +32,8 @@ interface IToposFormula {
 	///         and `_ca` of capital available.
 	/// @param _in Assets added to the pool.
 	/// @param _capitalAvailable Capital available to use for bonding curve mint.
-	/// @param _basePriceToCaptialRatio Precomputed factor which combines the base price multiplier with captial required
-    function tokenOut(uint256 _in, uint256 _capitalAvailable, uint _basePriceToCaptialRatio) external view returns (uint256);
+	/// @param _basePriceToCapitalRatio Precomputed factor which combines the base price multiplier with capital required
+    function tokenOut(uint256 _in, uint256 _capitalAvailable, uint _basePriceToCapitalRatio) external view returns (uint256);
 
 	/// @dev To get the change in assests when burning tokens
 	///
@@ -47,7 +47,7 @@ interface IToposFormula {
 	///         `_ca` of capital available and `_supply` TPG minted.
 	/// @param _out TPG to burn
 	/// @param _capitalAvailable Capital available to use for bonding curve burn.
-		/// @param _basePriceToCaptialRatio Precomputed factor which combines the base price multiplier with captial required
-    function tokenIn(uint256 _out, uint256 _capitalAvailable,uint _basePriceToCaptialRatio) external view returns (uint256);
+	/// @param _basePriceToCapitalRatio Precomputed factor which combines the base price multiplier with capital required
+    function tokenIn(uint256 _out, uint256 _capitalAvailable,uint _basePriceToCapitalRatio) external view returns (uint256);
 
 }
