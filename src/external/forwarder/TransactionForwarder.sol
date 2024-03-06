@@ -23,6 +23,21 @@ contract TransactionForwarder is
     constructor(string memory name) ERC2771Forwarder(name) {}
 
     //--------------------------------------------------------------------------
+    // Metatransaction Helper Functions
+
+    /// @notice Creates a digest for the given ForwardRequestData
+    /// @dev The signature field of the given ForwardRequestData can be empty
+    /// @param req The ForwardRequest you want to get the digest from
+    /// @return digest The digest needed to create a signature for the request
+    function createDigest(ERC2771Forwarder.ForwardRequestData memory req)
+        external
+        view
+        returns (bytes32 digest)
+    {
+        return _hashTypedDataV4(getStructHash(req));
+    }
+
+    //--------------------------------------------------------------------------
     // Multicall Functions
 
     /// @inheritdoc ITransactionForwarder
@@ -59,6 +74,28 @@ contract TransactionForwarder is
             //set result correctly
             results[i] = Result(success, returnData);
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal
+
+    function getStructHash(ERC2771Forwarder.ForwardRequestData memory req)
+        internal
+        view
+        returns (bytes32)
+    {
+        return keccak256(
+            abi.encode(
+                _FORWARD_REQUEST_TYPEHASH,
+                req.from,
+                req.to,
+                req.value,
+                req.gas,
+                nonces(req.from),
+                req.deadline,
+                keccak256(req.data)
+            )
+        );
     }
 
     // Copied from the ERC2771Forwarder as it isnt declared internal ಠ_ಠ
