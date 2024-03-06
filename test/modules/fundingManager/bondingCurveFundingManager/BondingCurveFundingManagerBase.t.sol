@@ -453,6 +453,41 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(bondingCurveFundingManager.buyFee(), newFee);
     }
 
+    /* Test getCollateralFeeCollected function
+        └── when the function gets called
+            └── it should return the right value
+    */
+
+    function testGetCollateralFeeCollected_works(uint amount, uint fee)
+        public
+    {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        vm.assume(fee < _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(fee);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Calculate receiving amount
+        uint feeCollected = amount * fee / bondingCurveFundingManager.call_BPS();
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, 0);
+
+        vm.prank(owner_address);
+        uint expectedReturnValue =
+            bondingCurveFundingManager.getCollateralTradeFeeCollected();
+
+        assertEq(expectedReturnValue, feeCollected);
+    }
+
     /* Test _calculateNetAmountAndFee function
         └── when feePct is lower than the BPS
                 └── it should return the deposit amount with the fee deducted

@@ -81,24 +81,6 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    //--------------------------------------------------------------------------
-    // OnlyOrchestrator Functions
-
-    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function openSell() external onlyOrchestratorOwner {
-        _openSell();
-    }
-
-    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function closeSell() external onlyOrchestratorOwner {
-        _closeSell();
-    }
-
-    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
-    function setSellFee(uint _fee) external virtual onlyOrchestratorOwner {
-        _setSellFee(_fee);
-    }
-
     /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
     function calculateSaleReturn(uint _depositAmount)
         external
@@ -107,6 +89,35 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         returns (uint redeemAmount)
     {
         return _calculateSaleReturn(_depositAmount);
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    function getSaleFeeForAmount(uint _amountIn)
+        external
+        view
+        virtual
+        returns (uint feeAmount)
+    {
+        ( /* netAmount */ , feeAmount) =
+            _calculateNetAmountAndFee(_amountIn, sellFee);
+    }
+
+    //--------------------------------------------------------------------------
+    // OnlyOrchestrator Functions
+
+    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    function openSell() external virtual onlyOrchestratorOwner {
+        _openSell();
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    function closeSell() external virtual onlyOrchestratorOwner {
+        _closeSell();
+    }
+
+    /// @inheritdoc IRedeemingBondingCurveFundingManagerBase
+    function setSellFee(uint _fee) external virtual onlyOrchestratorOwner {
+        _setSellFee(_fee);
     }
 
     //--------------------------------------------------------------------------
@@ -151,7 +162,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         address _receiver,
         uint _depositAmount,
         uint _minAmountOut
-    ) internal returns (uint redeemAmount, uint feeAmount) {
+    ) internal virtual returns (uint redeemAmount, uint feeAmount) {
         if (_depositAmount == 0) {
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
@@ -193,7 +204,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     }
 
     /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
-    function _openSell() internal {
+    function _openSell() internal virtual {
         if (sellIsOpen == true) {
             revert RedeemingBondingCurveFundingManager__SellingAlreadyOpen();
         }
@@ -202,7 +213,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     }
 
     /// @dev Closes the sell functionality by setting the state variable `sellIsOpen` to false.
-    function _closeSell() internal {
+    function _closeSell() internal virtual {
         if (sellIsOpen == false) {
             revert RedeemingBondingCurveFundingManager__SellingAlreadyClosed();
         }
@@ -212,7 +223,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
 
     /// @dev Sets the sell transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for sell transactions.
-    function _setSellFee(uint _fee) internal {
+    function _setSellFee(uint _fee) internal virtual {
         if (_fee > BPS) {
             revert RedeemingBondingCurveFundingManager__InvalidFeePercentage();
         }
@@ -227,6 +238,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     function _calculateSaleReturn(uint _depositAmount)
         internal
         view
+        virtual
         returns (uint redeemAmount)
     {
         if (_depositAmount == 0) {

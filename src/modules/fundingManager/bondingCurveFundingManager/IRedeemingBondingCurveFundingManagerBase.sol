@@ -98,4 +98,12 @@ interface IRedeemingBondingCurveFundingManagerBase {
     function calculateSaleReturn(uint _depositAmount)
         external
         returns (uint redeemAmount);
+
+    /// @notice Returns the fee amount for a sale transaction, based on the sell fee and amount in
+    /// @param _amountIn The amount over which the fee is calculated
+    /// @return feeAmount Total amount of fee to be paid
+    function getSaleFeeForAmount(uint _amountIn)
+        external
+        view
+        returns (uint feeAmount);
 }

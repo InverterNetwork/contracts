@@ -103,4 +103,18 @@ interface IBondingCurveFundingManagerBase {
     function calculatePurchaseReturn(uint _depositAmount)
         external
         returns (uint mintAmount);
+
+    /// @notice Returns the fee amount for a purchase transaction, based on the buy fee and amount in
+    /// @param _amountIn The amount over which the fee is calculated
+    /// @return feeAmount Total amount of fee to be paid
+    function getPurchaseFeeForAmount(uint _amountIn)
+        external
+        view
+        returns (uint feeAmount);
+
+    /// @notice Returns the current total fee collected in collateral tokens for all trades. This value will be set
+    /// to 0 when the fee is withdrawn from the contract
+    /// @dev function access is restricted to the owner of the orchestrator
+    /// @return uint The total amount of collateral fee collected still held in the contract
+    function getCollateralTradeFeeCollected() external returns (uint);
 }
