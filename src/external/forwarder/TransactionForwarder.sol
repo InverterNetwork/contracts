@@ -29,7 +29,7 @@ contract TransactionForwarder is
     /// @dev The signature field of the given ForwardRequestData can be empty
     /// @param req The ForwardRequest you want to get the digest from
     /// @return digest The digest needed to create a signature for the request
-    function createDigest(ERC2771Forwarder.ForwardRequestData memory req)
+    function createDigest(ForwardRequestData memory req)
         external
         view
         returns (bytes32 digest)
