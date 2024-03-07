@@ -275,8 +275,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         assertEq(_governor.isVoter(ALBA), true);
         assertEq(_governor.isVoter(BOB), true);
         assertEq(_governor.isVoter(COBIE), true);
-
-        assertEq(_authorizer.hasRole(owner, address(this)), false);
+        assertEq(_authorizer.hasRole(owner, address(this)), true);
         assertEq(_authorizer.hasRole(owner, address(_orchestrator)), false);
         assertEq(_governor.isVoter(address(this)), false);
         assertEq(_governor.isVoter(address(_orchestrator)), false);
