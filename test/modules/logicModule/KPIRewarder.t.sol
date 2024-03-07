@@ -902,13 +902,17 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
             //=========================================================
             // This is the place where imprecision issues arise. Needs review
             //=========================================================
-            /*
-            uint userReward = amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
+
+            uint userReward =
+                amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
             console.log(userReward);
 
-            assertEq(kpiManager.earned(users[i]), userReward);
-            */
-            
+            //Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
+            assertApproxEqRel(
+                kpiManager.earned(users[i]),
+                userReward,
+                0.00001e18 //This is 0,001 %
+            );
         }
 
         for (uint i; i < length; i++) {
@@ -974,13 +978,17 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
             //=========================================================
             // This is the place where imprecision issues arise. Needs review
             //=========================================================
-            /*
-            uint userReward = amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
+
+            uint userReward =
+                amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
             console.log(userReward);
-            
-            assertEq(kpiManager.earned(users[i]), userReward);
-            */
-            
+
+            //Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
+            assertApproxEqRel(
+                kpiManager.earned(users[i]),
+                userReward,
+                0.00001e18 //This is 0,001 %
+            );
         }
 
         for (uint i; i < length; i++) {
