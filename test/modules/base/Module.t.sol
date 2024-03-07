@@ -60,9 +60,6 @@ contract baseModuleTest is ModuleTest {
 
         _setUpOrchestrator(module);
 
-        //init authorizer and set this address as authorized
-        _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
-
         vm.expectEmit(true, true, true, false);
         emit ModuleInitialized(
             address(_orchestrator), _TITLE, _MAJOR_VERSION, _MINOR_VERSION
