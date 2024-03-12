@@ -34,7 +34,7 @@ contract TransactionForwarder is
         view
         returns (bytes32 digest)
     {
-        return _hashTypedDataV4(getStructHash(req));
+        return _hashTypedDataV4(_getStructHash(req));
     }
 
     //--------------------------------------------------------------------------
@@ -79,7 +79,7 @@ contract TransactionForwarder is
     //--------------------------------------------------------------------------
     // Internal
 
-    function getStructHash(ERC2771Forwarder.ForwardRequestData memory req)
+    function _getStructHash(ERC2771Forwarder.ForwardRequestData memory req)
         internal
         view
         returns (bytes32)
