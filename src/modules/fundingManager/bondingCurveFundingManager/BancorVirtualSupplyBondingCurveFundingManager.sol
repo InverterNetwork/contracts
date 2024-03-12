@@ -489,10 +489,10 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         uint _depositAmount,
         uint _minAmountOut
     ) internal {
-        (uint redeemAmount,) =
+        (uint redeemAmount, uint feeAmount) =
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
         _subVirtualTokenAmount(_depositAmount);
-        _subVirtualCollateralAmount(redeemAmount);
+        _subVirtualCollateralAmount(redeemAmount + feeAmount);
     }
 
     /// @dev Sets the reserve ratio for buying tokens.

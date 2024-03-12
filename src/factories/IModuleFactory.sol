@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
+import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
 
 interface IModuleFactory {
     //--------------------------------------------------------------------------
@@ -15,7 +13,7 @@ interface IModuleFactory {
     error ModuleFactory__InvalidMetadata();
 
     /// @notice Given beacon invalid.
-    error ModuleFactory__InvalidBeacon();
+    error ModuleFactory__InvalidInverterBeacon();
 
     /// @notice Given metadata unregistered.
     error ModuleFactory__UnregisteredMetadata();
@@ -30,7 +28,7 @@ interface IModuleFactory {
     /// @param metadata The registered Metadata
     /// @param beacon The registered Beacon
     event MetadataRegistered(
-        IModule.Metadata indexed metadata, IBeacon indexed beacon
+        IModule.Metadata indexed metadata, IInverterBeacon indexed beacon
     );
 
     /// @notice Event emitted when new module created for a orchestrator.
@@ -54,21 +52,23 @@ interface IModuleFactory {
         bytes memory configData
     ) external returns (address);
 
-    /// @notice Returns the {IBeacon} instance registered and the id for given
+    /// @notice Returns the {IInverterBeacon} instance registered and the id for given
     ///         metadata.
     /// @param metadata The module's metadata.
-    /// @return The module's {IBeacon} instance registered.
+    /// @return The module's {IInverterBeacon} instance registered.
     /// @return The metadata's id.
     function getBeaconAndId(IModule.Metadata memory metadata)
         external
         view
-        returns (IBeacon, bytes32);
+        returns (IInverterBeacon, bytes32);
 
-    /// @notice Registers metadata `metadata` with {IBeacon} implementation
+    /// @notice Registers metadata `metadata` with {IInverterBeacon} implementation
     ///         `beacon`.
     /// @dev Only callable by owner.
     /// @param metadata The module's metadata.
-    /// @param beacon The module's {IBeacon} instance.
-    function registerMetadata(IModule.Metadata memory metadata, IBeacon beacon)
-        external;
+    /// @param beacon The module's {IInverterBeacon} instance.
+    function registerMetadata(
+        IModule.Metadata memory metadata,
+        IInverterBeacon beacon
+    ) external;
 }

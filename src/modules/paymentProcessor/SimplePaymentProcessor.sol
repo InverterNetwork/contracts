@@ -87,6 +87,9 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         uint totalAmount;
         (orders, totalAmount) = client.collectPaymentOrders();
 
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        client.amountPaid(totalAmount);
+
         // Cache token.
         IERC20 token_ = token();
 
@@ -110,8 +113,6 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
                 orders[i].dueTo
             );
         }
-        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        client.amountPaid(totalAmount);
     }
 
     function cancelRunningPayments(IERC20PaymentClient client)

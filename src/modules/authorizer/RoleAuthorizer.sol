@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
+pragma solidity 0.8.23;
 // External Libraries
 
+// External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
+
+// Internal Dependencies
 import {Module, IModule} from "src/modules/base/Module.sol";
 import {IAuthorizer} from "./IAuthorizer.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
@@ -87,9 +92,6 @@ contract RoleAuthorizer is
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        //We preliminarily grant admin role to the caller
-        _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
-
         // Set up OWNER role structure:
 
         // -> set OWNER as admin of itself
@@ -103,11 +105,12 @@ contract RoleAuthorizer is
         // grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
-        // If there is no initial owner specfied or the initial owner is the same as the deployer, the initial setup is finished at this point
-        // If intialOwner corresponds to a different address, we need to set it up at this point and renounce the deployer
-        if (initialOwner != address(0) && initialOwner != _msgSender()) {
+        // If there is no initial owner specfied or the initial owner is the same as the deployer
+
+        if (initialOwner != address(0)) {
             _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
-            renounceRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
+        } else {
+            _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
         }
     }
 
@@ -214,5 +217,30 @@ contract RoleAuthorizer is
     /// @inheritdoc IAuthorizer
     function getManagerRole() public pure returns (bytes32) {
         return ORCHESTRATOR_MANAGER_ROLE;
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, Module)
+        returns (address sender)
+    {
+        return super._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, Module)
+        returns (bytes calldata)
+    {
+        return super._msgData();
     }
 }

@@ -116,7 +116,7 @@ contract TokenGatedRoleAuthorizer is
 
     /// @inheritdoc ITokenGatedRoleAuthorizer
     function hasTokenRole(bytes32 role, address who)
-        public
+        external
         view
         onlyTokenGated(role)
         returns (bool)

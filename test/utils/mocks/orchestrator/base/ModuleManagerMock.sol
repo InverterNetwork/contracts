@@ -12,6 +12,8 @@ contract ModuleManagerMock is ModuleManager {
 
     bool private _allAuthorized;
 
+    constructor(address _trustedForwarder) ModuleManager(_trustedForwarder) {}
+
     function __ModuleManager_setIsAuthorized(address who, bool to) external {
         _authorized[who] = to;
     }

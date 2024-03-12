@@ -204,9 +204,8 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
         uint currentFunds = __Module_orchestrator.fundingManager().token()
             .balanceOf(address(this));
 
-        if (currentFunds >= amount) {
-            //NoOp as we already have enough funds
-        } else {
+        // If current funds are not enough
+        if (currentFunds < amount) {
             // Trigger callback from orchestrator to transfer tokens
             // to address(this).
             bool ok;

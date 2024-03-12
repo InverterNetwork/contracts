@@ -20,4 +20,22 @@ contract ModuleMock is Module {
     ) external {
         __Module_init(orchestrator_, metadata);
     }
+
+    function original_msgSender()
+        external
+        view
+        virtual
+        returns (address sender)
+    {
+        return _msgSender();
+    }
+
+    function original_msgData()
+        external
+        view
+        virtual
+        returns (bytes calldata)
+    {
+        return _msgData();
+    }
 }

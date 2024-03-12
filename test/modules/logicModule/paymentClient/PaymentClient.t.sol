@@ -23,12 +23,10 @@ import {
     PaymentProcessorMock,
     IPaymentProcessor
 } from "test/utils/mocks/modules/PaymentProcessorMock.sol";
-
 import {
     IFundingManager,
     FundingManagerMock
 } from "test/utils/mocks/modules/FundingManagerMock.sol";
-// Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ERC20PaymentClientTest is ModuleTest {
