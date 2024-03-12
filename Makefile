@@ -73,6 +73,8 @@ testE2e: ## Run e2e test suite
 
 .PHONY: testScripts
 testScripts: ## Run e2e test suite
+	@make pre-script
+
 	@forge script script/deployment/DeploymentScript.s.sol
 
 	@forge script script/factories/DeployModuleFactory.s.sol
@@ -146,7 +148,8 @@ pre-test: # format and export correct data
 	@export FOUNDRY_FUZZ_RUNS=1024
 	@export FOUNDRY_FUZZ_MAX_TEST_REJECTS=65536
 
-	# Env variables required for the tests
+pre-script: # format and export correct data
+	# Env variables required for the scripts
 	@export WALLET_DEPLOYER=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
 	@export WALLET_DEPLOYER_PK=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 	@export DEPLOYMENT_PROPOSAL_FACTORY_TARGET=0x0000000000000000000000000000000000000001
@@ -165,11 +168,13 @@ pre-test: # format and export correct data
 .PHONY: pre-commit
 pre-commit: ## Git pre-commit hook
 
-	@echo "### Configure tests"
-	@make pre-test
+	
 	
 	@echo "### Running the scripts"
 	@make testScripts
+
+	@echo "### Configure tests"
+	@make pre-test
 
 	@echo "### Running the tests"
 	@forge test
