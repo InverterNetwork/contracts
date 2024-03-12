@@ -151,7 +151,7 @@ pre-test: # format and export correct data
 pre-script: # format and export correct data
 	@echo "# Env variables required for the scripts"
 
-	@echo "# OrchestratorFactory
+	@echo "# OrchestratorFactory"
 	@export DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET=0x0000000000000000000000000000000000000001
 	@export DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000001
 
