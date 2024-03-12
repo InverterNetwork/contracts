@@ -10,16 +10,53 @@ import {
     ERC2771Forwarder
 } from "src/external/forwarder/TransactionForwarder.sol";
 
+import {TransactionForwarderAccessMock} from
+    "test/utils/mocks/external/TransactionForwarderAccessMock.sol";
+
 import {CallIntercepter} from "test/utils/mocks/external/CallIntercepter.sol";
 
 contract TransactionForwarderTest is Test {
     // SuT
-    TransactionForwarder forwarder;
+    TransactionForwarderAccessMock forwarder;
 
     event CallReceived(address intercepterAddress, bytes data, address sender);
 
     function setUp() public {
-        forwarder = new TransactionForwarder("TransactionForwarder");
+        forwarder = new TransactionForwarderAccessMock("TransactionForwarder");
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: createDigest
+
+    function testCreateDigest(
+        ERC2771Forwarder.ForwardRequestData memory req,
+        uint signerPrivateKey
+    ) public {
+        //Restrict the signerKey to a space where it still should work
+        signerPrivateKey = bound(signerPrivateKey, 1, 2 ^ 128);
+
+        //Derive signer from signerkey
+        address signer = vm.addr(signerPrivateKey);
+
+        //set from in req to be the signer
+        req.from = signer;
+
+        //Create the digest needed to create the signature
+        bytes32 digest = forwarder.createDigest(req);
+
+        //Create Signature with digest (This has to be handled by the frontend)
+        vm.prank(signer);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        //Set correct signature in request
+        req.signature = signature;
+
+        (,, bool signerMatch, address signerResult) =
+            forwarder.original_validate(req);
+
+        assertTrue(signerMatch);
+        assertEq(signer, signerResult);
     }
 
     //--------------------------------------------------------------------------------
