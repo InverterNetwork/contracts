@@ -15,12 +15,8 @@
 # -----------------------------------------------------------------------------
 # Common
 .PHONY: install
-clean: ## Installs the required dependencies
+install: ## Installs the required dependencies
 	@forge install
-
-.PHONY: clean
-clean: ## Remove build artifacts
-	@forge clean
 
 .PHONY: build
 build: ## Build project
