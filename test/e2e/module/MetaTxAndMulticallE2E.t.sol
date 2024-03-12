@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
 
-import {ForwarderSignatureHelper} from "./ForwarderSignatureHelper.sol";
-
 // SuT
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 
@@ -22,7 +20,8 @@ import {
 } from "src/modules/logicModule/BountyManager.sol";
 import {
     TransactionForwarder,
-    ITransactionForwarder
+    ITransactionForwarder,
+    ERC2771Forwarder
 } from "src/external/forwarder/TransactionForwarder.sol";
 
 contract MetaTxAndMulticallE2E is E2ETest {
@@ -121,13 +120,9 @@ contract MetaTxAndMulticallE2E is E2ETest {
         vm.prank(signer);
         token.approve(fundingManager, depositAmount);
 
-        //Because the creation of the signature and the ForwardRequestData is kind of messy I created a Helper that handles that
-        ForwarderSignatureHelper signatureHelper =
-            new ForwarderSignatureHelper(address(forwarder));
-
         //We create a simplyfied ForwardRequest without the signature
-        ForwarderSignatureHelper.HelperForwardRequest memory req =
-        ForwarderSignatureHelper.HelperForwardRequest({
+        ERC2771Forwarder.ForwardRequestData memory req = ERC2771Forwarder
+            .ForwardRequestData({
             from: signer,
             to: fundingManager,
             value: 0,
@@ -135,15 +130,23 @@ contract MetaTxAndMulticallE2E is E2ETest {
             gas: 1_000_000,
             //This is the timestamp after which the request is not executable anymore.
             deadline: uint48(block.timestamp + 1 weeks),
-            data: abi.encodeWithSignature("deposit(uint256)", depositAmount)
+            data: abi.encodeWithSignature("deposit(uint256)", depositAmount),
+            //This has to be empty until we create the signature
+            signature: bytes("")
         });
 
-        //We use the helper to create the sinature
-        TransactionForwarder.ForwardRequestData memory finalReq =
-            signatureHelper.getForwardRequestData(req, signer, signerPrivateKey);
+        //Create the digest needed to create the signature
+        bytes32 digest = forwarder.createDigest(req);
+
+        //Create Signature with digest (This has to be handled by the frontend)
+        vm.prank(signer);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        req.signature = signature;
 
         //Do call
-        forwarder.execute(finalReq);
+        forwarder.execute(req);
 
         //Check if successful
         assertEq(
@@ -178,7 +181,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         );
 
         //Then we need to create the ForwardRequest
-        req = ForwarderSignatureHelper.HelperForwardRequest({
+        req = ERC2771Forwarder.ForwardRequestData({
             from: signer,
             to: address(bountyManager),
             value: 0,
@@ -190,15 +193,23 @@ contract MetaTxAndMulticallE2E is E2ETest {
                 100e18, //minimumPayoutAmount
                 500e18, //maximumPayoutAmount
                 bytes("This is a test bounty") //details
-            )
+            ),
+            //This has to be empty until we create the signature
+            signature: bytes("")
         });
 
-        //We use the helper to create the sinature
-        finalReq =
-            signatureHelper.getForwardRequestData(req, signer, signerPrivateKey);
+        //Create the digest needed to create the signature
+        digest = forwarder.createDigest(req);
+
+        //Create Signature with digest (This has to be handled by the frontend)
+        vm.prank(signer);
+        (v, r, s) = vm.sign(signerPrivateKey, digest);
+        signature = abi.encodePacked(r, s, v);
+
+        req.signature = signature;
 
         //Do call
-        forwarder.execute(finalReq);
+        forwarder.execute(req);
 
         //Check if successful
         assertTrue(bountyManager.isExistingBountyId(1));
