@@ -39,7 +39,7 @@ abstract contract OptimisticOracleIntegrator is
     // Storage
 
     // General Parameters
-    IERC20 public defaultCurrency; // The currency used for the bond.
+    IERC20 public defaultCurrency; // The currency used for the bond.  TODO: Rename to BondCurrency probably
     OptimisticOracleV3Interface public oo; // The OptimisticOracleV3 instance where assertions will be published to.
     uint64 public assertionLiveness; // Time period an assertion is open for dispute (in seconds).
     bytes32 public defaultIdentifier; // The identifier used when creating the assertion. For most usecases, this will resolve to "ASSERT_TRUTH".

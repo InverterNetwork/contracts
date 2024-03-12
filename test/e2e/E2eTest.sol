@@ -32,6 +32,9 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
+import {
+    KPIRewarder
+} from "src/modules/logicModule/KPIRewarder.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {TokenGatedRoleAuthorizer} from
     "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
@@ -418,6 +421,35 @@ contract E2eTest is Test {
         );
     }
 
+    // KPIRewarder
+
+    KPIRewarder kpiRewarderImpl;
+    Beacon kpiRewarderBeacon;
+    address kpiRewarderBeaconOwner = address(0x3BEAC0);
+    IModule.Metadata kpiRewarderMetadata = IModule.Metadata(
+        1, 1, "https://github.com/inverter/kpiRewarder", "KPIRewarder"
+    );
+    IOrchestratorFactory.ModuleConfig kpiRewarderFactoryConfig;
+
+    function setUpKPIRewarder() private {
+        // Deploy module implementations.
+        kpiRewarderImpl =  new KPIRewarder();
+
+        // Deploy module beacons.
+        vm.prank(kpiRewarderBeaconOwner);
+        kpiRewarderBeacon = new Beacon();
+
+        // Set beacon's implementations.
+        vm.prank(kpiRewarderBeaconOwner);
+        kpiRewarderBeacon.upgradeTo(address(kpiRewarderImpl));
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            kpiRewarderMetadata, IBeacon(kpiRewarderBeacon)
+        );
+    }
+
+
     //--------------------------------------------------------------------------
     // utils
 
@@ -581,6 +613,38 @@ contract E2eTest is Test {
         );
 
         optionalModules[0] = stakingManagerFactoryConfig;
+
+        IOrchestratorFactory.ModuleConfig memory
+            rebasingFundingManagerFactoryConfig = IOrchestratorFactory
+                .ModuleConfig(
+                rebasingFundingManagerMetadata,
+                abi.encode(address(config.token)),
+                abi.encode(hasDependency, dependencies)
+            );
+
+        return orchestratorFactory.createOrchestrator(
+            config,
+            rebasingFundingManagerFactoryConfig,
+            roleAuthorizerFactoryConfig,
+            paymentProcessorFactoryConfig,
+            optionalModules
+        );
+    }
+
+    function _createNewOrchestratorWithAllModules_withKPIRewarder(
+        IOrchestratorFactory.OrchestratorConfig memory config,
+        address bondToken, address stakingToken, address rewarderOracle
+    ) internal returns (IOrchestrator) {
+        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory.ModuleConfig[](1);
+
+        kpiRewarderFactoryConfig = IOrchestratorFactory.ModuleConfig(
+            kpiRewarderMetadata,
+            abi.encode(bondToken, stakingToken, rewarderOracle),
+            abi.encode(true, dependencies)
+        );
+
+        optionalModules[0] = kpiRewarderFactoryConfig;
 
         IOrchestratorFactory.ModuleConfig memory
             rebasingFundingManagerFactoryConfig = IOrchestratorFactory
