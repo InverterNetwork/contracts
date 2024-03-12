@@ -987,7 +987,7 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
             assertApproxEqRel(
                 kpiManager.earned(users[i]),
                 userReward,
-                0.00001e18 //This is 0,001 %
+                1e9 // Below this it reverts due to precision error
             );
         }
 
