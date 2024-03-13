@@ -800,7 +800,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     function testSellOrderFor(uint amountIn, address to) public {
         // Setup
 
-        vm.assume(to != address(0));
+        address seller = makeAddr("seller");
+        vm.assume(
+            to != address(0) && to != address(bondingCurveFundingManager)
+                && to != seller
+        );
 
         // For sells, number above 1e26 start reverting!?
         amountIn = bound(amountIn, 1, 1e26); // see comment in testBuyOrderWithZeroFee
@@ -808,7 +812,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             address(bondingCurveFundingManager), (type(uint).max - amountIn)
         ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
 
-        address seller = makeAddr("seller");
         assertNotEq(to, seller);
 
         _prepareSellConditions(seller, amountIn);

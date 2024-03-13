@@ -51,6 +51,11 @@ interface IToposBondingCurveFundingManager {
     /// @notice Emits when seize percentage gets updated
     event SeizeChanged(uint64 currentSeize, uint64 newSeize);
 
+    /// @notice Emits when basePriceToCapitalRatio gets updated
+    event BasePriceToCapitalRatioChanged(
+        uint currentBasePriceToCapitalRatio, uint newBasePriceToCapitalRatio
+    );
+
     //--------------------------------------------------------------------------
     // Structs
 

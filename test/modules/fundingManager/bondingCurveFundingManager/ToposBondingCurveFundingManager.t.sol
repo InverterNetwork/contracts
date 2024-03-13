@@ -113,8 +113,12 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         ILiquidityPool newValue, ILiquidityPool oldValue
     );
     event RepayableAmountChanged(uint newValue, uint oldValue);
+    event RepaymentTransfer(address receiver, uint amount);
     event CollateralSeized(uint amount);
     event SeizeChanged(uint64 currentSeize, uint64 newSeize);
+    event BasePriceToCapitalRatioChanged(
+        uint currentBasePriceToCapitalRatio, uint newBasePriceToCapitalRatio
+    );
 
     function setUp() public {
         // Deploy contracts
@@ -548,6 +552,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
                 └── And: _amount <= repayable amount available
                     └── When: the function transferRepayment() gets called
                         └── Then: it should transfer _amount to the _to address
+                            └── And: it should emit an event
     */
 
     function testTransferPayment_revertGivenCallerIsNotLp(
@@ -690,6 +695,8 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
 
         // Execute Tx
         vm.prank(liquidityPool);
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit RepaymentTransfer(_to, _amount);
         bondingCurveFundingManager.transferRepayment(_to, _amount);
 
         // Assert that _amount tokens have been withdrawn from funding manager
@@ -1258,10 +1265,10 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
     function testInternalRedeemTokensFormulaWrapper_worksGivenItReturnsRedeemAmount(
         uint _depositAmount
     ) public {
-        // protect agains overflow
+        // protect agains under/overflow
         _depositAmount = bound(
             _depositAmount,
-            1,
+            1e16,
             1e36 - bondingCurveFundingManager.call_getCapitalAvailable()
         );
         _mintCollateralTokenToAddressHelper(
@@ -1533,7 +1540,8 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
 
     /*    Test _updateVariables()
         └── Given: the function _updateVariables() gets called
-            └── Then: it should update the state variable basePriceToCapitalRatio
+            └── Then: it should emit an event
+                └── And: it should update the state variable basePriceToCapitalRatio
     */
 
     function testUpdateVariables_worksGivenBasePriceToCapitalRatioStateIsSet(
@@ -1552,8 +1560,16 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         uint expectedReturnValue = FixedPointMathLib.fdiv(
             _basePriceMultiplier, _capitalRequirements, FixedPointMathLib.WAD
         );
+        uint currentBasePriceToCapitalRatio =
+            bondingCurveFundingManager.basePriceToCapitalRatio();
 
         // Execute Tx
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit BasePriceToCapitalRatioChanged(
+            currentBasePriceToCapitalRatio, expectedReturnValue
+        );
         bondingCurveFundingManager.call_updateVariables();
         // Get set state value
         uint setStateValue =

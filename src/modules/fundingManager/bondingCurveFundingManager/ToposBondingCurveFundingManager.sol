@@ -308,6 +308,7 @@ contract ToposBondingCurveFundingManager is
         __Module_orchestrator.fundingManager().token().safeTransfer(
             _to, _amount
         );
+        emit RepaymentTransfer(_to, _amount);
     }
 
     //--------------------------------------------------------------------------
@@ -508,9 +509,13 @@ contract ToposBondingCurveFundingManager is
 
     /// @dev Precomputes and sets the price multiplier to capital ratio
     function _updateVariables() internal {
-        basePriceToCapitalRatio = _calculateBasePriceToCapitalRatio(
+        uint newBasePriceToCapitalRatio = _calculateBasePriceToCapitalRatio(
             capitalRequired, basePriceMultiplier
         );
+        emit BasePriceToCapitalRatioChanged(
+            basePriceToCapitalRatio, newBasePriceToCapitalRatio
+        );
+        basePriceToCapitalRatio = newBasePriceToCapitalRatio;
     }
 
     /// @dev Internal function which calculates the price multiplier to capital ratio

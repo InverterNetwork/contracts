@@ -23,6 +23,9 @@ interface IRepayer {
     /// @notice Event emitted when the repayable amount is updated
     event RepayableAmountChanged(uint newValue, uint oldValue);
 
+    /// @notice Event emitted when a repayment has been transferred
+    event RepaymentTransfer(address receiver, uint amount);
+
     //--------------------------------------------------------------------------
     // Functions
 
