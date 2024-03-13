@@ -14,7 +14,10 @@ import {
     BountyManager,
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
-import {BancorVirtualSupplyBondingCurveFundingManager} from
+import {
+    BancorVirtualSupplyBondingCurveFundingManager,
+    IBancorVirtualSupplyBondingCurveFundingManager
+} from
     "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
 
 import {BancorFormula} from
@@ -99,24 +102,37 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             token: collateralToken
         });
 
+        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
+            buf_issuanceToken =
+            IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken({
+                name: CURVE_TOKEN_NAME,
+                symbol: CURVE_TOKEN_SYMBOL,
+                decimals: CURVE_TOKEN_DECIMALS
+            });
+
+        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
+            memory buf_bondingCurveProperties =
+            IBancorVirtualSupplyBondingCurveFundingManager
+                .BondingCurveProperties({
+                formula: address(formula),
+                reserveRatioForBuying: RESERVE_RATIO_FOR_BUYING,
+                reserveRatioForSelling: RESERVE_RATIO_FOR_SELLING,
+                buyFee: BUY_FEE,
+                sellFee: SELL_FEE,
+                buyIsOpen: BUY_IS_OPEN,
+                sellIsOpen: SELL_IS_OPEN,
+                initialTokenSupply: INITIAL_TOKEN_SUPPLY,
+                initialCollateralSupply: INITIAL_COLLATERAL_SUPPLY
+            });
+
         // Funding Manager: Virtual Supply Bonding Curve Funding Manager
         IOrchestratorFactory.ModuleConfig memory
             bondingCurveFundingManagerConfig = IOrchestratorFactory
                 .ModuleConfig(
                 bondingCurveFundingManagerMetadata,
                 abi.encode(
-                    CURVE_TOKEN_NAME,
-                    CURVE_TOKEN_SYMBOL,
-                    CURVE_TOKEN_DECIMALS,
-                    address(formula),
-                    RESERVE_RATIO_FOR_BUYING,
-                    RESERVE_RATIO_FOR_SELLING,
-                    BUY_FEE,
-                    SELL_FEE,
-                    BUY_IS_OPEN,
-                    SELL_IS_OPEN,
-                    INITIAL_TOKEN_SUPPLY,
-                    INITIAL_COLLATERAL_SUPPLY,
+                    buf_issuanceToken,
+                    buf_bondingCurveProperties,
                     address(collateralToken)
                 ),
                 abi.encode(hasDependency, dependencies)
