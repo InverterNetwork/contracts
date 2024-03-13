@@ -114,6 +114,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
     );
     event RepayableAmountChanged(uint newValue, uint oldValue);
     event CollateralSeized(uint amount);
+    event SeizeChanged(uint64 currentSeize, uint64 newSeize);
 
     function setUp() public {
         // Deploy contracts
@@ -1379,7 +1380,8 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
         │       └── Then: it should revert
         └── Given: the parameter _seize <= MAX_SEIZE
             └── When: the function _setSeize() gets called
-                └── Then: it should succeed in writing a new value to state
+                └── Then: it should emit an event
+                    └── And: it should succeed in writing a new value to state
     */
 
     function testInternalSetSeize_revertGivenSeizeBiggerThanMaxSeize(
@@ -1404,8 +1406,13 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
     {
         vm.assume(_seize != bondingCurveFundingManager.currentSeize());
         _seize = uint64(bound(_seize, 1, MAX_SEIZE));
+        uint64 currentSeize = bondingCurveFundingManager.currentSeize();
 
         // Execute Tx
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit SeizeChanged(currentSeize, _seize);
         bondingCurveFundingManager.adjustSeize(_seize);
 
         assertEq(bondingCurveFundingManager.currentSeize(), _seize);

@@ -138,7 +138,7 @@ contract ToposBondingCurveFundingManager is
         _setCapitalRequired(bondingCurveProperties.capitalRequired);
         // Set current seize to MAX_SEIZE
         _setSeize(bondingCurveProperties.seize);
-        // Set initial
+        // Set base price multiplier
         _setBaseMultiplier(bondingCurveProperties.basePriceMultiplier);
         // Set sell fee to Max fee at initiation
         _setSellFee(bondingCurveProperties.sellFee);
@@ -457,6 +457,7 @@ contract ToposBondingCurveFundingManager is
         if (_seize > MAX_SEIZE) {
             revert ToposBondingCurveFundingManager__InvalidSeize(_seize);
         }
+        emit SeizeChanged(currentSeize, _seize);
         currentSeize = _seize;
     }
 

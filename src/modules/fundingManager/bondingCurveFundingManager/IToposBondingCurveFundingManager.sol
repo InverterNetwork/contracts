@@ -48,6 +48,9 @@ interface IToposBondingCurveFundingManager {
         uint currentBaseMultiplier, uint newBaseMultiplier
     );
 
+    /// @notice Emits when seize percentage gets updated
+    event SeizeChanged(uint64 currentSeize, uint64 newSeize);
+
     //--------------------------------------------------------------------------
     // Structs
 
