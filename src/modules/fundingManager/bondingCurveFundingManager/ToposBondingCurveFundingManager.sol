@@ -84,7 +84,7 @@ contract ToposBondingCurveFundingManager is
     IToposFormula public formula;
     /// @notice Repayable amount collateral which can be pulled from the contract by the liquidity pool
     uint public repayableAmount;
-    /// @dev The current seize percentage expresses in BPS
+    /// @dev The current seize percentage expressed in BPS
     uint64 public currentSeize;
     /// @dev Address of the liquidity pool who has access to the collateral held by the funding manager
     /// through the Repayer functionality
@@ -136,7 +136,7 @@ contract ToposBondingCurveFundingManager is
         formula = IToposFormula(bondingCurveProperties.formula);
         // Set capital required
         _setCapitalRequired(bondingCurveProperties.capitalRequired);
-        // Set current seize to MAX_SEIZE
+        // Set currentSeize
         _setSeize(bondingCurveProperties.seize);
         // Set base price multiplier
         _setBaseMultiplier(bondingCurveProperties.basePriceMultiplier);
