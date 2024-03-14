@@ -22,9 +22,9 @@ jobs:
 
       - name: Set environment variables
         run: |
-          set -o allexport
-          source dev.env set
-          +o allexport
+          set -a 
+          source dev.env 
+          set +a
 
       - name: Test stuff
         run: make smth
