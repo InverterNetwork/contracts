@@ -23,7 +23,7 @@ jobs:
       - name: Set environment variables
         run: |
           set -o allexport
-          source .env set
+          source dev.env set
           +o allexport
 
       - name: Test stuff
