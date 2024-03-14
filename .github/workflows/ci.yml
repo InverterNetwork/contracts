@@ -20,6 +20,9 @@ jobs:
       - name: Install deps
         run: forge install
 
+      - name: Set environment variables
+        run: source dev.env
+
       - name: Run scripts
         run: make testScripts
 
