@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {ILiquidityPool} from
-    "src/modules/logicModule/liquidityPool/ILiquidityPool.sol";
+import {ILiquidityVaultController} from
+    "src/modules/logicModule/liquidityVault/ILiquidityVaultController.sol";
 
 interface IToposBondingCurveFundingManager {
     //--------------------------------------------------------------------------
@@ -15,7 +15,9 @@ interface IToposBondingCurveFundingManager {
     error ToposBondingCurveFundingManager__InvalidInputAddress();
 
     /// @notice Only set liquidity pool address can call this function
-    error ToposBondingCurveFundingManager__InvalidLiquidityPool(address caller);
+    error ToposBondingCurveFundingManager__InvalidLiquidityVaultController(
+        address caller
+    );
 
     /// @notice Seize cannot be bigger than MAX_SEIZE = 1%
     error ToposBondingCurveFundingManager__InvalidSeize(uint64 seize);
@@ -64,7 +66,8 @@ interface IToposBondingCurveFundingManager {
 
     /// @notice Sets a new liquidity pool address
     /// @param _lp Address of the liquidity pool
-    function setLiquidityPoolContract(ILiquidityPool _lp) external;
+    function setLiquidityVaultController(ILiquidityVaultController _lp)
+        external;
 
     /// @notice Returns the fee amount for a sale transaction, based on the sell fee and amount in
     /// @param _amountIn The amount over which the fee is calculated

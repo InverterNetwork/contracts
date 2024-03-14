@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {ILiquidityPool} from
-    "src/modules/logicModule/liquidityPool/ILiquidityPool.sol";
+import {ILiquidityVaultController} from
+    "src/modules/logicModule/liquidityVault/ILiquidityVaultController.sol";
 
 interface IRepayer {
     //--------------------------------------------------------------------------
@@ -16,8 +16,8 @@ interface IRepayer {
     // Events
 
     /// @notice Event emitted when the liquidity pool address is updated
-    event LiquidityPoolChanged(
-        ILiquidityPool newValue, ILiquidityPool oldValue
+    event LiquidityVaultControllerChanged(
+        ILiquidityVaultController newValue, ILiquidityVaultController oldValue
     );
 
     /// @notice Event emitted when the repayable amount is updated
@@ -26,13 +26,16 @@ interface IRepayer {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Returns the max repayable amount set in the contract
+    /// @notice Return the repayable amount in collateral asset
+    /// @return uint The repayable amount
     function getRepayableAmount() external view returns (uint);
 
+    // Todo update comment
     /// @notice Sets the repayable amount
     /// @param _amount Max repayable amount
     function setRepayableAmount(uint _amount) external;
 
+    // Todo update comment
     /// @notice Transfers the repayable amount to the liquidity provider
     /// @param _amount the amount to repay
     /// @param _to the address of liquidity provider

@@ -102,5 +102,6 @@ interface IBondingCurveFundingManagerBase {
     /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
     function calculatePurchaseReturn(uint _depositAmount)
         external
+        view
         returns (uint mintAmount);
 }

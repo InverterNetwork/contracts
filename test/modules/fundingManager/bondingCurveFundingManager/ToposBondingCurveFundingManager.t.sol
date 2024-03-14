@@ -31,8 +31,8 @@ import {
     IRedeemingBondingCurveFundingManagerBase
 } from
     "src/modules/fundingManager/bondingCurveFundingManager/RedeemingBondingCurveFundingManagerBase.sol";
-import {ILiquidityPool} from
-    "src/modules/logicModule/liquidityPool/ILiquidityPool.sol";
+import {ILiquidityVaultController} from
+    "src/modules/logicModule/liquidityVault/ILiquidityVaultController.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -68,7 +68,8 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
     address formula;
 
     address owner_address = address(0xA1BA);
-    ILiquidityPool liquidityPool = ILiquidityPool(makeAddr("liquidityPool")); // TODO: Replace with Mock
+    ILiquidityVaultController liquidityVaultController =
+        ILiquidityVaultController(makeAddr("liquidityVaultController")); // TODO: Replace with Mock
 
     function setUp() public {
         // Deploy contracts
@@ -106,7 +107,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
                 issuanceToken,
                 bc_properties,
                 _token, // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                liquidityPool
+                liquidityVaultController
             )
         );
     }

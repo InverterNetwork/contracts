@@ -18,8 +18,8 @@ import {IToposBondingCurveFundingManager} from
     "src/modules/fundingManager/bondingCurveFundingManager/IToposBondingCurveFundingManager.sol";
 import {IRepayer} from
     "src/modules/fundingManager/bondingCurveFundingManager/IRepayer.sol";
-import {ILiquidityPool} from
-    "src/modules/logicModule/liquidityPool/ILiquidityPool.sol";
+import {ILiquidityVaultController} from
+    "src/modules/logicModule/liquidityVault/ILiquidityVaultController.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IToposFormula} from "./formula/IToposFormula.sol";
@@ -86,7 +86,7 @@ contract ToposBondingCurveFundingManager is
     uint64 public currentSeize = MAX_SEIZE;
     /// @dev Address of the liquidity pool who has access to the collateral held by the funding manager
     /// through the Repayer functionality
-    ILiquidityPool public liquidityPool;
+    ILiquidityVaultController public liquidityVaultController;
     /// @dev Token that is accepted by this funding manager for deposits.
     IERC20 private _token;
     /// @dev Tracks last seize timestamp to determine eligibility for subsequent seizures based on SEIZE_DELAY.
@@ -113,10 +113,14 @@ contract ToposBondingCurveFundingManager is
         address _acceptedToken;
         IssuanceToken memory issuanceToken;
         BondingCurveProperties memory bondingCurveProperties;
-        address _liquidityPool;
+        address _liquidityVaultController;
 
-        (issuanceToken, bondingCurveProperties, _acceptedToken, _liquidityPool)
-        = abi.decode(
+        (
+            issuanceToken,
+            bondingCurveProperties,
+            _acceptedToken,
+            _liquidityVaultController
+        ) = abi.decode(
             configData,
             (IssuanceToken, BondingCurveProperties, address, address)
         );
@@ -129,7 +133,8 @@ contract ToposBondingCurveFundingManager is
         // Set collateral token
         _token = IERC20(_acceptedToken);
         // Set liquidity pool address
-        liquidityPool = ILiquidityPool(_liquidityPool);
+        liquidityVaultController =
+            ILiquidityVaultController(_liquidityVaultController);
         // Set formula contract
         formula = IToposFormula(bondingCurveProperties.formula);
         _setCapitalRequired(bondingCurveProperties.capitalRequired);
@@ -144,9 +149,10 @@ contract ToposBondingCurveFundingManager is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier onlyLiquidityPool() {
-        if (_msgSender() != address(liquidityPool)) {
-            revert ToposBondingCurveFundingManager__InvalidLiquidityPool(
+    modifier onlyLiquidityVaultController() {
+        if (_msgSender() != address(liquidityVaultController)) {
+            revert
+                ToposBondingCurveFundingManager__InvalidLiquidityVaultController(
                 _msgSender()
             );
         }
@@ -308,7 +314,7 @@ contract ToposBondingCurveFundingManager is
     function transferRepayment(address _to, uint _amount)
         external
         validReceiver(_to)
-        onlyLiquidityPool
+        onlyLiquidityVaultController
     {
         if (_amount > _getRepayableAmount()) {
             revert Repayer__InsufficientCollateralForRepayerTransfer();
@@ -382,15 +388,15 @@ contract ToposBondingCurveFundingManager is
     }
 
     /// @inheritdoc IToposBondingCurveFundingManager
-    function setLiquidityPoolContract(ILiquidityPool _lp)
+    function setLiquidityVaultController(ILiquidityVaultController _lp)
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
         if (address(_lp) == address(0)) {
             revert ToposBondingCurveFundingManager__InvalidInputAddress();
         }
-        emit LiquidityPoolChanged(_lp, liquidityPool);
-        liquidityPool = _lp;
+        emit LiquidityVaultControllerChanged(_lp, liquidityVaultController);
+        liquidityVaultController = _lp;
     }
 
     //--------------------------------------------------------------------------
