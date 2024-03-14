@@ -73,7 +73,7 @@ testE2e: ## Run e2e test suite
 
 .PHONY: testScripts
 testScripts: ## Run e2e test suite
-	@make pre-script
+	@echo "# Run scripts"
 
 	@forge script script/factories/DeployModuleFactory.s.sol
 	@forge script script/factories/DeployOrchestratorFactory.s.sol
@@ -164,7 +164,7 @@ pre-script: # format and export correct data
 	@export ORCHESTRATOR_OWNER_PRIVATE_KEY=0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
 	@export FUNDER_1_PRIVATE_KEY=0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e
 
-	@echo "# These are just basic Addresses fro testing"
+	@echo "# Basic Addresses for testing"
 	@export DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET=0x0000000000000000000000000000000000000001
 	@export DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000002
 	@export FORWARDER_ADDRESS=0x0000000000000000000000000000000000000003
