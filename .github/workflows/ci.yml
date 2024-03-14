@@ -20,12 +20,6 @@ jobs:
       - name: Install dependencies
         run: forge install
 
-      - name: Set environment variables
-        run: |
-          set -a 
-          source dev.env 
-          set +a
-
       - name: Test stuff
         run: make smth
 
