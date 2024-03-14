@@ -17,11 +17,17 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install deps
+      - name: Install dependencies
         run: forge install
 
       - name: Set environment variables
-        run: source dev.env
+        run: |
+          set -o allexport
+          source .env set
+          +o allexport
+
+      - name: Test stuff
+        run: make smth
 
       - name: Run scripts
         run: make testScripts

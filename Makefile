@@ -71,6 +71,10 @@ testE2e: ## Run e2e test suite
 	@make pre-test
 	@forge test -vvv --match-path "*/e2e/*"
 
+.PHONY: smth
+smth:
+	@echo "In smth"
+
 .PHONY: testScripts
 testScripts: ## Run e2e test suite
 	@echo "# Run scripts"
