@@ -15,8 +15,10 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 
-import {SimplePaymentProcessor, IPaymentProcessor} from
-    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
+import {
+    SimplePaymentProcessor,
+    IPaymentProcessor
+} from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 
 import {
     KPIRewarder,
@@ -27,34 +29,42 @@ import {
     IERC20PaymentClient
 } from "src/modules/logicModule/KPIRewarder.sol";
 
-
-
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-contract KPIRewarderLifecycle is E2eTest {
+/*
+Fork testing necessary:
 
+forge test --match-contract KPIRewarderLifecycle -vvv --fork-url GOERLI_RPC_URL
+
+*/
+
+contract KPIRewarderLifecycle is E2eTest {
     // Constants
     address ooV3 = 0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB;
     //OptimisticOracleV3Interface oracle = new OptimisticOracleV3Interface(ooV3);
 
-    ERC20 USDC= address(0x1234);
-    ERC20 rewardToken = address(0x4567);
-    ERC20 stakingToken = address(0x5678);
+    ERC20Mock USDC =
+        ERC20Mock(address(0x07865c6E87B9F70255377e024ace6630C1Eaa37F)); //Goerli USDC address
+    address USDC_Minter = 0xc8EeCaDfc14D50F0e616806d890322C95E303f2f; // Goerli USDC Master Minter
+    ERC20Mock rewardToken =
+        new ERC20Mock("Project Reward Mock Token", "REWARD MOCK");
+    ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
     address OWNER = address(0x1); //Workflow owner
     address AUTOMATION_SERVICE = address(0x6E1A70); // The automation service that will post the assertion and do the callback
 
-        // Mock data for assertions
+    // Mock data for assertions
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
     bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
     address constant MOCK_ASSERTER_ADDRESS = address(0x1);
     uint constant MOCK_ASSERTED_VALUE = 50_000_000; // TODO remove when generalizing
 
+    IOrchestrator orchestrator;
+    RebasingFundingManager fundingManager;
     KPIRewarder kpiRewarder;
 
     // Mock data for the KPI
-
 
     // How do we approach this.
 
@@ -72,85 +82,56 @@ contract KPIRewarderLifecycle is E2eTest {
 
     */
 
+    function test_e2e_KPIRewarderLifecycle(
+        address[] memory users,
+        uint[] memory amounts,
+        uint rounds,
+        uint[] calldata assertedData
+    ) public {
+        _createOrchestratorAndSaveModules();
 
-    function test_e2e_KPIRewarderLifecycle(address[] calldata users, address[] calldata amounts, uint rounds, uint[] calldata assertedData ) public {
+        // TODO actually do the capping here, and then set up stake separately
+        //address[] memory users;
+        //uint[] memory amounts;
+        (users, amounts) = _validateAddressesAndAmounts(users, amounts);
 
+        console.log("Users: %s", users[0]);
+        console.log("Amounts: %s", amounts[0]);
+        console.log("Users.length: %s", users.length);
 
+        _setupUSDC();
 
+        _prepareKPIRewarder();
+        // give the automation service the rights to post assertions
 
+        // Initialize KPIRewarder setup:
+        USDC.approve(address(fundingManager), 50_000_000e18);
+        fundingManager.deposit(50_000_000e18);
 
-        // -----------INIT
-        // address(this) creates a new orchestrator.
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
-            owner: address(this),
-            token: address(USDC)
-        });
+        // TODO refactor to avoid slices (use % 2)
+        uint halfOfUsers = users.length / 2;
+        uint totalUserFunds_round1;
+        uint totalUserFunds_round2;
+        address[] memory users_round1 = new address[](halfOfUsers);
+        address[] memory users_round2 = new address[](halfOfUsers);
+        uint[] memory amounts_round1 = new uint[](halfOfUsers);
+        uint[] memory amounts_round2 = new uint[](halfOfUsers);
 
-        IOrchestrator orchestrator =
-        _createNewOrchestratorWithAllModules_withKPIRewarder(
-            orchestratorConfig,
-            address(USDC),
-            address(stakingToken),
-            ooV3
-        );
-
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
-
-
-
-        // Find KPIRewarder
-        address[] memory modulesList = orchestrator.listModules();
-        for (uint i; i < modulesList.length; ++i) {
-            try IKPIRewarder(modulesList[i]).KPICounter() returns (uint) {
-                kpiRewarder = KPIRewarder(modulesList[i]);
-                break;
-            } catch {
-                continue;
+        for (uint i; i < users.length; i += 2) {
+            console.log("i: %s", i);
+            if (i % 2 == 0) {
+                users_round1[i] = users[i];
+                amounts_round1[i] = amounts[i];
+                totalUserFunds_round1 += amounts[i];
+            } else {
+                users_round2[i] = users[i];
+                amounts_round2[i] = amounts[i];
+                totalUserFunds_round2 += amounts[i];
             }
         }
 
-        // we authorize the deployer of the orchestrator as the bounty admin
-        kpiRewarder.grantModuleRole(
-            kpiRewarder.ASSERTER_ROLE(), AUTOMATION_SERVICE
-        );
-
-
-        // Initialize KPIRewarder setup:
-        // - Connect to UMA 
-        // - Seed FundingManager with lots of rewards
-        USDC.mint(address(this), 100_000_000e18);
-        fundingManager.deposit(50_000_000e18);
-        // - Seed Automation service with Bond tokens and funds for execution
-        USDC.transfer(address(AUTOMATION_SERVICE), 1_000_000e18);
-        // - Ensure allowances
-            /*    feeToken.approve(
-            address(kpiRewarder), ooV3.getMinimumBond(address(feeToken))
-        );*/
-
         // Perform user staking with half of the users
-                // validate and bound addresses/amounts
-        uint halfOfUsers = users.length / 2;
-        uint totalUserFunds_round1;
-        address[] memory users_round1;
-        uint[] memory amounts_round1;
-        (users_round1, amounts_round1, totalUserFunds_round1) = _setUpStakers(users[:halfOfUsers], amounts);
-
-
-        // Create continuous  KPI
-        uint[] memory trancheValues = new uint[](3);
-        uint[] memory trancheRewards = new uint[](3);
-
-        trancheValues[0] = 20_000_000;
-        trancheValues[1] = 40_000_000;
-        trancheValues[2] = 60_000_000;
-
-        trancheRewards[0] = 100_000e18;
-        trancheRewards[1] = 100_000e18;
-        trancheRewards[2] = 100_000e18;
-
-        kpiRewarder.createKPI(true, trancheValues, trancheRewards);
+        _setUpStakers(users_round1, amounts_round1);
 
         // - Start an assertion with assertedData[0]
         vm.prank(AUTOMATION_SERVICE);
@@ -162,21 +143,15 @@ contract KPIRewarderLifecycle is E2eTest {
             0 // target KPI
         );
 
-
-
         // - Deposit the others
-
-        uint totalUserFunds_round2;
-        address[] memory users_round2;
-        uint[] memory amounts_round2;
-        (users_round2, amounts_round2, totalUserFunds_round2) = _setUpStakers(users[halfOfUsers:], amounts);
+        _setUpStakers(users_round2, amounts_round2);
 
         // - Resolve the assertion
         vm.prank(AUTOMATION_SERVICE);
         OptimisticOracleV3Interface(ooV3).settleAssertion(assertionId);
         // - Check the rewards
 
-        for(uint i; i < users_round1.length; i++) {
+        for (uint i; i < users_round1.length; i++) {
             uint reward = rewardToken.balanceOf(users_round1[i]);
             console.log("User %s has a reward of %s", users_round1[i], reward);
         }
@@ -184,22 +159,16 @@ contract KPIRewarderLifecycle is E2eTest {
         //          - This time all should get rewards
 
         // Withdraw all funds and check balances
-
-
-
-
     }
 
-    // Stakes a set of users and their amounts
-    function _setUpStakers(address[] memory users, uint[] memory amounts)
+    function _validateAddressesAndAmounts(
+        address[] memory users,
+        uint[] memory amounts
+    )
         private
-        returns (
-            address[] memory cappedUsers,
-            uint[] memory cappedAmounts,
-            uint totalUserFunds
-        )
+        returns (address[] memory cappedUsers, uint[] memory cappedAmounts)
     {
-        vm.assume(amounts.length >= users.length);
+        vm.assume(amounts.length > 1 && amounts.length >= users.length);
 
         uint maxLength = kpiRewarder.MAX_QUEUE_LENGTH();
 
@@ -219,22 +188,93 @@ contract KPIRewarderLifecycle is E2eTest {
             }
         }
 
-//        _assumeValidAddresses(cappedUsers);
+        _assumeValidAddresses(cappedUsers);
 
-        totalUserFunds = 0;
+        // (returns cappedUsers, cappedAmounts)
+    }
 
-        for (uint i = 0; i < cappedUsers.length; i++) {
-            stakingToken.mint(cappedUsers[i], cappedAmounts[i]);
-            vm.startPrank(cappedUsers[i]);
-            stakingToken.approve(address(kpiRewarder), cappedAmounts[i]);
-            kpiRewarder.stake(cappedAmounts[i]);
-            totalUserFunds += cappedAmounts[i];
+    // Stakes a set of users and their amounts
+    function _setUpStakers(address[] memory users, uint[] memory amounts)
+        private
+    {
+        for (uint i = 0; i < users.length; i++) {
+            stakingToken.mint(users[i], amounts[i]);
+            vm.startPrank(users[i]);
+            stakingToken.approve(address(kpiRewarder), amounts[i]);
+            kpiRewarder.stake(amounts[i]);
             vm.stopPrank();
         }
-
-        // (returns cappedUsers, cappedAmounts, totalUserFunds)
     }
-/*
+
+    function _createOrchestratorAndSaveModules() internal {
+        // PRE-Steps: register KPI Rewarder in factory
+
+        // -----------INIT
+        // address(this) creates a new orchestrator.
+        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory.OrchestratorConfig({
+            owner: address(this),
+            token: USDC
+        });
+
+        orchestrator = _createNewOrchestratorWithAllModules_withKPIRewarder(
+            orchestratorConfig, address(stakingToken), address(USDC), ooV3
+        );
+
+        fundingManager =
+            RebasingFundingManager(address(orchestrator.fundingManager()));
+
+        // Find KPIRewarder
+        address[] memory modulesList = orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            try KPIRewarder(modulesList[i]).KPICounter() returns (uint) {
+                kpiRewarder = KPIRewarder(modulesList[i]);
+                break;
+            } catch {
+                continue;
+            }
+        }
+    }
+
+    function _setupUSDC() internal {
+        vm.prank(address(USDC_Minter));
+        USDC.mint(address(this), 100_000_000e18);
+        // - Seed Automation service with Bond tokens and funds for execution
+        USDC.transfer(address(AUTOMATION_SERVICE), 1_000_000e18);
+        // - Ensure allowances
+        /*    feeToken.approve(
+            address(kpiRewarder), ooV3.getMinimumBond(address(feeToken))
+        );*/
+
+        // Add USDC to UMA whitelist:
+        //address Whitelist_Owner = 0x9A8f92a830A5cB89a3816e3D267CB7791c16b04D;
+    }
+
+    function _prepareKPIRewarder() internal {
+        kpiRewarder.grantModuleRole(
+            kpiRewarder.ASSERTER_ROLE(), AUTOMATION_SERVICE
+        );
+        _createDummyContinuousKPI(address(kpiRewarder));
+    }
+
+    // Creates  dummy incontinuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards
+    function _createDummyContinuousKPI(address kpiManager) internal {
+        uint[] memory trancheValues = new uint[](3);
+        uint[] memory trancheRewards = new uint[](3);
+
+        trancheValues[0] = 100;
+        trancheValues[1] = 200;
+        trancheValues[2] = 300;
+
+        trancheRewards[0] = 100e18;
+        trancheRewards[1] = 100e18;
+        trancheRewards[2] = 100e18;
+
+        IKPIRewarder(kpiManager).createKPI(true, trancheValues, trancheRewards);
+    }
+
+    // =========================================================================
+    // Helper to use fuzzed addresses
 
     // Address Sanity Checkers
     mapping(address => bool) addressCache;
@@ -264,20 +304,24 @@ contract KPIRewarderLifecycle is E2eTest {
         view
         returns (address[] memory)
     {
-        address[] memory modules = _orchestrator.listModules();
+        address[] memory modules = orchestrator.listModules();
 
-        address[] memory invalids = new address[](modules.length + 4);
+        address[] memory invalids = new address[](modules.length + 9);
 
         for (uint i; i < modules.length; ++i) {
             invalids[i] = modules[i];
         }
 
-        invalids[invalids.length - 4] = address(0);
-        invalids[invalids.length - 3] = address(this);
-        invalids[invalids.length - 2] = address(_orchestrator);
-        invalids[invalids.length - 1] = address(_token);
+        invalids[invalids.length - 1] = address(0);
+        invalids[invalids.length - 2] = address(this);
+        invalids[invalids.length - 3] = address(orchestrator);
+        invalids[invalids.length - 4] = address(USDC);
+        invalids[invalids.length - 5] = address(USDC_Minter);
+        invalids[invalids.length - 6] = address(rewardToken);
+        invalids[invalids.length - 7] = address(stakingToken);
+        invalids[invalids.length - 8] = address(OWNER);
+        invalids[invalids.length - 9] = address(AUTOMATION_SERVICE);
 
         return invalids;
     }
-*/
 }

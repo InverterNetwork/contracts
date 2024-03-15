@@ -908,7 +908,6 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
 
             assertEq(kpiManager.earned(users[i]), userReward);
             */
-            
         }
 
         for (uint i; i < length; i++) {
@@ -980,7 +979,6 @@ contract KPIRewarder_assertionresolvedCallbackTest is KPIRewarderTest {
             
             assertEq(kpiManager.earned(users[i]), userReward);
             */
-            
         }
 
         for (uint i; i < length; i++) {

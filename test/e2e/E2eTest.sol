@@ -32,9 +32,7 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
-import {
-    KPIRewarder
-} from "src/modules/logicModule/KPIRewarder.sol";
+import {KPIRewarder} from "src/modules/logicModule/KPIRewarder.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {TokenGatedRoleAuthorizer} from
     "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
@@ -433,7 +431,7 @@ contract E2eTest is Test {
 
     function setUpKPIRewarder() private {
         // Deploy module implementations.
-        kpiRewarderImpl =  new KPIRewarder();
+        kpiRewarderImpl = new KPIRewarder();
 
         // Deploy module beacons.
         vm.prank(kpiRewarderBeaconOwner);
@@ -448,7 +446,6 @@ contract E2eTest is Test {
             kpiRewarderMetadata, IBeacon(kpiRewarderBeacon)
         );
     }
-
 
     //--------------------------------------------------------------------------
     // utils
@@ -522,6 +519,7 @@ contract E2eTest is Test {
         setUpRecurringPaymentManager();
         setUpBountyManager();
         setUpStakingManager();
+        setUpKPIRewarder();
 
         //utils
         setSingleVoteGovernor();
@@ -633,7 +631,9 @@ contract E2eTest is Test {
 
     function _createNewOrchestratorWithAllModules_withKPIRewarder(
         IOrchestratorFactory.OrchestratorConfig memory config,
-        address bondToken, address stakingToken, address rewarderOracle
+        address bondToken,
+        address stakingToken,
+        address rewarderOracle
     ) internal returns (IOrchestrator) {
         IOrchestratorFactory.ModuleConfig[] memory optionalModules =
             new IOrchestratorFactory.ModuleConfig[](1);

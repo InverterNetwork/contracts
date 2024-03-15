@@ -92,8 +92,21 @@ contract KPIRewarder is
         oo = OptimisticOracleV3Interface(ooAddr);
         defaultIdentifier = oo.defaultIdentifier();
 
+        /*
         setDefaultCurrency(currencyAddr);
         setOptimisticOracle(ooAddr);
+        */
+        if (address(currencyAddr) == address(0)) {
+            revert Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
+        }
+        defaultCurrency = IERC20(currencyAddr);
+
+        if (ooAddr == address(0)) {
+            revert Module__OptimisticOracleIntegrator__InvalidOOInstance();
+        }
+        //TODO  check interface support with ERC165Checker.supportsInterface()
+        oo = OptimisticOracleV3Interface(ooAddr);
+        defaultIdentifier = oo.defaultIdentifier();
     }
 
     // ======================================================================
