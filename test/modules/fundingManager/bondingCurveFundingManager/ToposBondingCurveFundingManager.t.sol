@@ -1311,7 +1311,7 @@ contract ToposBondingCurveFundingManagerTest is ModuleTest {
 
         // Get state value of fee collected
         uint feeCollected =
-            bondingCurveFundingManager.getCollateralTradeFeeCollected();
+            bondingCurveFundingManager.totalCollateralTradeFeeCollected();
 
         // Calculate expected return value
         uint expectedReturnValue =

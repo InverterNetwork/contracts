@@ -177,7 +177,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             (redeemAmount, feeAmount) =
                 _calculateNetAmountAndFee(redeemAmount, sellFee);
             // Add fee amount to total collected fee
-            tradeFeeCollected += feeAmount;
+            totalCollateralTradeFeeCollected += feeAmount;
         }
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (redeemAmount < _minAmountOut) {
@@ -186,7 +186,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
         // Require that enough collateral token is held to be redeemable
         if (
-            redeemAmount + tradeFeeCollected
+            redeemAmount + totalCollateralTradeFeeCollected
                 > __Module_orchestrator.fundingManager().token().balanceOf(
                     address(this)
                 )

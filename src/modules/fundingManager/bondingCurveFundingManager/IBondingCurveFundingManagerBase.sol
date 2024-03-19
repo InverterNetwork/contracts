@@ -111,10 +111,4 @@ interface IBondingCurveFundingManagerBase {
         external
         view
         returns (uint feeAmount);
-
-    /// @notice Returns the current total fee collected in collateral tokens for all trades. This value will be set
-    /// to 0 when the fee is withdrawn from the contract
-    /// @dev function access is restricted to the owner of the orchestrator
-    /// @return uint The total amount of collateral fee collected still held in the contract
-    function getCollateralTradeFeeCollected() external returns (uint);
 }

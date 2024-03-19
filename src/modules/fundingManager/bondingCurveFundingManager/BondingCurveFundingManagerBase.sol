@@ -62,9 +62,9 @@ abstract contract BondingCurveFundingManagerBase is
     uint public buyFee;
     /// @dev Base Points used for percentage calculation. This value represents 100%
     uint internal constant BPS = 10_000;
-    /// @notice Accumulated trading fees collected from deposits made by users
-    /// when engaging with the bonding curve-based funding manager.
-    uint internal tradeFeeCollected;
+    /// @notice Accumulated trading fees collected in collateral by users
+    /// engaging with the bonding curve-based funding manager.
+    uint public totalCollateralTradeFeeCollected;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -158,16 +158,6 @@ abstract contract BondingCurveFundingManagerBase is
         _setBuyFee(_fee);
     }
 
-    function getCollateralTradeFeeCollected()
-        external
-        view
-        virtual
-        onlyOrchestratorOwner
-        returns (uint)
-    {
-        return tradeFeeCollected;
-    }
-
     //--------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
@@ -219,7 +209,7 @@ abstract contract BondingCurveFundingManagerBase is
             (_depositAmount, feeAmount) =
                 _calculateNetAmountAndFee(_depositAmount, buyFee);
             // Add fee amount to total collected fee
-            tradeFeeCollected += feeAmount;
+            totalCollateralTradeFeeCollected += feeAmount;
         }
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);

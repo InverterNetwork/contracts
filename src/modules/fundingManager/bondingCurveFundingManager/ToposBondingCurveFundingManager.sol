@@ -465,7 +465,8 @@ contract ToposBondingCurveFundingManager is
     /// @dev Returns the collateral available in this contract, subtracted by the fee collected
     /// @return uint Capital available in contract
     function _getCapitalAvailable() internal view returns (uint) {
-        return _token.balanceOf(address(this)) - tradeFeeCollected;
+        return
+            _token.balanceOf(address(this)) - totalCollateralTradeFeeCollected;
     }
 
     /// @dev Set the capital required state used in the bonding curve calculations.

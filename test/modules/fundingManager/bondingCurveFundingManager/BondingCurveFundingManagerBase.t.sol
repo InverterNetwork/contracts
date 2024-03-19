@@ -483,7 +483,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         vm.prank(owner_address);
         uint expectedReturnValue =
-            bondingCurveFundingManager.getCollateralTradeFeeCollected();
+            bondingCurveFundingManager.totalCollateralTradeFeeCollected();
 
         assertEq(expectedReturnValue, feeCollected);
     }
