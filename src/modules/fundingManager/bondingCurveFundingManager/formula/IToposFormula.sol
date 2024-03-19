@@ -13,13 +13,13 @@ interface IToposFormula {
     //--------------------------------------------------------------------------
     // Functions
 
-	/// @dev Compute spot price for a given capital available given current capital
-	///      requirements
+	/// @dev Compute spot price for a given capital available and capital required
 	/// p = f(C_a, C_r) = B * (C_a^2 / C_r)
 	///
-	/// @param _capitalAvailable Capital available to use for bonding curve mint.
-	/// @param _basePriceToCapitalRatio Precomputed factor which combines the base price multiplier with capital required
-	function spotPrice( uint256 _capitalAvailable, uint _basePriceToCapitalRatio) external view returns (uint256);
+	/// @param _capitalAvailable Capital pool to base the spot price on.
+	/// @param _capitalRequirements Capital requirements to base the spot price on.
+	/// @param _basePriceMultiplier Base Price Multiplier
+	function spotPrice( uint256 _capitalAvailable, uint _capitalRequirements, uint _basePriceMultiplier) external view returns (uint256);
 
 	/// @dev To get the number of tokens we have the following formula:
 	///

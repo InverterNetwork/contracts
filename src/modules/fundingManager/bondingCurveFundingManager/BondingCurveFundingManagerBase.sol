@@ -62,9 +62,9 @@ abstract contract BondingCurveFundingManagerBase is
     uint public buyFee;
     /// @dev Base Points used for percentage calculation. This value represents 100%
     uint internal constant BPS = 10_000;
-    /// @notice Accumulated trading fees collected from deposits made by users
-    /// when engaging with the bonding curve-based funding manager.
-    uint internal tradeFeeCollected;
+    /// @notice Accumulated trading fees collected in collateral by users
+    /// engaging with the bonding curve-based funding manager.
+    uint public totalCollateralTradeFeeCollected;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -106,6 +106,27 @@ abstract contract BondingCurveFundingManagerBase is
         _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
+    /// @inheritdoc IBondingCurveFundingManagerBase
+    function calculatePurchaseReturn(uint _depositAmount)
+        external
+        view
+        virtual
+        returns (uint mintAmount)
+    {
+        return _calculatePurchaseReturn(_depositAmount);
+    }
+
+    /// @inheritdoc IBondingCurveFundingManagerBase
+    function getPurchaseFeeForAmount(uint _amountIn)
+        external
+        view
+        virtual
+        returns (uint feeAmount)
+    {
+        ( /* netAmount */ , feeAmount) =
+            _calculateNetAmountAndFee(_amountIn, buyFee);
+    }
+
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
@@ -123,28 +144,18 @@ abstract contract BondingCurveFundingManagerBase is
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function openBuy() external onlyOrchestratorOwner {
+    function openBuy() external virtual onlyOrchestratorOwner {
         _openBuy();
     }
 
     /// @inheritdoc IBondingCurveFundingManagerBase
-    function closeBuy() external onlyOrchestratorOwner {
+    function closeBuy() external virtual onlyOrchestratorOwner {
         _closeBuy();
     }
 
     /// @inheritdoc IBondingCurveFundingManagerBase
     function setBuyFee(uint _fee) external virtual onlyOrchestratorOwner {
         _setBuyFee(_fee);
-    }
-
-    /// @inheritdoc IBondingCurveFundingManagerBase
-    function calculatePurchaseReturn(uint _depositAmount)
-        external
-        view
-        virtual
-        returns (uint mintAmount)
-    {
-        return _calculatePurchaseReturn(_depositAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -185,7 +196,7 @@ abstract contract BondingCurveFundingManagerBase is
         address _receiver,
         uint _depositAmount,
         uint _minAmountOut
-    ) internal returns (uint mintAmount, uint feeAmount) {
+    ) internal virtual returns (uint mintAmount, uint feeAmount) {
         if (_depositAmount == 0) {
             revert BondingCurveFundingManager__InvalidDepositAmount();
         }
@@ -198,7 +209,7 @@ abstract contract BondingCurveFundingManagerBase is
             (_depositAmount, feeAmount) =
                 _calculateNetAmountAndFee(_depositAmount, buyFee);
             // Add fee amount to total collected fee
-            tradeFeeCollected += feeAmount;
+            totalCollateralTradeFeeCollected += feeAmount;
         }
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
@@ -213,7 +224,7 @@ abstract contract BondingCurveFundingManagerBase is
     }
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
-    function _openBuy() internal {
+    function _openBuy() internal virtual {
         if (buyIsOpen == true) {
             revert BondingCurveFundingManager__BuyingAlreadyOpen();
         }
@@ -222,7 +233,7 @@ abstract contract BondingCurveFundingManagerBase is
     }
 
     /// @dev Closes the buy functionality by setting the state variable `buyIsOpen` to false.
-    function _closeBuy() internal {
+    function _closeBuy() internal virtual {
         if (buyIsOpen == false) {
             revert BondingCurveFundingManager__BuyingAlreadyClosed();
         }
@@ -232,7 +243,7 @@ abstract contract BondingCurveFundingManagerBase is
 
     /// @dev Sets the buy transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for buy transactions.
-    function _setBuyFee(uint _fee) internal {
+    function _setBuyFee(uint _fee) internal virtual {
         if (_fee >= BPS) {
             revert BondingCurveFundingManager__InvalidFeePercentage();
         }
@@ -247,6 +258,7 @@ abstract contract BondingCurveFundingManagerBase is
     function _calculatePurchaseReturn(uint _depositAmount)
         internal
         view
+        virtual
         returns (uint mintAmount)
     {
         if (_depositAmount == 0) {
@@ -268,6 +280,7 @@ abstract contract BondingCurveFundingManagerBase is
     function _calculateNetAmountAndFee(uint _transactionAmount, uint _feePct)
         internal
         pure
+        virtual
         returns (uint netAmount, uint feeAmount)
     {
         // Calculate fee amount

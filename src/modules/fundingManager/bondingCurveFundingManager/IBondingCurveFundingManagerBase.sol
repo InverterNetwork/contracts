@@ -103,4 +103,12 @@ interface IBondingCurveFundingManagerBase {
     function calculatePurchaseReturn(uint _depositAmount)
         external
         returns (uint mintAmount);
+
+    /// @notice Returns the fee amount for a purchase transaction, based on the buy fee and amount in
+    /// @param _amountIn The amount over which the fee is calculated
+    /// @return feeAmount Total amount of fee to be paid
+    function getPurchaseFeeForAmount(uint _amountIn)
+        external
+        view
+        returns (uint feeAmount);
 }

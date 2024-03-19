@@ -20,7 +20,7 @@ interface IToposBondingCurveFundingManager {
     /// @notice Seize cannot be bigger than MAX_SEIZE = 1%
     error ToposBondingCurveFundingManager__InvalidSeize(uint64 seize);
 
-    /// @notice Fee percentage cannont be higher than ToDO: %
+    /// @notice Fee percentage cannont be higher than 1%
     error ToposBondingCurveFundingManager__InvalidFeePercentage(uint fee);
 
     /// @notice Amount exeeds the seizable amount, defined by a percentage of total collateral
@@ -28,6 +28,9 @@ interface IToposBondingCurveFundingManager {
 
     /// @notice Timestamp is still in the future, so a seize is not allowed
     error ToposBondingCurveFundingManager__SeizeTimeout(uint allowedTimestamp);
+
+    /// @notice No capital is available.
+    error ToposBondingCurveFundingManager__NoCapitalAvailable();
 
     //--------------------------------------------------------------------------
     // Events
@@ -42,7 +45,15 @@ interface IToposBondingCurveFundingManager {
 
     /// @notice Emits when the Base Multiplier gets updated
     event BaseMultiplierChanged(
-        uint currentBaseMultiplier, uint newCBaseMultiplier
+        uint currentBaseMultiplier, uint newBaseMultiplier
+    );
+
+    /// @notice Emits when seize percentage gets updated
+    event SeizeChanged(uint64 currentSeize, uint64 newSeize);
+
+    /// @notice Emits when basePriceToCapitalRatio gets updated
+    event BasePriceToCapitalRatioChanged(
+        uint currentBasePriceToCapitalRatio, uint newBasePriceToCapitalRatio
     );
 
     //--------------------------------------------------------------------------
@@ -55,8 +66,14 @@ interface IToposBondingCurveFundingManager {
     }
 
     struct BondingCurveProperties {
-        uint capitalRequired;
-        address formula;
+        uint capitalRequired; // The initial capital requirement for the formula contract
+        address formula; // The formula contract used to calculate the issucance and redemption rate
+        uint buyFee; // The buy fee expressed in base points
+        uint sellFee; // The sell fee expressed in base points
+        bool buyIsOpen; // The indicator used for enabling/disabling the buying functionalities on deployment
+        bool sellIsOpen; // The indicator used for enabling/disabling the selling functionalties on deployment
+        uint64 seize; // The current seize percentage expresses in BPS
+        uint basePriceMultiplier; // Base price multiplier in the bonding curve formula
     }
 
     //--------------------------------------------------------------------------
@@ -66,22 +83,6 @@ interface IToposBondingCurveFundingManager {
     /// @param _lp Address of the liquidity pool
     function setLiquidityPoolContract(ILiquidityPool _lp) external;
 
-    /// @notice Returns the fee amount for a sale transaction, based on the sell fee and amount in
-    /// @param _amountIn The amount over which the fee is calculated
-    /// @return feeAmount Total amount of fee to be paid
-    function getSaleFeeForAmount(uint _amountIn)
-        external
-        view
-        returns (uint feeAmount);
-
-    /// @notice Returns the fee amount for a purchase transaction, based on the buy fee and amount in
-    /// @param _amountIn The amount over which the fee is calculated
-    /// @return feeAmount Total amount of fee to be paid
-    function getPurchaseFeeForAmount(uint _amountIn)
-        external
-        view
-        returns (uint feeAmount);
-
     /// @notice  Compute how many tokens can be seized based on `currentSeize` and token balance.
     /// @return uint Maximum number of tokens that can be seized
     function seizable() external view returns (uint);
@@ -90,8 +91,8 @@ interface IToposBondingCurveFundingManager {
     /// @param _seize The seize in percentage, expressed as BPS
     function adjustSeize(uint64 _seize) external;
 
-    /// @notice Allows the TODO: ROLE CHOICE to seize assets from this pool.
-    /// @dev As the TODO:ROLE has ability to basically rug the projects, a timelock and max
+    /// @notice Allows the COVER_MANAGER_ROLE to seize assets from this pool.
+    /// @dev As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max
     /// seizable percentage has been added
     /// @param _amount Number of tokens to be removed from the pool
     function seize(uint _amount) external;

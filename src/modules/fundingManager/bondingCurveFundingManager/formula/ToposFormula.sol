@@ -34,15 +34,16 @@ contract ToposFormula is IToposFormula {
     // Public Functions
 
 	/// @inheritdoc IToposFormula
-	function spotPrice( uint256 _capitalAvailable, uint _basePriceToCapitalRatio) public pure returns (uint256) {
+	function spotPrice( uint256 _capitalAvailable, uint _capitalRequirements, uint _basePriceMultiplier) public pure returns (uint256) {
 		uint256 caSq = FixedPointMathLib.fmul(_capitalAvailable, _capitalAvailable, FixedPointMathLib.WAD); // C_a^2
-		return FixedPointMathLib.fmul(caSq, _basePriceToCapitalRatio, FixedPointMathLib.WAD); // C_a^2 * B / C_r
+		uint256 caSqCr = FixedPointMathLib.fdiv(caSq, _capitalRequirements, FixedPointMathLib.WAD);
+		return FixedPointMathLib.fmul(caSqCr, _basePriceMultiplier, FixedPointMathLib.WAD); // C_a^2 * B / C_r
 	}
 
 	/// @inheritdoc IToposFormula
 	function tokenOut(uint256 _in, uint256 _capitalAvailable, uint _basePriceToCapitalRatio) public pure returns (uint256) {
 		// If the input is bigger inverse will give us 0.
-		if (_capitalAvailable > 1e36 || _capitalAvailable + _in > 1e36) revert ToposFormula__InvalidInputAmount();
+		if (_capitalAvailable > 1e36 || _capitalAvailable + _in > 1e36 || _capitalAvailable == 0) revert ToposFormula__InvalidInputAmount();
 
 		uint256 inv1 = _inverse(_capitalAvailable);
 		uint256 inv2 = _inverse(_capitalAvailable + _in);
