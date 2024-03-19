@@ -25,10 +25,21 @@ import {DeployRebasingFundingManager} from
     "script/modules/fundingManager/DeployRebasingFundingManager.s.sol";
 import {DeployRoleAuthorizer} from
     "script/modules/governance/DeployRoleAuthorizer.s.sol";
-
-//@todo all the dependencies are missing of the scripts i added
+import {DeployBancorVirtualSupplyBondingCurveFundingManager} from
+    "script/modules/fundingManager/DeployBancorVirtualSupplyBondingCurveFundingManager.s.sol";
+import {DeployTokenGatedRoleAuthorizer} from
+    "script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol";
+import {DeployStreamingPaymentProcessor} from
+    "script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol";
+import {DeployRecurringPaymentManager} from
+    "script/modules/DeployRecurringPaymentManager.s.sol";
+import {DeploySingleVoteGovernor} from
+    "script/modules/DeploySingleVoteGovernor.s.sol";
+import {DeployMetadataManager} from "script/utils/DeployMetadataManager.s.sol";
 
 contract DeploymentScript is Script {
+    error BeaconProxyDeploymentFailed();
+
     // ------------------------------------------------------------------------
     // Instances of Deployer Scripts
     //Orchestrator
@@ -59,8 +70,7 @@ contract DeploymentScript is Script {
     // Utils
     DeploySingleVoteGovernor deploySingleVoteGovernor =
         new DeploySingleVoteGovernor();
-    //@todo Metadatamanager needs to be added as a script
-
+    DeployMetadataManager deployMetadataManager = new DeployMetadataManager();
     // TransactionForwarder
     DeployTransactionForwarder deployTransactionForwarder =
         new DeployTransactionForwarder();
@@ -161,7 +171,7 @@ contract DeploymentScript is Script {
         1, 1, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
     );
 
-    IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
+    IModule.Metadata tokenGatedRoleAuthorizerMetadata = IModule.Metadata(
         1,
         1,
         "https://github.com/inverter/tokenRoleAuthorizer",
@@ -216,6 +226,50 @@ contract DeploymentScript is Script {
     /// @notice Deploys all necessary factories, beacons and implementations
     /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+        console2.log("Deploy forwarder implementation and proxy \n");
+        //Deploy TransactionForwarder implementation
+        forwarderImplementation = deployTransactionForwarder.run();
+
+        //Deploy beacon and actual proxy
+        (forwarderBeacon, forwarder) = deployAndSetUpBeacon
+            .deployBeaconAndSetupProxy(forwarderImplementation, 1, 1);
+
+        if (
+            forwarder == forwarderImplementation || forwarder == forwarderBeacon
+        ) {
+            revert BeaconProxyDeploymentFailed();
+        }
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+        console2.log("Deploy factory implementations and proxies \n");
+
+        //Deploy module Factory implementation
+        moduleFactoryImplementation = deployModuleFactory.run(forwarder);
+
+        //Deploy beacon and actual proxy
+        moduleFactoryBeacon;
+
+        (moduleFactoryBeacon, moduleFactory) = deployAndSetUpBeacon
+            .deployBeaconAndSetupProxy(moduleFactoryImplementation, 1, 1);
+
+        //Deploy orchestrator Factory implementation
+        orchestratorFactoryImplementation = deployOrchestratorFactory.run(
+            orchestrator, moduleFactory, forwarder
+        );
+
+        //Deploy beacon and actual proxy
+        (orchestratorFactoryBeacon, orchestratorFactory) = deployAndSetUpBeacon
+            .deployBeaconAndSetupProxy(orchestratorFactoryImplementation, 1, 1);
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+        console2.log("Deploy Modules Implementations \n");
         // Deploy implementation contracts.
         //Orchestrator
         orchestrator = deployOrchestrator.run();
@@ -239,31 +293,10 @@ contract DeploymentScript is Script {
 
         //@todo Check if the references are actually leading to the proxies and not the implementations (The proxies should be used and not the implementations (The beacon just points to the implementation))
 
-        //Deploy TransactionForwarder implementation
-        forwarderImplementation = deployTransactionForwarder.run();
-
-        //Deploy beacon and actual proxy
-        (forwarderBeacon, forwarder) = deployAndSetUpBeacon
-            .deployBeaconAndSetupProxy(forwarderImplementation, 1, 1);
-
-        //Deploy module Factory implementation
-        moduleFactoryImplementation = deployModuleFactory.run(forwarder);
-
-        //Deploy beacon and actual proxy
-        moduleFactoryBeacon;
-
-        (moduleFactoryBeacon, moduleFactory) = deployAndSetUpBeacon
-            .deployBeaconAndSetupProxy(moduleFactoryImplementation, 1, 1);
-
-        //Deploy orchestrator Factory implementation
-        orchestratorFactoryImplementation = deployOrchestratorFactory.run(
-            orchestrator, moduleFactory, forwarder
+        console2.log(
+            "-----------------------------------------------------------------------------"
         );
-
-        //Deploy beacon and actual proxy
-        (orchestratorFactoryBeacon, orchestratorFactory) = deployAndSetUpBeacon
-            .deployBeaconAndSetupProxy(orchestratorFactoryImplementation, 1, 1);
-
+        console2.log("Deploy module beacons and register in module factory \n");
         //Deploy Modules and Register in factories
 
         // Funding Manager
@@ -277,7 +310,7 @@ contract DeploymentScript is Script {
             .deployAndRegisterInFactory(
             bancorBondingCurveFundingManager,
             moduleFactory,
-            bancorBondingCurveFundingManagerMetadata
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata
         );
         // Authorizer
         roleAuthorizerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
@@ -316,7 +349,7 @@ contract DeploymentScript is Script {
         // Utils
         singleVoteGovernorBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            singleVoteGovernor, moduleFactory, singleVoteGovernor
+            singleVoteGovernor, moduleFactory, singleVoteGovernorMetadata
         );
         metadataManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
             metadataManager, moduleFactory, metadataManagerMetadata

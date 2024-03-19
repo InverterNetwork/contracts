@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
+import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 import {ModuleFactory} from "src/factories/ModuleFactory.sol";
@@ -55,7 +56,7 @@ contract DeployAndSetUpBeacon is Script {
         address implementation,
         uint majorVersion,
         uint minorVersion
-    ) external returns (address beacon, address proxy) {
+    ) external returns (address beaconAddress, address proxy) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
@@ -66,11 +67,14 @@ contract DeployAndSetUpBeacon is Script {
 
             //return the proxy after creation
             proxy = address(new InverterBeaconProxy(InverterBeacon(beacon)));
+
+            // cast to address for return
+            beaconAddress = address(beacon);
         }
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
-        console2.log("Deployment of Beacon at address: ", address(beacon));
+        console2.log("Deployment of Beacon at address: ", beaconAddress);
         console2.log("Creation of Proxy at address: ", address(proxy));
     }
 }
