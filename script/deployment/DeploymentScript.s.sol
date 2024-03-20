@@ -70,24 +70,30 @@ contract DeploymentScript is Script {
     // Module Metadata
     IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
         1,
-        1,
-        "https://github.com/inverter/payment-processor",
+        0,
+        "https://github.com/InverterNetwork",
         "SimplePaymentProcessor"
     );
 
     IModule.Metadata fundingManagerMetadata = IModule.Metadata(
         1,
-        1,
-        "https://github.com/inverter/funding-manager",
+        0,
+        "https://github.com/InverterNetwork",
         "RebasingFundingManager"
     );
 
     IModule.Metadata authorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/RoleAuthorizer", "RoleAuthorizer"
+        1,
+        0,
+        "https://github.com/InverterNetwork", 
+        "RoleAuthorizer"
     );
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
+        1,
+        0,
+        "https://github.com/InverterNetwork",
+        "BountyManager"
     );
 
     /// @notice Deploys all necessary factories, beacons and iplementations
