@@ -45,7 +45,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     // Set the Module Metadata.
     // ===============================================================================================================
     IModule.Metadata authorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/tokenAuthorizer", "TokenAuthorizer"
+        1, 1, "https://github.com/InverterNetwork", "TokenAuthorizer"
     );
 
     ModuleFactory moduleFactory = ModuleFactory(moduleFactoryAddress);
@@ -54,15 +54,15 @@ contract deployAndSwitchTokenAuthorizer is Script {
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
     function run() public {
-        /*   
-
+        /*
         // In case the module Beacon hasn't been deployed yet, deploy it and register it in the ModuleFactory   
 
         address authorizerImpl = deployTokenRoleAuthorizer.run();
 
         address authorizerBeacon = deployAndSetUpBeacon.run(
             authorizerImpl, address(moduleFactory), authorizerMetadata
-        ); */
+        ); 
+        */
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
@@ -84,7 +84,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
             TokenGatedRoleAuthorizer(deployedAuthorizerAddress);
 
         console.log(
-            "Deployed Authorizer at address: ", deployedAuthorizerAddress
+            "Deployed Token Authorizer at address: ", deployedAuthorizerAddress
         );
 
         // add module to orchestrator

@@ -58,13 +58,13 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             token = new ERC20Mock("Inverter USD", "iUSD");
         }
         vm.stopBroadcast();
-        //token = ERC20Mock(0xFb4DC4067900C3e5b37eD0476c9c866864e0C759);
+        //token = ERC20Mock(0x5eb14c2e7D0cD925327d74ae4ce3fC692ff8ABEF);
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
         address orchestratorFactory = DeploymentScript.run();
 
         //We use the exisiting orchestratorFactory address
-        //address orchestratorFactory = 0x9069e7E04a0E6B5eAe7e8A76C6864feB75CdE436;
+        //address orchestratorFactory = 0x690d5000D278f90B167354975d019c747B78032e;
 
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
