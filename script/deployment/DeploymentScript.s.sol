@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-
 // Import interfaces:
 
 import {IModule} from "src/modules/base/IModule.sol";
@@ -77,31 +76,19 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Module Metadata
     IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/InverterNetwork",
-        "SimplePaymentProcessor"
+        1, 1, "https://github.com/InverterNetwork", "SimplePaymentProcessor"
     );
 
     IModule.Metadata fundingManagerMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/InverterNetwork",
-        "RebasingFundingManager"
+        1, 1, "https://github.com/InverterNetwork", "RebasingFundingManager"
     );
 
     IModule.Metadata authorizerMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/InverterNetwork", 
-        "RoleAuthorizer"
+        1, 1, "https://github.com/InverterNetwork", "RoleAuthorizer"
     );
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/InverterNetwork",
-        "BountyManager"
+        1, 1, "https://github.com/InverterNetwork", "BountyManager"
     );
 
     IModule.Metadata bondingCurveFundingManagerMetadata = IModule.Metadata(
