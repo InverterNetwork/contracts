@@ -46,8 +46,13 @@ contract DeployAndSetUpTransactionForwarder is Script {
         vm.stopBroadcast();
 
         // Log
-        console2.log("Deployment of TransactionForwarder Implementation at address ", implementation);
-        console2.log("Deployment of TransactionForwarder Beacon at address ", beacon);
+        console2.log(
+            "Deployment of TransactionForwarder Implementation at address ",
+            implementation
+        );
+        console2.log(
+            "Deployment of TransactionForwarder Beacon at address ", beacon
+        );
         console2.log(
             "Deployment of TransactionForwarder Proxy at address ", forwarder
         );
