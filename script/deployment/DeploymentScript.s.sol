@@ -138,19 +138,49 @@ contract DeploymentScript is Script {
 
     // ------------------------------------------------------------------------
     // Module Metadata
-    IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
+
+    // ------------------------------------------------------------------------
+    // Funding Manager
+
+    IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/InverterNetwork", "RebasingFundingManager"
+    );
+
+    IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
+    IModule.Metadata(
+        1,
+        1,
+        "https://github.com/InverterNetwork",
+        "BancorVirtualSupplyBondingCurveFundingManager"
+    );
+
+    // ------------------------------------------------------------------------
+    // Authorizer
+
+    IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/InverterNetwork", "RoleAuthorizer"
+    );
+
+    IModule.Metadata tokenGatedRoleAuthorizerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/InverterNetwork", "TokenGatedRoleAuthorizer"
+    );
+
+    // ------------------------------------------------------------------------
+    // Payment Processor
+
+    IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
         1, 1, "https://github.com/InverterNetwork", "SimplePaymentProcessor"
     );
 
-    IModule.Metadata fundingManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "RebasingFundingManager"
+    IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
+        1, 1, "https://github.com/InverterNetwork", "StreamingPaymentProcessor"
     );
 
     // ------------------------------------------------------------------------
     // Logic Module
 
-    IModule.Metadata authorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "RoleAuthorizer"
+    IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/InverterNetwork", "RecurringPaymentManager"
     );
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
