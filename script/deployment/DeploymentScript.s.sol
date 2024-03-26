@@ -246,25 +246,15 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
-        console2.log("Deploy factory implementations and proxies \n");
+        console2.log("Deploy factory implementations \n");
 
         //Deploy module Factory implementation
-        moduleFactoryImplementation = deployModuleFactory.run(forwarder);
-
-        //Deploy beacon and actual proxy
-        moduleFactoryBeacon;
-
-        (moduleFactoryBeacon, moduleFactory) = deployAndSetUpBeacon
-            .deployBeaconAndSetupProxy(moduleFactoryImplementation, 1, 1);
+        moduleFactory = deployModuleFactory.run(forwarder);
 
         //Deploy orchestrator Factory implementation
-        orchestratorFactoryImplementation = deployOrchestratorFactory.run(
+        orchestratorFactory = deployOrchestratorFactory.run(
             orchestrator, moduleFactory, forwarder
         );
-
-        //Deploy beacon and actual proxy
-        (orchestratorFactoryBeacon, orchestratorFactory) = deployAndSetUpBeacon
-            .deployBeaconAndSetupProxy(orchestratorFactoryImplementation, 1, 1);
 
         console2.log(
             "-----------------------------------------------------------------------------"
