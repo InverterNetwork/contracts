@@ -261,8 +261,6 @@ contract DeploymentScript is Script {
         singleVoteGovernor = deploySingleVoteGovernor.run();
         metadataManager = deployMetadataManager.run();
 
-        //@todo Check if the references are actually leading to the proxies and not the implementations (The proxies should be used and not the implementations (The beacon just points to the implementation))
-
         console2.log(
             "-----------------------------------------------------------------------------"
         );
@@ -324,8 +322,6 @@ contract DeploymentScript is Script {
         metadataManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
             metadataManager, moduleFactory, metadataManagerMetadata
         );
-
-        //@todo check that it actually runs
 
         return (orchestratorFactory);
     }
