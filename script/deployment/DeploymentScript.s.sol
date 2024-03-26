@@ -229,6 +229,13 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
+        console2.log("Deploy orchestrator implementation \n");
+        //Orchestrator
+        orchestrator = deployOrchestrator.run();
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
         console2.log("Deploy forwarder implementation and proxy \n");
         //Deploy TransactionForwarder implementation
         forwarderImplementation = deployTransactionForwarder.run();
@@ -261,8 +268,6 @@ contract DeploymentScript is Script {
         );
         console2.log("Deploy Modules Implementations \n");
         // Deploy implementation contracts.
-        //Orchestrator
-        orchestrator = deployOrchestrator.run();
 
         // Funding Manager
         rebasingFundingManager = deployRebasingFundingManager.run();

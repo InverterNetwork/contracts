@@ -79,7 +79,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Funding Manager: Metadata, token address
         IOrchestratorFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
-            bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            rebasingFundingManagerMetadata,
             abi.encode(address(token)),
             abi.encode(hasDependency, dependencies)
         );
