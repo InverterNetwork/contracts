@@ -87,10 +87,6 @@ contract DeploymentScript is Script {
     //TransactionForwarder
     address forwarderImplementation;
 
-    // Factories
-    address moduleFactoryImplementation;
-    address orchestratorFactoryImplementation;
-
     // Funding Manager
     address rebasingFundingManager;
     address bancorBondingCurveFundingManager;
@@ -112,9 +108,6 @@ contract DeploymentScript is Script {
 
     //TransactionForwarder
     address forwarderBeacon;
-    // Factories
-    address moduleFactoryBeacon;
-    address orchestratorFactoryBeacon;
     // Funding Manager
     address rebasingFundingManagerBeacon;
     address bancorBondingCurveFundingManagerBeacon;
@@ -145,82 +138,34 @@ contract DeploymentScript is Script {
 
     // ------------------------------------------------------------------------
     // Module Metadata
-
-    // ------------------------------------------------------------------------
-    // Funding Manager
-
-    IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/funding-manager",
-        "RebasingFundingManager"
+    IModule.Metadata paymentProcessorMetadata = IModule.Metadata(
+        1, 1, "https://github.com/InverterNetwork", "SimplePaymentProcessor"
     );
 
-    IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
-    IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/bonding-curve-funding-manager",
-        "BancorVirtualSupplyBondingCurveFundingManager"
-    );
-
-    // ------------------------------------------------------------------------
-    // Authorizer
-
-    IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
-    );
-
-    IModule.Metadata tokenGatedRoleAuthorizerMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/tokenRoleAuthorizer",
-        "TokenGatedRoleAuthorizer"
-    );
-
-    // ------------------------------------------------------------------------
-    // Payment Processor
-
-    IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/payment-processor",
-        "SimplePaymentProcessor"
-    );
-
-    IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/streaming-payment-processor",
-        "StreamingPaymentProcessor"
+    IModule.Metadata fundingManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/InverterNetwork", "RebasingFundingManager"
     );
 
     // ------------------------------------------------------------------------
     // Logic Module
 
-    IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/recurring-payment-manager",
-        "RecurringPaymentManager"
+    IModule.Metadata authorizerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/InverterNetwork", "RoleAuthorizer"
     );
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
+        1, 1, "https://github.com/InverterNetwork", "BountyManager"
     );
 
     // ------------------------------------------------------------------------
     // Utils
 
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/single-vote-governor",
-        "SingleVoteGovernor"
+        1, 1, "https://github.com/InverterNetwork", "SingleVoteGovernor"
     );
 
     IModule.Metadata metadataManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/metadata-manager", "MetadataManager"
+        1, 1, "https://github.com/InverterNetwork", "MetadataManager"
     );
 
     /// @notice Deploys all necessary factories, beacons and implementations

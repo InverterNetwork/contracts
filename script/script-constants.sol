@@ -7,13 +7,13 @@ contract ScriptConstants {
     ///////////////////////
     bytes public emptyBytes = "0x0";
     address public bountyManagerAddress =
-        0x4FB5adc63fB08c7E7864Ce3f77714af6B8B50D9f;
+        0x3F65847e68EB9fa561238BC4416f8766322c13eD;
     address public moduleFactoryAddress =
-        0x349D52589aF62Ba1b35DB871F54FA2c5aFcA6B5B;
+        0xc8DAAbCc110F1271967aFd450B45d308A9B72Ff2;
     address public orchestratorAddress =
-        0x0A7c8C0EB1afAb6CBaD4bb2d4c738acFF047814A;
+        0x1c9373fae3bB828f3cb9001326415A3dBe5cCd0C;
     address public receiptTokenAddress =
-        0xC0f1842627Eeda938911A9A8368407ec241AC1dd;
+        0x94A988C49a84b990bc1750bC516b4EE63327442c;
 
     ////////////////////////////////////////
     // Add Bounty Manager Claim Constants
