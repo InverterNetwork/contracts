@@ -5,9 +5,9 @@ import "forge-std/Script.sol";
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 
 /**
- * @title SingleVoteGovernor Deployment Script
+ * @title BountyManager Deployment Script
  *
- * @dev Script to deploy a new SingleVoteGovernor.
+ * @dev Script to deploy a new BountyManager.
  *
  *
  * @author Inverter Network
@@ -23,14 +23,14 @@ contract DeployBountyManager is Script {
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the singleVoteGovernor.
+            // Deploy the BountyManager.
 
             bountyManager = new BountyManager();
         }
 
         vm.stopBroadcast();
 
-        // Log the deployed SingleVoteGovernor contract address.
+        // Log the deployed BountyManager contract address.
         console2.log(
             "Deployment of BountyManager Implementation at address",
             address(bountyManager)

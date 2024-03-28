@@ -79,7 +79,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Funding Manager: Metadata, token address
         IOrchestratorFactory.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
-            fundingManagerMetadata,
+            rebasingFundingManagerMetadata,
             abi.encode(address(token)),
             abi.encode(hasDependency, dependencies)
         );
@@ -87,7 +87,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Payment Processor: only Metadata
         IOrchestratorFactory.ModuleConfig memory paymentProcessorFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
-            paymentProcessorMetadata,
+            simplePaymentProcessorMetadata,
             bytes(""),
             abi.encode(hasDependency, dependencies)
         );
@@ -95,7 +95,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
-            authorizerMetadata,
+            roleAuthorizerMetadata,
             abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
         );
