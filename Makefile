@@ -103,6 +103,8 @@ testScripts: ## Run e2e test suite
 
 	@forge script script/deployment/DeploymentScript.s.sol
 
+	@forge script script/deployment/DeploymentScript.s.sol
+
 	@forge script script/setup/SetupToyOrchestratorScript.s.sol
 
 # -----------------------------------------------------------------------------
