@@ -18,10 +18,10 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Install dependencies
-        run: forge install
+        run: make install
 
       - name: Run scripts
         run: make testScripts
 
       - name: Run tests
-        run: forge test
+        run: make test
