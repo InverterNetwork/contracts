@@ -33,6 +33,9 @@ contract DeployTransactionForwarder is Script {
         vm.stopBroadcast();
 
         // Log
-        console2.log("Deployment of implementation at address ", implementation);
+        console2.log(
+            "Deployment of Transaction Forwarder implementation at address ",
+            implementation
+        );
     }
 }
