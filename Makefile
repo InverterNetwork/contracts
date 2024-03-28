@@ -21,6 +21,10 @@ endif
 
 # -----------------------------------------------------------------------------
 # Common
+.PHONY: clean
+clean: ## Remove build artifacts
+	@forge clean
+
 .PHONY: install
 install: ## Installs the required dependencies
 	@forge install
