@@ -478,7 +478,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Setup
 
         address buyer = makeAddr("buyer");
-        vm.assume(to != address(0) && to != address(this) && to != buyer);
+        vm.assume(
+            to != address(0) && to != address(this) && to != buyer
+                && to != address(bondingCurveFundingManager)
+        );
 
         // Above an amount of 1e38 the BancorFormula starts to revert.
         amount = bound(amount, 1, 1e38);

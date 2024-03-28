@@ -12,12 +12,22 @@
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# This loads in the dev.env as the environment
+
+ifneq (,$(wildcard ./dev.env))
+    include dev.env
+    export
+endif
+
 # -----------------------------------------------------------------------------
 # Common
-
 .PHONY: clean
 clean: ## Remove build artifacts
 	@forge clean
+
+.PHONY: install
+install: ## Installs the required dependencies
+	@forge install
 
 .PHONY: build
 build: ## Build project
@@ -52,10 +62,10 @@ testFuzz: ## Run whole testsuite with a custom amount of fuzz runs
 # -----------------------------------------------------------------------------
 # Individual Component Tests
 
-.PHONY: testProposal
-testProposal: ## Run proposal/ package tests
+.PHONY: testOrchestrator
+testOrchestrator: ## Run orchestrator/ package tests
 	@make pre-test
-	@forge test -vvv --match-path "*/proposal/*"
+	@forge test -vvv --match-path "*/orchestrator/*"
 
 .PHONY: testModules
 testModules: ## Run modules/ package tests
@@ -74,7 +84,7 @@ testE2e: ## Run e2e test suite
 
 .PHONY: testScripts
 testScripts: ## Run e2e test suite
-	@forge script script/deployment/DeploymentScript.s.sol
+	@echo "# Run scripts"
 
 	@forge script script/factories/DeployModuleFactory.s.sol
 	@forge script script/factories/DeployOrchestratorFactory.s.sol
@@ -89,6 +99,8 @@ testScripts: ## Run e2e test suite
 	@forge script script/orchestrator/DeployOrchestrator.s.sol
 
 	@forge script script/proxies/DeployBeacon.s.sol
+
+	@forge script script/deployment/DeploymentScript.s.sol
 
 	@forge script script/setup/SetupToyOrchestratorScript.s.sol
 
@@ -141,37 +153,21 @@ pre-test: # format and export correct data
 	@echo "### Formatting..."
 	@forge fmt
 
-	# Env variables to make sure the local tests runs
-	# equally long compared to the CI tests
+	@echo "# Env variables to make sure the local tests runs"
+	@echo "# equally long compared to the CI tests"
 	@export FOUNDRY_FUZZ_RUNS=1024
 	@export FOUNDRY_FUZZ_MAX_TEST_REJECTS=65536
-
-	# Env variables required for the tests
-	@export WALLET_DEPLOYER=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
-	@export WALLET_DEPLOYER_PK=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-	@export DEPLOYMENT_PROPOSAL_FACTORY_TARGET=0x0000000000000000000000000000000000000001
-	@export DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000001
-	@export ANVIL_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-	@export PPBO_PRIVATE_KEY=0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
-	@export MMBO_PRIVATE_KEY=0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a
-	@export FMBO_PRIVATE_KEY=0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6
-	@export ABO_PRIVATE_KEY=0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a
-	@export PROPOSAL_OWNER_PRIVATE_KEY=0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
-	@export FUNDER_1_PRIVATE_KEY=0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e
-	@export DEPLOYMENT_PROPOSAL_FACTORY_TARGET=0x0000000000000000000000000000000000000001
-	@export DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000002
-	@export FORWARDER_ADDRESS=0x0000000000000000000000000000000000000003
 
 .PHONY: pre-commit
 pre-commit: ## Git pre-commit hook
 
-	@echo "### Configure tests"
-	@make pre-test
-	
-	@echo "### Running the scripts..."
+	@echo "### Running the scripts"
 	@make testScripts
 
-	@echo "### Start running tests"
+	@echo "### Configure tests"
+	@make pre-test
+
+	@echo "### Running the tests"
 	@forge test
 
 # -----------------------------------------------------------------------------
