@@ -3,7 +3,11 @@ on:
   push:
     branches:
       - main
+      - dev
+      - temp_dev
   pull_request:
+    branches:
+      - '*'
 
 env:
   FOUNDRY_PROFILE: ci
