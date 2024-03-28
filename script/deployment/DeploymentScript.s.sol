@@ -143,14 +143,17 @@ contract DeploymentScript is Script {
     // Funding Manager
 
     IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "RebasingFundingManager"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "RebasingFundingManager"
     );
 
     IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule.Metadata(
         1,
         1,
-        "https://github.com/InverterNetwork",
+        "https://github.com/InverterNetwork/inverter-contracts",
         "BancorVirtualSupplyBondingCurveFundingManager"
     );
 
@@ -158,44 +161,68 @@ contract DeploymentScript is Script {
     // Authorizer
 
     IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "RoleAuthorizer"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "RoleAuthorizer"
     );
 
     IModule.Metadata tokenGatedRoleAuthorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "TokenGatedRoleAuthorizer"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "TokenGatedRoleAuthorizer"
     );
 
     // ------------------------------------------------------------------------
     // Payment Processor
 
     IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "SimplePaymentProcessor"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "SimplePaymentProcessor"
     );
 
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "StreamingPaymentProcessor"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "StreamingPaymentProcessor"
     );
 
     // ------------------------------------------------------------------------
     // Logic Module
 
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "RecurringPaymentManager"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "RecurringPaymentManager"
     );
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "BountyManager"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "BountyManager"
     );
 
     // ------------------------------------------------------------------------
     // Utils
 
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "SingleVoteGovernor"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "SingleVoteGovernor"
     );
 
     IModule.Metadata metadataManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "MetadataManager"
+        1,
+        1,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "MetadataManager"
     );
 
     /// @notice Deploys all necessary factories, beacons and implementations
