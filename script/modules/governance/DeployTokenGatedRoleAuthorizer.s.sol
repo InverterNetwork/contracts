@@ -16,7 +16,7 @@ import {TokenGatedRoleAuthorizer} from
 contract DeployTokenGatedRoleAuthorizer is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     TokenGatedRoleAuthorizer tokenRoleAuthorizer;

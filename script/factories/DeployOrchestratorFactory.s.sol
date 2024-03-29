@@ -18,39 +18,27 @@ import {OrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
 contract DeployOrchestratorFactory is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     OrchestratorFactory orchestratorFactory;
 
-    function run() external returns (address) {
-        // Read deployment settings from environment variables.
-        address target = vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET");
-        address moduleFactory =
-            vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY");
-        address forwarder = vm.envAddress("FORWARDER_ADDRESS");
-        // Check settings.
-        require(
-            target != address(0),
-            "DeployOrchestratorFactory: Missing env variable: target"
-        );
-        require(
-            moduleFactory != address(0),
-            "DeployOrchestratorFactory: Missing env variable: moduleFactory"
-        );
-        require(
-            forwarder != address(0),
-            "DeployOrchestratorFactory: Missing env variable: forwarder"
-        );
-
-        // Deploy the orchestratorFactory.
-        return run(target, moduleFactory, forwarder);
-    }
-
-    function run(address target, address moduleFactory, address forwarder)
+    function run(address _target, address _moduleFactory, address _forwarder)
         public
         returns (address)
     {
+        address target = _target != address(0)
+            ? _target
+            : vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET");
+
+        address moduleFactory = _moduleFactory != address(0)
+            ? _moduleFactory
+            : vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY");
+
+        address forwarder = _forwarder != address(0)
+            ? _forwarder
+            : vm.envAddress("FORWARDER_ADDRESS");
+
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the orchestratorFactory.
@@ -67,5 +55,9 @@ contract DeployOrchestratorFactory is Script {
         );
 
         return address(orchestratorFactory);
+    }
+
+    function run() external returns (address) {
+        return run(address(0), address(0), address(0));
     }
 }

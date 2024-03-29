@@ -11,8 +11,7 @@ import {ScriptConstants} from "../script-constants.sol";
 
 contract addClaim is Script {
     ScriptConstants scriptConstants = new ScriptConstants();
-    uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint orchestratorOwnerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
     // ===============================================================================================================

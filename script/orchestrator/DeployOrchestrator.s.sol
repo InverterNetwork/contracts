@@ -15,13 +15,16 @@ import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 contract DeployOrchestrator is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
-    address forwarderAddress = vm.envAddress("FORWARDER_ADDRESS");
+    uint deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     Orchestrator orchestrator;
 
-    function run() external returns (address) {
+    function run(address _forwarder) public returns (address) {
+        address forwarderAddress = _forwarder != address(0)
+            ? _forwarder
+            : vm.envAddress("FORWARDER_ADDRESS");
+
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the orchestrator.
@@ -38,5 +41,9 @@ contract DeployOrchestrator is Script {
         );
 
         return address(orchestrator);
+    }
+
+    function run() external returns (address) {
+        return run(address(0));
     }
 }

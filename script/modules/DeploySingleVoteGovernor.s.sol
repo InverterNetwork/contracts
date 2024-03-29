@@ -15,7 +15,7 @@ import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
 contract DeploySingleVoteGovernor is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     SingleVoteGovernor singleVoteGovernor;

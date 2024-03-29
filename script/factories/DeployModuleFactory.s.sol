@@ -15,33 +15,21 @@ import {ModuleFactory} from "src/factories/ModuleFactory.sol";
 contract DeployModuleFactory is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     ModuleFactory moduleFactory;
 
-    function run() external returns (address) {
-        // Read deployment settings from environment variables.
+    function run(address _forwarder) public returns (address) {
+        address forwarder = _forwarder != address(0)
+            ? _forwarder
+            : vm.envAddress("FORWARDER_ADDRESS");
 
-        address forwarder = vm.envAddress("FORWARDER_ADDRESS");
-        // Check settings.
-
-        require(
-            forwarder != address(0),
-            "DeployOrchestratorFactory: Missing env variable: forwarder"
-        );
-
-        // Deploy the orchestratorFactory.
-        return run(forwarder);
-    }
-
-    function run(address forwarder) public returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the moduleFactory.
             moduleFactory = new ModuleFactory(forwarder);
         }
-
         vm.stopBroadcast();
 
         // Log the deployed ModuleFactory contract address.
@@ -50,5 +38,9 @@ contract DeployModuleFactory is Script {
         );
 
         return address(moduleFactory);
+    }
+
+    function run() external returns (address) {
+        return run(address(0));
     }
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-import "../deployment/DeploymentScript.s.sol";
+import "../deployment/DeployLocal.s.sol";
 
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IModule} from "src/modules/base/IModule.sol";
@@ -19,23 +19,22 @@ import {ScriptConstants} from "../script-constants.sol";
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 
-contract SetupToyOrchestratorScript is Test, DeploymentScript {
+contract SetupToyOrchestratorScript is Test, DeployLocal {
     ScriptConstants scriptConstants = new ScriptConstants();
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
-    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+    uint deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+    address governance = vm.envAddress("GOVERNANCE_CONTRACT_ADDRESS");
 
     //-------------------------------------------------------------------------
     // Mock Funder and Contributor information
 
     //Since this is a demo deployment, we will use the same address for the owner and the funder.
-    uint funder1PrivateKey = orchestratorOwnerPrivateKey;
-    address funder1 = orchestratorOwner;
+    uint funder1PrivateKey = deployerPrivateKey;
+    address funder1 = deployer;
 
     //-------------------------------------------------------------------------
     // Storage
@@ -53,7 +52,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Setup
 
         // First we deploy a mock ERC20 to act as funding token for the orchestrator. It has a public mint function.
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(deployerPrivateKey);
         {
             token = new ERC20Mock("Inverter USD", "iUSD");
         }
@@ -61,7 +60,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         //token = ERC20Mock(0x5eb14c2e7D0cD925327d74ae4ce3fC692ff8ABEF);
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
-        address orchestratorFactory = DeploymentScript.run();
+        address orchestratorFactory = DeployLocal.run();
 
         //We use the exisiting orchestratorFactory address
         //address orchestratorFactory = 0x690d5000D278f90B167354975d019c747B78032e;
@@ -72,7 +71,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Orchestrator: Owner, funding token
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
-            owner: orchestratorOwner,
+            owner: governance,
             token: token
         });
 
@@ -96,7 +95,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
             roleAuthorizerMetadata,
-            abi.encode(orchestratorOwner, orchestratorOwner),
+            abi.encode(governance, governance),
             abi.encode(hasDependency, dependencies)
         );
 
@@ -116,7 +115,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Orchestrator Creation
 
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(deployerPrivateKey);
         {
             test_orchestrator = IOrchestratorFactory(orchestratorFactory)
                 .createOrchestrator(
@@ -217,10 +216,10 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         RebasingFundingManager fundingManager =
             RebasingFundingManager(address(test_orchestrator.fundingManager()));
 
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(deployerPrivateKey);
         {
             token.mint(
-                address(orchestratorOwner),
+                address(deployer),
                 scriptConstants.orchestratorTokenDepositAmount()
             );
 
@@ -252,21 +251,20 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // ------------------------------------------------------------------------
 
         // Create a Bounty
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(deployerPrivateKey);
 
         // Whitelist owner to create bounties
         orchestratorCreatedBountyManager.grantModuleRole(
-            orchestratorCreatedBountyManager.BOUNTY_ISSUER_ROLE(),
-            orchestratorOwner
+            orchestratorCreatedBountyManager.BOUNTY_ISSUER_ROLE(), deployer
         );
 
         // Whitelist owner to post claims
         orchestratorCreatedBountyManager.grantModuleRole(
-            orchestratorCreatedBountyManager.CLAIMANT_ROLE(), orchestratorOwner
+            orchestratorCreatedBountyManager.CLAIMANT_ROLE(), deployer
         );
         // Whitelist owner to verify claims
         orchestratorCreatedBountyManager.grantModuleRole(
-            orchestratorCreatedBountyManager.VERIFIER_ROLE(), orchestratorOwner
+            orchestratorCreatedBountyManager.VERIFIER_ROLE(), deployer
         );
 
         bytes memory details = "TEST BOUNTY";

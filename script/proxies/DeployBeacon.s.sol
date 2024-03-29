@@ -15,7 +15,7 @@ import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
 contract DeployBeacon is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     InverterBeacon beacon;
@@ -25,12 +25,11 @@ contract DeployBeacon is Script {
         return run(1);
     }
 
-    function run(uint majorVersion) public returns (address) {
+    function run(uint _majorVersion) public returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
-
-            beacon = new InverterBeacon(majorVersion);
+            beacon = new InverterBeacon(_majorVersion);
         }
 
         vm.stopBroadcast();

@@ -26,8 +26,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
-    uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint orchestratorOwnerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
     DeployTokenGatedRoleAuthorizer deployTokenRoleAuthorizer =
