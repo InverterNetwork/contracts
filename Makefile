@@ -101,9 +101,9 @@ testScripts: ## Run e2e test suite
 
 	@forge script script/proxies/DeployBeacon.s.sol
 
-	@forge script script/deployment/DeploymentScript.s.sol
+	@forge script script/deployment/DeployLocal.s.sol
 
-	@forge script script/setup/SetupToyOrchestratorScript.s.sol
+	@forge script script/setup/SetupLocalToyOrchestratorScript.s.sol
 
 # -----------------------------------------------------------------------------
 # Static Analyzers

@@ -27,7 +27,6 @@ contract SetupToyOrchestratorScript is Test, DeployLocal {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    address governance = vm.envAddress("GOVERNANCE_CONTRACT_ADDRESS");
 
     //-------------------------------------------------------------------------
     // Mock Funder and Contributor information
@@ -71,7 +70,7 @@ contract SetupToyOrchestratorScript is Test, DeployLocal {
         // Orchestrator: Owner, funding token
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
-            owner: governance,
+            owner: deployer,
             token: token
         });
 
@@ -95,7 +94,7 @@ contract SetupToyOrchestratorScript is Test, DeployLocal {
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
             roleAuthorizerMetadata,
-            abi.encode(governance, governance),
+            abi.encode(deployer, deployer),
             abi.encode(hasDependency, dependencies)
         );
 
