@@ -65,9 +65,11 @@ contract InverterBeaconTest is Test {
         address implementation = address(new ModuleImplementationV1Mock());
 
         //Upgrade to an initial Version
-        if (initialMinorVersion != 0) {
-            beacon.upgradeTo(implementation, initialMinorVersion, false);
-        }
+        beacon.upgradeTo(implementation, initialMinorVersion, false);
+
+        //Check for version
+        (, uint minorVersionPre) = beacon.version();
+        assertEq(minorVersionPre, initialMinorVersion);
 
         if (newMinorVersion <= initialMinorVersion) {
             vm.expectRevert(
@@ -77,6 +79,12 @@ contract InverterBeaconTest is Test {
             );
         }
         beacon.upgradeTo(implementation, newMinorVersion, false);
+
+        if (newMinorVersion > initialMinorVersion) {
+            //Check for version
+            (, uint minorVersionPost) = beacon.version();
+            assertEq(minorVersionPost, newMinorVersion);
+        }
     }
 
     function testValidImplementation(address newImplementation) public {
@@ -102,9 +110,7 @@ contract InverterBeaconTest is Test {
         //Turn off setImplementation
         beacon.flipUseOriginal_setImplementation();
 
-        if (oldMinorVersion != 0) {
-            beacon.upgradeTo(address(0), oldMinorVersion, false);
-        }
+        beacon.upgradeTo(address(0), oldMinorVersion, false);
 
         vm.expectEmit(true, true, true, true);
         emit Upgraded(address(newImplementation), newMinorVersion);
