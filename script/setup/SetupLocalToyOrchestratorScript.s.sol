@@ -69,10 +69,7 @@ contract SetupToyOrchestratorScript is Test, DeployLocal {
 
         // Orchestrator: Owner, funding token
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
-            owner: deployer,
-            token: token
-        });
+        IOrchestratorFactory.OrchestratorConfig({owner: deployer, token: token});
 
         // Funding Manager: Metadata, token address
         IOrchestratorFactory.ModuleConfig memory fundingManagerFactoryConfig =
