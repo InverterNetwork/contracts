@@ -19,7 +19,7 @@ import {ScriptConstants} from "../script-constants.sol";
 import {RebasingFundingManager} from
     "src/modules/fundingManager/RebasingFundingManager.sol";
 
-contract SetupToyOrchestratorScript is Test, DeployLocal {
+contract SetupLocalToyOrchestratorScript is Test, DeployLocal {
     ScriptConstants scriptConstants = new ScriptConstants();
     bool hasDependency;
     string[] dependencies = new string[](0);
