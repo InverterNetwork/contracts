@@ -37,8 +37,10 @@ import {DeploySingleVoteGovernor} from
     "script/modules/DeploySingleVoteGovernor.s.sol";
 import {DeployMetadataManager} from "script/utils/DeployMetadataManager.s.sol";
 
-contract DeploymentScript is Script {
+contract DeployLocal is Script {
     error BeaconProxyDeploymentFailed();
+
+    address deployer = vm.envAddress("DEPLOYER_ADDRESS");
 
     // ------------------------------------------------------------------------
     // Instances of Deployer Scripts
@@ -144,7 +146,7 @@ contract DeploymentScript is Script {
 
     IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "RebasingFundingManager"
     );
@@ -152,7 +154,7 @@ contract DeploymentScript is Script {
     IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "BancorVirtualSupplyBondingCurveFundingManager"
     );
@@ -162,14 +164,14 @@ contract DeploymentScript is Script {
 
     IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "RoleAuthorizer"
     );
 
     IModule.Metadata tokenGatedRoleAuthorizerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "TokenGatedRoleAuthorizer"
     );
@@ -179,14 +181,14 @@ contract DeploymentScript is Script {
 
     IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "SimplePaymentProcessor"
     );
 
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "StreamingPaymentProcessor"
     );
@@ -196,14 +198,14 @@ contract DeploymentScript is Script {
 
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "RecurringPaymentManager"
     );
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "BountyManager"
     );
@@ -213,14 +215,14 @@ contract DeploymentScript is Script {
 
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "SingleVoteGovernor"
     );
 
     IModule.Metadata metadataManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "MetadataManager"
     );
@@ -231,20 +233,13 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
-        console2.log("Deploy orchestrator implementation \n");
-        //Orchestrator
-        orchestrator = deployOrchestrator.run();
-
-        console2.log(
-            "-----------------------------------------------------------------------------"
-        );
         console2.log("Deploy forwarder implementation and proxy \n");
         //Deploy TransactionForwarder implementation
         forwarderImplementation = deployTransactionForwarder.run();
 
         //Deploy beacon and actual proxy
         (forwarderBeacon, forwarder) = deployAndSetUpBeacon
-            .deployBeaconAndSetupProxy(forwarderImplementation, 1, 1);
+            .deployBeaconAndSetupProxy(forwarderImplementation, 1, 0);
 
         if (
             forwarder == forwarderImplementation || forwarder == forwarderBeacon
@@ -255,10 +250,18 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
+        console2.log("Deploy orchestrator implementation \n");
+        //Orchestrator
+        orchestrator = deployOrchestrator.run(forwarder);
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
         console2.log("Deploy factory implementations \n");
 
         //Deploy module Factory implementation
         moduleFactory = deployModuleFactory.run(forwarder);
+        // Note: address 0 sets the owner to the deployer
 
         //Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
