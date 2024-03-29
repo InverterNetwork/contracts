@@ -36,7 +36,21 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     // Modifiers
 
     modifier validNewMinorVersion(uint newMinorVersion) {
-        if (newMinorVersion <= minorVersion) {
+        // version is invalid if
+        // - new number is less or equal to old (needs to be greater)
+        // - the following conditions are NOT met
+        //  - current minor version is set to 0
+        //  - new minor version is set to 0
+        //  - implementation is currently set to 0
+        // The second clause allows us to set a version x.0,
+        // but only if it's really the first implementation
+        if (
+            newMinorVersion <= minorVersion
+                && !(
+                    newMinorVersion == 0 && minorVersion == 0
+                        && _implementationAddress == address(0)
+                )
+        ) {
             revert Beacon__InvalidImplementationMinorVersion();
         }
         _;
