@@ -49,7 +49,7 @@ contract ModuleFactoryTest is Test {
 
     // Constants
     uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 1;
+    uint constant MINOR_VERSION = 0;
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Payment Processor";
 

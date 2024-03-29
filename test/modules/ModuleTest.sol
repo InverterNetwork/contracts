@@ -49,7 +49,7 @@ abstract contract ModuleTest is Test {
 
     // Module Constants
     uint constant _MAJOR_VERSION = 1;
-    uint constant _MINOR_VERSION = 1;
+    uint constant _MINOR_VERSION = 0;
     string constant _URL = "https://github.com/organization/module";
     string constant _TITLE = "Module";
 
