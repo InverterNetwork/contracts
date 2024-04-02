@@ -457,7 +457,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // An input verification is needed here since the Bancor formula, which determines the
         // issucance price, utilizes PPM for its computations. This leads to a precision loss
         // that's too significant to be acceptable for tokens with fewer than 7 decimals.
-        if (_decimals < 7 || _decimals > collateralTokenDecimals) {
+        if (_decimals < 7 || _decimals < collateralTokenDecimals) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal();
         }

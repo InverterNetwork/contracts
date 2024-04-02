@@ -1513,10 +1513,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         bondingCurveFundingManager.call_setDecimals(_newDecimals);
     }
 
-    function testSetDecimals_FailsIfHigherThanCollateralDecimals(
+    function testSetDecimals_FailsIfLowerThanCollateralDecimals(
         uint8 _newDecimals
     ) public {
-        vm.assume(_newDecimals > _token.decimals());
+        vm.assume(_newDecimals < _token.decimals());
         vm.expectRevert(
             IBancorVirtualSupplyBondingCurveFundingManager
                 .BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal
@@ -1527,7 +1527,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     function testSetDecimals(uint8 _newDecimals) public {
-        vm.assume(_newDecimals >= 7 && _newDecimals <= _token.decimals());
+        vm.assume(_newDecimals >= 7 && _newDecimals >= _token.decimals());
+
         // No authentication since it's an internal function exposed by the mock contract
         bondingCurveFundingManager.call_setDecimals(_newDecimals);
 
