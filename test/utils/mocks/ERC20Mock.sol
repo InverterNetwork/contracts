@@ -44,9 +44,9 @@ contract ERC20Mock is ERC20 {
         _transfer(owner, to, amount);
         return true;
     }
-    
+
     function decimals() public view virtual override returns (uint8) {
-        return 6;
+        return 18;
     }
 
     function transferFrom(address from, address to, uint amount)

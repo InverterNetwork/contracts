@@ -107,6 +107,28 @@ abstract contract ModuleTest is Test {
     //--------------------------------------------------------------------------------
     // Helpers
 
+    /// This function is intended to help in the case the number is intended to be converted into a token with a different decimal value.
+    /// @param number The number to be bounded
+    /// @param tokenDecimals The number of decimals the token which will be converted has
+    /// @param min The minimum value the number can be
+    /// @param max The maximum value the number can be, including the referenceDecimals
+    /// @param referenceDecimals The number of decimals the reference token has, which the token will be converted into
+    /// @return amount The bounded number
+    function _bound_for_decimal_conversion(
+        uint number,
+        uint min,
+        uint max,
+        uint tokenDecimals,
+        uint referenceDecimals
+    ) internal view returns (uint amount) {
+        assert(tokenDecimals <= referenceDecimals);
+
+        uint decimalDiff = referenceDecimals - tokenDecimals;
+        uint newMax = max / 10 ** decimalDiff;
+
+        amount = bound(amount, 1, newMax);
+    }
+
     function _assumeNonEmptyString(string memory a) internal pure {
         vm.assume(bytes(a).length != 0);
     }

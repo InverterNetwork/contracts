@@ -177,7 +177,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             );
 
             fundingManager.sell(
-                fundingManager.balanceOf(bob), fundingManager.balanceOf(bob) // Question: What happens with the fee? Shouldn't the amounts be wildly different since they are different tokens?
+                fundingManager.balanceOf(bob),
+                fundingManager.balanceOf(bob) // Question: What happens with the fee? Shouldn't the amounts be wildly different since they are different tokens?
             );
             assertApproxEqRel(token.balanceOf(bob), 2500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }

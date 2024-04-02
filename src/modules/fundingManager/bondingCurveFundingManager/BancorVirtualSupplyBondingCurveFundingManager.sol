@@ -124,11 +124,17 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             string(abi.encodePacked(issuanceToken.symbol))
         );
 
+
         _token = IERC20(_acceptedToken);
+
+        // Store token decimals for collateral
+        collateralTokenDecimals = IERC20Metadata(address(_token)).decimals();
+
         // Set token decimals for issuance token
         _setTokenDecimals(issuanceToken.decimals);
-        // Store token decimals for collateral
-        collateralTokenDecimals = IERC20Metadata(address(token())).decimals();
+
+
+
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
@@ -454,7 +460,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // An input verification is needed here since the Bancor formula, which determines the
         // issucance price, utilizes PPM for its computations. This leads to a precision loss
         // that's too significant to be acceptable for tokens with fewer than 7 decimals.
-        if (_decimals < 7) {
+        if (_decimals < 7 || _decimals > collateralTokenDecimals) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal();
         }
@@ -475,7 +481,12 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         (uint amountIssued, uint feeAmount) =
             _buyOrder(_receiver, _depositAmount, _minAmountOut);
         _addVirtualTokenAmount(amountIssued);
-        _addVirtualCollateralAmount(_depositAmount - feeAmount);
+        uint normalizedDepositAmount = _convertAmountToRequiredDecimal(
+            (_depositAmount - feeAmount),
+            collateralTokenDecimals,
+            eighteenDecimals
+        );
+        _addVirtualCollateralAmount(normalizedDepositAmount);
     }
 
     /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
@@ -492,7 +503,12 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         (uint redeemAmount, uint feeAmount) =
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
         _subVirtualTokenAmount(_depositAmount);
-        _subVirtualCollateralAmount(redeemAmount + feeAmount);
+        uint normalizedRedeemAmount = _convertAmountToRequiredDecimal(
+            (redeemAmount + feeAmount),
+            collateralTokenDecimals,
+            eighteenDecimals
+        );
+        _subVirtualCollateralAmount(normalizedRedeemAmount);
     }
 
     /// @dev Sets the reserve ratio for buying tokens.
