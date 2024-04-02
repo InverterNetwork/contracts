@@ -124,7 +124,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             string(abi.encodePacked(issuanceToken.symbol))
         );
 
-
         _token = IERC20(_acceptedToken);
 
         // Store token decimals for collateral
@@ -132,8 +131,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
         // Set token decimals for issuance token
         _setTokenDecimals(issuanceToken.decimals);
-
-
 
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);

@@ -1513,7 +1513,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         bondingCurveFundingManager.call_setDecimals(_newDecimals);
     }
 
-    function testSetDecimals_FailsIfHigherThanCollateralDecimals(uint8 _newDecimals) public {
+    function testSetDecimals_FailsIfHigherThanCollateralDecimals(
+        uint8 _newDecimals
+    ) public {
         vm.assume(_newDecimals > _token.decimals());
         vm.expectRevert(
             IBancorVirtualSupplyBondingCurveFundingManager
