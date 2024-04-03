@@ -234,6 +234,34 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
+    /// @inheritdoc IVirtualTokenSupply
+    /// @dev Since the supply is normalized internally to 18 decimals for use in the curve, when an external function queries it we convert it to it's native decimal amount
+    function getVirtualTokenSupply()
+        external
+        view
+        override(VirtualTokenSupplyBase)
+        returns (uint)
+    {
+        uint raw_tokenSupply = _getVirtualTokenSupply();
+        return _convertAmountToRequiredDecimal(
+            raw_tokenSupply, eighteenDecimals, decimals()
+        );
+    }
+
+    /// @inheritdoc IVirtualCollateralSupply
+    /// @dev Since the supply is normalized internally to 18 decimals for use in the curve, when an external function queries it we convert it to it's native decimal amount
+    function getVirtualCollateralSupply()
+        external
+        view
+        override(VirtualCollateralSupplyBase)
+        returns (uint)
+    {
+        uint raw_collateralSupply = _getVirtualCollateralSupply();
+        return _convertAmountToRequiredDecimal(
+            raw_collateralSupply, eighteenDecimals, collateralTokenDecimals
+        );
+    }
+
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function getReserveRatioForBuying() external view returns (uint32) {
         return reserveRatioForBuying;
@@ -329,6 +357,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _mint(_receiver, _amount);
     }
 
+    // question about these to: should we do the conversion here too? Since it's an admin function I'd tend towards no for better control, but I'd like to hear other opinions
+
     /// @inheritdoc IVirtualTokenSupply
     function setVirtualTokenSupply(uint _virtualSupply)
         external
@@ -381,6 +411,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
             _depositAmount, collateralTokenDecimals, eighteenDecimals
         );
+
         // Calculate mint amount through bonding curve
         mintAmount = formula.calculatePurchaseReturn(
             virtualTokenSupply,

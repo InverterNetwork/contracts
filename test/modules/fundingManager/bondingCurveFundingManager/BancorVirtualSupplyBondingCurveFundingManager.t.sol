@@ -211,12 +211,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             "Formula has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
             INITIAL_TOKEN_SUPPLY,
             "Virtual token supply has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             INITIAL_COLLATERAL_SUPPLY,
             "Virtual collateral supply has not been set correctly"
         );
@@ -385,8 +385,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculatePurchaseReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForBuying(),
             normalized_amount
         );
@@ -465,8 +465,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculatePurchaseReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForBuying(),
             normalized_buyAmountMinusFee
         );
@@ -547,8 +547,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             .call_convertAmountToRequiredDecimal(amount, _token.decimals(), 18);
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculatePurchaseReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForBuying(),
             normalizedAmount
         );
@@ -712,8 +712,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values. Note that these are the raw internal values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForSelling(),
             userSellAmount
         );
@@ -774,11 +774,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Check virtual token/collateral balances
         assertEq(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
             newVirtualTokenSupply - userSellAmount
         );
         assertEq(
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             newVirtualCollateral - payout_from_collateral
         );
     }
@@ -830,8 +830,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForSelling(),
             userSellAmount
         );
@@ -894,11 +894,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Check virtual token/collateral balances
         assertEq(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
             newVirtualTokenSupply - userSellAmount
         );
         assertEq(
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             newVirtualCollateral - payout_from_collateral
         );
     }
@@ -955,8 +955,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForSelling(),
             userSellAmount
         );
@@ -993,11 +993,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Check virtual token/collateral balances
         assertEq(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
             newVirtualTokenSupply - userSellAmount
         );
         assertEq(
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             newVirtualCollateral - payout_from_collateral
         );
     }
@@ -1042,8 +1042,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
     function testgetStaticPriceForBuying() public {
         uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForBuying()
         );
         assertEq(
@@ -1054,12 +1054,51 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
     function testgetStaticPriceForSelling() public {
         uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForBuying()
         );
         assertEq(
             bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
+        );
+    }
+
+    /* Test getVirtualCollateralSupply() */
+
+    function testGetVirtualCollateralSupply(uint _supply) public {
+        vm.assume(_supply > 0);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setVirtualCollateralSupply(_supply);
+
+        uint native_Supply = bondingCurveFundingManager
+            .call_convertAmountToRequiredDecimal(
+            _supply,
+            18,
+            bondingCurveFundingManager.call_collateralTokenDecimals()
+        );
+
+        assertEq(
+            native_Supply,
+            bondingCurveFundingManager.getVirtualCollateralSupply()
+        );
+    }
+
+    /* Test getVirtualTokenSupply() */
+
+    function testGetVirtualTokenSupply(uint _supply) public {
+        vm.assume(_supply > 0);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setVirtualTokenSupply(_supply);
+
+        uint native_Supply = bondingCurveFundingManager
+            .call_convertAmountToRequiredDecimal(
+            _supply, 18, bondingCurveFundingManager.decimals()
+        );
+
+        assertEq(
+            native_Supply, bondingCurveFundingManager.getVirtualTokenSupply()
         );
     }
 
@@ -1105,8 +1144,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculatePurchaseReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForBuying(),
             normalized_depositAmount
         );
@@ -1148,8 +1187,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculatePurchaseReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForBuying(),
             normalized_buyAmountMinusFee
         );
@@ -1204,8 +1243,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForBuying(),
             _saleAmount
         );
@@ -1255,8 +1294,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
-            bondingCurveFundingManager.getVirtualTokenSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_getVirtualTokenSupply(),
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
             bondingCurveFundingManager.call_reserveRatioForSelling(),
             _saleAmount
         );
@@ -1336,10 +1375,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
         emit VirtualTokenSupplySet(_newSupply, INITIAL_TOKEN_SUPPLY);
         bondingCurveFundingManager.setVirtualTokenSupply(_newSupply);
-        assertEq(bondingCurveFundingManager.getVirtualTokenSupply(), _newSupply);
+        assertEq(
+            bondingCurveFundingManager.call_getVirtualTokenSupply(), _newSupply
+        );
     }
 
-    /* Test setVirtualCollateralSupply and _ssetVirtualCollateralSupply function
+    /* Test setVirtualCollateralSupply and _setVirtualCollateralSupply function
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
@@ -1377,7 +1418,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         emit VirtualCollateralSupplySet(_newSupply, INITIAL_COLLATERAL_SUPPLY);
         bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
         assertEq(
-            bondingCurveFundingManager.getVirtualCollateralSupply(), _newSupply
+            bondingCurveFundingManager.call_getVirtualCollateralSupply(),
+            _newSupply
         );
     }
 

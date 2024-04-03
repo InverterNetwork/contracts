@@ -39,7 +39,7 @@ abstract contract VirtualTokenSupplyBase is IVirtualTokenSupply, ERC165 {
     // Public Functions
 
     /// @inheritdoc IVirtualTokenSupply
-    function getVirtualTokenSupply() external view returns (uint) {
+    function getVirtualTokenSupply() external view virtual returns (uint) {
         return _getVirtualTokenSupply();
     }
 

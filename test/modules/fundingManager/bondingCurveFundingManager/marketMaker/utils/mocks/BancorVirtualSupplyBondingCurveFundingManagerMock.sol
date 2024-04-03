@@ -26,6 +26,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 
+    function call_getVirtualCollateralSupply() external view returns (uint) {
+        return virtualCollateralSupply;
+    }
+
+    function call_getVirtualTokenSupply() external view returns (uint) {
+        return virtualTokenSupply;
+    }
+
     function call_BPS() external pure returns (uint) {
         return BPS;
     }
