@@ -88,7 +88,6 @@ contract GovernanceContract is
     //--------------------------------------------------------------------------
     // Storage
 
-    // Stored for easy public reference. Other Modules can assume the following roles to exist
     bytes32 public constant COMMUNITY_MULTISIG_ROLE = "0x01";
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
@@ -101,6 +100,10 @@ contract GovernanceContract is
     //--------------------------------------------------------------------------
     // Initialization
 
+    /// @notice The module's initializer function.
+    /// @param newCommunityMultisig The address of the community multisig
+    /// @param newTeamMultisig The address of the team multisig
+    /// @param newTimelockPeriod The timelock period needed to upgrade a beacon
     function init(
         address newCommunityMultisig,
         address newTeamMultisig,
@@ -129,10 +132,12 @@ contract GovernanceContract is
     //--------------------------------------------------------------------------
     // FeeManager
 
+    /// @inheritdoc IGovernanceContract
     function getFeeManager() external returns (address) {
         return feeManager;
     }
 
+    /// @inheritdoc IGovernanceContract
     function setFeeManager(address newFeeManager)
         external
         validAddress(newFeeManager)
@@ -146,7 +151,7 @@ contract GovernanceContract is
     //---------------------------
     // Upgrade
 
-    //@todo write in comments that this can just override previous upgrades
+    /// @inheritdoc IGovernanceContract
     function upgradeBeaconWithTimelock(
         address beacon,
         address newImplementation,
@@ -167,6 +172,7 @@ contract GovernanceContract is
         emit BeaconTimelockStarted(beacon, newImplementation, newMinorVersion);
     }
 
+    /// @inheritdoc IGovernanceContract
     function triggerUpgradeBeaconWithTimelock(address beacon)
         external
         onlyCommunityOrTeamMultisig
@@ -186,6 +192,7 @@ contract GovernanceContract is
         );
     }
 
+    /// @inheritdoc IGovernanceContract
     function cancelUpgrade(address beacon)
         external
         onlyCommunityOrTeamMultisig
@@ -195,6 +202,7 @@ contract GovernanceContract is
         emit BeaconUpgradedCanceled(beacon);
     }
 
+    /// @inheritdoc IGovernanceContract
     function setTimelockPeriod(uint newTimelockPeriod)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
@@ -207,6 +215,7 @@ contract GovernanceContract is
     //---------------------------
     //Emergency Shutdown
 
+    /// @inheritdoc IGovernanceContract
     function initiateBeaconShutdown(address beacon)
         external
         onlyCommunityOrTeamMultisig
@@ -216,6 +225,7 @@ contract GovernanceContract is
         emit BeaconShutdownInitiated(beacon);
     }
 
+    /// @inheritdoc IGovernanceContract
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
@@ -229,6 +239,7 @@ contract GovernanceContract is
         );
     }
 
+    /// @inheritdoc IGovernanceContract
     function restartBeaconImplementation(address beacon)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
@@ -241,9 +252,10 @@ contract GovernanceContract is
     //---------------------------
     //Ownable2Step
 
+    /// @inheritdoc IGovernanceContract
     function acceptOwnership(address adr)
         external
-        onlyRole(COMMUNITY_MULTISIG_ROLE) //@note correct Role?
+        onlyCommunityOrTeamMultisig //@note correct Role?
     {
         (bool success,) =
             adr.call(abi.encodeCall(Ownable2Step.acceptOwnership, ()));

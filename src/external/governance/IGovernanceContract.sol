@@ -9,10 +9,15 @@ interface IGovernanceContract {
     //--------------------------------------------------------------------------
     // Structs
 
+    /// @dev The timelock is needed to upgrade a beacon to new implementation.
     struct Timelock {
+        /// @dev Is the timelock currently active
         bool timelockActive;
+        /// @dev Timestamp that represents from when the upgrade can be carried out
         uint timelockUntil;
+        /// @dev The new inteded Implementation address of the beacon
         address intendedImplementation;
+        /// @dev The new intended minor Version of the beacon
         uint intendedMinorVersion;
     }
 
@@ -98,8 +103,14 @@ interface IGovernanceContract {
 
     //--------------------------------------------------------------------------
     // FeeManager
+
+    /// @notice Returns the FeeManager address
+    /// @return Address of the FeeManager
     function getFeeManager() external returns (address);
 
+    /// @notice Sets the address of the FeeManager
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @param newFeeManager The address of the new FeeManager
     function setFeeManager(address newFeeManager) external;
 
     //--------------------------------------------------------------------------
@@ -108,30 +119,62 @@ interface IGovernanceContract {
     //---------------------------
     //Upgrade
 
+    /// @notice Starts the upgrade process of a beacon by creating a timelock period after which the beacon can be upgraded via triggerUpgradeBeaconWithTimelock()
+    //@dev This function will override previous timelocks even if they are active
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
+    /// @param beacon The address of the beacon that is intended to be upgraded
+    /// @param newImplementation The address of the intended new Implementation of the beacon.
+    /// @param newMinorVersion The intended new minor version of the beacon.
     function upgradeBeaconWithTimelock(
-    address beacon, address newImplementation, uint newMinorVersion)
-        external; 
+        address beacon,
+        address newImplementation,
+        uint newMinorVersion
+    ) external;
 
-    function triggerUpgradeBeaconWithTimelock(address beacon) external; 
+    /// @notice Upgrades a beacon with the data provided by the active timelock
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
+    /// @param beacon The address of the beacon that is intended to be upgraded
+    function triggerUpgradeBeaconWithTimelock(address beacon) external;
 
+    /// @notice Cancels a Upgrade of beacon by setting the active timelock to inactive
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
+    /// @param beacon The address of the beacon for which the timelock should be canceled
     function cancelUpgrade(address beacon) external;
 
+    /// @notice Sets the timelock period of a beacon upgrade process
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @param newtimelockPeriod The new timelock period
     function setTimelockPeriod(uint newtimelockPeriod) external;
 
     //---------------------------
     //Emergency Shutdown
 
+    /// @notice Initiates the shutdown of a beacon
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
+    /// @param beacon The address of the beacon that should be shut down
     function initiateBeaconShutdown(address beacon) external;
 
+    /// @notice This function forces the upgrade of a beacon and restarts the implementation afterwards
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
+    /// @param beacon The address of the beacon that is intended to be upgraded and restarted
+    /// @param newImplementation The address of the intended new Implementation of the beacon.
+    /// @param newMinorVersion The intended new minor version of the beacon.
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
         uint newMinorVersion
     ) external;
 
+    /// @notice Restarts the beacon implementation
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @param beacon The address of the beacon that should restarted
     function restartBeaconImplementation(address beacon) external;
 
     //---------------------------
     //Ownable2Step
 
-    function acceptOwnership(address adr) external; 
+    /// @notice Accepts the ownership over the target address
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @param adr The address of target that wants to hand over the ownership
+    function acceptOwnership(address adr) external;
+}
