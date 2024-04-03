@@ -301,7 +301,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             bondingCurveFundingManager.decimals()
         );
-        // see comment in testBuyOrderWithZeroFee
+        // see comment in testBuyOrderWithZeroFee for information on the upper bound
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amount)
         );
@@ -336,7 +336,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             bondingCurveFundingManager.decimals()
         );
-        // see comment in testBuyOrderWithZeroFee
+        // see comment in testBuyOrderWithZeroFee for information on the upper bound
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amount)
         );
@@ -438,7 +438,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             bondingCurveFundingManager.decimals()
         );
-        // see comment in testBuyOrderWithZeroFee
+        // see comment in testBuyOrderWithZeroFee for information on the upper bound
 
         vm.prank(owner_address);
         bondingCurveFundingManager.setBuyFee(fee);
@@ -612,21 +612,23 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint amount
     ) public {
         // Setup
+
+        // We set a minimum high enough to discard most inputs that wouldn't mint at least 2 tokens (so the supply can be set to 1 below)
         amount = _bound_for_decimal_conversion(
             amount,
-            100_000_000,
+            1e4,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             bondingCurveFundingManager.decimals()
         );
-        // see comment in testBuyOrderWithZeroFee
+        // see comment in testBuyOrderWithZeroFee for information on the upper bound for information on the upper bound
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amount)
         );
 
         address seller = makeAddr("seller");
         uint userSellAmount = _prepareSellConditions(seller, amount);
-        vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause underflow
+        vm.assume(userSellAmount >= 2); // we discard buy-ins so small they wouldn't cause underflow
 
         // we set a virtual collateral supply that will not cover the amount to redeem
         vm.prank(owner_address);
@@ -651,7 +653,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             bondingCurveFundingManager.decimals()
         );
-        // see comment in testBuyOrderWithZeroFee
+        // see comment in testBuyOrderWithZeroFee for information on the upper bound
 
         address seller = makeAddr("seller");
         uint availableForSale = _prepareSellConditions(seller, amount);
@@ -670,22 +672,23 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     function testSellOrderWithZeroFee(uint amountIn) public {
         // Setup
 
-        // For sells, number above 1e26 start reverting!?
+        // We set a minimum high enough to discard most inputs that wouldn't mint even 1 token
         amountIn = _bound_for_decimal_conversion(
             amountIn,
-            1,
-            1e26,
+            100,
+            1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             bondingCurveFundingManager.decimals()
         );
-        // see comment in testBuyOrderWithZeroFee
+
+        // see comment in testBuyOrderWithZeroFee for information on the upper bound
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amountIn)
         ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
 
         address seller = makeAddr("seller");
         uint userSellAmount = _prepareSellConditions(seller, amountIn);
-        vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause minting
+        vm.assume(userSellAmount > 0); // we ensure we are discarding buy-ins so small they wouldn't cause minting
 
         // Set virtual supply to some number above the sell amount
         // Set virtual collateral to some number
@@ -787,15 +790,16 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint _bps = bondingCurveFundingManager.call_BPS();
         fee = bound(fee, 1, _bps);
 
-        //For sells, number above 1e26 start reverting!?
+        // We set a minimum high enough to discard most inputs that wouldn't mint even 1 token
         amountIn = _bound_for_decimal_conversion(
             amountIn,
-            1,
-            1e26,
+            100,
+            1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             bondingCurveFundingManager.decimals()
         );
-        // see comment in testBuyOrderWithZeroFee
+
+        // see comment in testBuyOrderWithZeroFee for information on the upper bound
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amountIn)
         ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
@@ -912,22 +916,22 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 && to != address(bondingCurveFundingManager)
         );
 
-        // For sells, number above 1e26 start reverting!?
+        // We set a minimum high enough to discard most inputs that wouldn't mint even 1 token
         amountIn = _bound_for_decimal_conversion(
             amountIn,
-            1,
-            1e26,
+            100,
+            1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             bondingCurveFundingManager.decimals()
         );
 
-        // see comment in testBuyOrderWithZeroFee
+        // see comment in testBuyOrderWithZeroFee for information on the upper bound
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amountIn)
         ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
 
         uint userSellAmount = _prepareSellConditions(seller, amountIn);
-        vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause underflow
+        vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause minting
 
         // Set virtual supply to some number above the sell amount
         // Set virtual collateral to some number
