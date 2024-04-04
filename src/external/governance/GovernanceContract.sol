@@ -49,13 +49,11 @@ contract GovernanceContract is
         _;
     }
 
-    modifier accessableBeacon(address beacon) {
-        if (
-            !supportsInterface(type(IInverterBeacon).interfaceId)
-                && Ownable(beacon).owner() != address(this)
-        ) {
-            revert IGovernanceContract.BeaconNotAccessible(beacon);
+    modifier accessableBeacon(address target) {
+        if (!isBeaconAccessible(target)) {
+            revert IGovernanceContract.BeaconNotAccessible(target);
         }
+
         _;
     }
 
@@ -63,16 +61,9 @@ contract GovernanceContract is
         address sender = _msgSender();
         if (
             !hasRole(COMMUNITY_MULTISIG_ROLE, sender)
-                && !hasRole(COMMUNITY_MULTISIG_ROLE, sender)
+                && !hasRole(TEAM_MULTISIG_ROLE, sender)
         ) {
             revert IGovernanceContract.OnlyCommunityOrTeamMultisig();
-        }
-        _;
-    }
-
-    modifier timelockPeriodExceeded(address beacon) {
-        if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
-            revert IGovernanceContract.timelockPeriodNotExceeded();
         }
         _;
     }
@@ -80,7 +71,14 @@ contract GovernanceContract is
     modifier upgradeProcessAlreadyStarted(address beacon) {
         //if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
-            revert IGovernanceContract.upgradeProcessNotStarted();
+            revert IGovernanceContract.UpgradeProcessNotStarted();
+        }
+        _;
+    }
+
+    modifier timelockPeriodExceeded(address beacon) {
+        if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
+            revert IGovernanceContract.TimelockPeriodNotExceeded();
         }
         _;
     }
@@ -95,7 +93,7 @@ contract GovernanceContract is
 
     uint public timelockPeriod;
 
-    mapping(address => IGovernanceContract.Timelock) public beaconTimelock;
+    mapping(address => IGovernanceContract.Timelock) private beaconTimelock;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -108,7 +106,13 @@ contract GovernanceContract is
         address newCommunityMultisig,
         address newTeamMultisig,
         uint newTimelockPeriod //@note should we add feeManager here?
-    ) external onlyInitializing {
+    )
+        external
+        initializer
+        validAddress(newCommunityMultisig)
+        validAddress(newTeamMultisig)
+        validAmount(newTimelockPeriod)
+    {
         // -> set COMMUNITY_MULTISIG_ROLE as admin of itself
         _setRoleAdmin(COMMUNITY_MULTISIG_ROLE, COMMUNITY_MULTISIG_ROLE);
         // -> set COMMUNITY_MULTISIG_ROLE as admin of DEFAULT_ADMIN_ROLE
@@ -127,21 +131,29 @@ contract GovernanceContract is
     }
 
     //--------------------------------------------------------------------------
-    // Functions
-
-    //--------------------------------------------------------------------------
-    // FeeManager
+    // Getter Functions
 
     /// @inheritdoc IGovernanceContract
-    function getFeeManager() external returns (address) {
+    function getBeaconTimelock(address beacon)
+        external
+        returns (Timelock memory)
+    {
+        return beaconTimelock[beacon];
+    }
+
+    //--------------------------------------------------------------------------
+    // FeeManager Functions
+
+    /// @inheritdoc IGovernanceContract
+    function getFeeManager() external view returns (address) {
         return feeManager;
     }
 
     /// @inheritdoc IGovernanceContract
     function setFeeManager(address newFeeManager)
         external
-        validAddress(newFeeManager)
         onlyRole(COMMUNITY_MULTISIG_ROLE)
+        validAddress(newFeeManager)
     {
         feeManager = newFeeManager;
     }
@@ -169,7 +181,12 @@ contract GovernanceContract is
             newMinorVersion
         );
 
-        emit BeaconTimelockStarted(beacon, newImplementation, newMinorVersion);
+        emit BeaconTimelockStarted(
+            beacon,
+            newImplementation,
+            newMinorVersion,
+            block.timestamp + timelockPeriod
+        );
     }
 
     /// @inheritdoc IGovernanceContract
@@ -180,11 +197,16 @@ contract GovernanceContract is
         upgradeProcessAlreadyStarted(beacon)
         timelockPeriodExceeded(beacon)
     {
+        //set timelock to inaktive
+        beaconTimelock[beacon].timelockActive = false;
+
+        //Upgrade beacon
         IInverterBeacon(beacon).upgradeTo(
             beaconTimelock[beacon].intendedImplementation,
             beaconTimelock[beacon].intendedMinorVersion,
             false //this is not intended to override a shutdown
         );
+
         emit BeaconUpgraded(
             beacon,
             beaconTimelock[beacon].intendedImplementation, //@todo optimise
@@ -230,7 +252,12 @@ contract GovernanceContract is
         address beacon,
         address newImplementation,
         uint newMinorVersion
-    ) external onlyRole(COMMUNITY_MULTISIG_ROLE) accessableBeacon(beacon) {
+    )
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+        accessableBeacon(beacon)
+        validAddress(newImplementation)
+    {
         IInverterBeacon(beacon).upgradeTo(
             newImplementation, newMinorVersion, true
         );
@@ -256,12 +283,57 @@ contract GovernanceContract is
     function acceptOwnership(address adr)
         external
         onlyCommunityOrTeamMultisig //@note correct Role?
+            //@note should be beacon?
     {
+        if (adr.code.length == 0) {
+            revert IGovernanceContract.CallToTargetContractFailed();
+        }
+
         (bool success,) =
             adr.call(abi.encodeCall(Ownable2Step.acceptOwnership, ()));
+
+        //if the call is not a success
         if (!success) {
             revert IGovernanceContract.CallToTargetContractFailed();
         }
         emit OwnershipAccepted(adr);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    //@dev internal function that checks if target address is a beacon and this contract has the ownership of it
+    function isBeaconAccessible(address target) internal returns (bool) {
+        //check if target is a contract
+        if (target.code.length == 0) {
+            return false;
+        }
+
+        //Check if target address supports Inverter beacon interface
+        (bool success, bytes memory result) = target.call(
+            abi.encodeCall(
+                InverterBeacon.supportsInterface,
+                (type(IInverterBeacon).interfaceId)
+            )
+        );
+
+        //if target does not support the beacon interface return false
+        if (!(success && result.length != 0 && abi.decode(result, (bool)))) {
+            return false;
+        }
+
+        //Check if target is ownable and who the owner is
+        (success, result) = target.call(abi.encodeCall(Ownable.owner, ()));
+
+        //if not ownable or owner is not this contract return false
+        if (
+            !(
+                success && result.length != 0
+                    && address(this) == abi.decode(result, (address))
+            )
+        ) return false;
+
+        //we are here, that means target is owned by this address and inverter beacon
+        return true;
     }
 }

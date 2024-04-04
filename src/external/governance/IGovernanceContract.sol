@@ -30,17 +30,17 @@ interface IGovernanceContract {
     /// @notice The given amount is invalid
     error InvalidAmount(uint amt);
 
-    /// @notice The given beacon address is not accessible
-    error BeaconNotAccessible(address beacon);
+    /// @notice The given target address is not accessible
+    error BeaconNotAccessible(address target);
 
     /// @notice This function can only be accessed by the CommunityMultisig or TeamMultisig
     error OnlyCommunityOrTeamMultisig();
 
     /// @notice The timelock period needed for the beacon to be upgraded has not been exceeded yet
-    error timelockPeriodNotExceeded();
+    error TimelockPeriodNotExceeded();
 
     /// @notice This Upgrade process for this beacon has not yet been started
-    error upgradeProcessNotStarted();
+    error UpgradeProcessNotStarted();
 
     /// @notice The call to the target contract has failed
     error CallToTargetContractFailed();
@@ -52,8 +52,12 @@ interface IGovernanceContract {
     /// @param beacon The address of the beacon
     /// @param newImplementation The address of the new Implementation.
     /// @param newMinorVersion The new minor version.
+    /// @param timelockExceeded Timestamp of when the timelock is exceeded
     event BeaconTimelockStarted(
-        address beacon, address newImplementation, uint newMinorVersion
+        address beacon,
+        address newImplementation,
+        uint newMinorVersion,
+        uint timelockExceeded
     );
 
     /// @notice Event emitted when a beacon is upgraded
@@ -102,11 +106,21 @@ interface IGovernanceContract {
     ) external;
 
     //--------------------------------------------------------------------------
+    // Getter Functions
+
+    /// @notice Returns the current timelock of a beacon address
+    /// @param beacon The address of the beacon
+    /// @return The timelock of the beacon address
+    function getBeaconTimelock(address beacon)
+        external
+        returns (Timelock memory);
+
+    //--------------------------------------------------------------------------
     // FeeManager
 
     /// @notice Returns the FeeManager address
     /// @return Address of the FeeManager
-    function getFeeManager() external returns (address);
+    function getFeeManager() external view returns (address);
 
     /// @notice Sets the address of the FeeManager
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
