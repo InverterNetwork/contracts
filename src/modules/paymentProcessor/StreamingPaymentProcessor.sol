@@ -770,7 +770,11 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param _cliff uint to validate.
     /// @param _end uint to validate.
     /// @return True if uint is valid.
-    function validTimes(uint _start, uint _cliff, uint _end) internal view returns (bool) {
+    function validTimes(uint _start, uint _cliff, uint _end)
+        internal
+        view
+        returns (bool)
+    {
         return !(_start >= type(uint).max && _start + _cliff > _end);
     }
 }
