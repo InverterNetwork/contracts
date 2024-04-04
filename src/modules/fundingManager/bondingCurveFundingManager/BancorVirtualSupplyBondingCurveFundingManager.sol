@@ -508,12 +508,18 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ) internal {
         (uint amountIssued, uint feeAmount) =
             _buyOrder(_receiver, _depositAmount, _minAmountOut);
-        _addVirtualTokenAmount(amountIssued);
+
+        uint normalizedIssuanceAmount = _convertAmountToRequiredDecimal(
+            amountIssued, decimals(), eighteenDecimals
+        );
+
         uint normalizedDepositAmount = _convertAmountToRequiredDecimal(
             (_depositAmount - feeAmount),
             collateralTokenDecimals,
             eighteenDecimals
         );
+
+        _addVirtualTokenAmount(normalizedIssuanceAmount);
         _addVirtualCollateralAmount(normalizedDepositAmount);
     }
 
@@ -530,12 +536,18 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ) internal {
         (uint redeemAmount, uint feeAmount) =
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
-        _subVirtualTokenAmount(_depositAmount);
+
+        uint normalizedBurnAmount = _convertAmountToRequiredDecimal(
+            _depositAmount, decimals(), eighteenDecimals
+        );
+
         uint normalizedRedeemAmount = _convertAmountToRequiredDecimal(
             (redeemAmount + feeAmount),
             collateralTokenDecimals,
             eighteenDecimals
         );
+
+        _subVirtualTokenAmount(normalizedBurnAmount);
         _subVirtualCollateralAmount(normalizedRedeemAmount);
     }
 

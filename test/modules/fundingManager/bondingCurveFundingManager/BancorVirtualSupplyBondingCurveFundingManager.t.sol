@@ -65,7 +65,7 @@ import {RedeemingBondingCurveFundingManagerBaseTest} from
 contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     string private constant NAME = "Bonding Curve Token";
     string private constant SYMBOL = "BCT";
-    //uint8 private constant DECIMALS = 18; // hardcoded for now @review
+    uint8 private constant DECIMALS = 18;
     uint private constant INITIAL_TOKEN_SUPPLY = 1;
     uint private constant INITIAL_COLLATERAL_SUPPLY = 1;
     uint32 private constant RESERVE_RATIO_FOR_BUYING = 200_000;
@@ -134,7 +134,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         issuanceToken.name = bytes32(abi.encodePacked(NAME));
         issuanceToken.symbol = bytes32(abi.encodePacked(SYMBOL));
-        issuanceToken.decimals = uint8(18);
+        issuanceToken.decimals = uint8(DECIMALS);
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -197,7 +197,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         assertEq(
             bondingCurveFundingManager.decimals(),
             //DECIMALS,
-            18,
+            DECIMALS,
             "Decimals has not been set correctly"
         );
         assertEq(
@@ -391,6 +391,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             normalized_amount
         );
 
+        uint native_formulaReturn = bondingCurveFundingManager
+            .call_convertAmountToRequiredDecimal(formulaReturn, 18, DECIMALS);
+
         // Execution
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
@@ -398,11 +401,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit Transfer(address(0), buyer, formulaReturn);
+        emit Transfer(address(0), buyer, native_formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, formulaReturn, buyer);
+        emit TokensBought(buyer, amount, native_formulaReturn, buyer);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
@@ -415,7 +418,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         emit VirtualCollateralAmountAdded(
             normalized_amount, (INITIAL_COLLATERAL_SUPPLY + normalized_amount)
         );
-        bondingCurveFundingManager.buy(amount, formulaReturn);
+        bondingCurveFundingManager.buy(amount, native_formulaReturn);
 
         // Post-checks
         assertEq(
@@ -471,6 +474,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             normalized_buyAmountMinusFee
         );
 
+        uint native_formulaReturn = bondingCurveFundingManager
+            .call_convertAmountToRequiredDecimal(formulaReturn, 18, DECIMALS);
+
         // Execution
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
@@ -478,11 +484,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit Transfer(address(0), buyer, formulaReturn);
+        emit Transfer(address(0), buyer, native_formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, buyAmountMinusFee, formulaReturn, buyer);
+        emit TokensBought(buyer, buyAmountMinusFee, native_formulaReturn, buyer);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
@@ -496,7 +502,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             normalized_buyAmountMinusFee,
             (INITIAL_TOKEN_SUPPLY + normalized_buyAmountMinusFee)
         );
-        bondingCurveFundingManager.buy(amount, formulaReturn);
+        bondingCurveFundingManager.buy(amount, native_formulaReturn);
 
         // Post-checks
         assertEq(
@@ -504,7 +510,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), formulaReturn);
+        assertEq(
+            bondingCurveFundingManager.balanceOf(buyer), native_formulaReturn
+        );
     }
 
     // test buyFor function
@@ -553,9 +561,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             normalizedAmount
         );
 
+        uint native_formulaReturn = bondingCurveFundingManager
+            .call_convertAmountToRequiredDecimal(formulaReturn, 18, DECIMALS);
+
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buyFor(to, amount, formulaReturn);
+        bondingCurveFundingManager.buyFor(to, amount, native_formulaReturn);
 
         // Post-checks
         assertEq(
@@ -564,7 +575,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(to), formulaReturn);
+        assertEq(bondingCurveFundingManager.balanceOf(to), native_formulaReturn);
     }
 
     /* Test sell and _virtualSupplySellOrder function
@@ -664,7 +675,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectRevert(); //The formula reverts
-            bondingCurveFundingManager.sell(amount, amount);
+            bondingCurveFundingManager.sell(availableForSale, amount);
         }
         vm.stopPrank();
     }
@@ -852,7 +863,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint feeAmount = (normalized_formulaReturn * fee)
             / bondingCurveFundingManager.call_BPS();
         uint sellAmountMinusFee = normalized_formulaReturn - feeAmount;
-        uint sellAmountPlusFee = feeAmount + sellAmountMinusFee;
 
         // Perform the sell
         vm.startPrank(seller);
