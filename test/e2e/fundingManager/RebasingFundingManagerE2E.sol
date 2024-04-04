@@ -8,7 +8,7 @@ import {
 
 //SuT
 import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
 
 /**
  * E2e test demonstrating a orchestrator's fund management.

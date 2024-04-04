@@ -20,7 +20,7 @@ import {
     IERC20PaymentClient
 } from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
 import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
 
 contract RecurringPaymentManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.

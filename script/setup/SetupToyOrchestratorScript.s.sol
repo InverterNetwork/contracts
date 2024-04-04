@@ -17,7 +17,7 @@ import {
 } from "src/modules/logicModule/BountyManager.sol";
 import {ScriptConstants} from "../script-constants.sol";
 import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     ScriptConstants scriptConstants = new ScriptConstants();

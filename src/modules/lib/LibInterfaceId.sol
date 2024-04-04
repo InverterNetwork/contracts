@@ -19,27 +19,27 @@ import {IERC20PaymentClient} from
     "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IRebasingERC20} from
-    "src/modules/fundingManager/token/IRebasingERC20.sol";
-import {IBancorVirtualSupplyBondingCurveFundingManager} from
-    "src/modules/fundingManager/bondingCurveFundingManager/IBancorVirtualSupplyBondingCurveFundingManager.sol";
-import {IBondingCurveFundingManagerBase} from
-    "src/modules/fundingManager/bondingCurveFundingManager/IBondingCurveFundingManagerBase.sol";
-import {IRedeemingBondingCurveFundingManagerBase} from
-    "src/modules/fundingManager/bondingCurveFundingManager/IRedeemingBondingCurveFundingManagerBase.sol";
-import {IVirtualCollateralSupply} from
-    "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualCollateralSupply.sol";
-import {IVirtualTokenSupply} from
-    "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualTokenSupply.sol";
+    "src/modules/fundingManager/rebasing/interfaces/IRebasingERC20.sol";
+import {IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1.sol";
+import {IBondingCurveBase} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IBondingCurveBase.sol";
+import {IRedeemingBondingCurveBase} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IRedeemingBondingCurveBase.sol";
+import {IVirtualCollateralSupplyBase} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IVirtualCollateralSupplyBase.sol";
+import {IVirtualIssuanceSupplyBase} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IVirtualIssuanceSupplyBase.sol";
 import {IBancorFormula} from
-    "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";
+    "src/modules/fundingManager/bondingCurve/interfaces/IBancorFormula.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {ITokenGatedRoleAuthorizer} from
     "src/modules/authorizer/ITokenGatedRoleAuthorizer.sol";
 
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-import {IERC20} from "src/modules/fundingManager/token/IERC20.sol";
+import {IERC20} from "src/modules/fundingManager/rebasing/interfaces/IERC20.sol";
 import {IERC20Metadata} from
-    "src/modules/fundingManager/token/IERC20Metadata.sol";
+    "src/modules/fundingManager/rebasing/interfaces/IERC20Metadata.sol";
 
 library LibInterfaceId {
     function getInterfaceId_ISingleVoteGovernor()
@@ -99,39 +99,41 @@ library LibInterfaceId {
         pure
         returns (bytes4)
     {
-        return type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId;
+        return type(
+            IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1
+        ).interfaceId;
     }
 
-    function getInterfaceId_IBondingCurveFundingManagerBase()
+    function getInterfaceId_IBondingCurveBase()
         external
         pure
         returns (bytes4)
     {
-        return type(IBondingCurveFundingManagerBase).interfaceId;
+        return type(IBondingCurveBase).interfaceId;
     }
 
-    function getInterfaceId_IRedeemingBondingCurveFundingManagerBase()
+    function getInterfaceId_IRedeemingBondingCurveBase()
         external
         pure
         returns (bytes4)
     {
-        return type(IRedeemingBondingCurveFundingManagerBase).interfaceId;
+        return type(IRedeemingBondingCurveBase).interfaceId;
     }
 
-    function getInterfaceId_IVirtualCollateralSupply()
+    function getInterfaceId_IVirtualCollateralSupplyBase()
         external
         pure
         returns (bytes4)
     {
-        return type(IVirtualCollateralSupply).interfaceId;
+        return type(IVirtualCollateralSupplyBase).interfaceId;
     }
 
-    function getInterfaceId_IVirtualTokenSupply()
+    function getInterfaceId_IVirtualIssuanceSupplyBase()
         external
         pure
         returns (bytes4)
     {
-        return type(IVirtualTokenSupply).interfaceId;
+        return type(IVirtualIssuanceSupplyBase).interfaceId;
     }
 
     function getInterfaceId_IBancorFormula() external pure returns (bytes4) {

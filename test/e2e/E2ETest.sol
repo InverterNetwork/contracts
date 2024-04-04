@@ -17,10 +17,10 @@ import {
 // Orchestrator
 import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 
-import {IBancorVirtualSupplyBondingCurveFundingManager} from
-    "src/modules/fundingManager/bondingCurveFundingManager/IBancorVirtualSupplyBondingCurveFundingManager.sol";
+import {IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1} from
+    "src/modules/fundingManager/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1.sol";
 import {BancorFormula} from
-    "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
+    "src/modules/fundingManager/bondingCurve/formulas/BancorFormula.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

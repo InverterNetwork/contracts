@@ -2,13 +2,13 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {BancorVirtualSupplyBondingCurveFundingManager} from
-    "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
+import {FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1} from
+    "src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1.sol";
 
 /**
- * @title BancorVirtualSupplyBondingCurveFundingManager Deployment Script
+ * @title FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1 Deployment Script
  *
- * @dev Script to deploy a new BancorVirtualSupplyBondingCurveFundingManager.
+ * @dev Script to deploy a new FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1.
  *
  * @author Inverter Network
  */
@@ -18,20 +18,21 @@ contract DeployBancorVirtualSupplyBondingCurveFundingManager is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    BancorVirtualSupplyBondingCurveFundingManager fundingManager;
+    FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1 fundingManager;
 
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the BancorVirtualSupplyBondingCurveFundingManager.
+            // Deploy the FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1.
 
-            fundingManager = new BancorVirtualSupplyBondingCurveFundingManager();
+            fundingManager = new FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1(
+            );
         }
 
         vm.stopBroadcast();
-        // Log the deployed BancorVirtualSupplyBondingCurveFundingManager contract address.
+        // Log the deployed FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1 contract address.
         console2.log(
-            "Deployment of BancorVirtualSupplyBondingCurveFundingManager Implementation at address: ",
+            "Deployment of FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1 Implementation at address: ",
             address(fundingManager)
         );
 

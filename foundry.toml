@@ -17,7 +17,7 @@ runs = 256
 line_length = 80
 int_types = "short"
 number_underscore = "thousands"
-ignore = ['src/generated/*', 'src/modules/fundingManager/bondingCurveFundingManager/formula/*']
+ignore = ['src/generated/*', 'src/modules/fundingManager/bondingCurve/formulas/*']
 
 [profile.ci]
 fuzz = { runs = 1_024 }
