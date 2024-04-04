@@ -41,12 +41,14 @@ contract SimplePaymentProcessorTest is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
+    /// @param cliff The duration of the cliff.
     /// @param end Timestamp at which the full amount should be payed out/claimable.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint createdAt,
+        uint cliff,
         uint end
     );
 
@@ -139,6 +141,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
+                cliff: 0,
                 end: block.timestamp
             })
         );
@@ -152,6 +155,7 @@ contract SimplePaymentProcessorTest is ModuleTest {
             recipient,
             amount,
             block.timestamp,
+            0,
             block.timestamp
         );
         emit TokensReleased(recipient, address(_token), amount);

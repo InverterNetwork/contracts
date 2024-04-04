@@ -14,15 +14,17 @@ interface IStreamingPaymentProcessor is IPaymentProcessor {
 
     /// @notice This struct is used to store the payment order for a particular paymentReceiver by a particular payment client
     /// @dev for _vestingWalletID, valid values will start from 1. 0 is not a valid vestingWalletID.
-    /// @param _salary: The total amount that the paymentReceiver should eventually get
-    /// @param _released: The amount that has been claimed by the paymentReceiver till now
-    /// @param _start: The start date of the vesting period
-    /// @param _end: The ending of the vesting period
-    /// @param _vestingWalletID: A unique identifier of a wallet for a specific paymentClient and paymentReceiver combination
+    /// @param _salary The total amount that the paymentReceiver should eventually get
+    /// @param _released The amount that has been claimed by the paymentReceiver till now
+    /// @param _start The start date of the vesting period
+    /// @param _cliff The duration of the cliff.
+    /// @param _end The ending of the vesting period
+    /// @param _vestingWalletID A unique identifier of a wallet for a specific paymentClient and paymentReceiver combination
     struct VestingWallet {
         uint _salary;
         uint _released;
         uint _start;
+        uint _cliff;
         uint _end;
         uint _vestingWalletID;
     }
@@ -34,6 +36,7 @@ interface IStreamingPaymentProcessor is IPaymentProcessor {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
+    /// @param cliff The duration of the cliff.
     /// @param end Timestamp at which the full amount should be claimable.
     /// @param walletId ID of the payment order that was added
     event StreamingPaymentAdded(
@@ -41,6 +44,7 @@ interface IStreamingPaymentProcessor is IPaymentProcessor {
         address indexed recipient,
         uint amount,
         uint start,
+        uint cliff,
         uint end,
         uint walletId
     );
@@ -58,9 +62,10 @@ interface IStreamingPaymentProcessor is IPaymentProcessor {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
+    /// @param cliff The duration of the cliff.
     /// @param end Timestamp at which the full amount should be claimable.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint end
+        address indexed recipient, uint amount, uint start, uint cliff, uint end
     );
 
     /// @notice Emitted when a payment gets processed for execution.
@@ -68,6 +73,7 @@ interface IStreamingPaymentProcessor is IPaymentProcessor {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
+    /// @param cliff The duration of the cliff.
     /// @param end Timestamp at which the full amount should be payed out/claimable.
     /// @param walletId ID of the payment order that was processed
     event PaymentOrderProcessed(
@@ -75,6 +81,7 @@ interface IStreamingPaymentProcessor is IPaymentProcessor {
         address indexed recipient,
         uint amount,
         uint createdAt,
+        uint cliff,
         uint end,
         uint walletId
     );
