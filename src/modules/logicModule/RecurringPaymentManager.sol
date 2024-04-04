@@ -263,8 +263,8 @@ contract RecurringPaymentManager is
                             recipient: currentPayment.recipient,
                             amount: currentPayment.amount,
                             createdAt: block.timestamp,
-                            //End of current epoch is the dueTo Date
-                            dueTo: (currentEpoch + 1) * epochLength
+                            //End of current epoch is the end Date
+                            end: (currentEpoch + 1) * epochLength
                         })
                     );
 
@@ -277,8 +277,8 @@ contract RecurringPaymentManager is
                                 amount: currentPayment.amount
                                     * (epochsNotTriggered - 1),
                                 createdAt: block.timestamp,
-                                //Payment was already due so dueDate is start of this epoch which should already have passed
-                                dueTo: currentEpoch * epochLength
+                                //Payment was already due so end is start of this epoch which should already have passed
+                                end: currentEpoch * epochLength
                             })
                         );
                     }

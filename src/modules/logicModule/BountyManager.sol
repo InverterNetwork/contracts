@@ -453,7 +453,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
                     recipient: contrib.addr,
                     amount: contrib.claimAmount,
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp //dueTo Date is now
+                    end: block.timestamp // end Date is now
                 })
             );
             unchecked {

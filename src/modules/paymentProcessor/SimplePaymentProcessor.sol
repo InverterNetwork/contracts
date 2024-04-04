@@ -110,7 +110,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
                 recipient,
                 amount,
                 orders[i].createdAt,
-                orders[i].dueTo
+                orders[i].end
             );
         }
     }

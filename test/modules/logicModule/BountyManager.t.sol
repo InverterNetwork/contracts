@@ -809,7 +809,7 @@ contract BountyManagerTest is ModuleTest {
             assertEq(orders[i].amount, claimAmount);
             assertEq(orders[i].createdAt, block.timestamp);
 
-            assertEq(orders[i].dueTo, block.timestamp);
+            assertEq(orders[i].end, block.timestamp);
         }
 
         assertEqualClaim(claimId, bountyId, contribs, details, true);
