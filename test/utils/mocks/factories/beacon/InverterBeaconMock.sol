@@ -2,13 +2,28 @@ pragma solidity ^0.8.0;
 
 import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
 
-contract InverterBeaconMock is IInverterBeacon {
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
+contract InverterBeaconMock is IInverterBeacon, ERC165 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IInverterBeacon).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     address public implementation;
 
     bool public emergencyMode;
 
     uint public majorVersion;
     uint public minorVersion;
+
+    uint public functionCalled;
 
     function overrideImplementation(address implementation_) public {
         implementation = implementation_;
@@ -31,9 +46,15 @@ contract InverterBeaconMock is IInverterBeacon {
         return emergencyMode;
     }
 
-    function upgradeTo(address, uint, bool) external {}
+    function upgradeTo(address, uint, bool) external {
+        functionCalled++; //@todo use address uint and bool
+    }
 
-    function shutDownImplementation() external {}
+    function shutDownImplementation() external {
+        functionCalled++;
+    }
 
-    function restartImplementation() external {}
+    function restartImplementation() external {
+        functionCalled++;
+    }
 }
