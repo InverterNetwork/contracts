@@ -13,6 +13,8 @@ interface IERC20PaymentClient {
         uint amount;
         /// @dev Timestamp at which the order got created.
         uint createdAt;
+        /// @dev Duration of the cliff.
+        uint cliff;
         /// @dev Timestamp at which the payment SHOULD be fulfilled.
         uint end;
     }
@@ -31,6 +33,9 @@ interface IERC20PaymentClient {
 
     /// @notice Given amount invalid.
     error Module__ERC20PaymentClient__InvalidAmount();
+
+    /// @notice Given cliff duration invalid.
+    error Module__ERC20PaymentClient__InvalidCliff();
 
     /// @notice Given end invalid.
     error Module__ERC20PaymentClient__InvalidEnd();

@@ -43,6 +43,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
+    /// @param cliff The duration of the cliff.
     /// @param end Timestamp at which the full amount should be claimable.
     /// @param walletId ID of the payment order that was added
     event StreamingPaymentAdded(
@@ -50,6 +51,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address indexed recipient,
         uint amount,
         uint start,
+        uint cliff,
         uint end,
         uint walletId
     );
@@ -67,9 +69,10 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
+    /// @param cliff The duration of the cliff.
     /// @param end Timestamp at which the full amount should be claimable.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint end
+        address indexed recipient, uint amount, uint start, uint cliff, uint end
     );
 
     /// @notice Emitted when a payment gets processed for execution.
@@ -77,6 +80,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
+    /// @param cliff The duration of the cliff.
     /// @param end Timestamp at which the full amount should be payed out/claimable.
     /// @param walletId ID of the payment order that was processed
     event PaymentOrderProcessed(
@@ -84,6 +88,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         address indexed recipient,
         uint amount,
         uint createdAt,
+        uint cliff,
         uint end,
         uint walletId
     );
@@ -187,6 +192,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -204,6 +210,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipients[i],
                 amounts[i],
                 block.timestamp,
+                0,
                 block.timestamp + durations[i],
                 1
             );
@@ -212,6 +219,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipients[i],
                 amounts[i],
                 block.timestamp,
+                0,
                 block.timestamp + durations[i],
                 1
             );
@@ -270,6 +278,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -342,17 +351,17 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     }
 
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
-    function testProcessPaymentsWorksForDueTimeThatIsPlacedBeforeStartTime(
+    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
         address[] memory recipients,
-        uint[] memory dueTimes
+        uint[] memory endTimes
     ) public {
         uint length = recipients.length;
         vm.assume(length < 50); //Restrict to reasonable size
-        vm.assume(length <= dueTimes.length);
+        vm.assume(length <= endTimes.length);
 
         assumeValidRecipients(recipients);
 
-        // Warp to reasonable time to test wether orders before timestamp are retrievable
+        // Warp to reasonable time to test whether orders before timestamp are retrievable
         vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
 
         //Amount of tokens for user that should be payed out
@@ -365,7 +374,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: payoutAmount,
                     createdAt: block.timestamp,
-                    end: dueTimes[i]
+                    cliff: 0,
+                    end: endTimes[i]
                 })
             );
         }
@@ -419,6 +429,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: 100,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + 100
                 })
             );
@@ -427,7 +438,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         for (uint i = 0; i < recipients.length - 1; ++i) {
             vm.expectEmit(true, true, true, true);
             emit InvalidStreamingOrderDiscarded(
-                recipients[i], 100, block.timestamp, block.timestamp + 100
+                recipients[i], 100, block.timestamp, 0, block.timestamp + 100
             );
         }
 
@@ -439,12 +450,17 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipient: address(0xB0B),
                 amount: invalidAmt,
                 createdAt: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + 100
             })
         );
         vm.expectEmit(true, true, true, true);
         emit InvalidStreamingOrderDiscarded(
-            address(0xB0B), invalidAmt, block.timestamp, block.timestamp + 100
+            address(0xB0B),
+            invalidAmt,
+            block.timestamp,
+            0,
+            block.timestamp + 100
         );
         paymentProcessor.processPayments(paymentClient);
 
@@ -527,6 +543,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -568,6 +585,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -686,6 +704,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -797,6 +816,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -958,6 +978,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + duration
                 })
             );
@@ -970,6 +991,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipients[i],
                 amounts[i],
                 block.timestamp,
+                0,
                 duration + block.timestamp,
                 1
             );
@@ -978,6 +1000,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipients[i],
                 amounts[i],
                 block.timestamp,
+                0,
                 duration + block.timestamp,
                 1
             );
@@ -1119,6 +1142,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amounts[i],
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + durations[i]
                 })
             );
@@ -1198,6 +1222,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: start + duration
                 })
             );
@@ -1292,6 +1317,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + duration
             })
         );
@@ -1355,6 +1381,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + duration
             })
         );
@@ -1430,6 +1457,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );

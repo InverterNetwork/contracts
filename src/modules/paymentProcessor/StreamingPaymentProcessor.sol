@@ -167,6 +167,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             address _recipient;
             uint _amount;
             uint _start;
+            uint _cliff;
             uint _end;
             uint _walletId;
 
@@ -176,6 +177,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                 _recipient = orders[i].recipient;
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
+                _cliff = orders[i].cliff;
                 _end = orders[i].end;
                 _walletId = numVestingWallets[address(client)][_recipient] + 1;
 
@@ -184,6 +186,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                     _recipient,
                     _amount,
                     _start,
+                    _cliff,
                     _end,
                     _walletId
                 );
@@ -193,6 +196,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
                     _recipient,
                     _amount,
                     _start,
+                    _cliff,
                     _end,
                     _walletId
                 );
@@ -577,6 +581,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @param _paymentReceiver PaymentReceiver's address.
     /// @param _salary Salary paymentReceiver will receive per epoch.
     /// @param _start Start vesting timestamp.
+    /// @param _cliff Vesting cliff duration.
     /// @param _end Streaming end timestamp.
     /// @param _walletId ID of the new wallet of the a particular paymentReceiver being added
     function _addPayment(
@@ -584,21 +589,22 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         address _paymentReceiver,
         uint _salary,
         uint _start,
+        uint _cliff,
         uint _end,
         uint _walletId
     ) internal {
         if (
             !validAddress(_paymentReceiver) || !validSalary(_salary)
-                || !validStart(_start)
+                || !validStart(_start) || !validCliff(_cliff, _end)
         ) {
             emit InvalidStreamingOrderDiscarded(
-                _paymentReceiver, _salary, _start, _end
+                _paymentReceiver, _salary, _start, _cliff, _end
             );
         } else {
             ++numVestingWallets[client][_paymentReceiver];
 
             vestings[client][_paymentReceiver][_walletId] =
-                VestingWallet(_salary, 0, _start, _end, _walletId);
+                VestingWallet(_salary, 0, _start, _cliff, _end, _walletId);
 
             // We do not want activePaymentReceivers[client] to have duplicate paymentReceiver entries
             // So we avoid pushing the _paymentReceiver to activePaymentReceivers[client] if it already exists
@@ -612,7 +618,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             activeVestingWallets[client][_paymentReceiver].push(_walletId);
 
             emit StreamingPaymentAdded(
-                client, _paymentReceiver, _salary, _start, _end, _walletId
+                client,
+                _paymentReceiver,
+                _salary,
+                _start,
+                _cliff,
+                _end,
+                _walletId
             );
         }
     }
@@ -715,11 +727,20 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
         uint endPaymentReceiver =
             endForSpecificWalletId(client, paymentReceiver, walletId);
 
-        if (timestamp < startPaymentReceiver) {
+        if (
+            timestamp
+                < startPaymentReceiver
+                    + vestings[client][paymentReceiver][walletId]._cliff
+        ) {
+            // if current time is smaller than starting date plus
+            // optional cliff duration, return 0
             return 0;
         } else if (timestamp >= endPaymentReceiver) {
+            // if time is already past the end date, return all
             return totalAllocation;
         } else {
+            // if time is after start including cliff but before end,
+            // return the corresponding share
             return (totalAllocation * (timestamp - startPaymentReceiver))
                 / (endPaymentReceiver - startPaymentReceiver);
         }
@@ -747,5 +768,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     /// @return True if uint is valid.
     function validStart(uint _start) internal view returns (bool) {
         return !(_start < block.timestamp || _start >= type(uint).max);
+    }
+
+    /// @notice validate uint cliff input.
+    /// @param _cliff uint to validate.
+    /// @param _end uint to validate.
+    /// @return True if uint is valid.
+    function validCliff(uint _cliff, uint _end) internal view returns (bool) {
+        return !(block.timestamp + _cliff > _end);
     }
 }

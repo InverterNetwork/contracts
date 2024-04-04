@@ -94,6 +94,7 @@ contract ERC20PaymentClientTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: end
                 })
             );
@@ -128,6 +129,7 @@ contract ERC20PaymentClientTest is ModuleTest {
                     recipient: invalids[0],
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: end
                 })
             );
@@ -150,6 +152,7 @@ contract ERC20PaymentClientTest is ModuleTest {
                     recipient: recipient,
                     amount: invalids[0],
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: end
                 })
             );
@@ -166,18 +169,21 @@ contract ERC20PaymentClientTest is ModuleTest {
             recipient: address(0xCAFE1),
             amount: 100e18,
             createdAt: block.timestamp,
+            cliff: 0,
             end: block.timestamp
         });
         ordersToAdd[1] = IERC20PaymentClient.PaymentOrder({
             recipient: address(0xCAFE2),
             amount: 100e18,
             createdAt: block.timestamp,
+            cliff: 0,
             end: block.timestamp + 1
         });
         ordersToAdd[2] = IERC20PaymentClient.PaymentOrder({
             recipient: address(0xCAFE3),
             amount: 100e18,
             createdAt: block.timestamp,
+            cliff: 0,
             end: block.timestamp + 2
         });
 
@@ -225,6 +231,7 @@ contract ERC20PaymentClientTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
+                    cliff: 0,
                     end: end
                 })
             );
