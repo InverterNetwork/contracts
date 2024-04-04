@@ -7,7 +7,7 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
 // SuT
 import {
     RecurringPaymentManager,

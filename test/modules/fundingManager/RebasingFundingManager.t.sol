@@ -11,7 +11,7 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 //Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {IRebasingERC20} from
-    "src/modules/fundingManager/token/IRebasingERC20.sol";
+    "src/modules/fundingManager/rebasing/interfaces/IRebasingERC20.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -23,7 +23,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {
     RebasingFundingManager,
     IFundingManager
-} from "src/modules/fundingManager/RebasingFundingManager.sol";
+} from "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
 
 contract RebasingFundingManagerTest is ModuleTest {
     bool hasDependency;

@@ -12,7 +12,7 @@ import {
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
 import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
 
 contract BountyManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.

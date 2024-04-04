@@ -10,11 +10,11 @@ import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
 import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
-import {BancorVirtualSupplyBondingCurveFundingManager} from
-    "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
+    "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
+import {FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1} from
+    "src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1.sol";
 import {BancorFormula} from
-    "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
+    "src/modules/fundingManager/bondingCurve/formulas/BancorFormula.sol";
 import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 import {StreamingPaymentProcessor} from
@@ -112,11 +112,11 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // BancorVirtualSupplyBondingCurveFundingManager
+    // FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1
 
     BancorFormula formula = new BancorFormula();
 
-    BancorVirtualSupplyBondingCurveFundingManager
+    FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
     Beacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
@@ -129,21 +129,21 @@ contract E2EModuleRegistry is Test {
         1,
         1,
         "https://github.com/inverter/bonding-curve-funding-manager",
-        "BancorVirtualSupplyBondingCurveFundingManager"
+        "FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1"
     );
 
     /*
-        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
-            issuanceToken = IBancorVirtualSupplyBondingCurveFundingManager
+        IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1.IssuanceToken memory
+            issuanceToken = IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1
                 .IssuanceToken({
                 name: bytes32(abi.encodePacked("Bonding Curve Token")),
                 symbol: bytes32(abi.encodePacked("BCT")),
                 decimals: uint8(18)
             });
 
-        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
+        IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1.BondingCurveProperties
             memory bc_properties =
-            IBancorVirtualSupplyBondingCurveFundingManager
+            IFM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1
                 .BondingCurveProperties({
                 formula: address(formula),
                 reserveRatioForBuying: 200_000,
@@ -152,7 +152,7 @@ contract E2EModuleRegistry is Test {
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialTokenSupply: 100,
+                initialIssuanceSupply: 100,
                 initialCollateralSupply: 100
             });
 
@@ -168,7 +168,7 @@ contract E2EModuleRegistry is Test {
     function setUpBancorVirtualSupplyBondingCurveFundingManager() internal {
         // Deploy module implementations.
         bancorVirtualSupplyBondingCurveFundingManagerImpl =
-            new BancorVirtualSupplyBondingCurveFundingManager();
+            new FM_BC_Bancor_Redeeming_VirtualIssuance_VirtualCollateral_v1();
 
         // Deploy module beacons.
         vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);

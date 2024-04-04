@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
 
 /**
  * @title PaymentProcessor Deployment Script

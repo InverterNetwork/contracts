@@ -13,7 +13,7 @@ import {
 
 // Modules that are used in this E2E test
 import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    "src/modules/fundingManager/rebasing/RebasingFundingManager.sol";
 import {
     BountyManager,
     IBountyManager,

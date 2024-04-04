@@ -6,7 +6,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {
     ElasticReceiptTokenUpgradeable,
     ElasticReceiptTokenBase
-} from "src/modules/fundingManager/token/ElasticReceiptTokenUpgradeable.sol";
+} from "src/modules/fundingManager/rebasing/abstracts/ElasticReceiptTokenUpgradeable.sol";
 
 contract ElasticReceiptTokenUpgradeableMock is
     ElasticReceiptTokenUpgradeable
