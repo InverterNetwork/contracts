@@ -43,14 +43,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param dueTo Timestamp at which the full amount should be claimable.
+    /// @param end Timestamp at which the full amount should be claimable.
     /// @param walletId ID of the payment order that was added
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint start,
-        uint dueTo,
+        uint end,
         uint walletId
     );
 
@@ -67,9 +67,9 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param dueTo Timestamp at which the full amount should be claimable.
+    /// @param end Timestamp at which the full amount should be claimable.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint dueTo
+        address indexed recipient, uint amount, uint start, uint end
     );
 
     /// @notice Emitted when a payment gets processed for execution.
@@ -77,14 +77,14 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
-    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    /// @param end Timestamp at which the full amount should be payed out/claimable.
     /// @param walletId ID of the payment order that was processed
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint createdAt,
-        uint dueTo,
+        uint end,
         uint walletId
     );
 
@@ -187,7 +187,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    end: block.timestamp + time
                 })
             );
 
@@ -270,7 +270,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    end: block.timestamp + time
                 })
             );
 
@@ -341,7 +341,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         assertEq(totalAmount, paymentClient.amountPaidCounter());
     }
 
-    // @dev Assume recipient can withdraw full amount immediately if dueTo is less than or equal to block.timestamp.
+    // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
     function testProcessPaymentsWorksForDueTimeThatIsPlacedBeforeStartTime(
         address[] memory recipients,
         uint[] memory dueTimes
@@ -365,7 +365,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: payoutAmount,
                     createdAt: block.timestamp,
-                    dueTo: dueTimes[i]
+                    end: dueTimes[i]
                 })
             );
         }
@@ -381,8 +381,8 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             address recipient = recipients[i];
             IERC20PaymentClient.PaymentOrder memory order = orders[i];
 
-            //If dueTo is before currentTimestamp evereything should be releasable
-            if (order.dueTo <= block.timestamp) {
+            //If end is before currentTimestamp evereything should be releasable
+            if (order.end <= block.timestamp) {
                 assertEq(
                     paymentProcessor.releasableForSpecificWalletId(
                         address(paymentClient), address(recipient), 1
@@ -419,7 +419,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: 100,
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + 100
+                    end: block.timestamp + 100
                 })
             );
         }
@@ -439,7 +439,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipient: address(0xB0B),
                 amount: invalidAmt,
                 createdAt: block.timestamp,
-                dueTo: block.timestamp + 100
+                end: block.timestamp + 100
             })
         );
         vm.expectEmit(true, true, true, true);
@@ -527,7 +527,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    end: block.timestamp + time
                 })
             );
         }
@@ -568,7 +568,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    end: block.timestamp + time
                 })
             );
         }
@@ -686,7 +686,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    end: block.timestamp + time
                 })
             );
         }
@@ -797,7 +797,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    end: block.timestamp + time
                 })
             );
         }
@@ -958,7 +958,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + duration
+                    end: block.timestamp + duration
                 })
             );
         }
@@ -1016,7 +1016,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 0
             );
             assertEq(
-                paymentProcessor.dueToForSpecificWalletId(
+                paymentProcessor.endForSpecificWalletId(
                     address(paymentClient), recipient, 1
                 ),
                 0
@@ -1119,7 +1119,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amounts[i],
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + durations[i]
+                    end: block.timestamp + durations[i]
                 })
             );
         }
@@ -1198,7 +1198,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: start + duration
+                    end: start + duration
                 })
             );
         }
@@ -1292,7 +1292,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
-                dueTo: block.timestamp + duration
+                end: block.timestamp + duration
             })
         );
         vm.prank(address(paymentClient));
@@ -1355,7 +1355,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
-                dueTo: block.timestamp + duration
+                end: block.timestamp + duration
             })
         );
         vm.prank(address(paymentClient));
@@ -1413,12 +1413,12 @@ contract StreamingPaymentProcessorTest is ModuleTest {
     function speedRunStreamingAndClaim(
         address[] memory recipients,
         uint128[] memory amounts,
-        uint64[] memory dueTos
+        uint64[] memory ends
     ) internal {
-        uint max_time = dueTos[0];
+        uint max_time = ends[0];
 
         for (uint i; i < recipients.length; i++) {
-            uint time = dueTos[i];
+            uint time = ends[i];
 
             if (time > max_time) {
                 max_time = time;
@@ -1430,7 +1430,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
                     recipient: recipients[i],
                     amount: amounts[i],
                     createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    end: block.timestamp + time
                 })
             );
         }

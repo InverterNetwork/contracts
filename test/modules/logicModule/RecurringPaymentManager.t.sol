@@ -779,13 +779,13 @@ contract RecurringPaymentManagerTest is ModuleTest {
         address recipient,
         uint amount,
         uint createdAt,
-        uint dueTo
+        uint end
     ) internal {
         assertEq(order.recipient, recipient);
 
         assertEq(order.amount, amount);
         assertEq(order.createdAt, createdAt);
 
-        assertEq(order.dueTo, dueTo);
+        assertEq(order.end, end);
     }
 }
