@@ -29,7 +29,7 @@ contract SimulateTransferPrecision is ElasticReceiptTokenTest {
     // Should not be zero due to div by zero at compile time.
     uint constant MAX_ITERATIONS = 1;
 
-    // Wether expansion or contraction should be simulated.
+    // Whether expansion or contraction should be simulated.
     bool constant SIMULATE_EXPANSION = true;
 
     function testSimulation() public {

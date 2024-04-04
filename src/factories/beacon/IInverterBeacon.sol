@@ -43,7 +43,7 @@ interface IInverterBeacon is IBeacon {
     /// @return The minor version.
     function version() external view returns (uint, uint);
 
-    /// @notice Returns wether the beacon is in emergency mode or not.
+    /// @notice Returns whether the beacon is in emergency mode or not.
     /// @return Is the beacon in emergency mode.
     function emergencyModeActive() external view returns (bool);
 
