@@ -12,7 +12,7 @@ contract InverterBeaconAccessMock is InverterBeacon {
         uint _minorVersion
     ) InverterBeacon(owner, _majorVersion, _implementation, _minorVersion) {}
 
-    function get_implementation() public returns (address) {
+    function get_implementation() public view returns (address) {
         return _implementationAddress;
     }
 
