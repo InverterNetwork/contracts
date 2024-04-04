@@ -595,7 +595,7 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     ) internal {
         if (
             !validAddress(_paymentReceiver) || !validSalary(_salary)
-                || !validStart(_start) || !validCliff(_cliff, _end)
+                || !validTimes(_start, _cliff, _end)
         ) {
             emit InvalidStreamingOrderDiscarded(
                 _paymentReceiver, _salary, _start, _cliff, _end
@@ -729,8 +729,10 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
         if (
             timestamp
-                < startPaymentReceiver
-                    + vestings[client][paymentReceiver][walletId]._cliff
+                < (
+                    startPaymentReceiver
+                        + vestings[client][paymentReceiver][walletId]._cliff
+                )
         ) {
             // if current time is smaller than starting date plus
             // optional cliff duration, return 0
@@ -765,16 +767,10 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
 
     /// @notice validate uint start input.
     /// @param _start uint to validate.
-    /// @return True if uint is valid.
-    function validStart(uint _start) internal view returns (bool) {
-        return !(_start < block.timestamp || _start >= type(uint).max);
-    }
-
-    /// @notice validate uint cliff input.
     /// @param _cliff uint to validate.
     /// @param _end uint to validate.
     /// @return True if uint is valid.
-    function validCliff(uint _cliff, uint _end) internal view returns (bool) {
-        return !(block.timestamp + _cliff > _end);
+    function validTimes(uint _start, uint _cliff, uint _end) internal view returns (bool) {
+        return !(_start >= type(uint).max && _start + _cliff > _end);
     }
 }
