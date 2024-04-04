@@ -24,6 +24,7 @@ contract InverterBeaconMock is IInverterBeacon, ERC165 {
     uint public minorVersion;
 
     uint public functionCalled;
+    bool public forcefulCall;
 
     function overrideImplementation(address implementation_) public {
         implementation = implementation_;
@@ -46,8 +47,11 @@ contract InverterBeaconMock is IInverterBeacon, ERC165 {
         return emergencyMode;
     }
 
-    function upgradeTo(address, uint, bool) external {
-        functionCalled++; //@todo use address uint and bool
+    function upgradeTo(address impl, uint vers, bool force) external {
+        functionCalled++;
+        implementation = impl;
+        minorVersion = vers;
+        forcefulCall = force;
     }
 
     function shutDownImplementation() external {

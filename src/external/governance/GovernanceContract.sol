@@ -209,7 +209,7 @@ contract GovernanceContract is
 
         emit BeaconUpgraded(
             beacon,
-            beaconTimelock[beacon].intendedImplementation, //@todo optimise
+            beaconTimelock[beacon].intendedImplementation,
             beaconTimelock[beacon].intendedMinorVersion
         );
     }

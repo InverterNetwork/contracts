@@ -387,6 +387,9 @@ contract GovernanceContractTest is Test {
         );
         //Make sure ownedBeaconMock got called
         assertEq(ownedBeaconMock.functionCalled(), 1);
+        assertEq(ownedBeaconMock.implementation(), address(0x1));
+        assertEq(ownedBeaconMock.minorVersion(), 0);
+        assertEq(ownedBeaconMock.forcefulCall(), false);
     }
 
     function testTriggerUpgradeBeaconWithTimelockModifierInPosition() public {
@@ -540,6 +543,9 @@ contract GovernanceContractTest is Test {
         );
         //Make sure ownedBeaconMock got called
         assertEq(ownedBeaconMock.functionCalled(), 1);
+        assertEq(ownedBeaconMock.implementation(), address(0x1));
+        assertEq(ownedBeaconMock.minorVersion(), 0);
+        assertEq(ownedBeaconMock.forcefulCall(), true);
     }
 
     function testForceUpgradeBeaconAndRestartImplementationModifierInPosition()
