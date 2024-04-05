@@ -20,7 +20,22 @@ contract DeployModuleFactory is Script {
 
     ModuleFactory moduleFactory;
 
-    function run(address forwarder) external returns (address) {
+    function run() external returns (address) {
+        // Read deployment settings from environment variables.
+
+        address forwarder = vm.envAddress("FORWARDER_ADDRESS");
+        // Check settings.
+
+        require(
+            forwarder != address(0),
+            "DeployOrchestratorFactory: Missing env variable: forwarder"
+        );
+
+        // Deploy the orchestratorFactory.
+        return run(forwarder);
+    }
+
+    function run(address forwarder) public returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the moduleFactory.

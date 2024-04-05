@@ -20,7 +20,12 @@ contract DeployBeacon is Script {
 
     InverterBeacon beacon;
 
-    function run(uint majorVersion) external returns (address) {
+    function run() external returns (address) {
+        //Start on a regular basis with major version 1
+        return run(1);
+    }
+
+    function run(uint majorVersion) public returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.

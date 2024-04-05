@@ -3,7 +3,11 @@ on:
   push:
     branches:
       - main
+      - dev
+      - temp_dev
   pull_request:
+    branches:
+      - '*'
 
 env:
   FOUNDRY_PROFILE: ci
@@ -16,11 +20,12 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
 
-      - name: Install deps
-        run: forge install
+      - name: Install dependencies
+        run: make install
+
+      - name: Run scripts
+        run: make testScripts
 
       - name: Run tests
-        run: forge test
+        run: make test
