@@ -165,8 +165,6 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
         // Note that we simulate orchestrator spending by just burning tokens.
-        //TODO: With the current implementation this does not work for tokens with other than 18 decimals
-        // in case we keep getVirtualCollateralSupply() as is we need to modifiy it to account for possible decimal mismatch
         uint halfOfDeposit = token.balanceOf(address(fundingManager)) / 2;
         fundingManager.setVirtualCollateralSupply(halfOfDeposit);
 

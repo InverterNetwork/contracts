@@ -329,8 +329,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _mint(_receiver, _amount);
     }
 
-    // question about these to: should we do the conversion here too? Since it's an admin function I'd tend towards no for better control, but I'd like to hear other opinions
-
     /// @inheritdoc IVirtualTokenSupply
     function setVirtualTokenSupply(uint _virtualSupply)
         external
