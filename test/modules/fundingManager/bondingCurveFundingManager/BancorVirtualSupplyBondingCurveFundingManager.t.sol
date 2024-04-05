@@ -904,7 +904,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Setup
         address seller = makeAddr("seller");
         vm.assume(
-            to != address(0) && to != seller
+            to != address(0) && to != seller && to != address(this)
                 && to != address(bondingCurveFundingManager)
         );
 
@@ -917,6 +917,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             bondingCurveFundingManager.decimals()
         );
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
+
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amountIn)
         ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
