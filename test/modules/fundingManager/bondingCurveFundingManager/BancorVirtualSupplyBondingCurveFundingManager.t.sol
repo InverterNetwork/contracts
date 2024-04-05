@@ -1649,9 +1649,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         // Set virtual supplies to a relatively high value before buying
         // This way the buy-in won't modify the price too much
-        uint _virtualTokenSupplyBeforeBuy = amountIn*1000;
-        uint _virtualCollateralSupplyBeforeBuy = minAmountOut*1000;
-            
+        uint _virtualTokenSupplyBeforeBuy = amountIn * 1000;
+        uint _virtualCollateralSupplyBeforeBuy = minAmountOut * 1000;
+
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setVirtualTokenSupply(
@@ -1662,7 +1662,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             );
         }
         vm.stopPrank();
-
 
         uint32 _reserveRatioBuying =
             bondingCurveFundingManager.call_reserveRatioForBuying();
@@ -1695,7 +1694,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
         // Static price has increased after buy
         assertGt(staticPriceAfterBuy, staticPriceBeforeBuy);
-        
+
         // Price has risen less than 1 * PPM
         assertApproxEqAbs(
             staticPriceAfterBuy,
