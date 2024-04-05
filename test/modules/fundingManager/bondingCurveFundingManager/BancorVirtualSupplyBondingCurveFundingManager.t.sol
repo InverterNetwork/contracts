@@ -1195,10 +1195,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         // Set virtual collateral to some number
         uint newVirtualTokenSupply = _saleAmount * 4;
         uint newVirtualCollateral = _saleAmount * 8;
-        /*bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            (_saleAmount), _token.decimals(), 18
-        );*/
+
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setVirtualTokenSupply(
@@ -1643,17 +1640,29 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     function testStaticPriceWithBuyReserveRatioNonFuzzing() public {
-        uint amount = 1;
+        uint amountIn = 100;
         uint minAmountOut =
-            bondingCurveFundingManager.calculatePurchaseReturn(amount);
+            bondingCurveFundingManager.calculatePurchaseReturn(amountIn);
         address buyer = makeAddr("buyer");
-        _prepareBuyConditions(buyer, amount);
+        _prepareBuyConditions(buyer, amountIn);
 
-        // Get virtual supplies before buying
-        uint _virtualTokenSupplyBeforeBuy =
-            bondingCurveFundingManager.getVirtualTokenSupply();
-        uint _virtualCollateralSupplyBeforeBuy =
-            bondingCurveFundingManager.getVirtualCollateralSupply();
+        // Set virtual supplies to a relatively high value before buying
+        // This way the buy-in won't modify the price too much
+        uint _virtualTokenSupplyBeforeBuy = amountIn*1000;
+        uint _virtualCollateralSupplyBeforeBuy = minAmountOut*1000;
+            
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setVirtualTokenSupply(
+                _virtualTokenSupplyBeforeBuy
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                _virtualCollateralSupplyBeforeBuy
+            );
+        }
+        vm.stopPrank();
+
+
         uint32 _reserveRatioBuying =
             bondingCurveFundingManager.call_reserveRatioForBuying();
         // Calculate static price before buy
@@ -1665,7 +1674,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
         // Buy tokens
         vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount, minAmountOut);
+        bondingCurveFundingManager.buy(amountIn, minAmountOut);
 
         // Get virtual supply after buy
         uint _virtualTokenSupplyAfterBuy =
@@ -1685,22 +1694,13 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
         // Static price has increased after buy
         assertGt(staticPriceAfterBuy, staticPriceBeforeBuy);
-        /*
-        Question:Unsure about how to proceed here. If the supply and collateral tokens have a big difference in decimals (i.e. 18 and 6) and we start with virtual 
-        supply/collateral of 1/1, the first buy will move the price by a lot, since we will be effectively depositing 1e12 collateral tokens (1 + padding to 18). 
-        This will exceed the delta by a lot, but it IS expected behavior.
-        If we set the initial supply to 1e18 and the initial collateral t 1e12 (what we can call "realistic values"), the delta holds again. But on the ohter hand, we
-        aren't testing on the empty curve, just a "normal" point in it. 
-        SO: should we remove the delta check and test with an empty curve, or should we ensure we seed the curve with realistic values and check for the delta? 
         
-        */
-        /*
         // Price has risen less than 1 * PPM
         assertApproxEqAbs(
             staticPriceAfterBuy,
             staticPriceBeforeBuy,
             1 * bondingCurveFundingManager.call_PPM()
-        );*/
+        );
     }
 
     /* Test _convertAmountToRequiredDecimal function
