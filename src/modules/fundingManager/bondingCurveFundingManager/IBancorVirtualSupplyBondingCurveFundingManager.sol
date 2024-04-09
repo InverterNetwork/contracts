@@ -8,8 +8,9 @@ interface IBancorVirtualSupplyBondingCurveFundingManager {
     /// @notice Reserve ratio can not be be bigger than 100% expressed in PPM
     error BancorVirtualSupplyBondingCurveFundingManager__InvalidReserveRatio();
 
-    /// @notice Token decimal should not be lower than 7 decimals due to destructive precision loss
-    /// when using the Bancor Formula contract otherwise.
+    /// @notice To avoid destructive precision loss when using the Bancor Formula, the Token decimals should:
+    //              - Not be lower than 7 decimals
+    //              - Higher or equal to the collateral token decimals
     error BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal();
 
     error BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount();

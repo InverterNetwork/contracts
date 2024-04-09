@@ -125,10 +125,13 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         );
 
         _token = IERC20(_acceptedToken);
+
+        // Store token decimals for collateral
+        collateralTokenDecimals = IERC20Metadata(address(_token)).decimals();
+
         // Set token decimals for issuance token
         _setTokenDecimals(issuanceToken.decimals);
-        // Store token decimals for collateral
-        collateralTokenDecimals = IERC20Metadata(address(token())).decimals();
+
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
@@ -374,20 +377,32 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         override(BondingCurveFundingManagerBase)
         returns (uint mintAmount)
     {
+        // Convert virtual supply and balance to 18 decimals
+        uint decimalConvertedVirtualTokenSupply =
+        _convertAmountToRequiredDecimal(
+            virtualTokenSupply, decimals(), eighteenDecimals
+        );
+
+        uint decimalConvertedVirtualCollateralSupply =
+        _convertAmountToRequiredDecimal(
+            virtualCollateralSupply, collateralTokenDecimals, eighteenDecimals
+        );
+
         // Convert depositAmount to 18 decimals, which is required by Bancor formula
         uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
             _depositAmount, collateralTokenDecimals, eighteenDecimals
         );
+
         // Calculate mint amount through bonding curve
-        mintAmount = formula.calculatePurchaseReturn(
-            virtualTokenSupply,
-            virtualCollateralSupply,
+        uint decimalConvertedMintAmount = formula.calculatePurchaseReturn(
+            decimalConvertedVirtualTokenSupply,
+            decimalConvertedVirtualCollateralSupply,
             reserveRatioForBuying,
             decimalConvertedDepositAmount
         );
         // Convert mint amount to issuing token decimals
         mintAmount = _convertAmountToRequiredDecimal(
-            mintAmount, eighteenDecimals, decimals()
+            decimalConvertedMintAmount, eighteenDecimals, decimals()
         );
     }
 
@@ -412,7 +427,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveFundingManagerBase's abstract function.
-    /// It handles decimal conversions and calculations through the bonding curve.
+    /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula assumes 18 decimals for all tokens
     /// @param _depositAmount The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint _depositAmount)
@@ -421,21 +436,35 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         override(RedeemingBondingCurveFundingManagerBase)
         returns (uint redeemAmount)
     {
+        // Convert virtual supply and balance to 18 decimals
+        uint decimalConvertedVirtualTokenSupply =
+        _convertAmountToRequiredDecimal(
+            virtualTokenSupply, decimals(), eighteenDecimals
+        );
+
+        uint decimalConvertedVirtualCollateralSupply =
+        _convertAmountToRequiredDecimal(
+            virtualCollateralSupply, collateralTokenDecimals, eighteenDecimals
+        );
+
         // Convert depositAmount to 18 decimals, which is required by Bancor formula
         uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
             _depositAmount, decimals(), eighteenDecimals
         );
+
         // Calculate redeem amount through bonding curve
-        redeemAmount = formula.calculateSaleReturn(
-            virtualTokenSupply,
-            virtualCollateralSupply,
+        uint decimalConvertedRedeemAmount = formula.calculateSaleReturn(
+            decimalConvertedVirtualTokenSupply,
+            decimalConvertedVirtualCollateralSupply,
             reserveRatioForSelling,
             decimalConvertedDepositAmount
         );
 
         // Convert redeem amount to collateral decimals
         redeemAmount = _convertAmountToRequiredDecimal(
-            redeemAmount, eighteenDecimals, collateralTokenDecimals
+            decimalConvertedRedeemAmount,
+            eighteenDecimals,
+            collateralTokenDecimals
         );
     }
 
@@ -454,7 +483,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         // An input verification is needed here since the Bancor formula, which determines the
         // issucance price, utilizes PPM for its computations. This leads to a precision loss
         // that's too significant to be acceptable for tokens with fewer than 7 decimals.
-        if (_decimals < 7) {
+        if (_decimals < 7 || _decimals < collateralTokenDecimals) {
             revert
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal();
         }
