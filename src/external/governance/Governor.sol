@@ -31,21 +31,21 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
 
     modifier validAddress(address adr) {
         if (adr == address(0)) {
-            revert IGovernor.Governance__InvalidAddress(adr);
+            revert Governance__InvalidAddress(adr);
         }
         _;
     }
 
-    modifier validAmount(uint amt) {
-        if (amt == 0) {
-            revert IGovernor.InvalidAmount(amt);
+    modifier validTimelockPeriod(uint amt) {
+        if (amt < 48 hours) {
+            revert Governance__InvalidTimelockPeriod(amt);
         }
         _;
     }
 
     modifier accessableBeacon(address target) {
         if (!isBeaconAccessible(target)) {
-            revert IGovernor.BeaconNotAccessible(target);
+            revert Governance__BeaconNotAccessible(target);
         }
 
         _;
@@ -57,7 +57,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
             !hasRole(COMMUNITY_MULTISIG_ROLE, sender)
                 && !hasRole(TEAM_MULTISIG_ROLE, sender)
         ) {
-            revert IGovernor.OnlyCommunityOrTeamMultisig();
+            revert Governance__OnlyCommunityOrTeamMultisig();
         }
         _;
     }
@@ -65,14 +65,14 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     modifier upgradeProcessAlreadyStarted(address beacon) {
         //if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
-            revert IGovernor.UpgradeProcessNotStarted();
+            revert Governance__UpgradeProcessNotStarted();
         }
         _;
     }
 
     modifier timelockPeriodExceeded(address beacon) {
         if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
-            revert IGovernor.TimelockPeriodNotExceeded();
+            revert Governance__TimelockPeriodNotExceeded();
         }
         _;
     }
@@ -105,7 +105,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
         initializer
         validAddress(newCommunityMultisig)
         validAddress(newTeamMultisig)
-        validAmount(newTimelockPeriod)
+        validTimelockPeriod(newTimelockPeriod)
     {
         // -> set COMMUNITY_MULTISIG_ROLE as admin of itself
         _setRoleAdmin(COMMUNITY_MULTISIG_ROLE, COMMUNITY_MULTISIG_ROLE);
@@ -223,7 +223,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     function setTimelockPeriod(uint newTimelockPeriod)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
-        validAmount(newTimelockPeriod)
+        validTimelockPeriod(newTimelockPeriod)
     {
         timelockPeriod = newTimelockPeriod;
         emit TimelockPeriodSet(newTimelockPeriod);
@@ -280,7 +280,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
         onlyCommunityOrTeamMultisig
     {
         if (adr.code.length == 0) {
-            revert IGovernor.CallToTargetContractFailed();
+            revert Governance__CallToTargetContractFailed();
         }
 
         (bool success,) =
@@ -288,7 +288,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
 
         //if the call is not a success
         if (!success) {
-            revert IGovernor.CallToTargetContractFailed();
+            revert Governance__CallToTargetContractFailed();
         }
         emit OwnershipAccepted(adr);
     }
