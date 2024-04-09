@@ -258,7 +258,7 @@ contract DeploymentScript is Script {
         console2.log("Deploy factory implementations \n");
 
         //Deploy module Factory implementation
-        moduleFactory = deployModuleFactory.run(forwarder);
+        moduleFactory = deployModuleFactory.run(forwarder, address(0)); //@todo govenance contract missing and script
 
         //Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
