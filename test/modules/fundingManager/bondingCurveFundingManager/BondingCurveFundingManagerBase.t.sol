@@ -476,6 +476,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_feeAmount, feeAmount);
     }
 
+
+// TODO: rewrite to test setIssuanceToken, while making sure that decimals are cached correctly too
     /* Test _setDecimals function
        
         └── when setting decimals

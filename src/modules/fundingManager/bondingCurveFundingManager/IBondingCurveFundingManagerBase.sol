@@ -39,6 +39,11 @@ interface IBondingCurveFundingManagerBase {
     /// @notice Event emitted when buy fee is updated
     event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
 
+    /// @notice Event emitted when the issuance token is updated
+    event IssuanceTokenUpdated(
+        address indexed oldToken, address indexed issuanceToken
+    );
+
     /// @notice Event emitted when tokens have been succesfully issued
     /// @param receiver The address that will receive the issued tokens.
     /// @param depositAmount The amount of collateral token deposited.

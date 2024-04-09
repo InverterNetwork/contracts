@@ -46,9 +46,13 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
         return collateralTokenDecimals;
     }
 
-    // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
-    function call_setDecimals(uint8 _newDecimals) external {
-        _setTokenDecimals(_newDecimals);
+    function call_issuanceTokenDecimals() external view returns (uint8) {
+        return issuanceTokenDecimals;
+    }
+
+    // Since the init calls are not registered for coverage, we call expose setIssuanceToken to get to 100% test coverage.
+    function call_setIssuanceToken(address _newIssuanceToken) external {
+        _setIssuanceToken(_newIssuanceToken);
     }
 
     function call_staticPricePPM(
@@ -78,7 +82,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
     // Note: this function returns the virtual token supply in the same format it will be fed to the Bancor formula
     function call_getFormulaVirtualTokenSupply() external view returns (uint) {
         uint decimalConvertedVirtualTokenSupply =
-            _convertAmountToRequiredDecimal(virtualTokenSupply, decimals(), 18);
+            _convertAmountToRequiredDecimal(virtualTokenSupply, issuanceTokenDecimals, 18);
         return decimalConvertedVirtualTokenSupply;
     }
 
