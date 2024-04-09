@@ -29,7 +29,7 @@ contract DeployModuleFactory is Script {
 
         require(
             governaceContract != address(0),
-            "DeployOrchestratorFactory: Missing env variable: forwarder"
+            "DeployOrchestratorFactory: Missing env variable: governance contract"
         );
 
         require(
@@ -37,7 +37,7 @@ contract DeployModuleFactory is Script {
             "DeployOrchestratorFactory: Missing env variable: forwarder"
         );
 
-        // Deploy the orchestratorFactory.
+        // Deploy the moduleFactory.
         return run(governaceContract, forwarder);
     }
 
