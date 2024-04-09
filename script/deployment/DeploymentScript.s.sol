@@ -89,6 +89,7 @@ contract DeploymentScript is Script {
 
     //TransactionForwarder
     address forwarderImplementation;
+    address governorImplementation;
 
     // Funding Manager
     address rebasingFundingManager;
@@ -133,7 +134,7 @@ contract DeploymentScript is Script {
     //These contracts will actually be used at the later point of time
 
     //Governor
-    address governor; //@todo add proxy implementation
+    address governor;
 
     //TransactionForwarder
     address forwarder;
@@ -246,7 +247,8 @@ contract DeploymentScript is Script {
         );
         console2.log("Governance Contract \n");
 
-        governor = deployGovernor.run(communityMultisig, teamMultisig, 1 weeks);
+        (governor, governorImplementation) =
+            deployGovernor.run(communityMultisig, teamMultisig, 1 weeks);
 
         console2.log(
             "-----------------------------------------------------------------------------"

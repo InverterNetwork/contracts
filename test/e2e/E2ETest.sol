@@ -30,6 +30,10 @@ import {BancorFormula} from
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
+// External Dependencies
+import {TransparentUpgradeableProxy} from
+    "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 /**
  * @dev Base contract for e2e tests.
  */
@@ -56,7 +60,15 @@ contract E2ETest is E2EModuleRegistry {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
         //Deploy Governance Contract
-        gov = new Governor(); //@todo upgradeable proxy
+        gov = Governor(
+            address(
+                new TransparentUpgradeableProxy( //based on openzeppelins TransparentUpgradeableProxy
+                    address(new Governor()), //Implementation Address
+                    communityMultisig, //Admin
+                    bytes("") //data field that could have been used for calls, but not necessary
+                )
+            )
+        );
 
         gov.init(communityMultisig, teamMultisig, 1 weeks);
         // Deploy a Mock funding token for testing.
