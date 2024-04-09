@@ -17,6 +17,8 @@ contract ModuleFactoryMock is IModuleFactory {
     // address(0x1).
     uint public addressCounter = 10;
 
+    address public governanceContract;
+
     function createModule(IModule.Metadata memory, IOrchestrator, bytes memory)
         external
         returns (address)
