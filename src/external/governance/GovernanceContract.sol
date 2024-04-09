@@ -282,8 +282,7 @@ contract GovernanceContract is
     /// @inheritdoc IGovernanceContract
     function acceptOwnership(address adr)
         external
-        onlyCommunityOrTeamMultisig //@note correct Role?
-            //@note should be beacon?
+        onlyCommunityOrTeamMultisig
     {
         if (adr.code.length == 0) {
             revert IGovernanceContract.CallToTargetContractFailed();
