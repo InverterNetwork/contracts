@@ -143,6 +143,18 @@ contract ModuleFactoryTest is Test {
         factory.registerMetadata(DATA, beacon);
     }
 
+    function testRegisterMetadataFailsIfBeaconIsNotOwnedByGovenor() public {
+        InverterBeaconOwnableMock notOwnedBeacon =
+            new InverterBeaconOwnableMock(address(0x1111111));
+
+        notOwnedBeacon.overrideImplementation(address(0x1));
+
+        vm.expectRevert(
+            IModuleFactory.ModuleFactory__InvalidInverterBeacon.selector
+        );
+        factory.registerMetadata(DATA, notOwnedBeacon);
+    }
+
     //--------------------------------------------------------------------------
     // Tests: createModule
 
@@ -225,6 +237,4 @@ contract ModuleFactoryTest is Test {
     function _assumeValidOrchestrator(address orchestrator) internal pure {
         vm.assume(orchestrator != address(0));
     }
-
-    //@todo check for beacon Ownable(address(beacon)).owner() != governor
 }
