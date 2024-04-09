@@ -64,7 +64,8 @@ contract ModuleFactory is
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         {IInverterBeacon} instance.
+    ///         IInverterBeacon instance and if the owner of the beacon
+    ///         is same as the governor of this contract.
     modifier validBeacon(IInverterBeacon beacon) {
         // Revert if beacon's implementation is zero address.
         if (
@@ -80,7 +81,7 @@ contract ModuleFactory is
     // Storage
 
     /// @inheritdoc IModuleFactory
-    address public governor; //@note changeable?
+    address public governor;
 
     /// @dev Mapping of metadata identifier to {IInverterBeacon} instance.
     /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon}

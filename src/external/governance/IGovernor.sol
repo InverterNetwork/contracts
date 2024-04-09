@@ -167,7 +167,7 @@ interface IGovernor {
     function initiateBeaconShutdown(address beacon) external;
 
     /// @notice This function forces the upgrade of a beacon and restarts the implementation afterwards
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
     /// @param beacon The address of the beacon that is intended to be upgraded and restarted
     /// @param newImplementation The address of the intended new Implementation of the beacon.
     /// @param newMinorVersion The intended new minor version of the beacon.
