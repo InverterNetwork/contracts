@@ -67,7 +67,10 @@ contract ModuleFactory is
     ///         {IInverterBeacon} instance.
     modifier validBeacon(IInverterBeacon beacon) {
         // Revert if beacon's implementation is zero address.
-        if (beacon.implementation() == address(0)) {
+        if (
+            beacon.implementation() == address(0)
+                || Ownable(address(beacon)).owner() != governanceContract
+        ) {
             revert ModuleFactory__InvalidInverterBeacon();
         }
         _;
@@ -76,6 +79,9 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @inheritdoc IModuleFactory
+    address public governanceContract; //@note changeable?
+
     /// @dev Mapping of metadata identifier to {IInverterBeacon} instance.
     /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon}
     mapping(bytes32 => IInverterBeacon) private _beacons;
@@ -83,11 +89,11 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(address _trustedForwarder)
+    constructor(address newGovernanceContract, address _trustedForwarder)
         ERC2771Context(_trustedForwarder)
         Ownable(_msgSender())
     {
-        // NO-OP
+        governanceContract = newGovernanceContract;
     }
 
     //--------------------------------------------------------------------------

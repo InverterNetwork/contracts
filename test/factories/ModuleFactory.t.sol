@@ -224,4 +224,6 @@ contract ModuleFactoryTest is Test {
     function _assumeValidOrchestrator(address orchestrator) internal pure {
         vm.assume(orchestrator != address(0));
     }
+
+    //@todo check for beacon Ownable(address(beacon)).owner() != governanceContract
 }

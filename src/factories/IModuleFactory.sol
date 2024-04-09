@@ -42,6 +42,10 @@ interface IModuleFactory {
     //--------------------------------------------------------------------------
     // Functions
 
+    /// @notice Returns the governance contract address
+    /// @return The address of the governance contract
+    function governanceContract() external view returns (address);
+
     /// @notice Creates a module instance identified by given metadata.
     /// @param metadata The module's metadata.
     /// @param orchestrator The orchestrator's instance of the module.
