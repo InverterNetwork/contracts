@@ -7,7 +7,7 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Context, Ownable} from "@oz/access/Ownable.sol";
 
 contract InverterBeaconOwnableMock is InverterBeaconMock, Ownable2Step {
-    constructor() Ownable(_msgSender()) {
+    constructor(address owner) Ownable(owner) {
         // NO-OP
     }
 }

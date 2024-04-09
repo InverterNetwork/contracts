@@ -54,14 +54,11 @@ contract GovernanceContractTest is Test {
         gov = new GovernanceContract();
         gov.init(communityMultisig, teamMultisig, timelockPeriod);
 
-        //Create owned beacon
-        ownedBeaconMock = new InverterBeaconOwnableMock();
-        //Transfer ownership to governance contract
-        ownedBeaconMock.transferOwnership(address(gov));
-        vm.prank(communityMultisig);
-        gov.acceptOwnership(address(ownedBeaconMock));
+        //Create beacon owned by governance contract
+        ownedBeaconMock = new InverterBeaconOwnableMock(address(gov));
 
-        unownedBeaconMock = new InverterBeaconOwnableMock();
+        //Create beacon not owned by governance contract
+        unownedBeaconMock = new InverterBeaconOwnableMock(address(this));
     }
 
     //--------------------------------------------------------------------------
@@ -682,12 +679,7 @@ contract GovernanceContractTest is Test {
     {
         // This syntax is a newer way to invoke create2 without assembly, you just need to pass salt
         InverterBeaconOwnableMock mock =
-            new InverterBeaconOwnableMock{salt: _salt}();
-
-        //Transfer ownership to governance contract
-        mock.transferOwnership(address(gov));
-        vm.prank(communityMultisig);
-        gov.acceptOwnership(address(mock));
+            new InverterBeaconOwnableMock{salt: _salt}(address(gov));
 
         return address(mock);
     }
