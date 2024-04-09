@@ -23,12 +23,13 @@ contract DeployModuleFactory is Script {
     function run() external returns (address) {
         // Read deployment settings from environment variables.
 
-        address governaceContract = vm.envAddress("COVERNANCE_CONTRACT_ADDRESS");
+        address governanceContract =
+            vm.envAddress("COVERNANCE_CONTRACT_ADDRESS");
         address forwarder = vm.envAddress("FORWARDER_ADDRESS");
         // Check settings.
 
         require(
-            governaceContract != address(0),
+            governanceContract != address(0),
             "DeployOrchestratorFactory: Missing env variable: governance contract"
         );
 
@@ -38,7 +39,7 @@ contract DeployModuleFactory is Script {
         );
 
         // Deploy the moduleFactory.
-        return run(governaceContract, forwarder);
+        return run(governanceContract, forwarder);
     }
 
     function run(address governanceContract, address forwarder)
