@@ -38,7 +38,7 @@ contract E2EModuleRegistry is Test {
     // General Storage and  QOL-constants
     ModuleFactory moduleFactory;
 
-    address constant DEFAULT_BEACON_OWNER = address(0x3BEAC0);
+    address public DEFAULT_BEACON_OWNER = address(0x3BEAC0);
 
     bool constant HAS_NO_DEPENDENCIES = false;
     string[] EMPTY_DEPENDENCY_LIST = new string[](0);
@@ -77,8 +77,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon rebasingFundingManagerBeacon;
 
-    address rebasingFundingManagerBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
         1,
         1,
@@ -100,12 +98,12 @@ contract E2EModuleRegistry is Test {
         rebasingFundingManagerImpl = new RebasingFundingManager();
 
         // Deploy module beacons.
-        vm.prank(rebasingFundingManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         rebasingFundingManagerBeacon =
             new InverterBeacon(rebasingFundingManagerMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(rebasingFundingManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         rebasingFundingManagerBeacon.upgradeTo(
             address(rebasingFundingManagerImpl),
             rebasingFundingManagerMetadata.minorVersion,
@@ -127,9 +125,6 @@ contract E2EModuleRegistry is Test {
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
     InverterBeacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
-
-    address bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner =
-        DEFAULT_BEACON_OWNER;
 
     IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule.Metadata(
@@ -178,13 +173,13 @@ contract E2EModuleRegistry is Test {
             new BancorVirtualSupplyBondingCurveFundingManager();
 
         // Deploy module beacons.
-        vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon(
             bancorVirtualSupplyBondingCurveFundingManagerMetadata.majorVersion
         );
 
         // Set beacon's implementations.
-        vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         bancorVirtualSupplyBondingCurveFundingManagerBeacon.upgradeTo(
             address(bancorVirtualSupplyBondingCurveFundingManagerImpl),
             bancorVirtualSupplyBondingCurveFundingManagerMetadata.minorVersion,
@@ -208,8 +203,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon roleAuthorizerBeacon;
 
-    address roleAuthorizerBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
     );
@@ -228,12 +221,12 @@ contract E2EModuleRegistry is Test {
         roleAuthorizerImpl = new RoleAuthorizer();
 
         // Deploy module beacons.
-        vm.prank(roleAuthorizerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         roleAuthorizerBeacon =
             new InverterBeacon(roleAuthorizerMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(roleAuthorizerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         roleAuthorizerBeacon.upgradeTo(
             address(roleAuthorizerImpl),
             roleAuthorizerMetadata.minorVersion,
@@ -251,8 +244,6 @@ contract E2EModuleRegistry is Test {
     TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
 
     InverterBeacon tokenRoleAuthorizerBeacon;
-
-    address tokenRoleAuthorizerBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
         1,
@@ -276,12 +267,12 @@ contract E2EModuleRegistry is Test {
         tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer();
 
         // Deploy module beacons.
-        vm.prank(tokenRoleAuthorizerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         tokenRoleAuthorizerBeacon =
             new InverterBeacon(tokenRoleAuthorizerMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(tokenRoleAuthorizerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         tokenRoleAuthorizerBeacon.upgradeTo(
             address(tokenRoleAuthorizerImpl),
             tokenRoleAuthorizerMetadata.minorVersion,
@@ -305,8 +296,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon simplePaymentProcessorBeacon;
 
-    address simplePaymentProcessorBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
         1,
         1,
@@ -327,12 +316,12 @@ contract E2EModuleRegistry is Test {
         simplePaymentProcessorImpl = new SimplePaymentProcessor();
 
         // Deploy module beacons.
-        vm.prank(simplePaymentProcessorBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         simplePaymentProcessorBeacon =
             new InverterBeacon(simplePaymentProcessorMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(simplePaymentProcessorBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         simplePaymentProcessorBeacon.upgradeTo(
             address(simplePaymentProcessorImpl),
             simplePaymentProcessorMetadata.minorVersion,
@@ -351,8 +340,6 @@ contract E2EModuleRegistry is Test {
     StreamingPaymentProcessor streamingPaymentProcessorImpl;
 
     InverterBeacon streamingPaymentProcessorBeacon;
-
-    address streamingPaymentProcessorBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
         1,
@@ -374,12 +361,12 @@ contract E2EModuleRegistry is Test {
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
 
         // Deploy module beacons.
-        vm.prank(streamingPaymentProcessorBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         streamingPaymentProcessorBeacon =
             new InverterBeacon(streamingPaymentProcessorMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(streamingPaymentProcessorBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         streamingPaymentProcessorBeacon.upgradeTo(
             address(streamingPaymentProcessorImpl),
             streamingPaymentProcessorMetadata.minorVersion,
@@ -402,8 +389,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon recurringPaymentManagerBeacon;
 
-    address recurringPaymentManagerBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
         1,
         1,
@@ -424,12 +409,12 @@ contract E2EModuleRegistry is Test {
         recurringPaymentManagerImpl = new RecurringPaymentManager();
 
         // Deploy module beacons.
-        vm.prank(recurringPaymentManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         recurringPaymentManagerBeacon =
             new InverterBeacon(recurringPaymentManagerMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(recurringPaymentManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         recurringPaymentManagerBeacon.upgradeTo(
             address(recurringPaymentManagerImpl),
             recurringPaymentManagerMetadata.minorVersion,
@@ -449,8 +434,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon bountyManagerBeacon;
 
-    address bountyManagerBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
@@ -468,12 +451,12 @@ contract E2EModuleRegistry is Test {
         bountyManagerImpl = new BountyManager();
 
         // Deploy module beacons.
-        vm.prank(bountyManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         bountyManagerBeacon =
             new InverterBeacon(bountyManagerMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(bountyManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         bountyManagerBeacon.upgradeTo(
             address(bountyManagerImpl),
             bountyManagerMetadata.minorVersion,
@@ -494,8 +477,6 @@ contract E2EModuleRegistry is Test {
     SingleVoteGovernor singleVoteGovernorImpl;
 
     InverterBeacon singleVoteGovernorBeacon;
-
-    address singleVoteGovernorBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
         1,
@@ -521,12 +502,12 @@ contract E2EModuleRegistry is Test {
         singleVoteGovernorImpl = new SingleVoteGovernor();
 
         // Deploy module beacons.
-        vm.prank(singleVoteGovernorBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         singleVoteGovernorBeacon =
             new InverterBeacon(singleVoteGovernorMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(singleVoteGovernorBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         singleVoteGovernorBeacon.upgradeTo(
             address(singleVoteGovernorImpl),
             singleVoteGovernorMetadata.minorVersion,
@@ -546,8 +527,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon metadataManagerBeacon;
 
-    address metadataManagerBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata metadataManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/metadata-manager", "MetadataManager"
     );
@@ -557,12 +536,12 @@ contract E2EModuleRegistry is Test {
         metadataManagerImpl = new MetadataManager();
 
         // Deploy module beacons.
-        vm.prank(metadataManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         metadataManagerBeacon =
             new InverterBeacon(metadataManagerMetadata.majorVersion);
 
         // Set beacon's implementations.
-        vm.prank(metadataManagerBeaconOwner);
+        vm.prank(DEFAULT_BEACON_OWNER);
         metadataManagerBeacon.upgradeTo(
             address(metadataManagerImpl),
             metadataManagerMetadata.minorVersion,
