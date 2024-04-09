@@ -41,7 +41,12 @@ abstract contract VirtualCollateralSupplyBase is
     //--------------------------------------------------------------------------
     // Public Functions
     /// @inheritdoc IVirtualCollateralSupply
-    function getVirtualCollateralSupply() external view returns (uint) {
+    function getVirtualCollateralSupply()
+        external
+        view
+        virtual
+        returns (uint)
+    {
         return _getVirtualCollateralSupply();
     }
 
