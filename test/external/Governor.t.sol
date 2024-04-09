@@ -4,10 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // SuT
-import {
-    GovernanceContract,
-    IGovernanceContract
-} from "src/external/governance/GovernanceContract.sol";
+import {Governor, IGovernor} from "src/external/governance/Governor.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -19,9 +16,9 @@ import {InverterBeaconOwnableMock} from
 //External Dependencies
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
-contract GovernanceContractTest is Test {
+contract GovernorTest is Test {
     // SuT
-    GovernanceContract gov;
+    Governor gov;
 
     InverterBeaconOwnableMock ownedBeaconMock;
     InverterBeaconOwnableMock unownedBeaconMock;
@@ -51,13 +48,13 @@ contract GovernanceContractTest is Test {
     event OwnershipAccepted(address adr);
 
     function setUp() public {
-        gov = new GovernanceContract();
+        gov = new Governor();
         gov.init(communityMultisig, teamMultisig, timelockPeriod);
 
-        //Create beacon owned by governance contract
+        //Create beacon owned by governor
         ownedBeaconMock = new InverterBeaconOwnableMock(address(gov));
 
-        //Create beacon not owned by governance contract
+        //Create beacon not owned by governor contract
         unownedBeaconMock = new InverterBeaconOwnableMock(address(this));
     }
 
@@ -65,7 +62,7 @@ contract GovernanceContractTest is Test {
     // Test: SupportsInterface
 
     function testSupportsInterface() public {
-        assertTrue(gov.supportsInterface(type(IGovernanceContract).interfaceId));
+        assertTrue(gov.supportsInterface(type(IGovernor).interfaceId));
     }
 
     //--------------------------------------------------------------------------
@@ -75,7 +72,7 @@ contract GovernanceContractTest is Test {
         if (adr == address(0)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernanceContract.InvalidAddress.selector, adr
+                    IGovernor.Governance__InvalidAddress.selector, adr
                 )
             );
         }
@@ -87,9 +84,7 @@ contract GovernanceContractTest is Test {
     function testValidAmount(uint amt) public {
         if (amt == 0) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IGovernanceContract.InvalidAmount.selector, amt
-                )
+                abi.encodeWithSelector(IGovernor.InvalidAmount.selector, amt)
             );
         }
 
@@ -120,7 +115,7 @@ contract GovernanceContractTest is Test {
         if (shouldFail) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernanceContract.BeaconNotAccessible.selector, target
+                    IGovernor.BeaconNotAccessible.selector, target
                 )
             );
         }
@@ -135,7 +130,7 @@ contract GovernanceContractTest is Test {
         ) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernanceContract.OnlyCommunityOrTeamMultisig.selector
+                    IGovernor.OnlyCommunityOrTeamMultisig.selector
                 )
             );
         }
@@ -155,7 +150,7 @@ contract GovernanceContractTest is Test {
         } else {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernanceContract.UpgradeProcessNotStarted.selector
+                    IGovernor.UpgradeProcessNotStarted.selector
                 )
             );
         }
@@ -181,7 +176,7 @@ contract GovernanceContractTest is Test {
         if (seed2 < timelockPeriod) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernanceContract.TimelockPeriodNotExceeded.selector
+                    IGovernor.TimelockPeriodNotExceeded.selector
                 )
             );
         }
@@ -226,11 +221,11 @@ contract GovernanceContractTest is Test {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         gov.init(communityMultisig, teamMultisig, timelockPeriod);
 
-        gov = new GovernanceContract();
+        gov = new Governor();
         //validAddress(newCommunityMultisig)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.InvalidAddress.selector, address(0)
+                IGovernor.Governance__InvalidAddress.selector, address(0)
             )
         );
         gov.init(address(0), teamMultisig, timelockPeriod);
@@ -238,16 +233,14 @@ contract GovernanceContractTest is Test {
         //validAddress(newTeamMultisig)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.InvalidAddress.selector, address(0)
+                IGovernor.Governance__InvalidAddress.selector, address(0)
             )
         );
         gov.init(communityMultisig, address(0), timelockPeriod);
 
         //validAmount(newTimelockPeriod)
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IGovernanceContract.InvalidAmount.selector, 0
-            )
+            abi.encodeWithSelector(IGovernor.InvalidAmount.selector, 0)
         );
         gov.init(communityMultisig, teamMultisig, 0);
     }
@@ -283,7 +276,7 @@ contract GovernanceContractTest is Test {
         //validAddress(newFeeManager)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.InvalidAddress.selector, address(0)
+                IGovernor.Governance__InvalidAddress.selector, address(0)
             )
         );
         vm.prank(address(communityMultisig));
@@ -342,7 +335,7 @@ contract GovernanceContractTest is Test {
         //onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.OnlyCommunityOrTeamMultisig.selector
+                IGovernor.OnlyCommunityOrTeamMultisig.selector
             )
         );
         gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0x1), 0);
@@ -350,7 +343,7 @@ contract GovernanceContractTest is Test {
         //accessableBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.BeaconNotAccessible.selector, address(0)
+                IGovernor.BeaconNotAccessible.selector, address(0)
             )
         );
         vm.prank(communityMultisig);
@@ -359,7 +352,7 @@ contract GovernanceContractTest is Test {
         //validAddress(newImplementation)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.InvalidAddress.selector, address(0)
+                IGovernor.Governance__InvalidAddress.selector, address(0)
             )
         );
         vm.prank(communityMultisig);
@@ -393,7 +386,7 @@ contract GovernanceContractTest is Test {
         //onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.OnlyCommunityOrTeamMultisig.selector
+                IGovernor.OnlyCommunityOrTeamMultisig.selector
             )
         );
         gov.triggerUpgradeBeaconWithTimelock(address(ownedBeaconMock));
@@ -401,7 +394,7 @@ contract GovernanceContractTest is Test {
         //accessableBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.BeaconNotAccessible.selector, address(0)
+                IGovernor.BeaconNotAccessible.selector, address(0)
             )
         );
         vm.prank(communityMultisig);
@@ -410,9 +403,7 @@ contract GovernanceContractTest is Test {
         //upgradeProcessAlreadyStarted(beacon)
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IGovernanceContract.UpgradeProcessNotStarted.selector
-            )
+            abi.encodeWithSelector(IGovernor.UpgradeProcessNotStarted.selector)
         );
         vm.prank(communityMultisig);
         gov.triggerUpgradeBeaconWithTimelock(address(ownedBeaconMock));
@@ -423,9 +414,7 @@ contract GovernanceContractTest is Test {
         gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0x1), 0);
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IGovernanceContract.TimelockPeriodNotExceeded.selector
-            )
+            abi.encodeWithSelector(IGovernor.TimelockPeriodNotExceeded.selector)
         );
         vm.prank(communityMultisig);
         gov.triggerUpgradeBeaconWithTimelock(address(ownedBeaconMock));
@@ -453,7 +442,7 @@ contract GovernanceContractTest is Test {
         //onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.OnlyCommunityOrTeamMultisig.selector
+                IGovernor.OnlyCommunityOrTeamMultisig.selector
             )
         );
         gov.cancelUpgrade(address(ownedBeaconMock));
@@ -461,9 +450,7 @@ contract GovernanceContractTest is Test {
         //upgradeProcessAlreadyStarted(beacon)
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IGovernanceContract.UpgradeProcessNotStarted.selector
-            )
+            abi.encodeWithSelector(IGovernor.UpgradeProcessNotStarted.selector)
         );
         vm.prank(communityMultisig);
         gov.cancelUpgrade(address(ownedBeaconMock));
@@ -482,9 +469,7 @@ contract GovernanceContractTest is Test {
 
         //validAmount(newTimelockPeriod)
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IGovernanceContract.InvalidAmount.selector, 0
-            )
+            abi.encodeWithSelector(IGovernor.InvalidAmount.selector, 0)
         );
         vm.prank(address(communityMultisig));
         gov.setTimelockPeriod(0);
@@ -508,7 +493,7 @@ contract GovernanceContractTest is Test {
         //onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.OnlyCommunityOrTeamMultisig.selector
+                IGovernor.OnlyCommunityOrTeamMultisig.selector
             )
         );
         gov.initiateBeaconShutdown(address(ownedBeaconMock));
@@ -516,7 +501,7 @@ contract GovernanceContractTest is Test {
         //accessableBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.BeaconNotAccessible.selector,
+                IGovernor.BeaconNotAccessible.selector,
                 address(unownedBeaconMock)
             )
         );
@@ -563,7 +548,7 @@ contract GovernanceContractTest is Test {
         //accessableBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.BeaconNotAccessible.selector, address(0)
+                IGovernor.BeaconNotAccessible.selector, address(0)
             )
         );
         vm.prank(communityMultisig);
@@ -574,7 +559,7 @@ contract GovernanceContractTest is Test {
         //validAddress(newImplementation)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.InvalidAddress.selector, address(0)
+                IGovernor.Governance__InvalidAddress.selector, address(0)
             )
         );
         vm.prank(communityMultisig);
@@ -608,7 +593,7 @@ contract GovernanceContractTest is Test {
         //accessableBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.BeaconNotAccessible.selector,
+                IGovernor.BeaconNotAccessible.selector,
                 address(unownedBeaconMock)
             )
         );
@@ -623,7 +608,7 @@ contract GovernanceContractTest is Test {
         //onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.OnlyCommunityOrTeamMultisig.selector
+                IGovernor.OnlyCommunityOrTeamMultisig.selector
             )
         );
         gov.acceptOwnership(address(unownedBeaconMock));
@@ -652,7 +637,7 @@ contract GovernanceContractTest is Test {
         if (shouldFail) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IGovernanceContract.CallToTargetContractFailed.selector
+                    IGovernor.CallToTargetContractFailed.selector
                 )
             );
         }
@@ -664,7 +649,7 @@ contract GovernanceContractTest is Test {
         //onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
-                IGovernanceContract.OnlyCommunityOrTeamMultisig.selector
+                IGovernor.OnlyCommunityOrTeamMultisig.selector
             )
         );
         gov.acceptOwnership(address(unownedBeaconMock));

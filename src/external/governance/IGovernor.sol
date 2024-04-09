@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface IGovernanceContract {
-    //@todo In factory check if beacon owner is governance contract
-
+interface IGovernor {
     //@todo Transparent upgradeable proxy?
 
     //--------------------------------------------------------------------------
@@ -25,7 +23,7 @@ interface IGovernanceContract {
     // Errors
 
     /// @notice The given address is invalid
-    error InvalidAddress(address adr);
+    error Governance__InvalidAddress(address adr);
 
     /// @notice The given amount is invalid
     error InvalidAmount(uint amt);
@@ -92,7 +90,7 @@ interface IGovernanceContract {
     /// @param beacon The address of the beacon
     event BeaconImplementationRestarted(address beacon);
 
-    /// @notice Event emitted when a the governance contract accepts the ownership over another contract
+    /// @notice Event emitted when a the governor contract accepts the ownership over another contract
     /// @param adr The address of the contract that distributed the ownership
     event OwnershipAccepted(address adr);
 

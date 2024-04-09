@@ -2,24 +2,23 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {GovernanceContract} from
-    "src/external/governance/GovernanceContract.sol";
+import {Governor} from "src/external/governance/Governor.sol";
 
 /**
- * @title GovernanceContract Deployment Script
+ * @title Governor Deployment Script
  *
- * @dev Script to deploy a new GovernanceContract.
+ * @dev Script to deploy a new Governor.
  *
  *
  * @author Inverter Network
  */
-contract DeployGovernanceContract is Script {
+contract DeployGovernor is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    GovernanceContract gov;
+    Governor gov;
 
     function run() external returns (address) {
         // Read deployment settings from environment variables.
@@ -39,7 +38,7 @@ contract DeployGovernanceContract is Script {
             "DeployOrchestratorFactory: Missing env variable: team multisig"
         );
 
-        // Deploy the GovernanceContract.
+        // Deploy the Governor.
         return run(communityMultisig, teamMultisig, timelockPeriod);
     }
 
@@ -50,17 +49,15 @@ contract DeployGovernanceContract is Script {
     ) public returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the GovernanceContract.
-            gov = new GovernanceContract();
+            // Deploy the Governor.
+            gov = new Governor();
             gov.init(communityMultisig, teamMultisig, timelockPeriod); //@todo
         }
 
         vm.stopBroadcast();
 
-        // Log the deployed GovernanceContract address.
-        console2.log(
-            "Deployment of GovernanceContract at address", address(gov)
-        );
+        // Log the deployed Governor address.
+        console2.log("Deployment of Governor at address", address(gov));
 
         return address(gov);
     }

@@ -97,7 +97,7 @@ contract InverterBeaconE2E is E2ETest {
         // Deploy module beacons.
 
         beacon = new InverterBeacon(
-            address(gov), //The governance contract will be the owner of the beacon
+            address(gov), //The governor contract will be the owner of the beacon
             MAJOR_VERSION,
             address(moduleImpl1),
             MINOR_VERSION

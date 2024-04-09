@@ -2,8 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IGovernanceContract} from
-    "src/external/governance/IGovernanceContract.sol";
+import {IGovernor} from "src/external/governance/IGovernor.sol";
 import {
     InverterBeacon,
     IInverterBeacon
@@ -16,12 +15,7 @@ import {AccessControl} from "@oz/access/AccessControl.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
-contract GovernanceContract is
-    ERC165,
-    IGovernanceContract,
-    Initializable,
-    AccessControl
-{
+contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -29,7 +23,7 @@ contract GovernanceContract is
         override(AccessControl, ERC165)
         returns (bool)
     {
-        return interfaceId == type(IGovernanceContract).interfaceId
+        return interfaceId == type(IGovernor).interfaceId
             || super.supportsInterface(interfaceId);
     }
     //--------------------------------------------------------------------------
@@ -37,21 +31,21 @@ contract GovernanceContract is
 
     modifier validAddress(address adr) {
         if (adr == address(0)) {
-            revert IGovernanceContract.InvalidAddress(adr);
+            revert IGovernor.Governance__InvalidAddress(adr);
         }
         _;
     }
 
     modifier validAmount(uint amt) {
         if (amt == 0) {
-            revert IGovernanceContract.InvalidAmount(amt);
+            revert IGovernor.InvalidAmount(amt);
         }
         _;
     }
 
     modifier accessableBeacon(address target) {
         if (!isBeaconAccessible(target)) {
-            revert IGovernanceContract.BeaconNotAccessible(target);
+            revert IGovernor.BeaconNotAccessible(target);
         }
 
         _;
@@ -63,7 +57,7 @@ contract GovernanceContract is
             !hasRole(COMMUNITY_MULTISIG_ROLE, sender)
                 && !hasRole(TEAM_MULTISIG_ROLE, sender)
         ) {
-            revert IGovernanceContract.OnlyCommunityOrTeamMultisig();
+            revert IGovernor.OnlyCommunityOrTeamMultisig();
         }
         _;
     }
@@ -71,14 +65,14 @@ contract GovernanceContract is
     modifier upgradeProcessAlreadyStarted(address beacon) {
         //if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
-            revert IGovernanceContract.UpgradeProcessNotStarted();
+            revert IGovernor.UpgradeProcessNotStarted();
         }
         _;
     }
 
     modifier timelockPeriodExceeded(address beacon) {
         if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
-            revert IGovernanceContract.TimelockPeriodNotExceeded();
+            revert IGovernor.TimelockPeriodNotExceeded();
         }
         _;
     }
@@ -93,7 +87,7 @@ contract GovernanceContract is
 
     uint public timelockPeriod;
 
-    mapping(address => IGovernanceContract.Timelock) private beaconTimelock;
+    mapping(address => IGovernor.Timelock) private beaconTimelock;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -133,9 +127,10 @@ contract GovernanceContract is
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function getBeaconTimelock(address beacon)
         external
+        view
         returns (Timelock memory)
     {
         return beaconTimelock[beacon];
@@ -144,12 +139,12 @@ contract GovernanceContract is
     //--------------------------------------------------------------------------
     // FeeManager Functions
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function getFeeManager() external view returns (address) {
         return feeManager;
     }
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function setFeeManager(address newFeeManager)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
@@ -163,7 +158,7 @@ contract GovernanceContract is
     //---------------------------
     // Upgrade
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function upgradeBeaconWithTimelock(
         address beacon,
         address newImplementation,
@@ -189,7 +184,7 @@ contract GovernanceContract is
         );
     }
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function triggerUpgradeBeaconWithTimelock(address beacon)
         external
         onlyCommunityOrTeamMultisig
@@ -214,7 +209,7 @@ contract GovernanceContract is
         );
     }
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function cancelUpgrade(address beacon)
         external
         onlyCommunityOrTeamMultisig
@@ -224,7 +219,7 @@ contract GovernanceContract is
         emit BeaconUpgradedCanceled(beacon);
     }
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function setTimelockPeriod(uint newTimelockPeriod)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
@@ -237,7 +232,7 @@ contract GovernanceContract is
     //---------------------------
     //Emergency Shutdown
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function initiateBeaconShutdown(address beacon)
         external
         onlyCommunityOrTeamMultisig
@@ -247,7 +242,7 @@ contract GovernanceContract is
         emit BeaconShutdownInitiated(beacon);
     }
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
@@ -266,7 +261,7 @@ contract GovernanceContract is
         );
     }
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function restartBeaconImplementation(address beacon)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
@@ -279,13 +274,13 @@ contract GovernanceContract is
     //---------------------------
     //Ownable2Step
 
-    /// @inheritdoc IGovernanceContract
+    /// @inheritdoc IGovernor
     function acceptOwnership(address adr)
         external
         onlyCommunityOrTeamMultisig
     {
         if (adr.code.length == 0) {
-            revert IGovernanceContract.CallToTargetContractFailed();
+            revert IGovernor.CallToTargetContractFailed();
         }
 
         (bool success,) =
@@ -293,7 +288,7 @@ contract GovernanceContract is
 
         //if the call is not a success
         if (!success) {
-            revert IGovernanceContract.CallToTargetContractFailed();
+            revert IGovernor.CallToTargetContractFailed();
         }
         emit OwnershipAccepted(adr);
     }

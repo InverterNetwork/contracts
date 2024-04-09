@@ -226,5 +226,5 @@ contract ModuleFactoryTest is Test {
         vm.assume(orchestrator != address(0));
     }
 
-    //@todo check for beacon Ownable(address(beacon)).owner() != governanceContract
+    //@todo check for beacon Ownable(address(beacon)).owner() != governor
 }

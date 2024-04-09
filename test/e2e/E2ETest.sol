@@ -7,8 +7,7 @@ import "forge-std/console.sol";
 // Internal Dependencies:
 import {E2EModuleRegistry} from "test/e2e/E2EModuleRegistry.sol";
 
-import {GovernanceContract} from
-    "src/external/governance/GovernanceContract.sol";
+import {Governor} from "src/external/governance/Governor.sol";
 
 import {TransactionForwarder} from
     "src/external/forwarder/TransactionForwarder.sol";
@@ -36,7 +35,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  */
 contract E2ETest is E2EModuleRegistry {
     //Governance Gontract
-    GovernanceContract gov;
+    Governor gov;
 
     // Factory instances.
     OrchestratorFactory orchestratorFactory;
@@ -57,7 +56,7 @@ contract E2ETest is E2EModuleRegistry {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
         //Deploy Governance Contract
-        gov = new GovernanceContract(); //@todo upgradeable proxy
+        gov = new Governor(); //@todo upgradeable proxy
 
         gov.init(communityMultisig, teamMultisig, 1 weeks);
         // Deploy a Mock funding token for testing.

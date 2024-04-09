@@ -16,8 +16,7 @@ import {DeployOrchestratorFactory} from
     "script/factories/DeployOrchestratorFactory.s.sol";
 import {DeployBountyManager} from "script/modules/DeployBountyManager.s.sol";
 
-import {DeployGovernanceContract} from
-    "script/external/DeployGovernanceContract.s.sol";
+import {DeployGovernor} from "script/external/DeployGovernor.s.sol";
 import {DeployTransactionForwarder} from
     "script/external/DeployTransactionForwarder.s.sol";
 import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
@@ -76,9 +75,8 @@ contract DeploymentScript is Script {
     // TransactionForwarder
     DeployTransactionForwarder deployTransactionForwarder =
         new DeployTransactionForwarder();
-    //GovernanceContract
-    DeployGovernanceContract deployGovernanceContract =
-        new DeployGovernanceContract();
+    //Governor
+    DeployGovernor deployGovernor = new DeployGovernor();
 
     //Beacon
     DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
@@ -134,8 +132,8 @@ contract DeploymentScript is Script {
 
     //These contracts will actually be used at the later point of time
 
-    //GovernanceContract
-    address governanceContract; //@todo add proxy implementation
+    //Governor
+    address governor; //@todo add proxy implementation
 
     //TransactionForwarder
     address forwarder;
@@ -248,9 +246,7 @@ contract DeploymentScript is Script {
         );
         console2.log("Governance Contract \n");
 
-        governanceContract = deployGovernanceContract.run(
-            communityMultisig, teamMultisig, 1 weeks
-        );
+        governor = deployGovernor.run(communityMultisig, teamMultisig, 1 weeks);
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -282,8 +278,7 @@ contract DeploymentScript is Script {
         console2.log("Deploy factory implementations \n");
 
         //Deploy module Factory implementation
-        moduleFactory =
-            deployModuleFactory.run(address(governanceContract), forwarder);
+        moduleFactory = deployModuleFactory.run(address(governor), forwarder);
 
         //Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
@@ -322,28 +317,28 @@ contract DeploymentScript is Script {
         // Funding Manager
         rebasingFundingManagerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             rebasingFundingManager,
             moduleFactory,
             rebasingFundingManagerMetadata
         );
         bancorBondingCurveFundingManagerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             bancorBondingCurveFundingManager,
             moduleFactory,
             bancorVirtualSupplyBondingCurveFundingManagerMetadata
         );
         // Authorizer
         roleAuthorizerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             roleAuthorizer,
             moduleFactory,
             roleAuthorizerMetadata
         );
         tokenGatedRoleAuthorizerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             tokenGatedRoleAuthorizer,
             moduleFactory,
             tokenGatedRoleAuthorizerMetadata
@@ -351,28 +346,28 @@ contract DeploymentScript is Script {
         // Payment Processor
         simplePaymentProcessorBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             simplePaymentProcessor,
             moduleFactory,
             simplePaymentProcessorMetadata
         );
         streamingPaymentProcessorBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             streamingPaymentProcessor,
             moduleFactory,
             streamingPaymentProcessorMetadata
         );
         // Logic Module
         bountyManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             bountyManager,
             moduleFactory,
             bountyManagerMetadata
         );
         recurringPaymentManagerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             recurringPaymentManager,
             moduleFactory,
             recurringPaymentManagerMetadata
@@ -381,13 +376,13 @@ contract DeploymentScript is Script {
         // Utils
         singleVoteGovernorBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             singleVoteGovernor,
             moduleFactory,
             singleVoteGovernorMetadata
         );
         metadataManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
-            address(governanceContract),
+            address(governor),
             metadataManager,
             moduleFactory,
             metadataManagerMetadata

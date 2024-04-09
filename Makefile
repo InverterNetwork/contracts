@@ -98,7 +98,7 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
 
 	@forge script script/external/DeployTransactionForwarder.s.sol
-	@forge script script/external/DeployGovernanceContract.s.sol
+	@forge script script/external/DeployGovernor.s.sol
 
 	@forge script script/orchestrator/DeployOrchestrator.s.sol
 
