@@ -26,6 +26,7 @@ contract DeployAndSetUpBeacon is Script {
     InverterBeacon beacon;
 
     function deployAndRegisterInFactory(
+        address owner,
         address implementation,
         address moduleFactory,
         IModule.Metadata calldata metadata
@@ -33,11 +34,11 @@ contract DeployAndSetUpBeacon is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
-            beacon = new InverterBeacon(metadata.majorVersion);
-
-            // Upgrade the Beacon to the chosen implementation
-            beacon.upgradeTo(
-                address(implementation), metadata.minorVersion, false
+            beacon = new InverterBeacon(
+                owner,
+                metadata.majorVersion,
+                implementation,
+                metadata.minorVersion
             );
 
             // Register Metadata at the ModuleFactory
@@ -53,6 +54,7 @@ contract DeployAndSetUpBeacon is Script {
     }
 
     function deployBeaconAndSetupProxy(
+        address owner,
         address implementation,
         uint majorVersion,
         uint minorVersion
@@ -60,10 +62,9 @@ contract DeployAndSetUpBeacon is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
-            beacon = new InverterBeacon(majorVersion);
-
-            // Upgrade the Beacon to the chosen implementation
-            beacon.upgradeTo(address(implementation), minorVersion, false);
+            beacon = new InverterBeacon(
+                owner, majorVersion, implementation, minorVersion
+            );
 
             //return the proxy after creation
             proxy = address(new InverterBeaconProxy(InverterBeacon(beacon)));

@@ -95,12 +95,13 @@ contract InverterBeaconE2E is E2ETest {
         moduleImpl2 = new ModuleImplementationV2Mock();
 
         // Deploy module beacons.
-        vm.prank(address(gov)); //The governance contract will be the owner of the beacon
-        beacon = new InverterBeacon(MAJOR_VERSION);
 
-        // Set beacon's implementations.
-        vm.prank(address(gov));
-        beacon.upgradeTo(address(moduleImpl1), MINOR_VERSION, false);
+        beacon = new InverterBeacon(
+            address(gov), //The governance contract will be the owner of the beacon
+            MAJOR_VERSION,
+            address(moduleImpl1),
+            MINOR_VERSION
+        );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(DATA, InverterBeacon(beacon));
