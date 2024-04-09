@@ -34,6 +34,8 @@ contract ModuleFactoryTest is Test {
     ModuleMock module;
     InverterBeaconMock beacon;
 
+    address governaceContract = address(0x010101010101);
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -60,7 +62,7 @@ contract ModuleFactoryTest is Test {
         module = new ModuleMock();
         beacon = new InverterBeaconMock();
 
-        factory = new ModuleFactory(address(0));
+        factory = new ModuleFactory(address(0), governaceContract);
     }
 
     function testDeploymentInvariants() public {
