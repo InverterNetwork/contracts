@@ -16,6 +16,8 @@ import {DeployOrchestratorFactory} from
     "script/factories/DeployOrchestratorFactory.s.sol";
 import {DeployBountyManager} from "script/modules/DeployBountyManager.s.sol";
 
+import {DeployGovernanceContract} from
+    "script/external/DeployGovernanceContract.s.sol";
 import {DeployTransactionForwarder} from
     "script/external/DeployTransactionForwarder.s.sol";
 import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
@@ -74,6 +76,9 @@ contract DeploymentScript is Script {
     // TransactionForwarder
     DeployTransactionForwarder deployTransactionForwarder =
         new DeployTransactionForwarder();
+    //GovernanceContract
+    DeployGovernanceContract deployGovernanceContract =
+        new DeployGovernanceContract();
 
     //Beacon
     DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
@@ -128,6 +133,9 @@ contract DeploymentScript is Script {
     // Deployed Proxy Contracts
 
     //These contracts will actually be used at the later point of time
+
+    //GovernanceContract
+    address governanceContract; //@todo add proxy implementation
 
     //TransactionForwarder
     address forwarder;
@@ -228,6 +236,22 @@ contract DeploymentScript is Script {
     /// @notice Deploys all necessary factories, beacons and implementations
     /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
+        //Fetch the deployer address
+        address deployer = vm.addr(vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY"));
+
+        //Fetch the Multisig addresses
+        address communityMultisig = vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
+        address teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+        console2.log("Governance Contract \n");
+
+        governanceContract = deployGovernanceContract.run(
+            communityMultisig, teamMultisig, 1 weeks
+        );
+
         console2.log(
             "-----------------------------------------------------------------------------"
         );
@@ -244,7 +268,7 @@ contract DeploymentScript is Script {
 
         //Deploy beacon and actual proxy
         (forwarderBeacon, forwarder) = deployAndSetUpBeacon
-            .deployBeaconAndSetupProxy(forwarderImplementation, 1, 1);
+            .deployBeaconAndSetupProxy(deployer, forwarderImplementation, 1, 1);
 
         if (
             forwarder == forwarderImplementation || forwarder == forwarderBeacon
@@ -258,7 +282,8 @@ contract DeploymentScript is Script {
         console2.log("Deploy factory implementations \n");
 
         //Deploy module Factory implementation
-        moduleFactory = deployModuleFactory.run(forwarder, address(0)); //@todo govenance contract missing and script
+        moduleFactory =
+            deployModuleFactory.run(address(governanceContract), forwarder);
 
         //Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
@@ -297,22 +322,28 @@ contract DeploymentScript is Script {
         // Funding Manager
         rebasingFundingManagerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
+            address(governanceContract),
             rebasingFundingManager,
             moduleFactory,
             rebasingFundingManagerMetadata
         );
         bancorBondingCurveFundingManagerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
+            address(governanceContract),
             bancorBondingCurveFundingManager,
             moduleFactory,
             bancorVirtualSupplyBondingCurveFundingManagerMetadata
         );
         // Authorizer
         roleAuthorizerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
-            roleAuthorizer, moduleFactory, roleAuthorizerMetadata
+            address(governanceContract),
+            roleAuthorizer,
+            moduleFactory,
+            roleAuthorizerMetadata
         );
         tokenGatedRoleAuthorizerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
+            address(governanceContract),
             tokenGatedRoleAuthorizer,
             moduleFactory,
             tokenGatedRoleAuthorizerMetadata
@@ -320,22 +351,28 @@ contract DeploymentScript is Script {
         // Payment Processor
         simplePaymentProcessorBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
+            address(governanceContract),
             simplePaymentProcessor,
             moduleFactory,
             simplePaymentProcessorMetadata
         );
         streamingPaymentProcessorBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
+            address(governanceContract),
             streamingPaymentProcessor,
             moduleFactory,
             streamingPaymentProcessorMetadata
         );
         // Logic Module
         bountyManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
-            bountyManager, moduleFactory, bountyManagerMetadata
+            address(governanceContract),
+            bountyManager,
+            moduleFactory,
+            bountyManagerMetadata
         );
         recurringPaymentManagerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
+            address(governanceContract),
             recurringPaymentManager,
             moduleFactory,
             recurringPaymentManagerMetadata
@@ -344,10 +381,16 @@ contract DeploymentScript is Script {
         // Utils
         singleVoteGovernorBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            singleVoteGovernor, moduleFactory, singleVoteGovernorMetadata
+            address(governanceContract),
+            singleVoteGovernor,
+            moduleFactory,
+            singleVoteGovernorMetadata
         );
         metadataManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
-            metadataManager, moduleFactory, metadataManagerMetadata
+            address(governanceContract),
+            metadataManager,
+            moduleFactory,
+            metadataManagerMetadata
         );
 
         return (orchestratorFactory);
