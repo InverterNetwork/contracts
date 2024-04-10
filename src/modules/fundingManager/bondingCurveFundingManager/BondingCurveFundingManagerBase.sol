@@ -179,15 +179,40 @@ abstract contract BondingCurveFundingManagerBase is
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
             _msgSender(), address(this), _depositAmount
         );
-        if (buyFee > 0) {
-            // Calculate fee amount and deposit amount subtracted by fee
-            (_depositAmount, feeAmount) =
-                _calculateNetAmountAndFee(_depositAmount, buyFee);
-            // Add fee amount to total collected fee
-            tradeFeeCollected += feeAmount;
-        }
+        // Get protocol fee percentages and treasury addresses
+        (
+            address collateralreasury,
+            address issuanceTreasury,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        ) = _getBuyFeesAndTreasuryAddresses();
+
+        uint protocolFeeAmount;
+        uint projectFeeAmount;
+        // Get net amount, protocol and project fee amounts
+        (_depositAmount, protocolFeeAmount, projectFeeAmount) =
+        _calculateNetAndSplitFees(
+            _depositAmount, collateralBuyFeePercentage, buyFee
+        );
+        // Process the protocol fee
+        _processProtocolFeeViaTransfer(
+            collateralreasury,
+            __Module_orchestrator.fundingManager().token(),
+            protocolFeeAmount
+        );
+        // Add project fee if applicable
+        if (projectFeeAmount > 0) tradeFeeCollected += feeAmount;
+
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+
+        // Get net amount, protocol and project fee amounts. Currently there is no issuance project
+        // fee enabled
+        (mintAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
+            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
+        // collect protocol fee on outgoing issuance token
+        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
+
         // Revert when the mint amount is lower than minimum amount the user expects
         if (mintAmount < _minAmountOut) {
             revert BondingCurveFundingManagerBase__InsufficientOutputAmount();
@@ -237,6 +262,8 @@ abstract contract BondingCurveFundingManagerBase is
         pure
         returns (uint netAmount, uint feeAmount)
     {
+        // Return transaction amount as net amount if fee percentage is zero
+        if (_feePct == 0) return (_transactionAmount, feeAmount);
         // Calculate fee amount
         feeAmount = (_transactionAmount * _feePct) / BPS;
         // Calculate net amount after fee deduction
@@ -251,6 +278,86 @@ abstract contract BondingCurveFundingManagerBase is
         uint8 oldDecimals = tokenDecimals;
         tokenDecimals = _decimals;
         emit TokenDecimalsUpdated(oldDecimals, tokenDecimals);
+    }
+
+    /// @dev Returns the collateral and issuance fee percentage retrieved from the tax manager for
+    ///     buy operations
+    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
+    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
+    /// @return collateralBuyFeePercentage The percentage fee to be collected from the collateral
+    ///     token being deposited for minting issuance, expressed in BPS
+    /// @return issuanceBuyFeePercentage The percentage fee to be collected from the issuance token
+    ///     being minted, expressed in BPS
+    function _getBuyFeesAndTreasuryAddresses()
+        internal
+        virtual
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        )
+    {
+        // (collateralTreasury, collateralBuyFeePercentage) =
+        //     __Module_orchestrator.taxMan().getCollateralFee();
+        // (issuanceTreasury, issuanceBuyFeePercentage) =
+        //     __Module_orchestrator.taxMan().getCollateralFee();
+
+        // TODO: Delete return
+        return (address(0), address(0), 100, 100);
+    }
+
+    function _calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _projectFee
+    )
+        public
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount)
+    {
+        // Get total fee percentage
+        uint totalFeePercentage = _protocolFee + _projectFee;
+        // Return total amount as net amount if combined fee is 0
+        if (totalFeePercentage == 0) return (_totalAmount, 0, 0);
+        uint feeAmount;
+        // Get net amount and total fee amount
+        (netAmount, feeAmount) =
+            _calculateNetAmountAndFee(_totalAmount, totalFeePercentage);
+        // Calculate the proportion of the total fees that each fee type represents
+        protocolFeeAmount = (feeAmount * _protocolFee) / totalFeePercentage;
+        projectFeeAmount = feeAmount - protocolFeeAmount;
+    }
+
+    function _processProtocolFeeViaTransfer(
+        address _treasury,
+        IERC20 _token,
+        uint _feeAmount
+    ) internal pure {
+        // skip protocol fee collection if fee percentage set to zero
+        if (_feeAmount == 0) return;
+
+        // transfer fee amount
+
+        // TODO: Get address of where the fee needs to be sent
+        // _token.safeTransferFrom(_treasury, feeAmount
+        // );
+
+        // TODO: Should we add event to protocol fee collection?
+    }
+
+    function _processProtocolFeeViaMinting(address _treasury, uint _feeAmount)
+        internal
+        pure
+    {
+        // skip protocol fee collection if fee percentage set to zero
+        if (_feeAmount == 0) return;
+
+        // mint fee amount
+        // TODO: Get address of where the tokens need to be minted to
+        // _mint(_treasury, feeAmount);
+
+        // TODO: Should we add event to protocol fee collection?
     }
 
     //--------------------------------------------------------------------------
