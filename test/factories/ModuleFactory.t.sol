@@ -143,7 +143,7 @@ contract ModuleFactoryTest is Test {
         factory.registerMetadata(DATA, beacon);
     }
 
-    function testRegisterMetadataFailsIfBeaconIsNotOwnedByGovenor() public {
+    function testRegisterMetadataFailsIfBeaconIsNotOwnedByGovernor() public {
         InverterBeaconOwnableMock notOwnedBeacon =
             new InverterBeaconOwnableMock(address(0x1111111));
 

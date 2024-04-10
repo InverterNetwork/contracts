@@ -31,21 +31,21 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
 
     modifier validAddress(address adr) {
         if (adr == address(0)) {
-            revert Govenor__InvalidAddress(adr);
+            revert Governor__InvalidAddress(adr);
         }
         _;
     }
 
     modifier validTimelockPeriod(uint amt) {
         if (amt < 48 hours) {
-            revert Govenor__InvalidTimelockPeriod(amt);
+            revert Governor__InvalidTimelockPeriod(amt);
         }
         _;
     }
 
     modifier accessibleBeacon(address target) {
         if (!isBeaconAccessible(target)) {
-            revert Govenor__BeaconNotAccessible(target);
+            revert Governor__BeaconNotAccessible(target);
         }
 
         _;
@@ -57,7 +57,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
             !hasRole(COMMUNITY_MULTISIG_ROLE, sender)
                 && !hasRole(TEAM_MULTISIG_ROLE, sender)
         ) {
-            revert Govenor__OnlyCommunityOrTeamMultisig();
+            revert Governor__OnlyCommunityOrTeamMultisig();
         }
         _;
     }
@@ -65,14 +65,14 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     modifier upgradeProcessAlreadyStarted(address beacon) {
         //if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
-            revert Govenor__UpgradeProcessNotStarted();
+            revert Governor__UpgradeProcessNotStarted();
         }
         _;
     }
 
     modifier timelockPeriodExceeded(address beacon) {
         if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
-            revert Govenor__TimelockPeriodNotExceeded();
+            revert Governor__TimelockPeriodNotExceeded();
         }
         _;
     }
@@ -282,7 +282,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         onlyCommunityOrTeamMultisig
     {
         if (adr.code.length == 0) {
-            revert Govenor__CallToTargetContractFailed();
+            revert Governor__CallToTargetContractFailed();
         }
 
         (bool success,) =
@@ -290,7 +290,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
 
         //if the call is not a success
         if (!success) {
-            revert Govenor__CallToTargetContractFailed();
+            revert Governor__CallToTargetContractFailed();
         }
         emit OwnershipAccepted(adr);
     }
