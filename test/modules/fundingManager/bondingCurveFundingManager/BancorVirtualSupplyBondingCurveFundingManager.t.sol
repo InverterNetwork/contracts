@@ -65,17 +65,17 @@ import {RedeemingBondingCurveFundingManagerBaseTest} from
     */
 
 contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
-    string private constant NAME = "Bonding Curve Token";
-    string private constant SYMBOL = "BCT";
-    uint8 private constant DECIMALS = 18;
-    uint private constant INITIAL_TOKEN_SUPPLY = 1;
-    uint private constant INITIAL_COLLATERAL_SUPPLY = 1;
-    uint32 private constant RESERVE_RATIO_FOR_BUYING = 200_000;
-    uint32 private constant RESERVE_RATIO_FOR_SELLING = 200_000;
-    uint private constant BUY_FEE = 0;
-    uint private constant SELL_FEE = 0;
-    bool private constant BUY_IS_OPEN = true;
-    bool private constant SELL_IS_OPEN = true;
+    string internal constant NAME = "Bonding Curve Token";
+    string internal constant SYMBOL = "BCT";
+    uint8 internal constant DECIMALS = 18;
+    uint internal constant INITIAL_TOKEN_SUPPLY = 1;
+    uint internal constant INITIAL_COLLATERAL_SUPPLY = 1;
+    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 200_000;
+    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 200_000;
+    uint internal constant BUY_FEE = 0;
+    uint internal constant SELL_FEE = 0;
+    bool internal constant BUY_IS_OPEN = true;
+    bool internal constant SELL_IS_OPEN = true;
 
     BancorVirtualSupplyBondingCurveFundingManagerMock bondingCurveFundingManager;
     address formula;
@@ -126,7 +126,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     // Events
     event TransferOrchestratorToken(address indexed to, uint indexed amount);
 
-    function setUp() public {
+    function setUp() public virtual {
         // Deploy contracts
         IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
             memory bc_properties;

@@ -93,7 +93,7 @@ contract AuthorizerMock is IAuthorizer, Module {
     }
 
     function grantRoleFromModule(bytes32 role, address target) external {
-        console.log(_msgSender());
+        //console.log(_msgSender());
         _roleAuthorized[generateRoleId(_msgSender(), role)][target] = true;
     }
 
