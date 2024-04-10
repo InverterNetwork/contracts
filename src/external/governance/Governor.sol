@@ -11,15 +11,16 @@ import {
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-import {AccessControl} from "@oz/access/AccessControl.sol";
+import {AccessControlUpgradeable} from
+    "@oz-up/access/AccessControlUpgradeable.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
-contract Governor is ERC165, IGovernor, Initializable, AccessControl {
+contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(AccessControl, ERC165)
+        override(AccessControlUpgradeable, ERC165)
         returns (bool)
     {
         return interfaceId == type(IGovernor).interfaceId
@@ -106,6 +107,8 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
         validAddress(newTeamMultisig)
         validTimelockPeriod(newTimelockPeriod)
     {
+        __AccessControl_init();
+
         // -> set COMMUNITY_MULTISIG_ROLE as admin of itself
         _setRoleAdmin(COMMUNITY_MULTISIG_ROLE, COMMUNITY_MULTISIG_ROLE);
         // -> set COMMUNITY_MULTISIG_ROLE as admin of DEFAULT_ADMIN_ROLE
