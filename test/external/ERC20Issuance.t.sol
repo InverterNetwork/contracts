@@ -84,7 +84,6 @@ contract ERC20IssuanceTest is Test {
         token.mint(address(this), amount);
 
         assertEq(token.totalSupply(), supplyBefore + amount);
-
     }
 
     /*
@@ -112,7 +111,6 @@ contract ERC20IssuanceTest is Test {
 
         token.mint(address(this), amount);
         token.burn(address(this), amount);
-
 
         assertEq(token.totalSupply(), supplyBefore);
     }

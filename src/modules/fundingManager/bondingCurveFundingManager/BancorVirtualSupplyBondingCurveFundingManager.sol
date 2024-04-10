@@ -169,6 +169,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
+        virtual
         override(BondingCurveFundingManagerBase)
         validReceiver(_receiver)
         buyingIsEnabled
@@ -188,6 +189,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buy(uint _depositAmount, uint _minAmountOut)
         external
+        virtual
         override(BondingCurveFundingManagerBase)
         buyingIsEnabled
     {
@@ -206,6 +208,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
+        virtual
         override(RedeemingBondingCurveFundingManagerBase)
         validReceiver(_receiver)
         sellingIsEnabled
@@ -225,6 +228,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut)
         external
+        virtual
         override(RedeemingBondingCurveFundingManagerBase)
         sellingIsEnabled
     {
@@ -320,6 +324,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function mintIssuanceTokenTo(address _receiver, uint _amount)
         external
+        virtual
         onlyOrchestratorOwner
         validReceiver(_receiver)
     {
@@ -329,6 +334,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @inheritdoc IVirtualTokenSupply
     function setVirtualTokenSupply(uint _virtualSupply)
         external
+        virtual
         override(VirtualTokenSupplyBase)
         onlyOrchestratorOwner
     {
@@ -338,6 +344,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @inheritdoc IVirtualCollateralSupply
     function setVirtualCollateralSupply(uint _virtualSupply)
         external
+        virtual
         override(VirtualCollateralSupplyBase)
         onlyOrchestratorOwner
     {
@@ -347,6 +354,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function setReserveRatioForBuying(uint32 _reserveRatio)
         external
+        virtual
         onlyOrchestratorOwner
     {
         _setReserveRatioForBuying(_reserveRatio);
@@ -355,6 +363,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function setReserveRatioForSelling(uint32 _reserveRatio)
         external
+        virtual
         onlyOrchestratorOwner
     {
         _setReserveRatioForSelling(_reserveRatio);
