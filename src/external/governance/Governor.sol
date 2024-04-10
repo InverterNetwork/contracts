@@ -12,7 +12,6 @@ import {
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {AccessControl} from "@oz/access/AccessControl.sol";
-import {Ownable} from "@oz/access/Ownable.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 contract Governor is ERC165, IGovernor, Initializable, AccessControl {
@@ -317,7 +316,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
         }
 
         //Check if target is ownable and who the owner is
-        (success, result) = target.call(abi.encodeCall(Ownable.owner, ()));
+        (success, result) = target.call(abi.encodeWithSignature("owner()"));
 
         //if not ownable or owner is not this contract return false
         if (
