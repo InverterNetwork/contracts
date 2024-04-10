@@ -35,13 +35,6 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier validNewMinorVersion(uint newMinorVersion) {
-        if (newMinorVersion <= minorVersion) {
-            revert Beacon__InvalidImplementationMinorVersion();
-        }
-        _;
-    }
-
     modifier validImplementation(address newImplementation) {
         if (!(newImplementation.code.length > 0)) {
             revert Beacon__InvalidImplementation();
@@ -72,8 +65,15 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(uint _majorVersion) Ownable(_msgSender()) {
+    constructor(
+        address owner,
+        uint _majorVersion,
+        address _implementation,
+        uint _newMinorVersion
+    ) Ownable(owner) {
         majorVersion = _majorVersion;
+
+        _upgradeTo(_implementation, _newMinorVersion, false);
     }
 
     //--------------------------------------------------------------------------------
@@ -102,12 +102,8 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
         address newImplementation,
         uint newMinorVersion,
         bool overrideShutdown
-    ) public onlyOwner validNewMinorVersion(newMinorVersion) {
-        _setImplementation(newImplementation, overrideShutdown);
-
-        minorVersion = newMinorVersion;
-
-        emit Upgraded(newImplementation, newMinorVersion);
+    ) public onlyOwner {
+        _upgradeTo(newImplementation, newMinorVersion, overrideShutdown);
     }
 
     //--------------------------------------------------------------------------------
@@ -134,7 +130,19 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     }
 
     //--------------------------------------------------------------------------------
-    // Internal Mutating Functions
+    // Internal Functions
+
+    function _upgradeTo(
+        address newImplementation,
+        uint newMinorVersion,
+        bool overrideShutdown
+    ) internal {
+        _setImplementation(newImplementation, overrideShutdown);
+
+        minorVersion = newMinorVersion;
+
+        emit Upgraded(newImplementation, newMinorVersion);
+    }
 
     function _setImplementation(
         address newImplementation,
