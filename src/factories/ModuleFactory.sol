@@ -178,10 +178,10 @@ contract ModuleFactory is
         internal
         view
         virtual
-        override(Context, ERC2771Context)
+        override(ERC2771Context, Context)
         returns (address sender)
     {
-        return super._msgSender();
+        return ERC2771Context._msgSender();
     }
 
     /// Needs to be overriden, because they are imported via the Ownable2Step as well
@@ -189,17 +189,17 @@ contract ModuleFactory is
         internal
         view
         virtual
-        override(Context, ERC2771Context)
+        override(ERC2771Context, Context)
         returns (bytes calldata)
     {
-        return super._msgData();
+        return ERC2771Context._msgData();
     }
 
     function _contextSuffixLength()
         internal
         view
         virtual
-        override(Context, ERC2771Context)
+        override(ERC2771Context, Context)
         returns (uint)
     {
         return 20;
