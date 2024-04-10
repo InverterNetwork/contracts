@@ -90,11 +90,11 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(address newGovernor, address _trustedForwarder)
+    constructor(address _governor, address _trustedForwarder)
         ERC2771Context(_trustedForwarder)
         Ownable(_msgSender())
     {
-        governor = newGovernor;
+        governor = _governor;
     }
 
     //--------------------------------------------------------------------------
