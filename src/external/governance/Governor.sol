@@ -31,21 +31,21 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
 
     modifier validAddress(address adr) {
         if (adr == address(0)) {
-            revert Governance__InvalidAddress(adr);
+            revert Govenor__InvalidAddress(adr);
         }
         _;
     }
 
     modifier validTimelockPeriod(uint amt) {
         if (amt < 48 hours) {
-            revert Governance__InvalidTimelockPeriod(amt);
+            revert Govenor__InvalidTimelockPeriod(amt);
         }
         _;
     }
 
     modifier accessibleBeacon(address target) {
         if (!isBeaconAccessible(target)) {
-            revert Governance__BeaconNotAccessible(target);
+            revert Govenor__BeaconNotAccessible(target);
         }
 
         _;
@@ -57,7 +57,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
             !hasRole(COMMUNITY_MULTISIG_ROLE, sender)
                 && !hasRole(TEAM_MULTISIG_ROLE, sender)
         ) {
-            revert Governance__OnlyCommunityOrTeamMultisig();
+            revert Govenor__OnlyCommunityOrTeamMultisig();
         }
         _;
     }
@@ -65,14 +65,14 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     modifier upgradeProcessAlreadyStarted(address beacon) {
         //if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
-            revert Governance__UpgradeProcessNotStarted();
+            revert Govenor__UpgradeProcessNotStarted();
         }
         _;
     }
 
     modifier timelockPeriodExceeded(address beacon) {
         if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
-            revert Governance__TimelockPeriodNotExceeded();
+            revert Govenor__TimelockPeriodNotExceeded();
         }
         _;
     }
@@ -99,7 +99,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     function init(
         address newCommunityMultisig,
         address newTeamMultisig,
-        uint newTimelockPeriod //@note should we add feeManager here?
+        uint newTimelockPeriod
     )
         external
         initializer
@@ -280,7 +280,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
         onlyCommunityOrTeamMultisig
     {
         if (adr.code.length == 0) {
-            revert Governance__CallToTargetContractFailed();
+            revert Govenor__CallToTargetContractFailed();
         }
 
         (bool success,) =
@@ -288,7 +288,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
 
         //if the call is not a success
         if (!success) {
-            revert Governance__CallToTargetContractFailed();
+            revert Govenor__CallToTargetContractFailed();
         }
         emit OwnershipAccepted(adr);
     }
