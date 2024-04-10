@@ -134,9 +134,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken.name = bytes32(abi.encodePacked(NAME));
-        issuanceToken.symbol = bytes32(abi.encodePacked(SYMBOL));
-        issuanceToken.decimals = uint8(18);
+        issuanceToken = new ERC20IssuanceMock();
+        issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -199,9 +199,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             "Symbol has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.decimals(),
-            //DECIMALS,
-            18,
+            issuanceToken.decimals(),
+            DECIMALS,
             "Decimals has not been set correctly"
         );
         assertEq(
@@ -1542,9 +1541,17 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     function testSetDecimals_FailsIfLowerThanCollateralDecimals(
+        uint _newMaxSupply,
         uint8 _newDecimals
     ) public {
         vm.assume(_newDecimals < _token.decimals());
+
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        newIssuanceToken.init(_name, _symbol, _newMaxSupply, _newDecimals);
+
         vm.expectRevert(
             IBancorVirtualSupplyBondingCurveFundingManager
                 .BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal
