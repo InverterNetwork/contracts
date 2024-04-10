@@ -43,7 +43,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
         _;
     }
 
-    modifier accessableBeacon(address target) {
+    modifier accessibleBeacon(address target) {
         if (!isBeaconAccessible(target)) {
             revert Governance__BeaconNotAccessible(target);
         }
@@ -166,7 +166,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     )
         external
         onlyCommunityOrTeamMultisig
-        accessableBeacon(beacon)
+        accessibleBeacon(beacon)
         validAddress(newImplementation)
     {
         beaconTimelock[beacon] = Timelock(
@@ -188,7 +188,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     function triggerUpgradeBeaconWithTimelock(address beacon)
         external
         onlyCommunityOrTeamMultisig
-        accessableBeacon(beacon)
+        accessibleBeacon(beacon)
         upgradeProcessAlreadyStarted(beacon)
         timelockPeriodExceeded(beacon)
     {
@@ -236,7 +236,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     function initiateBeaconShutdown(address beacon)
         external
         onlyCommunityOrTeamMultisig
-        accessableBeacon(beacon)
+        accessibleBeacon(beacon)
     {
         IInverterBeacon(beacon).shutDownImplementation();
         emit BeaconShutdownInitiated(beacon);
@@ -250,7 +250,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     )
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
-        accessableBeacon(beacon)
+        accessibleBeacon(beacon)
         validAddress(newImplementation)
     {
         IInverterBeacon(beacon).upgradeTo(
@@ -265,7 +265,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
     function restartBeaconImplementation(address beacon)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
-        accessableBeacon(beacon)
+        accessibleBeacon(beacon)
     {
         IInverterBeacon(beacon).restartImplementation();
         emit BeaconImplementationRestarted(beacon);

@@ -94,7 +94,7 @@ contract GovernorTest is Test {
         gov.setTimelockPeriod(amt);
     }
 
-    function testAccessableBeacon(uint seed, address target) public {
+    function testAccessibleBeacon(uint seed, address target) public {
         bool shouldFail = true;
         //Restrict seed to one of 3 variants
         seed = bound(seed, 0, 2);
@@ -344,7 +344,7 @@ contract GovernorTest is Test {
         );
         gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0x1), 0);
 
-        //accessableBeacon(beacon)
+        //accessibleBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor.Governance__BeaconNotAccessible.selector, address(0)
@@ -395,7 +395,7 @@ contract GovernorTest is Test {
         );
         gov.triggerUpgradeBeaconWithTimelock(address(ownedBeaconMock));
 
-        //accessableBeacon(beacon)
+        //accessibleBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor.Governance__BeaconNotAccessible.selector, address(0)
@@ -510,7 +510,7 @@ contract GovernorTest is Test {
         );
         gov.initiateBeaconShutdown(address(ownedBeaconMock));
 
-        //accessableBeacon(beacon)
+        //accessibleBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor.Governance__BeaconNotAccessible.selector,
@@ -557,7 +557,7 @@ contract GovernorTest is Test {
             address(ownedBeaconMock), address(0x1), 0
         );
 
-        //accessableBeacon(beacon)
+        //accessibleBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor.Governance__BeaconNotAccessible.selector, address(0)
@@ -602,7 +602,7 @@ contract GovernorTest is Test {
         );
         gov.restartBeaconImplementation(address(ownedBeaconMock));
 
-        //accessableBeacon(beacon)
+        //accessibleBeacon(beacon)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor.Governance__BeaconNotAccessible.selector,
