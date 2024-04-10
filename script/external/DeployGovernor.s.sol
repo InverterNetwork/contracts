@@ -74,7 +74,7 @@ contract DeployGovernor is Script {
 
         // Log the deployed Governor address.
         console2.log(
-            "Deployment of Governor implementatio at address", address(gov)
+            "Deployment of Governor implementation at address", address(gov)
         );
         console2.log("Deployment of Governor at address", address(gov));
 

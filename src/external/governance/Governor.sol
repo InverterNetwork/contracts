@@ -192,7 +192,7 @@ contract Governor is ERC165, IGovernor, Initializable, AccessControl {
         upgradeProcessAlreadyStarted(beacon)
         timelockPeriodExceeded(beacon)
     {
-        //set timelock to inaktive
+        //set timelock to inactive
         beaconTimelock[beacon].timelockActive = false;
 
         //Upgrade beacon
