@@ -274,7 +274,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function calculatePurchaseReturn(uint _depositAmount)
         external
-        view
         returns (uint mintAmount)
     {
         if (_depositAmount == 0) {
@@ -282,17 +281,35 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount(
             );
         }
-        if (buyFee > 0) {
-            (_depositAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(_depositAmount, buyFee);
-        }
-        return _issueTokensFormulaWrapper(_depositAmount);
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        ) = _getBuyFeesAndTreasuryAddresses();
+
+        // Deduct protocol and project buy fee from collateral, if applicable
+        (_depositAmount, /* feeAmount */ ) = _calculateNetAmountAndFee(
+            _depositAmount, (collateralBuyFeePercentage + buyFee)
+        );
+
+        // Calculate issuance token return from formula
+        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol buy fee from issuance, if applicable
+        (mintAmount, /* feeAmount */ ) =
+            _calculateNetAmountAndFee(mintAmount, issuanceBuyFeePercentage);
+
+        // Return expected purchase return amount
+        return mintAmount;
     }
 
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function calculateSaleReturn(uint _depositAmount)
         external
-        view
         returns (uint redeemAmount)
     {
         if (_depositAmount == 0) {
@@ -300,11 +317,29 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
                 BancorVirtualSupplyBondingCurveFundingManager__InvalidDepositAmount(
             );
         }
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        ) = _getSellFeesAndTreasuryAddresses();
+
+        // Deduct protocol sell fee from issuance, if applicable
+        (_depositAmount, /* feeAmount */ ) =
+            _calculateNetAmountAndFee(_depositAmount, issuanceSellFeePercentage);
+
+        // Calculate redeem amount from formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-        if (sellFee > 0) {
-            (redeemAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(redeemAmount, sellFee);
-        }
+        
+        // Deduct protocol and project sell fee from collateral, if applicable
+        (redeemAmount, /* feeAmount */ ) = _calculateNetAmountAndFee(
+            redeemAmount, (collateralSellFeePercentage + sellFee)
+        );
+        
+        // Return redeem amount
         return redeemAmount;
     }
 

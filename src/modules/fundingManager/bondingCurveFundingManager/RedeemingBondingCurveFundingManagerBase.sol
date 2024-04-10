@@ -145,24 +145,31 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         if (_depositAmount == 0) {
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
+        // Get protocol fee percentages and treasury addresses
+        (
+            address collateralreasury,
+            address issuanceTreasury,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        ) = _getSellFeesAndTreasuryAddresses();
+
+        uint protocolFeeAmount;
+        uint projectFeeAmount;
+
+        // Get net amount, protocol and project fee amounts. Currently there is no issuance project
+        // fee enabled
+        (_depositAmount, protocolFeeAmount, /* projectFee */ ) =
+        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
+        // Process the protocol fee
+        _processProtocolFeeViaTransfer(
+            issuanceTreasury, IERC20(address(this)), protocolFeeAmount
+        );
         // Calculate redeem amount based on upstream formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
 
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
 
-        if (sellFee > 0) {
-            // Calculate fee amount and redeem amount subtracted by fee
-            (redeemAmount, feeAmount) =
-                _calculateNetAmountAndFee(redeemAmount, sellFee);
-            // Add fee amount to total collected fee
-            tradeFeeCollected += feeAmount;
-        }
-        // Revert when the redeem amount is lower than minimum amount the user expects
-        if (redeemAmount < _minAmountOut) {
-            revert RedeemingBondingCurveFundingManager__InsufficientOutputAmount(
-            );
-        }
         // Require that enough collateral token is held to be redeemable
         if (
             redeemAmount
@@ -172,6 +179,27 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         ) {
             revert
                 RedeemingBondingCurveFundingManager__InsufficientCollateralForRedemption(
+            );
+        }
+
+        // Get net amount, protocol and project fee amounts
+        (redeemAmount, protocolFeeAmount, projectFeeAmount) =
+        _calculateNetAndSplitFees(
+            redeemAmount, collateralSellFeePercentage, sellFee
+        );
+        // Process the protocol fee
+        _processProtocolFeeViaTransfer(
+            collateralreasury,
+            __Module_orchestrator.fundingManager().token(),
+            protocolFeeAmount
+        );
+
+        // Add project fee if applicable
+        if (projectFeeAmount > 0) tradeFeeCollected += projectFeeAmount; // Add fee amount to total collected fee
+
+        // Revert when the redeem amount is lower than minimum amount the user expects
+        if (redeemAmount < _minAmountOut) {
+            revert RedeemingBondingCurveFundingManager__InsufficientOutputAmount(
             );
         }
         // Transfer tokens to receiver
@@ -208,5 +236,32 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
+    }
+
+    /// @dev Returns the collateral and issuance fee percentage retrieved from the tax manager for
+    ///     sell operations
+    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
+    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
+    /// @return collateralSellFeePercentage The percentage fee to be collected from the collateral
+    ///     token being redeemed, expressed in BPS
+    /// @return issuanceSellFeePercentage The percentage fee to be collected from the issuance token
+    ///     being deposited, expressed in BPS
+    function _getSellFeesAndTreasuryAddresses()
+        internal
+        virtual
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        )
+    {
+        // (collateralTreasury, collateralSellFeePercentage) =
+        //     __Module_orchestrator.taxMan().getCollateralFee();
+        // (issuanceTreasury, issuanceSellFeePercentage) =
+        //     __Module_orchestrator.taxMan().getCollateralFee();
+
+        // TODO: Delete return
+        return (address(0), address(0), 100, 100);
     }
 }
