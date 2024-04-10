@@ -137,6 +137,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         issuanceToken = new ERC20IssuanceMock();
         issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
 
+
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
         bc_properties.reserveRatioForSelling = RESERVE_RATIO_FOR_SELLING;
@@ -156,6 +157,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
+        
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -187,12 +190,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     function testInit() public override {
         assertEq(
             issuanceToken.name(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
+            string(abi.encodePacked(NAME)),
             "Name has not been set correctly"
         );
         assertEq(
             issuanceToken.symbol(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
+            string(abi.encodePacked(SYMBOL)),
             "Symbol has not been set correctly"
         );
         assertEq(
@@ -397,7 +400,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true, address(_token));
         emit Transfer(buyer, address(bondingCurveFundingManager), amount);
         vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
+            true, true, true, true, address(issuanceToken)
         );
         emit Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
@@ -476,7 +479,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.expectEmit(true, true, true, true, address(_token));
         emit Transfer(buyer, address(bondingCurveFundingManager), amount);
         vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
+            true, true, true, true, address(issuanceToken)
         );
         emit Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(

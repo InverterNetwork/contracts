@@ -67,6 +67,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         issuanceToken = new ERC20IssuanceMock();
         issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -102,22 +103,21 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     // Tests: Initialization
 
     function testInit() public override {
-        //TODO: recheck with external token
-        /*         assertEq(
-            bondingCurveFundingManager.name(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
+        assertEq(
+            issuanceToken.name(),
+            string(abi.encodePacked(NAME)),
             "Name has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.symbol(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
+            issuanceToken.symbol(),
+            string(abi.encodePacked(SYMBOL)),
             "Symbol has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.decimals(),
+            issuanceToken.decimals(),
             DECIMALS,
             "Decimals has not been set correctly"
-        ); */
+        );
         assertEq(
             address(bondingCurveFundingManager.formula()),
             formula,

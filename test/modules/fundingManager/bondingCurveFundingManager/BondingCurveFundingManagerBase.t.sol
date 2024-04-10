@@ -62,6 +62,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         issuanceToken = new ERC20IssuanceMock();
         issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -98,12 +99,12 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     function testInit() public override {
         assertEq(
             issuanceToken.name(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
+            string(abi.encodePacked(NAME)),
             "Name has not been set correctly"
         );
         assertEq(
             issuanceToken.symbol(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
+            string(abi.encodePacked(SYMBOL)),
             "Symbol has not been set correctly"
         );
         assertEq(
