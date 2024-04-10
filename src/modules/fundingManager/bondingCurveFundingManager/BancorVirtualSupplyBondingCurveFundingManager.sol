@@ -117,9 +117,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         address _issuanceToken;
         BondingCurveProperties memory bondingCurveProperties;
 
-        (_issuanceToken, bondingCurveProperties, _acceptedToken) = abi.decode(
-            configData, (address, BondingCurveProperties, address)
-        );
+        (_issuanceToken, bondingCurveProperties, _acceptedToken) =
+            abi.decode(configData, (address, BondingCurveProperties, address));
 
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(_issuanceToken);

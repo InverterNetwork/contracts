@@ -30,15 +30,13 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         __Module_init(orchestrator_, metadata);
 
         (
-address _issuanceToken,
+            address _issuanceToken,
             address _formula,
             uint _buyFee,
             bool _buyIsOpen
-        ) = abi.decode(
-            configData, (address, address, uint, bool)
-        );
+        ) = abi.decode(configData, (address, address, uint, bool));
 
--        _setIssuanceToken(_issuanceToken);
+        _setIssuanceToken(address(_issuanceToken));
 
         formula = IBancorFormula(_formula);
 

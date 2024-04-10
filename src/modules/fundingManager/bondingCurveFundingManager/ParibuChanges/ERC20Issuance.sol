@@ -42,6 +42,7 @@ contract ERC20Issuance is
 
     function init(string memory name_, string memory symbol_, uint _MAX_SUPPLY)
         external
+        virtual
         initializer
     {
         __ERC20_init(name_, symbol_);

@@ -40,9 +40,7 @@ contract RedeemingBondingCurveFundingManagerMock is
             uint _buyFee,
             bool _buyIsOpen,
             bool _sellIsOpen
-        ) = abi.decode(
-            configData, (address, address, uint, bool, bool)
-        );
+        ) = abi.decode(configData, (address, address, uint, bool, bool));
 
         _setIssuanceToken(_issuanceToken);
 

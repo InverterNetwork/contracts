@@ -82,7 +82,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
     // Note: this function returns the virtual token supply in the same format it will be fed to the Bancor formula
     function call_getFormulaVirtualTokenSupply() external view returns (uint) {
         uint decimalConvertedVirtualTokenSupply =
-            _convertAmountToRequiredDecimal(virtualTokenSupply, issuanceTokenDecimals, 18);
+        _convertAmountToRequiredDecimal(
+            virtualTokenSupply, issuanceTokenDecimals, 18
+        );
         return decimalConvertedVirtualTokenSupply;
     }
 
