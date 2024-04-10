@@ -20,8 +20,8 @@ import {
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
-import {InverterBeaconMock} from
-    "test/utils/mocks/factories/beacon/InverterBeaconMock.sol";
+import {InverterBeaconOwnableMock} from
+    "test/utils/mocks/factories/beacon/InverterBeaconOwnableMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -32,7 +32,9 @@ contract ModuleFactoryTest is Test {
 
     // Mocks
     ModuleMock module;
-    InverterBeaconMock beacon;
+    InverterBeaconOwnableMock beacon;
+
+    address governaceContract = address(0x010101010101);
 
     //--------------------------------------------------------------------------
     // Events
@@ -58,9 +60,9 @@ contract ModuleFactoryTest is Test {
 
     function setUp() public {
         module = new ModuleMock();
-        beacon = new InverterBeaconMock();
+        beacon = new InverterBeaconOwnableMock(governaceContract);
 
-        factory = new ModuleFactory(address(0));
+        factory = new ModuleFactory(governaceContract, address(0));
     }
 
     function testDeploymentInvariants() public {
@@ -120,7 +122,8 @@ contract ModuleFactoryTest is Test {
     function testRegisterMetadataFailsIfAlreadyRegistered() public {
         beacon.overrideImplementation(address(module));
 
-        InverterBeaconMock additionalBeacon = new InverterBeaconMock();
+        InverterBeaconOwnableMock additionalBeacon =
+            new InverterBeaconOwnableMock(governaceContract);
         additionalBeacon.overrideImplementation(address(module));
 
         factory.registerMetadata(DATA, beacon);
@@ -138,6 +141,18 @@ contract ModuleFactoryTest is Test {
             IModuleFactory.ModuleFactory__InvalidInverterBeacon.selector
         );
         factory.registerMetadata(DATA, beacon);
+    }
+
+    function testRegisterMetadataFailsIfBeaconIsNotOwnedByGovernor() public {
+        InverterBeaconOwnableMock notOwnedBeacon =
+            new InverterBeaconOwnableMock(address(0x1111111));
+
+        notOwnedBeacon.overrideImplementation(address(0x1));
+
+        vm.expectRevert(
+            IModuleFactory.ModuleFactory__InvalidInverterBeacon.selector
+        );
+        factory.registerMetadata(DATA, notOwnedBeacon);
     }
 
     //--------------------------------------------------------------------------

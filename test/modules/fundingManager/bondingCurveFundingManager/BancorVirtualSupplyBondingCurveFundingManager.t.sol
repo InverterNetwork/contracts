@@ -134,8 +134,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
+        issuanceToken.name = bytes32(abi.encodePacked(NAME));
+        issuanceToken.symbol = bytes32(abi.encodePacked(SYMBOL));
+        issuanceToken.decimals = uint8(18);
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -198,8 +199,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             "Symbol has not been set correctly"
         );
         assertEq(
-            issuanceToken.decimals(),
-            DECIMALS,
+            bondingCurveFundingManager.decimals(),
+            //DECIMALS,
+            18,
             "Decimals has not been set correctly"
         );
         assertEq(
@@ -296,13 +298,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint amount
     ) public {
         // Setup
-        amount = _bound_for_decimal_conversion(
-            amount,
-            1,
-            1e38,
-            bondingCurveFundingManager.call_collateralTokenDecimals(),
-            issuanceToken.decimals()
-        );
+        amount = bound(amount, 2, 1e38); // see comment in testBuyOrderWithZeroFee
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amount)
         );
@@ -821,6 +817,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         }
         vm.stopPrank();
 
+        uint decimalConverted_userSellAmount = bondingCurveFundingManager
+            .call_convertAmountToRequiredDecimal(
+            userSellAmount, _token.decimals(), 18
+        );
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
@@ -1541,6 +1541,21 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
+    function testSetDecimals_FailsIfLowerThanCollateralDecimals(
+        uint8 _newDecimals
+    ) public {
+        vm.assume(_newDecimals < _token.decimals());
+        vm.expectRevert(
+            IBancorVirtualSupplyBondingCurveFundingManager
+                .BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal
+                .selector
+        );
+        // No authentication since it's an internal function exposed by the mock contract
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
+    }
+
     function testSetIssuanceToken_FailsIfLowerThanCollateralDecimals(
         uint _newMaxSupply,
         uint8 _newDecimals
@@ -1875,6 +1890,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             );
         }
         vm.stopPrank();
+
+        return userSellAmount;
 
         return userSellAmount;
     }

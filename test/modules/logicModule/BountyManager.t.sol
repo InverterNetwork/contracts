@@ -929,7 +929,7 @@ contract BountyManagerTest is ModuleTest {
             if (amounts[i] == 0) {
                 amounts[i] = 1;
             }
-            //If Higher than 1_000_000_000_000_000 convert to 1_000_000_000_000_000 //@note is that a reasonable amount?
+            //If Higher than 1_000_000_000_000_000 convert to 1_000_000_000_000_000
             if (amounts[i] > 1_000_000_000_000_000) {
                 amounts[i] = 1_000_000_000_000_000;
             }
