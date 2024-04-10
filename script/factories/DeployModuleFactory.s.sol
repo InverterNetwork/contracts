@@ -23,23 +23,32 @@ contract DeployModuleFactory is Script {
     function run() external returns (address) {
         // Read deployment settings from environment variables.
 
+        address governor = vm.envAddress("GOVERNOR_ADDRESS");
         address forwarder = vm.envAddress("FORWARDER_ADDRESS");
         // Check settings.
+
+        require(
+            governor != address(0),
+            "DeployOrchestratorFactory: Missing env variable: governor contract"
+        );
 
         require(
             forwarder != address(0),
             "DeployOrchestratorFactory: Missing env variable: forwarder"
         );
 
-        // Deploy the orchestratorFactory.
-        return run(forwarder);
+        // Deploy the moduleFactory.
+        return run(governor, forwarder);
     }
 
-    function run(address forwarder) public returns (address) {
+    function run(address governor, address forwarder)
+        public
+        returns (address)
+    {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the moduleFactory.
-            moduleFactory = new ModuleFactory(forwarder);
+            moduleFactory = new ModuleFactory(governor, forwarder);
         }
 
         vm.stopBroadcast();

@@ -7,6 +7,8 @@ import "forge-std/console.sol";
 // Internal Dependencies:
 import {E2EModuleRegistry} from "test/e2e/E2EModuleRegistry.sol";
 
+import {Governor} from "src/external/governance/Governor.sol";
+
 import {TransactionForwarder} from
     "src/external/forwarder/TransactionForwarder.sol";
 
@@ -28,10 +30,17 @@ import {BancorFormula} from
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
+// External Dependencies
+import {TransparentUpgradeableProxy} from
+    "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 /**
  * @dev Base contract for e2e tests.
  */
 contract E2ETest is E2EModuleRegistry {
+    //Governance Gontract
+    Governor gov;
+
     // Factory instances.
     OrchestratorFactory orchestratorFactory;
 
@@ -44,10 +53,29 @@ contract E2ETest is E2EModuleRegistry {
     // Forwarder
     TransactionForwarder forwarder;
 
+    address communityMultisig = address(0x11111);
+    address teamMultisig = address(0x22222);
+
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
+        //Deploy Governance Contract
+        gov = Governor(
+            address(
+                new TransparentUpgradeableProxy( //based on openzeppelins TransparentUpgradeableProxy
+                    address(new Governor()), //Implementation Address
+                    communityMultisig, //Admin
+                    bytes("") //data field that could have been used for calls, but not necessary
+                )
+            )
+        );
+
+        gov.init(communityMultisig, teamMultisig, 1 weeks);
         // Deploy a Mock funding token for testing.
+
+        //Set gov as the default beacon owner
+        DEFAULT_BEACON_OWNER = address(gov);
+
         token = new ERC20Mock("Mock", "MOCK");
 
         //Deploy a forwarder used to enable metatransactions
@@ -57,7 +85,7 @@ contract E2ETest is E2EModuleRegistry {
         orchestratorImpl = new Orchestrator(address(forwarder));
 
         // Deploy Factories.
-        moduleFactory = new ModuleFactory(address(forwarder));
+        moduleFactory = new ModuleFactory(address(gov), address(forwarder));
 
         orchestratorFactory = new OrchestratorFactory(
             address(orchestratorImpl),

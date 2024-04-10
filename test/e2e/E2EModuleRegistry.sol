@@ -38,7 +38,7 @@ contract E2EModuleRegistry is Test {
     // General Storage and  QOL-constants
     ModuleFactory moduleFactory;
 
-    address constant DEFAULT_BEACON_OWNER = address(0x3BEAC0);
+    address public DEFAULT_BEACON_OWNER = address(0x3BEAC0);
 
     bool constant HAS_NO_DEPENDENCIES = false;
     string[] EMPTY_DEPENDENCY_LIST = new string[](0);
@@ -77,8 +77,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon rebasingFundingManagerBeacon;
 
-    address rebasingFundingManagerBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
         1,
         1,
@@ -100,16 +98,11 @@ contract E2EModuleRegistry is Test {
         rebasingFundingManagerImpl = new RebasingFundingManager();
 
         // Deploy module beacons.
-        vm.prank(rebasingFundingManagerBeaconOwner);
-        rebasingFundingManagerBeacon =
-            new InverterBeacon(rebasingFundingManagerMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(rebasingFundingManagerBeaconOwner);
-        rebasingFundingManagerBeacon.upgradeTo(
+        rebasingFundingManagerBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            rebasingFundingManagerMetadata.majorVersion,
             address(rebasingFundingManagerImpl),
-            rebasingFundingManagerMetadata.minorVersion,
-            false
+            rebasingFundingManagerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -127,9 +120,6 @@ contract E2EModuleRegistry is Test {
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
     InverterBeacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
-
-    address bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner =
-        DEFAULT_BEACON_OWNER;
 
     IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule.Metadata(
@@ -178,17 +168,11 @@ contract E2EModuleRegistry is Test {
             new BancorVirtualSupplyBondingCurveFundingManager();
 
         // Deploy module beacons.
-        vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
         bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon(
-            bancorVirtualSupplyBondingCurveFundingManagerMetadata.majorVersion
-        );
-
-        // Set beacon's implementations.
-        vm.prank(bancorVirtualSupplyBondingCurveFundingManagerBeaconOwner);
-        bancorVirtualSupplyBondingCurveFundingManagerBeacon.upgradeTo(
+            DEFAULT_BEACON_OWNER,
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata.majorVersion,
             address(bancorVirtualSupplyBondingCurveFundingManagerImpl),
-            bancorVirtualSupplyBondingCurveFundingManagerMetadata.minorVersion,
-            false
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -208,8 +192,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon roleAuthorizerBeacon;
 
-    address roleAuthorizerBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
     );
@@ -228,16 +210,11 @@ contract E2EModuleRegistry is Test {
         roleAuthorizerImpl = new RoleAuthorizer();
 
         // Deploy module beacons.
-        vm.prank(roleAuthorizerBeaconOwner);
-        roleAuthorizerBeacon =
-            new InverterBeacon(roleAuthorizerMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(roleAuthorizerBeaconOwner);
-        roleAuthorizerBeacon.upgradeTo(
+        roleAuthorizerBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            roleAuthorizerMetadata.majorVersion,
             address(roleAuthorizerImpl),
-            roleAuthorizerMetadata.minorVersion,
-            false
+            roleAuthorizerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -251,8 +228,6 @@ contract E2EModuleRegistry is Test {
     TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
 
     InverterBeacon tokenRoleAuthorizerBeacon;
-
-    address tokenRoleAuthorizerBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
         1,
@@ -276,16 +251,11 @@ contract E2EModuleRegistry is Test {
         tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer();
 
         // Deploy module beacons.
-        vm.prank(tokenRoleAuthorizerBeaconOwner);
-        tokenRoleAuthorizerBeacon =
-            new InverterBeacon(tokenRoleAuthorizerMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(tokenRoleAuthorizerBeaconOwner);
-        tokenRoleAuthorizerBeacon.upgradeTo(
+        tokenRoleAuthorizerBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            tokenRoleAuthorizerMetadata.majorVersion,
             address(tokenRoleAuthorizerImpl),
-            tokenRoleAuthorizerMetadata.minorVersion,
-            false
+            tokenRoleAuthorizerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -304,8 +274,6 @@ contract E2EModuleRegistry is Test {
     SimplePaymentProcessor simplePaymentProcessorImpl;
 
     InverterBeacon simplePaymentProcessorBeacon;
-
-    address simplePaymentProcessorBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
         1,
@@ -327,16 +295,11 @@ contract E2EModuleRegistry is Test {
         simplePaymentProcessorImpl = new SimplePaymentProcessor();
 
         // Deploy module beacons.
-        vm.prank(simplePaymentProcessorBeaconOwner);
-        simplePaymentProcessorBeacon =
-            new InverterBeacon(simplePaymentProcessorMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(simplePaymentProcessorBeaconOwner);
-        simplePaymentProcessorBeacon.upgradeTo(
+        simplePaymentProcessorBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            simplePaymentProcessorMetadata.majorVersion,
             address(simplePaymentProcessorImpl),
-            simplePaymentProcessorMetadata.minorVersion,
-            false
+            simplePaymentProcessorMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -351,8 +314,6 @@ contract E2EModuleRegistry is Test {
     StreamingPaymentProcessor streamingPaymentProcessorImpl;
 
     InverterBeacon streamingPaymentProcessorBeacon;
-
-    address streamingPaymentProcessorBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
         1,
@@ -374,16 +335,11 @@ contract E2EModuleRegistry is Test {
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
 
         // Deploy module beacons.
-        vm.prank(streamingPaymentProcessorBeaconOwner);
-        streamingPaymentProcessorBeacon =
-            new InverterBeacon(streamingPaymentProcessorMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(streamingPaymentProcessorBeaconOwner);
-        streamingPaymentProcessorBeacon.upgradeTo(
+        streamingPaymentProcessorBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            streamingPaymentProcessorMetadata.majorVersion,
             address(streamingPaymentProcessorImpl),
-            streamingPaymentProcessorMetadata.minorVersion,
-            false
+            streamingPaymentProcessorMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -401,8 +357,6 @@ contract E2EModuleRegistry is Test {
     RecurringPaymentManager recurringPaymentManagerImpl;
 
     InverterBeacon recurringPaymentManagerBeacon;
-
-    address recurringPaymentManagerBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
         1,
@@ -424,16 +378,11 @@ contract E2EModuleRegistry is Test {
         recurringPaymentManagerImpl = new RecurringPaymentManager();
 
         // Deploy module beacons.
-        vm.prank(recurringPaymentManagerBeaconOwner);
-        recurringPaymentManagerBeacon =
-            new InverterBeacon(recurringPaymentManagerMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(recurringPaymentManagerBeaconOwner);
-        recurringPaymentManagerBeacon.upgradeTo(
+        recurringPaymentManagerBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            recurringPaymentManagerMetadata.majorVersion,
             address(recurringPaymentManagerImpl),
-            recurringPaymentManagerMetadata.minorVersion,
-            false
+            recurringPaymentManagerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -448,8 +397,6 @@ contract E2EModuleRegistry is Test {
     BountyManager bountyManagerImpl;
 
     InverterBeacon bountyManagerBeacon;
-
-    address bountyManagerBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
@@ -468,16 +415,11 @@ contract E2EModuleRegistry is Test {
         bountyManagerImpl = new BountyManager();
 
         // Deploy module beacons.
-        vm.prank(bountyManagerBeaconOwner);
-        bountyManagerBeacon =
-            new InverterBeacon(bountyManagerMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(bountyManagerBeaconOwner);
-        bountyManagerBeacon.upgradeTo(
+        bountyManagerBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            bountyManagerMetadata.majorVersion,
             address(bountyManagerImpl),
-            bountyManagerMetadata.minorVersion,
-            false
+            bountyManagerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -494,8 +436,6 @@ contract E2EModuleRegistry is Test {
     SingleVoteGovernor singleVoteGovernorImpl;
 
     InverterBeacon singleVoteGovernorBeacon;
-
-    address singleVoteGovernorBeaconOwner = DEFAULT_BEACON_OWNER;
 
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
         1,
@@ -521,16 +461,11 @@ contract E2EModuleRegistry is Test {
         singleVoteGovernorImpl = new SingleVoteGovernor();
 
         // Deploy module beacons.
-        vm.prank(singleVoteGovernorBeaconOwner);
-        singleVoteGovernorBeacon =
-            new InverterBeacon(singleVoteGovernorMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(singleVoteGovernorBeaconOwner);
-        singleVoteGovernorBeacon.upgradeTo(
+        singleVoteGovernorBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            singleVoteGovernorMetadata.majorVersion,
             address(singleVoteGovernorImpl),
-            singleVoteGovernorMetadata.minorVersion,
-            false
+            singleVoteGovernorMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.
@@ -546,8 +481,6 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon metadataManagerBeacon;
 
-    address metadataManagerBeaconOwner = DEFAULT_BEACON_OWNER;
-
     IModule.Metadata metadataManagerMetadata = IModule.Metadata(
         1, 1, "https://github.com/inverter/metadata-manager", "MetadataManager"
     );
@@ -557,16 +490,11 @@ contract E2EModuleRegistry is Test {
         metadataManagerImpl = new MetadataManager();
 
         // Deploy module beacons.
-        vm.prank(metadataManagerBeaconOwner);
-        metadataManagerBeacon =
-            new InverterBeacon(metadataManagerMetadata.majorVersion);
-
-        // Set beacon's implementations.
-        vm.prank(metadataManagerBeaconOwner);
-        metadataManagerBeacon.upgradeTo(
+        metadataManagerBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            metadataManagerMetadata.majorVersion,
             address(metadataManagerImpl),
-            metadataManagerMetadata.minorVersion,
-            false
+            metadataManagerMetadata.minorVersion
         );
 
         // Register modules at moduleFactory.

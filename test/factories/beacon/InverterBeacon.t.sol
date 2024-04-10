@@ -29,6 +29,9 @@ contract InverterBeaconTest is Test {
     // SuT
     InverterBeaconAccessMock beacon;
 
+    ModuleImplementationV1Mock possibleImplementation =
+        new ModuleImplementationV1Mock();
+
     // Events copied from SuT
     event Upgraded(address indexed implementation, uint newMinorVersion);
 
@@ -37,11 +40,14 @@ contract InverterBeaconTest is Test {
     event ShutdownReversed();
 
     function setUp() public {
-        beacon = new InverterBeaconAccessMock(0);
+        beacon = new InverterBeaconAccessMock(
+            address(this), 0, address(possibleImplementation), 0
+        );
     }
 
     function testDeploymentInvariants() public {
-        assertEq(beacon.implementation(), address(0));
+        assertEq(beacon.owner(), address(this));
+        assertEq(beacon.implementation(), address(possibleImplementation));
 
         // Check that orchestrator's dependencies correctly initialized.
         // Ownable2Step:
@@ -56,28 +62,6 @@ contract InverterBeaconTest is Test {
 
     //--------------------------------------------------------------------------------
     // Test: modifier
-
-    function testValidNewMinorVersion(
-        uint initialMinorVersion,
-        uint newMinorVersion
-    ) public {
-        //generate implementation address
-        address implementation = address(new ModuleImplementationV1Mock());
-
-        //Upgrade to an initial Version
-        if (initialMinorVersion != 0) {
-            beacon.upgradeTo(implementation, initialMinorVersion, false);
-        }
-
-        if (newMinorVersion <= initialMinorVersion) {
-            vm.expectRevert(
-                IInverterBeacon
-                    .Beacon__InvalidImplementationMinorVersion
-                    .selector
-            );
-        }
-        beacon.upgradeTo(implementation, newMinorVersion, false);
-    }
 
     function testValidImplementation(address newImplementation) public {
         if (!(newImplementation.code.length > 0)) {
@@ -98,7 +82,6 @@ contract InverterBeaconTest is Test {
         uint newMinorVersion,
         bool overrideShutdown
     ) public {
-        vm.assume(oldMinorVersion < newMinorVersion);
         //Turn off setImplementation
         beacon.flipUseOriginal_setImplementation();
 

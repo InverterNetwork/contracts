@@ -64,10 +64,14 @@ contract ModuleFactory is
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         {IInverterBeacon} instance.
+    ///         IInverterBeacon instance and if the owner of the beacon
+    ///         is same as the governor of this contract.
     modifier validBeacon(IInverterBeacon beacon) {
         // Revert if beacon's implementation is zero address.
-        if (beacon.implementation() == address(0)) {
+        if (
+            beacon.implementation() == address(0)
+                || Ownable(address(beacon)).owner() != governor
+        ) {
             revert ModuleFactory__InvalidInverterBeacon();
         }
         _;
@@ -76,6 +80,9 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @inheritdoc IModuleFactory
+    address public governor;
+
     /// @dev Mapping of metadata identifier to {IInverterBeacon} instance.
     /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon}
     mapping(bytes32 => IInverterBeacon) private _beacons;
@@ -83,11 +90,11 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(address _trustedForwarder)
+    constructor(address _governor, address _trustedForwarder)
         ERC2771Context(_trustedForwarder)
         Ownable(_msgSender())
     {
-        // NO-OP
+        governor = _governor;
     }
 
     //--------------------------------------------------------------------------
