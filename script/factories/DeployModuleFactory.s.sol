@@ -23,7 +23,7 @@ contract DeployModuleFactory is Script {
     function run() external returns (address) {
         // Read deployment settings from environment variables.
 
-        address governor = vm.envAddress("GOVERNANT_ADDRESS");
+        address governor = vm.envAddress("GOVERNOR_ADDRESS");
         address forwarder = vm.envAddress("FORWARDER_ADDRESS");
         // Check settings.
 
