@@ -28,6 +28,8 @@ interface IERC20Issuance {
     // Errors
     error IERC20Issuance__CallerIsNotMinter();
 
+    error IERC20Issuance__MintExceedsSupplyCap();
+
     /// @notice Sets the address of the minter.
     /// @param _minter The address of the minter.
     function setMinter(address _minter) external;

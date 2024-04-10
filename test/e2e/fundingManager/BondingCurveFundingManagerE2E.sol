@@ -6,6 +6,8 @@ import {
     E2ETest, IOrchestratorFactory, IOrchestrator
 } from "test/e2e/E2ETest.sol";
 
+import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
+
 //SuT
 import {
     BancorVirtualSupplyBondingCurveFundingManager,
@@ -16,6 +18,8 @@ import {
 contract BondingCurveFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+
+    ERC20IssuanceMock issuanceToken;
 
     address alice = address(0xA11CE);
     address bob = address(0x606);
@@ -35,13 +39,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // FundingManager
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
-        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
-            issuanceToken = IBancorVirtualSupplyBondingCurveFundingManager
-                .IssuanceToken({
-                name: bytes32(abi.encodePacked("Bonding Curve Token")),
-                symbol: bytes32(abi.encodePacked("BCT")),
-                decimals: uint8(18)
-            });
+        issuanceToken = new ERC20IssuanceMock();
+        issuanceToken.init("Bonding Curve Token", "BCT", type(uint).max, 18);
 
         //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 
@@ -63,7 +62,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         moduleConfigurations.push(
             IOrchestratorFactory.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(issuanceToken, bc_properties, token),
+                abi.encode(address(issuanceToken), bc_properties, token),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
         );
@@ -115,6 +114,9 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             address(orchestrator.fundingManager())
         );
 
+        // We allow the FundingManager to mint tokens
+        issuanceToken.setMinter(address(fundingManager));
+
         // IMPORTANT
         // =========
         // Due to how the underlying rebase mechanism works, it is necessary
@@ -141,7 +143,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
 
             // After the deposit, alice received some amount of receipt tokens
             // from the fundingmanager.
-            assertTrue(fundingManager.balanceOf(alice) > 0);
+            assertTrue(issuanceToken.balanceOf(alice) > 0);
         }
         vm.stopPrank();
         buf_minAmountOut = fundingManager.calculatePurchaseReturn(5000e18);
@@ -157,7 +159,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
 
             // After the deposit, bob received some amount of receipt tokens
             // from the fundingmanager.
-            assertTrue(fundingManager.balanceOf(bob) > 0);
+            assertTrue(issuanceToken.balanceOf(bob) > 0);
         }
         vm.stopPrank();
 
@@ -169,34 +171,34 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         fundingManager.setVirtualCollateralSupply(halfOfDeposit);
 
         buf_minAmountOut =
-            fundingManager.calculateSaleReturn(fundingManager.balanceOf(bob));
+            fundingManager.calculateSaleReturn(issuanceToken.balanceOf(bob));
 
         // Bob is also able to withdraw half of his funded tokens.
         vm.startPrank(bob);
         {
             // Approve tokens to fundingmanager.
-            fundingManager.approve(
-                address(fundingManager), fundingManager.balanceOf(bob)
+            issuanceToken.approve(
+                address(fundingManager), issuanceToken.balanceOf(bob)
             );
 
-            fundingManager.sell(fundingManager.balanceOf(bob), buf_minAmountOut);
+            fundingManager.sell(issuanceToken.balanceOf(bob), buf_minAmountOut);
             assertApproxEqRel(token.balanceOf(bob), 2500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
 
         // Alice is now able to withdraw half her funded tokens.
         buf_minAmountOut =
-            fundingManager.calculateSaleReturn(fundingManager.balanceOf(alice));
+            fundingManager.calculateSaleReturn(issuanceToken.balanceOf(alice));
 
         vm.startPrank(alice);
         {
             // Approve tokens to fundingmanager.
-            fundingManager.approve(
-                address(fundingManager), fundingManager.balanceOf(alice)
+            issuanceToken.approve(
+                address(fundingManager), issuanceToken.balanceOf(alice)
             );
 
             fundingManager.sell(
-                fundingManager.balanceOf(alice), buf_minAmountOut
+                issuanceToken.balanceOf(alice), buf_minAmountOut
             );
             assertApproxEqRel(token.balanceOf(alice), 500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }
@@ -205,8 +207,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // After redeeming all their fundingmanager function tokens, the tokens got
         // burned.
         // Half of the deposited funds (the ones we set to "ignore" by modifying the virtual supply) are still in the manager
-        assertEq(fundingManager.balanceOf(alice), 0);
-        assertEq(fundingManager.balanceOf(bob), 0);
+        assertEq(issuanceToken.balanceOf(alice), 0);
+        assertEq(issuanceToken.balanceOf(bob), 0);
         assertApproxEqRel(
             token.balanceOf(address(fundingManager)), halfOfDeposit, 0.00001e18
         );

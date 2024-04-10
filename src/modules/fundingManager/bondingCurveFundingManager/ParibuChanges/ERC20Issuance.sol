@@ -62,7 +62,7 @@ contract ERC20Issuance is
     /// @param _amount The amount of tokens to mint.
     function mint(address _to, uint _amount) external onlyMinter {
         if (totalSupply() + _amount > MAX_SUPPLY) {
-            revert("ERC20Issuance: supply cap exceeded");
+            revert IERC20Issuance__MintExceedsSupplyCap();
         }
         _mint(_to, _amount);
     }
