@@ -21,25 +21,25 @@ interface IGovernor {
     // Errors
 
     /// @notice The given address is invalid
-    error Governance__InvalidAddress(address adr);
+    error Govenor__InvalidAddress(address adr);
 
     /// @notice The given amount is invalid
-    error Governance__InvalidTimelockPeriod(uint amt);
+    error Govenor__InvalidTimelockPeriod(uint amt);
 
     /// @notice The given target address is not accessible
-    error Governance__BeaconNotAccessible(address target);
+    error Govenor__BeaconNotAccessible(address target);
 
     /// @notice This function can only be accessed by the CommunityMultisig or TeamMultisig
-    error Governance__OnlyCommunityOrTeamMultisig();
+    error Govenor__OnlyCommunityOrTeamMultisig();
 
     /// @notice The timelock period needed for the beacon to be upgraded has not been exceeded yet
-    error Governance__TimelockPeriodNotExceeded();
+    error Govenor__TimelockPeriodNotExceeded();
 
     /// @notice This Upgrade process for this beacon has not yet been started
-    error Governance__UpgradeProcessNotStarted();
+    error Govenor__UpgradeProcessNotStarted();
 
     /// @notice The call to the target contract has failed
-    error Governance__CallToTargetContractFailed();
+    error Govenor__CallToTargetContractFailed();
 
     //--------------------------------------------------------------------------
     // Events
