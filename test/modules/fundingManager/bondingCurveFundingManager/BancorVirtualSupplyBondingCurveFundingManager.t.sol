@@ -297,7 +297,14 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint amount
     ) public {
         // Setup
-        amount = bound(amount, 2, 1e38); // see comment in testBuyOrderWithZeroFee
+        amount = _bound_for_decimal_conversion(
+            amount,
+            1,
+            1e38,
+            bondingCurveFundingManager.call_collateralTokenDecimals(),
+            issuanceToken.decimals()
+        );
+        // see comment in testBuyOrderWithZeroFee
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amount)
         );
