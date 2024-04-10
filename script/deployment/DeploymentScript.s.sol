@@ -393,6 +393,7 @@ contract DeploymentScript is Script {
         );
         recurringPaymentManagerBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
+            address(governor),
             recurringPaymentManager,
             moduleFactory,
             recurringPaymentManagerMetadata
@@ -401,10 +402,16 @@ contract DeploymentScript is Script {
         // Utils
         singleVoteGovernorBeacon = deployAndSetUpBeacon
             .deployAndRegisterInFactory(
-            singleVoteGovernor, moduleFactory, singleVoteGovernorMetadata
+            address(governor),
+            singleVoteGovernor,
+            moduleFactory,
+            singleVoteGovernorMetadata
         );
         metadataManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
-            metadataManager, moduleFactory, metadataManagerMetadata
+            address(governor),
+            metadataManager,
+            moduleFactory,
+            metadataManagerMetadata
         );
 
         return (orchestratorFactory);
