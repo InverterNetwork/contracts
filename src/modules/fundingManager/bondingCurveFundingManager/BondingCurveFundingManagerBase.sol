@@ -121,6 +121,14 @@ abstract contract BondingCurveFundingManagerBase is
     }
 
     //--------------------------------------------------------------------------
+    // Public Functions
+
+    /// @notice Returns the address of the issuance token
+    function getIssuanceToken() public view returns (address) {
+        return address(issuanceToken);
+    }
+
+    //--------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IBondingCurveFundingManagerBase

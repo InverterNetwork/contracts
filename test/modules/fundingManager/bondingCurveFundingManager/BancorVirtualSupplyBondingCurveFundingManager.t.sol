@@ -137,7 +137,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         issuanceToken = new ERC20IssuanceMock();
         issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
 
-
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
         bc_properties.reserveRatioForSelling = RESERVE_RATIO_FOR_SELLING;
@@ -157,7 +156,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
-        
+
         issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         // Init Module
@@ -399,9 +398,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
         emit Transfer(buyer, address(bondingCurveFundingManager), amount);
-        vm.expectEmit(
-            true, true, true, true, address(issuanceToken)
-        );
+        vm.expectEmit(true, true, true, true, address(issuanceToken));
         emit Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
@@ -478,9 +475,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
         emit Transfer(buyer, address(bondingCurveFundingManager), amount);
-        vm.expectEmit(
-            true, true, true, true, address(issuanceToken)
-        );
+        vm.expectEmit(true, true, true, true, address(issuanceToken));
         emit Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
@@ -826,10 +821,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         }
         vm.stopPrank();
 
-        uint decimalConverted_userSellAmount = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            userSellAmount, _token.decimals(), 18
-        );
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
@@ -1518,9 +1509,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    // TODO: change to _setIssuanceToken and control for decimals there
-
-    /* Test _setDecimals function
+    /* Test _setIssuanceToken function
         ├── When decimal is set to lower than seven
         |   └── it should revert
         ├── When decimal is set to more than the collateral decimals
@@ -1528,38 +1517,84 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         └── when decimal is between seven and the the collateral decimals
             └── it should succeed
             */
-    /*
-    function testSetDecimals_FailsIfLowerThanSeven(uint8 _newDecimals) public {
+
+    function testSetIssuanceToken_FailsIfTokenDecimalsLowerThanSeven(
+        uint _newMaxSupply,
+        uint8 _newDecimals
+    ) public {
         vm.assume(_newDecimals < 7);
+
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        newIssuanceToken.init(_name, _symbol, _newMaxSupply, _newDecimals);
+
         vm.expectRevert(
             IBancorVirtualSupplyBondingCurveFundingManager
                 .BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal
                 .selector
         );
         // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
     }
 
-    function testSetDecimals_FailsIfLowerThanCollateralDecimals(
+    function testSetIssuanceToken_FailsIfLowerThanCollateralDecimals(
+        uint _newMaxSupply,
         uint8 _newDecimals
     ) public {
         vm.assume(_newDecimals < _token.decimals());
+
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        newIssuanceToken.init(_name, _symbol, _newMaxSupply, _newDecimals);
+
         vm.expectRevert(
             IBancorVirtualSupplyBondingCurveFundingManager
                 .BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal
                 .selector
         );
         // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
     }
 
-    function testSetDecimals(uint8 _newDecimals) public {
+    function testSetIssuanceToken(uint _newMaxSupply, uint8 _newDecimals)
+        public
+    {
         vm.assume(_newDecimals >= 7 && _newDecimals >= _token.decimals());
-        // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
 
-        assertEq(issuanceToken.decimals(), _newDecimals);
-    } */
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        newIssuanceToken.init(_name, _symbol, _newMaxSupply, _newDecimals);
+
+        // No authentication since it's an internal function exposed by the mock contract
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
+
+        ERC20IssuanceMock issuanceTokenAfter =
+            ERC20IssuanceMock(bondingCurveFundingManager.getIssuanceToken());
+
+        assertEq(issuanceTokenAfter.name(), _name);
+        assertEq(issuanceTokenAfter.symbol(), _symbol);
+        assertEq(issuanceTokenAfter.decimals(), _newDecimals);
+        assertEq(issuanceTokenAfter.MAX_SUPPLY(), _newMaxSupply);
+
+        // we also check the decimals have been cached correctly
+
+        assertEq(
+            bondingCurveFundingManager.call_issuanceTokenDecimals(),
+            _newDecimals
+        );
+    }
 
     /* Test _staticPricePPM function
         ├── When calling with reserve ratio for selling without fuzzing

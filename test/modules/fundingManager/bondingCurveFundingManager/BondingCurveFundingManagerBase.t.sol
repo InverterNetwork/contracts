@@ -477,19 +477,35 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_feeAmount, feeAmount);
     }
 
-    // TODO: rewrite to test setIssuanceToken, while making sure that decimals are cached correctly too
-    /* Test _setDecimals function
+    /* Test _setIssuanceToken function
        
         └── when setting decimals
             └── it should succeed
     */
-    /*
 
-    function testSetDecimals(uint8 _newDecimals) public {
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
+    function testSetIssuanceToken(uint _newMaxSupply, uint8 _newDecimals)
+        public
+    {
+        vm.assume(_newDecimals > 0);
 
-        assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
-    } */
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        newIssuanceToken.init(_name, _symbol, _newMaxSupply, _newDecimals);
+
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
+
+        ERC20IssuanceMock issuanceTokenAfter =
+            ERC20IssuanceMock(bondingCurveFundingManager.getIssuanceToken());
+
+        assertEq(issuanceTokenAfter.name(), _name);
+        assertEq(issuanceTokenAfter.symbol(), _symbol);
+        assertEq(issuanceTokenAfter.decimals(), _newDecimals);
+        assertEq(issuanceTokenAfter.MAX_SUPPLY(), _newMaxSupply);
+    }
 
     // Test _issueTokens function
     // this is tested in the buy tests
