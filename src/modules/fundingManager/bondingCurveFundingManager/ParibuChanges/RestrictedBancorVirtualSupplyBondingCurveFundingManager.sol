@@ -13,7 +13,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
     BancorVirtualSupplyBondingCurveFundingManager
 {
     //Minter/Burner Role
-    bytes32 public constant CURVE_USER_ROLE = "CURVE_USER";
+    bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     //--------------------------------------------------------------------------
     // Public Functions
@@ -34,7 +34,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
         override(BancorVirtualSupplyBondingCurveFundingManager)
         validReceiver(_receiver)
         buyingIsEnabled
-        onlyModuleRole(CURVE_USER_ROLE)
+        onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
         _virtualBuyOrder(_receiver, _depositAmount, _minAmountOut);
     }
@@ -53,7 +53,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
         external
         override(BancorVirtualSupplyBondingCurveFundingManager)
         buyingIsEnabled
-        onlyModuleRole(CURVE_USER_ROLE)
+        onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
         _virtualBuyOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
@@ -73,7 +73,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
         override(BancorVirtualSupplyBondingCurveFundingManager)
         validReceiver(_receiver)
         sellingIsEnabled
-        onlyModuleRole(CURVE_USER_ROLE)
+        onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
         _virtualSellOrder(_receiver, _depositAmount, _minAmountOut);
     }
@@ -92,7 +92,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
         external
         override(BancorVirtualSupplyBondingCurveFundingManager)
         sellingIsEnabled
-        onlyModuleRole(CURVE_USER_ROLE)
+        onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
         _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
@@ -101,7 +101,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
     function mintIssuanceTokenTo(address _receiver, uint _amount)
         external
         override(BancorVirtualSupplyBondingCurveFundingManager)
-        onlyModuleRole(CURVE_USER_ROLE)
+        onlyModuleRole(CURVE_INTERACTION_ROLE)
         validReceiver(_receiver)
     {
         _mint(_receiver, _amount);
