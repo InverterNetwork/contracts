@@ -81,10 +81,14 @@ interface IModuleManager is IERC2771Context {
     // ERC2771 Context Upgradeable
     // @dev We imitate here the EIP2771 Standard to enable metatransactions
 
-    // @notice Returns the trusted forwarder for metatransactions
+    // @notice Returns wether the given address is the trusted forwarder or not
     // @dev Exposes the ERC2771 isTrusted Forwarder
     function isTrustedForwarder(address forwarder)
         external
         view
         returns (bool);
+
+    // @notice Returns the trusted forwarder for metatransactions
+    // @dev Exposes the ERC2771 isTrusted Forwarder
+    function trustedForwarder() external view returns (address);
 }

@@ -5,7 +5,10 @@ pragma solidity 0.8.23;
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+import {
+    ERC2771ContextUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
@@ -227,10 +230,10 @@ contract RoleAuthorizer is
         internal
         view
         virtual
-        override(ContextUpgradeable, Module)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (address sender)
     {
-        return super._msgSender();
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// Needs to be overriden, because they are imported via the AccessControlEnumerableUpgradeable as well
@@ -238,9 +241,19 @@ contract RoleAuthorizer is
         internal
         view
         virtual
-        override(ContextUpgradeable, Module)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (bytes calldata)
     {
-        return super._msgData();
+        return ERC2771ContextUpgradeable._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (uint)
+    {
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }
