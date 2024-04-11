@@ -91,6 +91,46 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         _setTokenDecimals(_newDecimals);
     }
 
+    function call_processProtocolFeeViaTransfer(
+        address _treasury,
+        IERC20 _token,
+        uint _feeAmount
+    ) external {
+        _processProtocolFeeViaTransfer(_treasury, _token, _feeAmount);
+    }
+
+    function call_processProtocolFeeViaMinting(
+        address _treasury,
+        uint _feeAmount
+    ) external {
+        _processProtocolFeeViaMinting(_treasury, _feeAmount);
+    }
+
+    function call_getBuyFeesAndTreasuryAddresses()
+        external
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        )
+    {
+        return _getBuyFeesAndTreasuryAddresses();
+    }
+
+    function call_calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _projectFee
+    )
+        external
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount)
+    {
+        return
+            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _projectFee);
+    }
+
     //--------------------------------------------------------------------------
     // Will be removed once we update base fundingManager
 

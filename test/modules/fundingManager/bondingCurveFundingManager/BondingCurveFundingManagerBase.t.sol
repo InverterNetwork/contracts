@@ -7,6 +7,7 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
@@ -36,6 +37,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     address owner_address = makeAddr("alice");
     address non_owner_address = makeAddr("bob");
+    address treasury = makeAddr("treasury");
 
     event BuyingEnabled();
     event BuyingDisabled();
@@ -45,6 +47,12 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint indexed depositAmount,
         uint indexed receivedAmount,
         address buyer
+    );
+    event ProtocolFeeTransferred(
+        address indexed token, address indexed treasury, uint indexed feeAmount
+    );
+    event ProtocolFeeMinted(
+        address indexed token, address indexed treasury, uint indexed feeAmount
     );
 
     function setUp() public {
@@ -223,18 +231,23 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         └── when the deposit amount is not 0
                 ├── when the return amount is lower than minimum expected amount out
                 │       └── it should revert 
-                ├── when the fee is higher than 0
+                ├── when the project fee is higher than 0
                 │       └── it should substract the fee from the deposit amount
                 │               ├── it should pull the buy amount from the caller  
                 │               ├── it should take the fee out from the pulled amount 
                 │               ├── it should determine the mint amount of tokens to mint from the rest
                 │               ├── it should mint the tokens to the receiver 
                 │               └── it should emit an event?  
-                └── when the fee is 0
+                ├── when the project fee is 0
+                │               ├── it should pull the buy amount from the caller  
+                │               ├── it should determine the mint amount of tokens to mint 
+                │               ├── it should mint the tokens to the receiver     
+                │               └── it should emit an event?  
+                └── when the protocol collateral fee is higher than 0
                                 ├── it should pull the buy amount from the caller  
                                 ├── it should determine the mint amount of tokens to mint 
                                 ├── it should mint the tokens to the receiver     
-                                └── it should emit an event?    
+                                └── it should emit an event?  
         
     */
     function testBuyOrder_FailsIfDepositAmountIsZero() public {
@@ -342,6 +355,48 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(bondingCurveFundingManager.balanceOf(buyer), amountMinusFee);
     }
+
+    // Protocol fee for collateral > 0
+    // Protocol fee for issuance == 0
+    // Project fee == 0
+    function test_buyOrderWithProtocolFeeCase1Works(
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _projectFee
+    ) public {
+        vm.assume(_issuanceFee == 0);
+        vm.assume(_projectFee == 0);
+        _collateralFee = bound(_collateralFee, 1, bondingCurveFundingManager.call_BPS());
+    }
+
+    // Protocol fee for collateral > 0
+    // Protocol fee for issuance == 0
+    // Project fee > 0
+    function test_buyOrderWithProtocolFeeCase1WithProjectFeeWorks(
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _projectFee
+    ) public {}
+
+    // Protocol fee for collateral > 0
+    // Protocol fee for issuance > 0
+    // Project fee == 0
+    function test_buyOrderWithProtocolFeeCase2Works() public {}
+
+    // Protocol fee for collateral > 0
+    // Protocol fee for issuance > 0
+    // Project fee > 0
+    function test_buyOrderWithProtocolFeeCase2WithProjectFeeWorks() public {}
+
+    // Protocol fee for collateral == 0
+    // Protocol fee for issuance > 0
+    // Project fee == 0
+    function test_buyOrderWithProtocolFeeCase3Works() public {}
+
+    // Protocol fee for collateral == 0
+    // Protocol fee for issuance > 0
+    // Project fee > 0
+    function test_buyOrderWithProtocolFeeCase3WithProjectFeeWorks() public {}
 
     /* Test openBuy and _openBuy function
         ├── when caller is not the Orchestrator owner
@@ -475,6 +530,165 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_amountMinusFee, amountMinusFee);
         assertEq(_feeAmount, feeAmount);
     }
+
+    /* Test _getBuyFeesAndTreasuryAddresses() function
+        └── When the function _getBuyFeesAndTreasuryAddresses() is called
+            └── Then it should return the correct collateral treasury address
+                └── And it should return the correct issuance treasury address
+                    └── And it should return the correct collateral buy fee percentage
+                        └── And it should return the correct issuance buy fee percentage
+
+    */
+
+    // function testInternalGetBuyFeesAndTreasuryAddresses_works(
+    //     address _collateralTreasury,
+    //     address _issuanceTreasury,
+    //     uint _collateralFee,
+    //     uint _issuanceFee
+    // ) public {
+    //     uint _bps = bondingCurveFundingManager.call_BPS(); // TODO: check if upper limit for fee manager is different
+    //     vm.assume(collateralFee <= _bps && issuanceFee <= _bps);
+    //     vm.assume(
+    //         collateralTreasury != address(0) && issuanceTreasury != address(0)
+    //     );
+
+    //     // TODO: Set values in fee manager. Not sure how to signal to the fee manager if the value should be stored as collateral or issuance fee
+    //     // bytes4 buyFeeFunctionSelector = bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")));
+    //     // bytes4[2]  _functions = [buyFeeFunctionSelector, buyFeeFunctionSelector];
+    //     // uint[2] _values = [collateralFee, issuanceFee];
+    //     // feeManager.setWorkflowFunctionFee(address(_orchestrator), _functions, _values );
+
+    //     (
+    //         address collateralTreasury,
+    //         address issuanceTreasury,
+    //         uint collateralFee,
+    //         uint issuanceFee
+    //     ) = bondingCurveFundingManager.call_getBuyFeesAndTreasuryAddresses();
+
+    //     assertEq(collateralTreasury, _collateralTreasury);
+    //     assertEq(issuanceTreasury, _issuanceTreasury);
+    //     assertEq(collateralFee, _collateralFee);
+    //     assertEq(issuanceFee, _issuanceFee);
+    // }
+
+    /* Test _processProtocolFeeViaMinting() function
+        ├── Given the fee amount > 0
+        │   └── And the treasury address is invalid
+        │       └── When the function _processProtocolFeeViaMinting() is called
+        │           └── Then the the transaction should revert
+        ├── Given the feeAmount == 0
+        │   └── When the function _processProtocolFeeViaMinting() is called
+        │       └── Then no amount of token should be transferred
+        └── Given the feeAmount > 0
+            └── And the treasury address is valid
+                └── When the function _processProtocolFeeViaMinting() is called
+                    └── Then the _feeAmount should be transferred to treasury address
+                        └── And an event should be emitted
+    */
+
+    function testInternalProcessProtocolFeeViaMinting_failsGivenTreasuryAddressInvalid(
+        uint _feeAmount
+    ) public {
+        vm.assume(_feeAmount > 0);
+        address _treasury = address(0);
+
+        vm.expectRevert(
+            IBondingCurveFundingManagerBase
+                .BondingCurveFundingManagerBase__InvalidRecipient
+                .selector
+        );
+        bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
+            _treasury, IERC20(_token), _feeAmount
+        );
+    }
+
+    function testInternalProcessProtocolFeeViaMinting_worksGivenFeeAmountIsZero(
+        uint _feeAmount
+    ) public {
+        vm.assume(_feeAmount == 0);
+
+        // Get balance before transfer
+        uint balanceBeforeTransfer = _token.balanceOf(treasury);
+        // Validate treasury has not tokens
+        assertEq(balanceBeforeTransfer, 0);
+        // Function call
+        bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
+            treasury, IERC20(_token), _feeAmount
+        );
+        // Get balance after transfer
+        uint balanceAfterTransfer = _token.balanceOf(treasury);
+
+        // Assert eq
+        assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
+    }
+
+    function testInternalProcessProtocolFeeViaMinting_worksGivenFeeAmountIsNotZero(
+        uint _feeAmount
+    ) public {
+        _feeAmount = bound(_feeAmount, 1, type(uint).max);
+        _token.mint(address(bondingCurveFundingManager), _feeAmount);
+        // Get balance before transfer
+        uint balanceBeforeTransfer = _token.balanceOf(treasury);
+        // Validate treasury has not tokens
+        assertEq(balanceBeforeTransfer, 0);
+
+        // Expect event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit ProtocolFeeTransferred(address(_token), treasury, _feeAmount);
+        // Function call
+        bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
+            treasury, IERC20(_token), _feeAmount
+        );
+
+        // Get balance after transfer
+        uint balanceAfterTransfer = _token.balanceOf(treasury);
+        // Assert eq
+        assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
+    }
+
+    /* Test _processProtocolFeeViaTransfer() function
+        ├── Given the feeAmount == 0
+        │   └── When the function _processProtocolFeeViaTransfer() is called
+        │       └── Then no amount of token should be transferred
+        ├── Given the fee amount > 0
+        │   └── And the treasury address is invalid
+        │       └── When the function _processProtocolFeeViaTransfer() is called
+        │           └── Then the the transaction should revert
+        └── Given the feeAmount > 0
+            └── And the treasury address is valid
+                └── When the function _processProtocolFeeViaTransfer() is called
+                    └── Then the _feeAmount should be transferred to treasury address
+    */
+   // TODO: write test
+
+    /* Test _calculateNetAndSplitFees() function
+        ├── Given the (protocol fee + project fee) == 0
+        │   └── When the function _calculateNetAndSplitFees() is called
+        │       └── Then it should return totalAmount as netAmount
+        │           └── And it should return 0 for protocol and project fee amount
+        ├── Given the protocol fee == 0
+        │   └── And the project fee  > 0
+        │       └── When the function _calculateNetAndSplitFees() is called
+        │           └── Then it should return the correct netAmount
+        │               ├── And it should return protocolFeeAmount as 0
+        │               └── And it should return the correct projectFeeAmount
+        ├── Given the protocol fee > 0
+        │   └── And the project fee == 0
+        │       └── When the function _calculateNetAndSplitFees() is called
+        │           └── Then it should return the correct netAmount
+        │               ├── And it should return the correct protocolFeeAmount
+        │               └── And it should return the projectFeeAmount == 0
+        └── Given the protocol fee > 0
+            └── And the project fee > 0
+                └── When the function _calculateNetAndSplitFees() is called
+                    └── Then it should return the correct netAmount
+                        ├── And it should return the correct protocolFeeAmount
+                        └── And it should return the correct projectFeeAmount
+    */
+
+   // TODO: Write test
 
     /* Test _setDecimals function
        

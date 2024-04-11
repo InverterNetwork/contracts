@@ -104,6 +104,18 @@ contract RedeemingBondingCurveFundingManagerMock is
         return BPS;
     }
 
+    function call_getSellFeesAndTreasuryAddresses()
+        external
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        )
+    {
+        return _getSellFeesAndTreasuryAddresses();
+    }
+
     //--------------------------------------------------------------------------
     // Will be removed once we update base fundingManager
 

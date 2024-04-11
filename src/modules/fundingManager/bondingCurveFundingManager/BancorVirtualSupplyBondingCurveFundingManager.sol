@@ -334,12 +334,12 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
         // Calculate redeem amount from formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-        
+
         // Deduct protocol and project sell fee from collateral, if applicable
         (redeemAmount, /* feeAmount */ ) = _calculateNetAmountAndFee(
             redeemAmount, (collateralSellFeePercentage + sellFee)
         );
-        
+
         // Return redeem amount
         return redeemAmount;
     }
