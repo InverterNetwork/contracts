@@ -178,4 +178,23 @@ contract AuthorizerMock is IAuthorizer, Module {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
         revokeRole(roleID, target);
     }
+
+    //--------------------------------------------------------------------------
+    // Functions left empty
+
+    function grantRoleFromModuleBatched(
+        bytes32 role,
+        address[] calldata targets
+    ) external {}
+
+    function revokeRoleFromModuleBatched(
+        bytes32 role,
+        address[] calldata targets
+    ) external {}
+
+    function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
+        external{}
+
+    function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
+        external{}
 }
