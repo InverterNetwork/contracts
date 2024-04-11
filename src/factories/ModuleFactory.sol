@@ -109,18 +109,6 @@ contract ModuleFactory is
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        // Note that a beacon's implementation address can not be the zero
-        // address when the beacon is registered. The beacon must have been
-        // updated since then.
-        // As a zero address implementation indicates an unrecoverable state
-        // and faulty update from the beacon's owner, the beacon should be
-        // considered dangerous. We therefore make sure that nothing else can
-        // happen in this tx and burn all remaining gas.
-        // Note that while the inverter's beacon implementation forbids an
-        // implementation update to non-contract addresses, we can not ensure
-        // a module does not use a different beacon implementation.
-        assert(beacon.implementation() != address(0));
-
         address implementation = address(new InverterBeaconProxy(beacon));
 
         IModule(implementation).init(orchestrator, metadata, configData);
