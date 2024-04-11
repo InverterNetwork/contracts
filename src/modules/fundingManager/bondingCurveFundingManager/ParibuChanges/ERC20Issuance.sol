@@ -27,7 +27,7 @@ contract ERC20Issuance is
 {
     // State Variables
     address public allowedMinter;
-    uint public constant MAX_SUPPLY;
+    uint public MAX_SUPPLY;
 
     //------------------------------------------------------------------------------------
     // Modifiers
