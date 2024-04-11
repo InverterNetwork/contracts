@@ -25,13 +25,11 @@ contract ERC20Issuance is
     ERC20Upgradeable,
     OwnableUpgradeable
 {
-    // TODO: hacky, make it decent looking
-
     // State Variables
     address public allowedMinter;
+    uint public constant MAX_SUPPLY;
 
-    uint public MAX_SUPPLY;
-
+    //------------------------------------------------------------------------------------
     // Modifiers
     modifier onlyMinter() {
         if (_msgSender() != allowedMinter) {
@@ -39,6 +37,9 @@ contract ERC20Issuance is
         }
         _;
     }
+
+    //------------------------------------------------------------------------------------
+    // Initializer
 
     function init(string memory name_, string memory symbol_, uint _MAX_SUPPLY)
         external
@@ -51,15 +52,15 @@ contract ERC20Issuance is
         MAX_SUPPLY = _MAX_SUPPLY;
     }
 
-    /// @notice Sets the address of the minter.
-    /// @param _minter The address of the minter.
+    //------------------------------------------------------------------------------------
+    // External Functions
+
+    /// @inheritdoc IERC20Issuance
     function setMinter(address _minter) external onlyOwner {
         _setMinter(_minter);
     }
 
-    /// @notice Mints new tokens
-    /// @param _to The address of the recipient.
-    /// @param _amount The amount of tokens to mint.
+    /// @inheritdoc IERC20Issuance
     function mint(address _to, uint _amount) external onlyMinter {
         if (totalSupply() + _amount > MAX_SUPPLY) {
             revert IERC20Issuance__MintExceedsSupplyCap();
@@ -67,13 +68,16 @@ contract ERC20Issuance is
         _mint(_to, _amount);
     }
 
-    /// @notice Burns tokens
-    /// @param _from The address of the owner.
-    /// @param _amount The amount of tokens to burn.
+    /// @inheritdoc IERC20Issuance
     function burn(address _from, uint _amount) external onlyMinter {
         _burn(_from, _amount);
     }
 
+    //------------------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @notice Sets the address of the minter.
+    /// @param _minter The address of the minter.
     function _setMinter(address _minter) internal {
         allowedMinter = _minter;
         emit minterSet(_minter);

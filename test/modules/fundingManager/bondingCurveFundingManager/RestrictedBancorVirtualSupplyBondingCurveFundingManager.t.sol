@@ -34,7 +34,6 @@ import {RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock} from
     "test/modules/fundingManager/bondingCurveFundingManager/marketMaker/utils/mocks/RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-
 contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
     BancorVirtualSupplyBondingCurveFundingManagerTest
 {
@@ -177,9 +176,8 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         // Since we tested the success case in the Upstream tests, we now only need to verify revert on unauthorized calls
     }
 
-
-    function testInit() public override{
-                assertEq(
+    function testInit() public override {
+        assertEq(
             issuanceToken.name(),
             string(abi.encodePacked(NAME)),
             "Name has not been set correctly"
@@ -247,9 +245,8 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
     }
 
     function testReinitFails() public override {
-            vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
-   
     }
 
     function testBuyFor_FailsIfCallerNotAuthorized() public {
@@ -277,7 +274,6 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
     }
 
     function testBuy_FailsIfCallerNotAuthorized() public {
-        
         address _buyer = makeAddr("buyer");
         uint _depositAmount = 1;
 
@@ -294,9 +290,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
                     _buyer
                 )
             );
-            bondingCurveFundingManager.buy(
-                _depositAmount, _depositAmount
-            );
+            bondingCurveFundingManager.buy(_depositAmount, _depositAmount);
         }
     }
 
@@ -325,7 +319,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
     }
 
     function testSell_FailsIfCallerNotAuthorized() public {
-                address _seller = makeAddr("seller");
+        address _seller = makeAddr("seller");
         uint _sellAmount = 1;
 
         bytes32 _roleId = _authorizer.generateRoleId(
@@ -341,9 +335,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
                     _seller
                 )
             );
-            bondingCurveFundingManager.sell(
-                _sellAmount, _sellAmount
-            );
+            bondingCurveFundingManager.sell(_sellAmount, _sellAmount);
         }
     }
 
