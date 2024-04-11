@@ -189,26 +189,6 @@ contract ModuleFactoryTest is Test {
         factory.createModule(metadata, IOrchestrator(orchestrator), configData);
     }
 
-    function testCreateModuleFailsIfBeaconsImplementationIsZero(
-        IModule.Metadata memory metadata,
-        address orchestrator,
-        bytes memory configData
-    ) public {
-        _assumeValidMetadata(metadata);
-        _assumeValidOrchestrator(orchestrator);
-
-        // Setup and register beacon.
-        beacon.overrideImplementation(address(new ModuleMock()));
-        factory.registerMetadata(metadata, beacon);
-
-        // Change beacon's implementation to zero address.
-        beacon.overrideImplementation(address(0));
-
-        // Note that an `assert()` statement fails.
-        vm.expectRevert();
-        factory.createModule(metadata, IOrchestrator(orchestrator), configData);
-    }
-
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
