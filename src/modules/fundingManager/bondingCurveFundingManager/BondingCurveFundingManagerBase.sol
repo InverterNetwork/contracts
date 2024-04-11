@@ -301,10 +301,16 @@ abstract contract BondingCurveFundingManagerBase is
             uint issuanceBuyFeePercentage
         )
     {
-        // (collateralTreasury, collateralBuyFeePercentage) =
-        //     __Module_orchestrator.taxMan().getCollateralFee();
-        // (issuanceTreasury, issuanceBuyFeePercentage) =
-        //     __Module_orchestrator.taxMan().getCollateralFee();
+        // (collateralBuyFeePercentage, collateralTreasury) =
+        // __Module_orchestrator.taxMan().getCollateralFee(
+        //     address(__Module_orchestrator),
+        //     bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        // );
+        // (issuanceBuyFeePercentage, issuanceTreasury) = __Module_orchestrator
+        //     .taxMan().getIssuanceFee(
+        //     address(__Module_orchestrator),
+        //     bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        // );
 
         // TODO: Delete return
         return (address(0), address(0), 100, 100);
@@ -336,31 +342,30 @@ abstract contract BondingCurveFundingManagerBase is
         address _treasury,
         IERC20 _token,
         uint _feeAmount
-    ) internal pure {
+    ) internal {
         // skip protocol fee collection if fee percentage set to zero
         if (_feeAmount == 0) return;
+        if (_treasury == address(0)) {
+            revert BondingCurveFundingManagerBase__InvalidRecipient();
+        }
 
         // transfer fee amount
-
-        // TODO: Get address of where the fee needs to be sent
-        // _token.safeTransferFrom(_treasury, feeAmount
-        // );
-
-        // TODO: Should we add event to protocol fee collection?
+        _token.safeTransfer(_treasury, _feeAmount);
+        emit ProtocolFeeTransferred(address(_token), _treasury, _feeAmount);
     }
 
     function _processProtocolFeeViaMinting(address _treasury, uint _feeAmount)
         internal
-        pure
     {
         // skip protocol fee collection if fee percentage set to zero
         if (_feeAmount == 0) return;
+        if (_treasury == address(0)) {
+            revert BondingCurveFundingManagerBase__InvalidRecipient();
+        }
 
         // mint fee amount
-        // TODO: Get address of where the tokens need to be minted to
-        // _mint(_treasury, feeAmount);
-
-        // TODO: Should we add event to protocol fee collection?
+        _mint(_treasury, _feeAmount);
+        emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
     }
 
     //--------------------------------------------------------------------------
