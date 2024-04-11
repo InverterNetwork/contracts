@@ -36,18 +36,34 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 /*
 Fork testing necessary:
 
-forge test --match-contract KPIRewarderLifecycle -vvv --fork-url GOERLI_RPC_URL
+forge test --match-contract KPIRewarderLifecycle -vvv --fork-url $SEPOLIA_RPC_URL
 
 */
 
 contract KPIRewarderLifecycle is E2eTest {
+
+        /*
+    - This needs to be a fork test using an actual UMA instance.
+    - Where are the UMA test deployments? => https://github.com/UMAprotocol/protocol/tree/master/packages/core/networks
+    - Sepolia:  
+        {
+            "contractName": "OptimisticOracleV3",
+            "address": "0xFd9e2642a170aDD10F53Ee14a93FcF2F31924944"
+        },
+    - What Tokens are whitelisted? Which ones could we mint freely for non-fork tests? =>
+        USDC clone: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
+        Minter for impersonation: 0x39B3756655A34F869208c72b661f1afdEc1d428F
+    
+
+
+    */
     // Constants
-    address ooV3 = 0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB;
+    address ooV3 = 0xFd9e2642a170aDD10F53Ee14a93FcF2F31924944; 
     //OptimisticOracleV3Interface oracle = new OptimisticOracleV3Interface(ooV3);
 
     ERC20Mock USDC =
-        ERC20Mock(address(0x07865c6E87B9F70255377e024ace6630C1Eaa37F)); //Goerli USDC address
-    address USDC_Minter = 0xc8EeCaDfc14D50F0e616806d890322C95E303f2f; // Goerli USDC Master Minter
+        ERC20Mock(address(0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238)); //Sepolia USDC address
+    address USDC_Minter = 0x39B3756655A34F869208c72b661f1afdEc1d428F; // Sepolia USDC Master Minter
     ERC20Mock rewardToken =
         new ERC20Mock("Project Reward Mock Token", "REWARD MOCK");
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
@@ -71,11 +87,11 @@ contract KPIRewarderLifecycle is E2eTest {
     /*
     - This needs to be a fork test using an actual UMA instance.
     - Where are the UMA test deployments? => https://github.com/UMAprotocol/protocol/tree/master/packages/core/networks
-    - Goerli:  
-            {
-                "contractName": "OptimisticOracleV3",
-                "address": "0x9923D42eF695B5dd9911D05Ac944d4cAca3c4EAB"
-            },
+    - Sepolia:  
+        {
+            "contractName": "OptimisticOracleV3",
+            "address": "0xFd9e2642a170aDD10F53Ee14a93FcF2F31924944"
+        },
     - What Tokens are whitelisted? Which ones could we mint freely for non-fork tests? =>
     
 
@@ -171,7 +187,7 @@ contract KPIRewarderLifecycle is E2eTest {
         vm.assume(amounts.length > 1 && amounts.length >= users.length);
 
         uint maxLength = kpiRewarder.MAX_QUEUE_LENGTH();
-
+        console.log(".");
         if (users.length > maxLength) {
             cappedUsers = new address[](maxLength);
             cappedAmounts = new uint[](maxLength);
@@ -187,9 +203,9 @@ contract KPIRewarderLifecycle is E2eTest {
                 cappedAmounts[i] = bound(amounts[i], 1, 100_000_000e18);
             }
         }
-
+console.log("..");
         _assumeValidAddresses(cappedUsers);
-
+console.log("...");
         // (returns cappedUsers, cappedAmounts)
     }
 
