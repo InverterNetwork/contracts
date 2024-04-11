@@ -190,6 +190,6 @@ contract ModuleFactory is
         override(ERC2771Context, Context)
         returns (uint)
     {
-        return 20;
+        return ERC2771Context._contextSuffixLength();
     }
 }
