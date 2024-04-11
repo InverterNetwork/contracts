@@ -7,7 +7,6 @@ import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
-
 contract AuthorizerMock is IAuthorizer, Module {
     function supportsInterface(bytes4 interfaceId)
         public
@@ -120,12 +119,10 @@ contract AuthorizerMock is IAuthorizer, Module {
         return "0x02";
     }
 
-
     function grantGlobalRole(bytes32 role, address target) external {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
         grantRole(roleID, target);
     }
-
 
     function revokeGlobalRole(bytes32 role, address target) external {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
