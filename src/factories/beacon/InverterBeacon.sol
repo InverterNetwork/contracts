@@ -42,6 +42,13 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
         _;
     }
 
+    modifier validNewMinorVersion(uint newMinorVersion) {
+        if (newMinorVersion <= minorVersion) {
+            revert Beacon__InvalidImplementationMinorVersion();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------------
     // State
 
@@ -102,7 +109,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
         address newImplementation,
         uint newMinorVersion,
         bool overrideShutdown
-    ) public onlyOwner {
+    ) public onlyOwner validNewMinorVersion(newMinorVersion) {
         _upgradeTo(newImplementation, newMinorVersion, overrideShutdown);
     }
 
