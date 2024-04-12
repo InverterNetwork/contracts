@@ -89,9 +89,13 @@ contract RebasingFundingManager is
         );
     }
 
+    function token() public view returns (IERC20) {
+        return _token;
+    }
 
     /// @dev Returns the current token balance as supply target.
     function _supplyTarget()
+        internal
         view
         override(ElasticReceiptTokenBase)
         returns (uint)
