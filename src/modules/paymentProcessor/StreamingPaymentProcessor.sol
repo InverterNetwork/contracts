@@ -510,12 +510,13 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
             );
         }
 
-        uint stillReleasable =
-            releasableForSpecificWalletId(client, paymentReceiver, walletId);
+        uint remainingReleasable = vestings[client][paymentReceiver][walletId]
+            ._salary - vestings[client][paymentReceiver][walletId]._released;
         //In case there is still something to be released
-        if (stillReleasable > 0) {
+        if (remainingReleasable > 0) {
             //Let PaymentClient know that the amount is not needed to be stored anymore
-            IERC20PaymentClient(client).amountPaid(stillReleasable);
+
+            IERC20PaymentClient(client).amountPaid(remainingReleasable);
         }
 
         // Standard deletion process.

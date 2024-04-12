@@ -734,7 +734,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
             (expectedSalary / 2)
         );
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), expectedSalary / 2);
+        assertEq(paymentClient.amountPaidCounter(), expectedSalary);
         assertTrue(
             initialWalletIdAtIndex1
                 != paymentReceiverWallets[1]._vestingWalletID
@@ -855,7 +855,10 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         );
 
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, salary2);
+        assertEq(
+            paymentClient.amountPaidCounter(),
+            paymentReceiverWallets[1]._salary + salary1
+        );
         amountPaidAlready = paymentClient.amountPaidCounter();
 
         paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
