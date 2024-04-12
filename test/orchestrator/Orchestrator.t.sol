@@ -20,6 +20,9 @@ import {
     IPaymentProcessor
 } from "src/orchestrator/IOrchestrator.sol";
 
+import {TransactionForwarder} from
+    "src/external/forwarder/TransactionForwarder.sol";
+
 // Mocks
 import {
     FundingManagerMock,
@@ -48,6 +51,7 @@ contract OrchestratorTest is Test {
     AuthorizerMock authorizer;
     PaymentProcessorMock paymentProcessor;
     ERC20Mock token;
+    TransactionForwarder forwarder;
 
     event AuthorizerUpdated(address indexed _address);
     event FundingManagerUpdated(address indexed _address);
@@ -64,9 +68,10 @@ contract OrchestratorTest is Test {
         fundingManager = new FundingManagerMock();
         authorizer = new AuthorizerMock();
         paymentProcessor = new PaymentProcessorMock();
+        forwarder = new TransactionForwarder("TransactionForwarder");
         token = new ERC20Mock("TestToken", "TST");
 
-        address impl = address(new Orchestrator());
+        address impl = address(new Orchestrator(address(forwarder)));
         orchestrator = Orchestrator(Clones.clone(impl));
 
         types = new TypeSanityHelper(address(orchestrator));
@@ -135,6 +140,7 @@ contract OrchestratorTest is Test {
         assertEq(
             address(orchestrator.paymentProcessor()), address(paymentProcessor)
         );
+        assertTrue(orchestrator.isTrustedForwarder(address(forwarder)));
     }
 
     function testReinitFails(uint orchestratorId, address[] memory modules)
@@ -161,7 +167,7 @@ contract OrchestratorTest is Test {
                 paymentProcessor
             );
 
-            vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+            vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
             orchestrator.init(
                 orchestratorId,
                 truncatedModules,
@@ -183,7 +189,7 @@ contract OrchestratorTest is Test {
                 paymentProcessor
             );
 
-            vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+            vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
             orchestrator.init(
                 orchestratorId,
                 modules,

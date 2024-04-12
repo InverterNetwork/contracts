@@ -20,11 +20,11 @@ contract DeployModuleFactory is Script {
 
     ModuleFactory moduleFactory;
 
-    function run() external returns (address) {
+    function run(address forwarder) external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the moduleFactory.
-            moduleFactory = new ModuleFactory();
+            moduleFactory = new ModuleFactory(forwarder);
         }
 
         vm.stopBroadcast();

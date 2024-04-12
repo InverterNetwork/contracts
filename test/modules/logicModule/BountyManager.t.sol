@@ -92,7 +92,7 @@ contract BountyManagerTest is ModuleTest {
     function testInit() public override(ModuleTest) {}
 
     function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bountyManager.init(_orchestrator, _METADATA, bytes(""));
     }
 

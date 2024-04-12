@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
+
+//External Dependencies
+import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -28,7 +31,7 @@ import {IModuleFactory} from "src/factories/IModuleFactory.sol";
  *
  * @author Inverter Network
  */
-contract OrchestratorFactory is IOrchestratorFactory, ERC165 {
+contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -73,7 +76,11 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC165 {
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(address target_, address moduleFactory_) {
+    constructor(
+        address target_,
+        address moduleFactory_,
+        address _trustedForwarder //@todo should this be changeable?
+    ) ERC2771Context(_trustedForwarder) {
         target = target_;
         moduleFactory = moduleFactory_;
     }

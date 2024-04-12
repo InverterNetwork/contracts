@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -20,6 +20,8 @@ import {
     IAuthorizer
 } from "src/orchestrator/IOrchestrator.sol";
 import {IModule} from "src/modules/base/IModule.sol";
+
+import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 
 /**
  * @title Orchestrator
@@ -82,7 +84,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Initializer
 
-    constructor() {
+    constructor(address _trustedForwarder) ModuleManager(_trustedForwarder) {
         _disableInitializers();
     }
 
@@ -288,5 +290,29 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     function version() external pure returns (string memory) {
         return "1";
+    }
+
+    // IERC2771Context
+    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator
+    // we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
+
+    function isTrustedForwarder(address forwarder)
+        public
+        view
+        virtual
+        override(IModuleManager, ModuleManager)
+        returns (bool)
+    {
+        return ModuleManager.isTrustedForwarder(forwarder);
+    }
+
+    function trustedForwarder()
+        public
+        view
+        virtual
+        override(IModuleManager, ModuleManager)
+        returns (address)
+    {
+        return ModuleManager.trustedForwarder();
     }
 }

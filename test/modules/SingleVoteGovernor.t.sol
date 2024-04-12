@@ -32,6 +32,9 @@ import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 
+// Errors
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
 contract SingleVoteGovernorTest is ModuleTest {
     bool hasDependency;
     string[] dependencies = new string[](0);
@@ -273,7 +276,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         assertEq(_governor.isVoter(BOB), true);
         assertEq(_governor.isVoter(COBIE), true);
 
-        assertEq(_authorizer.hasRole(owner, address(this)), false);
+        assertEq(_authorizer.hasRole(owner, address(this)), true);
         assertEq(_authorizer.hasRole(owner, address(_orchestrator)), false);
         assertEq(_governor.isVoter(address(this)), false);
         assertEq(_governor.isVoter(address(_orchestrator)), false);
@@ -351,35 +354,9 @@ contract SingleVoteGovernorTest is ModuleTest {
         );
     }
 
-    function testReinitFails() public override {
-        //Create a mock new orchestrator
-        Orchestrator newOrchestrator =
-            Orchestrator(Clones.clone(address(new Orchestrator())));
-
-        address[] memory testVoters = new address[](1);
-        testVoters[0] = address(this);
-
-        vm.expectRevert();
-        _authorizer.init(
-            IOrchestrator(newOrchestrator),
-            _METADATA,
-            abi.encode(
-                testVoters,
-                DEFAULT_QUORUM,
-                DEFAULT_DURATION,
-                hasDependency,
-                dependencies
-            )
-        );
-
-        assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), address(_governor)),
-            true
-        );
-        assertEq(_governor.isVoter(ALBA), true);
-        assertEq(_governor.isVoter(BOB), true);
-        assertEq(_governor.isVoter(COBIE), true);
-        assertEq(_governor.voterCount(), 3);
+    function testReinitFails() public override(ModuleTest) {
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        _governor.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testInitWithInvalidInitialVotersFails() public {

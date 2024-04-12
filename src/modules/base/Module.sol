@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
+import {
+    ERC2771ContextUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Libraries
@@ -35,7 +38,7 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 abstract contract Module is
     IModule,
     Initializable,
-    ContextUpgradeable,
+    ERC2771ContextUpgradeable,
     ERC165
 {
     function supportsInterface(bytes4 interfaceId)
@@ -152,7 +155,7 @@ abstract contract Module is
     //--------------------------------------------------------------------------
     // Initialization
 
-    constructor() {
+    constructor() ERC2771ContextUpgradeable(address(0)) {
         _disableInitializers();
     }
 
@@ -289,5 +292,37 @@ abstract contract Module is
         } catch {
             return false;
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// @notice Checks if the provided address is the trusted forwarder
+    /// @param forwarder The contract address to be verified.
+    /// @return bool Is the given address the trusted forwarder
+    /// @dev We imitate here the EIP2771 Standard to enable metatransactions
+    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
+    function isTrustedForwarder(address forwarder)
+        public
+        view
+        virtual
+        override(ERC2771ContextUpgradeable)
+        returns (bool)
+    {
+        return __Module_orchestrator.isTrustedForwarder(forwarder);
+    }
+
+    /// @notice Returns the trusted forwarder
+    /// @return address The trusted forwarder
+    /// @dev We imitate here the EIP2771 Standard to enable metatransactions
+    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
+    function trustedForwarder()
+        public
+        view
+        virtual
+        override(ERC2771ContextUpgradeable)
+        returns (address)
+    {
+        return __Module_orchestrator.trustedForwarder(); //@todo currently not exposed
     }
 }

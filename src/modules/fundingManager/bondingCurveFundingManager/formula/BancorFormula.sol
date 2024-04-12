@@ -1,4 +1,4 @@
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
