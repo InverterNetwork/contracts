@@ -45,7 +45,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     // Set the Module Metadata.
     // ===============================================================================================================
     IModule.Metadata authorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/InverterNetwork", "TokenAuthorizer"
+        1, 0, "https://github.com/InverterNetwork", "TokenAuthorizer"
     );
 
     ModuleFactory moduleFactory = ModuleFactory(moduleFactoryAddress);
