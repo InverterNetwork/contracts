@@ -47,6 +47,19 @@ contract ModuleFactoryTest is Test {
         address indexed orchestrator, address indexed module, bytes32 identifier
     );
 
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when new beacon registered for metadata.
+    event MetadataRegistered(
+        IModule.Metadata indexed metadata, IBeacon indexed beacon
+    );
+
+    /// @notice Event emitted when new module created for a orchestrator.
+    event ModuleCreated(
+        address indexed orchestrator, address indexed module, bytes32 identifier
+    );
+
     // Constants
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 1;
