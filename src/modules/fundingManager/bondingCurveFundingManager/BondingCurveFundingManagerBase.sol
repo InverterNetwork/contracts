@@ -263,7 +263,7 @@ abstract contract BondingCurveFundingManagerBase is
         external
         onlyOrchestrator
     {
-        __Module_orchestrator.token().safeTransfer(to, amount);
+        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
     }
