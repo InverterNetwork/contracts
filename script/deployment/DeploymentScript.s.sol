@@ -153,7 +153,7 @@ contract DeploymentScript is Script {
 
     IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "RebasingFundingManager"
     );
@@ -161,7 +161,7 @@ contract DeploymentScript is Script {
     IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "BancorVirtualSupplyBondingCurveFundingManager"
     );
@@ -171,14 +171,14 @@ contract DeploymentScript is Script {
 
     IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "RoleAuthorizer"
     );
 
     IModule.Metadata tokenGatedRoleAuthorizerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "TokenGatedRoleAuthorizer"
     );
@@ -188,14 +188,14 @@ contract DeploymentScript is Script {
 
     IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "SimplePaymentProcessor"
     );
 
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "StreamingPaymentProcessor"
     );
@@ -205,14 +205,14 @@ contract DeploymentScript is Script {
 
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "RecurringPaymentManager"
     );
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "BountyManager"
     );
@@ -222,14 +222,14 @@ contract DeploymentScript is Script {
 
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "SingleVoteGovernor"
     );
 
     IModule.Metadata metadataManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "MetadataManager"
     );
@@ -268,7 +268,7 @@ contract DeploymentScript is Script {
 
         //Deploy beacon and actual proxy
         (forwarderBeacon, forwarder) = deployAndSetUpBeacon
-            .deployBeaconAndSetupProxy(deployer, forwarderImplementation, 1, 1);
+            .deployBeaconAndSetupProxy(deployer, forwarderImplementation, 1, 0);
 
         if (
             forwarder == forwarderImplementation || forwarder == forwarderBeacon
