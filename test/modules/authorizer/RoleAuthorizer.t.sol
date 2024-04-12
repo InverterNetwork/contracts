@@ -55,7 +55,7 @@ contract RoleAuthorizerTest is Test {
     uint internal constant _ORCHESTRATOR_ID = 1;
     // Module Constants
     uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 1;
+    uint constant MINOR_VERSION = 0;
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
