@@ -57,14 +57,14 @@ contract OrchestratorFactoryTest is Test {
 
     IOrchestratorFactory.ModuleConfig fundingManagerConfig =
     IOrchestratorFactory.ModuleConfig(
-        IModule.Metadata(1, 1, "https://fundingmanager.com", "FundingManager"),
+        IModule.Metadata(1, 0, "https://fundingmanager.com", "FundingManager"),
         bytes("data"),
         abi.encode(hasDependency, dependencies)
     );
 
     IOrchestratorFactory.ModuleConfig authorizerConfig = IOrchestratorFactory
         .ModuleConfig(
-        IModule.Metadata(1, 1, "https://authorizer.com", "Authorizer"),
+        IModule.Metadata(1, 0, "https://authorizer.com", "Authorizer"),
         abi.encode(address(this), address(this)),
         abi.encode(hasDependency, dependencies)
     );
@@ -80,7 +80,7 @@ contract OrchestratorFactoryTest is Test {
 
     IOrchestratorFactory.ModuleConfig moduleConfig = IOrchestratorFactory
         .ModuleConfig(
-        IModule.Metadata(1, 1, "https://module.com", "Module"),
+        IModule.Metadata(1, 0, "https://module.com", "Module"),
         bytes(""),
         abi.encode(hasDependency, dependencies)
     );

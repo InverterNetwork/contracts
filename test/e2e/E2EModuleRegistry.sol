@@ -79,7 +79,7 @@ contract E2EModuleRegistry is Test {
 
     IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/inverter/funding-manager",
         "RebasingFundingManager"
     );
@@ -124,7 +124,7 @@ contract E2EModuleRegistry is Test {
     IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/inverter/bonding-curve-funding-manager",
         "BancorVirtualSupplyBondingCurveFundingManager"
     );
@@ -193,7 +193,7 @@ contract E2EModuleRegistry is Test {
     InverterBeacon roleAuthorizerBeacon;
 
     IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
+        1, 0, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
     );
 
     /* 
@@ -231,7 +231,7 @@ contract E2EModuleRegistry is Test {
 
     IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/inverter/tokenRoleAuthorizer",
         "TokenGatedRoleAuthorizer"
     );
@@ -277,7 +277,7 @@ contract E2EModuleRegistry is Test {
 
     IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/inverter/payment-processor",
         "SimplePaymentProcessor"
     );
@@ -317,7 +317,7 @@ contract E2EModuleRegistry is Test {
 
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/inverter/streaming-payment-processor",
         "StreamingPaymentProcessor"
     );
@@ -360,7 +360,7 @@ contract E2EModuleRegistry is Test {
 
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/inverter/recurring-payment-manager",
         "RecurringPaymentManager"
     );
@@ -399,7 +399,7 @@ contract E2EModuleRegistry is Test {
     InverterBeacon bountyManagerBeacon;
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
+        1, 0, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
     /*
      IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
@@ -439,7 +439,7 @@ contract E2EModuleRegistry is Test {
 
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
         1,
-        1,
+        0,
         "https://github.com/inverter/single-vote-governor",
         "SingleVoteGovernor"
     );
@@ -482,7 +482,7 @@ contract E2EModuleRegistry is Test {
     InverterBeacon metadataManagerBeacon;
 
     IModule.Metadata metadataManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/metadata-manager", "MetadataManager"
+        1, 0, "https://github.com/inverter/metadata-manager", "MetadataManager"
     );
 
     function setUpMetadataManager() internal {
