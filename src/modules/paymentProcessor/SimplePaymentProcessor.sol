@@ -10,23 +10,34 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // Internal Dependencies
 import {
     IPaymentProcessor,
-    IPaymentClient
+    IERC20PaymentClient
 } from "src/modules/paymentProcessor/IPaymentProcessor.sol";
 import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 /**
  * @title SimplePaymentProcessor
  *
  * @dev The SimplePaymentProcessor is a module to process payment orders from other
  *      modules. In order to process a module's payment orders, the module must
- *      implement the {IPaymentClient} interface.
+ *      implement the {IERC20PaymentClient} interface.
  *
  * @author Inverter Network
  */
 contract SimplePaymentProcessor is Module, IPaymentProcessor {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        return interfaceId == type(IPaymentProcessor).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
@@ -34,14 +45,14 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     /// @notice checks that the caller is an active module
     modifier onlyModule() {
-        if (!proposal().isModule(_msgSender())) {
+        if (!orchestrator().isModule(_msgSender())) {
             revert Module__PaymentManager__OnlyCallableByModule();
         }
         _;
     }
 
     /// @notice checks that the client is calling for itself
-    modifier validClient(IPaymentClient client) {
+    modifier validClient(IERC20PaymentClient client) {
         if (_msgSender() != address(client)) {
             revert Module__PaymentManager__CannotCallOnOtherClientsOrders();
         }
@@ -50,11 +61,11 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory /*configdata*/
+        bytes memory /*configData*/
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
     }
 
     //--------------------------------------------------------------------------
@@ -62,24 +73,27 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     /// @inheritdoc IPaymentProcessor
     function token() public view returns (IERC20) {
-        return __Module_proposal.token();
+        return __Module_orchestrator.fundingManager().token();
     }
 
     /// @inheritdoc IPaymentProcessor
-    function processPayments(IPaymentClient client)
+    function processPayments(IERC20PaymentClient client)
         external
         onlyModule
         validClient(client)
     {
         // Collect outstanding orders and their total token amount.
-        IPaymentClient.PaymentOrder[] memory orders;
+        IERC20PaymentClient.PaymentOrder[] memory orders;
         uint totalAmount;
         (orders, totalAmount) = client.collectPaymentOrders();
+
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        client.amountPaid(totalAmount);
 
         // Cache token.
         IERC20 token_ = token();
 
-        // Transfer tokens from {IPaymentClient} to order recipients.
+        // Transfer tokens from {IERC20PaymentClient} to order recipients.
         address recipient;
         uint amount;
         uint len = orders.length;
@@ -101,7 +115,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         }
     }
 
-    function cancelRunningPayments(IPaymentClient client)
+    function cancelRunningPayments(IERC20PaymentClient client)
         external
         onlyModule
         validClient(client)

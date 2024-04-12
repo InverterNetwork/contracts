@@ -3,23 +3,42 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
-import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
+import {IERC20PaymentClient} from
+    "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
+import {IModule} from "src/modules/base/Module.sol";
 
-contract PaymentProcessorMock is IPaymentProcessor {
+contract PaymentProcessorMock is IPaymentProcessor, ERC165 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        bytes4 interfaceId_IPaymentProcessor =
+            type(IPaymentProcessor).interfaceId;
+        bytes4 interfaceId_IModule = type(IModule).interfaceId;
+        return interfaceId == interfaceId_IPaymentProcessor
+            || interfaceId == interfaceId_IModule
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 
-    function processPayments(IPaymentClient client) external {}
+    function processPayments(IERC20PaymentClient client) external {}
 
-    function cancelRunningPayments(IPaymentClient client) external {}
+    function cancelRunningPayments(IERC20PaymentClient client) external {}
 
     function token() external pure returns (IERC20) {
         return IERC20(address(0));
     }
 
-    function deleteAllPayments(IPaymentClient client) external {
+    function deleteAllPayments(IERC20PaymentClient client) external {
         client.collectPaymentOrders();
     }
 }

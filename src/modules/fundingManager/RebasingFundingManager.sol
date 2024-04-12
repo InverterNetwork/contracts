@@ -11,7 +11,7 @@ import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -28,11 +28,21 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 contract RebasingFundingManager is
     IFundingManager,
-    IRebasingERC20,
     ContextUpgradeable,
     ElasticReceiptTokenUpgradeable,
     Module
 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ElasticReceiptTokenUpgradeable, Module)
+        returns (bool)
+    {
+        return interfaceId == type(IFundingManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     using Strings for uint;
     using SafeERC20 for IERC20;
 
@@ -53,32 +63,39 @@ contract RebasingFundingManager is
     uint internal constant DEPOSIT_CAP = 100_000_000e18;
 
     //--------------------------------------------------------------------------
+    // Storage
+
+    IERC20 private _token;
+
+    //--------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module
     function init(
-        IProposal proposal_,
+        IOrchestrator orchestrator_,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external override(Module) initializer {
-        __Module_init(proposal_, metadata);
+        __Module_init(orchestrator_, metadata);
 
-        address proposalTokenAddress = abi.decode(configdata, (address));
+        address orchestratorTokenAddress = abi.decode(configData, (address));
+        _token = IERC20(orchestratorTokenAddress);
 
-        string memory _id = proposal_.proposalId().toString();
-        string memory _name =
-            string(abi.encodePacked("Inverter Funding Token - Proposal #", _id));
+        string memory _id = orchestrator_.orchestratorId().toString();
+        string memory _name = string(
+            abi.encodePacked("Inverter Funding Token - Orchestrator #", _id)
+        );
         string memory _symbol = string(abi.encodePacked("IFT-", _id));
         // Initial upstream contracts.
         __ElasticReceiptToken_init(
             _name,
             _symbol,
-            IERC20MetadataUpgradeable(proposalTokenAddress).decimals()
+            IERC20MetadataUpgradeable(orchestratorTokenAddress).decimals()
         );
     }
 
     function token() public view returns (IERC20) {
-        return __Module_proposal.token();
+        return _token;
     }
 
     /// @dev Returns the current token balance as supply target.
@@ -111,14 +128,14 @@ contract RebasingFundingManager is
     }
 
     //--------------------------------------------------------------------------
-    // OnlyProposal Mutating Functions
+    // OnlyOrchestrator Mutating Functions
 
-    function transferProposalToken(address to, uint amount)
+    function transferOrchestratorToken(address to, uint amount)
         external
-        onlyProposal
+        onlyOrchestrator
         validAddress(to)
     {
-        _transferProposalToken(to, amount);
+        _transferOrchestratorToken(to, amount);
     }
 
     //--------------------------------------------------------------------------
@@ -149,9 +166,9 @@ contract RebasingFundingManager is
         emit Withdrawal(from, to, amount);
     }
 
-    function _transferProposalToken(address to, uint amount) internal {
-        __Module_proposal.token().safeTransfer(to, amount);
+    function _transferOrchestratorToken(address to, uint amount) internal {
+        token().safeTransfer(to, amount);
 
-        emit TransferProposalToken(to, amount);
+        emit TransferOrchestratorToken(to, amount);
     }
 }

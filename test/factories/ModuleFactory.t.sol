@@ -16,7 +16,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleFactory,
     IModule,
-    IProposal
+    IOrchestrator
 } from "src/factories/IModuleFactory.sol";
 
 // Mocks
@@ -33,6 +33,19 @@ contract ModuleFactoryTest is Test {
     // Mocks
     ModuleMock module;
     BeaconMock beacon;
+
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when new beacon registered for metadata.
+    event MetadataRegistered(
+        IModule.Metadata indexed metadata, IBeacon indexed beacon
+    );
+
+    /// @notice Event emitted when new module created for a orchestrator.
+    event ModuleCreated(
+        address indexed orchestrator, address indexed module, bytes32 identifier
+    );
 
     // Constants
     uint constant MAJOR_VERSION = 1;
@@ -71,6 +84,11 @@ contract ModuleFactoryTest is Test {
         _assumeValidMetadata(metadata);
 
         beacon.overrideImplementation(address(module));
+
+        vm.expectEmit(true, true, true, true);
+
+        // We emit the event we expect to see.
+        emit MetadataRegistered(metadata, beacon);
 
         factory.registerMetadata(metadata, beacon);
 
@@ -120,47 +138,57 @@ contract ModuleFactoryTest is Test {
 
     function testCreateModule(
         IModule.Metadata memory metadata,
-        address proposal,
-        bytes memory configdata
+        address orchestrator,
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
-        _assumeValidProposal(proposal);
+        _assumeValidOrchestrator(orchestrator);
 
         beacon.overrideImplementation(address(module));
 
         // Register ModuleMock for given metadata.
         factory.registerMetadata(metadata, beacon);
 
-        // Create new module instance.
-        IModule newModule = IModule(
-            factory.createModule(metadata, IProposal(proposal), configdata)
+        // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
+        vm.expectEmit(true, false, false, false);
+
+        // We emit the event we expect to see.
+        emit ModuleCreated(
+            orchestrator, address(0), LibMetadata.identifier(metadata)
         );
 
-        assertEq(address(newModule.proposal()), address(proposal));
+        // Create new module instance.
+        IModule newModule = IModule(
+            factory.createModule(
+                metadata, IOrchestrator(orchestrator), configData
+            )
+        );
+
+        assertEq(address(newModule.orchestrator()), address(orchestrator));
         assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
     }
 
     function testCreateModuleFailsIfMetadataUnregistered(
         IModule.Metadata memory metadata,
-        address proposal,
-        bytes memory configdata
+        address orchestrator,
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
-        _assumeValidProposal(proposal);
+        _assumeValidOrchestrator(orchestrator);
 
         vm.expectRevert(
             IModuleFactory.ModuleFactory__UnregisteredMetadata.selector
         );
-        factory.createModule(metadata, IProposal(proposal), configdata);
+        factory.createModule(metadata, IOrchestrator(orchestrator), configData);
     }
 
     function testCreateModuleFailsIfBeaconsImplementationIsZero(
         IModule.Metadata memory metadata,
-        address proposal,
-        bytes memory configdata
+        address orchestrator,
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
-        _assumeValidProposal(proposal);
+        _assumeValidOrchestrator(orchestrator);
 
         // Setup and register beacon.
         beacon.overrideImplementation(address(new ModuleMock()));
@@ -171,7 +199,7 @@ contract ModuleFactoryTest is Test {
 
         // Note that an `assert()` statement fails.
         vm.expectRevert();
-        factory.createModule(metadata, IProposal(proposal), configdata);
+        factory.createModule(metadata, IOrchestrator(orchestrator), configData);
     }
 
     //--------------------------------------------------------------------------
@@ -184,7 +212,7 @@ contract ModuleFactoryTest is Test {
         vm.assume(LibMetadata.isValid(metadata));
     }
 
-    function _assumeValidProposal(address proposal) internal pure {
-        vm.assume(proposal != address(0));
+    function _assumeValidOrchestrator(address orchestrator) internal pure {
+        vm.assume(orchestrator != address(0));
     }
 }

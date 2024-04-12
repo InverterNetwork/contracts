@@ -6,6 +6,8 @@ import "forge-std/Test.sol";
 // External Libraries
 import "@oz/utils/Address.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 // SuT
 import {Beacon, IBeacon} from "src/factories/beacon/Beacon.sol";
 
@@ -32,7 +34,7 @@ contract BeaconTest is Test {
     function testDeploymentInvariants() public {
         assertEq(beacon.implementation(), address(0));
 
-        // Check that proposal's dependencies correctly initialized.
+        // Check that orchestrator's dependencies correctly initialized.
         // Ownable2Step:
         assertEq(beacon.owner(), address(this));
         assertEq(beacon.pendingOwner(), address(0));

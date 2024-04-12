@@ -5,23 +5,35 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Module, IModule, IProposal} from "src/modules/base/Module.sol";
+import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 contract FundingManagerMock is IFundingManager, Module {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module)
+        returns (bool)
+    {
+        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
+        return interfaceId == interfaceId_IFundingManager
+            || super.supportsInterface(interfaceId);
+    }
+
     using SafeERC20 for IERC20;
 
     IERC20 private _token;
 
-    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
-        public
-        override(Module)
-        initializer
-    {
-        __Module_init(proposal_, metadata);
+    function init(
+        IOrchestrator orchestrator_,
+        Metadata memory metadata,
+        bytes memory
+    ) public override(Module) initializer {
+        __Module_init(orchestrator_, metadata);
     }
 
     function setToken(IERC20 newToken) public {
@@ -48,7 +60,7 @@ contract FundingManagerMock is IFundingManager, Module {
         _token.safeTransfer(to, amount);
     }
 
-    function transferProposalToken(address to, uint amount) external {
+    function transferOrchestratorToken(address to, uint amount) external {
         _token.safeTransfer(to, amount);
     }
 }

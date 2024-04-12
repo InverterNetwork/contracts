@@ -13,16 +13,16 @@ import {IModuleFactory} from "src/factories/ModuleFactory.sol";
 
 import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
 import {DeployModuleFactory} from "script/factories/DeployModuleFactory.s.sol";
-import {DeployProposalFactory} from
-    "script/factories/DeployProposalFactory.s.sol";
-
-import {DeployProposal} from "script/proposal/DeployProposal.s.sol";
-import {DeployStreamingPaymentProcessor} from
-    "script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol";
-import {DeployMilestoneManager} from
-    "script/modules/DeployMilestoneManager.s.sol";
+import {DeployOrchestratorFactory} from
+    "script/factories/DeployOrchestratorFactory.s.sol";
+import {DeployBountyManager} from "script/modules/DeployBountyManager.s.sol";
+import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
+import {DeploySimplePaymentProcessor} from
+    "script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol";
 import {DeployRebasingFundingManager} from
-    "script/modules/DeployRebasingFundingManager.s.sol";
+    "script/modules/fundingManager/DeployRebasingFundingManager.s.sol";
+import {DeployBancorVirtualSupplyBondingCurveFundingManager} from
+    "script/modules/fundingManager/DeployBancorVirtualSupplyBondingCurveFundingManager.s.sol";
 import {DeployRoleAuthorizer} from
     "script/modules/governance/DeployRoleAuthorizer.s.sol";
 
@@ -31,33 +31,39 @@ contract DeploymentScript is Script {
     // Instances of Deployer Contracts
 
     DeployModuleFactory deployModuleFactory = new DeployModuleFactory();
-    DeployProposalFactory deployProposalFactory = new DeployProposalFactory();
+    DeployOrchestratorFactory deployOrchestratorFactory =
+        new DeployOrchestratorFactory();
 
-    DeployProposal deployProposal = new DeployProposal();
-    DeployStreamingPaymentProcessor deployStreamingPaymentProcessor =
-        new DeployStreamingPaymentProcessor();
-    DeployMilestoneManager deployMilestoneManager = new DeployMilestoneManager();
+    DeployOrchestrator deployOrchestrator = new DeployOrchestrator();
+    DeploySimplePaymentProcessor deploySimplePaymentProcessor =
+        new DeploySimplePaymentProcessor();
     DeployRebasingFundingManager deployRebasingFundingManager =
         new DeployRebasingFundingManager();
+    DeployBancorVirtualSupplyBondingCurveFundingManager
+        deployBancorVirtualSupplyBondingCurveFundingManager =
+            new DeployBancorVirtualSupplyBondingCurveFundingManager();
     DeployRoleAuthorizer deployRoleAuthorizer = new DeployRoleAuthorizer();
+    DeployBountyManager deployBountyManager = new DeployBountyManager();
 
     DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
 
     // ------------------------------------------------------------------------
     // Deployed Contracts
 
-    address proposal;
-    address streamingPaymentProcessor;
-    address milestoneManager;
+    address orchestrator;
+    address simplePaymentProcessor;
+    address bountyManager;
     address fundingManager;
+    address bondingCurveFundingManager;
     address authorizer;
 
     address moduleFactory;
-    address proposalFactory;
+    address orchestratorFactory;
 
     address paymentProcessorBeacon;
-    address milestoneManagerBeacon;
+    address bountyManagerBeacon;
     address fundingManagerBeacon;
+    address bondingCurveFundingManagerBeacon;
     address authorizerBeacon;
 
     // ------------------------------------------------------------------------
@@ -66,51 +72,67 @@ contract DeploymentScript is Script {
         1,
         1,
         "https://github.com/inverter/payment-processor",
-        "StreamingPaymentProcessor"
-    );
-
-    IModule.Metadata milestoneManagerMetadata = IModule.Metadata(
-        1,
-        1,
-        "https://github.com/inverter/milestone-manager",
-        "MilestoneManager"
+        "SimplePaymentProcessor"
     );
 
     IModule.Metadata fundingManagerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/funding-manager", "FundingManager"
+        1,
+        1,
+        "https://github.com/inverter/funding-manager",
+        "RebasingFundingManager"
     );
 
     IModule.Metadata authorizerMetadata = IModule.Metadata(
-        1, 1, "https://github.com/inverter/authorizer", "Authorizer"
+        1, 1, "https://github.com/inverter/RoleAuthorizer", "RoleAuthorizer"
+    );
+
+    IModule.Metadata bountyManagerMetadata = IModule.Metadata(
+        1, 1, "https://github.com/inverter/bounty-manager", "BountyManager"
+    );
+
+    IModule.Metadata bondingCurveFundingManagerMetadata = IModule.Metadata(
+        1,
+        1,
+        "https://github.com/inverter/bonding-curve-funding-manager",
+        "BancorVirtualSupplyBondingCurveFundingManager"
     );
 
     /// @notice Deploys all necessary factories, beacons and iplementations
-    /// @return factory The addresses of the fully deployed proposal factory. All other addresses should be accessible from this.
+    /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
         // Deploy implementation contracts.
-        proposal = deployProposal.run();
-        streamingPaymentProcessor = deployStreamingPaymentProcessor.run();
+        orchestrator = deployOrchestrator.run();
+        simplePaymentProcessor = deploySimplePaymentProcessor.run();
         fundingManager = deployRebasingFundingManager.run();
+        bondingCurveFundingManager =
+            deployBancorVirtualSupplyBondingCurveFundingManager.run();
         authorizer = deployRoleAuthorizer.run();
-        milestoneManager = deployMilestoneManager.run();
 
         moduleFactory = deployModuleFactory.run();
-        proposalFactory = deployProposalFactory.run(proposal, moduleFactory);
+        orchestratorFactory =
+            deployOrchestratorFactory.run(orchestrator, moduleFactory);
+
+        bountyManager = deployBountyManager.run();
 
         // Create beacons, set implementations and set metadata.
         paymentProcessorBeacon = deployAndSetUpBeacon.run(
-            streamingPaymentProcessor, moduleFactory, paymentProcessorMetadata
+            simplePaymentProcessor, moduleFactory, paymentProcessorMetadata
         );
         fundingManagerBeacon = deployAndSetUpBeacon.run(
             fundingManager, moduleFactory, fundingManagerMetadata
         );
+        bondingCurveFundingManagerBeacon = deployAndSetUpBeacon.run(
+            bondingCurveFundingManager,
+            moduleFactory,
+            bondingCurveFundingManagerMetadata
+        );
         authorizerBeacon = deployAndSetUpBeacon.run(
             authorizer, moduleFactory, authorizerMetadata
         );
-        milestoneManagerBeacon = deployAndSetUpBeacon.run(
-            milestoneManager, moduleFactory, milestoneManagerMetadata
+        bountyManagerBeacon = deployAndSetUpBeacon.run(
+            bountyManager, moduleFactory, bountyManagerMetadata
         );
 
-        return (proposalFactory);
+        return (orchestratorFactory);
     }
 }

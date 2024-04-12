@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
 // Internal Interfaces
-import {IModule, IProposal} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
 interface IModuleFactory {
     //--------------------------------------------------------------------------
@@ -27,13 +27,18 @@ interface IModuleFactory {
     // Events
 
     /// @notice Event emitted when new beacon registered for metadata.
+    /// @param metadata The registered Metadata
+    /// @param beacon The registered Beacon
     event MetadataRegistered(
         IModule.Metadata indexed metadata, IBeacon indexed beacon
     );
 
-    /// @notice Event emitted when new module created for a proposal.
+    /// @notice Event emitted when new module created for a orchestrator.
+    /// @param orchestrator The corresponding orchestrator.
+    /// @param module The created module instance.
+    /// @param identifier The module's identifier.
     event ModuleCreated(
-        address indexed proposal, address indexed module, string moduleTitle
+        address indexed orchestrator, address indexed module, bytes32 identifier
     );
 
     //--------------------------------------------------------------------------
@@ -41,12 +46,12 @@ interface IModuleFactory {
 
     /// @notice Creates a module instance identified by given metadata.
     /// @param metadata The module's metadata.
-    /// @param proposal The proposal's instance of the module.
-    /// @param configdata The configdata of the module
+    /// @param orchestrator The orchestrator's instance of the module.
+    /// @param configData The configData of the module
     function createModule(
         IModule.Metadata memory metadata,
-        IProposal proposal,
-        bytes memory configdata
+        IOrchestrator orchestrator,
+        bytes memory configData
     ) external returns (address);
 
     /// @notice Returns the {IBeacon} instance registered and the id for given

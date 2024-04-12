@@ -21,36 +21,30 @@ interface IFundingManager {
     // Events
 
     /// @notice Event emitted when a deposit takes place.
-    /// @param from The address depositing tokens.
-    /// @param to The address that will receive the receipt tokens.
-    /// @param amount The amount of tokens deposited.
+    /// @param _from The address depositing tokens.
+    /// @param _for The address that will receive the receipt tokens.
+    /// @param _amount The amount of tokens deposited.
     event Deposit(
-        address indexed from, address indexed to, uint indexed amount
+        address indexed _from, address indexed _for, uint indexed _amount
     );
 
     /// @notice Event emitted when a withdrawal takes place.
-    /// @param from The address supplying the receipt tokens.
-    /// @param to The address that will receive the underlying tokens.
-    /// @param amount The amount of underlying tokens withdrawn.
+    /// @param _from The address supplying the receipt tokens.
+    /// @param _for The address that will receive the underlying tokens.
+    /// @param _amount The amount of underlying tokens withdrawn.
     event Withdrawal(
-        address indexed from, address indexed to, uint indexed amount
+        address indexed _from, address indexed _for, uint indexed _amount
     );
 
-    /// @notice Event emitted when a transferal of proposal tokens takes place.
-    /// @param to The address that will receive the underlying tokens.
-    /// @param amount The amount of underlying tokens transfered.
-    event TransferProposalToken(address indexed to, uint indexed amount);
+    /// @notice Event emitted when a transferal of orchestrator tokens takes place.
+    /// @param _to The address that will receive the underlying tokens.
+    /// @param _amount The amount of underlying tokens transfered.
+    event TransferOrchestratorToken(address indexed _to, uint indexed _amount);
 
     //--------------------------------------------------------------------------
     // Functions
 
     function token() external view returns (IERC20);
 
-    function deposit(uint amount) external;
-    function depositFor(address to, uint amount) external;
-
-    function withdraw(uint amount) external;
-    function withdrawTo(address to, uint amount) external;
-
-    function transferProposalToken(address to, uint amount) external;
+    function transferOrchestratorToken(address to, uint amount) external;
 }

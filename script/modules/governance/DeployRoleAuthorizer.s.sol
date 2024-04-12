@@ -12,11 +12,10 @@ import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
  *
  * @author Inverter Network
  */
-
 contract DeployRoleAuthorizer is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     RoleAuthorizer roleAuthorizer;

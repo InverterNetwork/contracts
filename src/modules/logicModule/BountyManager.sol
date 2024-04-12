@@ -1,55 +1,46 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.19;
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
 // External Libraries
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 // Internal Dependencies
-import {Module} from "src/modules/base/Module.sol";
 
-import {PaymentClient} from "src/modules/base/mixins/PaymentClient.sol";
+import {
+    ERC20PaymentClient,
+    Module
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
-import {IRoleAuthorizer} from "src/modules/authorizer/IRoleAuthorizer.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 
 import {
-    IPaymentClient,
+    IERC20PaymentClient,
     IPaymentProcessor
-} from "src/modules/base/mixins/PaymentClient.sol";
+} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
-//@todo this has a direct dependency to the new RoleAuthorizer Module.
-//At the current state of the project the IRoleAuthorizer isnt the standardized Interface to use,
-//That means there is a possibility function calls will fail if the roleAuthorizer isnt implemented as the Authorizer
-//This will be changed in the coming future,
-//but till then the RoleAuthorizer has to be selected as the Authorizer Module of the proposal if the BountyManager is to be used
+contract BountyManager is IBountyManager, ERC20PaymentClient {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC20PaymentClient)
+        returns (bool)
+    {
+        return interfaceId == type(IBountyManager).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
 
-contract BountyManager is IBountyManager, Module, PaymentClient {
-    using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
     using LinkedIdList for LinkedIdList.List;
 
     //--------------------------------------------------------------------------
     // Modifiers
-
-    //@todo Reminder that this will be moved into the Module Contract at a later point of time
-    modifier onlyRole(uint8 roleId) {
-        if (
-            !IRoleAuthorizer(address(__Module_proposal.authorizer()))
-                .isAuthorized(roleId, _msgSender())
-        ) {
-            revert Module__BountyManager__OnlyRole(roleId, address(this));
-        }
-        _;
-    }
 
     modifier onlyClaimContributor(uint claimId) {
         address sender = _msgSender();
@@ -114,7 +105,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         uint totalAmount;
         uint currentAmount;
         address contrib;
-        address proposalAddress = address(__Module_proposal);
+        address orchestratorAddress = address(__Module_orchestrator);
         for (uint i; i < length;) {
             currentAmount = contributors[i].claimAmount;
 
@@ -126,7 +117,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
             contrib = contributors[i].addr;
             if (
                 contrib == address(0) || contrib == address(this)
-                    || contrib == proposalAddress
+                    || contrib == orchestratorAddress
             ) {
                 revert Module__BountyManager__InvalidContributorAddress();
             }
@@ -145,19 +136,37 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         }
     }
 
-    modifier claimBelongingToBounty(uint claimId, uint bountyId) {
-        if (_claimRegistry[claimId].bountyId != bountyId) {
-            revert Module__BountyManager__ClaimNotBelongingToBounty();
+    modifier notLocked(uint bountyId) {
+        if (_bountyRegistry[bountyId].locked) {
+            revert Module__BountyManager__BountyLocked();
         }
         _;
     }
 
-    modifier notClaimed(uint bountyId) {
-        //Its not claimed if claimedBy is still 0
-        if (_bountyRegistry[bountyId].claimedBy != 0) {
-            revert Module__BountyManager__BountyAlreadyClaimedOrLocked();
+    modifier notClaimed(uint claimId) {
+        if (_claimRegistry[claimId].claimed) {
+            revert Module__BountyManager__AlreadyClaimed();
         }
         _;
+    }
+
+    function contributorsNotChanged(
+        uint claimId,
+        Contributor[] memory contributors
+    ) internal view {
+        Contributor[] memory claimContribs =
+            _claimRegistry[claimId].contributors;
+
+        uint length = contributors.length;
+        for (uint i; i < length;) {
+            if (
+                contributors[i].addr != claimContribs[i].addr
+                    || contributors[i].claimAmount != claimContribs[i].claimAmount
+            ) revert Module__BountyManager__ContributorsChanged();
+            unchecked {
+                i++;
+            }
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -165,6 +174,10 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
 
     /// @dev Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
+
+    bytes32 public constant BOUNTY_ISSUER_ROLE = "BOUNTY_ISSUER";
+    bytes32 public constant CLAIMANT_ROLE = "CLAIMANT";
+    bytes32 public constant VERIFIER_ROLE = "VERIFIER";
 
     //--------------------------------------------------------------------------
     // Storage
@@ -190,26 +203,24 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     // Initialization
 
     /// @inheritdoc Module
-    function init(IProposal proposal_, Metadata memory metadata, bytes memory)
-        external
-        override(Module)
-        initializer
-    {
-        __Module_init(proposal_, metadata);
+    function init(
+        IOrchestrator orchestrator_,
+        Metadata memory metadata,
+        bytes memory
+    ) external override(Module) initializer {
+        __Module_init(orchestrator_, metadata);
         //init empty list of bounties and claims
         _bountyList.init();
         _claimList.init();
     }
 
-    function init2(IProposal, bytes memory)
+    function init2(IOrchestrator, bytes memory)
         external
         override(Module)
         initializer2
     {
         //Note: due to the authorizer still not being set during initialization,
         // this function has to be called after.
-        IRoleAuthorizer(address(proposal().authorizer()))
-            .toggleModuleSelfManagement();
     }
 
     //--------------------------------------------------------------------------
@@ -274,7 +285,7 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         bytes calldata details
     )
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ISSUER_ROLE)
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -300,8 +311,9 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ISSUER_ROLE)
         validBountyId(bountyId)
+        notLocked(bountyId)
     {
         _bountyRegistry[bountyId].details = details;
 
@@ -311,11 +323,11 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function lockBounty(uint bountyId)
         external
-        onlyRole(uint8(Roles.BountyAdmin))
+        onlyModuleRole(BOUNTY_ISSUER_ROLE)
         validBountyId(bountyId)
-        notClaimed(bountyId)
+        notLocked(bountyId)
     {
-        _bountyRegistry[bountyId].claimedBy = type(uint).max;
+        _bountyRegistry[bountyId].locked = true;
 
         emit BountyLocked(bountyId);
     }
@@ -327,9 +339,9 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         bytes calldata details
     )
         external
-        onlyRole(uint8(Roles.ClaimAdmin))
+        onlyModuleRole(CLAIMANT_ROLE)
         validBountyId(bountyId)
-        notClaimed(bountyId)
+        notLocked(bountyId)
         returns (uint id)
     {
         validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
@@ -364,21 +376,23 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     /// @inheritdoc IBountyManager
     function updateClaimContributors(
         uint claimId,
-        uint bountyId,
         Contributor[] calldata contributors
     )
         external
         validClaimId(claimId)
-        onlyClaimContributor(claimId)
-        validBountyId(bountyId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
+        onlyModuleRole(CLAIMANT_ROLE)
     {
-        validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
+        validContributorsForBounty(
+            contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
+        );
         Claim storage c = _claimRegistry[claimId];
 
         uint length = c.contributors.length;
         for (uint i; i < length;) {
             //remove ClaimId for each contributor address
-            contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId); //@note c.contributors[i].addr -> is there a more gas efficient alternative to this?
+            contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId);
             unchecked {
                 ++i;
             }
@@ -404,6 +418,8 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
         validClaimId(claimId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
         onlyClaimContributor(claimId)
     {
         _claimRegistry[claimId].details = details;
@@ -412,20 +428,18 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
     }
 
     /// @inheritdoc IBountyManager
-    function verifyClaim(uint claimId, uint bountyId)
+    function verifyClaim(uint claimId, Contributor[] calldata contributors)
         external
-        onlyRole(uint8(Roles.VerifyAdmin))
+        onlyModuleRole(VERIFIER_ROLE)
         validClaimId(claimId)
-        validBountyId(bountyId)
-        claimBelongingToBounty(claimId, bountyId)
-        notClaimed(bountyId)
+        notClaimed(claimId)
+        notLocked(_claimRegistry[claimId].bountyId)
     {
+        contributorsNotChanged(claimId, contributors);
+
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
 
         uint length = contribs.length;
-
-        //total amount needed to verifyBounty
-        uint totalAmount;
 
         //current contributor in loop
         Contributor memory contrib;
@@ -433,7 +447,6 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
         //For each Contributor add payments according to the claimAmount specified
         for (uint i; i < length;) {
             contrib = contribs[i];
-            totalAmount += contrib.claimAmount;
 
             _addPaymentOrder(
                 PaymentOrder({
@@ -448,112 +461,14 @@ contract BountyManager is IBountyManager, Module, PaymentClient {
             }
         }
 
-        //ensure that this contract has enough tokens to fulfill all payments
-        _ensureTokenBalance(totalAmount);
-
         //when done process the Payments correctly
-        __Module_proposal.paymentProcessor().processPayments(
-            IPaymentClient(address(this))
+        __Module_orchestrator.paymentProcessor().processPayments(
+            IERC20PaymentClient(address(this))
         );
 
         //Set completed to true
-        _bountyRegistry[bountyId].claimedBy = claimId;
+        _claimRegistry[claimId].claimed = true;
 
-        emit ClaimVerified(claimId, bountyId);
-    }
-
-    //----------------------------------
-    // Role Functions
-
-    /// @inheritdoc IBountyManager
-    function grantBountyAdminRole(address addr) external onlyAuthorized {
-        //@todo Will be removed in the future and moved to the authorizer directly
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer())); //@todo Cast to IRoleAuthorizer wont be necessary as soon as the IAuthorizer Interface in Proposal is replaced by IRoleAuthorizer, this is the same for the other implementations
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.BountyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function grantClaimAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.ClaimAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function grantVerifyAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.grantRoleFromModule(uint8(Roles.VerifyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeBountyAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.BountyAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeClaimAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.ClaimAdmin), addr);
-    }
-
-    /// @inheritdoc IBountyManager
-    function revokeVerifyAdminRole(address addr) external onlyAuthorized {
-        IRoleAuthorizer roleAuthorizer =
-            IRoleAuthorizer(address(__Module_proposal.authorizer()));
-        roleAuthorizer.revokeRoleFromModule(uint8(Roles.VerifyAdmin), addr);
-    }
-
-    //--------------------------------------------------------------------------
-    // {PaymentClient} Function Implementations
-
-    function _ensureTokenBalance(uint amount)
-        internal
-        override(PaymentClient)
-    {
-        uint balance = __Module_proposal.token().balanceOf(address(this));
-
-        if (balance < amount) {
-            // Trigger callback from proposal to transfer tokens
-            // to address(this).
-            bool ok;
-            (ok, /*returnData*/ ) = __Module_proposal.executeTxFromModule(
-                address(__Module_proposal.fundingManager()),
-                abi.encodeWithSignature(
-                    "transferProposalToken(address,uint256)",
-                    address(this),
-                    amount - balance
-                )
-            );
-
-            if (!ok) {
-                revert Module__PaymentClient__TokenTransferFailed();
-            }
-        }
-    }
-
-    function _ensureTokenAllowance(IPaymentProcessor spender, uint amount)
-        internal
-        override(PaymentClient)
-    {
-        IERC20 token = __Module_proposal.token();
-        uint allowance = token.allowance(address(this), address(spender));
-
-        if (allowance < amount) {
-            token.safeIncreaseAllowance(address(spender), amount - allowance);
-        }
-    }
-
-    function _isAuthorizedPaymentProcessor(IPaymentProcessor who)
-        internal
-        view
-        override(PaymentClient)
-        returns (bool)
-    {
-        return __Module_proposal.paymentProcessor() == who;
+        emit ClaimVerified(claimId);
     }
 }

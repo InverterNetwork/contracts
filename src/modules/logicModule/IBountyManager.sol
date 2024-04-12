@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IPaymentClient} from "src/modules/base/mixins/IPaymentClient.sol";
+import {IERC20PaymentClient} from
+    "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
-interface IBountyManager is IPaymentClient {
-    //--------------------------------------------------------------------------
-    // Enums
-
-    enum Roles {
-        BountyAdmin,
-        ClaimAdmin,
-        VerifyAdmin
-    }
-
+interface IBountyManager is IERC20PaymentClient {
     //--------------------------------------------------------------------------
     // Types
 
@@ -24,9 +16,8 @@ interface IBountyManager is IPaymentClient {
         /// @dev Arbitrary data to store Bounty details if necessary.
         ///      CAN be empty.
         bytes details;
-        /// @dev Id that claimed the bounty
-        ///      A Bounty is claimed if a Claim got acknowledged by a Verifier
-        uint claimedBy;
+        /// @dev If locked the Bounty is no longer available for a claim
+        bool locked;
     }
 
     struct Contributor {
@@ -44,13 +35,12 @@ interface IBountyManager is IPaymentClient {
         /// @dev Arbitrary data to store Claim details if necessary.
         ///      CAN be empty.
         bytes details;
+        /// @dev Did this Claim claim its bounty already
+        bool claimed;
     }
 
     //--------------------------------------------------------------------------
     // Errors
-
-    /// @notice Access only to addresses with the given role id of BountyAdmin
-    error Module__BountyManager__OnlyRole(uint8 id, address module);
 
     /// @notice Access only to addresses that are listed as contributors in the according claim
     error Module__BountyManager__OnlyClaimContributor();
@@ -76,30 +66,44 @@ interface IBountyManager is IPaymentClient {
     /// @notice Given total claims of contributors exceed or are below the given payout amounts of the bounty
     error Module__BountyManager__ClaimExceedsGivenPayoutAmounts();
 
-    /// @notice Claim is not trying to claim given bounty
-    error Module__BountyManager__ClaimNotBelongingToBounty();
+    /// @notice Given Bounty id is Locked
+    error Module__BountyManager__BountyLocked();
 
-    /// @notice Given Bounty id is already claimed or Locked
-    error Module__BountyManager__BountyAlreadyClaimedOrLocked();
+    /// @notice Given Claim id got already claimed
+    error Module__BountyManager__AlreadyClaimed();
+
+    /// @notice The given Contributors are not the same as in the claim. This might be connected to a tried front run of the given transaction.
+    error Module__BountyManager__ContributorsChanged();
 
     //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a new Bounty is added.
+    /// @param bountyId The id of the newly added Bounty.
+    /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed
+    /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed
+    /// @param details The Bounty's details.
     event BountyAdded(
         uint indexed bountyId,
-        uint indexed minimumPayoutAmount,
-        uint indexed maximumPayoutAmount,
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
         bytes details
     );
 
     /// @notice Event emitted when a Bounty got updated.
+    /// @param bountyId The id of the updated Bounty.
+    /// @param details The Bounty's details.
     event BountyUpdated(uint indexed bountyId, bytes indexed details);
 
     /// @notice Event emitted when a Bounty gets locked.
+    /// @param bountyId The id of the locked Bounty.
     event BountyLocked(uint indexed bountyId);
 
     /// @notice Event emitted when a new Claim is added.
+    /// @param claimId The id of the newly added Claim.
+    /// @param bountyId The id of the Bounty that got claimed.
+    /// @param contributors The contributor information for the Claim.
+    /// @param details The Claim's details.
     event ClaimAdded(
         uint indexed claimId,
         uint indexed bountyId,
@@ -108,14 +112,20 @@ interface IBountyManager is IPaymentClient {
     );
 
     /// @notice Event emitted when Claim Contributors got updated.
+    /// @param claimId The id of the Claim that got updated.
+    /// @param contributors The contributor information for the Claim.
     event ClaimContributorsUpdated(
         uint indexed claimId, Contributor[] indexed contributors
     );
+
     /// @notice Event emitted when Claim Details got updated.
+    /// @param claimId The id of the Claim that got updated.
+    /// @param details The Claim's details.
     event ClaimDetailsUpdated(uint indexed claimId, bytes details);
 
     /// @notice Event emitted when a Claim is verified.
-    event ClaimVerified(uint indexed BountyId, uint indexed ClaimId);
+    /// @param claimId The id of the Claim that got verified.
+    event ClaimVerified(uint indexed claimId);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -210,11 +220,9 @@ interface IBountyManager is IPaymentClient {
     /// @notice Updates a Claim's contributor informations.
     /// @dev Reverts if an argument invalid.
     /// @param claimId The id of the Claim that will be updated.
-    /// @param bountyId The id of the bounty the Claim wants to claim.
     /// @param contributors The contributor information for the Claim.
     function updateClaimContributors(
         uint claimId,
-        uint bountyId,
         Contributor[] calldata contributors
     ) external;
 
@@ -227,40 +235,9 @@ interface IBountyManager is IPaymentClient {
     /// @notice Completes a Bounty by verifying a claim.
     /// @dev Only callable by authorized addresses.
     /// @dev Reverts if id invalid.
+    /// @dev contributors should be copied out of the given Claim. The parameter is used to prevent front running.
     /// @param claimId The id of the Claim that wants to claim the Bounty.
-    /// @param bountyId The id of the Bounty that will be claimed.
-    function verifyClaim(uint claimId, uint bountyId) external;
-
-    //----------------------------------
-    // Role Functions
-
-    /// @notice Grants the BountyAdmin Role to a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets the role granted
-    function grantBountyAdminRole(address addr) external;
-
-    /// @notice Grants the ClaimAdmin Role to a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets the role granted
-    function grantClaimAdminRole(address addr) external;
-
-    /// @notice Grants the VerifyAdmin Role to a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets the role granted
-    function grantVerifyAdminRole(address addr) external;
-
-    /// @notice Revokes the BountyAdmin Role from a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets their role revoked
-    function revokeBountyAdminRole(address addr) external;
-
-    /// @notice Revokes the ClaimAdmin Role from a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets their role revoked
-    function revokeClaimAdminRole(address addr) external;
-
-    /// @notice Revokes the VerifyAdmin Role from a specified address
-    /// @dev Only callable by authorized addresses.
-    /// @param addr Address that gets their role revoked
-    function revokeVerifyAdminRole(address addr) external;
+    /// @param contributors The contributor information for the Claim.
+    function verifyClaim(uint claimId, Contributor[] calldata contributors)
+        external;
 }

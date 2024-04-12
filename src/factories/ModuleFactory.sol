@@ -7,6 +7,7 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Dependencies
 import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
@@ -17,7 +18,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {
     IModuleFactory,
-    IProposal,
+    IOrchestrator,
     IModule
 } from "src/factories/IModuleFactory.sol";
 
@@ -32,7 +33,17 @@ import {
  *
  * @author Inverter Network
  */
-contract ModuleFactory is IModuleFactory, Ownable2Step {
+contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IModuleFactory).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -75,8 +86,8 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
     /// @inheritdoc IModuleFactory
     function createModule(
         IModule.Metadata memory metadata,
-        IProposal proposal,
-        bytes memory configdata
+        IOrchestrator orchestrator,
+        bytes memory configData
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
@@ -102,9 +113,13 @@ contract ModuleFactory is IModuleFactory, Ownable2Step {
 
         address implementation = address(new BeaconProxy(beacon));
 
-        IModule(implementation).init(proposal, metadata, configdata);
+        IModule(implementation).init(orchestrator, metadata, configData);
 
-        emit ModuleCreated(address(proposal), implementation, metadata.title);
+        emit ModuleCreated(
+            address(orchestrator),
+            implementation,
+            LibMetadata.identifier(metadata)
+        );
 
         return implementation;
     }

@@ -6,8 +6,12 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
 //Internal Dependencies
-import {ModuleTest, IModule, IProposal} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {IRebasingERC20} from
+    "src/modules/fundingManager/token/IRebasingERC20.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -43,21 +47,53 @@ contract RebasingFundingManagerTest is ModuleTest {
 
     // Other constants.
     uint8 private constant DECIMALS = 18;
-    uint private constant PROPOSAL_ID = 1;
+    uint private constant ORCHESTRATOR_ID = 1;
+
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when a deposit takes place.
+    /// @param _from The address depositing tokens.
+    /// @param _for The address that will receive the receipt tokens.
+    /// @param _amount The amount of tokens deposited.
+    event Deposit(
+        address indexed _from, address indexed _for, uint indexed _amount
+    );
+
+    /// @notice Event emitted when a withdrawal takes place.
+    /// @param _from The address supplying the receipt tokens.
+    /// @param _for The address that will receive the underlying tokens.
+    /// @param _amount The amount of underlying tokens withdrawn.
+    event Withdrawal(
+        address indexed _from, address indexed _for, uint indexed _amount
+    );
+
+    /// @notice Event emitted when a transferal of orchestrator tokens takes place.
+    /// @param _to The address that will receive the underlying tokens.
+    /// @param _amount The amount of underlying tokens transfered.
+    event TransferOrchestratorToken(address indexed _to, uint indexed _amount);
 
     function setUp() public {
         //because generateValidUserDeposits uses a mechanism to generate random numbers based on blocktimestamp we warp it
         vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
 
-        //Add Module to Mock Proposal
+        //Add Module to Mock Orchestrator
 
         address impl = address(new RebasingFundingManager());
         fundingManager = RebasingFundingManager(Clones.clone(impl));
 
-        _setUpProposal(fundingManager);
+        _setUpOrchestrator(fundingManager);
 
         //Init Module
-        fundingManager.init(_proposal, _METADATA, abi.encode(address(_token)));
+        fundingManager.init(
+            _orchestrator, _METADATA, abi.encode(address(_token))
+        );
+    }
+
+    function testSupportsInterface() public {
+        assertTrue(
+            fundingManager.supportsInterface(type(IFundingManager).interfaceId)
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -69,7 +105,9 @@ contract RebasingFundingManagerTest is ModuleTest {
 
     function testInit() public override(ModuleTest) {
         assertEq(fundingManager.decimals(), DECIMALS);
-        assertEq(fundingManager.name(), "Inverter Funding Token - Proposal #1");
+        assertEq(
+            fundingManager.name(), "Inverter Funding Token - Orchestrator #1"
+        );
         assertEq(fundingManager.symbol(), "IFT-1");
 
         assertEq(fundingManager.totalSupply(), 0);
@@ -78,7 +116,7 @@ contract RebasingFundingManagerTest is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        fundingManager.init(_proposal, _METADATA, abi.encode());
+        fundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 
     function testInit2RebasingFundingManager() public {
@@ -87,25 +125,25 @@ contract RebasingFundingManagerTest is ModuleTest {
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        fundingManager.init2(_proposal, abi.encode(123));
+        fundingManager.init2(_orchestrator, abi.encode(123));
 
         // Calling init2 for the first time with no dependency
         // SHOULD FAIL
-        bytes memory dependencydata = abi.encode(hasDependency, dependencies);
+        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
             IModule.Module__NoDependencyOrMalformedDependencyData.selector
         );
-        fundingManager.init2(_proposal, dependencydata);
+        fundingManager.init2(_orchestrator, dependencyData);
 
         // Calling init2 for the first time with dependency = true
         // SHOULD PASS
-        dependencydata = abi.encode(true, dependencies);
-        fundingManager.init2(_proposal, dependencydata);
+        dependencyData = abi.encode(true, dependencies);
+        fundingManager.init2(_orchestrator, dependencyData);
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
         vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
-        fundingManager.init2(_proposal, dependencydata);
+        fundingManager.init2(_orchestrator, dependencyData);
     }
 
     //--------------------------------------------------------------------------
@@ -122,6 +160,10 @@ contract RebasingFundingManagerTest is ModuleTest {
         vm.startPrank(user);
         {
             _token.approve(address(fundingManager), type(uint).max);
+
+            vm.expectEmit();
+            emit Deposit(user, user, amount);
+
             fundingManager.deposit(amount);
         }
         vm.stopPrank();
@@ -205,6 +247,10 @@ contract RebasingFundingManagerTest is ModuleTest {
         uint undelierDeposited = 0; // keeps track of amount deposited so we can use it later
         for (uint i; i < (input.users.length / 2); ++i) {
             vm.prank(input.users[i]);
+
+            vm.expectEmit();
+            emit Deposit(input.users[i], input.users[i], input.deposits[i]);
+
             fundingManager.deposit(input.deposits[i]);
 
             assertEq(
@@ -261,7 +307,7 @@ contract RebasingFundingManagerTest is ModuleTest {
         //Buffer variable to track how much underlying balance each user has left
         uint[] memory remainingFunds = new uint[](input.users.length);
 
-        //the deployer deposits 1 token so the proposal is never empty
+        //the deployer deposits 1 token so the orchestrator is never empty
         _token.mint(address(this), 1);
         vm.startPrank(address(this));
         _token.approve(address(fundingManager), type(uint).max);
@@ -286,6 +332,9 @@ contract RebasingFundingManagerTest is ModuleTest {
         // Half the users deposit their underliers.
         for (uint i; i < input.users.length / 2; ++i) {
             vm.prank(input.users[i]);
+            vm.expectEmit();
+            emit Deposit(input.users[i], input.users[i], input.deposits[i]);
+
             fundingManager.deposit(input.deposits[i]);
 
             assertEq(
@@ -316,6 +365,9 @@ contract RebasingFundingManagerTest is ModuleTest {
         // The other half of the users deposit their underliers.
         for (uint i = input.users.length / 2; i < input.users.length; ++i) {
             vm.prank(input.users[i]);
+            vm.expectEmit();
+            emit Deposit(input.users[i], input.users[i], input.deposits[i]);
+
             fundingManager.depositFor(input.users[i], input.deposits[i]);
 
             assertEq(
@@ -342,17 +394,21 @@ contract RebasingFundingManagerTest is ModuleTest {
             remainingFunds[i] = fundingManager.balanceOf(input.users[i]);
         }
 
-        // ---- STEP THREE: WIND DOWN PROPOSAL
+        // ---- STEP THREE: WIND DOWN ORCHESTRATOR
 
-        // The proposal is deemed completed, so everybody withdraws
+        // The orchestrator is deemed completed, so everybody withdraws
         for (uint i; i < input.users.length; ++i) {
             uint balance = fundingManager.balanceOf(input.users[i]);
             if (balance != 0) {
                 vm.prank(input.users[i]);
                 //to test both withdraw and withdrawTo
                 if (i % 2 == 0) {
+                    vm.expectEmit();
+                    emit Withdrawal(input.users[i], input.users[i], balance);
                     fundingManager.withdraw(balance);
                 } else {
+                    vm.expectEmit();
+                    emit Withdrawal(input.users[i], input.users[i], balance);
                     fundingManager.withdrawTo(input.users[i], balance);
                 }
             }
@@ -361,12 +417,15 @@ contract RebasingFundingManagerTest is ModuleTest {
         //Once everybody has withdrawn, only the initial token + some possible balance rounding leftovers remain.
         assertTrue(fundingManager.totalSupply() <= (1 + input.users.length));
 
-        // ---- STEP FOUR: RE-START PROPOSAL
+        // ---- STEP FOUR: RE-START ORCHESTRATOR
 
         // Some time passes, and now half the users deposit their underliers again to continue funding (if they had any funds left).
         for (uint i; i < input.users.length / 2; ++i) {
             if (remainingFunds[i] != 0) {
                 vm.prank(input.users[i]);
+                vm.expectEmit();
+                emit Deposit(input.users[i], input.users[i], remainingFunds[i]);
+
                 fundingManager.deposit(remainingFunds[i]);
 
                 assertEq(
@@ -377,20 +436,22 @@ contract RebasingFundingManagerTest is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
-    // Tests: OnlyProposal Mutating Functions
+    // Tests: OnlyOrchestrator Mutating Functions
 
-    function testTransferProposalToken(address to, uint amount) public {}
+    function testTransferOrchestratorToken(address to, uint amount) public {}
 
-    function testTransferProposalTokenFails(address caller, address to)
+    function testTransferOrchestratorTokenFails(address caller, address to)
         public
     {
+        vm.assume(to != address(0) && to != address(fundingManager));
+
         _token.mint(address(fundingManager), 2);
 
-        if (caller != address(_proposal)) {
-            vm.expectRevert(IModule.Module__OnlyCallableByProposal.selector);
+        if (caller != address(_orchestrator)) {
+            vm.expectRevert(IModule.Module__OnlyCallableByOrchestrator.selector);
         }
         vm.prank(caller);
-        fundingManager.transferProposalToken(address(0xBEEF), 1);
+        fundingManager.transferOrchestratorToken(address(0xBEEF), 1);
 
         if (to == address(0) || to == address(fundingManager)) {
             vm.expectRevert(
@@ -398,8 +459,12 @@ contract RebasingFundingManagerTest is ModuleTest {
             );
         }
 
-        vm.prank(address(_proposal));
-        fundingManager.transferProposalToken(to, 1);
+        vm.prank(address(_orchestrator));
+
+        vm.expectEmit();
+        emit TransferOrchestratorToken(to, 1);
+
+        fundingManager.transferOrchestratorToken(to, 1);
     }
 
     //--------------------------------------------------------------------------

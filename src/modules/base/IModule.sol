@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IProposal} from "src/proposal/IProposal.sol";
+import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 interface IModule {
     struct Metadata {
@@ -13,23 +13,38 @@ interface IModule {
     }
 
     //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Module has been initialized.
+    /// @param parentOrchestrator The address of the orchestrator the module is linked to.
+    /// @param moduleTitle The title of the module.
+    /// @param majorVersion The major version of the module.
+    /// @param minorVersion The minor version of the module.
+    event ModuleInitialized(
+        address indexed parentOrchestrator,
+        string indexed moduleTitle,
+        uint majorVersion,
+        uint minorVersion
+    );
+
+    //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Module__CallerNotAuthorized();
+    error Module__CallerNotAuthorized(bytes32 role, address caller);
 
-    /// @notice Function is only callable by the proposal.
-    error Module__OnlyCallableByProposal();
+    /// @notice Function is only callable by the orchestrator.
+    error Module__OnlyCallableByOrchestrator();
 
-    /// @notice Given proposal address invalid.
-    error Module__InvalidProposalAddress();
+    /// @notice Given orchestrator address invalid.
+    error Module__InvalidOrchestratorAddress();
 
     /// @notice Given metadata invalid.
     error Module__InvalidMetadata();
 
-    /// @notice Proposal callback triggered failed.
+    /// @notice Orchestrator callback triggered failed.
     /// @param funcSig The signature of the function called.
-    error Module_ProposalCallbackFailed(string funcSig);
+    error Module_OrchestratorCallbackFailed(string funcSig);
 
     /// @notice init2 was called again for a module
     error Module__CannotCallInit2Again();
@@ -44,21 +59,22 @@ interface IModule {
     /// @notice The module's initializer function.
     /// @dev CAN be overriden by downstream contract.
     /// @dev MUST call `__Module_init()`.
-    /// @param proposal The module's proposal instance.
+    /// @param orchestrator The module's orchestrator instance.
     /// @param metadata The module's metadata.
-    /// @param configdata Variable config data for specific module
+    /// @param configData Variable config data for specific module
     ///                   implementations.
     function init(
-        IProposal proposal,
+        IOrchestrator orchestrator,
         Metadata memory metadata,
-        bytes memory configdata
+        bytes memory configData
     ) external;
 
     /// @notice Second initialization function of the module to take care of dependencies.
-    /// @param proposal The module's proposal instance.
-    /// @param configdata Variable config data for specific module
+    /// @param orchestrator The module's orchestrator instance.
+    /// @param configData Variable config data for specific module
     ///                   implementations.
-    function init2(IProposal proposal, bytes memory configdata) external;
+    function init2(IOrchestrator orchestrator, bytes memory configData)
+        external;
 
     /// @notice Returns the module's identifier.
     /// @dev The identifier is defined as the keccak256 hash of the module's
@@ -79,7 +95,11 @@ interface IModule {
     /// @return The module's title.
     function title() external view returns (string memory);
 
-    /// @notice Returns the module's {IProposal} proposal instance.
-    /// @return The module's proposal.
-    function proposal() external view returns (IProposal);
+    /// @notice Returns the module's {IOrchestrator} orchestrator instance.
+    /// @return The module's orchestrator.
+    function orchestrator() external view returns (IOrchestrator);
+
+    function grantModuleRole(bytes32 role, address addr) external;
+
+    function revokeModuleRole(bytes32 role, address addr) external;
 }

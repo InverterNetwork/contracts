@@ -12,11 +12,10 @@ import {SimplePaymentProcessor} from
  *
  * @author Inverter Network
  */
-
-contract DeployPaymentProcessor is Script {
+contract DeploySimplePaymentProcessor is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("PROPOSAL_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     SimplePaymentProcessor paymentProcessor;
@@ -24,14 +23,14 @@ contract DeployPaymentProcessor is Script {
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the milestoneManager.
+            // Deploy the SimplePaymentProcessor.
 
             paymentProcessor = new SimplePaymentProcessor();
         }
 
         vm.stopBroadcast();
 
-        // Log the deployed MilestoneManager contract address.
+        // Log the deployed SimplePaymentProcessor contract address.
         console2.log(
             "Deployment of SimplePaymentProcessor Implementation at address",
             address(paymentProcessor)

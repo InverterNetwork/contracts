@@ -54,18 +54,22 @@ testFuzz: ## Run whole testsuite with a custom amount of fuzz runs
 
 .PHONY: testProposal
 testProposal: ## Run proposal/ package tests
+	@make pre-test
 	@forge test -vvv --match-path "*/proposal/*"
 
 .PHONY: testModules
 testModules: ## Run modules/ package tests
+	@make pre-test
 	@forge test -vvv --match-path "*/modules/*"
 
 .PHONY: testFactories
 testFactories: ## Run factories/ package tests
+	@make pre-test
 	@forge test -vvv --match-path "*/factories/*"
 
 .PHONY: testE2e
 testE2e: ## Run e2e test suite
+	@make pre-test
 	@forge test -vvv --match-path "*/e2e/*"
 
 .PHONY: testScripts
@@ -73,22 +77,21 @@ testScripts: ## Run e2e test suite
 	@forge script script/deployment/DeploymentScript.s.sol
 
 	@forge script script/factories/DeployModuleFactory.s.sol
-	@forge script script/factories/DeployProposalFactory.s.sol
-	
+	@forge script script/factories/DeployOrchestratorFactory.s.sol
+
 	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol
-	@forge script script/modules/governance/DeploySingleVoteGovernor.s.sol
+	@forge script script/modules/DeploySingleVoteGovernor.s.sol
 	
 	@forge script script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol
 	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
 
-	@forge script script/modules/DeployMilestoneManager.s.sol
-	@forge script script/modules/DeployRebasingFundingManager.s.sol
+	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
 
-	@forge script script/proposal/DeployProposal.s.sol
+	@forge script script/orchestrator/DeployOrchestrator.s.sol
 
 	@forge script script/proxies/DeployBeacon.s.sol
 
-	@forge script script/setup/SetupToyProposalScript.s.sol
+	@forge script script/setup/SetupToyOrchestratorScript.s.sol
 
 # -----------------------------------------------------------------------------
 # Static Analyzers
@@ -116,7 +119,10 @@ report-gas: ## Print gas report
 
 .PHONY: report-cov
 report-cov: ## Print coverage report
-	@forge coverage
+	@echo "### Running tests & generating the coverage report..."
+	@forge coverage --report lcov
+	@genhtml lcov.info --branch-coverage --output-dir coverage
+	@forge snapshot
 
 # -----------------------------------------------------------------------------
 # Formatting
@@ -132,13 +138,9 @@ fmt-check: ## Check whether code formatted correctly
 # -----------------------------------------------------------------------------
 # Git
 
-.PHONY: pre-commit
-pre-commit: ## Git pre-commit hook
+pre-test: # format and export correct data
 	@echo "### Formatting..."
 	@forge fmt
-
-	@echo "### Running the scripts..."
-	@make testScripts
 
 	# Env variables to make sure the local tests runs
 	# equally long compared to the CI tests
@@ -160,10 +162,17 @@ pre-commit: ## Git pre-commit hook
 	@export DEPLOYMENT_PROPOSAL_FACTORY_TARGET=0x0000000000000000000000000000000000000001
 	@export DEPLOYMENT_PROPOSAL_FACTORY_MODULE_FACTORY=0x0000000000000000000000000000000000000002
 
-	@echo "### Running tests & generating the coverage report..."
-	@forge coverage --report lcov
-	@genhtml lcov.info --branch-coverage --output-dir coverage
-	@forge snapshot
+.PHONY: pre-commit
+pre-commit: ## Git pre-commit hook
+
+	@echo "### Configure tests"
+	@make pre-test
+	
+	@echo "### Running the scripts..."
+	@make testScripts
+
+	@echo "### Start running tests"
+	@forge test
 
 # -----------------------------------------------------------------------------
 # Help Command

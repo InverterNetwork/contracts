@@ -8,13 +8,18 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+
+//Internal Dependencies
+import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule, IProposal} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
-import {Proposal} from "src/proposal/Proposal.sol";
+import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -28,80 +33,69 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract ModuleTest is Test {
+contract baseModuleTest is ModuleTest {
     // SuT
     ModuleMock module;
 
-    Proposal proposal;
+    bytes _CONFIGDATA = bytes("");
 
-    // Mocks
-    FundingManagerMock fundingManager;
-    AuthorizerMock authorizer;
-    PaymentProcessorMock paymentProcessor;
+    //--------------------------------------------------------------------------
+    // Events
 
-    // Constants
-    uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 1;
-    string constant URL = "https://github.com/organization/module";
-    string constant TITLE = "Payment Processor";
-
-    IModule.Metadata METADATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
-
-    bytes CONFIGDATA = bytes("");
+    /// @notice Module has been initialized.
+    /// @param parentOrchestrator The address of the orchestrator the module is linked to.
+    /// @param moduleTitle The title of the module.
+    /// @param majorVersion The major version of the module.
+    /// @param minorVersion The minor version of the module.
+    event ModuleInitialized(
+        address indexed parentOrchestrator,
+        string indexed moduleTitle,
+        uint majorVersion,
+        uint minorVersion
+    );
 
     function setUp() public {
-        fundingManager = new FundingManagerMock();
-
-        authorizer = new AuthorizerMock();
-        authorizer.setAllAuthorized(true);
-
-        paymentProcessor = new PaymentProcessorMock();
-
-        address proposalImpl = address(new Proposal());
-        proposal = Proposal(Clones.clone(proposalImpl));
-
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        module.init(proposal, METADATA, CONFIGDATA);
+        _setUpOrchestrator(module);
 
-        // Initialize proposal to enable module.
-        address[] memory modules = new address[](1);
-        modules[0] = address(module);
-        proposal.init(
-            1,
-            address(this),
-            IERC20(new ERC20Mock("Mock", "MOCK")),
-            modules,
-            fundingManager,
-            authorizer,
-            paymentProcessor
+        _authorizer.setIsAuthorized(address(this), true);
+
+        vm.expectEmit(true, true, true, false);
+        emit ModuleInitialized(
+            address(_orchestrator), _TITLE, _MAJOR_VERSION, _MINOR_VERSION
         );
+
+        module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInit() public {
-        // Proposal correctly written to storage.
-        assertEq(address(module.proposal()), address(proposal));
+    function testSupportsInterface() public {
+        assertTrue(module.supportsInterface(type(IModule).interfaceId));
+    }
+
+    function testInit() public override {
+        // Orchestrator correctly written to storage.
+        assertEq(address(module.orchestrator()), address(_orchestrator));
 
         // Identifier correctly computed.
-        assertEq(module.identifier(), LibMetadata.identifier(METADATA));
+        assertEq(module.identifier(), LibMetadata.identifier(_METADATA));
 
         // Version correctly set.
         uint majorVersion;
         uint minorVersion;
         (majorVersion, minorVersion) = module.version();
-        assertEq(majorVersion, MAJOR_VERSION);
-        assertEq(minorVersion, MINOR_VERSION);
+        assertEq(majorVersion, _MAJOR_VERSION);
+        assertEq(minorVersion, _MINOR_VERSION);
 
-        // URL correctly set.
-        assertEq(module.url(), URL);
+        // _URL correctly set.
+        assertEq(module.url(), _URL);
 
-        // Title correctly set.
-        assertEq(module.title(), TITLE);
+        // _TITLE correctly set.
+        assertEq(module.title(), _TITLE);
     }
 
     function testInitFailsForNonInitializerFunction() public {
@@ -109,40 +103,72 @@ contract ModuleTest is Test {
         module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        module.initNoInitializer(proposal, METADATA, CONFIGDATA);
+        module.initNoInitializer(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
-    function testReinitFails() public {
+    function testReinitFails() public override {
         vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
-        module.init(proposal, METADATA, CONFIGDATA);
+        module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
-    function testInitFailsForInvalidProposal() public {
+    function testInitFailsForInvalidOrchestrator() public {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        vm.expectRevert(IModule.Module__InvalidProposalAddress.selector);
-        module.init(IProposal(address(0)), METADATA, CONFIGDATA);
+        vm.expectRevert(IModule.Module__InvalidOrchestratorAddress.selector);
+        module.init(IOrchestrator(address(0)), _METADATA, _CONFIGDATA);
     }
 
     function testInitFailsIfMetadataInvalid() public {
         address impl = address(new ModuleMock());
         module = ModuleMock(Clones.clone(impl));
 
-        // Invalid if url empty.
+        // Invalid if _URL empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(
-            proposal,
-            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE),
-            CONFIGDATA
+            _orchestrator,
+            IModule.Metadata(_MAJOR_VERSION, _MINOR_VERSION, "", _TITLE),
+            _CONFIGDATA
         );
 
-        // Invalid if title empty.
+        // Invalid if _TITLE empty.
         vm.expectRevert(IModule.Module__InvalidMetadata.selector);
         module.init(
-            proposal,
-            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""),
-            CONFIGDATA
+            _orchestrator,
+            IModule.Metadata(_MAJOR_VERSION, _MINOR_VERSION, _URL, ""),
+            _CONFIGDATA
         );
+    }
+
+    //--------------------------------------------------------------------------
+    // Role Functions
+
+    function testGrantModuleRole(bytes32 role, address addr) public {
+        vm.assume(addr != address(0));
+
+        vm.startPrank(address(this));
+
+        module.grantModuleRole(role, addr);
+
+        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
+        bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
+        assertTrue(isAuthorized);
+
+        vm.stopPrank();
+    }
+
+    function testRevokeModuleRole(bytes32 role, address addr) public {
+        vm.assume(addr != address(0));
+
+        vm.startPrank(address(this));
+
+        module.grantModuleRole(role, addr);
+        module.revokeModuleRole(role, addr);
+
+        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
+        bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
+        assertFalse(isAuthorized);
+
+        vm.stopPrank();
     }
 }
