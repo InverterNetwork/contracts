@@ -136,7 +136,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         issuanceToken = new ERC20IssuanceMock();
         issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -1547,28 +1546,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
     }
 
-    function testSetDecimals_FailsIfLowerThanCollateralDecimals(
-        uint _newMaxSupply,
-        uint8 _newDecimals
-    ) public {
-        vm.assume(_newDecimals < _token.decimals());
 
-        string memory _name = "New Issuance Token";
-        string memory _symbol = "NEW";
-
-        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
-        newIssuanceToken.init(_name, _symbol, _newMaxSupply, _newDecimals);
-
-        vm.expectRevert(
-            IBancorVirtualSupplyBondingCurveFundingManager
-                .BancorVirtualSupplyBondingCurveFundingManager__InvalidTokenDecimal
-                .selector
-        );
-        // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setIssuanceToken(
-            address(newIssuanceToken)
-        );
-    }
 
     function testSetIssuanceToken_FailsIfLowerThanCollateralDecimals(
         uint _newMaxSupply,
