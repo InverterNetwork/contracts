@@ -42,13 +42,26 @@ interface IAuthorizer is IAccessControlEnumerable {
     /// @param target  The address to which to grant the role.
     function grantRoleFromModule(bytes32 role, address target) external;
 
+    /// @notice Used by a Module to grant a role to a set of users.
+    /// @param role The identifier of the role to grant
+    /// @param targets  The addresses to which to grant the role.
+    function grantRoleFromModuleBatched(
+        bytes32 role,
+        address[] calldata targets
+    ) external;
+
     /// @notice Used by a Module to revoke a role from a user.
     /// @param role The identifier of the role to revoke
     /// @param target  The address to revoke the role from.
     function revokeRoleFromModule(bytes32 role, address target) external;
 
-    /*     /// @notice Toggles if a Module self-manages its roles or defaults to the orchestrator's roles.
-    function toggleModuleSelfManagement() external; */
+    /// @notice Used by a Module to revoke a role from a set of users.
+    /// @param role The identifier of the role to revoke
+    /// @param targets  The address to revoke the role from.
+    function revokeRoleFromModuleBatched(
+        bytes32 role,
+        address[] calldata targets
+    ) external;
 
     /// @notice Transfer the admin rights to a given role.
     /// @param roleId The role on which to peform the admin transfer
@@ -66,11 +79,25 @@ interface IAuthorizer is IAccessControlEnumerable {
     /// @dev Only the addresses with the Owner role should be able to call this function
     function grantGlobalRole(bytes32 role, address target) external;
 
+    /// @notice Grants a global role to a set of targets
+    /// @param role The role to grant
+    /// @param targets The addresses to grant the role to
+    /// @dev Only the addresses with the Owner role should be able to call this function
+    function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
+        external;
+
     /// @notice Revokes a global role from a target
     /// @param role The role to grant
     /// @param target The address to grant the role to
     /// @dev Only the addresses with the Owner role should be able to call this function
     function revokeGlobalRole(bytes32 role, address target) external;
+
+    /// @notice Revokes a global role from a set of targets
+    /// @param role The role to grant
+    /// @param targets The addresses to grant the role to
+    /// @dev Only the addresses with the Owner role should be able to call this function
+    function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
+        external;
 
     /// @notice Returns the role ID of the owner role
     /// @return The role ID
