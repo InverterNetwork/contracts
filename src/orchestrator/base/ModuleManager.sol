@@ -283,6 +283,16 @@ abstract contract ModuleManager is
         override(IModuleManager, ERC2771Context)
         returns (bool)
     {
-        return super.isTrustedForwarder(forwarder);
+        return ERC2771Context.isTrustedForwarder(forwarder);
+    }
+
+    function trustedForwarder()
+        public
+        view
+        virtual
+        override(IModuleManager, ERC2771Context)
+        returns (address)
+    {
+        return ERC2771Context.trustedForwarder();
     }
 }
