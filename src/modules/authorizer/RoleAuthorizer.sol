@@ -166,12 +166,34 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
+    function grantRoleFromModuleBatched(
+        bytes32 role,
+        address[] calldata targets
+    ) external onlyModule(_msgSender()) {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        for (uint i = 0; i < targets.length; i++) {
+            _grantRole(roleId, targets[i]);
+        }
+    }
+
+    /// @inheritdoc IAuthorizer
     function revokeRoleFromModule(bytes32 role, address target)
         external
         onlyModule(_msgSender())
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _revokeRole(roleId, target);
+    }
+
+    /// @inheritdoc IAuthorizer
+    function revokeRoleFromModuleBatched(
+        bytes32 role,
+        address[] calldata targets
+    ) external onlyModule(_msgSender()) {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        for (uint i = 0; i < targets.length; i++) {
+            _revokeRole(roleId, targets[i]);
+        }
     }
 
     /// @inheritdoc IAuthorizer
@@ -201,12 +223,34 @@ contract RoleAuthorizer is
     }
 
     /// @inheritdoc IAuthorizer
+    function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
+        external
+        onlyRole(ORCHESTRATOR_OWNER_ROLE)
+    {
+        bytes32 roleId = generateRoleId(address(orchestrator()), role);
+        for (uint i = 0; i < targets.length; i++) {
+            _grantRole(roleId, targets[i]);
+        }
+    }
+
+    /// @inheritdoc IAuthorizer
     function revokeGlobalRole(bytes32 role, address target)
         external
         onlyRole(ORCHESTRATOR_OWNER_ROLE)
     {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         _revokeRole(roleId, target);
+    }
+
+    /// @inheritdoc IAuthorizer
+    function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
+        external
+        onlyRole(ORCHESTRATOR_OWNER_ROLE)
+    {
+        bytes32 roleId = generateRoleId(address(orchestrator()), role);
+        for (uint i = 0; i < targets.length; i++) {
+            _revokeRole(roleId, targets[i]);
+        }
     }
 
     /// @inheritdoc IAuthorizer
