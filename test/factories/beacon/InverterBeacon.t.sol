@@ -63,6 +63,56 @@ contract InverterBeaconTest is Test {
     //--------------------------------------------------------------------------------
     // Test: modifier
 
+    function testZeroAsNewMinorVersion() public {
+        //Check for version
+        (, uint minorVersionPre) = beacon.version();
+        assertEq(minorVersionPre, 0);
+
+        //generate implementation address
+        address implementation = address(new ModuleImplementationV1Mock());
+
+        vm.expectRevert(
+            IInverterBeacon.Beacon__InvalidImplementationMinorVersion.selector
+        );
+
+        //Upgrade to an initial Version
+        beacon.upgradeTo(implementation, 0, false);
+    }
+
+    function testNewMinorVersion(uint initialMinorVersion, uint newMinorVersion)
+        public
+    {
+        // we can't upgrade to 0 version
+        // as the 0 version can only be set during
+        // initialization (first version ever set)
+        vm.assume(initialMinorVersion > 0);
+
+        //generate implementation address
+        address implementation = address(new ModuleImplementationV1Mock());
+
+        //Upgrade to an initial Version
+        beacon.upgradeTo(implementation, initialMinorVersion, false);
+
+        //Check for version
+        (, uint minorVersionPre) = beacon.version();
+        assertEq(minorVersionPre, initialMinorVersion);
+
+        if (newMinorVersion <= initialMinorVersion) {
+            vm.expectRevert(
+                IInverterBeacon
+                    .Beacon__InvalidImplementationMinorVersion
+                    .selector
+            );
+        }
+        beacon.upgradeTo(implementation, newMinorVersion, false);
+
+        if (newMinorVersion > initialMinorVersion) {
+            //Check for version
+            (, uint minorVersionPost) = beacon.version();
+            assertEq(minorVersionPost, newMinorVersion);
+        }
+    }
+
     function testValidImplementation(address newImplementation) public {
         if (!(newImplementation.code.length > 0)) {
             vm.expectRevert(
@@ -82,6 +132,9 @@ contract InverterBeaconTest is Test {
         uint newMinorVersion,
         bool overrideShutdown
     ) public {
+        // needs to be a valid upgrade
+        vm.assume(oldMinorVersion < newMinorVersion);
+
         //Turn off setImplementation
         beacon.flipUseOriginal_setImplementation();
 
