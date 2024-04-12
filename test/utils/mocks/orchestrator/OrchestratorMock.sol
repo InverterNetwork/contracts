@@ -1,25 +1,37 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import {
+    ModuleManager,
+    IModuleManager
+} from "src/orchestrator/base/ModuleManager.sol";
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
-// Internal Interfaces
-import {
-    IModuleManager,
-    ModuleManager
-} from "src/orchestrator/base/ModuleManager.sol";
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IPaymentProcessor} from
-    "src/modules/paymentProcessor/IPaymentProcessor.sol";
-
 contract OrchestratorMock is Orchestrator {
+    bool connectToTrustedForwarder = false;
     bool public interceptData;
     bool public executeTxBoolReturn;
     bytes public executeTxData;
+
+    constructor(address _trustedForwarder) Orchestrator(_trustedForwarder) {}
+
+    function flipConnectToTrustedForwarder() external {
+        connectToTrustedForwarder = !connectToTrustedForwarder;
+    }
+
+    function isTrustedForwarder(address _forwarder)
+        public
+        view
+        virtual
+        override(Orchestrator)
+        returns (bool)
+    {
+        if (connectToTrustedForwarder) {
+            return super.isTrustedForwarder(_forwarder);
+        } else {
+            return false;
+        }
+    }
 
     function executeTxFromModule(address to, bytes memory data)
         external

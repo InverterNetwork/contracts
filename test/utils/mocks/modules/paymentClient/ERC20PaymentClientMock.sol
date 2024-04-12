@@ -22,10 +22,6 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
     uint public amountPaidCounter;
     mapping(address => bool) authorized;
 
-    constructor(ERC20Mock token_) {
-        token = token_;
-    }
-
     //--------------------------------------------------------------------------
     // Mock Functions
 
@@ -35,6 +31,10 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
 
     function setOrchestrator(IOrchestrator orchestrator) external {
         __Module_orchestrator = orchestrator;
+    }
+
+    function setToken(ERC20Mock token_) external {
+        token = token_;
     }
 
     //--------------------------------------------------------------------------
@@ -78,7 +78,8 @@ contract ERC20PaymentClientMock is ERC20PaymentClient {
         internal
         override(ERC20PaymentClient)
     {
-        token.increaseAllowance(address(spender), amount);
+        uint currentAllowance = token.allowance(_msgSender(), address(spender));
+        token.approve(address(spender), amount + currentAllowance);
     }
 
     function _isAuthorizedPaymentProcessor(IPaymentProcessor)

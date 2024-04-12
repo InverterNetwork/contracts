@@ -27,7 +27,7 @@ import {
 } from "src/modules/utils/MetadataManager.sol";
 
 //Beacon
-import {Beacon} from "src/factories/beacon/Beacon.sol";
+import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
 
 /**
  * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory}.
@@ -85,8 +85,6 @@ contract OrchestratorE2E is E2ETest {
 
         // We also set up the BountyManager, even though we'll add it later
         setUpBountyManager();
-
-        // TODO: MetadataManager may be removed in the future
 
         //==========================================
         //Set up Orchestrator Metadata

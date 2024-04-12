@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {Beacon} from "src/factories/beacon/Beacon.sol";
+import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
 
 /**
  * @title Beacon Deployment Script
@@ -18,14 +18,14 @@ contract DeployBeacon is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    Beacon beacon;
+    InverterBeacon beacon;
 
-    function run() external returns (address) {
+    function run(uint majorVersion) external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
 
-            beacon = new Beacon();
+            beacon = new InverterBeacon(majorVersion);
         }
 
         vm.stopBroadcast();

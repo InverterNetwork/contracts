@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
 
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
@@ -9,16 +9,17 @@ import {IBondingCurveFundingManagerBase} from
 
 // Internal Interfaces
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20MetadataUpgradeable} from
-    "@oz-up/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Dependencies
 import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
-
+import {
+    ERC2771ContextUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
@@ -33,7 +34,6 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 abstract contract BondingCurveFundingManagerBase is
     IBondingCurveFundingManagerBase,
     IFundingManager,
-    ContextUpgradeable,
     ERC20Upgradeable,
     Module
 {
@@ -110,7 +110,7 @@ abstract contract BondingCurveFundingManagerBase is
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IERC20MetadataUpgradeable
+    /// @inheritdoc IERC20Metadata
     function decimals()
         public
         view
@@ -263,8 +263,43 @@ abstract contract BondingCurveFundingManagerBase is
         external
         onlyOrchestrator
     {
-        __Module_orchestrator.token().safeTransfer(to, amount);
+        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overriden, because they are imported via the ERC20Upgradeable as well
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
+        return super._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the ERC20Upgradeable as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return super._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (uint)
+    {
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }

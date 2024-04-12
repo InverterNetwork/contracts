@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity 0.8.23;
 
-// External Dependencies
-import {Context} from "@oz/utils/Context.sol";
+//External Dependencies
+import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
+import {Context, Ownable} from "@oz/access/Ownable.sol";
 
 // External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Internal Dependencies
-import {BeaconProxy} from "src/factories/beacon/BeaconProxy.sol";
+import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
+
+import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -27,13 +29,18 @@ import {
  *
  * @dev An owned factory for deploying modules.
  *
- *      The owner can register module metadata's to an {IBeacon}
- *      implementations. Note that a metadata's registered {IBeacon}
+ *      The owner can register module metadata's to an {IInverterBeacon}
+ *      implementations. Note that a metadata's registered {IInverterBeacon}
  *      implementation can not be changed after registration!
  *
  * @author Inverter Network
  */
-contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
+contract ModuleFactory is
+    IModuleFactory,
+    ERC2771Context,
+    Ownable2Step,
+    ERC165
+{
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -57,11 +64,11 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         {IBeacon} instance.
-    modifier validBeacon(IBeacon beacon) {
+    ///         {IInverterBeacon} instance.
+    modifier validBeacon(IInverterBeacon beacon) {
         // Revert if beacon's implementation is zero address.
         if (beacon.implementation() == address(0)) {
-            revert ModuleFactory__InvalidBeacon();
+            revert ModuleFactory__InvalidInverterBeacon();
         }
         _;
     }
@@ -69,14 +76,17 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Mapping of metadata identifier to {IBeacon} instance.
-    /// @dev MetadataLib.identifier(metadata) => {IBeacon}
-    mapping(bytes32 => IBeacon) private _beacons;
+    /// @dev Mapping of metadata identifier to {IInverterBeacon} instance.
+    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon}
+    mapping(bytes32 => IInverterBeacon) private _beacons;
 
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor() {
+    constructor(address _trustedForwarder)
+        ERC2771Context(_trustedForwarder)
+        Ownable(_msgSender())
+    {
         // NO-OP
     }
 
@@ -92,26 +102,14 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
 
-        IBeacon beacon;
+        IInverterBeacon beacon;
         (beacon, /*id*/ ) = getBeaconAndId(metadata);
 
         if (address(beacon) == address(0)) {
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        // Note that a beacon's implementation address can not be the zero
-        // address when the beacon is registered. The beacon must have been
-        // updated since then.
-        // As a zero address implementation indicates an unrecoverable state
-        // and faulty update from the beacon's owner, the beacon should be
-        // considered dangerous. We therefore make sure that nothing else can
-        // happen in this tx and burn all remaining gas.
-        // Note that while the inverter's beacon implementation forbids an
-        // implementation update to non-contract addresses, we can not ensure
-        // a module does not use a different beacon implementation.
-        assert(beacon.implementation() != address(0));
-
-        address implementation = address(new BeaconProxy(beacon));
+        address implementation = address(new InverterBeaconProxy(beacon));
 
         IModule(implementation).init(orchestrator, metadata, configData);
 
@@ -131,7 +129,7 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
     function getBeaconAndId(IModule.Metadata memory metadata)
         public
         view
-        returns (IBeacon, bytes32)
+        returns (IInverterBeacon, bytes32)
     {
         bytes32 id = LibMetadata.identifier(metadata);
 
@@ -142,13 +140,11 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
     // onlyOwner Functions
 
     /// @inheritdoc IModuleFactory
-    function registerMetadata(IModule.Metadata memory metadata, IBeacon beacon)
-        external
-        onlyOwner
-        validMetadata(metadata)
-        validBeacon(beacon)
-    {
-        IBeacon oldBeacon;
+    function registerMetadata(
+        IModule.Metadata memory metadata,
+        IInverterBeacon beacon
+    ) external onlyOwner validMetadata(metadata) validBeacon(beacon) {
+        IInverterBeacon oldBeacon;
         bytes32 id;
         (oldBeacon, id) = getBeaconAndId(metadata);
 
@@ -160,5 +156,40 @@ contract ModuleFactory is IModuleFactory, Ownable2Step, ERC165 {
         // Register Metadata for beacon.
         _beacons[id] = beacon;
         emit MetadataRegistered(metadata, beacon);
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (address sender)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (uint)
+    {
+        return ERC2771Context._contextSuffixLength();
     }
 }

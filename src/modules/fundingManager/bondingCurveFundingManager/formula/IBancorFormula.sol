@@ -1,4 +1,4 @@
-pragma solidity 0.8.19;
+pragma solidity ^0.8.0;
 
 /// @title  Aragon Interface for the Bancor Formula
 /// @author https://github.com/AragonBlack/fundraising/blob/master/apps/bancor-formula/contracts/interfaces/IBancorFormula.sol

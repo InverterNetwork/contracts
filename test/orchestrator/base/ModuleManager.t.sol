@@ -40,7 +40,7 @@ contract ModuleManagerTest is Test {
     );
 
     function setUp() public {
-        moduleManager = new ModuleManagerMock();
+        moduleManager = new ModuleManagerMock(address(0));
         moduleManager.init(EMPTY_LIST);
 
         types = new TypeSanityHelper(address(moduleManager));
@@ -52,7 +52,7 @@ contract ModuleManagerTest is Test {
     // Tests: Initialization
 
     function testInit(address[] memory modules) public {
-        moduleManager = new ModuleManagerMock();
+        moduleManager = new ModuleManagerMock(address(0));
         types = new TypeSanityHelper(address(moduleManager));
 
         types.assumeValidModules(modules);
@@ -80,7 +80,7 @@ contract ModuleManagerTest is Test {
     }
 
     function testReinitFails() public {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         moduleManager.init(EMPTY_LIST);
     }
 
@@ -90,7 +90,7 @@ contract ModuleManagerTest is Test {
     }
 
     function testInitFailsForInvalidModules() public {
-        moduleManager = new ModuleManagerMock();
+        moduleManager = new ModuleManagerMock(address(0));
         types = new TypeSanityHelper(address(moduleManager));
 
         address[] memory invalids = types.createInvalidModules();
@@ -110,7 +110,7 @@ contract ModuleManagerTest is Test {
     }
 
     function testInitFailsIfModuleAddedTwice() public {
-        moduleManager = new ModuleManagerMock();
+        moduleManager = new ModuleManagerMock(address(0));
         types = new TypeSanityHelper(address(moduleManager));
 
         address[] memory modules = new address[](2);
@@ -128,7 +128,7 @@ contract ModuleManagerTest is Test {
 
         //we don't need to check for validity since it should revert before
 
-        moduleManager = new ModuleManagerMock();
+        moduleManager = new ModuleManagerMock(address(0));
         vm.expectRevert(
             IModuleManager
                 .Orchestrator__ModuleManager__ModuleAmountOverLimits
