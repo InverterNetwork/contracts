@@ -129,7 +129,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         IOrchestratorFactory.ModuleConfig memory
             bondingCurveFundingManagerConfig = IOrchestratorFactory
                 .ModuleConfig(
-                bondingCurveFundingManagerMetadata,
+                bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(
                     buf_issuanceToken,
                     buf_bondingCurveProperties,
@@ -141,7 +141,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // Payment Processor: only Metadata
         IOrchestratorFactory.ModuleConfig memory paymentProcessorFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
-            paymentProcessorMetadata,
+            simplePaymentProcessorMetadata,
             bytes(""),
             abi.encode(hasDependency, dependencies)
         );
@@ -149,7 +149,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory.ModuleConfig(
-            authorizerMetadata,
+            roleAuthorizerMetadata,
             abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
         );
