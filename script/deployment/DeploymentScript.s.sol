@@ -391,28 +391,6 @@ contract DeploymentScript is Script {
             moduleFactory,
             metadataManagerMetadata
         );
-        recurringPaymentManagerBeacon = deployAndSetUpBeacon
-            .deployAndRegisterInFactory(
-            address(governor),
-            recurringPaymentManager,
-            moduleFactory,
-            recurringPaymentManagerMetadata
-        );
-
-        // Utils
-        singleVoteGovernorBeacon = deployAndSetUpBeacon
-            .deployAndRegisterInFactory(
-            address(governor),
-            singleVoteGovernor,
-            moduleFactory,
-            singleVoteGovernorMetadata
-        );
-        metadataManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
-            address(governor),
-            metadataManager,
-            moduleFactory,
-            metadataManagerMetadata
-        );
 
         return (orchestratorFactory);
     }
