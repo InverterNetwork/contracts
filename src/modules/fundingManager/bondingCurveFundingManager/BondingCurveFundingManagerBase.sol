@@ -20,6 +20,7 @@ import {
     ERC2771ContextUpgradeable,
     ContextUpgradeable
 } from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
+
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
@@ -279,7 +280,7 @@ abstract contract BondingCurveFundingManagerBase is
         override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (address sender)
     {
-        return super._msgSender();
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// Needs to be overriden, because they are imported via the ERC20Upgradeable as well
@@ -290,7 +291,7 @@ abstract contract BondingCurveFundingManagerBase is
         override(ContextUpgradeable, ERC2771ContextUpgradeable)
         returns (bytes calldata)
     {
-        return super._msgData();
+        return ERC2771ContextUpgradeable._msgData();
     }
 
     function _contextSuffixLength()

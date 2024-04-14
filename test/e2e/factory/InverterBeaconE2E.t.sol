@@ -34,7 +34,7 @@ contract InverterBeaconE2E is E2ETest {
 
     // Mock Metadata
     uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 1;
+    uint constant MINOR_VERSION = 0;
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
@@ -95,12 +95,13 @@ contract InverterBeaconE2E is E2ETest {
         moduleImpl2 = new ModuleImplementationV2Mock();
 
         // Deploy module beacons.
-        vm.prank(address(this)); //this will be the owner of the beacon
-        beacon = new InverterBeacon(MAJOR_VERSION);
 
-        // Set beacon's implementations.
-        vm.prank(address(this));
-        beacon.upgradeTo(address(moduleImpl1), MINOR_VERSION, false);
+        beacon = new InverterBeacon(
+            address(gov), //The governor contract will be the owner of the beacon
+            MAJOR_VERSION,
+            address(moduleImpl1),
+            MINOR_VERSION
+        );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(DATA, InverterBeacon(beacon));
@@ -156,7 +157,7 @@ contract InverterBeaconE2E is E2ETest {
         assertEq(moduleMock.getMockVersion(), 1);
 
         // Upgrade beacon to point to the Version 2 implementation.
-        vm.prank(address(this));
+        vm.prank(address(gov));
         beacon.upgradeTo(address(moduleImpl2), MINOR_VERSION + 1, false);
 
         //Check that after the update
@@ -201,7 +202,7 @@ contract InverterBeaconE2E is E2ETest {
         assertEq(moduleMock.getMockVersion(), 1);
 
         //Simulate Emergency by implementing shut-down
-        vm.prank(address(this));
+        vm.prank(address(gov));
         beacon.shutDownImplementation();
 
         //The call to the implementation should fail
@@ -221,7 +222,7 @@ contract InverterBeaconE2E is E2ETest {
         assertEq(returnData.length, 0);
 
         //Reverse shut-down
-        vm.prank(address(this));
+        vm.prank(address(gov));
         beacon.restartImplementation();
 
         //Check that the Call of the implementation works again
@@ -229,11 +230,11 @@ contract InverterBeaconE2E is E2ETest {
 
         //Lets do a upgrade that overrides the shutdown
         //First shut-down
-        vm.prank(address(this));
+        vm.prank(address(gov));
         beacon.shutDownImplementation();
 
         // Upgrade beacon to point to the Version 2 implementation.
-        vm.prank(address(this));
+        vm.prank(address(gov));
         beacon.upgradeTo(
             address(moduleImpl2),
             MINOR_VERSION + 1,

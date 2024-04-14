@@ -5,6 +5,7 @@ out/
 # Test files
 coverage/
 lcov.info
+.gas-snapshot
 
 # Ignores development broadcast logs
 !/broadcast

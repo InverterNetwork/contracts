@@ -55,7 +55,7 @@ contract RoleAuthorizerTest is Test {
     uint internal constant _ORCHESTRATOR_ID = 1;
     // Module Constants
     uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 1;
+    uint constant MINOR_VERSION = 0;
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
@@ -554,6 +554,102 @@ contract RoleAuthorizerTest is Test {
         );
     }
 
+    // Test grantRoleFromModuleBatched
+    // - Should revert if caller is not a module
+    // - Should not revert if role is already granted, but not emit events either
+    // - Should not revert if address list is empty
+
+    function testGrantRoleFromModuleBatched(address[] memory newAuthorized)
+        public
+    {
+        _validateAuthorizedList(newAuthorized);
+
+        address newModule = _setupMockSelfManagedModule();
+        bytes32 role0_module = _authorizer.generateRoleId(newModule, ROLE_0);
+
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            assertEq(_authorizer.hasRole(role0_module, newAuthorized[i]), false);
+
+            vm.expectEmit(true, true, true, true);
+            emit RoleGranted(role0_module, newAuthorized[i], newModule);
+        }
+
+        vm.prank(newModule);
+        _authorizer.grantRoleFromModuleBatched(ROLE_0, newAuthorized);
+
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            assertEq(_authorizer.hasRole(role0_module, newAuthorized[i]), true);
+        }
+    }
+
+    function testGrantRoleFromModuleBatchedFailsIfCalledByNonModule() public {
+        address newModule = _setupMockSelfManagedModule();
+
+        address[] memory targets = new address[](2);
+        targets[0] = address(ALBA);
+        targets[1] = address(BOB);
+
+        vm.prank(address(BOB));
+        vm.expectRevert();
+        _authorizer.grantRoleFromModuleBatched(ROLE_0, targets);
+        (ROLE_0, ALBA);
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
+            ),
+            false
+        );
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
+            ),
+            false
+        );
+    }
+
+    function testGrantRoleFromModuleBatchedFailsIfModuleNotInOrchestrator()
+        public
+    {
+        address newModule = _setupMockSelfManagedModule();
+
+        address[] memory targets = new address[](2);
+        targets[0] = address(ALBA);
+        targets[1] = address(BOB);
+
+        vm.prank(ALBA);
+        _orchestrator.removeModule(newModule);
+
+        vm.prank(newModule);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
+                newModule
+            )
+        );
+        _authorizer.grantRoleFromModuleBatched(ROLE_0, targets);
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
+            ),
+            false
+        );
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
+            ),
+            false
+        );
+    }
+
+    function testGrantRoleFromModuleBatchedIdempotenceOnEmptyList() public {
+        address newModule = _setupMockSelfManagedModule();
+
+        address[] memory targets = new address[](0);
+
+        vm.prank(newModule);
+        _authorizer.grantRoleFromModuleBatched(ROLE_0, targets);
+    }
+
     // Test revokeRoleFromModule
     // - Should revert if caller is not a module
     // - Should revert if role does not exist
@@ -608,7 +704,7 @@ contract RoleAuthorizerTest is Test {
                 newModule
             )
         );
-        _authorizer.grantRoleFromModule(ROLE_0, BOB);
+        _authorizer.revokeRoleFromModule(ROLE_0, BOB);
         assertEq(
             _authorizer.hasRole(
                 _authorizer.generateRoleId(newModule, ROLE_0), BOB
@@ -629,6 +725,114 @@ contract RoleAuthorizerTest is Test {
 
         vm.stopPrank();
 
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
+            ),
+            false
+        );
+    }
+
+    // Test revokeRoleFromModuleBatched
+    // - Should revert if caller is not a module
+    // - Should not revert if target doesn't have role.
+    // - Should not revert if address list is empty
+
+    function testRevokeRoleFromModuleBatched(address[] memory newAuthorized)
+        public
+    {
+        address newModule = _setupMockSelfManagedModule();
+        newAuthorized = _validateAuthorizedList(newAuthorized);
+        bytes32 role0_module = _authorizer.generateRoleId(newModule, ROLE_0);
+
+        //grant role to the addresses
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            vm.prank(newModule);
+            _authorizer.grantRoleFromModule(ROLE_0, newAuthorized[i]);
+            assertEq(_authorizer.hasRole(role0_module, newAuthorized[i]), true);
+        }
+
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit RoleRevoked(role0_module, newAuthorized[i], newModule);
+        }
+
+        vm.prank(newModule);
+        _authorizer.revokeRoleFromModuleBatched(ROLE_0, newAuthorized);
+
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            assertEq(_authorizer.hasRole(role0_module, newAuthorized[i]), false);
+        }
+    }
+
+    function testRevokeRoleFromModuleBatchedFailsIfCalledByNonModule() public {
+        address newModule = _setupMockSelfManagedModule();
+
+        address[] memory targets = new address[](2);
+        targets[0] = address(ALBA);
+        targets[1] = address(BOB);
+
+        vm.prank(address(BOB));
+        vm.expectRevert();
+        _authorizer.revokeRoleFromModuleBatched(ROLE_0, targets);
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
+            ),
+            false
+        );
+    }
+
+    function testRevokeRoleFromModuleBatchedFailsIfModuleNotInOrchestrator()
+        public
+    {
+        address newModule = _setupMockSelfManagedModule();
+
+        address[] memory targets = new address[](2);
+        targets[0] = address(ALBA);
+        targets[1] = address(BOB);
+
+        vm.prank(ALBA);
+        _orchestrator.removeModule(newModule);
+
+        vm.prank(newModule);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer.Module__RoleAuthorizer__NotActiveModule.selector,
+                newModule
+            )
+        );
+        _authorizer.revokeRoleFromModuleBatched(ROLE_0, targets);
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
+            ),
+            false
+        );
+    }
+
+    function testRevokeRoleFromModuleBatchedIdempotence() public {
+        address newModule = _setupMockSelfManagedModule();
+
+        address[] memory targets = new address[](2);
+        targets[0] = address(ALBA);
+        targets[1] = address(BOB);
+
+        vm.startPrank(newModule);
+
+        _authorizer.revokeRoleFromModuleBatched(ROLE_0, targets);
+        _authorizer.revokeRoleFromModuleBatched(ROLE_0, targets);
+
+        // No reverts happen
+
+        vm.stopPrank();
+
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), ALBA
+            ),
+            false
+        );
         assertEq(
             _authorizer.hasRole(
                 _authorizer.generateRoleId(newModule, ROLE_0), BOB
@@ -661,6 +865,72 @@ contract RoleAuthorizerTest is Test {
         assertFalse(_authorizer.hasRole(globalRole, ALBA));
     }
 
+    // Test grantGlobalRoleBatched
+    // - Should revert if caller is not owner
+    // - Should not revert if address list is empty
+
+    function testGrantGlobalRoleBatched(address[] memory newAuthorized)
+        public
+    {
+        _validateAuthorizedList(newAuthorized);
+
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
+
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            assertEq(_authorizer.hasRole(globalRole, newAuthorized[i]), false);
+
+            vm.expectEmit(true, true, true, true);
+            emit RoleGranted(globalRole, newAuthorized[i], ALBA);
+        }
+
+        vm.prank(ALBA);
+        _authorizer.grantGlobalRoleBatched(bytes32("0x03"), newAuthorized);
+
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            assertEq(_authorizer.hasRole(globalRole, newAuthorized[i]), true);
+        }
+    }
+
+    function testGrantGlobalRoleBatchedFailsIfCalledByNonOwner() public {
+        address newModule = _setupMockSelfManagedModule();
+
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
+
+        address[] memory targets = new address[](2);
+        targets[0] = address(ALBA);
+        targets[1] = address(BOB);
+
+        vm.prank(address(BOB));
+        vm.expectRevert();
+        _authorizer.grantGlobalRoleBatched(globalRole, targets);
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, globalRole), ALBA
+            ),
+            false
+        );
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(newModule, ROLE_0), BOB
+            ),
+            false
+        );
+    }
+
+    function testGrantGlobalRoleBatchedIdempotenceOnEmptyList() public {
+        address newModule = _setupMockSelfManagedModule();
+
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
+
+        address[] memory targets = new address[](0);
+
+        vm.prank(ALBA);
+        _authorizer.grantGlobalRoleBatched(globalRole, targets);
+    }
+
     // Revoke  global roles
     function testRevokeGlobalRole() public {
         bytes32 globalRole =
@@ -681,6 +951,7 @@ contract RoleAuthorizerTest is Test {
     function testRevokeGlobalRoleFailsIfNotOwner() public {
         bytes32 globalRole =
             _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
+
         vm.prank(ALBA);
         _authorizer.grantGlobalRole(bytes32("0x03"), BOB);
         assertTrue(_authorizer.hasRole(globalRole, BOB));
@@ -689,6 +960,71 @@ contract RoleAuthorizerTest is Test {
         vm.expectRevert();
         _authorizer.revokeGlobalRole(bytes32("0x03"), BOB);
         assertTrue(_authorizer.hasRole(globalRole, BOB));
+    }
+
+    // Test revokeGlobalRoleBatched
+    // - Should revert if caller is not owner
+    // - Should not revert if address list is empty
+
+    function testRevokeGlobalRoleBatched(address[] memory newAuthorized)
+        public
+    {
+        _validateAuthorizedList(newAuthorized);
+
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
+
+        vm.startPrank(ALBA);
+        _authorizer.grantGlobalRoleBatched(bytes32("0x03"), newAuthorized);
+
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit RoleRevoked(globalRole, newAuthorized[i], ALBA);
+        }
+
+        _authorizer.revokeGlobalRoleBatched(bytes32("0x03"), newAuthorized);
+
+        for (uint i = 0; i < newAuthorized.length; i++) {
+            assertEq(_authorizer.hasRole(globalRole, newAuthorized[i]), false);
+        }
+
+        vm.stopPrank();
+    }
+
+    function testRevokeGlobalRoleBatchedFailsIfNotOwner() public {
+        address newModule = _setupMockSelfManagedModule();
+
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
+
+        address[] memory targets = new address[](2);
+        targets[0] = address(ALBA);
+        targets[1] = address(BOB);
+
+        vm.prank(ALBA);
+        _authorizer.grantGlobalRoleBatched(bytes32("0x03"), targets);
+
+        assertEq(_authorizer.hasRole(globalRole, ALBA), true);
+        assertEq(_authorizer.hasRole(globalRole, BOB), true);
+
+        vm.prank(address(BOB));
+        vm.expectRevert();
+        _authorizer.revokeGlobalRoleBatched(globalRole, targets);
+
+        assertEq(_authorizer.hasRole(globalRole, ALBA), true);
+        assertEq(_authorizer.hasRole(globalRole, BOB), true);
+    }
+
+    function testRevokeGlobalRoleBatchedIdempotenceOnEmptyList() public {
+        address newModule = _setupMockSelfManagedModule();
+
+        bytes32 globalRole =
+            _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
+
+        address[] memory targets = new address[](0);
+
+        vm.prank(ALBA);
+        _authorizer.revokeGlobalRoleBatched(globalRole, targets);
     }
 
     // =========================================================================

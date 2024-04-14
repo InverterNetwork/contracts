@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
+import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 import {ModuleFactory} from "src/factories/ModuleFactory.sol";
@@ -24,7 +25,8 @@ contract DeployAndSetUpBeacon is Script {
 
     InverterBeacon beacon;
 
-    function run(
+    function deployAndRegisterInFactory(
+        address owner,
         address implementation,
         address moduleFactory,
         IModule.Metadata calldata metadata
@@ -32,11 +34,11 @@ contract DeployAndSetUpBeacon is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
-            beacon = new InverterBeacon(metadata.majorVersion);
-
-            // Upgrade the Beacon to the chosen implementation
-            beacon.upgradeTo(
-                address(implementation), metadata.minorVersion, false
+            beacon = new InverterBeacon(
+                owner,
+                metadata.majorVersion,
+                implementation,
+                metadata.minorVersion
             );
 
             // Register Metadata at the ModuleFactory
@@ -49,5 +51,31 @@ contract DeployAndSetUpBeacon is Script {
         console2.log("Implementation upgraded and Metadata registered");
 
         return address(beacon);
+    }
+
+    function deployBeaconAndSetupProxy(
+        address owner,
+        address implementation,
+        uint majorVersion,
+        uint minorVersion
+    ) external returns (address beaconAddress, address proxy) {
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            // Deploy the beacon.
+            beacon = new InverterBeacon(
+                owner, majorVersion, implementation, minorVersion
+            );
+
+            //return the proxy after creation
+            proxy = address(new InverterBeaconProxy(InverterBeacon(beacon)));
+
+            // cast to address for return
+            beaconAddress = address(beacon);
+        }
+        vm.stopBroadcast();
+
+        // Log the deployed Beacon contract address.
+        console2.log("Deployment of Beacon at address: ", beaconAddress);
+        console2.log("Creation of Proxy at address: ", address(proxy));
     }
 }

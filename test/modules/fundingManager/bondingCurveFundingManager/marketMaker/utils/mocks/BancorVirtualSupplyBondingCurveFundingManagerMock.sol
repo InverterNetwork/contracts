@@ -74,4 +74,24 @@ contract BancorVirtualSupplyBondingCurveFundingManagerMock is
     function call_mintIssuanceToken(uint _amount, address _receiver) external {
         _mint(_receiver, _amount);
     }
+
+    // Note: this function returns the virtual token supply in the same format it will be fed to the Bancor formula
+    function call_getFormulaVirtualTokenSupply() external view returns (uint) {
+        uint decimalConvertedVirtualTokenSupply =
+            _convertAmountToRequiredDecimal(virtualTokenSupply, decimals(), 18);
+        return decimalConvertedVirtualTokenSupply;
+    }
+
+    // Note: this function returns the virtual collateral supply in the same format it will be fed to the Bancor formula
+    function call_getFormulaVirtualCollateralSupply()
+        external
+        view
+        returns (uint)
+    {
+        uint decimalConvertedVirtualCollateralSupply =
+        _convertAmountToRequiredDecimal(
+            virtualCollateralSupply, collateralTokenDecimals, 18
+        );
+        return decimalConvertedVirtualCollateralSupply;
+    }
 }

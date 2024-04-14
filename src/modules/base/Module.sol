@@ -323,6 +323,6 @@ abstract contract Module is
         override(ERC2771ContextUpgradeable)
         returns (address)
     {
-        return __Module_orchestrator.trustedForwarder(); //@todo currently not exposed
+        return __Module_orchestrator.trustedForwarder();
     }
 }

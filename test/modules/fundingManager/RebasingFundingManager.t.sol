@@ -46,7 +46,6 @@ contract RebasingFundingManagerTest is ModuleTest {
     uint internal constant DEPOSIT_CAP = 100_000_000e18;
 
     // Other constants.
-    uint8 private constant DECIMALS = 18;
     uint private constant ORCHESTRATOR_ID = 1;
 
     //--------------------------------------------------------------------------
@@ -104,7 +103,7 @@ contract RebasingFundingManagerTest is ModuleTest {
     // Tests: Initialization
 
     function testInit() public override(ModuleTest) {
-        assertEq(fundingManager.decimals(), DECIMALS);
+        assertEq(fundingManager.decimals(), _token.decimals());
         assertEq(
             fundingManager.name(), "Inverter Funding Token - Orchestrator #1"
         );

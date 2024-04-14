@@ -5,7 +5,12 @@ import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
 contract InverterBeaconAccessMock is InverterBeacon {
     bool useOriginal_setImplementation = true;
 
-    constructor(uint _majorVersion) InverterBeacon(_majorVersion) {}
+    constructor(
+        address owner,
+        uint _majorVersion,
+        address _implementation,
+        uint _minorVersion
+    ) InverterBeacon(owner, _majorVersion, _implementation, _minorVersion) {}
 
     function get_implementation() public returns (address) {
         return _implementationAddress;

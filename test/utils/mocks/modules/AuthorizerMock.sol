@@ -64,26 +64,6 @@ contract AuthorizerMock is IAuthorizer, Module {
     //--------------------------------------------------------------------------
     // IAuthorizer Functions
 
-    // Also accepts the owner role as authorized.
-    /*     function isAuthorized(address who) external view returns (bool) {
-        return _authorized[who] || _allAuthorized
-            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][who];
-    }
-
-    //IRoleAuthorizer
-
-    function isAuthorized(uint8 role, address who)
-        external
-        view
-        returns (bool)
-    {
-        return _authorized[who]
-            || _roleAuthorized[generateRoleId(msg.sender, role)][who]
-            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(0))][who]
-            || _roleAuthorized[generateRoleId(address(orchestrator()), uint8(1))][who]
-            || _allAuthorized;
-    }
-    */
     function generateRoleId(address module, bytes32 role)
         public
         pure
@@ -99,26 +79,6 @@ contract AuthorizerMock is IAuthorizer, Module {
 
     function revokeRoleFromModule(bytes32 role, address target) external {
         _roleAuthorized[generateRoleId(_msgSender(), role)][target] = false;
-    }
-
-    function toggleModuleSelfManagement() external {}
-
-    function transferAdminRole(bytes32, bytes32) external {}
-
-    function burnAdminFromModuleRole(bytes32) external {}
-
-    //IAccessControlUpgradeable
-
-    function getRoleAdmin(bytes32) external pure returns (bytes32) {
-        return bytes32("");
-    }
-
-    function getRoleMember(bytes32, uint) external pure returns (address) {
-        return address(0);
-    }
-
-    function getRoleMemberCount(bytes32) external pure returns (uint) {
-        return 0;
     }
 
     function grantRole(bytes32 role, address who) public {
@@ -151,8 +111,6 @@ contract AuthorizerMock is IAuthorizer, Module {
         _roleAuthorized[role][who] = false;
     }
 
-    function renounceRole(bytes32, address) external pure {}
-
     function getOwnerRole() external pure returns (bytes32) {
         return "0x01";
     }
@@ -161,21 +119,68 @@ contract AuthorizerMock is IAuthorizer, Module {
         return "0x02";
     }
 
-    /// @notice Grants a global role to a target
-    /// @param role The role to grant
-    /// @param target The address to grant the role to
-    /// @dev Only the addresses with the Owner role should be able to call this function
     function grantGlobalRole(bytes32 role, address target) external {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
         grantRole(roleID, target);
     }
 
-    /// @notice Revokes a global role from a target
-    /// @param role The role to grant
-    /// @param target The address to grant the role to
-    /// @dev Only the addresses with the Owner role should be able to call this function
     function revokeGlobalRole(bytes32 role, address target) external {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
         revokeRole(roleID, target);
+    }
+
+    //--------------------------------------------------------------------------
+    // Functions left empty
+
+    function grantRoleFromModuleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function revokeRoleFromModuleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function grantGlobalRoleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function revokeGlobalRoleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function renounceRole(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function transferAdminRole(bytes32, bytes32) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function burnAdminFromModuleRole(bytes32) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function getRoleAdmin(bytes32) external pure returns (bytes32) {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function getRoleMember(bytes32, uint) external pure returns (address) {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function getRoleMemberCount(bytes32) external pure returns (uint) {
+        revert("Not implemented in Authorizer Mock");
     }
 }

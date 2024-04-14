@@ -14,7 +14,7 @@ import {TransactionForwarder} from
  *
  * @author Inverter Network
  */
-contract DeployAndSetUpTransactionForwarder is Script {
+contract DeployTransactionForwarder is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
@@ -22,34 +22,20 @@ contract DeployAndSetUpTransactionForwarder is Script {
 
     /// @notice Creates the implementation, beacon and proxy of the transactionForwarder
     /// @return implementation The implementation of the TransactionForwarder that will be referenced in the beacon
-    /// @return beacon The beacon that points to the implementation
-    /// @return forwarder The proxy that will be used for the real transactionForwarder
-    function run()
-        external
-        returns (address implementation, address beacon, address forwarder)
-    {
+    function run() external returns (address implementation) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the transaction forwarder.
             implementation = address(
                 new TransactionForwarder("Inverter Transaction Forwarder")
             );
-
-            // Deploy the beacon.
-            beacon = address(new InverterBeacon(1));
-
-            // Upgrade the Beacon to the chosen implementation
-            InverterBeacon(beacon).upgradeTo(address(implementation), 1, false);
-
-            forwarder = address(new InverterBeaconProxy(InverterBeacon(beacon)));
         }
         vm.stopBroadcast();
 
         // Log
-        console2.log("Deployment of implementation at address ", implementation);
-        console2.log("Deployment of Beacon at address ", beacon);
         console2.log(
-            "Deployment of transactionForwarder proxy at address ", forwarder
+            "Deployment of Transaction Forwarder implementation at address ",
+            implementation
         );
     }
 }

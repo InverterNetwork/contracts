@@ -45,6 +45,10 @@ contract ERC20Mock is ERC20 {
         return true;
     }
 
+    function decimals() public view virtual override returns (uint8) {
+        return 18;
+    }
+
     function transferFrom(address from, address to, uint amount)
         public
         override

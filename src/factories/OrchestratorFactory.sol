@@ -79,7 +79,7 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
     constructor(
         address target_,
         address moduleFactory_,
-        address _trustedForwarder //@todo should this be changeable?
+        address _trustedForwarder
     ) ERC2771Context(_trustedForwarder) {
         target = target_;
         moduleFactory = moduleFactory_;
