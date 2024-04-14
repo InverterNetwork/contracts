@@ -24,6 +24,7 @@ import {BancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract SetupInvestableWorkstream is Test, DeploymentScript {
     //ScriptConstants scriptConstants = new ScriptConstants();
@@ -82,13 +83,14 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         address orchestratorFactory = DeploymentScript.run();
 
         //If there's no formula or token deployment on the chain, we deploy them
-        /* vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
             formula = new BancorFormula();
-            collateralToken = new ERC20("MOCK" , "MCK"); 
+            //!!!! This is not a real ERC20 implementation. Befor going into production change this deployment!!!!
+            collateralToken = new ERC20Mock("MOCK", "MCK");
         }
         vm.stopBroadcast();
-        */
+
         // ------------------------------------------------------------------------
         // Setup
 

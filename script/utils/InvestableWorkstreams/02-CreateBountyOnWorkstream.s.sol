@@ -28,7 +28,8 @@ contract CreateBountyInWorkstream is Script {
         vm.envAddress("DEPLOYED_ORCHESTRATOR_ADDRESS");
     IOrchestrator _orchestrator = IOrchestrator(deployedOrchestratorAddress);
 
-    address bountyCreator = vm.envAddress("BOUNTY_CREATOR_PRIVATE_KEY");
+    uint bountyCreatorPrivateKey = vm.envUint("BOUNTY_CREATOR_PRIVATE_KEY");
+    address bountyCreator = vm.addr(bountyCreatorPrivateKey);
 
     // ========================================
     // BOUTNY DATA
@@ -59,7 +60,7 @@ contract CreateBountyInWorkstream is Script {
         BountyManager orchestratorCreatedBountyManager =
             BountyManager(orchestratorCreatedBountyManagerAddress);
 
-        vm.startBroadcast(bountyCreator);
+        vm.startBroadcast(bountyCreatorPrivateKey);
         {
             orchestratorCreatedBountyManager.addBounty(
                 MINIMUM_BOUNTY_PAYOUT, MAXIMUM_BOUNTY_PAYOUT, BOUNTY_DETAILS
