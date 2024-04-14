@@ -14,7 +14,8 @@ import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
 import {DeployModuleFactory} from "script/factories/DeployModuleFactory.s.sol";
 import {DeployOrchestratorFactory} from
     "script/factories/DeployOrchestratorFactory.s.sol";
-import {DeployBountyManager} from "script/modules/DeployBountyManager.s.sol";
+import {DeployBountyManager} from
+    "script/modules/logicModule/DeployBountyManager.s.sol";
 
 import {DeployGovernor} from "script/external/DeployGovernor.s.sol";
 import {DeployTransactionForwarder} from
@@ -35,9 +36,9 @@ import {DeployTokenGatedRoleAuthorizer} from
 import {DeployStreamingPaymentProcessor} from
     "script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol";
 import {DeployRecurringPaymentManager} from
-    "script/modules/DeployRecurringPaymentManager.s.sol";
+    "script/modules/logicModule/DeployRecurringPaymentManager.s.sol";
 import {DeploySingleVoteGovernor} from
-    "script/modules/DeploySingleVoteGovernor.s.sol";
+    "script/modules/utils/DeploySingleVoteGovernor.s.sol";
 import {DeployMetadataManager} from "script/utils/DeployMetadataManager.s.sol";
 
 contract DeploymentScript is Script {

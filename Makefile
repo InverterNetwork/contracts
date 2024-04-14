@@ -85,27 +85,44 @@ testE2e: ## Run e2e test suite
 .PHONY: testScripts
 testScripts: ## Run e2e test suite
 	@echo "# Run scripts"
+ 	
+	## external
+	@forge script script/external/DeployGovernor.s.sol
+	@forge script script/external/DeployTransactionForwarder.s.sol
 
+	## factories
 	@forge script script/factories/DeployModuleFactory.s.sol
 	@forge script script/factories/DeployOrchestratorFactory.s.sol
+	
+	## modules
 
+	## fundingManager
+	@forge script script/modules/fundingManager/DeployBancorVirtualSupplyBondingCurveFundingManager.s.sol
+	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
+	
+	## governance
 	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol
-	@forge script script/modules/DeploySingleVoteGovernor.s.sol
+	@forge script script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol
+
+	## logicModule
+	@forge script script/modules/logicModule/DeployBountyManager.s.sol
+	@forge script script/modules/logicModule/DeployRecurringPaymentManager.s.sol
+
+	## paymentProcessor
 	@forge script script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol
 	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
 
-	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
-
-	@forge script script/external/DeployTransactionForwarder.s.sol
-	@forge script script/external/DeployGovernor.s.sol
-
+	## utils
+	@forge script script/modules/utils/DeploySingleVoteGovernor.s.sol
+	
+	## orchestrator
 	@forge script script/orchestrator/DeployOrchestrator.s.sol
 
-	@forge script script/deployment/DeploymentScript.s.sol
-
-	@forge script script/deployment/DeploymentScript.s.sol
-
+	## setup
 	@forge script script/setup/SetupToyOrchestratorScript.s.sol
+
+	## Deployment
+	@forge script script/deployment/DeploymentScript.s.sol
 
 # -----------------------------------------------------------------------------
 # Static Analyzers
