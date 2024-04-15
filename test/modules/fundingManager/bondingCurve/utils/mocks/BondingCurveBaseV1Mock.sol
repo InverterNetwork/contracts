@@ -29,23 +29,15 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         __Module_init(orchestrator_, metadata);
 
         (
-            bytes32 _name,
-            bytes32 _symbol,
-            uint8 _decimals,
+            address _issuanceToken,
             address _formula,
             uint _buyFee,
             bool _buyIsOpen
-        ) = abi.decode(
-            configData, (bytes32, bytes32, uint8, address, uint, bool)
-        );
+        ) = abi.decode(configData, (address, address, uint, bool));
 
-        __ERC20_init(
-            string(abi.encodePacked(_name)), string(abi.encodePacked(_symbol))
-        );
+        _setIssuanceToken(address(_issuanceToken));
 
         formula = IBancorFormula(_formula);
-
-        _setTokenDecimals(_decimals);
 
         _setBuyFee(_buyFee);
 
@@ -85,11 +77,10 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         return BPS;
     }
 
-    // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
-    function call_setDecimals(uint8 _newDecimals) external {
-        _setTokenDecimals(_newDecimals);
+    // Since the init calls are not registered for coverage, we call expose setIssuanceToken to get to 100% test coverage.
+    function call_setIssuanceToken(address _newIssuanceToken) external {
+        _setIssuanceToken(_newIssuanceToken);
     }
-
     //--------------------------------------------------------------------------
     // Will be removed once we update base fundingManager
 

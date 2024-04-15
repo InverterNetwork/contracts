@@ -8,24 +8,25 @@ import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFundingManager_v1
-} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+} from
+    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
+import {ERC20Issuance_v1} from
+    "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+
 // import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // import {IERC20Metadata} from
 //     "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // Internal Dependencies
-import {
-    ModuleTest,
-    IModule_v1,
-    IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
-import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+import {ModuleTest, IModule_v1, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
+import {BancorFormula} from
+    "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IVirtualIssuanceSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
 import {IVirtualCollateralSupplyBase_v1} from
@@ -35,7 +36,8 @@ import {IBondingCurveBase_v1} from
 import {
     IRedeemingBondingCurveBase_v1,
     IRedeemingBondingCurveBase_v1
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+} from
+    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -63,21 +65,25 @@ import {RedeemingBondingCurveBaseV1Test} from
 
     */
 
-contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
-    string private constant NAME = "Bonding Curve Token";
-    string private constant SYMBOL = "BCT";
-    uint8 private constant DECIMALS = 18;
-    uint private constant INITIAL_ISSUANCE_SUPPLY = 1;
-    uint private constant INITIAL_COLLATERAL_SUPPLY = 1;
-    uint32 private constant RESERVE_RATIO_FOR_BUYING = 200_000;
-    uint32 private constant RESERVE_RATIO_FOR_SELLING = 200_000;
-    uint private constant BUY_FEE = 0;
-    uint private constant SELL_FEE = 0;
-    bool private constant BUY_IS_OPEN = true;
-    bool private constant SELL_IS_OPEN = true;
+contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
+    string internal constant NAME = "Bonding Curve Token";
+    string internal constant SYMBOL = "BCT";
+    uint8 internal constant DECIMALS = 18;
+    uint internal constant MAX_SUPPLY = type(uint).max;
+
+    uint internal constant INITIAL_TOKEN_SUPPLY = 1;
+    uint internal constant INITIAL_COLLATERAL_SUPPLY = 1;
+    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 200_000;
+    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 200_000;
+    uint internal constant BUY_FEE = 0;
+    uint internal constant SELL_FEE = 0;
+    bool internal constant BUY_IS_OPEN = true;
+    bool internal constant SELL_IS_OPEN = true;
 
     FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock bondingCurveFundingManager;
     address formula;
+
+    ERC20Issuance_v1 issuanceToken;
 
     address owner_address = address(0xA1BA);
     address non_owner_address = address(0xB0B);
@@ -96,10 +102,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     event VirtualCollateralAmountSubtracted(
         uint indexed amountSubtracted, uint indexed newSupply
     );
-    event VirtualIssuanceAmountSubtracted(
+    event VirtualTokenAmountSubtracted(
         uint indexed amountSubtracted, uint indexed newSupply
     );
-    event VirtualIssuanceAmountAdded(
+    event VirtualTokenAmountAdded(
         uint indexed amountAdded, uint indexed newSupply
     );
     event TokensSold(
@@ -114,9 +120,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     event SellReserveRatioSet(
         uint32 indexed newSellReserveRatio, uint32 indexed oldSellReserveRatio
     );
-    event VirtualIssuanceSupplySet(
-        uint indexed newSupply, uint indexed oldSupply
-    );
+    event VirtualTokenSupplySet(uint indexed newSupply, uint indexed oldSupply);
     event VirtualCollateralSupplySet(
         uint indexed newSupply, uint indexed oldSupply
     );
@@ -125,19 +129,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // Events
     event TransferOrchestratorToken(address indexed to, uint indexed amount);
 
-    function setUp() public {
+    function setUp() public virtual {
         // Deploy contracts
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
-            issuanceToken;
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties;
+        IBondingCurveBase_v1.IssuanceToken memory
+            issuanceToken_properties;
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
+            memory bc_properties;
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken.name = bytes32(abi.encodePacked(NAME));
-        issuanceToken.symbol = bytes32(abi.encodePacked(SYMBOL));
-        issuanceToken.decimals = uint8(DECIMALS);
+        issuanceToken_properties.name = NAME;
+        issuanceToken_properties.symbol = SYMBOL;
+        issuanceToken_properties.decimals = DECIMALS;
+        issuanceToken_properties.maxSupply = MAX_SUPPLY;
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -146,13 +151,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bc_properties.sellFee = SELL_FEE;
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
-        bc_properties.initialIssuanceSupply = INITIAL_ISSUANCE_SUPPLY;
+        bc_properties.initialIssuanceSupply = INITIAL_TOKEN_SUPPLY;
         bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
-        address impl = address(new FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock());
+        address impl =
+            address(new FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock());
 
         bondingCurveFundingManager =
-            FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock(Clones.clone(impl));
+        FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock(Clones.clone(impl));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -163,17 +169,29 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                issuanceToken,
+                issuanceToken_properties,
+                owner_address,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
         );
+
+        issuanceToken =
+            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
+
+        vm.prank(owner_address);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
     }
 
     function testSupportsInterface() public {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IFM_BC_Bancor_Redeeming_VirtualSupply_v1).interfaceId
+            )
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IFundingManager_v1).interfaceId
             )
         );
     }
@@ -187,17 +205,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     function testInit() public override {
         assertEq(
-            bondingCurveFundingManager.name(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
+            issuanceToken.name(),
+            string(abi.encodePacked(NAME)),
             "Name has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.symbol(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
+            issuanceToken.symbol(),
+            string(abi.encodePacked(SYMBOL)),
             "Symbol has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.decimals(),
+            issuanceToken.decimals(),
             DECIMALS,
             "Decimals has not been set correctly"
         );
@@ -213,7 +231,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         );
         assertEq(
             bondingCurveFundingManager.getVirtualIssuanceSupply(),
-            INITIAL_ISSUANCE_SUPPLY,
+            INITIAL_TOKEN_SUPPLY,
             "Virtual token supply has not been set correctly"
         );
         assertEq(
@@ -288,7 +306,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         
     */
     function testBuyOrder_FailsIfDepositAmountIsZero() public {
-        // Test covered in BondingCurveBase_v1
+        // Test covered in BondingCurveFundingManagerBase
     }
 
     function testBuyOrder_FailsIfDepositAmountOverflowsVirtualCollateralSupply(
@@ -300,8 +318,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             1,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
+        // see comment in testBuyOrderWithZeroFee
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amount)
         );
@@ -325,7 +344,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function testBuyOrder_FailsIfMintAmountOverflowsVirtualIssuanceSupply(
+    function testBuyOrder_FailsIfMintAmountOverflowsVirtualTokenSupply(
         uint amount
     ) public {
         // Setup
@@ -334,7 +353,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             1,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
         _token.mint(
             address(bondingCurveFundingManager), (type(uint).max - amount)
@@ -365,7 +384,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             1,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
 
         address buyer = makeAddr("buyer");
@@ -375,7 +394,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
 
         assertEq(
             bondingCurveFundingManager.call_collateralTokenDecimals(),
@@ -397,9 +416,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
         emit Transfer(buyer, address(bondingCurveFundingManager), amount);
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
+        vm.expectEmit(true, true, true, true, address(issuanceToken));
         emit Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
@@ -408,8 +425,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceAmountAdded(
-            formulaReturn, (INITIAL_ISSUANCE_SUPPLY + formulaReturn)
+        emit VirtualTokenAmountAdded(
+            formulaReturn, (INITIAL_TOKEN_SUPPLY + formulaReturn)
         );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
@@ -425,7 +442,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), formulaReturn);
+        assertEq(issuanceToken.balanceOf(buyer), formulaReturn);
     }
 
     function testBuyOrderWithFee(uint amount, uint fee) public {
@@ -439,7 +456,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             1,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
 
@@ -453,7 +470,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // We calculate how much the real deposit amount will be after fees
         uint feeAmount = (amount * fee) / bondingCurveFundingManager.call_BPS();
@@ -476,9 +493,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
         emit Transfer(buyer, address(bondingCurveFundingManager), amount);
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
+        vm.expectEmit(true, true, true, true, address(issuanceToken));
         emit Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
@@ -487,14 +502,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceAmountAdded(
-            formulaReturn, (INITIAL_ISSUANCE_SUPPLY + formulaReturn)
+        emit VirtualTokenAmountAdded(
+            formulaReturn, (INITIAL_TOKEN_SUPPLY + formulaReturn)
         );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
         emit VirtualCollateralAmountAdded(
-            buyAmountMinusFee, (INITIAL_ISSUANCE_SUPPLY + buyAmountMinusFee)
+            buyAmountMinusFee, (INITIAL_TOKEN_SUPPLY + buyAmountMinusFee)
         );
         bondingCurveFundingManager.buy(amount, formulaReturn);
 
@@ -504,7 +519,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), formulaReturn);
+        assertEq(issuanceToken.balanceOf(buyer), formulaReturn);
     }
 
     // test buyFor function
@@ -527,7 +542,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             1,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
 
         assertNotEq(to, buyer);
@@ -538,7 +553,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Use formula to get expected return values.
         // Note that since we are calling the formula directly, we need to normalize the buy amount to 18 decimals (since that is what the curve uses internally)
@@ -564,8 +579,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(to), formulaReturn);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(to), formulaReturn);
     }
 
     /* Test sell and _virtualSupplySellOrder function
@@ -579,9 +594,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 │               ├── When there IS NOT enough collateral in the contract to cover the redeem amount
                 │               │        └── it should revert
                 │               └── When there IS enough collateral in the contract to cover the redeem amount
-                │                       ├── When the amount of redeemed tokens exceeds the virtual issuance supply
+                │                       ├── When the amount of redeemed tokens exceeds the virtual token supply
                 │                       │       └── it should revert
-                │                       └── When the amount of redeemed tokens does not exceed the virtual issuance supply
+                │                       └── When the amount of redeemed tokens does not exceed the virtual token supply
                 │                               ├── it should send the rest to the receiver    
                 │                               ├── it should emit an event
                 │                               ├── it should update the virtual token amount
@@ -594,9 +609,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                                 ├── When there IS NOT enough collateral in the contract to cover the redeem amount
                                 │        └── it should revert
                                 └── When there IS enough collateral in the contract to cover the redeem amount
-                                        ├── When the amount of redeemed tokens exceeds the virtual issuance supply
+                                        ├── When the amount of redeemed tokens exceeds the virtual token supply
                                         │       └── it should revert
-                                        └── When the amount of redeemed tokens does not exceed the virtual issuance supply
+                                        └── When the amount of redeemed tokens does not exceed the virtual token supply
                                                 ├── it should send the rest to the receiver    
                                                 ├── it should emit an event
                                                 ├── it should update the virtual token amount
@@ -606,10 +621,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     */
 
     function testSellOrder_FailsIfDepositAmountIsZero() public {
-        // Test covered in RedeemingBondingCurveBase_v1
+        // Test covered in RedeemingBondingCurveFundingManagerBase
     }
 
-    function testSellOrder_FailsIfBurnAmountExceedsVirtualIssuanceSupply(
+    function testSellOrder_FailsIfBurnAmountExceedsVirtualTokenSupply(
         uint amount
     ) public {
         // Setup
@@ -619,9 +634,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         amount = _bound_for_decimal_conversion(
             amount,
             1e4,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
 
         _token.mint(
@@ -629,9 +644,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         );
 
         address seller = makeAddr("seller");
-        uint availableForSale = _prepareSellConditions(seller, amount);
+        _prepareSellConditions(seller, amount);
 
-        uint userSellAmount = bondingCurveFundingManager.balanceOf(seller);
+        uint userSellAmount = issuanceToken.balanceOf(seller);
         vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause underflow
 
         // we set a virtual collateral supply that will not cover the amount to redeem
@@ -655,13 +670,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         amount = _bound_for_decimal_conversion(
             amount,
             1,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
 
         address seller = makeAddr("seller");
-        uint availableForSale = _prepareSellConditions(seller, amount);
+        _prepareSellConditions(seller, amount);
 
         // we simulate the fundingManager spending some funds. It can't cover full redemption anymore.
         _token.burn(address(bondingCurveFundingManager), 1);
@@ -681,9 +696,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         amountIn = _bound_for_decimal_conversion(
             amountIn,
             100,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
 
@@ -698,12 +713,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         // Set virtual supply to some number above the sell amount
         // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = userSellAmount * 2;
+        uint newVirtualTokenSupply = userSellAmount * 2;
         uint newVirtualCollateral = amountIn * 2;
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
+                newVirtualTokenSupply
             );
             bondingCurveFundingManager.setVirtualCollateralSupply(
                 newVirtualCollateral
@@ -713,7 +728,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         uint decimalConverted_userSellAmount = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
-            userSellAmount, bondingCurveFundingManager.decimals(), 18
+            userSellAmount, issuanceToken.decimals(), 18
         );
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
@@ -748,8 +763,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualIssuanceAmountSubtracted(
-                userSellAmount, newVirtualIssuanceSupply - userSellAmount
+            emit VirtualTokenAmountSubtracted(
+                userSellAmount, newVirtualTokenSupply - userSellAmount
             );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
@@ -765,7 +780,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.stopPrank();
 
         // Check real-world token/collateral balances
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(issuanceToken.balanceOf(seller), 0);
         assertEq(_token.balanceOf(seller), normalized_formulaReturn);
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
@@ -775,7 +790,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Check virtual token/collateral balances
         assertEq(
             bondingCurveFundingManager.getVirtualIssuanceSupply(),
-            newVirtualIssuanceSupply - userSellAmount
+            newVirtualTokenSupply - userSellAmount
         );
         assertEq(
             bondingCurveFundingManager.getVirtualCollateralSupply(),
@@ -794,9 +809,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         amountIn = _bound_for_decimal_conversion(
             amountIn,
             100,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
         _token.mint(
@@ -810,13 +825,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Set sell Fee
         // Set virtual supply to some number above _sellAmount
         // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = userSellAmount * 2;
+        uint newVirtualTokenSupply = userSellAmount * 2;
         uint newVirtualCollateral = amountIn * 2;
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setSellFee(fee);
             bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
+                newVirtualTokenSupply
             );
             bondingCurveFundingManager.setVirtualCollateralSupply(
                 newVirtualCollateral
@@ -824,10 +839,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         }
         vm.stopPrank();
 
-        uint decimalConverted_userSellAmount = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            userSellAmount, _token.decimals(), 18
-        );
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
@@ -864,8 +875,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualIssuanceAmountSubtracted(
-                userSellAmount, newVirtualIssuanceSupply - userSellAmount
+            emit VirtualTokenAmountSubtracted(
+                userSellAmount, newVirtualTokenSupply - userSellAmount
             );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
@@ -879,7 +890,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.stopPrank();
 
         // Check real-world token/collateral balances
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(issuanceToken.balanceOf(seller), 0);
         assertEq(_token.balanceOf(seller), sellAmountMinusFee);
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
@@ -889,7 +900,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Check virtual token/collateral balances
         assertEq(
             bondingCurveFundingManager.getVirtualIssuanceSupply(),
-            newVirtualIssuanceSupply - userSellAmount
+            newVirtualTokenSupply - userSellAmount
         );
         assertEq(
             bondingCurveFundingManager.getVirtualCollateralSupply(),
@@ -914,9 +925,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         amountIn = _bound_for_decimal_conversion(
             amountIn,
             100,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
 
@@ -928,12 +939,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause minting
         // Set virtual supply to some number above the sell amount
         // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = userSellAmount * 2;
+        uint newVirtualTokenSupply = userSellAmount * 2;
         uint newVirtualCollateral = amountIn * 2;
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
+                newVirtualTokenSupply
             );
             bondingCurveFundingManager.setVirtualCollateralSupply(
                 newVirtualCollateral
@@ -943,7 +954,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         uint decimalConverted_userSellAmount = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
-            userSellAmount, bondingCurveFundingManager.decimals(), 18
+            userSellAmount, issuanceToken.decimals(), 18
         );
 
         // Use formula to get expected return values
@@ -971,7 +982,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.stopPrank();
 
         // Check real-world token/collateral balances
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(issuanceToken.balanceOf(seller), 0);
         assertEq(_token.balanceOf(seller), 0);
         assertEq(_token.balanceOf(to), normalized_formulaReturn);
         assertEq(
@@ -982,7 +993,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Check virtual token/collateral balances
         assertEq(
             bondingCurveFundingManager.getVirtualIssuanceSupply(),
-            newVirtualIssuanceSupply - userSellAmount
+            newVirtualTokenSupply - userSellAmount
         );
         assertEq(
             bondingCurveFundingManager.getVirtualCollateralSupply(),
@@ -1065,7 +1076,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     /* Test getVirtualIssuanceSupply() */
 
-    function testGetVirtualIssuanceSupply(uint _supply) public {
+    function testGetVirtualTokenSupply(uint _supply) public {
         vm.assume(_supply > 0);
 
         vm.prank(owner_address);
@@ -1104,7 +1115,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             1,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
 
         uint decimalConverted_userDepositAmount = bondingCurveFundingManager
@@ -1139,7 +1150,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             1,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
 
         vm.prank(owner_address);
@@ -1192,17 +1203,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     function testCalculateSaleReturnWithZeroFee(uint _saleAmount) public {
         // Above an amount of 1e26 the BancorFormula starts to revert.
         _saleAmount = _bound_for_decimal_conversion(
-            _saleAmount, 1, 1e38, bondingCurveFundingManager.decimals(), 18
+            _saleAmount, 1, 1e36, issuanceToken.decimals(), 18
         );
         // Set virtual supply to some number above collateral supply
         // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = _saleAmount * 4;
+        uint newVirtualTokenSupply = _saleAmount * 4;
         uint newVirtualCollateral = _saleAmount * 8;
 
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
+                newVirtualTokenSupply
             );
             bondingCurveFundingManager.setVirtualCollateralSupply(
                 newVirtualCollateral
@@ -1212,7 +1223,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         uint decimalConverted_userSaleAmount = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
-            _saleAmount, bondingCurveFundingManager.decimals(), 18
+            _saleAmount, issuanceToken.decimals(), 18
         );
 
         // Use formula to get expected return values
@@ -1246,21 +1257,21 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _saleAmount = _bound_for_decimal_conversion(
             _saleAmount,
             1,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
-            bondingCurveFundingManager.decimals()
+            issuanceToken.decimals()
         );
 
         // Set sell Fee
         // Set virtual supply to some number above collateral supply
         // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = _saleAmount * 4;
+        uint newVirtualTokenSupply = _saleAmount * 4;
         uint newVirtualCollateral = _saleAmount * 2;
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setSellFee(_fee);
             bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
+                newVirtualTokenSupply
             );
             bondingCurveFundingManager.setVirtualCollateralSupply(
                 newVirtualCollateral
@@ -1270,7 +1281,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         uint decimalConverted_userDepositAmount = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
-            _saleAmount, bondingCurveFundingManager.decimals(), 18
+            _saleAmount, issuanceToken.decimals(), 18
         );
 
         // Use formula to get expected return values
@@ -1306,23 +1317,22 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     */
     function testMintIssuanceTokenTo(uint amount)
         public
+        virtual
         callerIsOrchestratorOwner
     {
-        assertEq(bondingCurveFundingManager.balanceOf(non_owner_address), 0);
+        assertEq(issuanceToken.balanceOf(non_owner_address), 0);
 
         bondingCurveFundingManager.mintIssuanceTokenTo(
             non_owner_address, amount
         );
 
-        assertEq(
-            bondingCurveFundingManager.balanceOf(non_owner_address), amount
-        );
+        assertEq(issuanceToken.balanceOf(non_owner_address), amount);
     }
 
-    /* Test setVirtualIssuanceSupply and _setVirtualIssuanceSupply function
-        ├── when caller is not the Orchestrator_v1 owner
+    /* Test setVirtualIssuanceSupply and _setVirtualTokenSupply function
+        ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                 ├── when the new token supply is zero
                 │   └── it should revert
                 └── when the new token supply is above zero
@@ -1331,7 +1341,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     */
 
-    function testSetVirtualIssuanceSupply_FailsIfZero()
+    function testSetVirtualTokenSupply_FailsIfZero()
         public
         callerIsOrchestratorOwner
     {
@@ -1345,7 +1355,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
     }
 
-    function testSetVirtualIssuanceSupply(uint _newSupply)
+    function testSetVirtualTokenSupply(uint _newSupply)
         public
         callerIsOrchestratorOwner
     {
@@ -1354,17 +1364,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceSupplySet(_newSupply, INITIAL_ISSUANCE_SUPPLY);
+        emit VirtualTokenSupplySet(_newSupply, INITIAL_TOKEN_SUPPLY);
         bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
-        assertEq(
-            bondingCurveFundingManager.getVirtualIssuanceSupply(), _newSupply
-        );
+        assertEq(bondingCurveFundingManager.getVirtualIssuanceSupply(), _newSupply);
     }
 
     /* Test setVirtualCollateralSupply and _setVirtualCollateralSupply function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                 ├── when the new collateral supply is zero
                 │   └── it should revert
                 └── when the new collateral supply is above zero
@@ -1404,9 +1412,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     /* Test setReserveRatioForBuying and _setReserveRatioForBuying function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │       └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                 ├── when reserve ratio is  0% 
                 │       └── it should revert
                 ├── when reserve ratio is below 100%
@@ -1463,9 +1471,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // Test reserve ratio changes
 
     /* Test setReserveRatioForSelling and _setReserveRatioForSelling function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │       └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                 ├── when reserve ratio is  0% 
                 │       └── it should revert
                 ├── when reserve ratio is below 100%
@@ -1520,44 +1528,98 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /* Test _setDecimals function
+    /* Test _setIssuanceToken function
         ├── When decimal is set to lower than seven
         |   └── it should revert
         ├── When decimal is set to more than the collateral decimals
         |   └── it should revert
         └── when decimal is between seven and the the collateral decimals
+            ├── it should store the new decimal number 
             └── it should succeed
             */
-    function testSetDecimals_FailsIfLowerThanSeven(uint8 _newDecimals) public {
+
+    function testSetIssuanceToken_FailsIfTokenDecimalsLowerThanSeven(
+        uint _newMaxSupply,
+        uint8 _newDecimals
+    ) public {
         vm.assume(_newDecimals < 7);
+
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
+        newIssuanceToken.init(
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+        );
+
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidTokenDecimal
                 .selector
         );
         // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
     }
 
-    function testSetDecimals_FailsIfLowerThanCollateralDecimals(
+    function testSetIssuanceToken_FailsIfLowerThanCollateralDecimals(
+        uint _newMaxSupply,
         uint8 _newDecimals
     ) public {
         vm.assume(_newDecimals < _token.decimals());
+
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
+        newIssuanceToken.init(
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+        );
+
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidTokenDecimal
                 .selector
         );
         // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
     }
 
-    function testSetDecimals(uint8 _newDecimals) public {
+    function testSetIssuanceToken(uint _newMaxSupply, uint8 _newDecimals)
+        public
+    {
         vm.assume(_newDecimals >= 7 && _newDecimals >= _token.decimals());
-        // No authentication since it's an internal function exposed by the mock contract
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
 
-        assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
+        newIssuanceToken.init(
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+        );
+
+        // No authentication since it's an internal function exposed by the mock contract
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
+
+        ERC20Issuance_v1 issuanceTokenAfter =
+            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
+
+        assertEq(issuanceTokenAfter.name(), _name);
+        assertEq(issuanceTokenAfter.symbol(), _symbol);
+        assertEq(issuanceTokenAfter.decimals(), _newDecimals);
+        assertEq(issuanceTokenAfter.MAX_SUPPLY(), _newMaxSupply);
+
+        // we also check the decimals have been cached correctly
+
+        assertEq(
+            bondingCurveFundingManager.call_issuanceTokenDecimals(),
+            _newDecimals
+        );
     }
 
     /* Test _staticPricePPM function
@@ -1576,7 +1638,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint availableForSale = _prepareSellConditions(seller, amountIn); // Multiply amount to ensure that user has enough tokens, because return amount when buying less than amount
         // Set virtual supply to some number above _sellAmount
         // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = availableForSale * 2;
+        uint newVirtualTokenSupply = availableForSale * 2;
         uint newVirtualCollateral = amountIn * 2;
 
         _token.mint(
@@ -1587,7 +1649,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
+                newVirtualTokenSupply
             );
             bondingCurveFundingManager.setVirtualCollateralSupply(
                 newVirtualCollateral
@@ -1600,7 +1662,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             bondingCurveFundingManager.calculateSaleReturn(availableForSale);
 
         // Get virtual supplies before selling
-        uint _virtualIssuanceSupplyBeforeSell =
+        uint _virtualTokenSupplyBeforeSell =
             bondingCurveFundingManager.getVirtualIssuanceSupply();
         uint _virtualCollateralSupplyBeforeSell =
             bondingCurveFundingManager.getVirtualCollateralSupply();
@@ -1610,7 +1672,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Calculate static price before selling
         uint staticPriceBeforeSell = bondingCurveFundingManager
             .call_staticPricePPM(
-            _virtualIssuanceSupplyBeforeSell,
+            _virtualTokenSupplyBeforeSell,
             _virtualCollateralSupplyBeforeSell,
             _reserveRatioSelling
         );
@@ -1620,7 +1682,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.sell(availableForSale, minAmountOut);
 
         // Get virtual supplies after selling
-        uint _virtualIssuanceSupplyAfterSell =
+        uint _virtualTokenSupplyAfterSell =
             bondingCurveFundingManager.getVirtualIssuanceSupply();
         uint _virtualCollateralSupplyAfterSell =
             bondingCurveFundingManager.getVirtualCollateralSupply();
@@ -1628,15 +1690,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Calculate static price after selling
         uint staticPriceAfterSell = bondingCurveFundingManager
             .call_staticPricePPM(
-            _virtualIssuanceSupplyAfterSell,
+            _virtualTokenSupplyAfterSell,
             _virtualCollateralSupplyAfterSell,
             _reserveRatioSelling
         );
 
         // Assert that supply has changed
-        assertLt(
-            _virtualIssuanceSupplyAfterSell, _virtualIssuanceSupplyBeforeSell
-        );
+        assertLt(_virtualTokenSupplyAfterSell, _virtualTokenSupplyBeforeSell);
         assertLt(
             _virtualCollateralSupplyAfterSell,
             _virtualCollateralSupplyBeforeSell
@@ -1655,13 +1715,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         // Set virtual supplies to a relatively high value before buying
         // This way the buy-in won't modify the price too much
-        uint _virtualIssuanceSupplyBeforeBuy = amountIn * 1000;
+        uint _virtualTokenSupplyBeforeBuy = amountIn * 1000;
         uint _virtualCollateralSupplyBeforeBuy = minAmountOut * 1000;
 
         vm.startPrank(owner_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
-                _virtualIssuanceSupplyBeforeBuy
+                _virtualTokenSupplyBeforeBuy
             );
             bondingCurveFundingManager.setVirtualCollateralSupply(
                 _virtualCollateralSupplyBeforeBuy
@@ -1674,7 +1734,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Calculate static price before buy
         uint staticPriceBeforeBuy = bondingCurveFundingManager
             .call_staticPricePPM(
-            _virtualIssuanceSupplyBeforeBuy,
+            _virtualTokenSupplyBeforeBuy,
             _virtualCollateralSupplyBeforeBuy,
             _reserveRatioBuying
         );
@@ -1683,14 +1743,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.buy(amountIn, minAmountOut);
 
         // Get virtual supply after buy
-        uint _virtualIssuanceSupplyAfterBuy =
+        uint _virtualTokenSupplyAfterBuy =
             bondingCurveFundingManager.getVirtualIssuanceSupply();
         uint _virtualCollateralSupplyAfterBuy =
             bondingCurveFundingManager.getVirtualCollateralSupply();
         // Calculate static price after buy
         uint staticPriceAfterBuy = bondingCurveFundingManager
             .call_staticPricePPM(
-            _virtualIssuanceSupplyAfterBuy,
+            _virtualTokenSupplyAfterBuy,
             _virtualCollateralSupplyAfterBuy,
             _reserveRatioBuying
         );
@@ -1714,7 +1774,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         │       └── it should return the amount without change
         ├── when the token decimals are higher than the required decimals
         │       └── it should cut the excess decimals from the amount and return it
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                 └── it should pad the amount by the missing decimals and return it
         */
 
@@ -1736,10 +1796,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint8 _requiredDecimals
     ) public {
         // Bounds necessary to avoid overflows:
-        // amount < (1e78 (uint.max) - 1e32 (max decimals in test) - 1e5 (BPS))
+        // amount < (1e78 (uint.max) - 1e36 (max decimals in test) - 1e5 (BPS))
         _amount = bound(_amount, 1, 1e41);
         _requiredDecimals = uint8(bound(_requiredDecimals, 1, 18));
-        _tokenDecimals = uint8(bound(_tokenDecimals, _requiredDecimals + 1, 32));
+        _tokenDecimals = uint8(bound(_tokenDecimals, _requiredDecimals + 1, 36));
 
         uint res = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
@@ -1756,11 +1816,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint8 _requiredDecimals
     ) public {
         // Bounds necessary to avoid overflows:
-        // amount < (1e78 (uint.max) - 1e32 (max decimals in test) - 1e5 (BPS))
+        // amount < (1e78 (uint.max) - 1e36 (max decimals in test) - 1e5 (BPS))
         _amount = bound(_amount, 1, 1e41);
         _tokenDecimals = uint8(bound(_tokenDecimals, 1, 18));
         _requiredDecimals =
-            uint8(bound(_requiredDecimals, _tokenDecimals + 1, 32));
+            uint8(bound(_requiredDecimals, _tokenDecimals + 1, 36));
 
         uint res = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
@@ -1773,14 +1833,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // OnlyOrchestrator Mutating Functions
 
     /* Test transferOrchestratorToken 
-        ├── when caller is not the Orchestrator_v1 
+        ├── when caller is not the Orchestrator 
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                 ├── it should send the funds to the specified address
                 └── it should emit an event?
     */
 
-    function testTransferOrchestratorToken(address to, uint amount) public {
+    function testTransferOrchestratorToken(address to, uint amount)
+        public
+        virtual
+    {
         vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
 
         _token.mint(address(bondingCurveFundingManager), amount);
@@ -1834,9 +1897,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         {
             _token.approve(address(bondingCurveFundingManager), amount);
             bondingCurveFundingManager.buy(amount, minAmountOut);
-            userSellAmount = bondingCurveFundingManager.balanceOf(seller);
+            userSellAmount = issuanceToken.balanceOf(seller);
 
-            bondingCurveFundingManager.approve(
+            issuanceToken.approve(
                 address(bondingCurveFundingManager), userSellAmount
             );
         }

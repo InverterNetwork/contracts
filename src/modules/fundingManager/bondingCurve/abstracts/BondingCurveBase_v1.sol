@@ -12,15 +12,8 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // External Interfaces
+import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
-
-// External Dependencies
-import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
-import {
-    ERC2771ContextUpgradeable,
-    ContextUpgradeable
-} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -41,7 +34,6 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 abstract contract BondingCurveBase_v1 is
     IBondingCurveBase_v1,
     IFundingManager_v1,
-    ERC20Upgradeable,
     Module_v1
 {
     function supportsInterface(bytes4 interfaceId)
@@ -56,13 +48,15 @@ abstract contract BondingCurveBase_v1 is
             || super.supportsInterface(interfaceId);
     }
 
+    using SafeERC20 for ERC20Issuance_v1;
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Stores the number of decimals used by the token.
-    uint8 internal tokenDecimals;
+    /// @dev The token the Curve will mint and burn from
+    ERC20Issuance_v1 internal issuanceToken;
+
     /// @dev Indicates whether the buy functionality is open or not.
     ///      Enabled = true || disabled = false.
     bool public buyIsOpen;
@@ -115,19 +109,6 @@ abstract contract BondingCurveBase_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Public Mutating Functions
-
-    /// @inheritdoc IERC20Metadata
-    function decimals()
-        public
-        view
-        override(ERC20Upgradeable)
-        returns (uint8)
-    {
-        return tokenDecimals;
-    }
-
-    //--------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -143,6 +124,14 @@ abstract contract BondingCurveBase_v1 is
     /// @inheritdoc IBondingCurveBase_v1
     function setBuyFee(uint _fee) external onlyOrchestratorOwner {
         _setBuyFee(_fee);
+    }
+
+    //--------------------------------------------------------------------------
+    // Public Functions
+
+    /// @notice Returns the address of the issuance token
+    function getIssuanceToken() public view returns (address) {
+        return address(issuanceToken);
     }
 
     //--------------------------------------------------------------------------
@@ -252,14 +241,14 @@ abstract contract BondingCurveBase_v1 is
         netAmount = _transactionAmount - feeAmount;
     }
 
-    /// @dev Sets the number of decimals for the token.
-    /// This function updates the `tokenDecimals` state variable and should be be overriden by
-    /// the implementation contract if input validation is needed.
-    /// @param _decimals The number of decimals to set for the token.
-    function _setTokenDecimals(uint8 _decimals) internal virtual {
-        uint8 oldDecimals = tokenDecimals;
-        tokenDecimals = _decimals;
-        emit TokenDecimalsUpdated(oldDecimals, tokenDecimals);
+    /// @dev Sets the issuance token for the FundingManager.
+    /// This function updates the `issuanceToken` state variable and should be be overriden by
+    /// the implementation contract if extra validation around the token characteristics is needed.
+    /// @param _issuanceToken The token which will be issued by the Bonding Curve.
+    function _setIssuanceToken(address _issuanceToken) internal virtual {
+        address oldToken = address(issuanceToken);
+        issuanceToken = ERC20Issuance_v1(_issuanceToken);
+        emit IssuanceTokenUpdated(oldToken, _issuanceToken);
     }
 
     //--------------------------------------------------------------------------
@@ -276,37 +265,19 @@ abstract contract BondingCurveBase_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // ERC2771 Context Upgradeable
+    // Calls to the external ERC20 contract
 
-    /// Needs to be overriden, because they are imported via the ERC20Upgradeable as well
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (address sender)
-    {
-        return ERC2771ContextUpgradeable._msgSender();
+    /// @dev Mints new tokens
+    /// @param _to The address of the recipient.
+    /// @param _amount The amount of tokens to mint.
+    function _mint(address _to, uint _amount) internal {
+        issuanceToken.mint(_to, _amount);
     }
+    /// @dev Burns tokens
+    /// @param _from The address of the owner.
+    /// @param _amount The amount of tokens to burn.
 
-    /// Needs to be overriden, because they are imported via the ERC20Upgradeable as well
-    function _msgData()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (bytes calldata)
-    {
-        return ERC2771ContextUpgradeable._msgData();
-    }
-
-    function _contextSuffixLength()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (uint)
-    {
-        return ERC2771ContextUpgradeable._contextSuffixLength();
+    function _burn(address _from, uint _amount) internal {
+        issuanceToken.burn(_from, _amount);
     }
 }

@@ -32,24 +32,16 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         __Module_init(orchestrator_, metadata);
 
         (
-            bytes32 _name,
-            bytes32 _symbol,
-            uint8 _decimals,
+            address _issuanceToken,
             address _formula,
             uint _buyFee,
             bool _buyIsOpen,
             bool _sellIsOpen
-        ) = abi.decode(
-            configData, (bytes32, bytes32, uint8, address, uint, bool, bool)
-        );
+        ) = abi.decode(configData, (address, address, uint, bool, bool));
 
-        __ERC20_init(
-            string(abi.encodePacked(_name)), string(abi.encodePacked(_symbol))
-        );
+        _setIssuanceToken(_issuanceToken);
 
         formula = IBancorFormula(_formula);
-
-        _setTokenDecimals(_decimals);
 
         _setBuyFee(_buyFee);
 

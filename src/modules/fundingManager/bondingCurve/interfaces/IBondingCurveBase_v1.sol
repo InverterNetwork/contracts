@@ -39,6 +39,11 @@ interface IBondingCurveBase_v1 {
     /// @notice Event emitted when buy fee is updated
     event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
 
+    /// @notice Event emitted when the issuance token is updated
+    event IssuanceTokenUpdated(
+        address indexed oldToken, address indexed issuanceToken
+    );
+
     /// @notice Event emitted when tokens have been succesfully issued
     /// @param receiver The address that will receive the issued tokens.
     /// @param depositAmount The amount of collateral token deposited.
@@ -57,6 +62,15 @@ interface IBondingCurveBase_v1 {
     event TokenDecimalsUpdated(
         uint8 indexed oldDecimals, uint8 indexed newDecimals
     );
+
+        //--------------------------------------------------------------------------
+    // Structs
+    struct IssuanceToken {
+        string name; // The name of the issuance token
+        string symbol; // The symbol of the issuance token
+        uint8 decimals; // The decimals used within the issuance token
+        uint maxSupply; // The maximum supply of the issuance token
+    }
 
     //--------------------------------------------------------------------------
     // Functions
