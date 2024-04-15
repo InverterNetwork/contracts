@@ -7,6 +7,9 @@ import "forge-std/console.sol";
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // SuT
+import {RestrictedBancorVirtualSupplyBondingCurveFundingManager} from
+    "src/modules/fundingManager/bondingCurveFundingManager/ParibuChanges/RestrictedBancorVirtualSupplyBondingCurveFundingManager.sol";
+
 import {
     BancorVirtualSupplyBondingCurveFundingManager,
     IBancorVirtualSupplyBondingCurveFundingManager
@@ -16,8 +19,8 @@ import {IBancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";
 import {Module} from "src/modules/base/Module.sol";
 
-contract BancorVirtualSupplyBondingCurveFundingManagerMock is
-    BancorVirtualSupplyBondingCurveFundingManager
+contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock is
+    RestrictedBancorVirtualSupplyBondingCurveFundingManager
 {
     //--------------------------------------------------------------------------
     // The BancorVirtualSupplyBondingCurveFundingManager is not abstract, so all the necessary functions are already implemented

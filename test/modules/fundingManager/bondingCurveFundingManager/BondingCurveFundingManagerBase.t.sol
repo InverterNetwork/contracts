@@ -8,6 +8,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
+import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
+
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
@@ -34,6 +36,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     BondingCurveFundingManagerMock bondingCurveFundingManager;
     address formula;
 
+    ERC20IssuanceMock issuanceToken;
+
     address owner_address = makeAddr("alice");
     address non_owner_address = makeAddr("bob");
 
@@ -56,6 +60,10 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         formula = address(new BancorFormula());
 
+        issuanceToken = new ERC20IssuanceMock();
+        issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
+
         _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
@@ -64,14 +72,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         bondingCurveFundingManager.init(
             _orchestrator,
             _METADATA,
-            abi.encode(
-                bytes32(abi.encodePacked(NAME)),
-                bytes32(abi.encodePacked(SYMBOL)),
-                DECIMALS,
-                formula,
-                BUY_FEE,
-                BUY_IS_OPEN
-            )
+            abi.encode(address(issuanceToken), formula, BUY_FEE, BUY_IS_OPEN)
         );
     }
 
@@ -97,17 +98,17 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     function testInit() public override {
         assertEq(
-            bondingCurveFundingManager.name(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
+            issuanceToken.name(),
+            string(abi.encodePacked(NAME)),
             "Name has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.symbol(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
+            issuanceToken.symbol(),
+            string(abi.encodePacked(SYMBOL)),
             "Symbol has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.decimals(),
+            issuanceToken.decimals(),
             DECIMALS,
             "Decimals has not been set correctly"
         );
@@ -200,8 +201,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(receiver), 0);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(receiver), 0);
 
         // Execution
         vm.prank(buyer);
@@ -213,8 +214,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(receiver), amount);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(receiver), amount);
     }
 
     /* Test buy and _buyOrder function
@@ -279,7 +280,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Emit event
         vm.expectEmit(
@@ -297,7 +298,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), amount);
+        assertEq(issuanceToken.balanceOf(buyer), amount);
     }
 
     function testBuyOrderWithFee(uint amount, uint fee) public {
@@ -318,7 +319,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Calculate receiving amount
         uint amountMinusFee =
@@ -340,7 +341,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), amountMinusFee);
+        assertEq(issuanceToken.balanceOf(buyer), amountMinusFee);
     }
 
     /* Test openBuy and _openBuy function
@@ -476,16 +477,34 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_feeAmount, feeAmount);
     }
 
-    /* Test _setDecimals function
+    /* Test _setIssuanceToken function
        
         └── when setting decimals
             └── it should succeed
     */
 
-    function testSetDecimals(uint8 _newDecimals) public {
-        bondingCurveFundingManager.call_setDecimals(_newDecimals);
+    function testSetIssuanceToken(uint _newMaxSupply, uint8 _newDecimals)
+        public
+    {
+        vm.assume(_newDecimals > 0);
 
-        assertEq(bondingCurveFundingManager.decimals(), _newDecimals);
+        string memory _name = "New Issuance Token";
+        string memory _symbol = "NEW";
+
+        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        newIssuanceToken.init(_name, _symbol, _newMaxSupply, _newDecimals);
+
+        bondingCurveFundingManager.call_setIssuanceToken(
+            address(newIssuanceToken)
+        );
+
+        ERC20IssuanceMock issuanceTokenAfter =
+            ERC20IssuanceMock(bondingCurveFundingManager.getIssuanceToken());
+
+        assertEq(issuanceTokenAfter.name(), _name);
+        assertEq(issuanceTokenAfter.symbol(), _symbol);
+        assertEq(issuanceTokenAfter.decimals(), _newDecimals);
+        assertEq(issuanceTokenAfter.MAX_SUPPLY(), _newMaxSupply);
     }
 
     // Test _issueTokens function

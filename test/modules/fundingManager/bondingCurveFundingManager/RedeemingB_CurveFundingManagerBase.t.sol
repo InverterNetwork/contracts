@@ -8,6 +8,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
+import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
+
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
@@ -39,6 +41,8 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     RedeemingBondingCurveFundingManagerMock bondingCurveFundingManager;
     address formula;
 
+    ERC20IssuanceMock issuanceToken;
+
     address owner_address = address(0xA1BA);
     address non_owner_address = address(0xB0B);
 
@@ -61,6 +65,10 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         formula = address(new BancorFormula());
 
+        issuanceToken = new ERC20IssuanceMock();
+        issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
+
         _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
@@ -70,9 +78,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                bytes32(abi.encodePacked(NAME)),
-                bytes32(abi.encodePacked(SYMBOL)),
-                DECIMALS,
+                address(issuanceToken),
                 formula,
                 BUY_FEE,
                 BUY_IS_OPEN,
@@ -98,17 +104,17 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
     function testInit() public override {
         assertEq(
-            bondingCurveFundingManager.name(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
+            issuanceToken.name(),
+            string(abi.encodePacked(NAME)),
             "Name has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.symbol(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
+            issuanceToken.symbol(),
+            string(abi.encodePacked(SYMBOL)),
             "Symbol has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.decimals(),
+            issuanceToken.decimals(),
             DECIMALS,
             "Decimals has not been set correctly"
         );
@@ -181,7 +187,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         uint receiverBalanceBefore = _token.balanceOf(receiver);
         assertEq(_token.balanceOf(seller), 0);
         assertEq(_token.balanceOf(receiver), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(seller), sellAmount);
+        assertEq(issuanceToken.balanceOf(seller), sellAmount);
 
         // Execution
         vm.prank(seller);
@@ -193,7 +199,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             _token.balanceOf(address(bondingCurveFundingManager)),
             (bondingCurveBalanceBefore - redeemAmount)
         );
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(issuanceToken.balanceOf(seller), 0);
         assertEq(_token.balanceOf(seller), 0);
     }
 
@@ -289,9 +295,9 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalTokenSupplyBefore = bondingCurveFundingManager.totalSupply();
+        uint totalTokenSupplyBefore = issuanceToken.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
-        //uint userTokenBalanceBefore = bondingCurveFundingManager.balanceOf(seller);
+        //uint userTokenBalanceBefore = issuanceToken.balanceOf(seller);
 
         // Emit event
         vm.expectEmit(
@@ -309,11 +315,8 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             (bondingCurveCollateralBalanceBefore - amount)
         );
         assertEq(_token.balanceOf(seller), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
-        assertEq(
-            bondingCurveFundingManager.totalSupply(),
-            totalTokenSupplyBefore - amount
-        );
+        assertEq(issuanceToken.balanceOf(seller), 0);
+        assertEq(issuanceToken.totalSupply(), totalTokenSupplyBefore - amount);
     }
 
     function testSellOrderWithFee(uint amount, uint fee) public {
@@ -334,7 +337,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalTokenSupplyBefore = bondingCurveFundingManager.totalSupply();
+        uint totalTokenSupplyBefore = issuanceToken.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
 
         // Calculate receive amount
@@ -357,11 +360,8 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             (bondingCurveCollateralBalanceBefore - amountMinusFee)
         );
         assertEq(_token.balanceOf(seller), amountMinusFee);
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
-        assertEq(
-            bondingCurveFundingManager.totalSupply(),
-            totalTokenSupplyBefore - amount
-        );
+        assertEq(issuanceToken.balanceOf(seller), 0);
+        assertEq(issuanceToken.totalSupply(), totalTokenSupplyBefore - amount);
     }
 
     /* Test openSell and _openSell function
@@ -500,9 +500,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             _token.approve(address(bondingCurveFundingManager), amount);
             bondingCurveFundingManager.buy(amount, amount);
 
-            bondingCurveFundingManager.approve(
-                address(bondingCurveFundingManager), amount
-            );
+            issuanceToken.approve(address(bondingCurveFundingManager), amount);
         }
         vm.stopPrank();
     }
