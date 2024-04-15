@@ -134,7 +134,7 @@ abstract contract OptimisticOracleIntegrator is
         asserter = asserter == address(0) ? _msgSender() : asserter;
         uint bond = oo.getMinimumBond(address(defaultCurrency));
         defaultCurrency.safeTransferFrom(_msgSender(), address(this), bond);
-        defaultCurrency.safeApprove(address(oo), bond);
+        defaultCurrency.safeIncreaseAllowance(address(oo), bond);
 
         // The claim we want to assert is the first argument of assertTruth. It must contain all of the relevant
         // details so that anyone may verify the claim without having to read any further information on chain. As a

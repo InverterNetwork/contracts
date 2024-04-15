@@ -23,7 +23,10 @@ import {
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract StakingManagerLifecycle is E2eTest {
+contract StakingManagerLifecycle is E2ETest {
+    // Module Configurations for the current E2E test. Should be filled during setUp() call.
+    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+
     // Let's create a list of staker
     address staker1 = makeAddr("staker1");
     address staker2 = makeAddr("staker 2");
@@ -44,25 +47,78 @@ contract StakingManagerLifecycle is E2eTest {
     ERC20Mock rewardToken = new ERC20Mock("Mock", "MOCK");
     ERC20Mock stakingToken = new ERC20Mock("Mock", "MOCK");
 
-    function test_e2e_StakingManagerLifecycle() public {
-        StakingManager stakingManager;
 
-        // -----------INIT
-        // address(this) creates a new orchestrator.
+    function setUp() public override {
+        // Setup common E2E framework
+        super.setUp();
+
+        // Set Up individual Modules the E2E test is going to use and store their configurations:
+        // NOTE: It's important to store the module configurations in order, since _create_E2E_Orchestrator() will copy from the array.
+        // The order should be:
+        //      moduleConfigurations[0]  => FundingManager
+        //      moduleConfigurations[1]  => Authorizer
+        //      moduleConfigurations[2]  => PaymentProcessor
+        //      moduleConfigurations[3:] => Additional Logic Modules
+
+        // FundingManager
+        setUpRebasingFundingManager();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                rebasingFundingManagerMetadata,
+                abi.encode(address(token)),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // Authorizer
+        setUpRoleAuthorizer();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                roleAuthorizerMetadata,
+                abi.encode(address(this), address(this)),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // PaymentProcessor
+        setUpStreamingPaymentProcessor();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                streamingPaymentProcessorMetadata,
+                bytes(""),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+
+        // Additional Logic Modules
+        setUpStakingManager();
+        moduleConfigurations.push(
+            IOrchestratorFactory.ModuleConfig(
+                stakingManagerMetadata,
+                abi.encode(stakingToken),
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+            )
+        );
+    }
+
+    function test_e2e_StakingManagerLifecycle() public {
+    //--------------------------------------------------------------------------------
+        // Orchestrator Initialization
+        //--------------------------------------------------------------------------------
+      
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
             owner: address(this),
             token: rewardToken
         });
 
-        IOrchestrator orchestrator =
-        _createNewOrchestratorWithAllModules_StakingManager(
-            orchestratorConfig, address(stakingToken)
-        );
+        IOrchestrator orchestrator = _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
+
 
         RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
 
+StakingManager stakingManager;
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {

@@ -67,7 +67,7 @@ contract StakingManagerTest is ModuleTest {
     }
 
     function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
@@ -467,7 +467,7 @@ contract StakingManagerTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule.Module__CallerNotAuthorized.selector,
-                _authorizer.getManagerRole(),
+                _authorizer.getOwnerRole(),
                 address(0xBEEF)
             )
         );

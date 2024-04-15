@@ -24,7 +24,7 @@ contract FundingManagerMock is IFundingManager, Module {
             || super.supportsInterface(interfaceId);
     }
 
-    using SafeERC20 for IERC20;
+    //using SafeERC20 for IERC20;
 
     IERC20 private _token;
 
@@ -45,22 +45,27 @@ contract FundingManagerMock is IFundingManager, Module {
     }
 
     function deposit(uint amount) external {
-        _token.safeTransferFrom(_msgSender(), address(this), amount);
+        //_token.safeTransferFrom(_msgSender(), address(this), amount);
+        _token.transferFrom(_msgSender(), address(this), amount);
     }
 
     function depositFor(address, uint amount) external {
-        _token.safeTransferFrom(_msgSender(), address(this), amount);
+        //_token.safeTransferFrom(_msgSender(), address(this), amount);
+        _token.transferFrom(_msgSender(), address(this), amount);
     }
 
     function withdraw(uint amount) external {
-        _token.safeTransfer(_msgSender(), amount);
+        //_token.safeTransfer(_msgSender(), amount);
+        _token.transfer(_msgSender(), amount);
     }
 
     function withdrawTo(address to, uint amount) external {
-        _token.safeTransfer(to, amount);
+        //_token.safeTransfer(to, amount);
+        _token.transfer(to, amount);
     }
 
     function transferOrchestratorToken(address to, uint amount) external {
-        _token.safeTransfer(to, amount);
+        //_token.safeTransfer(to, amount);
+        _token.transfer(to, amount);
     }
 }

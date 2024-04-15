@@ -97,7 +97,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     }
 
     function testReinitFails() public override(ModuleTest) {
-        vm.expectRevert(OZErrors.Initializable__AlreadyInitialized);
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         ooIntegrator.init(_orchestrator, _METADATA, bytes(""));
     }
 

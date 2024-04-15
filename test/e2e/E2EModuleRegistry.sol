@@ -22,6 +22,7 @@ import {StreamingPaymentProcessor} from
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
+import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {TokenGatedRoleAuthorizer} from
     "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
@@ -425,6 +426,43 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             bountyManagerMetadata, IInverterBeacon(bountyManagerBeacon)
+        );
+    }
+
+    // StakingManager
+
+    StakingManager stakingManagerImpl;
+
+    InverterBeacon stakingManagerBeacon;
+
+    IModule.Metadata stakingManagerMetadata = IModule.Metadata(
+        1, 0, "https://github.com/inverter/staking-manager", "StakingManager"
+    );
+
+    /*
+     IOrchestratorFactory.ModuleConfig stakingManagerFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
+        stakingManagerMetadata,
+        bytes(address(stakingToken)),
+        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+    ); 
+    */
+
+    function setUpStakingManager() internal {
+        // Deploy module implementations.
+        stakingManagerImpl = new StakingManager();
+
+        // Deploy module beacons.
+        stakingManagerBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            stakingManagerMetadata.majorVersion,
+            address(stakingManagerImpl),
+            stakingManagerMetadata.minorVersion
+        );
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            stakingManagerMetadata, IInverterBeacon(stakingManagerBeacon)
         );
     }
 

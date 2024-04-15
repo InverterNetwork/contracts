@@ -7,6 +7,15 @@ contract ERC20Mock is ERC20 {
     mapping(address => bool) blockedAddresses;
     bool returnFalse;
 
+       bool reentrancyOnTransfer;
+
+    bytes reentrancyCallData;
+
+    bool public callSuccessful;
+
+    bytes public callData;
+
+
     constructor(string memory _name, string memory _symbol)
         ERC20(_name, _symbol)
     {}
@@ -31,6 +40,11 @@ contract ERC20Mock is ERC20 {
         returnFalse = !returnFalse;
     }
 
+        function setReentrancyOnTransfer(bytes calldata data) public {
+        reentrancyOnTransfer = true;
+        reentrancyCallData = data;
+    }
+
     function isBlockedAddress(address user) public view returns (bool) {
         return blockedAddresses[user];
     }
@@ -42,6 +56,15 @@ contract ERC20Mock is ERC20 {
         require(!isBlockedAddress(to), "address blocked");
         address owner = _msgSender();
         _transfer(owner, to, amount);
+
+               //Quite dirty but this should do the trick of testing attempted reentrancy
+        if (reentrancyOnTransfer) {
+            (bool success, bytes memory data) =
+                msg.sender.call(reentrancyCallData);
+            callSuccessful = success;
+            callData = data;
+        }
+
         return true;
     }
 
@@ -61,6 +84,15 @@ contract ERC20Mock is ERC20 {
         address spender = _msgSender();
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
+
+               //Quite dirty but this should do the trick of testing attempted reentrancy
+        if (reentrancyOnTransfer) {
+            (bool success, bytes memory data) =
+                msg.sender.call(reentrancyCallData);
+            callSuccessful = success;
+            callData = data;
+        }
+        
         return true;
     }
 }

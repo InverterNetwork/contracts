@@ -14,6 +14,7 @@ import {
     StakingManager,
     SafeERC20,
     IERC20,
+    ERC20PaymentClient,
     IERC20PaymentClient,
     ReentrancyGuard
 } from "./StakingManager.sol";
@@ -32,6 +33,17 @@ contract KPIRewarder is
     OptimisticOracleIntegrator
 {
     using SafeERC20 for IERC20;
+
+        function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC20PaymentClient, Module)
+        returns (bool)
+    {
+        return interfaceId == type(IKPIRewarder).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
 
     // =================================================================
     // General Information about the working of this contract
