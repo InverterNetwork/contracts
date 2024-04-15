@@ -7,14 +7,13 @@ contract ERC20Mock is ERC20 {
     mapping(address => bool) blockedAddresses;
     bool returnFalse;
 
-       bool reentrancyOnTransfer;
+    bool reentrancyOnTransfer;
 
     bytes reentrancyCallData;
 
     bool public callSuccessful;
 
     bytes public callData;
-
 
     constructor(string memory _name, string memory _symbol)
         ERC20(_name, _symbol)
@@ -40,7 +39,7 @@ contract ERC20Mock is ERC20 {
         returnFalse = !returnFalse;
     }
 
-        function setReentrancyOnTransfer(bytes calldata data) public {
+    function setReentrancyOnTransfer(bytes calldata data) public {
         reentrancyOnTransfer = true;
         reentrancyCallData = data;
     }
@@ -57,7 +56,7 @@ contract ERC20Mock is ERC20 {
         address owner = _msgSender();
         _transfer(owner, to, amount);
 
-               //Quite dirty but this should do the trick of testing attempted reentrancy
+        //Quite dirty but this should do the trick of testing attempted reentrancy
         if (reentrancyOnTransfer) {
             (bool success, bytes memory data) =
                 msg.sender.call(reentrancyCallData);
@@ -85,14 +84,14 @@ contract ERC20Mock is ERC20 {
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
 
-               //Quite dirty but this should do the trick of testing attempted reentrancy
+        //Quite dirty but this should do the trick of testing attempted reentrancy
         if (reentrancyOnTransfer) {
             (bool success, bytes memory data) =
                 msg.sender.call(reentrancyCallData);
             callSuccessful = success;
             callData = data;
         }
-        
+
         return true;
     }
 }

@@ -34,7 +34,7 @@ contract KPIRewarder is
 {
     using SafeERC20 for IERC20;
 
-        function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual

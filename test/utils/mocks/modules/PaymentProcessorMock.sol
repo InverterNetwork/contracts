@@ -27,13 +27,13 @@ contract PaymentProcessorMock is IPaymentProcessor, ERC165 {
             || super.supportsInterface(interfaceId);
     }
 
-   uint public processPaymentsTriggered;
+    uint public processPaymentsTriggered;
 
     //--------------------------------------------------------------------------
     // IPaymentProcessor Functions
 
     function processPayments(IERC20PaymentClient client) external {
-               processPaymentsTriggered += 1;
+        processPaymentsTriggered += 1;
     }
 
     function cancelRunningPayments(IERC20PaymentClient client) external {}

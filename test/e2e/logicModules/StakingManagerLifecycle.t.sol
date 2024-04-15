@@ -47,7 +47,6 @@ contract StakingManagerLifecycle is E2ETest {
     ERC20Mock rewardToken = new ERC20Mock("Mock", "MOCK");
     ERC20Mock stakingToken = new ERC20Mock("Mock", "MOCK");
 
-
     function setUp() public override {
         // Setup common E2E framework
         super.setUp();
@@ -102,23 +101,23 @@ contract StakingManagerLifecycle is E2ETest {
     }
 
     function test_e2e_StakingManagerLifecycle() public {
-    //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------------
         // Orchestrator Initialization
         //--------------------------------------------------------------------------------
-      
+
         IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory.OrchestratorConfig({
             owner: address(this),
             token: rewardToken
         });
 
-        IOrchestrator orchestrator = _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
-
+        IOrchestrator orchestrator =
+            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         RebasingFundingManager fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
 
-StakingManager stakingManager;
+        StakingManager stakingManager;
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
