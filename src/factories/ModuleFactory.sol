@@ -87,6 +87,12 @@ contract ModuleFactory is
     /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon}
     mapping(bytes32 => IInverterBeacon) private _beacons;
 
+    /// @dev Mapping of the module proxies to the address of the
+    ///      orchestrator contract that it was registered for.
+    ///      If that address is not zero, it is one of our proxies.
+    /// @dev Proxy(address) => Orchestrator(address)
+    mapping(address => address) private _orchestratorOfProxy;
+
     //--------------------------------------------------------------------------
     // Constructor
 
@@ -116,17 +122,16 @@ contract ModuleFactory is
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        address implementation = address(new InverterBeaconProxy(beacon));
+        address proxy = address(new InverterBeaconProxy(beacon));
+        _orchestratorOfProxy[proxy] = address(orchestrator);
 
-        IModule(implementation).init(orchestrator, metadata, configData);
+        IModule(proxy).init(orchestrator, metadata, configData);
 
         emit ModuleCreated(
-            address(orchestrator),
-            implementation,
-            LibMetadata.identifier(metadata)
+            address(orchestrator), proxy, LibMetadata.identifier(metadata)
         );
 
-        return implementation;
+        return proxy;
     }
 
     //--------------------------------------------------------------------------
@@ -141,6 +146,15 @@ contract ModuleFactory is
         bytes32 id = LibMetadata.identifier(metadata);
 
         return (_beacons[id], id);
+    }
+
+    /// @inheritdoc IModuleFactory
+    function getOrchestratorOfProxy(address proxy)
+        public
+        view
+        returns (address)
+    {
+        return _orchestratorOfProxy[proxy];
     }
 
     //--------------------------------------------------------------------------

@@ -8,6 +8,7 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // Interfaces
 import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
+import {IModuleFactory} from "src/factories/IModuleFactory.sol";
 
 /**
  * @title Module Manager
@@ -83,6 +84,13 @@ abstract contract ModuleManager is
         _;
     }
 
+    modifier moduleRegisteredInFactory(address module) {
+        if (_moduleFactory.getOrchestratorOfProxy(module) != address(this)) {
+            revert Orchestrator__ModuleManager_ModuleNotRegisteredInFactory();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
@@ -108,15 +116,20 @@ abstract contract ModuleManager is
     mapping(address => mapping(bytes32 => mapping(address => bool))) private
         _moduleRoles;
 
+    /// @dev Module factory address
+    IModuleFactory private _moduleFactory;
+
     //--------------------------------------------------------------------------
     // Initializer
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {}
 
-    function __ModuleManager_init(address[] calldata modules)
-        internal
-        onlyInitializing
-    {
+    function __ModuleManager_init(
+        address moduleFactory,
+        address[] calldata modules
+    ) internal onlyInitializing {
+        _moduleFactory = IModuleFactory(moduleFactory);
+
         address module;
         uint len = modules.length;
 
@@ -137,6 +150,7 @@ abstract contract ModuleManager is
         internal
         isNotModule(module)
         validModule(module)
+        moduleRegisteredInFactory(module)
     {
         _commitAddModule(module);
     }
@@ -186,6 +200,7 @@ abstract contract ModuleManager is
         moduleLimitNotExceeded
         isNotModule(module)
         validModule(module)
+        moduleRegisteredInFactory(module)
     {
         _commitAddModule(module);
     }

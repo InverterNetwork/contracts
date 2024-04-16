@@ -29,6 +29,9 @@ interface IModuleManager is IERC2771Context {
     /// @notice The Manager has reached the maximum amount of modules.
     error Orchestrator__ModuleManager__ModuleAmountOverLimits();
 
+    /// @notice The module has not been registered in the factory.
+    error Orchestrator__ModuleManager_ModuleNotRegisteredInFactory();
+
     //--------------------------------------------------------------------------
     // Events
 

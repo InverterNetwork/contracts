@@ -23,6 +23,8 @@ import {IModule} from "src/modules/base/IModule.sol";
 
 import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
 
+import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
+
 /**
  * @title Orchestrator
  *
@@ -97,7 +99,9 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         IPaymentProcessor paymentProcessor_
     ) external override(IOrchestrator) initializer {
         // Initialize upstream contracts.
-        __ModuleManager_init(modules);
+        __ModuleManager_init(
+            IOrchestratorFactory(msg.sender).moduleFactory(), modules
+        );
 
         // Set storage variables.
         orchestratorId = orchestratorId_;
