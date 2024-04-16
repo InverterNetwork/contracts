@@ -5,15 +5,36 @@ pragma solidity 0.8.23;
 
 import {
     BancorVirtualSupplyBondingCurveFundingManager,
+    IFundingManager,
     IBancorVirtualSupplyBondingCurveFundingManager
 } from
     "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
 
+// TODO: correct this
+/// @title Bancor Virtual Supply Bonding Curve Funding Manager Contract.
+/// @author Inverter Network.
+/// @notice This contract enables the issuance and redeeming of tokens on a bonding curve, using
+/// a virtual supply for both the token and the collateral as input. The contract makes use of the
+/// Aragon's Bancor Formula contract to calculate the issuance and redeeming rates.
+/// @dev This contract inherits functionalties from the contracts:
+/// - BondingCurveFundingManagerBase
+/// - RedeemingBondingCurveFundingManagerBase
+/// - VirtualTokenSupplyBase
+/// - VirtualCollateralSupplyBase
+/// The contract should be used by the Orchestrator Owner to manage all the configuration fo the
+/// bonding curve, e.g., the virtual supplies and reserve ratios, as well as the opening and closing
+/// of the issuance and redeeming functionalities. The contract implements the formulaWrapper
+/// functions enforced by the upstream contracts, using the Bancor formula to calculate the
+/// issuance/redeeming rate. It also implements a function which enables direct minting of the issuance token
 contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
     BancorVirtualSupplyBondingCurveFundingManager
 {
     //Minter/Burner Role
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
+
+    // Errors
+    error RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated(
+    );
 
     //--------------------------------------------------------------------------
     // Public Functions
@@ -101,9 +122,24 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
     function mintIssuanceTokenTo(address _receiver, uint _amount)
         external
         override(BancorVirtualSupplyBondingCurveFundingManager)
-        onlyModuleRole(CURVE_INTERACTION_ROLE)
+        onlyOrchestratorOwner
         validReceiver(_receiver)
     {
+        // @question : check if we need to disable this one too or if it can stay non-overridden
         _mint(_receiver, _amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // OnlyOrchestrator Functions
+
+    /// @inheritdoc IFundingManager
+    function transferOrchestratorToken(address to, uint amount)
+        external
+        override
+        onlyOrchestrator
+    {
+        revert
+            RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated(
+        );
     }
 }

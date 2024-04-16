@@ -95,12 +95,4 @@ contract RedeemingBondingCurveFundingManagerMock is
     function call_BPS() external pure returns (uint) {
         return BPS;
     }
-
-    //--------------------------------------------------------------------------
-    // Will be removed once we update base fundingManager
-
-    /// @inheritdoc IFundingManager
-    function token() public view returns (IERC20) {
-        return __Module_orchestrator.fundingManager().token();
-    }
 }

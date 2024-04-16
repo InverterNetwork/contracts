@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IBondingCurveFundingManagerBase} from
     "src/modules/fundingManager/bondingCurveFundingManager/IBondingCurveFundingManagerBase.sol";
 
@@ -11,7 +10,7 @@ import {IBondingCurveFundingManagerBase} from
 import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
 
 // External Interfaces
-import {ERC20Issuance} from "./ParibuChanges/ERC20Issuance.sol";
+import {IERC20Issuance} from "./ParibuChanges/IERC20Issuance.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Libraries
@@ -27,7 +26,6 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 ///             the downstream contract.
 abstract contract BondingCurveFundingManagerBase is
     IBondingCurveFundingManagerBase,
-    IFundingManager,
     Module
 {
     function supportsInterface(bytes4 interfaceId)
@@ -38,18 +36,17 @@ abstract contract BondingCurveFundingManagerBase is
         returns (bool)
     {
         return interfaceId == type(IBondingCurveFundingManagerBase).interfaceId
-            || interfaceId == type(IFundingManager).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
-    using SafeERC20 for ERC20Issuance;
+    using SafeERC20 for IERC20Issuance;
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
     // Storage
 
     /// @dev The token the Curve will mint and burn from
-    ERC20Issuance internal issuanceToken;
+    IERC20Issuance internal issuanceToken;
 
     /// @dev Indicates whether the buy functionality is open or not.
     ///      Enabled = true || disabled = false.
@@ -241,21 +238,8 @@ abstract contract BondingCurveFundingManagerBase is
     /// @param _issuanceToken The token which will be issued by the Bonding Curve.
     function _setIssuanceToken(address _issuanceToken) internal virtual {
         address oldToken = address(issuanceToken);
-        issuanceToken = ERC20Issuance(_issuanceToken);
+        issuanceToken = IERC20Issuance(_issuanceToken);
         emit IssuanceTokenUpdated(oldToken, _issuanceToken);
-    }
-
-    //--------------------------------------------------------------------------
-    // OnlyOrchestrator Mutating Functions
-
-    /// @inheritdoc IFundingManager
-    function transferOrchestratorToken(address to, uint amount)
-        external
-        onlyOrchestrator
-    {
-        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
-
-        emit TransferOrchestratorToken(to, amount);
     }
 
     //--------------------------------------------------------------------------

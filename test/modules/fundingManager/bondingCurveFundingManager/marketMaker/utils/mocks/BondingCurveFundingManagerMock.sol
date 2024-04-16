@@ -84,11 +84,4 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
     function call_setIssuanceToken(address _newIssuanceToken) external {
         _setIssuanceToken(_newIssuanceToken);
     }
-    //--------------------------------------------------------------------------
-    // Will be removed once we update base fundingManager
-
-    /// @inheritdoc IFundingManager
-    function token() public view returns (IERC20) {
-        return __Module_orchestrator.fundingManager().token();
-    }
 }

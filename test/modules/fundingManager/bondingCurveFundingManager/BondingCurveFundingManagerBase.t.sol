@@ -84,11 +84,6 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 type(IBondingCurveFundingManagerBase).interfaceId
             )
         );
-        assertTrue(
-            bondingCurveFundingManager.supportsInterface(
-                type(IFundingManager).interfaceId
-            )
-        );
     }
 
     //--------------------------------------------------------------------------

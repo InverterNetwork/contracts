@@ -56,6 +56,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 /// issuance/redeeming rate. It also implements a function which enables direct minting of the issuance token
 contract BancorVirtualSupplyBondingCurveFundingManager is
     IBancorVirtualSupplyBondingCurveFundingManager,
+    IFundingManager,
     VirtualTokenSupplyBase,
     VirtualCollateralSupplyBase,
     RedeemingBondingCurveFundingManagerBase
@@ -73,6 +74,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     {
         return interfaceId
             == type(IBancorVirtualSupplyBondingCurveFundingManager).interfaceId
+            || interfaceId == type(IFundingManager).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -137,10 +139,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             tokenAdmin
         );
 
-        //console.log("This: ", address(this));
-        //console.log("msgSender", _msgSender());
-        //console.log("Minter:", _issuanceToken.allowedMinter());
-
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
 
@@ -175,7 +173,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     }
 
     //--------------------------------------------------------------------------
-    // Public Functions
+    // Public Mutating Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address. This function is subject
     /// to a transactional limit, determined by the deposit token's decimal precision and the underlying
@@ -256,6 +254,9 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
+    //--------------------------------------------------------------------------
+    // Public Nonmutating Functions
+
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function getReserveRatioForBuying() external view returns (uint32) {
         return reserveRatioForBuying;
@@ -331,9 +332,6 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         return redeemAmount;
     }
 
-    //--------------------------------------------------------------------------
-    // Public Mutating Functions
-
     /// @inheritdoc IFundingManager
     function token() public view returns (IERC20) {
         return _token;
@@ -341,6 +339,17 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Functions
+
+    /// @inheritdoc IFundingManager
+    function transferOrchestratorToken(address to, uint amount)
+        external
+        virtual
+        onlyOrchestrator
+    {
+        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
+
+        emit TransferOrchestratorToken(to, amount);
+    }
 
     /// @inheritdoc IBancorVirtualSupplyBondingCurveFundingManager
     function mintIssuanceTokenTo(address _receiver, uint _amount)

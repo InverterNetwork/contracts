@@ -364,9 +364,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         address _receiver = makeAddr("receiver");
         uint _mintAmount = 1;
 
-        bytes32 _roleId = _authorizer.generateRoleId(
-            address(bondingCurveFundingManager), "CURVE_USER"
-        );
+        bytes32 _roleId = _authorizer.getOwnerRole();
 
         vm.startPrank(_minter);
         {
