@@ -10,6 +10,8 @@ import {RestrictedBancorVirtualSupplyBondingCurveFundingManager} from
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {ERC20Issuance} from
+    "src/modules/fundingManager/bondingCurveFundingManager/ParibuChanges/ERC20Issuance.sol";
 
 import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
@@ -47,10 +49,9 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken_properties.name = NAME;
-        issuanceToken_properties.symbol = SYMBOL;
-        issuanceToken_properties.decimals = DECIMALS;
-        issuanceToken_properties.maxSupply = MAX_SUPPLY;
+        issuanceToken = new ERC20IssuanceV1Mock();
+        issuanceToken.init(NAME, SYMBOL, DECIMALS, type(uint).max);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -229,7 +230,6 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
             _METADATA,
             abi.encode(
                 issuanceToken_properties,
-                owner_address,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
@@ -237,8 +237,6 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
 
         issuanceToken =
             ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
-        vm.prank(owner_address);
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         // Since we tested the success case in the Upstream tests, we now only need to verify revert on unauthorized calls
     }

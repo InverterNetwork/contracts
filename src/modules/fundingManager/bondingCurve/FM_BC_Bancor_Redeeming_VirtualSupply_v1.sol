@@ -27,6 +27,8 @@ import {VirtualCollateralSupplyBase_v1} from
 import {VirtualIssuanceSupplyBase_v1} from
     "@fm/bondingCurve/abstracts/VirtualIssuanceSupplyBase_v1.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
+import {ERC20Issuance_v1} from
+    "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -116,15 +118,25 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
-        address _acceptedToken;
-        address _issuanceToken;
+        IssuanceToken memory issuanceTokenData;
         BondingCurveProperties memory bondingCurveProperties;
+        address _acceptedToken;
 
-        (_issuanceToken, bondingCurveProperties, _acceptedToken) =
-            abi.decode(configData, (address, BondingCurveProperties, address));
+        (issuanceTokenData, bondingCurveProperties, _acceptedToken) = abi.decode(
+            configData, (IssuanceToken, BondingCurveProperties, address)
+        );
+
+        // TODO: deploy ERC20Issuance and initialize
+        ERC20Issuance _issuanceToken = new ERC20Issuance();
+        _issuanceToken.init(
+            string(abi.encodePacked(issuanceTokenData.name)),
+            string(abi.encodePacked(issuanceTokenData.symbol)),
+            issuanceTokenData.decimals,
+            issuanceTokenData.maxSupply
+        );
 
         // Set issuance token. This also caches the decimals
-        _setIssuanceToken(_issuanceToken);
+        _setIssuanceToken(address(_issuanceToken));
 
         // Set accepted token
         _token = IERC20(_acceptedToken);

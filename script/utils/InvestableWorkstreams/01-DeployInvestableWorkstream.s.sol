@@ -17,7 +17,8 @@ import {
 } from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    IBondingCurveBase_v1
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
@@ -50,8 +51,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // ========================================================================
     // BONDING CURVE PARAMETERS
 
-    bytes32 CURVE_TOKEN_NAME = "Conding Burve Token";
-    bytes32 CURVE_TOKEN_SYMBOL = "BCRG";
+    string CURVE_TOKEN_NAME = "Conding Burve Token";
+    string CURVE_TOKEN_SYMBOL = "BCRG";
     uint8 CURVE_TOKEN_DECIMALS = 18;
 
     uint32 RESERVE_RATIO_FOR_BUYING = 330_000;
@@ -103,13 +104,13 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             token: collateralToken
         });
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
-            buf_issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .IssuanceToken({
-                name: CURVE_TOKEN_NAME,
-                symbol: CURVE_TOKEN_SYMBOL,
-                decimals: CURVE_TOKEN_DECIMALS
-            });
+        IBondingCurveBase_v1.IssuanceToken memory buf_issuanceToken =
+        IBondingCurveBase_v1.IssuanceToken({
+            name: CURVE_TOKEN_NAME,
+            symbol: CURVE_TOKEN_SYMBOL,
+            decimals: CURVE_TOKEN_DECIMALS,
+            maxSupply: type(uint).max
+        });
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             buf_bondingCurveProperties =

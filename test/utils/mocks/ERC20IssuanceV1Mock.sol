@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import {ERC20Issuance_v1} from
     "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
-contract ERC20IssuanceMock is ERC20Issuance_v1 {
-    uint8 private _decimals;
+contract ERC20IssuanceV1Mock is ERC20Issuance_v1 {
+//uint8 private _decimals;
 
-    function init(
+/*function init(
         string memory name_,
         string memory symbol_,
         uint _MAX_SUPPLY,
@@ -18,9 +18,9 @@ contract ERC20IssuanceMock is ERC20Issuance_v1 {
         _setMinter(_msgSender());
         MAX_SUPPLY = _MAX_SUPPLY;
         _decimals = decimals_;
-    }
+    }*/
 
-    function decimals() public view virtual override returns (uint8) {
-        return _decimals;
-    }
+//function decimals() public view override returns (uint8) {
+//    return _decimals;
+//}
 }

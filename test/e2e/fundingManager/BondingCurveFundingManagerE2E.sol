@@ -42,7 +42,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
         issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init("Bonding Curve Token", "BCT", type(uint).max, 18);
+        issuanceToken.init("Bonding Curve Token", "BCT", 18, type(uint).max);
 
         //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 

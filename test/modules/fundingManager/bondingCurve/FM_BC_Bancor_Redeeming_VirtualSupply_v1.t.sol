@@ -16,6 +16,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
+import {ERC20IssuanceV1Mock} from "test/utils/mocks/ERC20IssuanceV1Mock.sol";
 import {ERC20Issuance_v1} from
     "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
@@ -170,7 +171,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             _METADATA,
             abi.encode(
                 issuanceToken_properties,
-                owner_address,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
@@ -179,7 +179,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         issuanceToken =
             ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
 
-        vm.prank(owner_address);
+        console.log(issuanceToken.owner());
         issuanceToken.setMinter(address(bondingCurveFundingManager));
     }
 
@@ -1547,10 +1547,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
-        newIssuanceToken.init(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20IssuanceV1Mock newIssuanceToken = new ERC20IssuanceV1Mock();
+        newIssuanceToken.init(_name, _symbol, _newDecimals, _newMaxSupply);
 
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -1572,10 +1570,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
-        newIssuanceToken.init(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20IssuanceV1Mock newIssuanceToken = new ERC20IssuanceV1Mock();
+        newIssuanceToken.init(_name, _symbol, _newDecimals, _newMaxSupply);
 
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -1596,10 +1592,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
-        newIssuanceToken.init(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20IssuanceV1Mock newIssuanceToken = new ERC20IssuanceV1Mock();
+        newIssuanceToken.init(_name, _symbol, _newDecimals, _newMaxSupply);
 
         // No authentication since it's an internal function exposed by the mock contract
         bondingCurveFundingManager.call_setIssuanceToken(
