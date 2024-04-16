@@ -66,7 +66,7 @@ import {RedeemingBondingCurveBaseV1Test} from
 
     */
 
-contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
+contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     string internal constant NAME = "Bonding Curve Token";
     string internal constant SYMBOL = "BCT";
     uint8 internal constant DECIMALS = 18;

@@ -110,7 +110,6 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         );
     }
 
-    // Override to test deactivation
     function testTransferOrchestratorToken(address to, uint amount)
         public
         override
@@ -135,29 +134,6 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
 
         assertEq(_token.balanceOf(to), 0);
         assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
-    }
-
-    // Override to test deactivation
-    function testMintIssuanceTokenTo(uint amount) public override {
-        assertEq(issuanceToken.balanceOf(non_owner_address), 0);
-
-        vm.startPrank(address(owner_address));
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    RestrictedBancorVirtualSupplyBondingCurveFundingManager
-                        .RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated
-                        .selector
-                )
-            );
-
-            bondingCurveFundingManager.mintIssuanceTokenTo(
-                non_owner_address, amount
-            );
-        }
-        vm.stopPrank();
-
-        assertEq(_token.balanceOf(non_owner_address), 0);
     }
 }
 
