@@ -1843,7 +1843,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 └── it should emit an event?
     */
 
-    function testTransferOrchestratorToken(address to, uint amount) public {
+    function testTransferOrchestratorToken(address to, uint amount)
+        public
+        virtual
+    {
         vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
 
         _token.mint(address(bondingCurveFundingManager), amount);

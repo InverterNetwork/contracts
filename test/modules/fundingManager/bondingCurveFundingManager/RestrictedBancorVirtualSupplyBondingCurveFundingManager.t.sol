@@ -110,6 +110,32 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
             CURVE_INTERACTION_ROLE, owner_address
         );
     }
+
+    function testTransferOrchestratorToken(address to, uint amount)
+        public
+        override
+    {
+        vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
+
+        _token.mint(address(bondingCurveFundingManager), amount);
+
+        vm.startPrank(address(_orchestrator));
+        {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    RestrictedBancorVirtualSupplyBondingCurveFundingManager
+                        .RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated
+                        .selector
+                )
+            );
+
+            bondingCurveFundingManager.transferOrchestratorToken(to, amount);
+        }
+        vm.stopPrank();
+
+        assertEq(_token.balanceOf(to), 0);
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
+    }
 }
 
 contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
