@@ -171,6 +171,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             _METADATA,
             abi.encode(
                 issuanceToken_properties,
+                owner_address,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
@@ -179,7 +180,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         issuanceToken =
             ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
 
-        console.log(issuanceToken.owner());
+        vm.prank(owner_address);
         issuanceToken.setMinter(address(bondingCurveFundingManager));
     }
 
@@ -1545,7 +1546,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _symbol = "NEW";
 
         ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
-        newIssuanceToken.init(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.init(
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+        );
 
         vm.expectRevert(
             IBancorVirtualSupplyBondingCurveFundingManager
@@ -1568,7 +1571,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _symbol = "NEW";
 
         ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
-        newIssuanceToken.init(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.init(
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+        );
 
         vm.expectRevert(
             IBancorVirtualSupplyBondingCurveFundingManager
@@ -1590,7 +1595,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _symbol = "NEW";
 
         ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
-        newIssuanceToken.init(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.init(
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+        );
 
         // No authentication since it's an internal function exposed by the mock contract
         bondingCurveFundingManager.call_setIssuanceToken(

@@ -42,15 +42,18 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
 {
     function setUp() public override {
         // Deploy contracts
+        IBondingCurveFundingManagerBase.IssuanceToken memory
+            issuanceToken_properties;
         IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
             memory bc_properties;
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init(NAME, SYMBOL, DECIMALS, type(uint).max);
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
+        issuanceToken_properties.name = NAME;
+        issuanceToken_properties.symbol = SYMBOL;
+        issuanceToken_properties.decimals = DECIMALS;
+        issuanceToken_properties.maxSupply = MAX_SUPPLY;
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -73,18 +76,23 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
 
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
-
         // Init Module
         bondingCurveFundingManager.init(
             _orchestrator,
             _METADATA,
             abi.encode(
-                address(issuanceToken),
+                issuanceToken_properties,
+                owner_address,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
         );
+
+        issuanceToken =
+            ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
+
+        vm.prank(owner_address);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         // Grant necessary roles for the Upstream tests to pass
 
@@ -174,6 +182,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
             _METADATA,
             abi.encode(
                 issuanceToken_properties,
+                owner_address,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
@@ -181,6 +190,8 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
 
         issuanceToken =
             ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
+        vm.prank(owner_address);
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         // Since we tested the success case in the Upstream tests, we now only need to verify revert on unauthorized calls
     }

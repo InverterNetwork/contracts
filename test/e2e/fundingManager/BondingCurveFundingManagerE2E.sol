@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
+
 //Internal Dependencies
 import {
     E2ETest, IOrchestratorFactory, IOrchestrator
 } from "test/e2e/E2ETest.sol";
 
-import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
+import {ERC20Issuance} from
+    "src/modules/fundingManager/bondingCurveFundingManager/ParibuChanges/ERC20Issuance.sol";
 
 //SuT
 import {
     BancorVirtualSupplyBondingCurveFundingManager,
+    IBondingCurveFundingManagerBase,
     IBancorVirtualSupplyBondingCurveFundingManager
 } from
     "test/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.t.sol";
@@ -19,7 +23,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
-    ERC20IssuanceMock issuanceToken;
+    ERC20Issuance issuanceToken;
 
     address alice = address(0xA11CE);
     address bob = address(0x606);
@@ -39,10 +43,18 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // FundingManager
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
-        issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init("Bonding Curve Token", "BCT", 18, type(uint).max);
-
         //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
+
+        IBondingCurveFundingManagerBase.IssuanceToken memory
+            issuanceToken_properties = IBondingCurveFundingManagerBase
+                .IssuanceToken({
+                name: "Test Token",
+                symbol: "TT",
+                decimals: 18,
+                maxSupply: type(uint).max - 1
+            });
+
+        address issuanceTokenAdmin = address(this);
 
         IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
             memory bc_properties =
@@ -62,7 +74,12 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         moduleConfigurations.push(
             IOrchestratorFactory.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(address(issuanceToken), bc_properties, token),
+                abi.encode(
+                    issuanceToken_properties,
+                    issuanceTokenAdmin,
+                    bc_properties,
+                    token
+                ),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
         );
@@ -114,6 +131,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             address(orchestrator.fundingManager())
         );
 
+        issuanceToken = ERC20Issuance(fundingManager.getIssuanceToken());
+        console.log("minter", issuanceToken.allowedMinter());
         // We allow the FundingManager to mint tokens
         issuanceToken.setMinter(address(fundingManager));
 

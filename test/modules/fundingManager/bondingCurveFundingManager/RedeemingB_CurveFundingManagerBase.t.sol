@@ -60,9 +60,6 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
     function setUp() public {
         // Deploy contracts
-        IBondingCurveFundingManagerBase.IssuanceToken memory
-            issuanceToken_properties;
-
         address impl = address(new RedeemingBondingCurveFundingManagerMock());
 
         bondingCurveFundingManager =
@@ -70,10 +67,11 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         formula = address(new BancorFormula());
 
-        issuanceToken_properties.name = NAME;
-        issuanceToken_properties.symbol = SYMBOL;
-        issuanceToken_properties.decimals = DECIMALS;
-        issuanceToken_properties.maxSupply = MAX_SUPPLY;
+        issuanceToken = new ERC20IssuanceMock();
+        issuanceToken.init(
+            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
+        );
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -84,7 +82,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                issuanceToken_properties,
+                address(issuanceToken),
                 formula,
                 BUY_FEE,
                 BUY_IS_OPEN,

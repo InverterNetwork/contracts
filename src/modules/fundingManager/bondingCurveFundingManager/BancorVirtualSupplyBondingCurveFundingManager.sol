@@ -34,6 +34,8 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
+import "forge-std/console.sol";
+
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
@@ -116,21 +118,28 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         __Module_init(orchestrator_, metadata);
 
         IssuanceToken memory issuanceTokenData;
+        address tokenAdmin;
         BondingCurveProperties memory bondingCurveProperties;
         address _acceptedToken;
 
-        (issuanceTokenData, bondingCurveProperties, _acceptedToken) = abi.decode(
-            configData, (IssuanceToken, BondingCurveProperties, address)
+        (issuanceTokenData, tokenAdmin, bondingCurveProperties, _acceptedToken)
+        = abi.decode(
+            configData,
+            (IssuanceToken, address, BondingCurveProperties, address)
         );
 
-        // TODO: deploy ERC20Issuance and initialize
         ERC20Issuance _issuanceToken = new ERC20Issuance();
         _issuanceToken.init(
             string(abi.encodePacked(issuanceTokenData.name)),
             string(abi.encodePacked(issuanceTokenData.symbol)),
             issuanceTokenData.decimals,
-            issuanceTokenData.maxSupply
+            issuanceTokenData.maxSupply,
+            tokenAdmin
         );
+
+        //console.log("This: ", address(this));
+        //console.log("msgSender", _msgSender());
+        //console.log("Minter:", _issuanceToken.allowedMinter());
 
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));

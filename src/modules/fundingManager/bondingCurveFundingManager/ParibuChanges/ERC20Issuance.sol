@@ -46,11 +46,12 @@ contract ERC20Issuance is
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
-        uint MAX_SUPPLY_
+        uint MAX_SUPPLY_,
+        address admin_
     ) external virtual initializer {
         __ERC20_init(name_, symbol_);
-        __Ownable_init(_msgSender());
-        _setMinter(_msgSender());
+        __Ownable_init(admin_);
+        _setMinter(admin_);
         MAX_SUPPLY = MAX_SUPPLY_;
         _decimals = decimals_;
     }

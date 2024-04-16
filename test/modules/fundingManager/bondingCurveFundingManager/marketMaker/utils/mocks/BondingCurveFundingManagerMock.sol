@@ -29,6 +29,8 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
+        // NOTE: The BancorBondingCurve deploys an issuance token on intialization for ease of testing, these mocks of the abstract contracts receive the address of a pre-deployed one
+
         (
             address _issuanceToken,
             address _formula,
