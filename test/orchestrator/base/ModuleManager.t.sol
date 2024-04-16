@@ -41,7 +41,7 @@ contract ModuleManagerTest is Test {
 
     function setUp() public {
         moduleManager = new ModuleManagerMock(address(0));
-        moduleManager.init(EMPTY_LIST);
+        moduleManager.init(address(0), EMPTY_LIST);
 
         types = new TypeSanityHelper(address(moduleManager));
 
@@ -64,9 +64,9 @@ contract ModuleManagerTest is Test {
                     .selector
             );
 
-            moduleManager.init(modules);
+            moduleManager.init(address(0), modules);
         } else {
-            moduleManager.init(modules);
+            moduleManager.init(address(0), modules);
 
             // List of modules should be size of modules array.
             address[] memory modulesAdded = moduleManager.listModules();
@@ -81,12 +81,12 @@ contract ModuleManagerTest is Test {
 
     function testReinitFails() public {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        moduleManager.init(EMPTY_LIST);
+        moduleManager.init(address(0), EMPTY_LIST);
     }
 
     function testInitFailsForNonInitializerFunction() public {
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        moduleManager.initNoInitializer(EMPTY_LIST);
+        moduleManager.initNoInitializer(address(0), EMPTY_LIST);
     }
 
     function testInitFailsForInvalidModules() public {
@@ -105,7 +105,7 @@ contract ModuleManagerTest is Test {
                     .Orchestrator__ModuleManager__InvalidModuleAddress
                     .selector
             );
-            moduleManager.init(modules);
+            moduleManager.init(address(0), modules);
         }
     }
 
@@ -120,7 +120,7 @@ contract ModuleManagerTest is Test {
         vm.expectRevert(
             IModuleManager.Orchestrator__ModuleManager__IsModule.selector
         );
-        moduleManager.init(modules);
+        moduleManager.init(address(0), modules);
     }
 
     function testInitFailsForTooManyModules(address[] memory modules) public {
@@ -134,7 +134,7 @@ contract ModuleManagerTest is Test {
                 .Orchestrator__ModuleManager__ModuleAmountOverLimits
                 .selector
         );
-        moduleManager.init(modules);
+        moduleManager.init(address(0), modules);
     }
 
     //--------------------------------------------------------------------------

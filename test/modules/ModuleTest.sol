@@ -95,6 +95,22 @@ abstract contract ModuleTest is Test {
     function testReinitFails() public virtual;
 
     //--------------------------------------------------------------------------------
+    // Test: Module Manager Helpers
+    //
+    // Used to test modules without a proper factory deployment.
+    function moduleFactory() public view returns (address) {
+        return (address(this));
+    }
+
+    function getOrchestratorOfProxy(address module)
+        public
+        view
+        returns (address)
+    {
+        return msg.sender;
+    }
+
+    //--------------------------------------------------------------------------------
     // Assertion Helper Functions
     //
     // Prefixed with `_assert`.

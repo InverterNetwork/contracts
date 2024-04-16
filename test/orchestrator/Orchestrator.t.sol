@@ -616,6 +616,22 @@ contract OrchestratorTest is Test {
         revert("failed");
     }
 
+    //--------------------------------------------------------------------------------
+    // Test: Module Manager Helpers
+    //
+    // Used to test the orchestrator without a proper factory deployment.
+    function moduleFactory() public view returns (address) {
+        return (address(this));
+    }
+
+    function getOrchestratorOfProxy(address module)
+        public
+        view
+        returns (address)
+    {
+        return msg.sender;
+    }
+
     //--------------------------------------------------------------------------
     // Tests: Other
 

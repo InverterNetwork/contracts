@@ -34,6 +34,17 @@ contract ModuleFactoryMock is IModuleFactory {
         return (_beacon, LibMetadata.identifier(metadata));
     }
 
+    // For mocking purposes, we just return the callers
+    // address, as this would be the right return value
+    // from the factory, in case of a success.
+    function getOrchestratorOfProxy(address proxy)
+        external
+        view
+        returns (address)
+    {
+        return msg.sender;
+    }
+
     function registerMetadata(IModule.Metadata memory, IInverterBeacon)
         external
     {}
