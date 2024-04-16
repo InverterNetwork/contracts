@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
+
 //Internal Dependencies
 import {
     E2ETest,
@@ -8,11 +10,13 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
+import {ERC20Issuance_v1} from
+    "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 //SuT
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    IBondingCurveBase_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from
     "test/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
@@ -21,7 +25,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    ERC20IssuanceMock issuanceToken;
+    ERC20Issuance issuanceToken;
 
     address alice = address(0xA11CE);
     address bob = address(0x606);
@@ -41,13 +45,22 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // FundingManager
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
-        issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init("Bonding Curve Token", "BCT", 18, type(uint).max);
-
         //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+        IBondingCurveBase_v1.IssuanceToken memory
+            issuanceToken_properties = IBondingCurveBase_v1
+                .IssuanceToken({
+                name: "Test Token",
+                symbol: "TT",
+                decimals: 18,
+                maxSupply: type(uint).max - 1
+            });
+
+        address issuanceTokenAdmin = address(this);
+
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
+            memory bc_properties =
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .BondingCurveProperties({
                 formula: address(formula),
                 reserveRatioForBuying: 200_000,
@@ -63,7 +76,12 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(address(issuanceToken), bc_properties, token),
+                abi.encode(
+                    issuanceToken_properties,
+                    issuanceTokenAdmin,
+                    bc_properties,
+                    token
+                ),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
         );
@@ -115,6 +133,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             address(orchestrator.fundingManager())
         );
 
+        issuanceToken = ERC20Issuance(fundingManager.getIssuanceToken());
+        console.log("minter", issuanceToken.allowedMinter());
         // We allow the FundingManager to mint tokens
         issuanceToken.setMinter(address(fundingManager));
 

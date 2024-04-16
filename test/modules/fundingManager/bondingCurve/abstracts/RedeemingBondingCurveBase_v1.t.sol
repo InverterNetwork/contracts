@@ -8,7 +8,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
+import {ERC20IssuanceV1Mock} from "test/utils/mocks/ERC20IssuanceV1Mock.sol";
 
 // Internal Dependencies
 import {
@@ -46,7 +46,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     RedeemingBondingCurveBaseV1Mock bondingCurveFundingManager;
     address formula;
 
-    ERC20IssuanceMock issuanceToken;
+    ERC20IssuanceV1Mock issuanceToken;
 
     address owner_address = address(0xA1BA);
     address non_owner_address = address(0xB0B);
@@ -63,9 +63,6 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     function setUp() public {
         // Deploy contracts
-        IBondingCurveBase_v1.IssuanceToken memory
-            issuanceToken_properties;
-
         address impl = address(new RedeemingBondingCurveBaseV1Mock());
 
         bondingCurveFundingManager =
@@ -73,10 +70,11 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         formula = address(new BancorFormula());
 
-        issuanceToken_properties.name = NAME;
-        issuanceToken_properties.symbol = SYMBOL;
-        issuanceToken_properties.decimals = DECIMALS;
-        issuanceToken_properties.maxSupply = MAX_SUPPLY;
+        issuanceToken = new ERC20IssuanceV1Mock();
+        issuanceToken.init(
+            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
+        );
+        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -87,7 +85,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                issuanceToken_properties,
+                address(issuanceToken),
                 formula,
                 BUY_FEE,
                 BUY_IS_OPEN,
