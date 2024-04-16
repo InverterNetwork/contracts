@@ -16,6 +16,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     StakingManager,
     IStakingManager,
+    ReentrancyGuard,
     IERC20PaymentClient
 } from "src/modules/logicModule/StakingManager.sol";
 
@@ -268,8 +269,7 @@ contract StakingManagerTest is ModuleTest {
         //Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
-                0x08c379a0,
-                "ReentrancyGuard: reentrant call" // This is the encoding for a non custom error
+                ReentrancyGuard.ReentrancyGuardReentrantCall.selector
             ),
             stakingToken.callData()
         );
@@ -383,8 +383,7 @@ contract StakingManagerTest is ModuleTest {
         //Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
-                0x08c379a0,
-                "ReentrancyGuard: reentrant call" // This is the encoding for a non custom error
+                ReentrancyGuard.ReentrancyGuardReentrantCall.selector
             ),
             stakingToken.callData()
         );

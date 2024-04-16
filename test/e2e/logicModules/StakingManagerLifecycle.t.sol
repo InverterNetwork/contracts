@@ -21,9 +21,14 @@ import {
 } from "src/modules/logicModule/StakingManager.sol";
 
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+//import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from
+    "test/modules/fundingManager/token/utils/mocks/ERC20Mock.sol";
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 contract StakingManagerLifecycle is E2ETest {
+    using SafeERC20 for ERC20Mock;
+
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
@@ -64,7 +69,7 @@ contract StakingManagerLifecycle is E2ETest {
         moduleConfigurations.push(
             IOrchestratorFactory.ModuleConfig(
                 rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
+                abi.encode(address(rewardToken)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
         );
@@ -95,7 +100,7 @@ contract StakingManagerLifecycle is E2ETest {
             IOrchestratorFactory.ModuleConfig(
                 stakingManagerMetadata,
                 abi.encode(stakingToken),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                abi.encode(true, EMPTY_DEPENDENCY_LIST)
             )
         );
     }
