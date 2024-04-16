@@ -195,6 +195,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
                 type(IFundingManager_v1).interfaceId
             )
         );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IFundingManager).interfaceId
+            )
+        );
     }
 
     //--------------------------------------------------------------------------

@@ -59,9 +59,11 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  */
 contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    IFundingManager_v1,
     VirtualIssuanceSupplyBase_v1,
     VirtualCollateralSupplyBase_v1,
     RedeemingBondingCurveBase_v1
+
 {
     function supportsInterface(bytes4 interfaceId)
         public
@@ -76,6 +78,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     {
         return interfaceId
             == type(IFM_BC_Bancor_Redeeming_VirtualSupply_v1).interfaceId
+            || interfaceId == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -131,7 +134,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             (IssuanceToken, address, BondingCurveProperties, address)
         );
 
-        ERC20Issuance _issuanceToken = new ERC20Issuance();
+        ERC20Issuance_v1 _issuanceToken = new ERC20Issuance_v1();
         _issuanceToken.init(
             string(abi.encodePacked(issuanceTokenData.name)),
             string(abi.encodePacked(issuanceTokenData.symbol)),
@@ -139,10 +142,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             issuanceTokenData.maxSupply,
             tokenAdmin
         );
-
-        //console.log("This: ", address(this));
-        //console.log("msgSender", _msgSender());
-        //console.log("Minter:", _issuanceToken.allowedMinter());
 
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
@@ -178,7 +177,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Public Functions
+    // Public Mutating Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address. This function is subject
     /// to a transactional limit, determined by the deposit token's decimal precision and the underlying
@@ -259,6 +258,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
+    //--------------------------------------------------------------------------
+    // Public Nonmutating Functions
+
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
     function getReserveRatioForBuying() external view returns (uint32) {
         return reserveRatioForBuying;
@@ -338,9 +340,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         return redeemAmount;
     }
 
-    //--------------------------------------------------------------------------
-    // Public Mutating Functions
-
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
         return _token;
@@ -348,6 +347,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Functions
+
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to, uint amount)
+        external
+        virtual
+        onlyOrchestrator
+    {
+        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
+
+        emit TransferOrchestratorToken(to, amount);
+    }
 
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
     function mintIssuanceTokenTo(address _receiver, uint _amount)

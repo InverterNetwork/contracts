@@ -13,6 +13,7 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
+//TODO: UpdateNatspec
 /// @title Bonding Curve Funding Manager Base Contract.
 /// @author Inverter Network.
 /// @notice This contract enables the base functionalities for issuing tokens along a bonding curve.
@@ -88,6 +89,7 @@ contract ERC20Issuance_v1 is
     /// @notice Sets the address of the minter.
     /// @param _minter The address of the minter.
     function _setMinter(address _minter) internal {
+        // Note to @Zitzak: Since the token should work independently, I wouldn't control that the minter is a module. Also, setting the minter to zero may be useful in some cases.
         allowedMinter = _minter;
         emit minterSet(_minter);
     }

@@ -8,7 +8,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
+import {ERC20IssuanceV1Mock} from "test/utils/mocks/ERC20IssuanceV1Mock.sol";
 
 // Internal Dependencies
 import {
@@ -84,11 +84,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IBondingCurveBase_v1).interfaceId
-            )
-        );
-        assertTrue(
-            bondingCurveFundingManager.supportsInterface(
-                type(IFundingManager_v1).interfaceId
             )
         );
     }

@@ -123,14 +123,13 @@ contract AUT_RoleV1Test is Test {
             abi.encode(initialAuth, initialManager)
         );
 
-        //console.log(_authorizer.hasRole(_authorizer.getManagerRole(), initialManager));
         assertEq(
             _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
-        //console.log(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA));
+
         assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
-        //console.log(_authorizer.hasRole(_authorizer.getOwnerRole(), address(this)));
+
         assertEq(
             _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
             false

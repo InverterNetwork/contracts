@@ -134,7 +134,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         );
 
         issuanceToken = ERC20Issuance(fundingManager.getIssuanceToken());
-        console.log("minter", issuanceToken.allowedMinter());
+
         // We allow the FundingManager to mint tokens
         issuanceToken.setMinter(address(fundingManager));
 
