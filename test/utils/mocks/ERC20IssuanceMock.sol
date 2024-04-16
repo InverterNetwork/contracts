@@ -5,9 +5,9 @@ import {ERC20Issuance} from
     "src/modules/fundingManager/bondingCurveFundingManager/ParibuChanges/ERC20Issuance.sol";
 
 contract ERC20IssuanceMock is ERC20Issuance {
-    uint8 private _decimals;
+//uint8 private _decimals;
 
-    function init(
+/*function init(
         string memory name_,
         string memory symbol_,
         uint _MAX_SUPPLY,
@@ -18,9 +18,9 @@ contract ERC20IssuanceMock is ERC20Issuance {
         _setMinter(_msgSender());
         MAX_SUPPLY = _MAX_SUPPLY;
         _decimals = decimals_;
-    }
+    }*/
 
-    function decimals() public view virtual override returns (uint8) {
-        return _decimals;
-    }
+//function decimals() public view override returns (uint8) {
+//    return _decimals;
+//}
 }

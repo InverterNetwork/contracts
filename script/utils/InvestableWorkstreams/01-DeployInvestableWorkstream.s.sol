@@ -16,7 +16,8 @@ import {
 } from "src/modules/logicModule/BountyManager.sol";
 import {
     BancorVirtualSupplyBondingCurveFundingManager,
-    IBancorVirtualSupplyBondingCurveFundingManager
+    IBancorVirtualSupplyBondingCurveFundingManager,
+    IBondingCurveFundingManagerBase
 } from
     "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
 
@@ -51,8 +52,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // ========================================================================
     // BONDING CURVE PARAMETERS
 
-    bytes32 CURVE_TOKEN_NAME = "Conding Burve Token";
-    bytes32 CURVE_TOKEN_SYMBOL = "BCRG";
+    string CURVE_TOKEN_NAME = "Conding Burve Token";
+    string CURVE_TOKEN_SYMBOL = "BCRG";
     uint8 CURVE_TOKEN_DECIMALS = 18;
 
     uint32 RESERVE_RATIO_FOR_BUYING = 330_000;
@@ -104,13 +105,13 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             token: collateralToken
         });
 
-        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
-            buf_issuanceToken =
-            IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken({
-                name: CURVE_TOKEN_NAME,
-                symbol: CURVE_TOKEN_SYMBOL,
-                decimals: CURVE_TOKEN_DECIMALS
-            });
+        IBondingCurveFundingManagerBase.IssuanceToken memory buf_issuanceToken =
+        IBondingCurveFundingManagerBase.IssuanceToken({
+            name: CURVE_TOKEN_NAME,
+            symbol: CURVE_TOKEN_SYMBOL,
+            decimals: CURVE_TOKEN_DECIMALS,
+            maxSupply: type(uint).max
+        });
 
         IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
             memory buf_bondingCurveProperties =

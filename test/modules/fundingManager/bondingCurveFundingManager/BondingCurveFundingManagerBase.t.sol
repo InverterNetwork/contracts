@@ -61,7 +61,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         formula = address(new BancorFormula());
 
         issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
+        issuanceToken.init(NAME, SYMBOL, DECIMALS, type(uint).max);
         issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         _setUpOrchestrator(bondingCurveFundingManager);
@@ -492,7 +492,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         string memory _symbol = "NEW";
 
         ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
-        newIssuanceToken.init(_name, _symbol, _newMaxSupply, _newDecimals);
+        newIssuanceToken.init(_name, _symbol, _newDecimals, _newMaxSupply);
 
         bondingCurveFundingManager.call_setIssuanceToken(
             address(newIssuanceToken)

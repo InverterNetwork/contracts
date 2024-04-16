@@ -13,6 +13,8 @@ import {VirtualTokenSupplyBase} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/VirtualTokenSupplyBase.sol";
 import {IBancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/IBancorFormula.sol";
+import {ERC20Issuance} from
+    "src/modules/fundingManager/bondingCurveFundingManager/ParibuChanges/ERC20Issuance.sol";
 
 // Internal Interfaces
 import {IBondingCurveFundingManagerBase} from
@@ -113,15 +115,25 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ) external override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
-        address _acceptedToken;
-        address _issuanceToken;
+        IssuanceToken memory issuanceTokenData;
         BondingCurveProperties memory bondingCurveProperties;
+        address _acceptedToken;
 
-        (_issuanceToken, bondingCurveProperties, _acceptedToken) =
-            abi.decode(configData, (address, BondingCurveProperties, address));
+        (issuanceTokenData, bondingCurveProperties, _acceptedToken) = abi.decode(
+            configData, (IssuanceToken, BondingCurveProperties, address)
+        );
+
+        // TODO: deploy ERC20Issuance and initialize
+        ERC20Issuance _issuanceToken = new ERC20Issuance();
+        _issuanceToken.init(
+            string(abi.encodePacked(issuanceTokenData.name)),
+            string(abi.encodePacked(issuanceTokenData.symbol)),
+            issuanceTokenData.decimals,
+            issuanceTokenData.maxSupply
+        );
 
         // Set issuance token. This also caches the decimals
-        _setIssuanceToken(_issuanceToken);
+        _setIssuanceToken(address(_issuanceToken));
 
         // Set accepted token
         _token = IERC20(_acceptedToken);

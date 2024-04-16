@@ -10,10 +10,13 @@ import {RestrictedBancorVirtualSupplyBondingCurveFundingManager} from
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {ERC20Issuance} from
+    "src/modules/fundingManager/bondingCurveFundingManager/ParibuChanges/ERC20Issuance.sol";
 
 import {
     IBancorVirtualSupplyBondingCurveFundingManager,
     BancorVirtualSupplyBondingCurveFundingManager,
+    IBondingCurveFundingManagerBase,
     IFundingManager
 } from
     "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
@@ -46,7 +49,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         formula = address(bancorFormula);
 
         issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
+        issuanceToken.init(NAME, SYMBOL, DECIMALS, type(uint).max);
         issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         bc_properties.formula = formula;
@@ -107,6 +110,8 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
     string internal constant NAME = "Bonding Curve Token";
     string internal constant SYMBOL = "BCT";
     uint8 internal constant DECIMALS = 18;
+    uint internal constant MAX_SUPPLY = type(uint).max;
+
     uint internal constant INITIAL_TOKEN_SUPPLY = 1;
     uint internal constant INITIAL_COLLATERAL_SUPPLY = 1;
     uint32 internal constant RESERVE_RATIO_FOR_BUYING = 200_000;
@@ -120,22 +125,25 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         bondingCurveFundingManager;
     address formula;
 
-    ERC20IssuanceMock issuanceToken;
+    ERC20Issuance issuanceToken;
 
     address owner_address = address(0xA1BA);
     address non_owner_address = address(0xB0B);
 
     function setUp() public {
         // Deploy contracts
+        IBondingCurveFundingManagerBase.IssuanceToken memory
+            issuanceToken_properties;
         IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
             memory bc_properties;
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
+        issuanceToken_properties.name = NAME;
+        issuanceToken_properties.symbol = SYMBOL;
+        issuanceToken_properties.decimals = DECIMALS;
+        issuanceToken_properties.maxSupply = MAX_SUPPLY;
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -160,18 +168,19 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
 
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
-
         // Init Module
         bondingCurveFundingManager.init(
             _orchestrator,
             _METADATA,
             abi.encode(
-                address(issuanceToken),
+                issuanceToken_properties,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
         );
+
+        issuanceToken =
+            ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
 
         // Since we tested the success case in the Upstream tests, we now only need to verify revert on unauthorized calls
     }

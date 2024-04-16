@@ -28,6 +28,7 @@ contract ERC20Issuance is
     // State Variables
     address public allowedMinter;
     uint public MAX_SUPPLY;
+    uint8 internal _decimals;
 
     //------------------------------------------------------------------------------------
     // Modifiers
@@ -41,19 +42,25 @@ contract ERC20Issuance is
     //------------------------------------------------------------------------------------
     // Initializer
 
-    function init(string memory name_, string memory symbol_, uint _MAX_SUPPLY)
-        external
-        virtual
-        initializer
-    {
+    function init(
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_,
+        uint MAX_SUPPLY_
+    ) external virtual initializer {
         __ERC20_init(name_, symbol_);
         __Ownable_init(_msgSender());
         _setMinter(_msgSender());
-        MAX_SUPPLY = _MAX_SUPPLY;
+        MAX_SUPPLY = MAX_SUPPLY_;
+        _decimals = decimals_;
     }
 
     //------------------------------------------------------------------------------------
     // External Functions
+
+    function decimals() public view override returns (uint8) {
+        return _decimals;
+    }
 
     /// @inheritdoc IERC20Issuance
     function setMinter(address _minter) external onlyOwner {

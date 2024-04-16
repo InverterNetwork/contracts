@@ -33,6 +33,8 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     string private constant NAME = "Bonding Curve Token";
     string private constant SYMBOL = "BCT";
     uint8 private constant DECIMALS = 18;
+    uint internal constant MAX_SUPPLY = type(uint).max;
+
     uint private constant BUY_FEE = 0;
     uint private constant SELL_FEE = 0;
     bool private constant BUY_IS_OPEN = true;
@@ -58,6 +60,9 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
     function setUp() public {
         // Deploy contracts
+        IBondingCurveFundingManagerBase.IssuanceToken memory
+            issuanceToken_properties;
+
         address impl = address(new RedeemingBondingCurveFundingManagerMock());
 
         bondingCurveFundingManager =
@@ -65,9 +70,10 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         formula = address(new BancorFormula());
 
-        issuanceToken = new ERC20IssuanceMock();
-        issuanceToken.init(NAME, SYMBOL, type(uint).max, DECIMALS);
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
+        issuanceToken_properties.name = NAME;
+        issuanceToken_properties.symbol = SYMBOL;
+        issuanceToken_properties.decimals = DECIMALS;
+        issuanceToken_properties.maxSupply = MAX_SUPPLY;
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -78,7 +84,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                address(issuanceToken),
+                issuanceToken_properties,
                 formula,
                 BUY_FEE,
                 BUY_IS_OPEN,
