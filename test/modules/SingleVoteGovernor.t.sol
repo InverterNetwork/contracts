@@ -342,7 +342,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__IsAlreadyVoter
+                    .Module__SingleVoteGovernor_v1__IsAlreadyVoter
                     .selector
             )
         );
@@ -369,7 +369,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__EmptyVoters
+                    .Module__SingleVoteGovernor_v1__EmptyVoters
                     .selector
             )
         );
@@ -385,7 +385,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidVoterAddress
+                    .Module__SingleVoteGovernor_v1__InvalidVoterAddress
                     .selector
             )
         );
@@ -399,7 +399,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidVoterAddress
+                    .Module__SingleVoteGovernor_v1__InvalidVoterAddress
                     .selector
             )
         );
@@ -413,7 +413,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidVoterAddress
+                    .Module__SingleVoteGovernor_v1__InvalidVoterAddress
                     .selector
             )
         );
@@ -492,7 +492,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             assertEq(_governor.isVoter(users[i]), false);
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__CallerNotVoter
+                    .Module__SingleVoteGovernor_v1__CallerNotVoter
                     .selector
             );
             vm.prank(users[i]);
@@ -611,7 +611,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             // fail to vote as unauthorized address
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__CallerNotVoter
+                    .Module__SingleVoteGovernor_v1__CallerNotVoter
                     .selector
             );
             voteInFavor(users[i], _voteID);
@@ -670,7 +670,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             // fail to vote as unauthorized address
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__CallerNotVoter
+                    .Module__SingleVoteGovernor_v1__CallerNotVoter
                     .selector
             );
             voteAgainst(users[i], _voteID);
@@ -744,7 +744,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             // fail to vote as unauthorized address
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__CallerNotVoter
+                    .Module__SingleVoteGovernor_v1__CallerNotVoter
                     .selector
             );
             voteAbstain(users[i], _voteID);
@@ -764,7 +764,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             // For
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__MotionVotingPhaseClosed
+                    .Module__SingleVoteGovernor_v1__MotionVotingPhaseClosed
                     .selector
             );
 
@@ -773,7 +773,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             // Against
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__MotionVotingPhaseClosed
+                    .Module__SingleVoteGovernor_v1__MotionVotingPhaseClosed
                     .selector
             );
             voteAgainst(ALBA, _voteID);
@@ -781,7 +781,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             //Abstain
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__MotionVotingPhaseClosed
+                    .Module__SingleVoteGovernor_v1__MotionVotingPhaseClosed
                     .selector
             );
             voteAbstain(ALBA, _voteID);
@@ -801,7 +801,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             // For
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidMotionId
+                    .Module__SingleVoteGovernor_v1__InvalidMotionId
                     .selector
             );
 
@@ -810,7 +810,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             // Against
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidMotionId
+                    .Module__SingleVoteGovernor_v1__InvalidMotionId
                     .selector
             );
 
@@ -819,7 +819,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             //Abstain
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidMotionId
+                    .Module__SingleVoteGovernor_v1__InvalidMotionId
                     .selector
             );
             voteAbstain(ALBA, wrongID);
@@ -835,7 +835,7 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__InvalidSupport
+                .Module__SingleVoteGovernor_v1__InvalidSupport
                 .selector
         );
         vm.prank(ALBA);
@@ -856,21 +856,21 @@ contract SingleVoteGovernorTest is ModuleTest {
 
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__AttemptedDoubleVote
+                    .Module__SingleVoteGovernor_v1__AttemptedDoubleVote
                     .selector
             );
             voteInFavor(users[i], _voteID);
 
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__AttemptedDoubleVote
+                    .Module__SingleVoteGovernor_v1__AttemptedDoubleVote
                     .selector
             );
             voteAgainst(users[i], _voteID);
 
             vm.expectRevert(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__AttemptedDoubleVote
+                    .Module__SingleVoteGovernor_v1__AttemptedDoubleVote
                     .selector
             );
             voteAbstain(users[i], _voteID);
@@ -911,7 +911,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         //No votes exist yet, everyting should fail
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__InvalidMotionId
+                .Module__SingleVoteGovernor_v1__InvalidMotionId
                 .selector
         );
         _governor.executeMotion(wrongId);
@@ -929,7 +929,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         //No prank address needed
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__ThresholdNotReached
+                .Module__SingleVoteGovernor_v1__ThresholdNotReached
                 .selector
         );
         _governor.executeMotion(_voteID);
@@ -948,7 +948,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodePacked(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__MotionInVotingPhase
+                    .Module__SingleVoteGovernor_v1__MotionInVotingPhase
                     .selector
             )
         );
@@ -960,7 +960,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodePacked(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__MotionInVotingPhase
+                    .Module__SingleVoteGovernor_v1__MotionInVotingPhase
                     .selector
             )
         );
@@ -987,7 +987,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__MotionAlreadyExecuted
+                    .Module__SingleVoteGovernor_v1__MotionAlreadyExecuted
                     .selector
             )
         );
@@ -1071,7 +1071,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         //this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__UnreachableThreshold
+                .Module__SingleVoteGovernor_v1__UnreachableThreshold
                 .selector
         );
         _governor.removeVoter(BOB);
@@ -1089,7 +1089,9 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         //this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
-            ISingleVoteGovernor.Module__SingleVoteGovernor__EmptyVoters.selector
+            ISingleVoteGovernor
+                .Module__SingleVoteGovernor_v1__EmptyVoters
+                .selector
         );
         _governor.removeVoter(ALBA);
 
@@ -1125,7 +1127,7 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         vm.expectRevert(
             ISingleVoteGovernor
-                .Module__SingleVoteGovernor__UnreachableThreshold
+                .Module__SingleVoteGovernor_v1__UnreachableThreshold
                 .selector
         );
         vm.prank(address(_governor));
@@ -1207,7 +1209,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidVotingDuration
+                    .Module__SingleVoteGovernor_v1__InvalidVotingDuration
                     .selector
             )
         );
@@ -1219,7 +1221,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 ISingleVoteGovernor
-                    .Module__SingleVoteGovernor__InvalidVotingDuration
+                    .Module__SingleVoteGovernor_v1__InvalidVotingDuration
                     .selector
             )
         );

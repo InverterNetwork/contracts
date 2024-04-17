@@ -17,9 +17,9 @@ import {DeployOrchestratorFactory} from
 import {DeployBountyManager} from
     "script/modules/logicModule/DeployBountyManager.s.sol";
 
-import {DeployGovernor} from "script/external/DeployGovernor.s.sol";
-import {DeployTransactionForwarder} from
-    "script/external/DeployTransactionForwarder.s.sol";
+import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
+import {DeployTransactionForwarder_v1} from
+    "script/external/DeployTransactionForwarder_v1.s.sol";
 import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
 import {DeploySimplePaymentProcessor} from
     "script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol";
@@ -75,11 +75,11 @@ contract DeploymentScript is Script {
     DeploySingleVoteGovernor deploySingleVoteGovernor =
         new DeploySingleVoteGovernor();
     DeployMetadataManager deployMetadataManager = new DeployMetadataManager();
-    // TransactionForwarder
-    DeployTransactionForwarder deployTransactionForwarder =
-        new DeployTransactionForwarder();
-    //Governor
-    DeployGovernor deployGovernor = new DeployGovernor();
+    // TransactionForwarder_v1
+    DeployTransactionForwarder_v1 deployTransactionForwarder =
+        new DeployTransactionForwarder_v1();
+    //Governor_v1
+    DeployGovernor_v1 deployGovernor = new DeployGovernor_v1();
 
     //Beacon
     DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
@@ -90,7 +90,7 @@ contract DeploymentScript is Script {
     //Orchestrator
     address orchestrator;
 
-    //TransactionForwarder
+    //TransactionForwarder_v1
     address forwarderImplementation;
     address governorImplementation;
 
@@ -113,7 +113,7 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Beacons
 
-    //TransactionForwarder
+    //TransactionForwarder_v1
     address forwarderBeacon;
     // Funding Manager
     address rebasingFundingManagerBeacon;
@@ -136,10 +136,10 @@ contract DeploymentScript is Script {
 
     //These contracts will actually be used at the later point of time
 
-    //Governor
+    //Governor_v1
     address governor;
 
-    //TransactionForwarder
+    //TransactionForwarder_v1
     address forwarder;
 
     // Factories
@@ -264,7 +264,7 @@ contract DeploymentScript is Script {
             "-----------------------------------------------------------------------------"
         );
         console2.log("Deploy forwarder implementation and proxy \n");
-        //Deploy TransactionForwarder implementation
+        //Deploy TransactionForwarder_v1 implementation
         forwarderImplementation = deployTransactionForwarder.run();
 
         //Deploy beacon and actual proxy

@@ -87,8 +87,8 @@ testScripts: ## Run e2e test suite
 	@echo "# Run scripts"
  	
 	## external
-	@forge script script/external/DeployGovernor.s.sol
-	@forge script script/external/DeployTransactionForwarder.s.sol
+	@forge script script/external/DeployGovernor_v1.s.sol
+	@forge script script/external/DeployTransactionForwarder_v1.s.sol
 
 	## factories
 	@forge script script/factories/DeployModuleFactory.s.sol

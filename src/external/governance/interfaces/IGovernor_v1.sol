@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface IGovernor {
+interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
@@ -21,25 +21,25 @@ interface IGovernor {
     // Errors
 
     /// @notice The given address is invalid
-    error Governor__InvalidAddress(address adr);
+    error Governor_v1__InvalidAddress(address adr);
 
     /// @notice The given amount is invalid
-    error Governor__InvalidTimelockPeriod(uint amt);
+    error Governor_v1__InvalidTimelockPeriod(uint amt);
 
     /// @notice The given target address is not accessible
-    error Governor__BeaconNotAccessible(address target);
+    error Governor_v1__BeaconNotAccessible(address target);
 
     /// @notice This function can only be accessed by the CommunityMultisig or TeamMultisig
-    error Governor__OnlyCommunityOrTeamMultisig();
+    error Governor_v1__OnlyCommunityOrTeamMultisig();
 
     /// @notice The timelock period needed for the beacon to be upgraded has not been exceeded yet
-    error Governor__TimelockPeriodNotExceeded();
+    error Governor_v1__TimelockPeriodNotExceeded();
 
     /// @notice This Upgrade process for this beacon has not yet been started
-    error Governor__UpgradeProcessNotStarted();
+    error Governor_v1__UpgradeProcessNotStarted();
 
     /// @notice The call to the target contract has failed
-    error Governor__CallToTargetContractFailed();
+    error Governor_v1__CallToTargetContractFailed();
 
     //--------------------------------------------------------------------------
     // Events

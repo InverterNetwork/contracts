@@ -20,8 +20,8 @@ import {
     IPaymentProcessor
 } from "src/orchestrator/IOrchestrator.sol";
 
-import {TransactionForwarder} from
-    "src/external/forwarder/TransactionForwarder.sol";
+import {TransactionForwarder_v1} from
+    "src/external/forwarder/TransactionForwarder_v1.sol";
 
 // Mocks
 import {
@@ -51,7 +51,7 @@ contract OrchestratorTest is Test {
     AuthorizerMock authorizer;
     PaymentProcessorMock paymentProcessor;
     ERC20Mock token;
-    TransactionForwarder forwarder;
+    TransactionForwarder_v1 forwarder;
 
     event AuthorizerUpdated(address indexed _address);
     event FundingManagerUpdated(address indexed _address);
@@ -68,7 +68,7 @@ contract OrchestratorTest is Test {
         fundingManager = new FundingManagerMock();
         authorizer = new AuthorizerMock();
         paymentProcessor = new PaymentProcessorMock();
-        forwarder = new TransactionForwarder("TransactionForwarder");
+        forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
         token = new ERC20Mock("TestToken", "TST");
 
         address impl = address(new Orchestrator(address(forwarder)));

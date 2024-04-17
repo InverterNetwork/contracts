@@ -5,24 +5,25 @@ import "forge-std/Test.sol";
 
 // SuT
 import {
-    TransactionForwarder,
-    ITransactionForwarder,
+    TransactionForwarder_v1,
+    ITransactionForwarder_v1,
     ERC2771Forwarder
-} from "src/external/forwarder/TransactionForwarder.sol";
+} from "src/external/forwarder/TransactionForwarder_v1.sol";
 
-import {TransactionForwarderAccessMock} from
-    "test/utils/mocks/external/TransactionForwarderAccessMock.sol";
+import {TransactionForwarderV1AccessMock} from
+    "test/utils/mocks/external/TransactionForwarderV1AccessMock.sol";
 
 import {CallIntercepter} from "test/utils/mocks/external/CallIntercepter.sol";
 
-contract TransactionForwarderTest is Test {
+contract TransactionForwarderV1Test is Test {
     // SuT
-    TransactionForwarderAccessMock forwarder;
+    TransactionForwarderV1AccessMock forwarder;
 
     event CallReceived(address intercepterAddress, bytes data, address sender);
 
     function setUp() public {
-        forwarder = new TransactionForwarderAccessMock("TransactionForwarder");
+        forwarder =
+            new TransactionForwarderV1AccessMock("TransactionForwarder_v1");
     }
 
     //--------------------------------------------------------------------------
@@ -67,12 +68,14 @@ contract TransactionForwarderTest is Test {
         CallIntercepter intercepter = new CallIntercepter();
 
         //Create SingleCall
-        ITransactionForwarder.SingleCall memory call = ITransactionForwarder
-            .SingleCall(address(intercepter), false, abi.encode("data"));
+        ITransactionForwarder_v1.SingleCall memory call =
+        ITransactionForwarder_v1.SingleCall(
+            address(intercepter), false, abi.encode("data")
+        );
 
         //Set up a array for the multicall
-        ITransactionForwarder.SingleCall[] memory calls =
-            new ITransactionForwarder.SingleCall[](1);
+        ITransactionForwarder_v1.SingleCall[] memory calls =
+            new ITransactionForwarder_v1.SingleCall[](1);
         calls[0] = call;
 
         //No contract is trusted forwarder
@@ -95,16 +98,20 @@ contract TransactionForwarderTest is Test {
         CallIntercepter intercepter = new CallIntercepter();
 
         //Create SingleCall that is allowed to fail
-        ITransactionForwarder.SingleCall memory call1 = ITransactionForwarder
-            .SingleCall(address(intercepter), true, abi.encode("data"));
+        ITransactionForwarder_v1.SingleCall memory call1 =
+        ITransactionForwarder_v1.SingleCall(
+            address(intercepter), true, abi.encode("data")
+        );
 
         //Create SingleCall that is not allowed to fail
-        ITransactionForwarder.SingleCall memory call2 = ITransactionForwarder
-            .SingleCall(address(intercepter), false, abi.encode("data"));
+        ITransactionForwarder_v1.SingleCall memory call2 =
+        ITransactionForwarder_v1.SingleCall(
+            address(intercepter), false, abi.encode("data")
+        );
 
         //Set up a array for the multicall
-        ITransactionForwarder.SingleCall[] memory calls =
-            new ITransactionForwarder.SingleCall[](2);
+        ITransactionForwarder_v1.SingleCall[] memory calls =
+            new ITransactionForwarder_v1.SingleCall[](2);
         calls[0] = call1;
         calls[0] = call2;
 
@@ -113,7 +120,7 @@ contract TransactionForwarderTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ITransactionForwarder.CallFailed.selector, call2
+                ITransactionForwarder_v1.CallFailed.selector, call2
             )
         );
         forwarder.executeMulticall(calls);
@@ -130,8 +137,8 @@ contract TransactionForwarderTest is Test {
             amount = 30;
         }
 
-        ITransactionForwarder.SingleCall[] memory calls =
-            new ITransactionForwarder.SingleCall[](amount);
+        ITransactionForwarder_v1.SingleCall[] memory calls =
+            new ITransactionForwarder_v1.SingleCall[](amount);
 
         CallIntercepter[] memory intercepter = new CallIntercepter[](amount);
 
@@ -174,7 +181,7 @@ contract TransactionForwarderTest is Test {
         }
 
         //execute multicall
-        ITransactionForwarder.Result[] memory results =
+        ITransactionForwarder_v1.Result[] memory results =
             forwarder.executeMulticall(calls);
 
         uint resultLength = results.length;
@@ -213,13 +220,13 @@ contract TransactionForwarderTest is Test {
     function createSingleCall(uint seed, address target)
         internal
         pure
-        returns (ITransactionForwarder.SingleCall memory)
+        returns (ITransactionForwarder_v1.SingleCall memory)
     {
         bool allowFailure = seed % 2 == 0;
 
         //Encodes seed into bytes
         bytes memory data = abi.encode("data");
 
-        return ITransactionForwarder.SingleCall(target, allowFailure, data);
+        return ITransactionForwarder_v1.SingleCall(target, allowFailure, data);
     }
 }

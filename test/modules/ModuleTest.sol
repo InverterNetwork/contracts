@@ -12,8 +12,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Dependencies
 import {OrchestratorMock} from
     "test/utils/mocks/orchestrator/OrchestratorMock.sol";
-import {TransactionForwarder} from
-    "src/external/forwarder/TransactionForwarder.sol";
+import {TransactionForwarder_v1} from
+    "src/external/forwarder/TransactionForwarder_v1.sol";
 
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
@@ -41,8 +41,8 @@ abstract contract ModuleTest is Test {
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
 
     //Deploy a forwarder used to enable metatransactions
-    TransactionForwarder _forwarder =
-        new TransactionForwarder("TransactionForwarder");
+    TransactionForwarder_v1 _forwarder =
+        new TransactionForwarder_v1("TransactionForwarder_v1");
 
     // Orchestrator Constants
     uint constant _ORCHESTRATOR_ID = 1;

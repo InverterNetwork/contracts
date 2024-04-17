@@ -7,10 +7,10 @@ import "forge-std/console.sol";
 // Internal Dependencies:
 import {E2EModuleRegistry} from "test/e2e/E2EModuleRegistry.sol";
 
-import {Governor} from "src/external/governance/Governor.sol";
+import {Governor_v1} from "src/external/governance/Governor_v1.sol";
 
-import {TransactionForwarder} from
-    "src/external/forwarder/TransactionForwarder.sol";
+import {TransactionForwarder_v1} from
+    "src/external/forwarder/TransactionForwarder_v1.sol";
 
 // Factories
 import {ModuleFactory, IModuleFactory} from "src/factories/ModuleFactory.sol";
@@ -39,7 +39,7 @@ import {TransparentUpgradeableProxy} from
  */
 contract E2ETest is E2EModuleRegistry {
     //Governance Gontract
-    Governor gov;
+    Governor_v1 gov;
 
     // Factory instances.
     OrchestratorFactory orchestratorFactory;
@@ -51,7 +51,7 @@ contract E2ETest is E2EModuleRegistry {
     ERC20Mock token;
 
     // Forwarder
-    TransactionForwarder forwarder;
+    TransactionForwarder_v1 forwarder;
 
     address communityMultisig = address(0x11111);
     address teamMultisig = address(0x22222);
@@ -60,10 +60,10 @@ contract E2ETest is E2EModuleRegistry {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
         //Deploy Governance Contract
-        gov = Governor(
+        gov = Governor_v1(
             address(
                 new TransparentUpgradeableProxy( //based on openzeppelins TransparentUpgradeableProxy
-                    address(new Governor()), //Implementation Address
+                    address(new Governor_v1()), //Implementation Address
                     communityMultisig, //Admin
                     bytes("") //data field that could have been used for calls, but not necessary
                 )
@@ -79,7 +79,7 @@ contract E2ETest is E2EModuleRegistry {
         token = new ERC20Mock("Mock", "MOCK");
 
         //Deploy a forwarder used to enable metatransactions
-        forwarder = new TransactionForwarder("TransactionForwarder");
+        forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
 
         // Deploy Orchestrator implementation.
         orchestratorImpl = new Orchestrator(address(forwarder));

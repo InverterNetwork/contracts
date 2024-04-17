@@ -19,10 +19,10 @@ import {
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
 import {
-    TransactionForwarder,
-    ITransactionForwarder,
+    TransactionForwarder_v1,
+    ITransactionForwarder_v1,
     ERC2771Forwarder
-} from "src/external/forwarder/TransactionForwarder.sol";
+} from "src/external/forwarder/TransactionForwarder_v1.sol";
 
 contract MetaTxAndMulticallE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -234,8 +234,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
         // for the multicall to work we need to collect all the individual calls we want to make
         // For this we use an array of Singlecall Structs from the Transaction Forwarder
-        ITransactionForwarder.SingleCall[] memory callCollection =
-            new ITransactionForwarder.SingleCall[](2);
+        ITransactionForwarder_v1.SingleCall[] memory callCollection =
+            new ITransactionForwarder_v1.SingleCall[](2);
 
         //-----------------------------------------------------
         // Call Function without role
@@ -253,8 +253,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
         token.approve(fundingManager, depositAmount);
 
         //We create a call struct containing the call we want to make
-        ITransactionForwarder.SingleCall memory call1 = ITransactionForwarder
-            .SingleCall({
+        ITransactionForwarder_v1.SingleCall memory call1 =
+        ITransactionForwarder_v1.SingleCall({
             //target of the call should be the fundingmanager
             target: fundingManager,
             //We dont allow the call to fail. In some circumstances this might be useful though
@@ -290,8 +290,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
         bountyManager.grantModuleRole(bountyManager.BOUNTY_ISSUER_ROLE(), user);
 
         //We create a call struct containing the call we want to make
-        ITransactionForwarder.SingleCall memory call2 = ITransactionForwarder
-            .SingleCall({
+        ITransactionForwarder_v1.SingleCall memory call2 =
+        ITransactionForwarder_v1.SingleCall({
             //target of the call should be the fundingmanager
             target: address(bountyManager),
             //We dont allow the call to fail. In some circumstances this might be useful though

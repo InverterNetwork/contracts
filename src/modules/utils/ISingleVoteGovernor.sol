@@ -33,43 +33,43 @@ interface ISingleVoteGovernor {
     // Errors
 
     /// @notice The action would leave an empty voter list.
-    error Module__SingleVoteGovernor__EmptyVoters();
+    error Module__SingleVoteGovernor_v1__EmptyVoters();
 
     /// @notice The supplied voter address is invalid.
-    error Module__SingleVoteGovernor__InvalidVoterAddress();
+    error Module__SingleVoteGovernor_v1__InvalidVoterAddress();
 
     /// @notice The threshold cannot exceed the amount of voters
-    error Module__SingleVoteGovernor__UnreachableThreshold();
+    error Module__SingleVoteGovernor_v1__UnreachableThreshold();
 
     /// @notice The supplied voting duration is invalid.
-    error Module__SingleVoteGovernor__InvalidVotingDuration();
+    error Module__SingleVoteGovernor_v1__InvalidVotingDuration();
 
     /// @notice The function can only be called by a voter.
-    error Module__SingleVoteGovernor__CallerNotVoter();
+    error Module__SingleVoteGovernor_v1__CallerNotVoter();
 
     /// @notice The address is already a voter.
-    error Module__SingleVoteGovernor__IsAlreadyVoter();
+    error Module__SingleVoteGovernor_v1__IsAlreadyVoter();
 
     /// @notice The value given as vote is invalid.
-    error Module__SingleVoteGovernor__InvalidSupport();
+    error Module__SingleVoteGovernor_v1__InvalidSupport();
 
     /// @notice The supplied ID is referencing a motion that doesn't exist.
-    error Module__SingleVoteGovernor__InvalidMotionId();
+    error Module__SingleVoteGovernor_v1__InvalidMotionId();
 
     /// @notice A user cannot vote twice.
-    error Module__SingleVoteGovernor__AttemptedDoubleVote();
+    error Module__SingleVoteGovernor_v1__AttemptedDoubleVote();
 
     /// @notice A motion cannot be executed if the voting duration hasn't passed.
-    error Module__SingleVoteGovernor__MotionInVotingPhase();
+    error Module__SingleVoteGovernor_v1__MotionInVotingPhase();
 
     /// @notice A motion cannot be voted on if the duration has been exceeded.
-    error Module__SingleVoteGovernor__MotionVotingPhaseClosed();
+    error Module__SingleVoteGovernor_v1__MotionVotingPhaseClosed();
 
     /// @notice A motion cannot be executed twice.
-    error Module__SingleVoteGovernor__MotionAlreadyExecuted();
+    error Module__SingleVoteGovernor_v1__MotionAlreadyExecuted();
 
     /// @notice A motion cannot be executed if it didn't reach the threshold.
-    error Module__SingleVoteGovernor__ThresholdNotReached();
+    error Module__SingleVoteGovernor_v1__ThresholdNotReached();
 
     //--------------------------------------------------------------------------
     // Events

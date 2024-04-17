@@ -2,28 +2,28 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {Governor} from "src/external/governance/Governor.sol";
+import {Governor_v1} from "src/external/governance/Governor_v1.sol";
 
 // External Dependencies
 import {TransparentUpgradeableProxy} from
     "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 /**
- * @title Governor Deployment Script
+ * @title Governor_v1 Deployment Script
  *
- * @dev Script to deploy a new Governor.
+ * @dev Script to deploy a new Governor_v1.
  *
  *
  * @author Inverter Network
  */
-contract DeployGovernor is Script {
+contract DeployGovernor_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    Governor govImplementation;
-    Governor gov;
+    Governor_v1 govImplementation;
+    Governor_v1 gov;
 
     function run() external returns (address, address) {
         // Read deployment settings from environment variables.
@@ -43,7 +43,7 @@ contract DeployGovernor is Script {
             "DeployOrchestratorFactory: Missing env variable: team multisig"
         );
 
-        // Deploy the Governor.
+        // Deploy the Governor_v1.
         return run(communityMultisig, teamMultisig, timelockPeriod);
     }
 
@@ -54,11 +54,11 @@ contract DeployGovernor is Script {
     ) public returns (address, address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the Governor.
-            govImplementation = new Governor();
+            // Deploy the Governor_v1.
+            govImplementation = new Governor_v1();
 
             //Deploy Governance Contract
-            gov = Governor(
+            gov = Governor_v1(
                 address(
                     new TransparentUpgradeableProxy( //based on openzeppelins TransparentUpgradeableProxy
                         address(govImplementation), //Implementation Address
@@ -72,11 +72,11 @@ contract DeployGovernor is Script {
 
         vm.stopBroadcast();
 
-        // Log the deployed Governor address.
+        // Log the deployed Governor_v1 address.
         console2.log(
-            "Deployment of Governor implementation at address", address(gov)
+            "Deployment of Governor_v1 implementation at address", address(gov)
         );
-        console2.log("Deployment of Governor at address", address(gov));
+        console2.log("Deployment of Governor_v1 at address", address(gov));
 
         return (address(gov), address(govImplementation));
     }

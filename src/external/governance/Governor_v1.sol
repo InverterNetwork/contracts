@@ -2,11 +2,11 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IGovernor} from "src/external/governance/IGovernor.sol";
+import {IGovernor_v1} from "src/external/governance/interfaces/IGovernor_v1.sol";
 import {
-    InverterBeacon,
-    IInverterBeacon
-} from "src/factories/beacon/InverterBeacon.sol";
+    InverterBeacon_v1,
+    IInverterBeacon_v1
+} from "src/factories/beacon/InverterBeacon_v1.sol";
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
@@ -15,7 +15,21 @@ import {AccessControlUpgradeable} from
     "@oz-up/access/AccessControlUpgradeable.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
-contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
+/**
+ * @title   Governor Contract for Managing Upgrades and Operations within the Inverter Network.
+ *
+ * @notice  This contract manages upgrades to beacon contracts through role-based permissions,
+ *          enabling a timelocked upgrade process and emergency procedures. It supports various
+ *          administrative functions that can be executed only by specified multisig addresses.
+ *
+ *  @dev    Inherits from ERC165 for interface detection, AccessControlUpgradeable for role-based
+ *          access control, and implements the IGovernor_v1 interface for governance
+ *          functionalities, i.e. setting the fee manager, setting the timelock, upgrading the
+ *          beacons and exposing the emergency shutdown.
+ *
+ * @author  Inverter Network.
+ */
+contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -23,7 +37,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         override(AccessControlUpgradeable, ERC165)
         returns (bool)
     {
-        return interfaceId == type(IGovernor).interfaceId
+        return interfaceId == type(IGovernor_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
     //--------------------------------------------------------------------------
@@ -31,21 +45,21 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
 
     modifier validAddress(address adr) {
         if (adr == address(0)) {
-            revert Governor__InvalidAddress(adr);
+            revert Governor_v1__InvalidAddress(adr);
         }
         _;
     }
 
     modifier validTimelockPeriod(uint amt) {
         if (amt < 48 hours) {
-            revert Governor__InvalidTimelockPeriod(amt);
+            revert Governor_v1__InvalidTimelockPeriod(amt);
         }
         _;
     }
 
     modifier accessibleBeacon(address target) {
         if (!isBeaconAccessible(target)) {
-            revert Governor__BeaconNotAccessible(target);
+            revert Governor_v1__BeaconNotAccessible(target);
         }
 
         _;
@@ -57,7 +71,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
             !hasRole(COMMUNITY_MULTISIG_ROLE, sender)
                 && !hasRole(TEAM_MULTISIG_ROLE, sender)
         ) {
-            revert Governor__OnlyCommunityOrTeamMultisig();
+            revert Governor_v1__OnlyCommunityOrTeamMultisig();
         }
         _;
     }
@@ -65,14 +79,14 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     modifier upgradeProcessAlreadyStarted(address beacon) {
         //if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
-            revert Governor__UpgradeProcessNotStarted();
+            revert Governor_v1__UpgradeProcessNotStarted();
         }
         _;
     }
 
     modifier timelockPeriodExceeded(address beacon) {
         if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
-            revert Governor__TimelockPeriodNotExceeded();
+            revert Governor_v1__TimelockPeriodNotExceeded();
         }
         _;
     }
@@ -87,7 +101,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
 
     uint public timelockPeriod;
 
-    mapping(address => IGovernor.Timelock) private beaconTimelock;
+    mapping(address => IGovernor_v1.Timelock) private beaconTimelock;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -129,7 +143,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function getBeaconTimelock(address beacon)
         external
         view
@@ -141,12 +155,12 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     //--------------------------------------------------------------------------
     // FeeManager Functions
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function getFeeManager() external view returns (address) {
         return feeManager;
     }
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function setFeeManager(address newFeeManager)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
@@ -160,7 +174,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     //---------------------------
     // Upgrade
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function upgradeBeaconWithTimelock(
         address beacon,
         address newImplementation,
@@ -186,7 +200,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         );
     }
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function triggerUpgradeBeaconWithTimelock(address beacon)
         external
         onlyCommunityOrTeamMultisig
@@ -198,7 +212,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         beaconTimelock[beacon].timelockActive = false;
 
         //Upgrade beacon
-        IInverterBeacon(beacon).upgradeTo(
+        IInverterBeacon_v1(beacon).upgradeTo(
             beaconTimelock[beacon].intendedImplementation,
             beaconTimelock[beacon].intendedMinorVersion,
             false //this is not intended to override a shutdown
@@ -211,7 +225,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         );
     }
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function cancelUpgrade(address beacon)
         external
         onlyCommunityOrTeamMultisig
@@ -221,7 +235,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         emit BeaconUpgradedCanceled(beacon);
     }
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function setTimelockPeriod(uint newTimelockPeriod)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
@@ -234,17 +248,17 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     //---------------------------
     //Emergency Shutdown
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function initiateBeaconShutdown(address beacon)
         external
         onlyCommunityOrTeamMultisig
         accessibleBeacon(beacon)
     {
-        IInverterBeacon(beacon).shutDownImplementation();
+        IInverterBeacon_v1(beacon).shutDownImplementation();
         emit BeaconShutdownInitiated(beacon);
     }
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
@@ -255,7 +269,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         accessibleBeacon(beacon)
         validAddress(newImplementation)
     {
-        IInverterBeacon(beacon).upgradeTo(
+        IInverterBeacon_v1(beacon).upgradeTo(
             newImplementation, newMinorVersion, true
         );
         emit BeaconForcefullyUpgradedAndImplementationRestarted(
@@ -263,26 +277,26 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         );
     }
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function restartBeaconImplementation(address beacon)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
         accessibleBeacon(beacon)
     {
-        IInverterBeacon(beacon).restartImplementation();
+        IInverterBeacon_v1(beacon).restartImplementation();
         emit BeaconImplementationRestarted(beacon);
     }
 
     //---------------------------
     //Ownable2Step
 
-    /// @inheritdoc IGovernor
+    /// @inheritdoc IGovernor_v1
     function acceptOwnership(address adr)
         external
         onlyCommunityOrTeamMultisig
     {
         if (adr.code.length == 0) {
-            revert Governor__CallToTargetContractFailed();
+            revert Governor_v1__CallToTargetContractFailed();
         }
 
         (bool success,) =
@@ -290,7 +304,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
 
         //if the call is not a success
         if (!success) {
-            revert Governor__CallToTargetContractFailed();
+            revert Governor_v1__CallToTargetContractFailed();
         }
         emit OwnershipAccepted(adr);
     }
@@ -308,8 +322,8 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         //Check if target address supports Inverter beacon interface
         (bool success, bytes memory result) = target.call(
             abi.encodeCall(
-                InverterBeacon.supportsInterface,
-                (type(IInverterBeacon).interfaceId)
+                InverterBeacon_v1.supportsInterface,
+                (type(IInverterBeacon_v1).interfaceId)
             )
         );
 
