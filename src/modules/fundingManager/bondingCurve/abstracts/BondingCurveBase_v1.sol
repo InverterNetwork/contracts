@@ -12,7 +12,8 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // External Interfaces
-import {IERC20Issuance_v1} from "@fm/bondingCurve/interfaces/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from
+    "@fm/bondingCurve/interfaces/IERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Libraries
@@ -31,10 +32,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  Inverter Network
  */
-abstract contract BondingCurveBase_v1 is
-    IBondingCurveBase_v1,
-    Module_v1
-{
+abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -245,7 +243,7 @@ abstract contract BondingCurveBase_v1 is
     /// @param _issuanceToken The token which will be issued by the Bonding Curve.
     function _setIssuanceToken(address _issuanceToken) internal virtual {
         address oldToken = address(issuanceToken);
-        issuanceToken = ERC20Issuance_v1(_issuanceToken);
+        issuanceToken = IERC20Issuance_v1(_issuanceToken);
         emit IssuanceTokenUpdated(oldToken, _issuanceToken);
     }
 

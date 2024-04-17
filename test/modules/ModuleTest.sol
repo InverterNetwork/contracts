@@ -126,7 +126,7 @@ abstract contract ModuleTest is Test {
         uint decimalDiff = referenceDecimals - tokenDecimals;
         uint newMax = max / 10 ** decimalDiff;
 
-        amount = bound(amount, min, newMax);
+        amount = bound(number, min, newMax);
     }
 
     function _assumeNonEmptyString(string memory a) internal pure {

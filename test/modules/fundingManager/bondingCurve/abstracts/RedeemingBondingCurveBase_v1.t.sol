@@ -8,7 +8,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ERC20IssuanceV1Mock} from "test/utils/mocks/ERC20IssuanceV1Mock.sol";
+import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {
@@ -46,7 +46,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     RedeemingBondingCurveBaseV1Mock bondingCurveFundingManager;
     address formula;
 
-    ERC20IssuanceV1Mock issuanceToken;
+    ERC20Issuance_v1 issuanceToken;
 
     address owner_address = address(0xA1BA);
     address non_owner_address = address(0xB0B);
@@ -70,7 +70,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         formula = address(new BancorFormula());
 
-        issuanceToken = new ERC20IssuanceV1Mock();
+        issuanceToken = new ERC20Issuance_v1();
         issuanceToken.init(
             NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
         );
@@ -304,7 +304,6 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             _token.balanceOf(address(bondingCurveFundingManager));
         uint totalTokenSupplyBefore = issuanceToken.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
-        //uint userTokenBalanceBefore = issuanceToken.balanceOf(seller);
 
         // Emit event
         vm.expectEmit(

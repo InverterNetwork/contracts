@@ -7,8 +7,7 @@ import "forge-std/Test.sol";
 import {
     ERC20Issuance_v1,
     IERC20Issuance_v1
-} from
-    "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 

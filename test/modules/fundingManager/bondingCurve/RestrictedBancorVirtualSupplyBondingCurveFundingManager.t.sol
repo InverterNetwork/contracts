@@ -10,8 +10,7 @@ import {RestrictedBancorVirtualSupplyBondingCurveFundingManager} from
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
-import {ERC20Issuance_v1} from
-    "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
@@ -21,8 +20,7 @@ import {
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
-
-import {ERC20IssuanceV1Mock} from "test/utils/mocks/ERC20IssuanceV1Mock.sol";
+import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 import {
     FM_BC_Bancor_Redeeming_VirtualSupplyV1Test,
@@ -41,10 +39,9 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
 {
     function setUp() public override {
         // Deploy contracts
-        IBondingCurveBase_v1.IssuanceToken memory
-            issuanceToken_properties;
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
-            memory bc_properties;
+        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties;
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties;
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
@@ -61,7 +58,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         bc_properties.sellFee = SELL_FEE;
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
-        bc_properties.initialTokenSupply = INITIAL_TOKEN_SUPPLY;
+        bc_properties.initialIssuanceSupply = INITIAL_TOKEN_SUPPLY;
         bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
         address impl = address(
@@ -69,7 +66,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         );
 
         bondingCurveFundingManager =
-        BancorVirtualSupplyBondingCurveFundingManagerMock(Clones.clone(impl));
+            FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock(Clones.clone(impl));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -110,6 +107,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         );
     }
 
+    // Override to test deactivation
     function testTransferOrchestratorToken(address to, uint amount)
         public
         override
@@ -134,6 +132,29 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
 
         assertEq(_token.balanceOf(to), 0);
         assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
+    }
+
+    // Override to test deactivation
+    function testMintIssuanceTokenTo(uint amount) public override {
+        assertEq(issuanceToken.balanceOf(non_owner_address), 0);
+
+        vm.startPrank(address(owner_address));
+        {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    RestrictedBancorVirtualSupplyBondingCurveFundingManager
+                        .RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated
+                        .selector
+                )
+            );
+
+            bondingCurveFundingManager.mintIssuanceTokenTo(
+                non_owner_address, amount
+            );
+        }
+        vm.stopPrank();
+
+        assertEq(_token.balanceOf(non_owner_address), 0);
     }
 }
 
@@ -165,10 +186,9 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
 
     function setUp() public {
         // Deploy contracts
-        IBondingCurveFundingManagerBase.IssuanceToken memory
-            issuanceToken_properties;
-        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
-            memory bc_properties;
+        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties;
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties;
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
@@ -185,7 +205,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         bc_properties.sellFee = SELL_FEE;
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
-        bc_properties.initialTokenSupply = INITIAL_TOKEN_SUPPLY;
+        bc_properties.initialIssuanceSupply = INITIAL_TOKEN_SUPPLY;
         bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
         address impl = address(
@@ -307,7 +327,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     _roleId,
                     _buyer
                 )
@@ -330,7 +350,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     _roleId,
                     _buyer
                 )
@@ -352,7 +372,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     _roleId,
                     _seller
                 )
@@ -375,7 +395,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     _roleId,
                     _seller
                 )
@@ -395,7 +415,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     _roleId,
                     _minter
                 )

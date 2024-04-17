@@ -27,14 +27,11 @@ import {VirtualCollateralSupplyBase_v1} from
 import {VirtualIssuanceSupplyBase_v1} from
     "@fm/bondingCurve/abstracts/VirtualIssuanceSupplyBase_v1.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
-import {ERC20Issuance_v1} from
-    "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
-
-import "forge-std/console.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -63,7 +60,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     VirtualIssuanceSupplyBase_v1,
     VirtualCollateralSupplyBase_v1,
     RedeemingBondingCurveBase_v1
-
 {
     function supportsInterface(bytes4 interfaceId)
         public
@@ -259,7 +255,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Public Nonmutating Functions
+    // Public Data Query Functions
 
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
     function getReserveRatioForBuying() external view returns (uint32) {

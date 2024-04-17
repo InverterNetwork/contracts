@@ -1,19 +1,4 @@
-//TODO: Updte NAtspec
-/// @title Bancor Virtual Supply Bonding Curve Funding Manager Contract.
-/// @author Inverter Network.
-/// @notice This contract enables the issuance and redeeming of tokens on a bonding curve, using
-/// a virtual supply for both the token and the collateral as input. The contract makes use of the
-/// Aragon's Bancor Formula contract to calculate the issuance and redeeming rates.
-/// @dev This contract inherits functionalties from the contracts:
-/// - BondingCurveFundingManagerBase
-/// - RedeemingBondingCurveFundingManagerBase
-/// - VirtualTokenSupplyBase
-/// - VirtualCollateralSupplyBase
-/// The contract should be used by the Orchestrator Owner to manage all the configuration fo the
-/// bonding curve, e.g., the virtual supplies and reserve ratios, as well as the opening and closing
-/// of the issuance and redeeming functionalities. The contract implements the formulaWrapper
-/// functions enforced by the upstream contracts, using the Bancor formula to calculate the
-/// issuance/redeeming rate. It also implements a function which enables direct minting of the issuance token// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
 // External Interfaces
@@ -38,12 +23,18 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 ///             the downstream contract.
 interface IERC20Issuance_v1 {
     // Events
+
+    /// @notice Emitted when the minter is set.
     event minterSet(address indexed minter);
 
+    //--------------------------------------------------------------------------
     // Errors
     error IERC20Issuance_v1__CallerIsNotMinter();
 
     error IERC20Issuance_v1__MintExceedsSupplyCap();
+
+    //--------------------------------------------------------------------------
+    // Functions
 
     /// @notice Sets the address of the minter.
     /// @param _minter The address of the minter.

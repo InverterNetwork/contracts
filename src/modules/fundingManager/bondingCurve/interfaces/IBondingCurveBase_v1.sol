@@ -63,15 +63,6 @@ interface IBondingCurveBase_v1 {
         uint8 indexed oldDecimals, uint8 indexed newDecimals
     );
 
-        //--------------------------------------------------------------------------
-    // Structs
-    struct IssuanceToken {
-        string name; // The name of the issuance token
-        string symbol; // The symbol of the issuance token
-        uint8 decimals; // The decimals used within the issuance token
-        uint maxSupply; // The maximum supply of the issuance token
-    }
-
     //--------------------------------------------------------------------------
     // Structs
     struct IssuanceToken {

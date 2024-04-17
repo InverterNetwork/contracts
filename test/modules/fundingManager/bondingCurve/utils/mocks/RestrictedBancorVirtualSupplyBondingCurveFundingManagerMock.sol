@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 // SuT
 import {RestrictedBancorVirtualSupplyBondingCurveFundingManager} from
@@ -13,17 +14,15 @@ import {RestrictedBancorVirtualSupplyBondingCurveFundingManager} from
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-} from
-    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IBancorFormula} from
-    "@fm/bondingCurve/interfaces/IBancorFormula.sol";
+} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock is
     RestrictedBancorVirtualSupplyBondingCurveFundingManager
 {
     //--------------------------------------------------------------------------
-    // The BancorVirtualSupplyBondingCurveFundingManager is not abstract, so all the necessary functions are already implemented
+    // The RestrictedBancorVirtualSupplyBondingCurveFundingManager is not abstract, so all the necessary functions are already implemented
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
     //--------------------------------------------------------------------------
@@ -83,7 +82,11 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock is
     }
 
     // Note: this function returns the virtual token supply in the same format it will be fed to the Bancor formula
-    function call_getFormulaVirtualIssuanceSupply() external view returns (uint) {
+    function call_getFormulaVirtualIssuanceSupply()
+        external
+        view
+        returns (uint)
+    {
         uint decimalConvertedVirtualIssuanceSupply =
         _convertAmountToRequiredDecimal(
             virtualIssuanceSupply, issuanceTokenDecimals, 18
