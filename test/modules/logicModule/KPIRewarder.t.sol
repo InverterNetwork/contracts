@@ -102,18 +102,14 @@ contract KPIRewarderTest is ModuleTest {
             abi.encode(address(stakingToken), address(feeToken), ooV3);
 
         kpiManager.init(_orchestrator, _METADATA, configData);
-        /*
 
-        //TODO: Setup reverts in this block
         // Perform initial deposit of reward tokens:
         address depositor_1 = address(0x42);
         _token.mint(depositor_1, 10_000e18);
         vm.startPrank(depositor_1);
         _token.approve(address(_fundingManager), 10_000e18);
-       _fundingManager.deposit(10_000e18);
+        _fundingManager.deposit(10_000e18);
         vm.stopPrank();
-         
-        */
     }
 
     //--------------------------------------------------------------------------
@@ -268,13 +264,6 @@ postAssertionTest
 */
 contract KPIRewarder_postAssertionTest is KPIRewarderTest {
     function test_RevertWhen_TheBondConfigurationIsInvalid() external {
-        address depositor_1 = address(0x42);
-        _token.mint(depositor_1, 10_000e18);
-        vm.startPrank(depositor_1);
-        _token.approve(address(_fundingManager), 10_000e18);
-        _fundingManager.deposit(10_000e18);
-        vm.stopPrank();
-
         // Since the setup has a correct KPI MAnager, we create a new one with stakingToken == FeeToken
 
         address impl = address(new KPIRewarder());

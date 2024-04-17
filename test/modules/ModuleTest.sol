@@ -82,6 +82,7 @@ abstract contract ModuleTest is Test {
 
         _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
 
+        _fundingManager.init(_orchestrator, _METADATA, abi.encode(""));
         _fundingManager.setToken(IERC20(address(_token)));
     }
 
