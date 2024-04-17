@@ -23,7 +23,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock is
     RestrictedBancorVirtualSupplyBondingCurveFundingManager
 {
     //--------------------------------------------------------------------------
-    // The BancorVirtualSupplyBondingCurveFundingManager is not abstract, so all the necessary functions are already implemented
+    // The RestrictedBancorVirtualSupplyBondingCurveFundingManager is not abstract, so all the necessary functions are already implemented
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
     //--------------------------------------------------------------------------

@@ -12,15 +12,13 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-//TODO: UpdateNatspec
-/// @title Bonding Curve Funding Manager Base Contract.
+/// @title ERC20Issuance Token
 /// @author Inverter Network.
-/// @notice This contract enables the base functionalities for issuing tokens along a bonding curve.
+/// @notice This contract creates an ERC20 token with the ability to mint and burn tokens and a supply cap.
 /// @dev The contract implements functionalties for:
-///         - opening and closing the issuance of tokens.
-///         - setting and subtracting of fees, expressed in BPS and subtracted from the collateral.
-///         - calculating the issuance amount by means of an abstract function to be implemented in
-///             the downstream contract.
+///         - Whitelisted mint and burn
+///         - A supply cap
+///         - Flexible decimals in initialization
 contract ERC20Issuance is
     IERC20Issuance,
     ERC20Upgradeable,

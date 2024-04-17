@@ -48,8 +48,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         IBondingCurveFundingManagerBase.IssuanceToken memory
             issuanceToken_properties = IBondingCurveFundingManagerBase
                 .IssuanceToken({
-                name: "Test Token",
-                symbol: "TT",
+                name: "Bonding Curve Token",
+                symbol: "BCT",
                 decimals: 18,
                 maxSupply: type(uint).max - 1
             });

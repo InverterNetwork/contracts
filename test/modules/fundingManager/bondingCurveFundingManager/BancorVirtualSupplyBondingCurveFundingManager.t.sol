@@ -16,7 +16,6 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
 import {ERC20Issuance} from
     "src/modules/fundingManager/bondingCurveFundingManager/ParibuChanges/ERC20Issuance.sol";
 
@@ -635,7 +634,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         amount = _bound_for_decimal_conversion(
             amount,
             1e4,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
         );
@@ -645,7 +644,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
 
         address seller = makeAddr("seller");
-        uint availableForSale = _prepareSellConditions(seller, amount);
+        _prepareSellConditions(seller, amount);
 
         uint userSellAmount = issuanceToken.balanceOf(seller);
         vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause underflow
@@ -671,13 +670,13 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         amount = _bound_for_decimal_conversion(
             amount,
             1,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
         );
 
         address seller = makeAddr("seller");
-        uint availableForSale = _prepareSellConditions(seller, amount);
+        _prepareSellConditions(seller, amount);
 
         // we simulate the fundingManager spending some funds. It can't cover full redemption anymore.
         _token.burn(address(bondingCurveFundingManager), 1);
@@ -697,7 +696,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         amountIn = _bound_for_decimal_conversion(
             amountIn,
             100,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
         );
@@ -810,7 +809,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         amountIn = _bound_for_decimal_conversion(
             amountIn,
             100,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
         );
@@ -840,10 +839,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         }
         vm.stopPrank();
 
-        uint decimalConverted_userSellAmount = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            userSellAmount, _token.decimals(), 18
-        );
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
@@ -930,7 +925,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         amountIn = _bound_for_decimal_conversion(
             amountIn,
             100,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
         );
@@ -1208,7 +1203,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     function testCalculateSaleReturnWithZeroFee(uint _saleAmount) public {
         // Above an amount of 1e26 the BancorFormula starts to revert.
         _saleAmount = _bound_for_decimal_conversion(
-            _saleAmount, 1, 1e38, issuanceToken.decimals(), 18
+            _saleAmount, 1, 1e36, issuanceToken.decimals(), 18
         );
         // Set virtual supply to some number above collateral supply
         // Set virtual collateral to some number
@@ -1262,7 +1257,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         _saleAmount = _bound_for_decimal_conversion(
             _saleAmount,
             1,
-            1e38,
+            1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
         );
@@ -1322,6 +1317,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     */
     function testMintIssuanceTokenTo(uint amount)
         public
+        virtual
         callerIsOrchestratorOwner
     {
         assertEq(issuanceToken.balanceOf(non_owner_address), 0);
@@ -1538,6 +1534,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         ├── When decimal is set to more than the collateral decimals
         |   └── it should revert
         └── when decimal is between seven and the the collateral decimals
+            ├── it should store the new decimal number 
             └── it should succeed
             */
 
@@ -1550,7 +1547,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        ERC20Issuance newIssuanceToken = new ERC20Issuance();
         newIssuanceToken.init(
             _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
@@ -1575,7 +1572,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        ERC20Issuance newIssuanceToken = new ERC20Issuance();
         newIssuanceToken.init(
             _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
@@ -1599,7 +1596,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        ERC20Issuance newIssuanceToken = new ERC20Issuance();
         newIssuanceToken.init(
             _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
@@ -1609,8 +1606,8 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             address(newIssuanceToken)
         );
 
-        ERC20IssuanceMock issuanceTokenAfter =
-            ERC20IssuanceMock(bondingCurveFundingManager.getIssuanceToken());
+        ERC20Issuance issuanceTokenAfter =
+            ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
 
         assertEq(issuanceTokenAfter.name(), _name);
         assertEq(issuanceTokenAfter.symbol(), _symbol);
@@ -1799,10 +1796,10 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint8 _requiredDecimals
     ) public {
         // Bounds necessary to avoid overflows:
-        // amount < (1e78 (uint.max) - 1e32 (max decimals in test) - 1e5 (BPS))
+        // amount < (1e78 (uint.max) - 1e36 (max decimals in test) - 1e5 (BPS))
         _amount = bound(_amount, 1, 1e41);
         _requiredDecimals = uint8(bound(_requiredDecimals, 1, 18));
-        _tokenDecimals = uint8(bound(_tokenDecimals, _requiredDecimals + 1, 32));
+        _tokenDecimals = uint8(bound(_tokenDecimals, _requiredDecimals + 1, 36));
 
         uint res = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
@@ -1819,11 +1816,11 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         uint8 _requiredDecimals
     ) public {
         // Bounds necessary to avoid overflows:
-        // amount < (1e78 (uint.max) - 1e32 (max decimals in test) - 1e5 (BPS))
+        // amount < (1e78 (uint.max) - 1e36 (max decimals in test) - 1e5 (BPS))
         _amount = bound(_amount, 1, 1e41);
         _tokenDecimals = uint8(bound(_tokenDecimals, 1, 18));
         _requiredDecimals =
-            uint8(bound(_requiredDecimals, _tokenDecimals + 1, 32));
+            uint8(bound(_requiredDecimals, _tokenDecimals + 1, 36));
 
         uint res = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
@@ -1907,8 +1904,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
             );
         }
         vm.stopPrank();
-
-        return userSellAmount;
 
         return userSellAmount;
     }

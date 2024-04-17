@@ -8,7 +8,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ERC20IssuanceMock} from "test/utils/mocks/ERC20IssuanceMock.sol";
+import {ERC20Issuance} from
+    "src/modules/fundingManager/bondingCurveFundingManager/ParibuChanges/ERC20Issuance.sol";
 
 // Internal Dependencies
 import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
@@ -36,7 +37,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     BondingCurveFundingManagerMock bondingCurveFundingManager;
     address formula;
 
-    ERC20IssuanceMock issuanceToken;
+    ERC20Issuance issuanceToken;
 
     address owner_address = makeAddr("alice");
     address non_owner_address = makeAddr("bob");
@@ -50,6 +51,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint indexed receivedAmount,
         address buyer
     );
+    event IssuanceTokenUpdated(
+        address indexed oldToken, address indexed issuanceToken
+    );
 
     function setUp() public {
         // Deploy contracts
@@ -60,7 +64,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         formula = address(new BancorFormula());
 
-        issuanceToken = new ERC20IssuanceMock();
+        issuanceToken = new ERC20Issuance();
         issuanceToken.init(
             NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
         );
@@ -476,7 +480,10 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     /* Test _setIssuanceToken function
        
-        └── when setting decimals
+        └── when setting the Token
+            ├── it should set the new token
+            ├── it should emit an event
+            ├── it should cache the new decimals
             └── it should succeed
     */
 
@@ -485,20 +492,28 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     {
         vm.assume(_newDecimals > 0);
 
+        address tokenBefore =
+            address(bondingCurveFundingManager.getIssuanceToken());
+
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20IssuanceMock newIssuanceToken = new ERC20IssuanceMock();
+        ERC20Issuance newIssuanceToken = new ERC20Issuance();
         newIssuanceToken.init(
             _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
 
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit IssuanceTokenUpdated(tokenBefore, address(newIssuanceToken));
         bondingCurveFundingManager.call_setIssuanceToken(
             address(newIssuanceToken)
         );
 
-        ERC20IssuanceMock issuanceTokenAfter =
-            ERC20IssuanceMock(bondingCurveFundingManager.getIssuanceToken());
+        ERC20Issuance issuanceTokenAfter =
+            ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
 
         assertEq(issuanceTokenAfter.name(), _name);
         assertEq(issuanceTokenAfter.symbol(), _symbol);

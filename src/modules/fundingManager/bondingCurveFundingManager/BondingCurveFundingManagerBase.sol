@@ -20,7 +20,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 /// @author Inverter Network.
 /// @notice This contract enables the base functionalities for issuing tokens along a bonding curve.
 /// @dev The contract implements functionalties for:
-///         - opening and closing the issuance of tokens.
+///         - setting the (external) ERC20Issuance token.
+///         - opening and closing the issuance of tokens on the curve.
 ///         - setting and subtracting of fees, expressed in BPS and subtracted from the collateral.
 ///         - calculating the issuance amount by means of an abstract function to be implemented in
 ///             the downstream contract.
