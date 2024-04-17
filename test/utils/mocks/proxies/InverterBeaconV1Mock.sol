@@ -1,10 +1,10 @@
 pragma solidity ^0.8.0;
 
-import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
-contract InverterBeaconMock is IInverterBeacon, ERC165 {
+contract InverterBeaconV1Mock is IInverterBeacon_v1, ERC165 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -12,7 +12,7 @@ contract InverterBeaconMock is IInverterBeacon, ERC165 {
         override(ERC165)
         returns (bool)
     {
-        return interfaceId == type(IInverterBeacon).interfaceId
+        return interfaceId == type(IInverterBeacon_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 

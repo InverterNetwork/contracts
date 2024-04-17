@@ -1,29 +1,29 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
-interface IOrchestratorFactory {
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Given id is invalid.
-    error OrchestratorFactory__InvalidId();
+    error OrchestratorFactory_v1__InvalidId();
 
     /// @notice The module's data arrays length mismatch.
-    error OrchestratorFactory__ModuleDataLengthMismatch();
+    error OrchestratorFactory_v1__ModuleDataLengthMismatch();
 
     /// @notice The orchestrator owner is address(0)
-    error OrchestratorFactory__OrchestratorOwnerIsInvalid();
+    error OrchestratorFactory_v1__OrchestratorOwnerIsInvalid();
 
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when a new orchestrator is created.
+    /// @notice Event emitted when a new orchestrator_v1 is created.
     /// @param orchestratorId The id of the orchestrator.
     /// @param orchestratorAddress The address of the orchestrator.
     event OrchestratorCreated(
@@ -47,7 +47,7 @@ interface IOrchestratorFactory {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Creates a new orchestrator with caller being the orchestrator's owner.
+    /// @notice Creates a new orchestrator_v1 with caller being the orchestrator's owner.
     /// @param orchestratorConfig The orchestrator's config data.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer}
     ///                         instance.
@@ -63,13 +63,13 @@ interface IOrchestratorFactory {
         ModuleConfig[] memory moduleConfigs
     ) external returns (IOrchestrator);
 
-    /// @notice Returns the {IOrchestrator} target implementation address.
+    /// @notice Returns the {IOrchestrator_v1} target implementation address.
     function target() external view returns (address);
 
-    /// @notice Returns the {IModuleFactory} implementation address.
+    /// @notice Returns the {IModuleFactory_v1} implementation address.
     function moduleFactory() external view returns (address);
 
-    /// @notice Returns the {IOrchestrator} address that corresponds to the given id.
+    /// @notice Returns the {IOrchestrator_v1} address that corresponds to the given id.
     /// @param id The requested orchestrator's id.
     function getOrchestratorByID(uint id) external view returns (address);
 

@@ -1,37 +1,48 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+// Internal Interfaces
+import {
+    IOrchestratorFactory_v1,
+    IOrchestrator,
+    IModule
+} from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {
+    IFundingManager,
+    IAuthorizer,
+    IPaymentProcessor
+} from "src/orchestrator/IOrchestrator.sol";
+import {IModuleFactory_v1} from "src/factories/interfaces/IModuleFactory_v1.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
-
-// Internal Interfaces
-import {
-    IOrchestratorFactory,
-    IOrchestrator,
-    IModule
-} from "src/factories/IOrchestratorFactory.sol";
-import {
-    IFundingManager,
-    IAuthorizer,
-    IPaymentProcessor
-} from "src/orchestrator/IOrchestrator.sol";
-import {IModuleFactory} from "src/factories/IModuleFactory.sol";
-
 /**
- * @title Orchestrator Factory
+ * @title   Orchestrator Factory V1
  *
- * @dev An immutable factory for deploying orchestrators.
+ * @notice  Orchestrator Factory V1 facilitates the deployment of orchestrators and their
+ *          associated modules for the Inverter Network, ensuring seamless creation and
+ *          configuration of various components in a single transaction.
  *
- * @author Inverter Network
+ * @dev     Utilizes ERC2771Context for meta-transaction capabilities and ERC165 for interface
+ *          detection. Orchestrators are deployed through EIP-1167 minimal proxies for efficiency.
+ *          Integrates with the module factory to instantiate necessary modules with custom
+ *          configurations, supporting complex setup with interdependencies among modules.
+ *
+ * @author  Inverter Network.
  */
-contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
+contract OrchestratorFactory_v1 is
+    IOrchestratorFactory_v1,
+    ERC2771Context,
+    ERC165
+{
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -39,17 +50,17 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
         override(ERC165)
         returns (bool)
     {
-        return interfaceId == type(IOrchestratorFactory).interfaceId
+        return interfaceId == type(IOrchestratorFactory_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
     //--------------------------------------------------------------------------
     // Immutables
 
-    /// @inheritdoc IOrchestratorFactory
+    /// @inheritdoc IOrchestratorFactory_v1
     address public immutable override target;
 
-    /// @inheritdoc IOrchestratorFactory
+    /// @inheritdoc IOrchestratorFactory_v1
     address public immutable override moduleFactory;
 
     //--------------------------------------------------------------------------
@@ -68,7 +79,7 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
     /// @notice Modifier to guarantee that the given id is valid
     modifier validOrchestratorId(uint id) {
         if (id > _orchestratorIdCounter) {
-            revert OrchestratorFactory__InvalidId();
+            revert OrchestratorFactory_v1__InvalidId();
         }
         _;
     }
@@ -88,7 +99,7 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IOrchestratorFactory
+    /// @inheritdoc IOrchestratorFactory_v1
     function createOrchestrator(
         OrchestratorConfig memory orchestratorConfig,
         ModuleConfig memory fundingManagerConfig,
@@ -102,21 +113,21 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
         _orchestrators[++_orchestratorIdCounter] = clone;
 
         // Deploy and cache {IFundingManager} module.
-        address fundingManager = IModuleFactory(moduleFactory).createModule(
+        address fundingManager = IModuleFactory_v1(moduleFactory).createModule(
             fundingManagerConfig.metadata,
             IOrchestrator(clone),
             fundingManagerConfig.configData
         );
 
         // Deploy and cache {IAuthorizer} module.
-        address authorizer = IModuleFactory(moduleFactory).createModule(
+        address authorizer = IModuleFactory_v1(moduleFactory).createModule(
             authorizerConfig.metadata,
             IOrchestrator(clone),
             authorizerConfig.configData
         );
 
         // Deploy and cache {IPaymentProcessor} module.
-        address paymentProcessor = IModuleFactory(moduleFactory).createModule(
+        address paymentProcessor = IModuleFactory_v1(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
             IOrchestrator(clone),
             paymentProcessorConfig.configData
@@ -126,7 +137,7 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
         uint modulesLen = moduleConfigs.length;
         address[] memory modules = new address[](modulesLen);
         for (uint i; i < modulesLen; ++i) {
-            modules[i] = IModuleFactory(moduleFactory).createModule(
+            modules[i] = IModuleFactory_v1(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
                 IOrchestrator(clone),
                 moduleConfigs[i].configData
@@ -134,7 +145,7 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
         }
 
         if (orchestratorConfig.owner == address(0)) {
-            revert OrchestratorFactory__OrchestratorOwnerIsInvalid();
+            revert OrchestratorFactory_v1__OrchestratorOwnerIsInvalid();
         }
 
         emit OrchestratorCreated(_orchestratorIdCounter, clone);
@@ -180,7 +191,7 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
         return IOrchestrator(clone);
     }
 
-    /// @inheritdoc IOrchestratorFactory
+    /// @inheritdoc IOrchestratorFactory_v1
     function getOrchestratorByID(uint id)
         external
         view

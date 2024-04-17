@@ -3,10 +3,10 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {IGovernor_v1} from "src/external/governance/interfaces/IGovernor_v1.sol";
-import {
-    InverterBeacon_v1,
-    IInverterBeacon_v1
-} from "src/factories/beacon/InverterBeacon_v1.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
+// Internal Dependencies
+import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";

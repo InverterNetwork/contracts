@@ -1,14 +1,14 @@
 # Script to deploy Inverter Base Contracts
 
-# - OrchestratorFactory
-forge script script/factories/DeployOrchestratorFactory.s.sol:DeployOrchestratorFactory \
+# - OrchestratorFactory_v1
+forge script script/factories/DeployOrchestratorFactory_v1.s.sol:DeployOrchestratorFactory_v1 \
     --fork-url $RPC_URL \
     --sender $WALLET_DEPLOYER \
     --private-key $WALLET_DEPLOYER_PK \
     --broadcast
 
-# - ModuleFactory
-forge script script/factories/DeployModuleFactory.s.sol:DeployModuleFactory \
+# - ModuleFactory_v1
+forge script script/factories/DeployModuleFactory_v1.s.sol:DeployModuleFactory_v1 \
     --fork-url $RPC_URL \
     --sender $WALLET_DEPLOYER \
     --private-key $WALLET_DEPLOYER_PK \
@@ -43,7 +43,7 @@ forge script script/modules/DeployPaymentProcessor.s.sol:DeployPaymentProcessor 
     --broadcast
 
 # - Beacon
-forge script script/proxies/DeployBeacon.s.sol:DeployBeacon \
+forge script script/proxies/DeployInverterBeacon_v1.s.sol:DeployInverterBeacon_v1 \
     --fork-url $RPC_URL \
     --sender $WALLET_DEPLOYER \
     --private-key $WALLET_DEPLOYER_PK \

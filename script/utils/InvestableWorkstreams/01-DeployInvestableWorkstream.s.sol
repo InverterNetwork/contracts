@@ -8,7 +8,8 @@ import "../../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IModule} from "src/modules/base/IModule.sol";
-import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 import {
     BountyManager,
@@ -98,8 +99,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // Define Initial Configuration Data
 
         // Orchestrator: Owner, funding token
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: orchestratorOwner,
             token: collateralToken
         });
@@ -128,8 +129,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             });
 
         // Funding Manager: Virtual Supply Bonding Curve Funding Manager
-        IOrchestratorFactory.ModuleConfig memory
-            bondingCurveFundingManagerConfig = IOrchestratorFactory
+        IOrchestratorFactory_v1.ModuleConfig memory
+            bondingCurveFundingManagerConfig = IOrchestratorFactory_v1
                 .ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(
@@ -141,32 +142,33 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             );
 
         // Payment Processor: only Metadata
-        IOrchestratorFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
-            simplePaymentProcessorMetadata,
-            bytes(""),
-            abi.encode(hasDependency, dependencies)
-        );
+        IOrchestratorFactory_v1.ModuleConfig memory
+            paymentProcessorFactoryConfig = IOrchestratorFactory_v1
+                .ModuleConfig(
+                simplePaymentProcessorMetadata,
+                bytes(""),
+                abi.encode(hasDependency, dependencies)
+            );
 
         // Authorizer: Metadata, initial authorized addresses
-        IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             roleAuthorizerMetadata,
             abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
         );
 
         // Bounty Manager:
-        IOrchestratorFactory.ModuleConfig memory bountyManagerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             bountyManagerMetadata,
             abi.encode(""),
             abi.encode(hasDependency, dependencies)
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the BountyManager.
-        IOrchestratorFactory.ModuleConfig[] memory additionalModuleConfig =
-            new IOrchestratorFactory.ModuleConfig[](1);
+        IOrchestratorFactory_v1.ModuleConfig[] memory additionalModuleConfig =
+            new IOrchestratorFactory_v1.ModuleConfig[](1);
         additionalModuleConfig[0] = bountyManagerFactoryConfig;
 
         // ------------------------------------------------------------------------
@@ -174,7 +176,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            _orchestrator = IOrchestratorFactory(orchestratorFactory)
+            _orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
                 orchestratorConfig,
                 bondingCurveFundingManagerConfig,

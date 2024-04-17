@@ -2,28 +2,29 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
-import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
+import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
+import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
-import {DeployBeacon} from "script/proxies/DeployBeacon.s.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {DeployInverterBeacon_v1} from
+    "script/proxies/DeployInverterBeacon_v1.s.sol";
 
 /**
- * @title InverterBeacon Deployment Script
+ * @title DeployAndSetupInverterBeacon_v1 Deployment Script
  *
- * @dev Script to deploy a new InverterBeacon.
+ * @dev Script to deploy and setup new InverterBeacon_v1.
  *
  *
  * @author Inverter Network
  */
-contract DeployAndSetUpBeacon is Script {
+contract DeployAndSetUpInverterBeacon_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    InverterBeacon beacon;
+    InverterBeacon_v1 beacon;
 
     function deployAndRegisterInFactory(
         address owner,
@@ -34,15 +35,15 @@ contract DeployAndSetUpBeacon is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
-            beacon = new InverterBeacon(
+            beacon = new InverterBeacon_v1(
                 owner,
                 metadata.majorVersion,
                 implementation,
                 metadata.minorVersion
             );
 
-            // Register Metadata at the ModuleFactory
-            ModuleFactory(moduleFactory).registerMetadata(metadata, beacon);
+            // Register Metadata at the ModuleFactory_v1
+            ModuleFactory_v1(moduleFactory).registerMetadata(metadata, beacon);
         }
         vm.stopBroadcast();
 
@@ -62,12 +63,13 @@ contract DeployAndSetUpBeacon is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
-            beacon = new InverterBeacon(
+            beacon = new InverterBeacon_v1(
                 owner, majorVersion, implementation, minorVersion
             );
 
             //return the proxy after creation
-            proxy = address(new InverterBeaconProxy(InverterBeacon(beacon)));
+            proxy =
+                address(new InverterBeaconProxy_v1(InverterBeacon_v1(beacon)));
 
             // cast to address for return
             beaconAddress = address(beacon);

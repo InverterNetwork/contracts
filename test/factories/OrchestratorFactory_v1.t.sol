@@ -4,17 +4,17 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Internal Dependencies
-import {OrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
 import {
-    IOrchestratorFactory,
+    IOrchestratorFactory_v1,
     IModule,
     IOrchestrator
-} from "src/factories/IOrchestratorFactory.sol";
+} from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
 import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
 
@@ -26,12 +26,12 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract OrchestratorFactoryTest is Test {
+contract OrchestratorFactoryV1Test is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT
-    OrchestratorFactory factory;
+    OrchestratorFactory_v1 factory;
 
     Orchestrator target;
 
@@ -49,28 +49,28 @@ contract OrchestratorFactoryTest is Test {
     ModuleFactoryMock moduleFactory;
 
     // Metadata
-    IOrchestratorFactory.OrchestratorConfig orchestratorConfig =
-    IOrchestratorFactory.OrchestratorConfig({
+    IOrchestratorFactory_v1.OrchestratorConfig orchestratorConfig =
+    IOrchestratorFactory_v1.OrchestratorConfig({
         owner: address(this),
         token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
     });
 
-    IOrchestratorFactory.ModuleConfig fundingManagerConfig =
-    IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         IModule.Metadata(1, 0, "https://fundingmanager.com", "FundingManager"),
         bytes("data"),
         abi.encode(hasDependency, dependencies)
     );
 
-    IOrchestratorFactory.ModuleConfig authorizerConfig = IOrchestratorFactory
-        .ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig authorizerConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         IModule.Metadata(1, 0, "https://authorizer.com", "Authorizer"),
         abi.encode(address(this), address(this)),
         abi.encode(hasDependency, dependencies)
     );
 
-    IOrchestratorFactory.ModuleConfig paymentProcessorConfig =
-    IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         IModule.Metadata(
             1, 1, "https://paymentprocessor.com", "SimplePaymentProcessor"
         ),
@@ -78,7 +78,7 @@ contract OrchestratorFactoryTest is Test {
         abi.encode(hasDependency, dependencies)
     );
 
-    IOrchestratorFactory.ModuleConfig moduleConfig = IOrchestratorFactory
+    IOrchestratorFactory_v1.ModuleConfig moduleConfig = IOrchestratorFactory_v1
         .ModuleConfig(
         IModule.Metadata(1, 0, "https://module.com", "Module"),
         bytes(""),
@@ -90,7 +90,7 @@ contract OrchestratorFactoryTest is Test {
 
         target = new Orchestrator(address(0));
 
-        factory = new OrchestratorFactory(
+        factory = new OrchestratorFactory_v1(
             address(target), address(moduleFactory), address(0)
         );
     }
@@ -107,7 +107,9 @@ contract OrchestratorFactoryTest is Test {
 
         if (getId > orchestratorsCreated) {
             vm.expectRevert(
-                IOrchestratorFactory.OrchestratorFactory__InvalidId.selector
+                IOrchestratorFactory_v1
+                    .OrchestratorFactory_v1__InvalidId
+                    .selector
             );
         }
         factory.getOrchestratorByID(getId);
@@ -123,8 +125,8 @@ contract OrchestratorFactoryTest is Test {
         modulesLen = bound(modulesLen, 0, 50);
 
         // Create optional ModuleConfig instances.
-        IOrchestratorFactory.ModuleConfig[] memory moduleConfigs =
-            new IOrchestratorFactory.ModuleConfig[](modulesLen);
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs =
+            new IOrchestratorFactory_v1.ModuleConfig[](modulesLen);
         for (uint i; i < modulesLen; ++i) {
             moduleConfigs[i] = moduleConfig;
         }
@@ -176,8 +178,8 @@ contract OrchestratorFactoryTest is Test {
 
     function _deployOrchestrator() private returns (address) {
         //Create Empty ModuleConfig
-        IOrchestratorFactory.ModuleConfig[] memory moduleConfigs =
-            new IOrchestratorFactory.ModuleConfig[](0);
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs =
+            new IOrchestratorFactory_v1.ModuleConfig[](0);
 
         vm.expectEmit(false, false, false, false);
         emit OrchestratorCreated(0, address(0)); // Since we don't know the id/address of the orchestrator

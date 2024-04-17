@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
-import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 interface IModuleImplementationMock {
     /// @dev Returns the Version of the Implementation

@@ -8,7 +8,8 @@ import "../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IModule} from "src/modules/base/IModule.sol";
-import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {
@@ -70,47 +71,48 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Define Initial Configuration Data
 
         // Orchestrator: Owner, funding token
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: orchestratorOwner,
             token: token
         });
 
         // Funding Manager: Metadata, token address
-        IOrchestratorFactory.ModuleConfig memory fundingManagerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             rebasingFundingManagerMetadata,
             abi.encode(address(token)),
             abi.encode(hasDependency, dependencies)
         );
 
         // Payment Processor: only Metadata
-        IOrchestratorFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
-            simplePaymentProcessorMetadata,
-            bytes(""),
-            abi.encode(hasDependency, dependencies)
-        );
+        IOrchestratorFactory_v1.ModuleConfig memory
+            paymentProcessorFactoryConfig = IOrchestratorFactory_v1
+                .ModuleConfig(
+                simplePaymentProcessorMetadata,
+                bytes(""),
+                abi.encode(hasDependency, dependencies)
+            );
 
         // Authorizer: Metadata, initial authorized addresses
-        IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             roleAuthorizerMetadata,
             abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
         );
 
         // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
-        IOrchestratorFactory.ModuleConfig memory bountyManagerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             bountyManagerMetadata,
             abi.encode(""),
             abi.encode(true, dependencies)
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the BountyManager.
-        IOrchestratorFactory.ModuleConfig[] memory additionalModuleConfig =
-            new IOrchestratorFactory.ModuleConfig[](1);
+        IOrchestratorFactory_v1.ModuleConfig[] memory additionalModuleConfig =
+            new IOrchestratorFactory_v1.ModuleConfig[](1);
         additionalModuleConfig[0] = bountyManagerFactoryConfig;
 
         // ------------------------------------------------------------------------
@@ -118,7 +120,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            test_orchestrator = IOrchestratorFactory(orchestratorFactory)
+            test_orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
                 orchestratorConfig,
                 fundingManagerFactoryConfig,

@@ -9,25 +9,25 @@ import "@oz/utils/Address.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 // SuT
-import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
-import {InverterBeaconAccessMock} from
-    "test/utils/mocks/factories/beacon/InverterBeaconAccessMock.sol";
+import {InverterBeaconV1AccessMock} from
+    "test/utils/mocks/proxies/InverterBeaconV1AccessMock.sol";
 
 // Mocks
 import {ModuleImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
+    "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
 import {ModuleImplementationV2Mock} from
-    "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
+    "test/utils/mocks/proxies/ModuleImplementationV2Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 import {Ownable} from "@oz/access/Ownable.sol";
 
-contract InverterBeaconTest is Test {
+contract InverterBeaconV1Test is Test {
     // SuT
-    InverterBeaconAccessMock beacon;
+    InverterBeaconV1AccessMock beacon;
 
     ModuleImplementationV1Mock possibleImplementation =
         new ModuleImplementationV1Mock();
@@ -40,7 +40,7 @@ contract InverterBeaconTest is Test {
     event ShutdownReversed();
 
     function setUp() public {
-        beacon = new InverterBeaconAccessMock(
+        beacon = new InverterBeaconV1AccessMock(
             address(this), 0, address(possibleImplementation), 0
         );
     }
@@ -72,7 +72,9 @@ contract InverterBeaconTest is Test {
         address implementation = address(new ModuleImplementationV1Mock());
 
         vm.expectRevert(
-            IInverterBeacon.Beacon__InvalidImplementationMinorVersion.selector
+            IInverterBeacon_v1
+                .InverterBeacon_v1__InvalidImplementationMinorVersion
+                .selector
         );
 
         //Upgrade to an initial Version
@@ -99,8 +101,8 @@ contract InverterBeaconTest is Test {
 
         if (newMinorVersion <= initialMinorVersion) {
             vm.expectRevert(
-                IInverterBeacon
-                    .Beacon__InvalidImplementationMinorVersion
+                IInverterBeacon_v1
+                    .InverterBeacon_v1__InvalidImplementationMinorVersion
                     .selector
             );
         }
@@ -116,7 +118,9 @@ contract InverterBeaconTest is Test {
     function testValidImplementation(address newImplementation) public {
         if (!(newImplementation.code.length > 0)) {
             vm.expectRevert(
-                IInverterBeacon.Beacon__InvalidImplementation.selector
+                IInverterBeacon_v1
+                    .InverterBeacon_v1__InvalidImplementation
+                    .selector
             );
         }
 
@@ -190,7 +194,9 @@ contract InverterBeaconTest is Test {
         );
         beacon.upgradeTo(address(this), 1, false);
 
-        vm.expectRevert(IInverterBeacon.Beacon__InvalidImplementation.selector);
+        vm.expectRevert(
+            IInverterBeacon_v1.InverterBeacon_v1__InvalidImplementation.selector
+        );
         beacon.upgradeTo(address(0), 1, false);
     }
 
@@ -299,7 +305,9 @@ contract InverterBeaconTest is Test {
     }
 
     function test_setImplementationModifierInPosition() public {
-        vm.expectRevert(IInverterBeacon.Beacon__InvalidImplementation.selector);
+        vm.expectRevert(
+            IInverterBeacon_v1.InverterBeacon_v1__InvalidImplementation.selector
+        );
         beacon.original_setImplementation(address(0), false);
     }
 
@@ -307,6 +315,8 @@ contract InverterBeaconTest is Test {
     // Test: ERC-165's supportInterface()
 
     function testSupportsInterface() public {
-        assertTrue(beacon.supportsInterface(type(IInverterBeacon).interfaceId));
+        assertTrue(
+            beacon.supportsInterface(type(IInverterBeacon_v1).interfaceId)
+        );
     }
 }

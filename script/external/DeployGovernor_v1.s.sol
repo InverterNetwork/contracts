@@ -35,12 +35,12 @@ contract DeployGovernor_v1 is Script {
 
         require(
             communityMultisig != address(0),
-            "DeployOrchestratorFactory: Missing env variable: community multisig"
+            "DeployOrchestratorFactory_v1: Missing env variable: community multisig"
         );
 
         require(
             teamMultisig != address(0),
-            "DeployOrchestratorFactory: Missing env variable: team multisig"
+            "DeployOrchestratorFactory_v1: Missing env variable: team multisig"
         );
 
         // Deploy the Governor_v1.

@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 import {
-    IModuleFactory,
-    IInverterBeacon,
+    IModuleFactory_v1,
+    IInverterBeacon_v1,
     IModule,
     IOrchestrator
-} from "src/factories/IModuleFactory.sol";
+} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
-contract ModuleFactoryMock is IModuleFactory {
-    IInverterBeacon private _beacon;
+contract ModuleFactoryMock is IModuleFactory_v1 {
+    IInverterBeacon_v1 private _beacon;
 
     // Note to not start too low as, e.g., modules are not allowed to have
     // address(0x1).
@@ -29,12 +29,12 @@ contract ModuleFactoryMock is IModuleFactory {
     function getBeaconAndId(IModule.Metadata memory metadata)
         external
         view
-        returns (IInverterBeacon, bytes32)
+        returns (IInverterBeacon_v1, bytes32)
     {
         return (_beacon, LibMetadata.identifier(metadata));
     }
 
-    function registerMetadata(IModule.Metadata memory, IInverterBeacon)
+    function registerMetadata(IModule.Metadata memory, IInverterBeacon_v1)
         external
     {}
 }

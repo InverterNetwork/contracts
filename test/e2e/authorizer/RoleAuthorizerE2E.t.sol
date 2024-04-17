@@ -8,7 +8,9 @@ import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 
 //Internal Dependencies
 import {
-    E2ETest, IOrchestratorFactory, IOrchestrator
+    E2ETest,
+    IOrchestratorFactory_v1,
+    IOrchestrator
 } from "test/e2e/E2ETest.sol";
 
 // Modules that are used in this E2E test
@@ -22,7 +24,7 @@ import {
 
 contract RoleAuthorizerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     // E2E Test Variables
     address orchestratorOwner = makeAddr("orchestratorOwner");
@@ -44,7 +46,7 @@ contract RoleAuthorizerE2E is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(token)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -54,7 +56,7 @@ contract RoleAuthorizerE2E is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 roleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -64,7 +66,7 @@ contract RoleAuthorizerE2E is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -74,7 +76,7 @@ contract RoleAuthorizerE2E is E2ETest {
         // Additional Logic Modules
         setUpBountyManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 bountyManagerMetadata,
                 bytes(""),
                 abi.encode(true, EMPTY_DEPENDENCY_LIST)
@@ -86,8 +88,8 @@ contract RoleAuthorizerE2E is E2ETest {
         //--------------------------------------------------------------------------------
         // Orchestrator Initialization
         //--------------------------------------------------------------------------------
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });

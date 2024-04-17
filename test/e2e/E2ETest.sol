@@ -13,11 +13,14 @@ import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
 // Factories
-import {ModuleFactory, IModuleFactory} from "src/factories/ModuleFactory.sol";
 import {
-    OrchestratorFactory,
-    IOrchestratorFactory
-} from "src/factories/OrchestratorFactory.sol";
+    ModuleFactory_v1,
+    IModuleFactory_v1
+} from "src/factories/ModuleFactory_v1.sol";
+import {
+    OrchestratorFactory_v1,
+    IOrchestratorFactory_v1
+} from "src/factories/OrchestratorFactory_v1.sol";
 
 // Orchestrator
 import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
@@ -42,7 +45,7 @@ contract E2ETest is E2EModuleRegistry {
     Governor_v1 gov;
 
     // Factory instances.
-    OrchestratorFactory orchestratorFactory;
+    OrchestratorFactory_v1 orchestratorFactory;
 
     // Orchestrator implementation.
     Orchestrator orchestratorImpl;
@@ -85,9 +88,9 @@ contract E2ETest is E2EModuleRegistry {
         orchestratorImpl = new Orchestrator(address(forwarder));
 
         // Deploy Factories.
-        moduleFactory = new ModuleFactory(address(gov), address(forwarder));
+        moduleFactory = new ModuleFactory_v1(address(gov), address(forwarder));
 
-        orchestratorFactory = new OrchestratorFactory(
+        orchestratorFactory = new OrchestratorFactory_v1(
             address(orchestratorImpl),
             address(moduleFactory),
             address(forwarder)
@@ -103,14 +106,14 @@ contract E2ETest is E2EModuleRegistry {
     //      moduleConfigurations[2]  => PaymentProcessor
     //      moduleConfigurations[3:] => Additional Logic Modules
     function _create_E2E_Orchestrator(
-        IOrchestratorFactory.OrchestratorConfig memory _config,
-        IOrchestratorFactory.ModuleConfig[] memory _moduleConfigurations
+        IOrchestratorFactory_v1.OrchestratorConfig memory _config,
+        IOrchestratorFactory_v1.ModuleConfig[] memory _moduleConfigurations
     ) internal virtual returns (IOrchestrator) {
         // Prepare array of optional modules (hopefully can be made more succinct in the future)
         uint amtOfOptionalModules = _moduleConfigurations.length - 3;
 
-        IOrchestratorFactory.ModuleConfig[] memory optionalModules =
-            new IOrchestratorFactory.ModuleConfig[](amtOfOptionalModules);
+        IOrchestratorFactory_v1.ModuleConfig[] memory optionalModules =
+            new IOrchestratorFactory_v1.ModuleConfig[](amtOfOptionalModules);
 
         for (uint i = 0; i < amtOfOptionalModules; i++) {
             optionalModules[i] = _moduleConfigurations[i + 3];

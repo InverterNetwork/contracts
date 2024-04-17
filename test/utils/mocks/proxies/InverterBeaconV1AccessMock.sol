@@ -1,8 +1,8 @@
 pragma solidity ^0.8.0;
 
-import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
+import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
-contract InverterBeaconAccessMock is InverterBeacon {
+contract InverterBeaconV1AccessMock is InverterBeacon_v1 {
     bool useOriginal_setImplementation = true;
 
     constructor(
@@ -10,7 +10,7 @@ contract InverterBeaconAccessMock is InverterBeacon {
         uint _majorVersion,
         address _implementation,
         uint _minorVersion
-    ) InverterBeacon(owner, _majorVersion, _implementation, _minorVersion) {}
+    ) InverterBeacon_v1(owner, _majorVersion, _implementation, _minorVersion) {}
 
     function get_implementation() public returns (address) {
         return _implementationAddress;

@@ -13,7 +13,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // Internal Dependencies
 import {InverterBeaconV1OwnableMock} from
-    "test/utils/mocks/factories/beacon/InverterBeaconV1OwnableMock.sol";
+    "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
 
 //External Dependencies
 import {IAccessControl} from "@oz/access/IAccessControl.sol";

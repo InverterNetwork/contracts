@@ -91,8 +91,8 @@ testScripts: ## Run e2e test suite
 	@forge script script/external/DeployTransactionForwarder_v1.s.sol
 
 	## factories
-	@forge script script/factories/DeployModuleFactory.s.sol
-	@forge script script/factories/DeployOrchestratorFactory.s.sol
+	@forge script script/factories/DeployModuleFactory_v1.s.sol
+	@forge script script/factories/DeployOrchestratorFactory_v1.s.sol
 	
 	## modules
 

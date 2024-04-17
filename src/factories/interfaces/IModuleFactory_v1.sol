@@ -3,23 +3,23 @@ pragma solidity ^0.8.0;
 
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
-import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
-interface IModuleFactory {
+interface IModuleFactory_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Given metadata invalid.
-    error ModuleFactory__InvalidMetadata();
+    error ModuleFactory_v1__InvalidMetadata();
 
     /// @notice Given beacon invalid.
-    error ModuleFactory__InvalidInverterBeacon();
+    error ModuleFactory_v1__InvalidInverterBeacon();
 
     /// @notice Given metadata unregistered.
-    error ModuleFactory__UnregisteredMetadata();
+    error ModuleFactory_v1__UnregisteredMetadata();
 
     /// @notice Given metadata already registered.
-    error ModuleFactory__MetadataAlreadyRegistered();
+    error ModuleFactory_v1__MetadataAlreadyRegistered();
 
     //--------------------------------------------------------------------------
     // Events
@@ -28,10 +28,10 @@ interface IModuleFactory {
     /// @param metadata The registered Metadata
     /// @param beacon The registered Beacon
     event MetadataRegistered(
-        IModule.Metadata indexed metadata, IInverterBeacon indexed beacon
+        IModule.Metadata indexed metadata, IInverterBeacon_v1 indexed beacon
     );
 
-    /// @notice Event emitted when new module created for a orchestrator.
+    /// @notice Event emitted when new module created for a orchestrator_v1.
     /// @param orchestrator The corresponding orchestrator.
     /// @param module The created module instance.
     /// @param identifier The module's identifier.
@@ -42,7 +42,7 @@ interface IModuleFactory {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Returns the governor contract address
+    /// @notice Returns the governor_v1 contract address
     /// @return The address of the governor contract
     function governor() external view returns (address);
 
@@ -56,23 +56,23 @@ interface IModuleFactory {
         bytes memory configData
     ) external returns (address);
 
-    /// @notice Returns the {IInverterBeacon} instance registered and the id for given
+    /// @notice Returns the {IInverterBeacon_v1} instance registered and the id for given
     ///         metadata.
     /// @param metadata The module's metadata.
-    /// @return The module's {IInverterBeacon} instance registered.
+    /// @return The module's {IInverterBeacon_v1} instance registered.
     /// @return The metadata's id.
     function getBeaconAndId(IModule.Metadata memory metadata)
         external
         view
-        returns (IInverterBeacon, bytes32);
+        returns (IInverterBeacon_v1, bytes32);
 
-    /// @notice Registers metadata `metadata` with {IInverterBeacon} implementation
+    /// @notice Registers metadata `metadata` with {IInverterBeacon_v1} implementation
     ///         `beacon`.
     /// @dev Only callable by owner.
     /// @param metadata The module's metadata.
-    /// @param beacon The module's {IInverterBeacon} instance.
+    /// @param beacon The module's {IInverterBeacon_v1} instance.
     function registerMetadata(
         IModule.Metadata memory metadata,
-        IInverterBeacon beacon
+        IInverterBeacon_v1 beacon
     ) external;
 }

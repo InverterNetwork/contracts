@@ -8,7 +8,8 @@ import "../../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IModule} from "src/modules/base/IModule.sol";
-import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 import {
     BountyManager,

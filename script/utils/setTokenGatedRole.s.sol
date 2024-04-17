@@ -11,13 +11,14 @@ import {
 } from "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
 import {DeployTokenGatedRoleAuthorizer} from
     "script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol";
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
-import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
+import {DeployAndSetUpInverterBeacon_v1} from
+    "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 import {ScriptConstants} from "../script-constants.sol";
 
 contract deployAndSwitchTokenAuthorizer is Script {

@@ -1,42 +1,44 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+// Internal Interfaces
+import {
+    IModuleFactory_v1,
+    IOrchestrator,
+    IModule
+} from "src/factories/interfaces/IModuleFactory_v1.sol";
+
+// Internal Dependencies
+import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
+// Internal Libraries
+import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
+
+// External Interfaces
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Context, Ownable} from "@oz/access/Ownable.sol";
 
-// External Interfaces
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
-
-// Internal Dependencies
-import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
-
-import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
-
-// Internal Libraries
-import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
-
-// Internal Interfaces
-import {
-    IModuleFactory,
-    IOrchestrator,
-    IModule
-} from "src/factories/IModuleFactory.sol";
-
 /**
- * @title Module Factory
+ * @title  Module Factory V1 for Managing and Deploying Inverter Modules
  *
- * @dev An owned factory for deploying modules.
+ * @notice  Enables the creation and registration of Inverter Modules,
+ *          facilitating the deployment of module instances linked to specific beacons.
+ *          Provides management functionality to govern module behavior and interactions.
  *
- *      The owner can register module metadata's to an {IInverterBeacon}
- *      implementations. Note that a metadata's registered {IInverterBeacon}
- *      implementation can not be changed after registration!
+ * @dev     An owned factory for deploying modules.
+ *          The owner can register module metadata's to an {IInverterBeacon_v1}
+ *          implementations. Note that a metadata's registered {IInverterBeacon_v1}
+ *          implementation can not be changed after registration!
  *
- * @author Inverter Network
+ * @author  Inverter Network
  */
-contract ModuleFactory is
-    IModuleFactory,
+contract ModuleFactory_v1 is
+    IModuleFactory_v1,
     ERC2771Context,
     Ownable2Step,
     ERC165
@@ -48,7 +50,7 @@ contract ModuleFactory is
         override(ERC165)
         returns (bool)
     {
-        return interfaceId == type(IModuleFactory).interfaceId
+        return interfaceId == type(IModuleFactory_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
     //--------------------------------------------------------------------------
@@ -58,21 +60,21 @@ contract ModuleFactory is
     ///         metadata.
     modifier validMetadata(IModule.Metadata memory data) {
         if (!LibMetadata.isValid(data)) {
-            revert ModuleFactory__InvalidMetadata();
+            revert ModuleFactory_v1__InvalidMetadata();
         }
         _;
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         IInverterBeacon instance and if the owner of the beacon
+    ///         IInverterBeacon_v1 instance and if the owner of the beacon
     ///         is same as the governor of this contract.
-    modifier validBeacon(IInverterBeacon beacon) {
+    modifier validBeacon(IInverterBeacon_v1 beacon) {
         // Revert if beacon's implementation is zero address.
         if (
             beacon.implementation() == address(0)
                 || Ownable(address(beacon)).owner() != governor
         ) {
-            revert ModuleFactory__InvalidInverterBeacon();
+            revert ModuleFactory_v1__InvalidInverterBeacon();
         }
         _;
     }
@@ -80,12 +82,12 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @inheritdoc IModuleFactory
+    /// @inheritdoc IModuleFactory_v1
     address public governor;
 
-    /// @dev Mapping of metadata identifier to {IInverterBeacon} instance.
-    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon}
-    mapping(bytes32 => IInverterBeacon) private _beacons;
+    /// @dev Mapping of metadata identifier to {IInverterBeacon_v1} instance.
+    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon_v1}
+    mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -100,7 +102,7 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IModuleFactory
+    /// @inheritdoc IModuleFactory_v1
     function createModule(
         IModule.Metadata memory metadata,
         IOrchestrator orchestrator,
@@ -109,14 +111,14 @@ contract ModuleFactory is
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
 
-        IInverterBeacon beacon;
+        IInverterBeacon_v1 beacon;
         (beacon, /*id*/ ) = getBeaconAndId(metadata);
 
         if (address(beacon) == address(0)) {
-            revert ModuleFactory__UnregisteredMetadata();
+            revert ModuleFactory_v1__UnregisteredMetadata();
         }
 
-        address implementation = address(new InverterBeaconProxy(beacon));
+        address implementation = address(new InverterBeaconProxy_v1(beacon));
 
         IModule(implementation).init(orchestrator, metadata, configData);
 
@@ -132,11 +134,11 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // Public View Functions
 
-    /// @inheritdoc IModuleFactory
+    /// @inheritdoc IModuleFactory_v1
     function getBeaconAndId(IModule.Metadata memory metadata)
         public
         view
-        returns (IInverterBeacon, bytes32)
+        returns (IInverterBeacon_v1, bytes32)
     {
         bytes32 id = LibMetadata.identifier(metadata);
 
@@ -146,18 +148,18 @@ contract ModuleFactory is
     //--------------------------------------------------------------------------
     // onlyOwner Functions
 
-    /// @inheritdoc IModuleFactory
+    /// @inheritdoc IModuleFactory_v1
     function registerMetadata(
         IModule.Metadata memory metadata,
-        IInverterBeacon beacon
+        IInverterBeacon_v1 beacon
     ) external onlyOwner validMetadata(metadata) validBeacon(beacon) {
-        IInverterBeacon oldBeacon;
+        IInverterBeacon_v1 oldBeacon;
         bytes32 id;
         (oldBeacon, id) = getBeaconAndId(metadata);
 
         // Revert if metadata already registered for different beacon.
         if (address(oldBeacon) != address(0)) {
-            revert ModuleFactory__MetadataAlreadyRegistered();
+            revert ModuleFactory_v1__MetadataAlreadyRegistered();
         }
 
         // Register Metadata for beacon.

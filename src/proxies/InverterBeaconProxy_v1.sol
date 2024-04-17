@@ -5,32 +5,32 @@ pragma solidity 0.8.23;
 import {Proxy} from "@oz/proxy/Proxy.sol";
 
 // Internal Dependencies
-import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 /**
  * @title BeaconProxy
  */
-contract InverterBeaconProxy is Proxy {
+contract InverterBeaconProxy_v1 is Proxy {
     //--------------------------------------------------------------------------------
     // Events
 
-    /// @notice Proxy upgraded to new {InverterBeacon} instance.
-    /// @param beacon The new {InverterBeacon} instance.
-    event BeaconUpgraded(IInverterBeacon indexed beacon);
+    /// @notice Proxy upgraded to new {InverterBeacon_v1} instance.
+    /// @param beacon The new {InverterBeacon_v1} instance.
+    event BeaconUpgraded(IInverterBeacon_v1 indexed beacon);
 
     //--------------------------------------------------------------------------------
     // State
 
-    /// @notice {InverterBeacon} instance that points to the implementation.
-    IInverterBeacon private immutable _beacon;
+    /// @notice {InverterBeacon_v1} instance that points to the implementation.
+    IInverterBeacon_v1 private immutable _beacon;
 
     //--------------------------------------------------------------------------------
     // Constructor
 
-    /// @notice Constructs the InverterBeaconProxy.
-    /// @dev Sets the {InverterBeacon} instance that contains the implementation address.
-    /// @param beacon The {InverterBeacon} instance.
-    constructor(IInverterBeacon beacon) {
+    /// @notice Constructs the InverterBeaconProxy_v1.
+    /// @dev Sets the {InverterBeacon_v1} instance that contains the implementation address.
+    /// @param beacon The {InverterBeacon_v1} instance.
+    constructor(IInverterBeacon_v1 beacon) {
         _beacon = beacon;
         emit BeaconUpgraded(beacon);
     }

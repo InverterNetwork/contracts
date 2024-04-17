@@ -94,7 +94,7 @@ interface IOrchestrator is IModuleManager {
         returns (bytes memory);
 
     /// @notice Returns the orchestrator's id.
-    /// @dev Unique id set by the {OrchestratorFactory} during initialization.
+    /// @dev Unique id set by the {OrchestratorFactory_v1} during initialization.
     function orchestratorId() external view returns (uint);
 
     /// @notice The {IFundingManager} implementation used to hold and distribute Funds.

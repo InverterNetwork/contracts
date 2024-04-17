@@ -6,14 +6,15 @@ import "forge-std/Script.sol";
 // Import interfaces:
 
 import {IModule} from "src/modules/base/IModule.sol";
-import {IModuleFactory} from "src/factories/ModuleFactory.sol";
+import {IModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 
 // Import scripts:
-
-import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
-import {DeployModuleFactory} from "script/factories/DeployModuleFactory.s.sol";
-import {DeployOrchestratorFactory} from
-    "script/factories/DeployOrchestratorFactory.s.sol";
+import {DeployAndSetUpInverterBeacon_v1} from
+    "script/proxies/deployAndSetupInverterBeacon_v1.s.sol";
+import {DeployModuleFactory_v1} from
+    "script/factories/DeployModuleFactory_v1.s.sol";
+import {DeployOrchestratorFactory_v1} from
+    "script/factories/DeployOrchestratorFactory_v1.s.sol";
 import {DeployBountyManager} from
     "script/modules/logicModule/DeployBountyManager.s.sol";
 
@@ -49,9 +50,9 @@ contract DeploymentScript is Script {
     //Orchestrator
     DeployOrchestrator deployOrchestrator = new DeployOrchestrator();
     // Factories
-    DeployModuleFactory deployModuleFactory = new DeployModuleFactory();
-    DeployOrchestratorFactory deployOrchestratorFactory =
-        new DeployOrchestratorFactory();
+    DeployModuleFactory_v1 deployModuleFactory = new DeployModuleFactory_v1();
+    DeployOrchestratorFactory_v1 deployOrchestratorFactory =
+        new DeployOrchestratorFactory_v1();
     // Funding Manager
     DeployRebasingFundingManager deployRebasingFundingManager =
         new DeployRebasingFundingManager();
@@ -82,7 +83,8 @@ contract DeploymentScript is Script {
     DeployGovernor_v1 deployGovernor = new DeployGovernor_v1();
 
     //Beacon
-    DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
+    DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
+        new DeployAndSetUpInverterBeacon_v1();
 
     // ------------------------------------------------------------------------
     // Deployed Implementation Contracts
@@ -268,7 +270,7 @@ contract DeploymentScript is Script {
         forwarderImplementation = deployTransactionForwarder.run();
 
         //Deploy beacon and actual proxy
-        (forwarderBeacon, forwarder) = deployAndSetUpBeacon
+        (forwarderBeacon, forwarder) = deployAndSetupInverterBeacon_v1
             .deployBeaconAndSetupProxy(deployer, forwarderImplementation, 1, 0);
 
         if (
@@ -282,7 +284,7 @@ contract DeploymentScript is Script {
         );
         console2.log("Deploy factory implementations \n");
 
-        //Deploy module Factory implementation
+        //Deploy module factory v1 implementation
         moduleFactory = deployModuleFactory.run(address(governor), forwarder);
 
         //Deploy orchestrator Factory implementation
@@ -316,18 +318,20 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
-        console2.log("Deploy module beacons and register in module factory \n");
+        console2.log(
+            "Deploy module beacons and register in module factory v1 \n"
+        );
         //Deploy Modules and Register in factories
 
         // Funding Manager
-        rebasingFundingManagerBeacon = deployAndSetUpBeacon
+        rebasingFundingManagerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
             address(governor),
             rebasingFundingManager,
             moduleFactory,
             rebasingFundingManagerMetadata
         );
-        bancorBondingCurveFundingManagerBeacon = deployAndSetUpBeacon
+        bancorBondingCurveFundingManagerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
             address(governor),
             bancorBondingCurveFundingManager,
@@ -335,13 +339,14 @@ contract DeploymentScript is Script {
             bancorVirtualSupplyBondingCurveFundingManagerMetadata
         );
         // Authorizer
-        roleAuthorizerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
+        roleAuthorizerBeacon = deployAndSetupInverterBeacon_v1
+            .deployAndRegisterInFactory(
             address(governor),
             roleAuthorizer,
             moduleFactory,
             roleAuthorizerMetadata
         );
-        tokenGatedRoleAuthorizerBeacon = deployAndSetUpBeacon
+        tokenGatedRoleAuthorizerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
             address(governor),
             tokenGatedRoleAuthorizer,
@@ -349,14 +354,14 @@ contract DeploymentScript is Script {
             tokenGatedRoleAuthorizerMetadata
         );
         // Payment Processor
-        simplePaymentProcessorBeacon = deployAndSetUpBeacon
+        simplePaymentProcessorBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
             address(governor),
             simplePaymentProcessor,
             moduleFactory,
             simplePaymentProcessorMetadata
         );
-        streamingPaymentProcessorBeacon = deployAndSetUpBeacon
+        streamingPaymentProcessorBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
             address(governor),
             streamingPaymentProcessor,
@@ -364,13 +369,14 @@ contract DeploymentScript is Script {
             streamingPaymentProcessorMetadata
         );
         // Logic Module
-        bountyManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
+        bountyManagerBeacon = deployAndSetupInverterBeacon_v1
+            .deployAndRegisterInFactory(
             address(governor),
             bountyManager,
             moduleFactory,
             bountyManagerMetadata
         );
-        recurringPaymentManagerBeacon = deployAndSetUpBeacon
+        recurringPaymentManagerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
             address(governor),
             recurringPaymentManager,
@@ -379,14 +385,15 @@ contract DeploymentScript is Script {
         );
 
         // Utils
-        singleVoteGovernorBeacon = deployAndSetUpBeacon
+        singleVoteGovernorBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
             address(governor),
             singleVoteGovernor,
             moduleFactory,
             singleVoteGovernorMetadata
         );
-        metadataManagerBeacon = deployAndSetUpBeacon.deployAndRegisterInFactory(
+        metadataManagerBeacon = deployAndSetupInverterBeacon_v1
+            .deployAndRegisterInFactory(
             address(governor),
             metadataManager,
             moduleFactory,

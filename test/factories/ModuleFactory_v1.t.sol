@@ -4,35 +4,35 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Internal Dependencies
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 
-import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
 import {
-    IModuleFactory,
+    IModuleFactory_v1,
     IModule,
     IOrchestrator
-} from "src/factories/IModuleFactory.sol";
+} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
-import {InverterBeaconOwnableMock} from
-    "test/utils/mocks/factories/beacon/InverterBeaconOwnableMock.sol";
+import {InverterBeaconV1OwnableMock} from
+    "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract ModuleFactoryTest is Test {
+contract ModuleFactoryV1Test is Test {
     // SuT
-    ModuleFactory factory;
+    ModuleFactory_v1 factory;
 
     // Mocks
     ModuleMock module;
-    InverterBeaconOwnableMock beacon;
+    InverterBeaconV1OwnableMock beacon;
 
     address governaceContract = address(0x010101010101);
 
@@ -41,7 +41,7 @@ contract ModuleFactoryTest is Test {
 
     /// @notice Event emitted when new beacon registered for metadata.
     event MetadataRegistered(
-        IModule.Metadata indexed metadata, IInverterBeacon indexed beacon
+        IModule.Metadata indexed metadata, IInverterBeacon_v1 indexed beacon
     );
 
     /// @notice Event emitted when new module created for a orchestrator.
@@ -60,9 +60,9 @@ contract ModuleFactoryTest is Test {
 
     function setUp() public {
         module = new ModuleMock();
-        beacon = new InverterBeaconOwnableMock(governaceContract);
+        beacon = new InverterBeaconV1OwnableMock(governaceContract);
 
-        factory = new ModuleFactory(governaceContract, address(0));
+        factory = new ModuleFactory_v1(governaceContract, address(0));
     }
 
     function testDeploymentInvariants() public {
@@ -99,7 +99,7 @@ contract ModuleFactoryTest is Test {
 
         factory.registerMetadata(metadata, beacon);
 
-        IInverterBeacon beaconRegistered;
+        IInverterBeacon_v1 beaconRegistered;
         (beaconRegistered, /*id*/ ) = factory.getBeaconAndId(metadata);
 
         assertEq(address(beaconRegistered), address(beacon));
@@ -107,13 +107,17 @@ contract ModuleFactoryTest is Test {
 
     function testRegisterMetadataFailsIfMetadataInvalid() public {
         // Invalid if url empty.
-        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidMetadata.selector);
+        vm.expectRevert(
+            IModuleFactory_v1.ModuleFactory_v1__InvalidMetadata.selector
+        );
         factory.registerMetadata(
             IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE), beacon
         );
 
         // Invalid if title empty.
-        vm.expectRevert(IModuleFactory.ModuleFactory__InvalidMetadata.selector);
+        vm.expectRevert(
+            IModuleFactory_v1.ModuleFactory_v1__InvalidMetadata.selector
+        );
         factory.registerMetadata(
             IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""), beacon
         );
@@ -122,14 +126,16 @@ contract ModuleFactoryTest is Test {
     function testRegisterMetadataFailsIfAlreadyRegistered() public {
         beacon.overrideImplementation(address(module));
 
-        InverterBeaconOwnableMock additionalBeacon =
-            new InverterBeaconOwnableMock(governaceContract);
+        InverterBeaconV1OwnableMock additionalBeacon =
+            new InverterBeaconV1OwnableMock(governaceContract);
         additionalBeacon.overrideImplementation(address(module));
 
         factory.registerMetadata(DATA, beacon);
 
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__MetadataAlreadyRegistered.selector
+            IModuleFactory_v1
+                .ModuleFactory_v1__MetadataAlreadyRegistered
+                .selector
         );
         factory.registerMetadata(DATA, additionalBeacon);
     }
@@ -138,19 +144,19 @@ contract ModuleFactoryTest is Test {
         beacon.overrideImplementation(address(0));
 
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidInverterBeacon.selector
+            IModuleFactory_v1.ModuleFactory_v1__InvalidInverterBeacon.selector
         );
         factory.registerMetadata(DATA, beacon);
     }
 
     function testRegisterMetadataFailsIfBeaconIsNotOwnedByGovernor() public {
-        InverterBeaconOwnableMock notOwnedBeacon =
-            new InverterBeaconOwnableMock(address(0x1111111));
+        InverterBeaconV1OwnableMock notOwnedBeacon =
+            new InverterBeaconV1OwnableMock(address(0x1111111));
 
         notOwnedBeacon.overrideImplementation(address(0x1));
 
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__InvalidInverterBeacon.selector
+            IModuleFactory_v1.ModuleFactory_v1__InvalidInverterBeacon.selector
         );
         factory.registerMetadata(DATA, notOwnedBeacon);
     }
@@ -199,7 +205,7 @@ contract ModuleFactoryTest is Test {
         _assumeValidOrchestrator(orchestrator);
 
         vm.expectRevert(
-            IModuleFactory.ModuleFactory__UnregisteredMetadata.selector
+            IModuleFactory_v1.ModuleFactory_v1__UnregisteredMetadata.selector
         );
         factory.createModule(metadata, IOrchestrator(orchestrator), configData);
     }

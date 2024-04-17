@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
 import {IModuleImplementationMock} from
-    "test/utils/mocks/factories/beacon/IModuleImplementationMock.sol";
+    "test/utils/mocks/proxies/IModuleImplementationMock.sol";
 
 contract ModuleImplementationV1Mock is ModuleMock, IModuleImplementationMock {
     uint public data;

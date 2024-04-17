@@ -1,21 +1,32 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+//Internal Interfaces
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
+// External Interfaces
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+
 // External Dependencies
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
-// External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-
-//Internal Interfaces
-import {IInverterBeacon} from "src/factories/beacon/IInverterBeacon.sol";
 /**
- * @title Beacon
+ * @title   Inverter Beacon for Upgradable Contract Management
+ *
+ * @notice  Manages upgrades and versioning for smart contract implementations, allowing
+ *          contract administrators to dynamically change contract logic while maintaining
+ *          the state. Supports emergency shutdown mechanisms to halt operations if needed.
+ *
+ * @dev     Extends ERC165 for interface detection and implements both IInverterBeacon_v1 and
+ *          IBeacon. Uses modifiers to enforce constraints on implementation upgrades. Unique
+ *          features include emergency mode control and strict version handling with major
+ *          and minor version concepts.
+ *
+ * @author  Inverter Network.
  */
-
-contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
+contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
     // ERC-165 Public View Functions
 
@@ -27,7 +38,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
         override
         returns (bool)
     {
-        return interfaceId == type(IInverterBeacon).interfaceId
+        return interfaceId == type(IInverterBeacon_v1).interfaceId
             || interfaceId == type(IBeacon).interfaceId
             || super.supportsInterface(interfaceId);
     }
@@ -37,14 +48,14 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
 
     modifier validImplementation(address newImplementation) {
         if (!(newImplementation.code.length > 0)) {
-            revert Beacon__InvalidImplementation();
+            revert InverterBeacon_v1__InvalidImplementation();
         }
         _;
     }
 
     modifier validNewMinorVersion(uint newMinorVersion) {
         if (newMinorVersion <= minorVersion) {
-            revert Beacon__InvalidImplementationMinorVersion();
+            revert InverterBeacon_v1__InvalidImplementationMinorVersion();
         }
         _;
     }
@@ -91,12 +102,12 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
         return _implementationPointer;
     }
 
-    /// @inheritdoc IInverterBeacon
+    /// @inheritdoc IInverterBeacon_v1
     function emergencyModeActive() external view returns (bool) {
         return _emergencyMode;
     }
 
-    /// @inheritdoc IInverterBeacon
+    /// @inheritdoc IInverterBeacon_v1
     function version() external view returns (uint, uint) {
         return (majorVersion, minorVersion);
     }
@@ -104,7 +115,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
     // onlyOwner Mutating Functions
 
-    /// @inheritdoc IInverterBeacon
+    /// @inheritdoc IInverterBeacon_v1
     function upgradeTo(
         address newImplementation,
         uint newMinorVersion,
@@ -116,7 +127,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
     // onlyOwner Intervention Mechanism
 
-    /// @inheritdoc IInverterBeacon
+    /// @inheritdoc IInverterBeacon_v1
     function shutDownImplementation() external onlyOwner {
         //Go into emergency mode
         _emergencyMode = true;
@@ -126,7 +137,7 @@ contract InverterBeacon is IInverterBeacon, ERC165, Ownable2Step {
         emit ShutdownInitiated();
     }
 
-    /// @inheritdoc IInverterBeacon
+    /// @inheritdoc IInverterBeacon_v1
     function restartImplementation() external onlyOwner {
         //Reverse emergency mode
         _emergencyMode = false;

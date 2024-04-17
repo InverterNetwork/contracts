@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 //Internal Dependencies
 import {
     E2ETest,
-    IOrchestratorFactory,
+    IOrchestratorFactory_v1,
     IOrchestrator,
-    ModuleFactory
+    ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
 
 //SuT
@@ -27,14 +27,14 @@ import {
 } from "src/modules/utils/MetadataManager.sol";
 
 //Beacon
-import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
+import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
 /**
- * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory}.
+ * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory_v1}.
  */
 contract OrchestratorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     //Orchestrator Metadata
     IMetadataManager.ManagerMetadata ownerMetadata;
@@ -56,7 +56,7 @@ contract OrchestratorE2E is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(token)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -66,7 +66,7 @@ contract OrchestratorE2E is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 roleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -76,7 +76,7 @@ contract OrchestratorE2E is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -119,8 +119,8 @@ contract OrchestratorE2E is E2ETest {
     //We're adding and removing a Module during the lifetime of the orchestrator
     function testManageModulesLiveOnPorposal() public {
         // address(this) creates a new orchestrator.
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });

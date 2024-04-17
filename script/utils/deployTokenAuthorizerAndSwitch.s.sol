@@ -10,17 +10,19 @@ import {
 } from "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
 import {DeployTokenGatedRoleAuthorizer} from
     "script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol";
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
-import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
+import {DeployAndSetUpInverterBeacon_v1} from
+    "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 import {ScriptConstants} from "../script-constants.sol";
 
 contract deployAndSwitchTokenAuthorizer is Script {
-    DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
+    DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
+        new DeployAndSetUpInverterBeacon_v1();
     ScriptConstants scriptConstants = new ScriptConstants();
 
     bool hasDependency;
@@ -48,25 +50,25 @@ contract deployAndSwitchTokenAuthorizer is Script {
         1, 0, "https://github.com/InverterNetwork", "TokenAuthorizer"
     );
 
-    ModuleFactory moduleFactory = ModuleFactory(moduleFactoryAddress);
+    ModuleFactory_v1 moduleFactory = ModuleFactory_v1(moduleFactoryAddress);
     Orchestrator orchestrator = Orchestrator(orchestratorAddress);
 
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
     function run() public {
         /*
-        // In case the module Beacon hasn't been deployed yet, deploy it and register it in the ModuleFactory   
+        // In case the module Beacon hasn't been deployed yet, deploy it and register it in the ModuleFactory_v1   
 
         address authorizerImpl = deployTokenRoleAuthorizer.run();
 
-        address authorizerBeacon = deployAndSetUpBeacon.run(
+        address authorizerBeacon = deployAndSetupInverterBeacon_v1.run(
             authorizerImpl, address(moduleFactory), authorizerMetadata
         ); 
         */
 
         // Authorizer: Metadata, initial authorized addresses
-        IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             authorizerMetadata,
             abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)

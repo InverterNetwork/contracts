@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Factories
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
-import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
 // Modules
 import {IModule} from "src/modules/base/IModule.sol";
@@ -30,13 +31,13 @@ import {MetadataManager} from "src/modules/utils/MetadataManager.sol";
 
 // Beacon
 import {
-    InverterBeacon,
-    IInverterBeacon
-} from "src/factories/beacon/InverterBeacon.sol";
+    InverterBeacon_v1,
+    IInverterBeacon_v1
+} from "src/proxies/InverterBeacon_v1.sol";
 
 contract E2EModuleRegistry is Test {
     // General Storage and  QOL-constants
-    ModuleFactory moduleFactory;
+    ModuleFactory_v1 moduleFactory;
 
     address public DEFAULT_BEACON_OWNER = address(0x3BEAC0);
 
@@ -49,7 +50,7 @@ contract E2EModuleRegistry is Test {
     // # TEMPLATE
     // Each module should declare:
     //      Module moduleImpl;
-    //      InverterBeacon moduleBeacon;
+    //      InverterBeacon_v1 moduleBeacon;
     //      address moduleBeaconOwner = DEFAULT_BEACON_OWNER;
     //      IModule.Metadata moduleMetadata = IModule.Metadata(
     //          1, 1, "https://github.com/inverter/module", "ModuleName"
@@ -57,7 +58,7 @@ contract E2EModuleRegistry is Test {
     // And AS A COMMENT:
     // /*
     //  //Example Config:
-    //      IOrchestratorFactory.ModuleConfig(
+    //      IOrchestratorFactory_v1.ModuleConfig(
     //          moduleMetadata,
     //          abi.encode(address(this)),
     //          abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -75,7 +76,7 @@ contract E2EModuleRegistry is Test {
 
     RebasingFundingManager rebasingFundingManagerImpl;
 
-    InverterBeacon rebasingFundingManagerBeacon;
+    InverterBeacon_v1 rebasingFundingManagerBeacon;
 
     IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
         1,
@@ -85,8 +86,8 @@ contract E2EModuleRegistry is Test {
     );
 
     /*
-    IOrchestratorFactory.ModuleConfig rebasingFundingManagerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig rebasingFundingManagerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             rebasingFundingManagerMetadata,
             abi.encode(address(token)),
             abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -98,7 +99,7 @@ contract E2EModuleRegistry is Test {
         rebasingFundingManagerImpl = new RebasingFundingManager();
 
         // Deploy module beacons.
-        rebasingFundingManagerBeacon = new InverterBeacon(
+        rebasingFundingManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             rebasingFundingManagerMetadata.majorVersion,
             address(rebasingFundingManagerImpl),
@@ -108,7 +109,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             rebasingFundingManagerMetadata,
-            IInverterBeacon(rebasingFundingManagerBeacon)
+            IInverterBeacon_v1(rebasingFundingManagerBeacon)
         );
     }
 
@@ -119,7 +120,7 @@ contract E2EModuleRegistry is Test {
     BancorVirtualSupplyBondingCurveFundingManager
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
-    InverterBeacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
+    InverterBeacon_v1 bancorVirtualSupplyBondingCurveFundingManagerBeacon;
 
     IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule.Metadata(
@@ -154,7 +155,7 @@ contract E2EModuleRegistry is Test {
             });
 
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(issuanceToken, bc_properties, token),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -168,7 +169,7 @@ contract E2EModuleRegistry is Test {
             new BancorVirtualSupplyBondingCurveFundingManager();
 
         // Deploy module beacons.
-        bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon(
+        bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             bancorVirtualSupplyBondingCurveFundingManagerMetadata.majorVersion,
             address(bancorVirtualSupplyBondingCurveFundingManagerImpl),
@@ -178,7 +179,9 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-            IInverterBeacon(bancorVirtualSupplyBondingCurveFundingManagerBeacon)
+            IInverterBeacon_v1(
+                bancorVirtualSupplyBondingCurveFundingManagerBeacon
+            )
         );
     }
 
@@ -190,7 +193,7 @@ contract E2EModuleRegistry is Test {
 
     RoleAuthorizer roleAuthorizerImpl;
 
-    InverterBeacon roleAuthorizerBeacon;
+    InverterBeacon_v1 roleAuthorizerBeacon;
 
     IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
         1, 0, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
@@ -198,8 +201,8 @@ contract E2EModuleRegistry is Test {
 
     /* 
     // Note that RoleAuthorizer owner and manager are the same
-    IOrchestratorFactory.ModuleConfig roleAuthorizerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig roleAuthorizerFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         roleAuthorizerMetadata,
         abi.encode(address(this), address(this)),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -210,7 +213,7 @@ contract E2EModuleRegistry is Test {
         roleAuthorizerImpl = new RoleAuthorizer();
 
         // Deploy module beacons.
-        roleAuthorizerBeacon = new InverterBeacon(
+        roleAuthorizerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             roleAuthorizerMetadata.majorVersion,
             address(roleAuthorizerImpl),
@@ -219,7 +222,7 @@ contract E2EModuleRegistry is Test {
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            roleAuthorizerMetadata, IInverterBeacon(roleAuthorizerBeacon)
+            roleAuthorizerMetadata, IInverterBeacon_v1(roleAuthorizerBeacon)
         );
     }
 
@@ -227,7 +230,7 @@ contract E2EModuleRegistry is Test {
 
     TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
 
-    InverterBeacon tokenRoleAuthorizerBeacon;
+    InverterBeacon_v1 tokenRoleAuthorizerBeacon;
 
     IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
         1,
@@ -238,8 +241,8 @@ contract E2EModuleRegistry is Test {
 
     /* 
     // Note that RoleAuthorizer owner and manager are the same
-    IOrchestratorFactory.ModuleConfig tokenRoleAuthorizerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         tokenRoleAuthorizerMetadata,
         abi.encode(address(this), address(this)),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -251,7 +254,7 @@ contract E2EModuleRegistry is Test {
         tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer();
 
         // Deploy module beacons.
-        tokenRoleAuthorizerBeacon = new InverterBeacon(
+        tokenRoleAuthorizerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             tokenRoleAuthorizerMetadata.majorVersion,
             address(tokenRoleAuthorizerImpl),
@@ -261,7 +264,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             tokenRoleAuthorizerMetadata,
-            IInverterBeacon(tokenRoleAuthorizerBeacon)
+            IInverterBeacon_v1(tokenRoleAuthorizerBeacon)
         );
     }
 
@@ -273,7 +276,7 @@ contract E2EModuleRegistry is Test {
 
     SimplePaymentProcessor simplePaymentProcessorImpl;
 
-    InverterBeacon simplePaymentProcessorBeacon;
+    InverterBeacon_v1 simplePaymentProcessorBeacon;
 
     IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
         1,
@@ -283,8 +286,8 @@ contract E2EModuleRegistry is Test {
     );
 
     /*
-     IOrchestratorFactory.ModuleConfig simplePaymentProcessorFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+     IOrchestratorFactory_v1.ModuleConfig simplePaymentProcessorFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         simplePaymentProcessorMetadata,
         bytes(""),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -295,7 +298,7 @@ contract E2EModuleRegistry is Test {
         simplePaymentProcessorImpl = new SimplePaymentProcessor();
 
         // Deploy module beacons.
-        simplePaymentProcessorBeacon = new InverterBeacon(
+        simplePaymentProcessorBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             simplePaymentProcessorMetadata.majorVersion,
             address(simplePaymentProcessorImpl),
@@ -305,7 +308,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             simplePaymentProcessorMetadata,
-            IInverterBeacon(simplePaymentProcessorBeacon)
+            IInverterBeacon_v1(simplePaymentProcessorBeacon)
         );
     }
 
@@ -313,7 +316,7 @@ contract E2EModuleRegistry is Test {
 
     StreamingPaymentProcessor streamingPaymentProcessorImpl;
 
-    InverterBeacon streamingPaymentProcessorBeacon;
+    InverterBeacon_v1 streamingPaymentProcessorBeacon;
 
     IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
         1,
@@ -323,8 +326,8 @@ contract E2EModuleRegistry is Test {
     );
 
     /*
-     IOrchestratorFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+     IOrchestratorFactory_v1.ModuleConfig streamingPaymentProcessorFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         streamingPaymentProcessorMetadata,
         bytes(""),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -335,7 +338,7 @@ contract E2EModuleRegistry is Test {
         streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
 
         // Deploy module beacons.
-        streamingPaymentProcessorBeacon = new InverterBeacon(
+        streamingPaymentProcessorBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             streamingPaymentProcessorMetadata.majorVersion,
             address(streamingPaymentProcessorImpl),
@@ -345,7 +348,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             streamingPaymentProcessorMetadata,
-            IInverterBeacon(streamingPaymentProcessorBeacon)
+            IInverterBeacon_v1(streamingPaymentProcessorBeacon)
         );
     }
 
@@ -356,7 +359,7 @@ contract E2EModuleRegistry is Test {
 
     RecurringPaymentManager recurringPaymentManagerImpl;
 
-    InverterBeacon recurringPaymentManagerBeacon;
+    InverterBeacon_v1 recurringPaymentManagerBeacon;
 
     IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
         1,
@@ -365,8 +368,8 @@ contract E2EModuleRegistry is Test {
         "RecurringPaymentManager"
     );
     /*
-    IOrchestratorFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig recurringPaymentManagerFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         recurringPaymentManagerMetadata,
         abi.encode(1 weeks),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -378,7 +381,7 @@ contract E2EModuleRegistry is Test {
         recurringPaymentManagerImpl = new RecurringPaymentManager();
 
         // Deploy module beacons.
-        recurringPaymentManagerBeacon = new InverterBeacon(
+        recurringPaymentManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             recurringPaymentManagerMetadata.majorVersion,
             address(recurringPaymentManagerImpl),
@@ -388,7 +391,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             recurringPaymentManagerMetadata,
-            IInverterBeacon(recurringPaymentManagerBeacon)
+            IInverterBeacon_v1(recurringPaymentManagerBeacon)
         );
     }
 
@@ -396,14 +399,14 @@ contract E2EModuleRegistry is Test {
 
     BountyManager bountyManagerImpl;
 
-    InverterBeacon bountyManagerBeacon;
+    InverterBeacon_v1 bountyManagerBeacon;
 
     IModule.Metadata bountyManagerMetadata = IModule.Metadata(
         1, 0, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
     /*
-     IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+     IOrchestratorFactory_v1.ModuleConfig bountyManagerFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         bountyManagerMetadata,
         bytes(""),
         abi.encode(true, EMPTY_DEPENDENCY_LIST)
@@ -415,7 +418,7 @@ contract E2EModuleRegistry is Test {
         bountyManagerImpl = new BountyManager();
 
         // Deploy module beacons.
-        bountyManagerBeacon = new InverterBeacon(
+        bountyManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             bountyManagerMetadata.majorVersion,
             address(bountyManagerImpl),
@@ -424,7 +427,7 @@ contract E2EModuleRegistry is Test {
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            bountyManagerMetadata, IInverterBeacon(bountyManagerBeacon)
+            bountyManagerMetadata, IInverterBeacon_v1(bountyManagerBeacon)
         );
     }
 
@@ -435,7 +438,7 @@ contract E2EModuleRegistry is Test {
 
     SingleVoteGovernor singleVoteGovernorImpl;
 
-    InverterBeacon singleVoteGovernorBeacon;
+    InverterBeacon_v1 singleVoteGovernorBeacon;
 
     IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
         1,
@@ -448,8 +451,8 @@ contract E2EModuleRegistry is Test {
     address[] initialVoters =
         [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
 
-    IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig singleVoteGovernorFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         singleVoteGovernorMetadata,
         abi.encode(initialVoters, 2, 3 days),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -461,7 +464,7 @@ contract E2EModuleRegistry is Test {
         singleVoteGovernorImpl = new SingleVoteGovernor();
 
         // Deploy module beacons.
-        singleVoteGovernorBeacon = new InverterBeacon(
+        singleVoteGovernorBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             singleVoteGovernorMetadata.majorVersion,
             address(singleVoteGovernorImpl),
@@ -471,7 +474,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             singleVoteGovernorMetadata,
-            IInverterBeacon(singleVoteGovernorBeacon)
+            IInverterBeacon_v1(singleVoteGovernorBeacon)
         );
     }
 
@@ -479,7 +482,7 @@ contract E2EModuleRegistry is Test {
 
     MetadataManager metadataManagerImpl;
 
-    InverterBeacon metadataManagerBeacon;
+    InverterBeacon_v1 metadataManagerBeacon;
 
     IModule.Metadata metadataManagerMetadata = IModule.Metadata(
         1, 0, "https://github.com/inverter/metadata-manager", "MetadataManager"
@@ -490,7 +493,7 @@ contract E2EModuleRegistry is Test {
         metadataManagerImpl = new MetadataManager();
 
         // Deploy module beacons.
-        metadataManagerBeacon = new InverterBeacon(
+        metadataManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             metadataManagerMetadata.majorVersion,
             address(metadataManagerImpl),
@@ -499,7 +502,7 @@ contract E2EModuleRegistry is Test {
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            metadataManagerMetadata, IInverterBeacon(metadataManagerBeacon)
+            metadataManagerMetadata, IInverterBeacon_v1(metadataManagerBeacon)
         );
     }
 }

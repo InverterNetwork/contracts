@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// External Interfaces
-import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
-
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 
-interface IInverterBeacon is IBeacon {
+// External Interfaces
+import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
+
+interface IInverterBeacon_v1 is IBeacon {
     //--------------------------------------------------------------------------------
     // Errors
 
     /// @notice Given implementation invalid.
-    error Beacon__InvalidImplementation();
+    error InverterBeacon_v1__InvalidImplementation();
 
     /// @notice Given implementation minor version is not higher than previous minor version.
-    error Beacon__InvalidImplementationMinorVersion();
+    error InverterBeacon_v1__InvalidImplementationMinorVersion();
 
     //--------------------------------------------------------------------------
     // Events

@@ -5,42 +5,42 @@ import "forge-std/Test.sol";
 
 // Internal Dependencies
 import {
-    InverterBeacon,
-    IInverterBeacon
-} from "src/factories/beacon/InverterBeacon.sol";
-import {InverterBeaconProxy} from "src/factories/beacon/InverterBeaconProxy.sol";
+    InverterBeacon_v1,
+    IInverterBeacon_v1
+} from "src/proxies/InverterBeacon_v1.sol";
+import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 
 // Mocks
-import {InverterBeaconMock} from
-    "test/utils/mocks/factories/beacon/InverterBeaconMock.sol";
+import {InverterBeaconV1Mock} from
+    "test/utils/mocks/proxies/InverterBeaconV1Mock.sol";
 import {ModuleImplementationV1Mock} from
-    "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
+    "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
 
-contract InverterBeaconProxyTest is Test {
+contract InverterBeaconProxyV1Test is Test {
     // SuT
-    InverterBeaconProxy proxy;
+    InverterBeaconProxy_v1 proxy;
 
     // Mocks
-    InverterBeaconMock beacon;
+    InverterBeaconV1Mock beacon;
     ModuleImplementationV1Mock implementation;
 
     // Events copied from SuT
-    event BeaconUpgraded(IInverterBeacon indexed beacon);
+    event BeaconUpgraded(IInverterBeacon_v1 indexed beacon);
 
     function setUp() public {
-        beacon = new InverterBeaconMock();
+        beacon = new InverterBeaconV1Mock();
 
         implementation = new ModuleImplementationV1Mock();
         beacon.overrideImplementation(address(implementation));
 
-        proxy = new InverterBeaconProxy(beacon);
+        proxy = new InverterBeaconProxy_v1(beacon);
     }
 
     function testDeploymentInvariants() public {
         vm.expectEmit(true, true, true, true);
         emit BeaconUpgraded(beacon);
 
-        InverterBeaconProxy localProxy = new InverterBeaconProxy(beacon);
+        InverterBeaconProxy_v1 localProxy = new InverterBeaconProxy_v1(beacon);
 
         (uint majorVersion, uint minorVersion) = localProxy.version();
         assertEq(majorVersion, 0);
