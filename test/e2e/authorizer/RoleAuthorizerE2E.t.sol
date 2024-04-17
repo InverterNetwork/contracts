@@ -10,7 +10,7 @@ import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
 // Modules that are used in this E2E test
@@ -86,7 +86,7 @@ contract RoleAuthorizerE2E is E2ETest {
 
     function test_e2e_RoleAuthorizer() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory_v1.OrchestratorConfig({
@@ -94,7 +94,7 @@ contract RoleAuthorizerE2E is E2ETest {
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         RebasingFundingManager fundingManager =

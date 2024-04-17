@@ -15,7 +15,8 @@ import {AccessControlEnumerableUpgradeable} from
 // Internal Dependencies
 import {Module, IModule} from "src/modules/base/Module.sol";
 import {IAuthorizer} from "./IAuthorizer.sol";
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 contract RoleAuthorizer is
     IAuthorizer,
@@ -75,7 +76,7 @@ contract RoleAuthorizer is
 
     /// @inheritdoc Module
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override initializer {

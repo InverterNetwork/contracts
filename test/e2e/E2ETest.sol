@@ -22,8 +22,11 @@ import {
     IOrchestratorFactory_v1
 } from "src/factories/OrchestratorFactory_v1.sol";
 
-// Orchestrator
-import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
+// Orchestrator_v1
+import {
+    Orchestrator_v1,
+    IOrchestrator_v1
+} from "src/orchestrator/Orchestrator_v1.sol";
 
 import {IBancorVirtualSupplyBondingCurveFundingManager} from
     "src/modules/fundingManager/bondingCurveFundingManager/IBancorVirtualSupplyBondingCurveFundingManager.sol";
@@ -47,8 +50,8 @@ contract E2ETest is E2EModuleRegistry {
     // Factory instances.
     OrchestratorFactory_v1 orchestratorFactory;
 
-    // Orchestrator implementation.
-    Orchestrator orchestratorImpl;
+    // Orchestrator_v1 implementation.
+    Orchestrator_v1 orchestratorImpl;
 
     // Mock token for funding.
     ERC20Mock token;
@@ -84,8 +87,8 @@ contract E2ETest is E2EModuleRegistry {
         //Deploy a forwarder used to enable metatransactions
         forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
 
-        // Deploy Orchestrator implementation.
-        orchestratorImpl = new Orchestrator(address(forwarder));
+        // Deploy Orchestrator_v1 implementation.
+        orchestratorImpl = new Orchestrator_v1(address(forwarder));
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory_v1(address(gov), address(forwarder));
@@ -108,7 +111,7 @@ contract E2ETest is E2EModuleRegistry {
     function _create_E2E_Orchestrator(
         IOrchestratorFactory_v1.OrchestratorConfig memory _config,
         IOrchestratorFactory_v1.ModuleConfig[] memory _moduleConfigurations
-    ) internal virtual returns (IOrchestrator) {
+    ) internal virtual returns (IOrchestrator_v1) {
         // Prepare array of optional modules (hopefully can be made more succinct in the future)
         uint amtOfOptionalModules = _moduleConfigurations.length - 3;
 

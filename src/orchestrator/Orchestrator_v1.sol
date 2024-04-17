@@ -1,54 +1,56 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+// Internal Interfaces
+import {
+    IOrchestrator_v1,
+    IFundingManager,
+    IPaymentProcessor,
+    IAuthorizer
+} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IModule} from "src/modules/base/IModule.sol";
+import {IModuleManagerBase_v1} from
+    "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
+
+// Internal Dependencies
+import {RecurringPaymentManager} from
+    "src/modules/logicModule/RecurringPaymentManager.sol";
+import {ModuleManagerBase_v1} from
+    "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
+
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Libraries
 import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
-// Internal Dependencies
-import {RecurringPaymentManager} from
-    "src/modules/logicModule/RecurringPaymentManager.sol";
-import {ModuleManager} from "src/orchestrator/base/ModuleManager.sol";
-
-// Internal Interfaces
-import {
-    IOrchestrator,
-    IFundingManager,
-    IPaymentProcessor,
-    IAuthorizer
-} from "src/orchestrator/IOrchestrator.sol";
-import {IModule} from "src/modules/base/IModule.sol";
-
-import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
-
 /**
- * @title Orchestrator
+ * @title   Orchestrator V1
  *
- * @dev A new funding primitive to enable multiple actors within a decentralized
- *      network to collaborate on orchestrators.
+ * @dev     A new funding primitive to enable multiple actors within a decentralized
+ *          network to collaborate on orchestrators.
  *
- *      A orchestrator is composed of a [funding mechanism](./base/FundingVault) *      and a set of [modules](./base/ModuleManager).
+ *          An orchestrator is composed of a [funding mechanism](./base/FundingVault)
+ *          and a set of [modules](./base/ModuleManagerBase_v1).
  *
- *      The token being accepted for funding is non-changeable and set during
- *      initialization. Authorization is performed via calling a non-changeable
- *      {IAuthorizer} instance. Payments, initiated by modules, are processed
- *      via a non-changeable {IPaymentProcessor} instance.
+ *          The token being accepted for funding is non-changeable and set during
+ *          initialization. Authorization is performed via calling a non-changeable
+ *          {IAuthorizer} instance. Payments, initiated by modules, are processed
+ *          via a non-changeable {IPaymentProcessor} instance.
  *
- *      Each orchestrator has a unique id set during initialization.
+ *          Each orchestrator has a unique id set during initialization.
  *
- * @author Inverter Network
+ * @author  Inverter Network
  */
-contract Orchestrator is IOrchestrator, ModuleManager {
+contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ModuleManager)
+        override(ModuleManagerBase_v1)
         returns (bool)
     {
-        return interfaceId == type(IOrchestrator).interfaceId
+        return interfaceId == type(IOrchestrator_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -61,7 +63,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         bytes32 ownerRole = authorizer.getOwnerRole();
 
         if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
+            revert Orchestrator_v1__CallerNotAuthorized(ownerRole, _msgSender());
         }
         _;
     }
@@ -69,33 +71,35 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @inheritdoc IOrchestrator
-    uint public override(IOrchestrator) orchestratorId;
+    /// @inheritdoc IOrchestrator_v1
+    uint public override(IOrchestrator_v1) orchestratorId;
 
-    /// @inheritdoc IOrchestrator
-    IFundingManager public override(IOrchestrator) fundingManager;
+    /// @inheritdoc IOrchestrator_v1
+    IFundingManager public override(IOrchestrator_v1) fundingManager;
 
-    /// @inheritdoc IOrchestrator
-    IAuthorizer public override(IOrchestrator) authorizer;
+    /// @inheritdoc IOrchestrator_v1
+    IAuthorizer public override(IOrchestrator_v1) authorizer;
 
-    /// @inheritdoc IOrchestrator
-    IPaymentProcessor public override(IOrchestrator) paymentProcessor;
+    /// @inheritdoc IOrchestrator_v1
+    IPaymentProcessor public override(IOrchestrator_v1) paymentProcessor;
 
     //--------------------------------------------------------------------------
     // Initializer
 
-    constructor(address _trustedForwarder) ModuleManager(_trustedForwarder) {
+    constructor(address _trustedForwarder)
+        ModuleManagerBase_v1(_trustedForwarder)
+    {
         _disableInitializers();
     }
 
-    /// @inheritdoc IOrchestrator
+    /// @inheritdoc IOrchestrator_v1
     function init(
         uint orchestratorId_,
         address[] calldata modules,
         IFundingManager fundingManager_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
-    ) external override(IOrchestrator) initializer {
+    ) external override(IOrchestrator_v1) initializer {
         // Initialize upstream contracts.
         __ModuleManager_init(modules);
 
@@ -160,7 +164,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         return (type(uint).max, address(0));
     }
 
-    /// @inheritdoc IOrchestrator
+    /// @inheritdoc IOrchestrator_v1
     function findModuleAddressInOrchestrator(string calldata moduleName)
         external
         view
@@ -169,7 +173,8 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         (uint moduleIndex, address moduleAddress) =
             _isModuleUsedInOrchestrator(moduleName);
         if (moduleIndex == type(uint).max) {
-            revert DependencyInjection__ModuleNotUsedInOrchestrator();
+            revert
+                Orchestrator_v1__DependencyInjection__ModuleNotUsedInOrchestrator();
         }
 
         return moduleAddress;
@@ -183,7 +188,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     function __ModuleManager_isAuthorized(address who)
         internal
         view
-        override(ModuleManager)
+        override(ModuleManagerBase_v1)
         returns (bool)
     {
         return authorizer.hasRole(authorizer.getOwnerRole(), who);
@@ -192,7 +197,7 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     //--------------------------------------------------------------------------
     // onlyOrchestratorOwner Functions
 
-    /// @inheritdoc IOrchestrator
+    /// @inheritdoc IOrchestrator_v1
     function setAuthorizer(IAuthorizer authorizer_)
         external
         onlyOrchestratorOwner
@@ -213,11 +218,11 @@ contract Orchestrator is IOrchestrator, ModuleManager {
             authorizer = authorizer_;
             emit AuthorizerUpdated(address(authorizer_));
         } else {
-            revert Orchestrator__InvalidModuleType(address(authorizer_));
+            revert Orchestrator_v1__InvalidModuleType(address(authorizer_));
         }
     }
 
-    /// @inheritdoc IOrchestrator
+    /// @inheritdoc IOrchestrator_v1
     function setFundingManager(IFundingManager fundingManager_)
         external
         onlyOrchestratorOwner
@@ -238,11 +243,11 @@ contract Orchestrator is IOrchestrator, ModuleManager {
             fundingManager = fundingManager_;
             emit FundingManagerUpdated(address(fundingManager_));
         } else {
-            revert Orchestrator__InvalidModuleType(address(fundingManager_));
+            revert Orchestrator_v1__InvalidModuleType(address(fundingManager_));
         }
     }
 
-    /// @inheritdoc IOrchestrator
+    /// @inheritdoc IOrchestrator_v1
     function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
         external
         onlyOrchestratorOwner
@@ -263,11 +268,13 @@ contract Orchestrator is IOrchestrator, ModuleManager {
             paymentProcessor = paymentProcessor_;
             emit PaymentProcessorUpdated(address(paymentProcessor_));
         } else {
-            revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
+            revert Orchestrator_v1__InvalidModuleType(
+                address(paymentProcessor_)
+            );
         }
     }
 
-    /// @inheritdoc IOrchestrator
+    /// @inheritdoc IOrchestrator_v1
     function executeTx(address target, bytes memory data)
         external
         onlyOrchestratorOwner
@@ -280,39 +287,39 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         if (ok) {
             return returnData;
         } else {
-            revert Orchestrator__ExecuteTxFailed();
+            revert Orchestrator_v1__ExecuteTxFailed();
         }
     }
 
     //--------------------------------------------------------------------------
     // View Functions
 
-    /// @inheritdoc IOrchestrator
+    /// @inheritdoc IOrchestrator_v1
     function version() external pure returns (string memory) {
         return "1";
     }
 
     // IERC2771Context
-    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator
+    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
     // we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
 
     function isTrustedForwarder(address forwarder)
         public
         view
         virtual
-        override(IModuleManager, ModuleManager)
+        override(IModuleManagerBase_v1, ModuleManagerBase_v1)
         returns (bool)
     {
-        return ModuleManager.isTrustedForwarder(forwarder);
+        return ModuleManagerBase_v1.isTrustedForwarder(forwarder);
     }
 
     function trustedForwarder()
         public
         view
         virtual
-        override(IModuleManager, ModuleManager)
+        override(IModuleManagerBase_v1, ModuleManagerBase_v1)
         returns (address)
     {
-        return ModuleManager.trustedForwarder();
+        return ModuleManagerBase_v1.trustedForwarder();
     }
 }

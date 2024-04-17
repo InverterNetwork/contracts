@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
-import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
+import {Module, IModule, IOrchestrator_v1} from "src/modules/base/Module.sol";
 
 // SuT
 import {
@@ -22,7 +23,7 @@ contract ERC20PaymentClientAccessMock is ERC20PaymentClient {
     mapping(address => bool) authorized;
 
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory //configData
     ) external override(Module) initializer {

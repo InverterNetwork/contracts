@@ -71,17 +71,17 @@ interface IRedeemingBondingCurveFundingManagerBase {
     function sell(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the selling functionality for the collateral.
-    /// @dev Only callable by the Orchestrator owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
     ///      Reverts if selling is already open.
     function openSell() external;
 
     /// @notice Closes the selling functionality for the collateral.
-    /// @dev Only callable by the Orchestrator owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
     ///      Reverts if selling is already closed.
     function closeSell() external;
 
     /// @notice Sets the fee percentage for selling collateral, payed in collateral
-    /// @dev Only callable by the Orchestrator owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
     ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setSellFee(uint _fee) external;

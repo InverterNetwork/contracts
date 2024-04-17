@@ -13,10 +13,10 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {
     IOrchestratorFactory_v1,
     IModule,
-    IOrchestrator
+    IOrchestrator_v1
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Mocks
 import {ModuleFactoryMock} from
@@ -33,7 +33,7 @@ contract OrchestratorFactoryV1Test is Test {
     // SuT
     OrchestratorFactory_v1 factory;
 
-    Orchestrator target;
+    Orchestrator_v1 target;
 
     //--------------------------------------------------------------------------
     // Events
@@ -88,7 +88,7 @@ contract OrchestratorFactoryV1Test is Test {
     function setUp() public {
         moduleFactory = new ModuleFactoryMock();
 
-        target = new Orchestrator(address(0));
+        target = new Orchestrator_v1(address(0));
 
         factory = new OrchestratorFactory_v1(
             address(target), address(moduleFactory), address(0)
@@ -134,8 +134,8 @@ contract OrchestratorFactoryV1Test is Test {
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(1, address(0)); // Since we don't know the address of the orchestrator
 
-        // Deploy Orchestrator with id=1
-        IOrchestrator orchestrator = factory.createOrchestrator(
+        // Deploy Orchestrator_v1 with id=1
+        IOrchestrator_v1 orchestrator = factory.createOrchestrator(
             orchestratorConfig,
             fundingManagerConfig,
             authorizerConfig,
@@ -151,7 +151,7 @@ contract OrchestratorFactoryV1Test is Test {
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(2, address(0)); //since we don't know the address of the orchestrator
 
-        // Deploy Orchestrator with id=2
+        // Deploy Orchestrator_v1 with id=2
         orchestrator = factory.createOrchestrator(
             orchestratorConfig,
             fundingManagerConfig,
@@ -184,8 +184,8 @@ contract OrchestratorFactoryV1Test is Test {
         vm.expectEmit(false, false, false, false);
         emit OrchestratorCreated(0, address(0)); // Since we don't know the id/address of the orchestrator
 
-        // Deploy Orchestrator
-        IOrchestrator orchestrator = factory.createOrchestrator(
+        // Deploy Orchestrator_v1
+        IOrchestrator_v1 orchestrator = factory.createOrchestrator(
             orchestratorConfig,
             fundingManagerConfig,
             authorizerConfig,

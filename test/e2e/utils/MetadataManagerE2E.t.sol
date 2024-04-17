@@ -10,7 +10,7 @@ import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
 import {
@@ -127,7 +127,7 @@ contract MetadataManagerE2E is E2ETest {
 
     function test_e2e_MetadataManager() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
@@ -136,7 +136,7 @@ contract MetadataManagerE2E is E2ETest {
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------------

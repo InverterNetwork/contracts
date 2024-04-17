@@ -20,11 +20,11 @@ import {IAccessControlEnumerable} from
 
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 // Internal Dependencies
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 // Interfaces
-import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -39,7 +39,7 @@ contract RoleAuthorizerTest is Test {
 
     // Mocks
     RoleAuthorizer _authorizer;
-    Orchestrator internal _orchestrator = new Orchestrator(address(0));
+    Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
@@ -51,7 +51,7 @@ contract RoleAuthorizerTest is Test {
     bytes32 immutable ROLE_0 = "ROLE_0";
     bytes32 immutable ROLE_1 = "ROLE_1";
 
-    // Orchestrator Constants
+    // Orchestrator_v1 Constants
     uint internal constant _ORCHESTRATOR_ID = 1;
     // Module Constants
     uint constant MAJOR_VERSION = 1;
@@ -103,8 +103,8 @@ contract RoleAuthorizerTest is Test {
     function setUp() public virtual {
         address authImpl = address(new RoleAuthorizer());
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
-        address propImpl = address(new Orchestrator(address(_forwarder)));
-        _orchestrator = Orchestrator(Clones.clone(propImpl));
+        address propImpl = address(new Orchestrator_v1(address(_forwarder)));
+        _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
         ModuleMock module = new ModuleMock();
         address[] memory modules = new address[](1);
         modules[0] = address(module);
@@ -120,7 +120,7 @@ contract RoleAuthorizerTest is Test {
         address initialManager = address(this);
 
         _authorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );
@@ -157,7 +157,7 @@ contract RoleAuthorizerTest is Test {
         vm.assume(initialAuth != address(this));
 
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, address(this))
         );
@@ -182,7 +182,7 @@ contract RoleAuthorizerTest is Test {
         address initialAuth = address(0);
 
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, address(this))
         );
@@ -205,7 +205,7 @@ contract RoleAuthorizerTest is Test {
         address initialAuth = address(this);
 
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, address(this))
         );
@@ -221,15 +221,16 @@ contract RoleAuthorizerTest is Test {
 
     function testReinitFails() public {
         //Create a mock new orchestrator
-        Orchestrator newOrchestrator =
-            Orchestrator(Clones.clone(address(new Orchestrator(address(0)))));
+        Orchestrator_v1 newOrchestrator = Orchestrator_v1(
+            Clones.clone(address(new Orchestrator_v1(address(0))))
+        );
 
         address initialOwner = address(this);
         address initialManager = address(this);
 
         vm.expectRevert();
         _authorizer.init(
-            IOrchestrator(newOrchestrator),
+            IOrchestrator_v1(newOrchestrator),
             _METADATA,
             abi.encode(initialOwner, initialManager)
         );

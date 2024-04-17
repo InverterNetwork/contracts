@@ -5,9 +5,9 @@ import {Test} from "forge-std/Test.sol";
 
 // SuT
 import {
-    ModuleManagerMock,
-    IModuleManager
-} from "test/utils/mocks/orchestrator/base/ModuleManagerMock.sol";
+    ModuleManagerBaseV1Mock,
+    IModuleManagerBase_v1
+} from "test/utils/mocks/orchestrator/abstracts/ModuleManagerBaseV1Mock.sol";
 
 // Mocks
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -18,9 +18,9 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 // Helper
 import {TypeSanityHelper} from "test/orchestrator/helper/TypeSanityHelper.sol";
 
-contract ModuleManagerTest is Test {
+contract ModuleManagerBaseV1Test is Test {
     // SuT
-    ModuleManagerMock moduleManager;
+    ModuleManagerBaseV1Mock moduleManager;
 
     // Helper
     TypeSanityHelper types;
@@ -40,7 +40,7 @@ contract ModuleManagerTest is Test {
     );
 
     function setUp() public {
-        moduleManager = new ModuleManagerMock(address(0));
+        moduleManager = new ModuleManagerBaseV1Mock(address(0));
         moduleManager.init(EMPTY_LIST);
 
         types = new TypeSanityHelper(address(moduleManager));
@@ -52,15 +52,15 @@ contract ModuleManagerTest is Test {
     // Tests: Initialization
 
     function testInit(address[] memory modules) public {
-        moduleManager = new ModuleManagerMock(address(0));
+        moduleManager = new ModuleManagerBaseV1Mock(address(0));
         types = new TypeSanityHelper(address(moduleManager));
 
         types.assumeValidModules(modules);
 
         if (modules.length > (MAX_MODULES - 3)) {
             vm.expectRevert(
-                IModuleManager
-                    .Orchestrator__ModuleManager__ModuleAmountOverLimits
+                IModuleManagerBase_v1
+                    .ModuleManagerBase_v1__ModuleAmountOverLimits
                     .selector
             );
 
@@ -90,7 +90,7 @@ contract ModuleManagerTest is Test {
     }
 
     function testInitFailsForInvalidModules() public {
-        moduleManager = new ModuleManagerMock(address(0));
+        moduleManager = new ModuleManagerBaseV1Mock(address(0));
         types = new TypeSanityHelper(address(moduleManager));
 
         address[] memory invalids = types.createInvalidModules();
@@ -101,8 +101,8 @@ contract ModuleManagerTest is Test {
             modules[0] = invalids[i];
 
             vm.expectRevert(
-                IModuleManager
-                    .Orchestrator__ModuleManager__InvalidModuleAddress
+                IModuleManagerBase_v1
+                    .ModuleManagerBase_v1__InvalidModuleAddress
                     .selector
             );
             moduleManager.init(modules);
@@ -110,7 +110,7 @@ contract ModuleManagerTest is Test {
     }
 
     function testInitFailsIfModuleAddedTwice() public {
-        moduleManager = new ModuleManagerMock(address(0));
+        moduleManager = new ModuleManagerBaseV1Mock(address(0));
         types = new TypeSanityHelper(address(moduleManager));
 
         address[] memory modules = new address[](2);
@@ -118,7 +118,7 @@ contract ModuleManagerTest is Test {
         modules[1] = address(0xCAFE);
 
         vm.expectRevert(
-            IModuleManager.Orchestrator__ModuleManager__IsModule.selector
+            IModuleManagerBase_v1.ModuleManagerBase_v1__IsModule.selector
         );
         moduleManager.init(modules);
     }
@@ -128,10 +128,10 @@ contract ModuleManagerTest is Test {
 
         //we don't need to check for validity since it should revert before
 
-        moduleManager = new ModuleManagerMock(address(0));
+        moduleManager = new ModuleManagerBaseV1Mock(address(0));
         vm.expectRevert(
-            IModuleManager
-                .Orchestrator__ModuleManager__ModuleAmountOverLimits
+            IModuleManagerBase_v1
+                .ModuleManagerBase_v1__ModuleAmountOverLimits
                 .selector
         );
         moduleManager.init(modules);
@@ -145,8 +145,8 @@ contract ModuleManagerTest is Test {
 
     function testExecuteTxFromModuleOnlyCallableByModule() public {
         vm.expectRevert(
-            IModuleManager
-                .Orchestrator__ModuleManager__OnlyCallableByModule
+            IModuleManagerBase_v1
+                .ModuleManagerBase_v1__OnlyCallableByModule
                 .selector
         );
         moduleManager.executeTxFromModule(address(this), bytes(""));
@@ -225,8 +225,8 @@ contract ModuleManagerTest is Test {
         moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
 
         vm.expectRevert(
-            IModuleManager
-                .Orchestrator__ModuleManager__CallerNotAuthorized
+            IModuleManagerBase_v1
+                .ModuleManagerBase_v1__CallerNotAuthorized
                 .selector
         );
         moduleManager.addModule(who);
@@ -238,7 +238,7 @@ contract ModuleManagerTest is Test {
         moduleManager.addModule(who);
 
         vm.expectRevert(
-            IModuleManager.Orchestrator__ModuleManager__IsModule.selector
+            IModuleManagerBase_v1.ModuleManagerBase_v1__IsModule.selector
         );
         moduleManager.addModule(who);
     }
@@ -248,8 +248,8 @@ contract ModuleManagerTest is Test {
 
         for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
-                IModuleManager
-                    .Orchestrator__ModuleManager__InvalidModuleAddress
+                IModuleManagerBase_v1
+                    .ModuleManagerBase_v1__InvalidModuleAddress
                     .selector
             );
             moduleManager.addModule(invalids[i]);
@@ -270,8 +270,8 @@ contract ModuleManagerTest is Test {
         }
 
         vm.expectRevert(
-            IModuleManager
-                .Orchestrator__ModuleManager__ModuleAmountOverLimits
+            IModuleManagerBase_v1
+                .ModuleManagerBase_v1__ModuleAmountOverLimits
                 .selector
         );
         moduleManager.addModule(whos[MAX_MODULES]);
@@ -335,8 +335,8 @@ contract ModuleManagerTest is Test {
         moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
 
         vm.expectRevert(
-            IModuleManager
-                .Orchestrator__ModuleManager__CallerNotAuthorized
+            IModuleManagerBase_v1
+                .ModuleManagerBase_v1__CallerNotAuthorized
                 .selector
         );
         moduleManager.removeModule(who);
@@ -346,7 +346,7 @@ contract ModuleManagerTest is Test {
         types.assumeValidModule(who);
 
         vm.expectRevert(
-            IModuleManager.Orchestrator__ModuleManager__IsNotModule.selector
+            IModuleManagerBase_v1.ModuleManagerBase_v1__IsNotModule.selector
         );
         moduleManager.removeModule(who);
     }

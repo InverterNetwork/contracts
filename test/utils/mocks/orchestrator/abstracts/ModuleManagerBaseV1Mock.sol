@@ -3,16 +3,18 @@ pragma solidity ^0.8.0;
 
 // Internal Dependencies
 import {
-    ModuleManager,
-    IModuleManager
-} from "src/orchestrator/base/ModuleManager.sol";
+    ModuleManagerBase_v1,
+    IModuleManagerBase_v1
+} from "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
 
-contract ModuleManagerMock is ModuleManager {
+contract ModuleManagerBaseV1Mock is ModuleManagerBase_v1 {
     mapping(address => bool) private _authorized;
 
     bool private _allAuthorized;
 
-    constructor(address _trustedForwarder) ModuleManager(_trustedForwarder) {}
+    constructor(address _trustedForwarder)
+        ModuleManagerBase_v1(_trustedForwarder)
+    {}
 
     function __ModuleManager_setIsAuthorized(address who, bool to) external {
         _authorized[who] = to;
@@ -34,7 +36,7 @@ contract ModuleManagerMock is ModuleManager {
     function __ModuleManager_isAuthorized(address who)
         internal
         view
-        override(ModuleManager)
+        override(ModuleManagerBase_v1)
         returns (bool)
     {
         return _authorized[who] || _allAuthorized;

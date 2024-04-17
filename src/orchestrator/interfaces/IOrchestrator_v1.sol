@@ -1,31 +1,32 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
 // Internal Interfaces
-import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
+import {IModuleManagerBase_v1} from
+    "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
-interface IOrchestrator is IModuleManager {
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Orchestrator__CallerNotAuthorized(bytes32 role, address caller);
+    error Orchestrator_v1__CallerNotAuthorized(bytes32 role, address caller);
 
     /// @notice Execution of transaction failed.
-    error Orchestrator__ExecuteTxFailed();
+    error Orchestrator_v1__ExecuteTxFailed();
 
     /// @notice The given module is not used in the orchestrator
-    error Orchestrator__InvalidModuleType(address module);
+    error Orchestrator_v1__InvalidModuleType(address module);
 
     /// @notice The given module is not used in the orchestrator
-    error DependencyInjection__ModuleNotUsedInOrchestrator();
+    error Orchestrator_v1__DependencyInjection__ModuleNotUsedInOrchestrator();
 
     //--------------------------------------------------------------------------
     // Events
@@ -42,7 +43,7 @@ interface IOrchestrator is IModuleManager {
     /// @param _address The new address.
     event PaymentProcessorUpdated(address indexed _address);
 
-    /// @notice Orchestrator has been initialized with the corresponding modules
+    /// @notice Orchestrator_v1 has been initialized with the corresponding modules
     /// @param orchestratorId_ The id of the orchestrator.
     /// @param fundingManager The address of the funding manager module.
     /// @param authorizer The address of the authorizer module.

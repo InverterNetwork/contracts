@@ -21,7 +21,9 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 //     "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest, IModule, IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
 import {IVirtualTokenSupply} from
@@ -1318,9 +1320,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     /* Test setVirtualTokenSupply and _setVirtualTokenSupply function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator_v1 owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                 ├── when the new token supply is zero
                 │   └── it should revert
                 └── when the new token supply is above zero
@@ -1358,9 +1360,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     /* Test setVirtualCollateralSupply and _setVirtualCollateralSupply function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator_v1 owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                 ├── when the new collateral supply is zero
                 │   └── it should revert
                 └── when the new collateral supply is above zero
@@ -1400,9 +1402,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     }
 
     /* Test setReserveRatioForBuying and _setReserveRatioForBuying function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator_v1 owner
         │       └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                 ├── when reserve ratio is  0% 
                 │       └── it should revert
                 ├── when reserve ratio is below 100%
@@ -1459,9 +1461,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     // Test reserve ratio changes
 
     /* Test setReserveRatioForSelling and _setReserveRatioForSelling function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator_v1 owner
         │       └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                 ├── when reserve ratio is  0% 
                 │       └── it should revert
                 ├── when reserve ratio is below 100%
@@ -1708,7 +1710,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         │       └── it should return the amount without change
         ├── when the token decimals are higher than the required decimals
         │       └── it should cut the excess decimals from the amount and return it
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                 └── it should pad the amount by the missing decimals and return it
         */
 
@@ -1767,9 +1769,9 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
     // OnlyOrchestrator Mutating Functions
 
     /* Test transferOrchestratorToken 
-        ├── when caller is not the Orchestrator 
+        ├── when caller is not the Orchestrator_v1 
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                 ├── it should send the funds to the specified address
                 └── it should emit an event?
     */

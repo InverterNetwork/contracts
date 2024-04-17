@@ -1,32 +1,33 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+// Interfaces
+import {IModuleManagerBase_v1} from
+    "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
+
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
-// Interfaces
-import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
-
 /**
- * @title Module Manager
+ * @title   Module Manager Base V1
  *
- * @dev A contract to manage modules that can execute transactions via this
- *      contract and manage own role-based access control mechanisms.
+ * @dev     A contract to manage modules that can execute transactions via this
+ *          contract and manage own role-based access control mechanisms.
  *
- *      The role-based access control mechanism is based on OpenZeppelin's
- *      AccessControl contract. Each module has it's own access control context
- *      which it is able to freely manage.
+ *          The role-based access control mechanism is based on OpenZeppelin's
+ *          AccessControl contract. Each module has it's own access control context
+ *          which it is able to freely manage.
  *
- *      The transaction execution and module management is copied from Gnosis
- *      Safe's [ModuleManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/ModuleManager.sol).
+ *          The transaction execution and module management is copied from Gnosis
+ *          Safe's [ModuleManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/ModuleManager.sol).
  *
- * @author Adapted from Gnosis Safe
- * @author Inverter Network
+ * @author  Adapted from Gnosis Safe
+ * @author  Inverter Network
  */
-abstract contract ModuleManager is
-    IModuleManager,
+abstract contract ModuleManagerBase_v1 is
+    IModuleManagerBase_v1,
     Initializable,
     ERC2771Context,
     ERC165
@@ -38,7 +39,7 @@ abstract contract ModuleManager is
         override(ERC165)
         returns (bool)
     {
-        return interfaceId == type(IModuleManager).interfaceId
+        return interfaceId == type(IModuleManagerBase_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -47,14 +48,14 @@ abstract contract ModuleManager is
 
     modifier __ModuleManager_onlyAuthorized() {
         if (!__ModuleManager_isAuthorized(_msgSender())) {
-            revert Orchestrator__ModuleManager__CallerNotAuthorized();
+            revert ModuleManagerBase_v1__CallerNotAuthorized();
         }
         _;
     }
 
     modifier onlyModule() {
         if (!isModule(_msgSender())) {
-            revert Orchestrator__ModuleManager__OnlyCallableByModule();
+            revert ModuleManagerBase_v1__OnlyCallableByModule();
         }
         _;
     }
@@ -66,7 +67,7 @@ abstract contract ModuleManager is
 
     modifier isModule_(address module) {
         if (!isModule(module)) {
-            revert Orchestrator__ModuleManager__IsNotModule();
+            revert ModuleManagerBase_v1__IsNotModule();
         }
         _;
     }
@@ -78,7 +79,7 @@ abstract contract ModuleManager is
 
     modifier moduleLimitNotExceeded() {
         if (_modules.length >= MAX_MODULE_AMOUNT) {
-            revert Orchestrator__ModuleManager__ModuleAmountOverLimits();
+            revert ModuleManagerBase_v1__ModuleAmountOverLimits();
         }
         _;
     }
@@ -86,7 +87,7 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev Marks the maximum amount of Modules a Orchestrator can have to avoid out-of-gas risk.
+    /// @dev Marks the maximum amount of Modules a Orchestrator_v1 can have to avoid out-of-gas risk.
     uint private constant MAX_MODULE_AMOUNT = 128;
 
     //--------------------------------------------------------------------------
@@ -123,7 +124,7 @@ abstract contract ModuleManager is
         // Check that the initial list of Modules doesn't exceed the max amount
         // The subtraction by 3 is to ensure enough space for the compulsory modules: fundingManager, authorizer and paymentProcessor
         if (len > (MAX_MODULE_AMOUNT - 3)) {
-            revert Orchestrator__ModuleManager__ModuleAmountOverLimits();
+            revert ModuleManagerBase_v1__ModuleAmountOverLimits();
         }
 
         for (uint i; i < len; ++i) {
@@ -156,22 +157,22 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // Public View Functions
 
-    /// @inheritdoc IModuleManager
+    /// @inheritdoc IModuleManagerBase_v1
     function isModule(address module)
         public
         view
-        override(IModuleManager)
+        override(IModuleManagerBase_v1)
         returns (bool)
     {
         return _isModule[module];
     }
 
-    /// @inheritdoc IModuleManager
+    /// @inheritdoc IModuleManagerBase_v1
     function listModules() public view returns (address[] memory) {
         return _modules;
     }
 
-    /// @inheritdoc IModuleManager
+    /// @inheritdoc IModuleManagerBase_v1
     function modulesSize() external view returns (uint8) {
         return uint8(_modules.length);
     }
@@ -179,7 +180,7 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // onlyOrchestratorOwner Functions
 
-    /// @inheritdoc IModuleManager
+    /// @inheritdoc IModuleManagerBase_v1
     function addModule(address module)
         public
         __ModuleManager_onlyAuthorized
@@ -190,7 +191,7 @@ abstract contract ModuleManager is
         _commitAddModule(module);
     }
 
-    /// @inheritdoc IModuleManager
+    /// @inheritdoc IModuleManagerBase_v1
     function removeModule(address module)
         public
         __ModuleManager_onlyAuthorized
@@ -202,7 +203,7 @@ abstract contract ModuleManager is
     //--------------------------------------------------------------------------
     // onlyModule Functions
 
-    /// @inheritdoc IModuleManager
+    /// @inheritdoc IModuleManagerBase_v1
     function executeTxFromModule(address to, bytes memory data)
         external
         virtual
@@ -262,25 +263,25 @@ abstract contract ModuleManager is
 
     function _ensureValidModule(address module) private view {
         if (module == address(0) || module == address(this)) {
-            revert Orchestrator__ModuleManager__InvalidModuleAddress();
+            revert ModuleManagerBase_v1__InvalidModuleAddress();
         }
     }
 
     function _ensureNotModule(address module) private view {
         if (isModule(module)) {
-            revert Orchestrator__ModuleManager__IsModule();
+            revert ModuleManagerBase_v1__IsModule();
         }
     }
 
     // IERC2771Context
-    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator
+    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
     // we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
 
     function isTrustedForwarder(address forwarder)
         public
         view
         virtual
-        override(IModuleManager, ERC2771Context)
+        override(IModuleManagerBase_v1, ERC2771Context)
         returns (bool)
     {
         return ERC2771Context.isTrustedForwarder(forwarder);
@@ -290,7 +291,7 @@ abstract contract ModuleManager is
         public
         view
         virtual
-        override(IModuleManager, ERC2771Context)
+        override(IModuleManagerBase_v1, ERC2771Context)
         returns (address)
     {
         return ERC2771Context.trustedForwarder();

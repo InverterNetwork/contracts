@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
 import {RebasingFundingManager} from
@@ -40,7 +40,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     uint epochsAmount = 10;
 
     // Modules, for reference between functions
-    IOrchestrator orchestrator;
+    IOrchestrator_v1 orchestrator;
     RebasingFundingManager fundingManager;
     RecurringPaymentManager recurringPaymentManager;
     StreamingPaymentProcessor streamingPaymentProcessor;
@@ -100,7 +100,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
     function init() private {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory_v1.OrchestratorConfig({

@@ -11,15 +11,17 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest, IModule, IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
 
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Mocks
 import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
@@ -76,7 +78,7 @@ contract baseModuleTest is ModuleTest {
     }
 
     function testInit() public override {
-        // Orchestrator correctly written to storage.
+        // Orchestrator_v1 correctly written to storage.
         assertEq(address(module.orchestrator()), address(_orchestrator));
 
         // Identifier correctly computed.
@@ -114,7 +116,7 @@ contract baseModuleTest is ModuleTest {
         module = ModuleMock(Clones.clone(impl));
 
         vm.expectRevert(IModule.Module__InvalidOrchestratorAddress.selector);
-        module.init(IOrchestrator(address(0)), _METADATA, _CONFIGDATA);
+        module.init(IOrchestrator_v1(address(0)), _METADATA, _CONFIGDATA);
     }
 
     function testInitFailsIfMetadataInvalid() public {

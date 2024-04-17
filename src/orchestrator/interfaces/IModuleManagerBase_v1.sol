@@ -4,30 +4,30 @@ pragma solidity ^0.8.0;
 // Interfaces
 import {IERC2771Context} from "src/external/interfaces/IERC2771Context.sol";
 
-interface IModuleManager is IERC2771Context {
+interface IModuleManagerBase_v1 is IERC2771Context {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by authorized address.
-    error Orchestrator__ModuleManager__CallerNotAuthorized();
+    error ModuleManagerBase_v1__CallerNotAuthorized();
 
     /// @notice Function is only callable by modules.
-    error Orchestrator__ModuleManager__OnlyCallableByModule();
+    error ModuleManagerBase_v1__OnlyCallableByModule();
 
     /// @notice Given module address invalid.
-    error Orchestrator__ModuleManager__InvalidModuleAddress();
+    error ModuleManagerBase_v1__InvalidModuleAddress();
 
     /// @notice Given address is a module.
-    error Orchestrator__ModuleManager__IsModule();
+    error ModuleManagerBase_v1__IsModule();
 
     /// @notice Given address is not a module.
-    error Orchestrator__ModuleManager__IsNotModule();
+    error ModuleManagerBase_v1__IsNotModule();
 
     /// @notice The supplied modules are not consecutive.
-    error Orchestrator__ModuleManager__ModulesNotConsecutive();
+    error ModuleManagerBase_v1__ModulesNotConsecutive();
 
     /// @notice The Manager has reached the maximum amount of modules.
-    error Orchestrator__ModuleManager__ModuleAmountOverLimits();
+    error ModuleManagerBase_v1__ModuleAmountOverLimits();
 
     //--------------------------------------------------------------------------
     // Events

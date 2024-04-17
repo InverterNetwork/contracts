@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
 //SuT
@@ -109,7 +109,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         BancorVirtualSupplyBondingCurveFundingManager fundingManager =

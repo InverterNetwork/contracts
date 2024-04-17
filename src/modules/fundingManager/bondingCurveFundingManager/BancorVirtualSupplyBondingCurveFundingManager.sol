@@ -25,7 +25,8 @@ import {IVirtualTokenSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualTokenSupply.sol";
 import {IVirtualCollateralSupply} from
     "src/modules/fundingManager/bondingCurveFundingManager/marketMaker/IVirtualCollateralSupply.sol";
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 // External Interfaces
@@ -45,7 +46,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 /// - RedeemingBondingCurveFundingManagerBase
 /// - VirtualTokenSupplyBase
 /// - VirtualCollateralSupplyBase
-/// The contract should be used by the Orchestrator Owner to manage all the configuration fo the
+/// The contract should be used by the Orchestrator_v1 Owner to manage all the configuration fo the
 /// bonding curve, e.g., the virtual supplies and reserve ratios, as well as the opening and closing
 /// of the issuance and redeeming functionalities. The contract implements the formulaWrapper
 /// functions enforced by the upstream contracts, using the Bancor formula to calculate the
@@ -96,7 +97,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     uint32 internal constant PPM = 1_000_000;
     /// @dev Token that is accepted by this funding manager for deposits.
     IERC20 private _token;
-    /// @dev Token decimals of the Orchestrator token, which is used as collateral and stores within
+    /// @dev Token decimals of the Orchestrator_v1 token, which is used as collateral and stores within
     /// implementation for gas saving.
     uint8 internal collateralTokenDecimals;
 
@@ -105,7 +106,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
 
     /// @inheritdoc Module
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override(Module) initializer {

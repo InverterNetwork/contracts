@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
+import {Module, IModule, IOrchestrator_v1} from "src/modules/base/Module.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 
 // External Libraries
@@ -29,7 +29,7 @@ contract FundingManagerMock is IFundingManager, Module {
     IERC20 private _token;
 
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory
     ) public override(Module) initializer {

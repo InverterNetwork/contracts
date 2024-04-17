@@ -4,14 +4,14 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {
     IOrchestratorFactory_v1,
-    IOrchestrator,
+    IOrchestrator_v1,
     IModule
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {
     IFundingManager,
     IAuthorizer,
     IPaymentProcessor
-} from "src/orchestrator/IOrchestrator.sol";
+} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IModuleFactory_v1} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 // External Interfaces
@@ -25,9 +25,9 @@ import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 /**
- * @title   Orchestrator Factory V1
+ * @title   Orchestrator_v1 Factory V1
  *
- * @notice  Orchestrator Factory V1 facilitates the deployment of orchestrators and their
+ * @notice  Orchestrator_v1 Factory V1 facilitates the deployment of orchestrators and their
  *          associated modules for the Inverter Network, ensuring seamless creation and
  *          configuration of various components in a single transaction.
  *
@@ -106,7 +106,7 @@ contract OrchestratorFactory_v1 is
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
-    ) external returns (IOrchestrator) {
+    ) external returns (IOrchestrator_v1) {
         address clone = Clones.clone(target);
 
         //Map orchestrator clone
@@ -115,21 +115,21 @@ contract OrchestratorFactory_v1 is
         // Deploy and cache {IFundingManager} module.
         address fundingManager = IModuleFactory_v1(moduleFactory).createModule(
             fundingManagerConfig.metadata,
-            IOrchestrator(clone),
+            IOrchestrator_v1(clone),
             fundingManagerConfig.configData
         );
 
         // Deploy and cache {IAuthorizer} module.
         address authorizer = IModuleFactory_v1(moduleFactory).createModule(
             authorizerConfig.metadata,
-            IOrchestrator(clone),
+            IOrchestrator_v1(clone),
             authorizerConfig.configData
         );
 
         // Deploy and cache {IPaymentProcessor} module.
         address paymentProcessor = IModuleFactory_v1(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
-            IOrchestrator(clone),
+            IOrchestrator_v1(clone),
             paymentProcessorConfig.configData
         );
 
@@ -139,7 +139,7 @@ contract OrchestratorFactory_v1 is
         for (uint i; i < modulesLen; ++i) {
             modules[i] = IModuleFactory_v1(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
-                IOrchestrator(clone),
+                IOrchestrator_v1(clone),
                 moduleConfigs[i].configData
             );
         }
@@ -151,7 +151,7 @@ contract OrchestratorFactory_v1 is
         emit OrchestratorCreated(_orchestratorIdCounter, clone);
 
         // Initialize orchestrator.
-        IOrchestrator(clone).init(
+        IOrchestrator_v1(clone).init(
             _orchestratorIdCounter,
             modules,
             IFundingManager(fundingManager),
@@ -165,7 +165,7 @@ contract OrchestratorFactory_v1 is
         for (uint i; i < modulesLen; ++i) {
             if (_dependencyInjectionRequired(moduleConfigs[i].dependencyData)) {
                 IModule(modules[i]).init2(
-                    IOrchestrator(clone), moduleConfigs[i].dependencyData
+                    IOrchestrator_v1(clone), moduleConfigs[i].dependencyData
                 );
             }
         }
@@ -173,22 +173,22 @@ contract OrchestratorFactory_v1 is
         // Also, running the init2 functionality on the compulsory modules excluded from the modules array
         if (_dependencyInjectionRequired(fundingManagerConfig.dependencyData)) {
             IModule(fundingManager).init2(
-                IOrchestrator(clone), fundingManagerConfig.dependencyData
+                IOrchestrator_v1(clone), fundingManagerConfig.dependencyData
             );
         }
         if (_dependencyInjectionRequired(authorizerConfig.dependencyData)) {
             IModule(authorizer).init2(
-                IOrchestrator(clone), authorizerConfig.dependencyData
+                IOrchestrator_v1(clone), authorizerConfig.dependencyData
             );
         }
         if (_dependencyInjectionRequired(paymentProcessorConfig.dependencyData))
         {
             IModule(paymentProcessor).init2(
-                IOrchestrator(clone), paymentProcessorConfig.dependencyData
+                IOrchestrator_v1(clone), paymentProcessorConfig.dependencyData
             );
         }
 
-        return IOrchestrator(clone);
+        return IOrchestrator_v1(clone);
     }
 
     /// @inheritdoc IOrchestratorFactory_v1

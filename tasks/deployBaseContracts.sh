@@ -14,8 +14,8 @@ forge script script/factories/DeployModuleFactory_v1.s.sol:DeployModuleFactory_v
     --private-key $WALLET_DEPLOYER_PK \
     --broadcast
 
-# - Orchestrator
-forge script script/orchestrator/DeployOrchestrator.s.sol:DeployOrchestrator \
+# - Orchestrator_v1
+forge script script/orchestrator/DeployOrchestrator_v1.s.sol:DeployOrchestrator_v1 \
     --fork-url $RPC_URL \
     --sender $WALLET_DEPLOYER \
     --private-key $WALLET_DEPLOYER_PK \

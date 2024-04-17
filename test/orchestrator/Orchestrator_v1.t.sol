@@ -10,15 +10,15 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 // Internal Interfaces
 import {
-    IOrchestrator,
+    IOrchestrator_v1,
     IAuthorizer,
     IPaymentProcessor
-} from "src/orchestrator/IOrchestrator.sol";
+} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
@@ -39,9 +39,9 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 // Helper
 import {TypeSanityHelper} from "test/orchestrator/helper/TypeSanityHelper.sol";
 
-contract OrchestratorTest is Test {
+contract OrchestratorV1Test is Test {
     // SuT
-    Orchestrator orchestrator;
+    Orchestrator_v1 orchestrator;
 
     // Helper
     TypeSanityHelper types;
@@ -71,8 +71,8 @@ contract OrchestratorTest is Test {
         forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
         token = new ERC20Mock("TestToken", "TST");
 
-        address impl = address(new Orchestrator(address(forwarder)));
-        orchestrator = Orchestrator(Clones.clone(impl));
+        address impl = address(new Orchestrator_v1(address(forwarder)));
+        orchestrator = Orchestrator_v1(Clones.clone(impl));
 
         types = new TypeSanityHelper(address(orchestrator));
     }
@@ -283,7 +283,7 @@ contract OrchestratorTest is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v1.Orchestrator_v1__InvalidModuleType.selector,
                 newAuthorizer
             )
         );
@@ -370,7 +370,7 @@ contract OrchestratorTest is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v1.Orchestrator_v1__InvalidModuleType.selector,
                 newFundingManager
             )
         );
@@ -448,7 +448,7 @@ contract OrchestratorTest is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator.Orchestrator__InvalidModuleType.selector,
+                IOrchestrator_v1.Orchestrator_v1__InvalidModuleType.selector,
                 newPaymentProcessor
             )
         );
@@ -549,7 +549,9 @@ contract OrchestratorTest is Test {
 
         authorizer.setIsAuthorized(address(this), true);
 
-        vm.expectRevert(IOrchestrator.Orchestrator__ExecuteTxFailed.selector);
+        vm.expectRevert(
+            IOrchestrator_v1.Orchestrator_v1__ExecuteTxFailed.selector
+        );
         orchestrator.executeTx(
             address(this), abi.encodeWithSignature("fails()")
         );
@@ -600,7 +602,7 @@ contract OrchestratorTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator.Orchestrator__CallerNotAuthorized.selector,
+                IOrchestrator_v1.Orchestrator_v1__CallerNotAuthorized.selector,
                 authorizer.getOwnerRole(),
                 address(this)
             )

@@ -10,7 +10,7 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
+import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {
     BountyManager,
     IBountyManager
@@ -27,7 +27,8 @@ contract CreateBountyInWorkstream is Script {
 
     address deployedOrchestratorAddress =
         vm.envAddress("DEPLOYED_ORCHESTRATOR_ADDRESS");
-    IOrchestrator _orchestrator = IOrchestrator(deployedOrchestratorAddress);
+    IOrchestrator_v1 _orchestrator =
+        IOrchestrator_v1(deployedOrchestratorAddress);
 
     uint bountyCreatorPrivateKey = vm.envUint("BOUNTY_CREATOR_PRIVATE_KEY");
     address bountyCreator = vm.addr(bountyCreatorPrivateKey);
@@ -44,7 +45,7 @@ contract CreateBountyInWorkstream is Script {
         // Find BountyManager
 
         address[] memory moduleAddresses =
-            IOrchestrator(_orchestrator).listModules();
+            IOrchestrator_v1(_orchestrator).listModules();
         uint lenModules = moduleAddresses.length;
         address orchestratorCreatedBountyManagerAddress;
 

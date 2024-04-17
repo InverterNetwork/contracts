@@ -7,7 +7,7 @@ import {
     IModuleFactory_v1,
     IInverterBeacon_v1,
     IModule,
-    IOrchestrator
+    IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 contract ModuleFactoryMock is IModuleFactory_v1 {
@@ -19,10 +19,11 @@ contract ModuleFactoryMock is IModuleFactory_v1 {
 
     address public governor;
 
-    function createModule(IModule.Metadata memory, IOrchestrator, bytes memory)
-        external
-        returns (address)
-    {
+    function createModule(
+        IModule.Metadata memory,
+        IOrchestrator_v1,
+        bytes memory
+    ) external returns (address) {
         return address(uint160(++addressCounter));
     }
 

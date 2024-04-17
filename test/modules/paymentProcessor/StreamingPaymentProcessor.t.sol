@@ -6,7 +6,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest, IModule, IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {IPaymentProcessor} from

@@ -7,7 +7,9 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 import {Clones} from "@oz/proxy/Clones.sol";
 
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest, IModule, IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 
 // SuT
 import {
@@ -16,8 +18,8 @@ import {
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientAccessMock.sol";
 import {Module, IModule} from "src/modules/base/Module.sol";
 
-import {OrchestratorMock} from
-    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
+import {OrchestratorV1Mock} from
+    "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
 
 import {
     PaymentProcessorMock,

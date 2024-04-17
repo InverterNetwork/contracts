@@ -15,7 +15,8 @@ import {
 import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 /**
  * @title SimplePaymentProcessor
@@ -61,7 +62,7 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
 
     /// @inheritdoc Module
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory /*configData*/
     ) external override(Module) initializer {

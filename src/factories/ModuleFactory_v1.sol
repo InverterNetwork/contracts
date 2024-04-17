@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {
     IModuleFactory_v1,
-    IOrchestrator,
+    IOrchestrator_v1,
     IModule
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
@@ -105,7 +105,7 @@ contract ModuleFactory_v1 is
     /// @inheritdoc IModuleFactory_v1
     function createModule(
         IModule.Metadata memory metadata,
-        IOrchestrator orchestrator,
+        IOrchestrator_v1 orchestrator,
         bytes memory configData
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the

@@ -9,7 +9,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest, IModule, IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 import {IRebasingERC20} from
     "src/modules/fundingManager/token/IRebasingERC20.sol";
 
@@ -76,7 +78,7 @@ contract RebasingFundingManagerTest is ModuleTest {
         //because generateValidUserDeposits uses a mechanism to generate random numbers based on blocktimestamp we warp it
         vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
 
-        //Add Module to Mock Orchestrator
+        //Add Module to Mock Orchestrator_v1
 
         address impl = address(new RebasingFundingManager());
         fundingManager = RebasingFundingManager(Clones.clone(impl));
@@ -105,7 +107,7 @@ contract RebasingFundingManagerTest is ModuleTest {
     function testInit() public override(ModuleTest) {
         assertEq(fundingManager.decimals(), _token.decimals());
         assertEq(
-            fundingManager.name(), "Inverter Funding Token - Orchestrator #1"
+            fundingManager.name(), "Inverter Funding Token - Orchestrator_v1 #1"
         );
         assertEq(fundingManager.symbol(), "IFT-1");
 

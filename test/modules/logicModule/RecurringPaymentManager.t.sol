@@ -9,7 +9,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest, IModule, IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -41,7 +43,7 @@ contract RecurringPaymentManagerTest is ModuleTest {
     event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
     function setUp() public {
-        //Add Module to Mock Orchestrator
+        //Add Module to Mock Orchestrator_v1
         address impl = address(new RecurringPaymentManager());
         recurringPaymentManager = RecurringPaymentManager(Clones.clone(impl));
 

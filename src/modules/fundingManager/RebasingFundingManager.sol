@@ -10,7 +10,8 @@ import {
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Internal Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -69,7 +70,7 @@ contract RebasingFundingManager is
 
     /// @inheritdoc Module
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override(Module) initializer {
@@ -80,7 +81,7 @@ contract RebasingFundingManager is
 
         string memory _id = orchestrator_.orchestratorId().toString();
         string memory _name = string(
-            abi.encodePacked("Inverter Funding Token - Orchestrator #", _id)
+            abi.encodePacked("Inverter Funding Token - Orchestrator_v1 #", _id)
         );
         string memory _symbol = string(abi.encodePacked("IFT-", _id));
         // Initial upstream contracts.

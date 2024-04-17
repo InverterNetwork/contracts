@@ -34,7 +34,7 @@ contract DeployTransactionForwarder_v1 is Script {
 
         // Log
         console2.log(
-            "Deployment of Transaction Forwarder implementation at address ",
+            "Deployment of TransactionForwarder_v1 implementation at address ",
             implementation
         );
     }

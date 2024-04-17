@@ -13,7 +13,7 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
@@ -65,7 +65,7 @@ abstract contract Module is
     /// @dev The module's orchestrator instance.
     ///
     /// @custom:invariant Not mutated after initialization.
-    IOrchestrator internal __Module_orchestrator;
+    IOrchestrator_v1 internal __Module_orchestrator;
 
     /// @dev The module's metadata.
     ///
@@ -80,7 +80,7 @@ abstract contract Module is
     // inlines argument validations not needed in downstream contracts.
 
     /// @notice Modifier to guarantee function is only callable by addresses
-    ///         authorized via Orchestrator.
+    ///         authorized via Orchestrator_v1.
     modifier onlyOrchestratorOwner() {
         IAuthorizer authorizer = __Module_orchestrator.authorizer();
 
@@ -93,7 +93,7 @@ abstract contract Module is
     }
 
     /// @notice Modifier to guarantee function is only callable by either
-    ///         addresses authorized via Orchestrator or the Orchestrator's manager.
+    ///         addresses authorized via Orchestrator_v1 or the Orchestrator_v1's manager.
     modifier onlyOrchestratorOwnerOrManager() {
         IAuthorizer authorizer = __Module_orchestrator.authorizer();
 
@@ -161,7 +161,7 @@ abstract contract Module is
 
     /// @inheritdoc IModule
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory /*configData*/
     ) external virtual initializer {
@@ -172,7 +172,7 @@ abstract contract Module is
     ///      contract in their overriden `init()` function.
     /// @param orchestrator_ The module's orchestrator.
     function __Module_init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata
     ) internal onlyInitializing {
         // Write orchestrator to storage.
@@ -195,7 +195,7 @@ abstract contract Module is
         );
     }
 
-    function init2(IOrchestrator orchestrator_, bytes memory dependencyData)
+    function init2(IOrchestrator_v1 orchestrator_, bytes memory dependencyData)
         external
         virtual
         initializer2
@@ -226,7 +226,7 @@ abstract contract Module is
     }
 
     /// @inheritdoc IModule
-    function orchestrator() public view returns (IOrchestrator) {
+    function orchestrator() public view returns (IOrchestrator_v1) {
         return __Module_orchestrator;
     }
 

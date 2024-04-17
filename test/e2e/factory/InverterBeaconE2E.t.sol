@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator,
+    IOrchestrator_v1,
     ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
 import {
@@ -124,7 +124,7 @@ contract InverterBeaconE2E is E2ETest {
 
     function test_e2e_InverterBeaconUpgrade() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
@@ -133,7 +133,7 @@ contract InverterBeaconE2E is E2ETest {
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ contract InverterBeaconE2E is E2ETest {
 
     function test_e2e_InverterBeaconShutdown() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
@@ -178,7 +178,7 @@ contract InverterBeaconE2E is E2ETest {
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------------

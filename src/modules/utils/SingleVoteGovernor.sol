@@ -3,7 +3,8 @@ pragma solidity 0.8.23;
 
 import {Module, IModule} from "src/modules/base/Module.sol";
 
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {ISingleVoteGovernor} from "src/modules/utils/ISingleVoteGovernor.sol";
 
@@ -83,7 +84,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
 
     /// @inheritdoc Module
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override initializer {

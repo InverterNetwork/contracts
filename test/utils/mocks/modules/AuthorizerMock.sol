@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
 
-import {Module, IModule, IOrchestrator} from "src/modules/base/Module.sol";
+import {Module, IModule, IOrchestrator_v1} from "src/modules/base/Module.sol";
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
@@ -37,7 +37,7 @@ contract AuthorizerMock is IAuthorizer, Module {
     // IModule Functions
 
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) public override(Module) initializer {

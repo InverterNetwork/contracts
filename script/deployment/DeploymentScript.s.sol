@@ -21,7 +21,8 @@ import {DeployBountyManager} from
 import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
 import {DeployTransactionForwarder_v1} from
     "script/external/DeployTransactionForwarder_v1.s.sol";
-import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
+import {DeployOrchestrator_v1} from
+    "script/orchestrator/DeployOrchestrator_v1.s.sol";
 import {DeploySimplePaymentProcessor} from
     "script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol";
 import {DeployRebasingFundingManager} from
@@ -47,8 +48,8 @@ contract DeploymentScript is Script {
 
     // ------------------------------------------------------------------------
     // Instances of Deployer Scripts
-    //Orchestrator
-    DeployOrchestrator deployOrchestrator = new DeployOrchestrator();
+    //Orchestrator_v1
+    DeployOrchestrator_v1 deployOrchestrator = new DeployOrchestrator_v1();
     // Factories
     DeployModuleFactory_v1 deployModuleFactory = new DeployModuleFactory_v1();
     DeployOrchestratorFactory_v1 deployOrchestratorFactory =
@@ -89,7 +90,7 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Deployed Implementation Contracts
 
-    //Orchestrator
+    //Orchestrator_v1
     address orchestrator;
 
     //TransactionForwarder_v1
@@ -259,7 +260,7 @@ contract DeploymentScript is Script {
             "-----------------------------------------------------------------------------"
         );
         console2.log("Deploy orchestrator implementation \n");
-        //Orchestrator
+        //Orchestrator_v1
         orchestrator = deployOrchestrator.run();
 
         console2.log(

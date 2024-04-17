@@ -10,7 +10,7 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
+import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {
     BountyManager,
@@ -42,7 +42,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
     // Storage
 
     ERC20Mock token;
-    IOrchestrator test_orchestrator;
+    IOrchestrator_v1 test_orchestrator;
 
     address[] initialAuthorizedAddresses;
 
@@ -70,7 +70,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
-        // Orchestrator: Owner, funding token
+        // Orchestrator_v1: Owner, funding token
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory_v1.OrchestratorConfig({
             owner: orchestratorOwner,
@@ -116,7 +116,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         additionalModuleConfig[0] = bountyManagerFactoryConfig;
 
         // ------------------------------------------------------------------------
-        // Orchestrator Creation
+        // Orchestrator_v1 Creation
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
@@ -135,17 +135,18 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         assert(address(test_orchestrator) != address(0));
 
-        address orchestratorToken =
-            address(IOrchestrator(test_orchestrator).fundingManager().token());
+        address orchestratorToken = address(
+            IOrchestrator_v1(test_orchestrator).fundingManager().token()
+        );
         assertEq(orchestratorToken, address(token));
 
-        // Now we need to find the MilestoneManager. ModuleManager has a function called `listModules` that returns a list of
+        // Now we need to find the MilestoneManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
         // active modules, let's use that to get the address of the MilestoneManager.
 
         // TODO: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
 
         address[] memory moduleAddresses =
-            IOrchestrator(test_orchestrator).listModules();
+            IOrchestrator_v1(test_orchestrator).listModules();
         uint lenModules = moduleAddresses.length;
         address orchestratorCreatedBountyManagerAddress;
 
@@ -181,7 +182,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             "=================================================================================="
         );
         console2.log(
-            "Orchestrator with Id %s created at address: %s ",
+            "Orchestrator_v1 with Id %s created at address: %s ",
             test_orchestrator.orchestratorId(),
             address(test_orchestrator)
         );

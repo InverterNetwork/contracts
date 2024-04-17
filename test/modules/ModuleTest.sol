@@ -10,17 +10,17 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {OrchestratorMock} from
-    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
+import {OrchestratorV1Mock} from
+    "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
 // Internal Interfaces
-import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
 
 // Mocks
-import {OrchestratorMock} from
-    "test/utils/mocks/orchestrator/OrchestratorMock.sol";
+import {OrchestratorV1Mock} from
+    "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
 import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
@@ -32,7 +32,7 @@ import {PaymentProcessorMock} from
  * @dev Base class for module implementation test contracts.
  */
 abstract contract ModuleTest is Test {
-    OrchestratorMock _orchestrator;
+    OrchestratorV1Mock _orchestrator;
 
     // Mocks
     FundingManagerMock _fundingManager;
@@ -44,7 +44,7 @@ abstract contract ModuleTest is Test {
     TransactionForwarder_v1 _forwarder =
         new TransactionForwarder_v1("TransactionForwarder_v1");
 
-    // Orchestrator Constants
+    // Orchestrator_v1 Constants
     uint constant _ORCHESTRATOR_ID = 1;
 
     // Module Constants
@@ -63,8 +63,8 @@ abstract contract ModuleTest is Test {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
-        address impl = address(new OrchestratorMock(address(_forwarder)));
-        _orchestrator = OrchestratorMock(Clones.clone(impl));
+        address impl = address(new OrchestratorV1Mock(address(_forwarder)));
+        _orchestrator = OrchestratorV1Mock(Clones.clone(impl));
 
         impl = address(new FundingManagerMock());
         _fundingManager = FundingManagerMock(Clones.clone(impl));

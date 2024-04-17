@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 // SuT
 import {
@@ -28,7 +29,7 @@ contract RedeemingBondingCurveFundingManagerMock is
     IBancorFormula public formula;
 
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override(Module) initializer {

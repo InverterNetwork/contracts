@@ -8,7 +8,8 @@ import {
 } from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IRecurringPaymentManager} from
     "src/modules/logicModule/IRecurringPaymentManager.sol";
 
@@ -87,7 +88,7 @@ contract RecurringPaymentManager is
 
     /// @inheritdoc Module
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override(Module) initializer {

@@ -5,12 +5,15 @@ pragma solidity ^0.8.0;
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator,
+    IOrchestrator_v1,
     ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
 
 //SuT
-import {IOrchestrator, Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {
+    IOrchestrator_v1,
+    Orchestrator_v1
+} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Modules that are used in this E2E test
 import {IPaymentProcessor} from
@@ -36,7 +39,7 @@ contract OrchestratorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    //Orchestrator Metadata
+    //Orchestrator_v1 Metadata
     IMetadataManager.ManagerMetadata ownerMetadata;
     IMetadataManager.OrchestratorMetadata orchestratorMetadata;
     IMetadataManager.MemberMetadata[] teamMetadata;
@@ -87,7 +90,7 @@ contract OrchestratorE2E is E2ETest {
         setUpBountyManager();
 
         //==========================================
-        //Set up Orchestrator Metadata
+        //Set up Orchestrator_v1 Metadata
 
         ownerMetadata = IMetadataManager.ManagerMetadata(
             "Name", address(0xBEEF), "TwitterHandle"
@@ -125,8 +128,8 @@ contract OrchestratorE2E is E2ETest {
             token: token
         });
 
-        //Create Orchestrator
-        IOrchestrator orchestrator =
+        //Create Orchestrator_v1
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //------------------------------------------------------------------------------------------------

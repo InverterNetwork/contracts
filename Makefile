@@ -116,7 +116,7 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/utils/DeploySingleVoteGovernor.s.sol
 	
 	## orchestrator
-	@forge script script/orchestrator/DeployOrchestrator.s.sol
+	@forge script script/orchestrator/DeployOrchestrator_v1.s.sol
 
 	## setup
 	@forge script script/setup/SetupToyOrchestratorScript.s.sol

@@ -10,7 +10,7 @@ import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {
     E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
 import {RebasingFundingManager} from
@@ -85,7 +85,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
     function test_e2e_SendMetaTransaction() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
@@ -94,7 +94,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
     function test_e2e_SendMulticall() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
@@ -228,7 +228,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //lets use this example user

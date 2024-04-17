@@ -48,7 +48,9 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
-        console2.log("Deployment of Beacon at address", address(beacon));
+        console2.log(
+            "Deployment of InverterBeacon_v1 at address", address(beacon)
+        );
         console2.log("Implementation upgraded and Metadata registered");
 
         return address(beacon);
@@ -77,7 +79,11 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
-        console2.log("Deployment of Beacon at address: ", beaconAddress);
-        console2.log("Creation of Proxy at address: ", address(proxy));
+        console2.log(
+            "Deployment of InverterBeacon_v1 at address: ", beaconAddress
+        );
+        console2.log(
+            "Creation of InverterBeaconProxy_v1 at address: ", address(proxy)
+        );
     }
 }

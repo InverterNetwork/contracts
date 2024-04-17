@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -61,7 +61,7 @@ interface IOrchestratorFactory_v1 {
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
-    ) external returns (IOrchestrator);
+    ) external returns (IOrchestrator_v1);
 
     /// @notice Returns the {IOrchestrator_v1} target implementation address.
     function target() external view returns (address);

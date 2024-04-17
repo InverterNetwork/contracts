@@ -9,7 +9,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 // Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest, IModule, IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 import {BancorFormula} from
     "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
 
@@ -344,9 +346,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test openBuy and _openBuy function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator_v1 owner
         │      └── it should revert (tested in base Module modifier tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                └── when buy functionality is already open
                 │      └── it should revert
                 └── when buy functionality is not open
@@ -381,9 +383,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test closeBuy and _closeBuy function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator_v1 owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                └── when buy functionality is already closed
                 │      └── it should revert 
                 └── when buy functionality is not closed
@@ -416,9 +418,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test setBuyFee and _setBuyFee function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator_v1 owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator_v1 owner
                └── when fee is over 100% 
                 │      └── it should revert
                 ├── when fee is  100% 

@@ -6,7 +6,8 @@ import {Module} from "src/modules/base/Module.sol";
 
 // Internal Interfaces
 import {IMetadataManager} from "src/modules/utils/IMetadataManager.sol";
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 contract MetadataManager is IMetadataManager, Module {
     function supportsInterface(bytes4 interfaceId)
@@ -32,7 +33,7 @@ contract MetadataManager is IMetadataManager, Module {
 
     /// @inheritdoc Module
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external override(Module) initializer {

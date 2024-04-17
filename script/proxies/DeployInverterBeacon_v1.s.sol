@@ -38,7 +38,9 @@ contract DeployInverterBeacon_v1 is Script {
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
-        console2.log("Deployment of Beacon at address", address(beacon));
+        console2.log(
+            "Deployment of InverterBeacon_v1 at address", address(beacon)
+        );
 
         return address(beacon);
     }

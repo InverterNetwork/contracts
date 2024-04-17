@@ -76,17 +76,17 @@ interface IBondingCurveFundingManagerBase {
     function buy(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the buying functionality for the token.
-    /// @dev Only callable by the Orchestrator owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
     ///      Reverts if buying is already open.
     function openBuy() external;
 
     /// @notice Closes the buying functionality for the token.
-    /// @dev Only callable by the Orchestrator owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
     ///      Reverts if buying is already closed.
     function closeBuy() external;
 
     /// @notice Sets the fee percentage for buying tokens, payed in collateral
-    /// @dev Only callable by the Orchestrator owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
     ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setBuyFee(uint _fee) external;

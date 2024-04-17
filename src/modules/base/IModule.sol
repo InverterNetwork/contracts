@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 interface IModule {
     struct Metadata {
@@ -42,7 +43,7 @@ interface IModule {
     /// @notice Given metadata invalid.
     error Module__InvalidMetadata();
 
-    /// @notice Orchestrator callback triggered failed.
+    /// @notice Orchestrator_v1 callback triggered failed.
     /// @param funcSig The signature of the function called.
     error Module_OrchestratorCallbackFailed(string funcSig);
 
@@ -64,7 +65,7 @@ interface IModule {
     /// @param configData Variable config data for specific module
     ///                   implementations.
     function init(
-        IOrchestrator orchestrator,
+        IOrchestrator_v1 orchestrator,
         Metadata memory metadata,
         bytes memory configData
     ) external;
@@ -73,7 +74,7 @@ interface IModule {
     /// @param orchestrator The module's orchestrator instance.
     /// @param configData Variable config data for specific module
     ///                   implementations.
-    function init2(IOrchestrator orchestrator, bytes memory configData)
+    function init2(IOrchestrator_v1 orchestrator, bytes memory configData)
         external;
 
     /// @notice Returns the module's identifier.
@@ -95,9 +96,9 @@ interface IModule {
     /// @return The module's title.
     function title() external view returns (string memory);
 
-    /// @notice Returns the module's {IOrchestrator} orchestrator instance.
+    /// @notice Returns the module's {IOrchestrator_v1} orchestrator instance.
     /// @return The module's orchestrator.
-    function orchestrator() external view returns (IOrchestrator);
+    function orchestrator() external view returns (IOrchestrator_v1);
 
     function grantModuleRole(bytes32 role, address addr) external;
 

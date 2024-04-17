@@ -25,9 +25,9 @@ import {IAccessControlEnumerable} from
     "@oz/access/extensions/IAccessControlEnumerable.sol";
 
 // Internal Dependencies
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 // Interfaces
-import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ERC721Mock} from "test/utils/mocks/ERC721Mock.sol";
@@ -45,8 +45,8 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
         //==========================================================================
 
-        address propImpl = address(new Orchestrator(address(0)));
-        _orchestrator = Orchestrator(Clones.clone(propImpl));
+        address propImpl = address(new Orchestrator_v1(address(0)));
+        _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
         ModuleMock module = new ModuleMock();
         address[] memory modules = new address[](1);
         modules[0] = address(module);
@@ -62,7 +62,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
         address initialManager = address(this);
 
         _authorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );
@@ -84,7 +84,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
 
     // Mocks
     TokenGatedRoleAuthorizer _authorizer;
-    Orchestrator internal _orchestrator = new Orchestrator(address(0));
+    Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
@@ -103,7 +103,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
     bytes32 immutable ROLE_TOKEN = "ROLE_TOKEN";
     bytes32 immutable ROLE_NFT = "ROLE_NFT";
 
-    // Orchestrator Constants
+    // Orchestrator_v1 Constants
     uint internal constant _ORCHESTRATOR_ID = 1;
     // Module Constants
     uint constant MAJOR_VERSION = 1;
@@ -131,8 +131,8 @@ contract TokenGatedRoleAuthorizerTest is Test {
     function setUp() public {
         address authImpl = address(new TokenGatedRoleAuthorizer());
         _authorizer = TokenGatedRoleAuthorizer(Clones.clone(authImpl));
-        address propImpl = address(new Orchestrator(address(0)));
-        _orchestrator = Orchestrator(Clones.clone(propImpl));
+        address propImpl = address(new Orchestrator_v1(address(0)));
+        _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
         address[] memory modules = new address[](1);
         modules[0] = address(mockModule);
         _orchestrator.init(
@@ -147,7 +147,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
         address initialManager = address(this);
 
         _authorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );

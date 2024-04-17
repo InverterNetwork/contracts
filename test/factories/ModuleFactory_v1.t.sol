@@ -15,7 +15,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleFactory_v1,
     IModule,
-    IOrchestrator
+    IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 // Mocks
@@ -188,7 +188,7 @@ contract ModuleFactoryV1Test is Test {
         // Create new module instance.
         IModule newModule = IModule(
             factory.createModule(
-                metadata, IOrchestrator(orchestrator), configData
+                metadata, IOrchestrator_v1(orchestrator), configData
             )
         );
 
@@ -207,7 +207,9 @@ contract ModuleFactoryV1Test is Test {
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory_v1__UnregisteredMetadata.selector
         );
-        factory.createModule(metadata, IOrchestrator(orchestrator), configData);
+        factory.createModule(
+            metadata, IOrchestrator_v1(orchestrator), configData
+        );
     }
 
     //--------------------------------------------------------------------------

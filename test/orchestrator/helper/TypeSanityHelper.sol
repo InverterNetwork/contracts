@@ -23,8 +23,8 @@ contract TypeSanityHelper is Test {
     }
 
     //--------------------------------------------------------------------------------
-    // Types for Orchestrator
-    // Contract: Orchestrator.sol
+    // Types for Orchestrator_v1
+    // Contract: Orchestrator_v1.sol
 
     function assumeValidOrchestratorId(uint id) public pure {
         vm.assume(id != 0);
@@ -32,7 +32,7 @@ contract TypeSanityHelper is Test {
 
     //--------------------------------------------------------------------------------
     // Types for Module
-    // Contract: base/ModuleManager.sol
+    // Contract: base/ModuleManagerBase_v1.sol
 
     uint8 private constant MAX_MODULES = 128;
 

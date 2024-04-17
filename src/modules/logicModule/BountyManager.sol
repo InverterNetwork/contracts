@@ -12,7 +12,8 @@ import {
 } from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IBountyManager} from "src/modules/logicModule/IBountyManager.sol";
 
@@ -204,7 +205,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
 
     /// @inheritdoc Module
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory
     ) external override(Module) initializer {
@@ -214,7 +215,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
         _claimList.init();
     }
 
-    function init2(IOrchestrator, bytes memory)
+    function init2(IOrchestrator_v1, bytes memory)
         external
         override(Module)
         initializer2

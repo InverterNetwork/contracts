@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
+import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 interface IModuleFactory_v1 {
@@ -52,7 +52,7 @@ interface IModuleFactory_v1 {
     /// @param configData The configData of the module
     function createModule(
         IModule.Metadata memory metadata,
-        IOrchestrator orchestrator,
+        IOrchestrator_v1 orchestrator,
         bytes memory configData
     ) external returns (address);
 

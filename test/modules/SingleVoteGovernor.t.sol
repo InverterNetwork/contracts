@@ -14,13 +14,16 @@ import {
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest, IModule, IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 
 // Internal Dependencies
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
 // Mocks
@@ -42,7 +45,7 @@ contract SingleVoteGovernorTest is ModuleTest {
     // SuT
     SingleVoteGovernor _governor;
 
-    //Orchestrator _orchestrator;
+    //Orchestrator_v1 _orchestrator;
     address[] initialVoters;
     address[] currentVoters;
 
@@ -108,7 +111,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         uint _startingDuration = DEFAULT_DURATION;
 
         _governor.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialVoters, _startingThreshold, _startingDuration)
         );
@@ -301,7 +304,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         }
 
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -347,7 +350,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -374,7 +377,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -390,7 +393,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -404,7 +407,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -418,7 +421,7 @@ contract SingleVoteGovernorTest is ModuleTest {
             )
         );
         testAuthorizer.init(
-            IOrchestrator(_orchestrator),
+            IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
@@ -999,7 +1002,7 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator.Orchestrator__CallerNotAuthorized.selector,
+                IOrchestrator_v1.Orchestrator_v1__CallerNotAuthorized.selector,
                 _authorizer.getOwnerRole(),
                 _other
             )

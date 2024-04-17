@@ -2,18 +2,18 @@
 pragma solidity ^0.8.0;
 
 import {
-    ModuleManager,
-    IModuleManager
-} from "src/orchestrator/base/ModuleManager.sol";
-import {Orchestrator} from "src/orchestrator/Orchestrator.sol";
+    ModuleManagerBase_v1,
+    IModuleManagerBase_v1
+} from "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
-contract OrchestratorMock is Orchestrator {
+contract OrchestratorV1Mock is Orchestrator_v1 {
     bool connectToTrustedForwarder = false;
     bool public interceptData;
     bool public executeTxBoolReturn;
     bytes public executeTxData;
 
-    constructor(address _trustedForwarder) Orchestrator(_trustedForwarder) {}
+    constructor(address _trustedForwarder) Orchestrator_v1(_trustedForwarder) {}
 
     function flipConnectToTrustedForwarder() external {
         connectToTrustedForwarder = !connectToTrustedForwarder;
@@ -23,7 +23,7 @@ contract OrchestratorMock is Orchestrator {
         public
         view
         virtual
-        override(Orchestrator)
+        override(Orchestrator_v1)
         returns (bool)
     {
         if (connectToTrustedForwarder) {
@@ -35,7 +35,7 @@ contract OrchestratorMock is Orchestrator {
 
     function executeTxFromModule(address to, bytes memory data)
         external
-        override(IModuleManager, ModuleManager)
+        override(IModuleManagerBase_v1, ModuleManagerBase_v1)
         onlyModule
         returns (bool, bytes memory)
     {

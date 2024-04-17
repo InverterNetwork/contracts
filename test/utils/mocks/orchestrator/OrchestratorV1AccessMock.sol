@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Interfaces
-import {IModuleManager} from "src/orchestrator/base/IModuleManager.sol";
+import {IModuleManagerBase_v1} from
+    "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
-contract OrchestratorAccessMock is IOrchestrator {
+contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     IERC20 public token;
     IPaymentProcessor public paymentProcessor;
     IFundingManager public fundingManager;

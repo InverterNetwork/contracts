@@ -11,7 +11,10 @@ import {
 import {DeployTokenGatedRoleAuthorizer} from
     "script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol";
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
-import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
+import {
+    Orchestrator_v1,
+    IOrchestrator_v1
+} from "src/orchestrator/Orchestrator_v1.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
@@ -36,7 +39,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         new DeployTokenGatedRoleAuthorizer();
 
     // ===============================================================================================================
-    // Introduce addresses of the deployed Orchestrator here
+    // Introduce addresses of the deployed Orchestrator_v1 here
     // ===============================================================================================================
     address moduleFactoryAddress = scriptConstants.moduleFactoryAddress();
     address orchestratorAddress = scriptConstants.orchestratorAddress();
@@ -51,7 +54,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     );
 
     ModuleFactory_v1 moduleFactory = ModuleFactory_v1(moduleFactoryAddress);
-    Orchestrator orchestrator = Orchestrator(orchestratorAddress);
+    Orchestrator_v1 orchestrator = Orchestrator_v1(orchestratorAddress);
 
     BountyManager bountyManager = BountyManager(bountyManagerAddress);
 
@@ -79,7 +82,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // moduleFactory -> create Module
         address deployedAuthorizerAddress = moduleFactory.createModule(
             authorizerMetadata,
-            IOrchestrator(orchestrator),
+            IOrchestrator_v1(orchestrator),
             authorizerFactoryConfig.configData
         );
         TokenGatedRoleAuthorizer deployedAuthorizer =

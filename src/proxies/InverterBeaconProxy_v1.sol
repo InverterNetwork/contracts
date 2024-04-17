@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// External Dependencies
-import {Proxy} from "@oz/proxy/Proxy.sol";
-
 // Internal Dependencies
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
+// External Dependencies
+import {Proxy} from "@oz/proxy/Proxy.sol";
 
 /**
  * @title BeaconProxy
