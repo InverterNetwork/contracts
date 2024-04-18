@@ -12,6 +12,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Dependencies
 import {OrchestratorMock} from
     "test/utils/mocks/orchestrator/OrchestratorMock.sol";
+import {TaxMan} from "src/external/taxation/TaxMan.sol";
 import {TransactionForwarder} from
     "src/external/forwarder/TransactionForwarder.sol";
 
@@ -43,6 +44,9 @@ abstract contract ModuleTest is Test {
 
     GovernorMock governor = new GovernorMock();
 
+    TaxMan taxMan = new TaxMan();
+    address treasury = makeAddr("treasury");
+
     //Deploy a forwarder used to enable metatransactions
     TransactionForwarder _forwarder =
         new TransactionForwarder("TransactionForwarder");
@@ -63,6 +67,9 @@ abstract contract ModuleTest is Test {
     // Setup
 
     function _setUpOrchestrator(IModule module) internal virtual {
+        taxMan.init(address(this), treasury, 0, 0);
+        governor.setTaxMan(address(taxMan));
+
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 

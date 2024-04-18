@@ -37,7 +37,6 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     address owner_address = makeAddr("alice");
     address non_owner_address = makeAddr("bob");
-    address treasury = makeAddr("treasury");
 
     event BuyingEnabled();
     event BuyingDisabled();
@@ -94,6 +93,13 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 type(IFundingManager).interfaceId
             )
         );
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: Invariant
+
+    function testBPS() public {
+        assertEq(taxMan.BPS(), bondingCurveFundingManager.call_BPS());
     }
 
     //--------------------------------------------------------------------------
@@ -363,7 +369,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint _collateralFee,
         uint _issuanceFee,
         uint _projectFee
-    ) public {
+    ) public view {
         vm.assume(_issuanceFee == 0);
         vm.assume(_projectFee == 0);
         _collateralFee =
@@ -541,36 +547,48 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
     */
 
-    // function testInternalGetBuyFeesAndTreasuryAddresses_works(
-    //     address _collateralTreasury,
-    //     address _issuanceTreasury,
-    //     uint _collateralFee,
-    //     uint _issuanceFee
-    // ) public {
-    //     uint _bps = bondingCurveFundingManager.call_BPS(); // TODO: check if upper limit for fee manager is different
-    //     vm.assume(collateralFee <= _bps && issuanceFee <= _bps);
-    //     vm.assume(
-    //         collateralTreasury != address(0) && issuanceTreasury != address(0)
-    //     );
+    function testInternalGetBuyFeesAndTreasuryAddresses_works(
+        address _treasury,
+        uint _collateralFee,
+        uint _issuanceFee
+    ) public {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        vm.assume(_collateralFee <= _bps && _issuanceFee <= _bps);
+        vm.assume(_treasury != address(0));
 
-    //     // TODO: Set values in fee manager. Not sure how to signal to the fee manager if the value should be stored as collateral or issuance fee
-    //     // bytes4 buyFeeFunctionSelector = bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")));
-    //     // bytes4[2]  _functions = [buyFeeFunctionSelector, buyFeeFunctionSelector];
-    //     // uint[2] _values = [collateralFee, issuanceFee];
-    //     // taxMan.setWorkflowFunctionFee(address(_orchestrator), _functions, _values );
+        // Set values in taxMan
 
-    //     (
-    //         address collateralTreasury,
-    //         address issuanceTreasury,
-    //         uint collateralFee,
-    //         uint issuanceFee
-    //     ) = bondingCurveFundingManager.call_getBuyFeesAndTreasuryAddresses();
+        taxMan.setWorkflowTreasuries(address(_orchestrator), _treasury);
+        bytes4 buyFeeFunctionSelector =
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")));
 
-    //     assertEq(collateralTreasury, _collateralTreasury);
-    //     assertEq(issuanceTreasury, _issuanceTreasury);
-    //     assertEq(collateralFee, _collateralFee);
-    //     assertEq(issuanceFee, _issuanceFee);
-    // }
+        taxMan.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(bondingCurveFundingManager),
+            buyFeeFunctionSelector,
+            true,
+            _collateralFee
+        );
+        taxMan.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(bondingCurveFundingManager),
+            buyFeeFunctionSelector,
+            true,
+            _issuanceFee
+        );
+
+        (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralFee,
+            uint issuanceFee
+        ) = bondingCurveFundingManager.call_getBuyFeesAndTreasuryAddresses();
+
+        assertEq(collateralTreasury, _treasury);
+        assertEq(issuanceTreasury, _treasury);
+        assertEq(collateralFee, _collateralFee);
+        assertEq(issuanceFee, _issuanceFee);
+    }
 
     /* Test _processProtocolFeeViaMinting() function
         ├── Given the fee amount > 0
@@ -662,7 +680,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 └── When the function _processProtocolFeeViaTransfer() is called
                     └── Then the _feeAmount should be transferred to treasury address
     */
-   // TODO: write test
+    // TODO: write test
 
     /* Test _calculateNetAndSplitFees() function
         ├── Given the (protocol fee + project fee) == 0
@@ -689,7 +707,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                         └── And it should return the correct projectFeeAmount
     */
 
-   // TODO: Write test
+    // TODO: Write test
 
     /* Test _setDecimals function
        

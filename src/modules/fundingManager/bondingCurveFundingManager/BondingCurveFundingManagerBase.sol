@@ -184,7 +184,7 @@ abstract contract BondingCurveFundingManagerBase is
         );
         // Get protocol fee percentages and treasury addresses
         (
-            address collateralreasury,
+            address collateralTreasury,
             address issuanceTreasury,
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
@@ -199,7 +199,7 @@ abstract contract BondingCurveFundingManagerBase is
         );
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
-            collateralreasury,
+            collateralTreasury,
             __Module_orchestrator.fundingManager().token(),
             protocolFeeAmount
         );
@@ -308,9 +308,6 @@ abstract contract BondingCurveFundingManagerBase is
         (issuanceBuyFeePercentage, issuanceTreasury) = getTaxManIssuanceFeeData(
             bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
         );
-
-        // TODO: Delete return
-        return (address(0), address(0), 100, 100);
     }
 
     function _calculateNetAndSplitFees(

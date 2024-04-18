@@ -491,7 +491,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
     //      - Mints collateral tokens to a seller and
     //      - Deposits them so they can later be sold.
     //      - Approves the BondingCurve contract to spend the receipt tokens
-    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many toknes as they deposit
+    //      - This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many toknes as they deposit
     function _prepareSellConditions(address seller, uint amount) internal {
         _token.mint(seller, amount);
 

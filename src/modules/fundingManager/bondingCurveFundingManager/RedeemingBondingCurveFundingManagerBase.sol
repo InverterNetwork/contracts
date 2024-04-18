@@ -256,18 +256,13 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             uint issuanceSellFeePercentage
         )
     {
-        // (collateralSellFeePercentage, collateralTreasury) =
-        // __Module_orchestrator.taxMan().getCollateralFee(
-        //     address(__Module_orchestrator),
-        //     bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
-        // );
-        // (issuanceSellFeePercentage, issuanceTreasury) = __Module_orchestrator
-        //     .taxMan().getIssuanceFee(
-        //     address(__Module_orchestrator),
-        //     bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
-        // );
-
-        // TODO: Delete return
-        return (address(0), address(0), 100, 100);
+        (collateralSellFeePercentage, collateralTreasury) =
+        getTaxManCollateralFeeData(
+            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+        );
+        (issuanceSellFeePercentage, issuanceTreasury) =
+        getTaxManCollateralFeeData(
+            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+        );
     }
 }
