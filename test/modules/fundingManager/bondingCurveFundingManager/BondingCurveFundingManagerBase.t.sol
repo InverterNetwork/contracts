@@ -366,7 +366,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     ) public {
         vm.assume(_issuanceFee == 0);
         vm.assume(_projectFee == 0);
-        _collateralFee = bound(_collateralFee, 1, bondingCurveFundingManager.call_BPS());
+        _collateralFee =
+            bound(_collateralFee, 1, bondingCurveFundingManager.call_BPS());
     }
 
     // Protocol fee for collateral > 0
@@ -556,7 +557,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     //     // bytes4 buyFeeFunctionSelector = bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")));
     //     // bytes4[2]  _functions = [buyFeeFunctionSelector, buyFeeFunctionSelector];
     //     // uint[2] _values = [collateralFee, issuanceFee];
-    //     // feeManager.setWorkflowFunctionFee(address(_orchestrator), _functions, _values );
+    //     // taxMan.setWorkflowFunctionFee(address(_orchestrator), _functions, _values );
 
     //     (
     //         address collateralTreasury,

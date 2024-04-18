@@ -83,7 +83,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     bytes32 public constant COMMUNITY_MULTISIG_ROLE = "0x01";
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
-    address private feeManager;
+    address private taxMan;
 
     uint public timelockPeriod;
 
@@ -139,20 +139,20 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     }
 
     //--------------------------------------------------------------------------
-    // FeeManager Functions
+    // TaxMan Functions
 
     /// @inheritdoc IGovernor
-    function getFeeManager() external view returns (address) {
-        return feeManager;
+    function getTaxMan() external view returns (address) {
+        return taxMan;
     }
 
     /// @inheritdoc IGovernor
-    function setFeeManager(address newFeeManager)
+    function setTaxMan(address newTaxMan)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
-        validAddress(newFeeManager)
+        validAddress(newTaxMan)
     {
-        feeManager = newFeeManager;
+        taxMan = newTaxMan;
     }
 
     //--------------------------------------------------------------------------

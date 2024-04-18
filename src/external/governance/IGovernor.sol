@@ -98,7 +98,7 @@ interface IGovernor {
     function init(
         address communityMultisig,
         address teamMultisig,
-        uint timelockPeriod //@note should we add feeManager here?
+        uint timelockPeriod //@note should we add taxMan here?
     ) external;
 
     //--------------------------------------------------------------------------
@@ -112,16 +112,16 @@ interface IGovernor {
         returns (Timelock memory);
 
     //--------------------------------------------------------------------------
-    // FeeManager
+    // TaxMan
 
-    /// @notice Returns the FeeManager address
-    /// @return Address of the FeeManager
-    function getFeeManager() external view returns (address);
+    /// @notice Returns the TaxMan address
+    /// @return Address of the TaxMan
+    function getTaxMan() external view returns (address);
 
-    /// @notice Sets the address of the FeeManager
+    /// @notice Sets the address of the TaxMan
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
-    /// @param newFeeManager The address of the new FeeManager
-    function setFeeManager(address newFeeManager) external;
+    /// @param newTaxMan The address of the new TaxMan
+    function setTaxMan(address newTaxMan) external;
 
     //--------------------------------------------------------------------------
     // Beacon Functions
