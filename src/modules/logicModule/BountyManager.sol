@@ -8,7 +8,7 @@ import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 import {
     ERC20PaymentClient,
-    Module
+    Module_v1
 } from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
@@ -203,12 +203,12 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory
-    ) external override(Module) initializer {
+    ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
         //init empty list of bounties and claims
         _bountyList.init();
@@ -217,7 +217,7 @@ contract BountyManager is IBountyManager, ERC20PaymentClient {
 
     function init2(IOrchestrator_v1, bytes memory)
         external
-        override(Module)
+        override(Module_v1)
         initializer2
     {
         //Note: due to the authorizer still not being set during initialization,

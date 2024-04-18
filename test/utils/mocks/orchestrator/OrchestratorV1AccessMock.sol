@@ -10,7 +10,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Interfaces
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
@@ -18,7 +18,7 @@ import {IPaymentProcessor} from
 contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     IERC20 public token;
     IPaymentProcessor public paymentProcessor;
-    IFundingManager public fundingManager;
+    IFundingManager_v1 public fundingManager;
 
     bool public executeTxBoolReturn;
     bytes public executeTxData;
@@ -55,14 +55,14 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     function init(
         uint,
         address[] calldata,
-        IFundingManager,
+        IFundingManager_v1,
         IAuthorizer,
         IPaymentProcessor
     ) external {}
 
     function setAuthorizer(IAuthorizer authorizer_) external {}
 
-    function setFundingManager(IFundingManager fundingManager_) external {
+    function setFundingManager(IFundingManager_v1 fundingManager_) external {
         fundingManager = fundingManager_;
     }
 

@@ -13,7 +13,7 @@ import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
 // Internal Dependencies
-import {Module, IModule} from "src/modules/base/Module.sol";
+import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 import {IAuthorizer} from "./IAuthorizer.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -21,13 +21,13 @@ import {IOrchestrator_v1} from
 contract RoleAuthorizer is
     IAuthorizer,
     AccessControlEnumerableUpgradeable,
-    Module
+    Module_v1
 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module, AccessControlEnumerableUpgradeable)
+        override(Module_v1, AccessControlEnumerableUpgradeable)
         returns (bool)
     {
         return interfaceId == type(IAuthorizer).interfaceId
@@ -74,7 +74,7 @@ contract RoleAuthorizer is
         _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
     }
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,

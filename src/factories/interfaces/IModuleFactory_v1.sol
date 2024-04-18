@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
+import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 interface IModuleFactory_v1 {
@@ -28,7 +28,7 @@ interface IModuleFactory_v1 {
     /// @param metadata The registered Metadata
     /// @param beacon The registered Beacon
     event MetadataRegistered(
-        IModule.Metadata indexed metadata, IInverterBeacon_v1 indexed beacon
+        IModule_v1.Metadata indexed metadata, IInverterBeacon_v1 indexed beacon
     );
 
     /// @notice Event emitted when new module created for a orchestrator_v1.
@@ -51,7 +51,7 @@ interface IModuleFactory_v1 {
     /// @param orchestrator The orchestrator's instance of the module.
     /// @param configData The configData of the module
     function createModule(
-        IModule.Metadata memory metadata,
+        IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
         bytes memory configData
     ) external returns (address);
@@ -61,7 +61,7 @@ interface IModuleFactory_v1 {
     /// @param metadata The module's metadata.
     /// @return The module's {IInverterBeacon_v1} instance registered.
     /// @return The metadata's id.
-    function getBeaconAndId(IModule.Metadata memory metadata)
+    function getBeaconAndId(IModule_v1.Metadata memory metadata)
         external
         view
         returns (IInverterBeacon_v1, bytes32);
@@ -72,7 +72,7 @@ interface IModuleFactory_v1 {
     /// @param metadata The module's metadata.
     /// @param beacon The module's {IInverterBeacon_v1} instance.
     function registerMetadata(
-        IModule.Metadata memory metadata,
+        IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external;
 }

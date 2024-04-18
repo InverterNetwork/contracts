@@ -16,7 +16,7 @@ import {
     Orchestrator_v1,
     IOrchestrator_v1
 } from "src/orchestrator/Orchestrator_v1.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 

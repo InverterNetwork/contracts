@@ -5,7 +5,7 @@ pragma solidity 0.8.23;
 import {
     IModuleFactory_v1,
     IOrchestrator_v1,
-    IModule
+    IModule_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 // Internal Dependencies
@@ -58,7 +58,7 @@ contract ModuleFactory_v1 is
 
     /// @notice Modifier to guarantee function is only callable with valid
     ///         metadata.
-    modifier validMetadata(IModule.Metadata memory data) {
+    modifier validMetadata(IModule_v1.Metadata memory data) {
         if (!LibMetadata.isValid(data)) {
             revert ModuleFactory_v1__InvalidMetadata();
         }
@@ -104,7 +104,7 @@ contract ModuleFactory_v1 is
 
     /// @inheritdoc IModuleFactory_v1
     function createModule(
-        IModule.Metadata memory metadata,
+        IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
         bytes memory configData
     ) external returns (address) {
@@ -120,7 +120,7 @@ contract ModuleFactory_v1 is
 
         address implementation = address(new InverterBeaconProxy_v1(beacon));
 
-        IModule(implementation).init(orchestrator, metadata, configData);
+        IModule_v1(implementation).init(orchestrator, metadata, configData);
 
         emit ModuleCreated(
             address(orchestrator),
@@ -135,7 +135,7 @@ contract ModuleFactory_v1 is
     // Public View Functions
 
     /// @inheritdoc IModuleFactory_v1
-    function getBeaconAndId(IModule.Metadata memory metadata)
+    function getBeaconAndId(IModule_v1.Metadata memory metadata)
         public
         view
         returns (IInverterBeacon_v1, bytes32)
@@ -150,7 +150,7 @@ contract ModuleFactory_v1 is
 
     /// @inheritdoc IModuleFactory_v1
     function registerMetadata(
-        IModule.Metadata memory metadata,
+        IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external onlyOwner validMetadata(metadata) validBeacon(beacon) {
         IInverterBeacon_v1 oldBeacon;

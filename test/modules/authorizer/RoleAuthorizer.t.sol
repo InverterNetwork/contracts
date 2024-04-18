@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import {
     RoleAuthorizer,
     IAuthorizer,
-    IModule
+    IModule_v1
 } from "src/modules/authorizer/RoleAuthorizer.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -24,10 +24,10 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 // Interfaces
-import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
+import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
+import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
 import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {PaymentProcessorMock} from
@@ -59,8 +59,8 @@ contract RoleAuthorizerTest is Test {
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
-    IModule.Metadata _METADATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+    IModule_v1.Metadata _METADATA =
+        IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     //--------------------------------------------------------------------------
     // Events
@@ -105,7 +105,7 @@ contract RoleAuthorizerTest is Test {
         _authorizer = RoleAuthorizer(Clones.clone(authImpl));
         address propImpl = address(new Orchestrator_v1(address(_forwarder)));
         _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
-        ModuleMock module = new ModuleMock();
+        ModuleV1Mock module = new ModuleV1Mock();
         address[] memory modules = new address[](1);
         modules[0] = address(module);
         _orchestrator.init(
@@ -244,7 +244,7 @@ contract RoleAuthorizerTest is Test {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
         vm.expectRevert(
-            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
         );
         _authorizer.init2(_orchestrator, abi.encode(123));
 
@@ -252,7 +252,7 @@ contract RoleAuthorizerTest is Test {
         // SHOULD FAIL
         bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
-            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
         );
         _authorizer.init2(_orchestrator, dependencyData);
 
@@ -263,7 +263,7 @@ contract RoleAuthorizerTest is Test {
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
-        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         _authorizer.init2(_orchestrator, dependencyData);
     }
 
@@ -1162,7 +1162,7 @@ contract RoleAuthorizerTest is Test {
     // - 1 with burnt admin
     // BOB is member of both roles.
     function _setupMockSelfManagedModule() internal returns (address) {
-        ModuleMock mockModule = new ModuleMock();
+        ModuleV1Mock mockModule = new ModuleV1Mock();
 
         vm.prank(ALBA); //We assume ALBA is owner
         _orchestrator.addModule(address(mockModule));

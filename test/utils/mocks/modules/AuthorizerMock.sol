@@ -3,16 +3,20 @@ pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
 
-import {Module, IModule, IOrchestrator_v1} from "src/modules/base/Module.sol";
+import {
+    Module_v1,
+    IModule_v1,
+    IOrchestrator_v1
+} from "src/modules/base/Module_v1.sol";
 
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 
-contract AuthorizerMock is IAuthorizer, Module {
+contract AuthorizerMock is IAuthorizer, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module)
+        override(Module_v1)
         returns (bool)
     {
         bytes4 interfaceId_IAuthorizer = type(IAuthorizer).interfaceId;
@@ -34,13 +38,13 @@ contract AuthorizerMock is IAuthorizer, Module {
     }
 
     //--------------------------------------------------------------------------
-    // IModule Functions
+    // IModule_v1 Functions
 
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) public override(Module) initializer {
+    ) public override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
         // Read first authorized address from configData.

@@ -6,7 +6,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleFactory_v1,
     IInverterBeacon_v1,
-    IModule,
+    IModule_v1,
     IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
@@ -20,14 +20,14 @@ contract ModuleFactoryMock is IModuleFactory_v1 {
     address public governor;
 
     function createModule(
-        IModule.Metadata memory,
+        IModule_v1.Metadata memory,
         IOrchestrator_v1,
         bytes memory
     ) external returns (address) {
         return address(uint160(++addressCounter));
     }
 
-    function getBeaconAndId(IModule.Metadata memory metadata)
+    function getBeaconAndId(IModule_v1.Metadata memory metadata)
         external
         view
         returns (IInverterBeacon_v1, bytes32)
@@ -35,7 +35,7 @@ contract ModuleFactoryMock is IModuleFactory_v1 {
         return (_beacon, LibMetadata.identifier(metadata));
     }
 
-    function registerMetadata(IModule.Metadata memory, IInverterBeacon_v1)
+    function registerMetadata(IModule_v1.Metadata memory, IInverterBeacon_v1)
         external
     {}
 }

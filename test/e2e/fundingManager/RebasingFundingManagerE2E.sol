@@ -9,8 +9,7 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 //SuT
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 /**
  * E2e test demonstrating a orchestrator's fund management.
@@ -92,8 +91,8 @@ contract RebasingFundingManagerE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
+        FM_Rebasing_v1 fundingManager =
+            FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
         // IMPORTANT
         // =========

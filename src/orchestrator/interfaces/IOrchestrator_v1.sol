@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Internal Interfaces
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
@@ -64,7 +64,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     function init(
         uint orchestratorId,
         address[] calldata modules,
-        IFundingManager fundingManager,
+        IFundingManager_v1 fundingManager,
         IAuthorizer authorizer,
         IPaymentProcessor paymentProcessor
     ) external;
@@ -77,7 +77,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice Replaces the current funding manager with `fundingManager_`
     /// @dev Only callable by authorized caller.
     /// @param fundingManager_ The address of the new funding manager module.
-    function setFundingManager(IFundingManager fundingManager_) external;
+    function setFundingManager(IFundingManager_v1 fundingManager_) external;
 
     /// @notice Replaces the current payment processor with `paymentProcessor_`
     /// @dev Only callable by authorized caller.
@@ -98,8 +98,8 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @dev Unique id set by the {OrchestratorFactory_v1} during initialization.
     function orchestratorId() external view returns (uint);
 
-    /// @notice The {IFundingManager} implementation used to hold and distribute Funds.
-    function fundingManager() external view returns (IFundingManager);
+    /// @notice The {IFundingManager_v1} implementation used to hold and distribute Funds.
+    function fundingManager() external view returns (IFundingManager_v1);
 
     /// @notice The {IAuthorizer} implementation used to authorize addresses.
     function authorizer() external view returns (IAuthorizer);

@@ -16,7 +16,7 @@ import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
 // Internal Interfaces
-import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
+import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 
 // Mocks
 import {OrchestratorV1Mock} from
@@ -47,19 +47,19 @@ abstract contract ModuleTest is Test {
     // Orchestrator_v1 Constants
     uint constant _ORCHESTRATOR_ID = 1;
 
-    // Module Constants
+    // Module_v1 Constants
     uint constant _MAJOR_VERSION = 1;
     uint constant _MINOR_VERSION = 0;
     string constant _URL = "https://github.com/organization/module";
-    string constant _TITLE = "Module";
+    string constant _TITLE = "Module_v1";
 
-    IModule.Metadata _METADATA =
-        IModule.Metadata(_MAJOR_VERSION, _MINOR_VERSION, _URL, _TITLE);
+    IModule_v1.Metadata _METADATA =
+        IModule_v1.Metadata(_MAJOR_VERSION, _MINOR_VERSION, _URL, _TITLE);
 
     //--------------------------------------------------------------------------------
     // Setup
 
-    function _setUpOrchestrator(IModule module) internal virtual {
+    function _setUpOrchestrator(IModule_v1 module) internal virtual {
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 

@@ -6,8 +6,8 @@ import "forge-std/Test.sol";
 
 import "../../deployment/DeploymentScript.s.sol";
 
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -15,8 +15,7 @@ import {
     BountyManager,
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 //import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 //import {ScriptConstants} from "../script-constants.sol";

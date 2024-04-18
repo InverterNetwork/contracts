@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
+import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 
 // External Interfaces
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";

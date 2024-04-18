@@ -97,8 +97,8 @@ testScripts: ## Run e2e test suite
 	## modules
 
 	## fundingManager
-	@forge script script/modules/fundingManager/DeployBancorVirtualSupplyBondingCurveFundingManager.s.sol
-	@forge script script/modules/fundingManager/DeployRebasingFundingManager.s.sol
+	@forge script script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol
+	@forge script script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol
 	
 	## governance
 	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol

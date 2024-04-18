@@ -1,10 +1,13 @@
 pragma solidity ^0.8.0;
 
-import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
+import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
 import {IModuleImplementationMock} from
     "test/utils/mocks/proxies/IModuleImplementationMock.sol";
 
-contract ModuleImplementationV1Mock is ModuleMock, IModuleImplementationMock {
+contract ModuleImplementationV1Mock is
+    ModuleV1Mock,
+    IModuleImplementationMock
+{
     uint public data;
 
     function initialize(uint _data) external initializer {

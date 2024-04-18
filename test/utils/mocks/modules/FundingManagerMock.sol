@@ -5,21 +5,26 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Module, IModule, IOrchestrator_v1} from "src/modules/base/Module.sol";
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {
+    Module_v1,
+    IModule_v1,
+    IOrchestrator_v1
+} from "src/modules/base/Module_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-contract FundingManagerMock is IFundingManager, Module {
+contract FundingManagerMock is IFundingManager_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module)
+        override(Module_v1)
         returns (bool)
     {
-        bytes4 interfaceId_IFundingManager = type(IFundingManager).interfaceId;
+        bytes4 interfaceId_IFundingManager =
+            type(IFundingManager_v1).interfaceId;
         return interfaceId == interfaceId_IFundingManager
             || super.supportsInterface(interfaceId);
     }
@@ -32,7 +37,7 @@ contract FundingManagerMock is IFundingManager, Module {
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory
-    ) public override(Module) initializer {
+    ) public override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
     }
 

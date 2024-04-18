@@ -5,10 +5,10 @@ pragma solidity 0.8.23;
 import {
     IOrchestratorFactory_v1,
     IOrchestrator_v1,
-    IModule
+    IModule_v1
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {
-    IFundingManager,
+    IFundingManager_v1,
     IAuthorizer,
     IPaymentProcessor
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -112,7 +112,7 @@ contract OrchestratorFactory_v1 is
         //Map orchestrator clone
         _orchestrators[++_orchestratorIdCounter] = clone;
 
-        // Deploy and cache {IFundingManager} module.
+        // Deploy and cache {IFundingManager_v1} module.
         address fundingManager = IModuleFactory_v1(moduleFactory).createModule(
             fundingManagerConfig.metadata,
             IOrchestrator_v1(clone),
@@ -154,7 +154,7 @@ contract OrchestratorFactory_v1 is
         IOrchestrator_v1(clone).init(
             _orchestratorIdCounter,
             modules,
-            IFundingManager(fundingManager),
+            IFundingManager_v1(fundingManager),
             IAuthorizer(authorizer),
             IPaymentProcessor(paymentProcessor)
         );
@@ -164,7 +164,7 @@ contract OrchestratorFactory_v1 is
         // available that are set during the orchestrator init function.
         for (uint i; i < modulesLen; ++i) {
             if (_dependencyInjectionRequired(moduleConfigs[i].dependencyData)) {
-                IModule(modules[i]).init2(
+                IModule_v1(modules[i]).init2(
                     IOrchestrator_v1(clone), moduleConfigs[i].dependencyData
                 );
             }
@@ -172,18 +172,18 @@ contract OrchestratorFactory_v1 is
 
         // Also, running the init2 functionality on the compulsory modules excluded from the modules array
         if (_dependencyInjectionRequired(fundingManagerConfig.dependencyData)) {
-            IModule(fundingManager).init2(
+            IModule_v1(fundingManager).init2(
                 IOrchestrator_v1(clone), fundingManagerConfig.dependencyData
             );
         }
         if (_dependencyInjectionRequired(authorizerConfig.dependencyData)) {
-            IModule(authorizer).init2(
+            IModule_v1(authorizer).init2(
                 IOrchestrator_v1(clone), authorizerConfig.dependencyData
             );
         }
         if (_dependencyInjectionRequired(paymentProcessorConfig.dependencyData))
         {
-            IModule(paymentProcessor).init2(
+            IModule_v1(paymentProcessor).init2(
                 IOrchestrator_v1(clone), paymentProcessorConfig.dependencyData
             );
         }

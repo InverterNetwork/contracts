@@ -12,7 +12,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Interfaces
 import {
     IOrchestratorFactory_v1,
-    IModule,
+    IModule_v1,
     IOrchestrator_v1
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
@@ -57,21 +57,23 @@ contract OrchestratorFactoryV1Test is Test {
 
     IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule.Metadata(1, 0, "https://fundingmanager.com", "FundingManager"),
+        IModule_v1.Metadata(
+            1, 0, "https://fundingmanager.com", "FundingManager"
+        ),
         bytes("data"),
         abi.encode(hasDependency, dependencies)
     );
 
     IOrchestratorFactory_v1.ModuleConfig authorizerConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule.Metadata(1, 0, "https://authorizer.com", "Authorizer"),
+        IModule_v1.Metadata(1, 0, "https://authorizer.com", "Authorizer"),
         abi.encode(address(this), address(this)),
         abi.encode(hasDependency, dependencies)
     );
 
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        IModule.Metadata(
+        IModule_v1.Metadata(
             1, 1, "https://paymentprocessor.com", "SimplePaymentProcessor"
         ),
         bytes("data"),
@@ -80,7 +82,7 @@ contract OrchestratorFactoryV1Test is Test {
 
     IOrchestratorFactory_v1.ModuleConfig moduleConfig = IOrchestratorFactory_v1
         .ModuleConfig(
-        IModule.Metadata(1, 0, "https://module.com", "Module"),
+        IModule_v1.Metadata(1, 0, "https://module.com", "Module_v1"),
         bytes(""),
         abi.encode(hasDependency, dependencies)
     );

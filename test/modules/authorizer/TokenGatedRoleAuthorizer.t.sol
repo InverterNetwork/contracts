@@ -27,11 +27,11 @@ import {IAccessControlEnumerable} from
 // Internal Dependencies
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 // Interfaces
-import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
+import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ERC721Mock} from "test/utils/mocks/ERC721Mock.sol";
-import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
+import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
 import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {PaymentProcessorMock} from
@@ -47,7 +47,7 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
 
         address propImpl = address(new Orchestrator_v1(address(0)));
         _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
-        ModuleMock module = new ModuleMock();
+        ModuleV1Mock module = new ModuleV1Mock();
         address[] memory modules = new address[](1);
         modules[0] = address(module);
         _orchestrator.init(
@@ -89,7 +89,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
 
-    ModuleMock mockModule = new ModuleMock();
+    ModuleV1Mock mockModule = new ModuleV1Mock();
 
     address ALBA = address(0xa1ba); //default authorized person
     address BOB = address(0xb0b); // example person
@@ -111,8 +111,8 @@ contract TokenGatedRoleAuthorizerTest is Test {
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
-    IModule.Metadata _METADATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+    IModule_v1.Metadata _METADATA =
+        IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     //--------------------------------------------------------------------------
     // Events

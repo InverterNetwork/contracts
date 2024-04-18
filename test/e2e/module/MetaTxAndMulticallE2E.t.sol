@@ -13,8 +13,7 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 import {
     BountyManager,
@@ -152,9 +151,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
         //Check if successful
         assertEq(
-            RebasingFundingManager(fundingManager).token().balanceOf(
-                fundingManager
-            ),
+            FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
 
@@ -318,9 +315,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         //Check if successful
         //For the fundingmanager
         assertEq(
-            RebasingFundingManager(fundingManager).token().balanceOf(
-                fundingManager
-            ),
+            FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
         //For the bountyManager

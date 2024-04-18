@@ -28,10 +28,9 @@ import {
     IOrchestrator_v1
 } from "src/orchestrator/Orchestrator_v1.sol";
 
-import {IBancorVirtualSupplyBondingCurveFundingManager} from
-    "src/modules/fundingManager/bondingCurveFundingManager/IBancorVirtualSupplyBondingCurveFundingManager.sol";
-import {BancorFormula} from
-    "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
+import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

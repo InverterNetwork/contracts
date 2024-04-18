@@ -4,11 +4,11 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {
     IOrchestrator_v1,
-    IFundingManager,
+    IFundingManager_v1,
     IPaymentProcessor,
     IAuthorizer
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 
@@ -75,7 +75,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     uint public override(IOrchestrator_v1) orchestratorId;
 
     /// @inheritdoc IOrchestrator_v1
-    IFundingManager public override(IOrchestrator_v1) fundingManager;
+    IFundingManager_v1 public override(IOrchestrator_v1) fundingManager;
 
     /// @inheritdoc IOrchestrator_v1
     IAuthorizer public override(IOrchestrator_v1) authorizer;
@@ -96,7 +96,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     function init(
         uint orchestratorId_,
         address[] calldata modules,
-        IFundingManager fundingManager_,
+        IFundingManager_v1 fundingManager_,
         IAuthorizer authorizer_,
         IPaymentProcessor paymentProcessor_
     ) external override(IOrchestrator_v1) initializer {
@@ -145,7 +145,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         uint index;
 
         for (; index < moduleAddressesLength;) {
-            currentModuleName = IModule(moduleAddresses[index]).title();
+            currentModuleName = IModule_v1(moduleAddresses[index]).title();
 
             if (bytes(currentModuleName).length == bytes(moduleName).length) {
                 if (
@@ -203,7 +203,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         onlyOrchestratorOwner
     {
         address authorizerContract = address(authorizer_);
-        bytes4 moduleInterfaceId = type(IModule).interfaceId;
+        bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         bytes4 authorizerInterfaceId = type(IAuthorizer).interfaceId;
         if (
             ERC165Checker.supportsInterface(
@@ -223,13 +223,13 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function setFundingManager(IFundingManager fundingManager_)
+    function setFundingManager(IFundingManager_v1 fundingManager_)
         external
         onlyOrchestratorOwner
     {
         address fundingManagerContract = address(fundingManager_);
-        bytes4 moduleInterfaceId = type(IModule).interfaceId;
-        bytes4 fundingManagerInterfaceId = type(IFundingManager).interfaceId;
+        bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
+        bytes4 fundingManagerInterfaceId = type(IFundingManager_v1).interfaceId;
         if (
             ERC165Checker.supportsInterface(
                 fundingManagerContract, moduleInterfaceId
@@ -253,7 +253,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         onlyOrchestratorOwner
     {
         address paymentProcessorContract = address(paymentProcessor_);
-        bytes4 moduleInterfaceId = type(IModule).interfaceId;
+        bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         bytes4 paymentProcessorInterfaceId = type(IPaymentProcessor).interfaceId;
         if (
             ERC165Checker.supportsInterface(

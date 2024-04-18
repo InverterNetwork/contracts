@@ -14,12 +14,12 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {
     IModuleFactory_v1,
-    IModule,
+    IModule_v1,
     IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 // Mocks
-import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
+import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
 import {InverterBeaconV1OwnableMock} from
     "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
 
@@ -31,7 +31,7 @@ contract ModuleFactoryV1Test is Test {
     ModuleFactory_v1 factory;
 
     // Mocks
-    ModuleMock module;
+    ModuleV1Mock module;
     InverterBeaconV1OwnableMock beacon;
 
     address governaceContract = address(0x010101010101);
@@ -41,7 +41,7 @@ contract ModuleFactoryV1Test is Test {
 
     /// @notice Event emitted when new beacon registered for metadata.
     event MetadataRegistered(
-        IModule.Metadata indexed metadata, IInverterBeacon_v1 indexed beacon
+        IModule_v1.Metadata indexed metadata, IInverterBeacon_v1 indexed beacon
     );
 
     /// @notice Event emitted when new module created for a orchestrator.
@@ -55,11 +55,11 @@ contract ModuleFactoryV1Test is Test {
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Payment Processor";
 
-    IModule.Metadata DATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+    IModule_v1.Metadata DATA =
+        IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     function setUp() public {
-        module = new ModuleMock();
+        module = new ModuleV1Mock();
         beacon = new InverterBeaconV1OwnableMock(governaceContract);
 
         factory = new ModuleFactory_v1(governaceContract, address(0));
@@ -87,7 +87,7 @@ contract ModuleFactoryV1Test is Test {
         factory.registerMetadata(DATA, beacon);
     }
 
-    function testRegisterMetadata(IModule.Metadata memory metadata) public {
+    function testRegisterMetadata(IModule_v1.Metadata memory metadata) public {
         _assumeValidMetadata(metadata);
 
         beacon.overrideImplementation(address(module));
@@ -111,7 +111,7 @@ contract ModuleFactoryV1Test is Test {
             IModuleFactory_v1.ModuleFactory_v1__InvalidMetadata.selector
         );
         factory.registerMetadata(
-            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE), beacon
+            IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE), beacon
         );
 
         // Invalid if title empty.
@@ -119,7 +119,7 @@ contract ModuleFactoryV1Test is Test {
             IModuleFactory_v1.ModuleFactory_v1__InvalidMetadata.selector
         );
         factory.registerMetadata(
-            IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""), beacon
+            IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""), beacon
         );
     }
 
@@ -165,7 +165,7 @@ contract ModuleFactoryV1Test is Test {
     // Tests: createModule
 
     function testCreateModule(
-        IModule.Metadata memory metadata,
+        IModule_v1.Metadata memory metadata,
         address orchestrator,
         bytes memory configData
     ) public {
@@ -174,7 +174,7 @@ contract ModuleFactoryV1Test is Test {
 
         beacon.overrideImplementation(address(module));
 
-        // Register ModuleMock for given metadata.
+        // Register ModuleV1Mock for given metadata.
         factory.registerMetadata(metadata, beacon);
 
         // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
@@ -186,7 +186,7 @@ contract ModuleFactoryV1Test is Test {
         );
 
         // Create new module instance.
-        IModule newModule = IModule(
+        IModule_v1 newModule = IModule_v1(
             factory.createModule(
                 metadata, IOrchestrator_v1(orchestrator), configData
             )
@@ -197,7 +197,7 @@ contract ModuleFactoryV1Test is Test {
     }
 
     function testCreateModuleFailsIfMetadataUnregistered(
-        IModule.Metadata memory metadata,
+        IModule_v1.Metadata memory metadata,
         address orchestrator,
         bytes memory configData
     ) public {
@@ -215,7 +215,7 @@ contract ModuleFactoryV1Test is Test {
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
-    function _assumeValidMetadata(IModule.Metadata memory metadata)
+    function _assumeValidMetadata(IModule_v1.Metadata memory metadata)
         public
         pure
     {

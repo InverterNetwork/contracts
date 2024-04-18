@@ -18,7 +18,7 @@ import {
 // Modules that are used in this E2E test
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {
     IBountyManager,
@@ -186,7 +186,7 @@ contract OrchestratorE2E is E2ETest {
 
         //Replace the old modules with the new ones
         orchestrator.setPaymentProcessor(IPaymentProcessor(newPaymentProcessor));
-        orchestrator.setFundingManager(IFundingManager(newFundingManager));
+        orchestrator.setFundingManager(IFundingManager_v1(newFundingManager));
         orchestrator.setAuthorizer(IAuthorizer(newAuthorizer));
 
         //Assert post-state

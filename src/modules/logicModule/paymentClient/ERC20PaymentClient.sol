@@ -8,13 +8,13 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Module, ContextUpgradeable} from "src/modules/base/Module.sol";
+import {Module_v1, ContextUpgradeable} from "src/modules/base/Module_v1.sol";
 import {
     IERC20PaymentClient,
     IPaymentProcessor
 } from "src/modules/logicModule/paymentClient/IERC20PaymentClient.sol";
 
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 /**
  * @title ERC20PaymentClient
@@ -24,12 +24,12 @@ import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
  *
  * @author Inverter Network
  */
-abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
+abstract contract ERC20PaymentClient is IERC20PaymentClient, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module)
+        override(Module_v1)
         returns (bool)
     {
         return interfaceId == type(IERC20PaymentClient).interfaceId
@@ -212,7 +212,7 @@ abstract contract ERC20PaymentClient is IERC20PaymentClient, Module {
             (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
                 address(__Module_orchestrator.fundingManager()),
                 abi.encodeCall(
-                    IFundingManager.transferOrchestratorToken,
+                    IFundingManager_v1.transferOrchestratorToken,
                     (address(this), amount - currentFunds)
                 )
             );

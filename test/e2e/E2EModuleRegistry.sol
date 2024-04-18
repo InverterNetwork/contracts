@@ -9,13 +9,11 @@ import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
 // Modules
-import {IModule} from "src/modules/base/IModule.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
-import {BancorVirtualSupplyBondingCurveFundingManager} from
-    "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
-import {BancorFormula} from
-    "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {SimplePaymentProcessor} from
     "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
 import {StreamingPaymentProcessor} from
@@ -52,7 +50,7 @@ contract E2EModuleRegistry is Test {
     //      Module moduleImpl;
     //      InverterBeacon_v1 moduleBeacon;
     //      address moduleBeaconOwner = DEFAULT_BEACON_OWNER;
-    //      IModule.Metadata moduleMetadata = IModule.Metadata(
+    //      IModule_v1.Metadata moduleMetadata = IModule_v1.Metadata(
     //          1, 1, "https://github.com/inverter/module", "ModuleName"
     //      );
     // And AS A COMMENT:
@@ -72,17 +70,14 @@ contract E2EModuleRegistry is Test {
     // Funding Managers
     //--------------------------------------------------------------------------
 
-    // RebasingFundingManager
+    // FM_Rebasing_v1
 
-    RebasingFundingManager rebasingFundingManagerImpl;
+    FM_Rebasing_v1 rebasingFundingManagerImpl;
 
     InverterBeacon_v1 rebasingFundingManagerBeacon;
 
-    IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
-        1,
-        0,
-        "https://github.com/inverter/funding-manager",
-        "RebasingFundingManager"
+    IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata(
+        1, 0, "https://github.com/inverter/funding-manager", "FM_Rebasing_v1"
     );
 
     /*
@@ -96,7 +91,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpRebasingFundingManager() internal {
         // Deploy module implementations.
-        rebasingFundingManagerImpl = new RebasingFundingManager();
+        rebasingFundingManagerImpl = new FM_Rebasing_v1();
 
         // Deploy module beacons.
         rebasingFundingManagerBeacon = new InverterBeacon_v1(
@@ -113,35 +108,35 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // BancorVirtualSupplyBondingCurveFundingManager
+    // FM_BC_Bancor_Redeeming_VirtualSupply_v1
 
     BancorFormula formula = new BancorFormula();
 
-    BancorVirtualSupplyBondingCurveFundingManager
+    FM_BC_Bancor_Redeeming_VirtualSupply_v1
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
     InverterBeacon_v1 bancorVirtualSupplyBondingCurveFundingManagerBeacon;
 
-    IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
-    IModule.Metadata(
+    IModule_v1.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
+    IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/bonding-curve-funding-manager",
-        "BancorVirtualSupplyBondingCurveFundingManager"
+        "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
     );
 
     /*
-        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
-            issuanceToken = IBancorVirtualSupplyBondingCurveFundingManager
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
+            issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .IssuanceToken({
                 name: bytes32(abi.encodePacked("Bonding Curve Token")),
                 symbol: bytes32(abi.encodePacked("BCT")),
                 decimals: uint8(18)
             });
 
-        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
             memory bc_properties =
-            IBancorVirtualSupplyBondingCurveFundingManager
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .BondingCurveProperties({
                 formula: address(formula),
                 reserveRatioForBuying: 200_000,
@@ -150,7 +145,7 @@ contract E2EModuleRegistry is Test {
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialTokenSupply: 100,
+                initialIssuanceSupply: 100,
                 initialCollateralSupply: 100
             });
 
@@ -166,7 +161,7 @@ contract E2EModuleRegistry is Test {
     function setUpBancorVirtualSupplyBondingCurveFundingManager() internal {
         // Deploy module implementations.
         bancorVirtualSupplyBondingCurveFundingManagerImpl =
-            new BancorVirtualSupplyBondingCurveFundingManager();
+            new FM_BC_Bancor_Redeeming_VirtualSupply_v1();
 
         // Deploy module beacons.
         bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon_v1(
@@ -195,7 +190,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 roleAuthorizerBeacon;
 
-    IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
+    IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
         1, 0, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
     );
 
@@ -232,7 +227,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 tokenRoleAuthorizerBeacon;
 
-    IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
+    IModule_v1.Metadata tokenRoleAuthorizerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/tokenRoleAuthorizer",
@@ -278,7 +273,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 simplePaymentProcessorBeacon;
 
-    IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
+    IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/payment-processor",
@@ -318,7 +313,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 streamingPaymentProcessorBeacon;
 
-    IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
+    IModule_v1.Metadata streamingPaymentProcessorMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/streaming-payment-processor",
@@ -361,7 +356,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 recurringPaymentManagerBeacon;
 
-    IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
+    IModule_v1.Metadata recurringPaymentManagerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/recurring-payment-manager",
@@ -401,7 +396,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 bountyManagerBeacon;
 
-    IModule.Metadata bountyManagerMetadata = IModule.Metadata(
+    IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
         1, 0, "https://github.com/inverter/bounty-manager", "BountyManager"
     );
     /*
@@ -440,7 +435,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 singleVoteGovernorBeacon;
 
-    IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
+    IModule_v1.Metadata singleVoteGovernorMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/single-vote-governor",
@@ -484,7 +479,7 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 metadataManagerBeacon;
 
-    IModule.Metadata metadataManagerMetadata = IModule.Metadata(
+    IModule_v1.Metadata metadataManagerMetadata = IModule_v1.Metadata(
         1, 0, "https://github.com/inverter/metadata-manager", "MetadataManager"
     );
 

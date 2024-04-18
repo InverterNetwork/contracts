@@ -6,8 +6,8 @@ import "forge-std/Test.sol";
 
 import "../deployment/DeploymentScript.s.sol";
 
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -17,8 +17,7 @@ import {
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
 import {ScriptConstants} from "../script-constants.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     ScriptConstants scriptConstants = new ScriptConstants();
@@ -217,8 +216,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // It's best, if the owner deposits them right after deployment.
 
         // Initial Deposit => 10e18;
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(test_orchestrator.fundingManager()));
+        FM_Rebasing_v1 fundingManager =
+            FM_Rebasing_v1(address(test_orchestrator.fundingManager()));
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {

@@ -6,8 +6,8 @@ import "forge-std/Test.sol";
 
 import "../../deployment/DeploymentScript.s.sol";
 
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -16,13 +16,11 @@ import {
     IBountyManager
 } from "src/modules/logicModule/BountyManager.sol";
 import {
-    BancorVirtualSupplyBondingCurveFundingManager,
-    IBancorVirtualSupplyBondingCurveFundingManager
-} from
-    "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
+    FM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
-import {BancorFormula} from
-    "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
+import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -62,7 +60,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     uint SELL_FEE = 100;
     bool BUY_IS_OPEN = true;
     bool SELL_IS_OPEN = false;
-    uint INITIAL_TOKEN_SUPPLY = 1;
+    uint INITIAL_ISSUANCE_SUPPLY = 1;
     uint INITIAL_COLLATERAL_SUPPLY = 1;
 
     // ========================================================================
@@ -105,18 +103,17 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             token: collateralToken
         });
 
-        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
-            buf_issuanceToken =
-            IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken({
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
+            buf_issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .IssuanceToken({
                 name: CURVE_TOKEN_NAME,
                 symbol: CURVE_TOKEN_SYMBOL,
                 decimals: CURVE_TOKEN_DECIMALS
             });
 
-        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
-            memory buf_bondingCurveProperties =
-            IBancorVirtualSupplyBondingCurveFundingManager
-                .BondingCurveProperties({
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            buf_bondingCurveProperties =
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties({
                 formula: address(formula),
                 reserveRatioForBuying: RESERVE_RATIO_FOR_BUYING,
                 reserveRatioForSelling: RESERVE_RATIO_FOR_SELLING,
@@ -124,7 +121,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                 sellFee: SELL_FEE,
                 buyIsOpen: BUY_IS_OPEN,
                 sellIsOpen: SELL_IS_OPEN,
-                initialTokenSupply: INITIAL_TOKEN_SUPPLY,
+                initialIssuanceSupply: INITIAL_ISSUANCE_SUPPLY,
                 initialCollateralSupply: INITIAL_COLLATERAL_SUPPLY
             });
 

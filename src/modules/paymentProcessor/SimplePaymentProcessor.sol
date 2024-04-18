@@ -12,7 +12,7 @@ import {
     IPaymentProcessor,
     IERC20PaymentClient
 } from "src/modules/paymentProcessor/IPaymentProcessor.sol";
-import {Module} from "src/modules/base/Module.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 // Internal Interfaces
 import {IOrchestrator_v1} from
@@ -27,12 +27,12 @@ import {IOrchestrator_v1} from
  *
  * @author Inverter Network
  */
-contract SimplePaymentProcessor is Module, IPaymentProcessor {
+contract SimplePaymentProcessor is Module_v1, IPaymentProcessor {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module)
+        override(Module_v1)
         returns (bool)
     {
         return interfaceId == type(IPaymentProcessor).interfaceId
@@ -60,12 +60,12 @@ contract SimplePaymentProcessor is Module, IPaymentProcessor {
         _;
     }
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory /*configData*/
-    ) external override(Module) initializer {
+    ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
     }
 

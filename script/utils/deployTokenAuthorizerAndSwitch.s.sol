@@ -15,7 +15,7 @@ import {
     Orchestrator_v1,
     IOrchestrator_v1
 } from "src/orchestrator/Orchestrator_v1.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
@@ -49,7 +49,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     // ===============================================================================================================
     // Set the Module Metadata.
     // ===============================================================================================================
-    IModule.Metadata authorizerMetadata = IModule.Metadata(
+    IModule_v1.Metadata authorizerMetadata = IModule_v1.Metadata(
         1, 0, "https://github.com/InverterNetwork", "TokenAuthorizer"
     );
 

@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal Dependencies
 import {
     ERC20PaymentClient,
-    Module
+    Module_v1
 } from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
 
 // Internal Interfaces
@@ -86,12 +86,12 @@ contract RecurringPaymentManager is
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module) initializer {
+    ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
         //Set empty list of RecurringPayment
         _paymentList.init();

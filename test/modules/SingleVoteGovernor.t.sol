@@ -15,7 +15,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {
-    ModuleTest, IModule, IOrchestrator_v1
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 
 // Internal Dependencies
@@ -24,10 +26,10 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 // Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // Mocks
-import {ModuleMock} from "test/utils/mocks/modules/base/ModuleMock.sol";
+import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
@@ -434,7 +436,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
         vm.expectRevert(
-            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
         );
         _authorizer.init2(_orchestrator, abi.encode(123));
 
@@ -442,7 +444,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         // SHOULD FAIL
         bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
-            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
         );
         _governor.init2(_orchestrator, dependencyData);
 
@@ -453,7 +455,7 @@ contract SingleVoteGovernorTest is ModuleTest {
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
-        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         _governor.init2(_orchestrator, dependencyData);
     }
 
@@ -510,7 +512,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     bytes32("onlySelf"),
                     users[i]
                 )
@@ -527,7 +529,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     bytes32("onlySelf"),
                     users[i]
                 )
@@ -1146,7 +1148,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     bytes32("onlySelf"),
                     users[i]
                 )
@@ -1251,7 +1253,7 @@ contract SingleVoteGovernorTest is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IModule.Module__CallerNotAuthorized.selector,
+                    IModule_v1.Module__CallerNotAuthorized.selector,
                     bytes32("onlySelf"),
                     users[i]
                 )

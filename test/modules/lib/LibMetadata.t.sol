@@ -7,14 +7,14 @@ import {Test} from "forge-std/Test.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // Internal Interfaces
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 contract LibMetadataTest is Test {
     function setUp() public {}
 
     /// @dev The identifier is defined as the hash of the major version, url
     ///      and title.
-    function testIdentifier(IModule.Metadata memory data) public {
+    function testIdentifier(IModule_v1.Metadata memory data) public {
         bytes32 got = LibMetadata.identifier(data);
         bytes32 want =
             keccak256(abi.encodePacked(data.majorVersion, data.url, data.title));
@@ -32,8 +32,8 @@ contract LibMetadataTest is Test {
         vm.assume(bytes(url).length != 0);
         vm.assume(bytes(title).length != 0);
 
-        IModule.Metadata memory data =
-            IModule.Metadata(majorVersion, minorVersion, url, title);
+        IModule_v1.Metadata memory data =
+            IModule_v1.Metadata(majorVersion, minorVersion, url, title);
 
         assertTrue(LibMetadata.isValid(data));
     }
@@ -42,8 +42,8 @@ contract LibMetadataTest is Test {
         public
     {
         vm.assume(majorVersion != 0 || minorVersion != 0);
-        IModule.Metadata memory data =
-            IModule.Metadata(majorVersion, minorVersion, "", "title");
+        IModule_v1.Metadata memory data =
+            IModule_v1.Metadata(majorVersion, minorVersion, "", "title");
 
         assertTrue(!LibMetadata.isValid(data));
     }
@@ -54,8 +54,8 @@ contract LibMetadataTest is Test {
     ) public {
         vm.assume(majorVersion != 0 || minorVersion != 0);
 
-        IModule.Metadata memory data =
-            IModule.Metadata(majorVersion, minorVersion, "url", "");
+        IModule_v1.Metadata memory data =
+            IModule_v1.Metadata(majorVersion, minorVersion, "url", "");
 
         assertTrue(!LibMetadata.isValid(data));
     }
@@ -64,8 +64,8 @@ contract LibMetadataTest is Test {
         uint majorVersion,
         uint minorVersion
     ) public {
-        IModule.Metadata memory data =
-            IModule.Metadata(majorVersion, minorVersion, "url", "title");
+        IModule_v1.Metadata memory data =
+            IModule_v1.Metadata(majorVersion, minorVersion, "url", "title");
         if (majorVersion == 0 && minorVersion == 0) {
             assertFalse(LibMetadata.isValid(data));
         } else {

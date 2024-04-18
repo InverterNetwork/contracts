@@ -2,19 +2,19 @@
 pragma solidity 0.8.23;
 
 // Internal Dependencies
-import {Module} from "src/modules/base/Module.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 // Internal Interfaces
 import {IMetadataManager} from "src/modules/utils/IMetadataManager.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
-contract MetadataManager is IMetadataManager, Module {
+contract MetadataManager is IMetadataManager, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module)
+        override(Module_v1)
         returns (bool)
     {
         return interfaceId == type(IMetadataManager).interfaceId
@@ -31,12 +31,12 @@ contract MetadataManager is IMetadataManager, Module {
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module) initializer {
+    ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
         (

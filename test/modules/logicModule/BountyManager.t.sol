@@ -10,7 +10,9 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 //Internal Dependencies
 import {
-    ModuleTest, IModule, IOrchestrator_v1
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 
 // Errors
@@ -416,7 +418,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector,
+                IModule_v1.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
                     address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
                 ),
@@ -497,7 +499,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyClaimAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector,
+                IModule_v1.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
                     address(bountyManager), bountyManager.CLAIMANT_ROLE()
                 ),
@@ -536,7 +538,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector,
+                IModule_v1.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
                     address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
                 ),
@@ -592,7 +594,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector,
+                IModule_v1.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
                     address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
                 ),
@@ -675,7 +677,7 @@ contract BountyManagerTest is ModuleTest {
         _authorizer.setIsAuthorized(address(this), false); //No access address
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector,
+                IModule_v1.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
                     address(bountyManager), bountyManager.CLAIMANT_ROLE()
                 ),
@@ -830,7 +832,7 @@ contract BountyManagerTest is ModuleTest {
         //onlyVerifyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector,
+                IModule_v1.Module__CallerNotAuthorized.selector,
                 _authorizer.generateRoleId(
                     address(bountyManager), bountyManager.VERIFIER_ROLE()
                 ),

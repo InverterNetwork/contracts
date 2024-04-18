@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 
 // Import interfaces:
 
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 
 // Import scripts:
@@ -25,14 +25,14 @@ import {DeployOrchestrator_v1} from
     "script/orchestrator/DeployOrchestrator_v1.s.sol";
 import {DeploySimplePaymentProcessor} from
     "script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol";
-import {DeployRebasingFundingManager} from
-    "script/modules/fundingManager/DeployRebasingFundingManager.s.sol";
-import {DeployBancorVirtualSupplyBondingCurveFundingManager} from
-    "script/modules/fundingManager/DeployBancorVirtualSupplyBondingCurveFundingManager.s.sol";
+import {DeployFM_Rebasing_v1} from
+    "script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol";
+import {DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol";
 import {DeployRoleAuthorizer} from
     "script/modules/governance/DeployRoleAuthorizer.s.sol";
-import {DeployBancorVirtualSupplyBondingCurveFundingManager} from
-    "script/modules/fundingManager/DeployBancorVirtualSupplyBondingCurveFundingManager.s.sol";
+import {DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol";
 import {DeployTokenGatedRoleAuthorizer} from
     "script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol";
 import {DeployStreamingPaymentProcessor} from
@@ -55,11 +55,11 @@ contract DeploymentScript is Script {
     DeployOrchestratorFactory_v1 deployOrchestratorFactory =
         new DeployOrchestratorFactory_v1();
     // Funding Manager
-    DeployRebasingFundingManager deployRebasingFundingManager =
-        new DeployRebasingFundingManager();
-    DeployBancorVirtualSupplyBondingCurveFundingManager
+    DeployFM_Rebasing_v1 deployRebasingFundingManager =
+        new DeployFM_Rebasing_v1();
+    DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1
         deployBancorVirtualSupplyBondingCurveFundingManager =
-            new DeployBancorVirtualSupplyBondingCurveFundingManager();
+            new DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1();
     // Authorizer
     DeployRoleAuthorizer deployRoleAuthorizer = new DeployRoleAuthorizer();
     DeployTokenGatedRoleAuthorizer deployTokenGatedRoleAuthorizer =
@@ -155,32 +155,32 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Funding Manager
 
-    IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
+    IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "RebasingFundingManager"
+        "FM_Rebasing_v1"
     );
 
-    IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
-    IModule.Metadata(
+    IModule_v1.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
+    IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "BancorVirtualSupplyBondingCurveFundingManager"
+        "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
     );
 
     // ------------------------------------------------------------------------
     // Authorizer
 
-    IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
+    IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "RoleAuthorizer"
     );
 
-    IModule.Metadata tokenGatedRoleAuthorizerMetadata = IModule.Metadata(
+    IModule_v1.Metadata tokenGatedRoleAuthorizerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
@@ -190,14 +190,14 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Payment Processor
 
-    IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
+    IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "SimplePaymentProcessor"
     );
 
-    IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
+    IModule_v1.Metadata streamingPaymentProcessorMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
@@ -207,14 +207,14 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Logic Module
 
-    IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
+    IModule_v1.Metadata recurringPaymentManagerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "RecurringPaymentManager"
     );
 
-    IModule.Metadata bountyManagerMetadata = IModule.Metadata(
+    IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
@@ -224,14 +224,14 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Utils
 
-    IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
+    IModule_v1.Metadata singleVoteGovernorMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "SingleVoteGovernor"
     );
 
-    IModule.Metadata metadataManagerMetadata = IModule.Metadata(
+    IModule_v1.Metadata metadataManagerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",

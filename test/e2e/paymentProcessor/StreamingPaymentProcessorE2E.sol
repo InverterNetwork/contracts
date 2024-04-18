@@ -8,8 +8,7 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 // SuT
 import {
     RecurringPaymentManager,
@@ -41,7 +40,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
     // Modules, for reference between functions
     IOrchestrator_v1 orchestrator;
-    RebasingFundingManager fundingManager;
+    FM_Rebasing_v1 fundingManager;
     RecurringPaymentManager recurringPaymentManager;
     StreamingPaymentProcessor streamingPaymentProcessor;
 
@@ -111,8 +110,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
+        fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
         recurringPaymentManager = RecurringPaymentManager(
             orchestrator.findModuleAddressInOrchestrator(

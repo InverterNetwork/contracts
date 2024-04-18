@@ -11,7 +11,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // Internal Interfaces
 import {
@@ -26,7 +26,7 @@ import {TransactionForwarder_v1} from
 // Mocks
 import {
     FundingManagerMock,
-    IFundingManager
+    IFundingManager_v1
 } from "test/utils/mocks/modules/FundingManagerMock.sol";
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
@@ -374,7 +374,7 @@ contract OrchestratorV1Test is Test {
                 newFundingManager
             )
         );
-        orchestrator.setFundingManager(IFundingManager(newFundingManager));
+        orchestrator.setFundingManager(IFundingManager_v1(newFundingManager));
         assertTrue(orchestrator.fundingManager() == fundingManager);
     }
 

@@ -8,7 +8,9 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {
-    ModuleTest, IModule, IOrchestrator_v1
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 
 // SuT
@@ -16,7 +18,7 @@ import {
     ERC20PaymentClientAccessMock,
     IERC20PaymentClient
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientAccessMock.sol";
-import {Module, IModule} from "src/modules/base/Module.sol";
+import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
 import {OrchestratorV1Mock} from
     "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
@@ -26,7 +28,7 @@ import {
     IPaymentProcessor
 } from "test/utils/mocks/modules/PaymentProcessorMock.sol";
 import {
-    IFundingManager,
+    IFundingManager_v1,
     FundingManagerMock
 } from "test/utils/mocks/modules/FundingManagerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -331,7 +333,7 @@ contract ERC20PaymentClientTest is ModuleTest {
             //callback from orchestrator to transfer tokens has to be in this form
             assertEq(
                 abi.encodeCall(
-                    IFundingManager.transferOrchestratorToken,
+                    IFundingManager_v1.transferOrchestratorToken,
                     (address(paymentClient), amountRequired - currentFunds)
                 ),
                 _orchestrator.executeTxData()

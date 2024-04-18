@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {Module, IModule} from "src/modules/base/Module.sol";
+import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {ISingleVoteGovernor} from "src/modules/utils/ISingleVoteGovernor.sol";
 
-contract SingleVoteGovernor is ISingleVoteGovernor, Module {
+contract SingleVoteGovernor is ISingleVoteGovernor, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module)
+        override(Module_v1)
         returns (bool)
     {
         return interfaceId == type(ISingleVoteGovernor).interfaceId
@@ -82,7 +82,7 @@ contract SingleVoteGovernor is ISingleVoteGovernor, Module {
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,

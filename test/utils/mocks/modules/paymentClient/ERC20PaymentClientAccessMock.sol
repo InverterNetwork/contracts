@@ -4,7 +4,11 @@ pragma solidity ^0.8.0;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
-import {Module, IModule, IOrchestrator_v1} from "src/modules/base/Module.sol";
+import {
+    Module_v1,
+    IModule_v1,
+    IOrchestrator_v1
+} from "src/modules/base/Module_v1.sol";
 
 // SuT
 import {
@@ -26,7 +30,7 @@ contract ERC20PaymentClientAccessMock is ERC20PaymentClient {
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory //configData
-    ) external override(Module) initializer {
+    ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
     }
 

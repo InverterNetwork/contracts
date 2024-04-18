@@ -7,7 +7,9 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 import {
-    ModuleTest, IModule, IOrchestrator_v1
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 
 // SuT
@@ -135,7 +137,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
         vm.expectRevert(
-            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
         );
         paymentProcessor.init2(_orchestrator, abi.encode(123));
 
@@ -143,7 +145,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
         // SHOULD FAIL
         bytes memory dependencyData = abi.encode(hasDependency, dependencies);
         vm.expectRevert(
-            IModule.Module__NoDependencyOrMalformedDependencyData.selector
+            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
         );
         paymentProcessor.init2(_orchestrator, dependencyData);
 
@@ -154,7 +156,7 @@ contract StreamingPaymentProcessorTest is ModuleTest {
 
         // Attempting to call the init2 function again.
         // SHOULD FAIL
-        vm.expectRevert(IModule.Module__CannotCallInit2Again.selector);
+        vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         paymentProcessor.init2(_orchestrator, dependencyData);
     }
 

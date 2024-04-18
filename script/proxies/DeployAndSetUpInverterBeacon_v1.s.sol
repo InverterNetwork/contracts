@@ -4,7 +4,7 @@ import "forge-std/Script.sol";
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
-import {IModule} from "src/modules/base/IModule.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {DeployInverterBeacon_v1} from
@@ -30,7 +30,7 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         address owner,
         address implementation,
         address moduleFactory,
-        IModule.Metadata calldata metadata
+        IModule_v1.Metadata calldata metadata
     ) external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {

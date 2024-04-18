@@ -1,2 +1,5 @@
 @oz-up/=lib/openzeppelin-contracts-upgradeable/contracts/
 @oz/=lib/openzeppelin-contracts/contracts/
+@fm/=src/modules/fundingManager/
+@pp/=src/modules/paymentProcessor/
+@lm/=src/modules/logicModule/

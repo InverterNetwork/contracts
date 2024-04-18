@@ -8,7 +8,7 @@ import {
     IERC20PaymentClient
 } from "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
 
-import {Module} from "src/modules/base/Module.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 // Interfaces
@@ -25,12 +25,12 @@ import {IOrchestrator_v1} from
  *
  * @author Inverter Network
  */
-contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
+contract StreamingPaymentProcessor is Module_v1, IStreamingPaymentProcessor {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module)
+        override(Module_v1)
         returns (bool)
     {
         return interfaceId == type(IStreamingPaymentProcessor).interfaceId
@@ -92,12 +92,12 @@ contract StreamingPaymentProcessor is Module, IStreamingPaymentProcessor {
     //--------------------------------------------------------------------------
     // External Functions
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory /*configData*/
-    ) external override(Module) initializer {
+    ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
     }
 

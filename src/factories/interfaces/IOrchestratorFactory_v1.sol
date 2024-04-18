@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IModule, IOrchestrator_v1} from "src/modules/base/IModule.sol";
+import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -39,7 +39,7 @@ interface IOrchestratorFactory_v1 {
     }
 
     struct ModuleConfig {
-        IModule.Metadata metadata;
+        IModule_v1.Metadata metadata;
         bytes configData;
         bytes dependencyData;
     }
