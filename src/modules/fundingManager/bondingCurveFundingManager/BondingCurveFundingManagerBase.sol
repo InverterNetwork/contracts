@@ -301,16 +301,13 @@ abstract contract BondingCurveFundingManagerBase is
             uint issuanceBuyFeePercentage
         )
     {
-        // (collateralBuyFeePercentage, collateralTreasury) =
-        // __Module_orchestrator.taxMan().getCollateralFee(
-        //     address(__Module_orchestrator),
-        //     bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
-        // );
-        // (issuanceBuyFeePercentage, issuanceTreasury) = __Module_orchestrator
-        //     .taxMan().getIssuanceFee(
-        //     address(__Module_orchestrator),
-        //     bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
-        // );
+        (collateralBuyFeePercentage, collateralTreasury) =
+        getTaxManCollateralFeeData(
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
+        (issuanceBuyFeePercentage, issuanceTreasury) = getTaxManIssuanceFeeData(
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
 
         // TODO: Delete return
         return (address(0), address(0), 100, 100);

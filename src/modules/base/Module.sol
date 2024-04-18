@@ -15,7 +15,8 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // Internal Interfaces
 import {IModule, IOrchestrator} from "src/modules/base/IModule.sol";
 import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+import {IGovernor} from "src/external/governance/IGovernor.sol";
+import {ITaxMan} from "src/external/taxation/ITaxMan.sol";
 
 /**
  * @title Module
@@ -251,6 +252,42 @@ abstract contract Module is
 
     //--------------------------------------------------------------------------
     // Internal Functions
+
+    /// @notice Returns the collateral fee for the specified workflow module function and the according treasury address of this workflow
+    /// @param functionSelector The function selector of the target function
+    /// @dev FunctionSelector is always passed as selector of this module / address
+    /// @return fee The collateral fee amount in relation to the BPS of the taxMan
+    /// @return treasury The address of the treasury
+    function getTaxManCollateralFeeData(bytes4 functionSelector)
+        internal
+        returns (uint, address)
+    {
+        //Fetch taxman address from orchestrator
+        return ITaxMan(__Module_orchestrator.governor().getTaxMan()) //Fetch taxMan address from orchestrator
+            .getCollateralWorkflowFeeAndTreasury(
+            address(__Module_orchestrator), //Always take this modules orchestrator as the workflow address
+            address(this), //always take this as the module address
+            functionSelector
+        );
+    }
+
+    /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address of this workflow
+    /// @param functionSelector The function selector of the target function
+    /// @dev FunctionSelector is always passed as selector of this module / address
+    /// @return fee The issuance fee amount in relation to the BPS of the taxMan
+    /// @return treasury The address of the treasury
+    function getTaxManIssuanceFeeData(bytes4 functionSelector)
+        internal
+        returns (uint, address)
+    {
+        //Fetch taxman address from orchestrator
+        return ITaxMan(__Module_orchestrator.governor().getTaxMan()) //Fetch taxMan address from orchestrator
+            .getIssuanceWorkflowFeeAndTreasury(
+            address(__Module_orchestrator), //Always take this modules orchestrator as the workflow address
+            address(this), //always take this as the module address
+            functionSelector
+        );
+    }
 
     /// @dev Internal function to trigger a callback from the orchestrator.
     /// @param data The call data for the orchestrator to call.
