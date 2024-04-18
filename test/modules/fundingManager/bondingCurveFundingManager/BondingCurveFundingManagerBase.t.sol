@@ -319,7 +319,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(bondingCurveFundingManager.balanceOf(buyer), amount);
     }
 
-    function testBuyOrderWithFee(uint amount, uint fee) public {
+    function testBuyOrderWithProjectFee(uint amount, uint fee) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         vm.assume(fee < _bps);
@@ -366,24 +366,110 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     // Protocol fee for issuance == 0
     // Project fee == 0
     function test_buyOrderWithProtocolFeeCase1Works(
-        uint _collateralFee,
-        uint _issuanceFee,
-        uint _projectFee
-    ) public view {
-        vm.assume(_issuanceFee == 0);
-        vm.assume(_projectFee == 0);
-        _collateralFee =
-            bound(_collateralFee, 1, bondingCurveFundingManager.call_BPS());
+        uint amount,
+        uint _collateralFee
+    ) public {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        _collateralFee = bound(_collateralFee, 1, _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        //Set Collateral Fee
+
+        taxMan.setDefaultCollateralFee(_collateralFee);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Pre-checks
+        uint balanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Calculate receiving amount
+        uint amountMinusFee = amount
+            - (amount * _collateralFee / bondingCurveFundingManager.call_BPS());
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(buyer, amountMinusFee, amountMinusFee, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, amountMinusFee);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (balanceBefore + amount)
+        );
+        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), amountMinusFee);
     }
 
-    // Protocol fee for collateral > 0
+    // Protocol fee for collateral > 0 //@todo
     // Protocol fee for issuance == 0
     // Project fee > 0
     function test_buyOrderWithProtocolFeeCase1WithProjectFeeWorks(
+        uint amount,
         uint _collateralFee,
-        uint _issuanceFee,
         uint _projectFee
-    ) public {}
+    ) public {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        _collateralFee = bound(_collateralFee, 1, _bps);
+        _projectFee = bound(_projectFee, 1, _bps);
+        vm.assume(_collateralFee + _projectFee < _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        //Set Collateral Fee
+
+        taxMan.setDefaultCollateralFee(_collateralFee);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(_projectFee);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Pre-checks
+        uint balanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Calculate receiving amount
+        uint amountMinusFee = amount
+            - (
+                (amount * _collateralFee + amount * _projectFee) //add colleteral Fees together
+                    / _bps
+            );
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(buyer, amountMinusFee, amountMinusFee, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, amountMinusFee);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (balanceBefore + amount)
+        );
+        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), amountMinusFee);
+    }
 
     // Protocol fee for collateral > 0
     // Protocol fee for issuance > 0
@@ -616,8 +702,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                 .BondingCurveFundingManagerBase__InvalidRecipient
                 .selector
         );
-        bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
-            _treasury, IERC20(_token), _feeAmount
+        bondingCurveFundingManager.call_processProtocolFeeViaMinting(
+            _treasury, _feeAmount
         );
     }
 
@@ -625,6 +711,85 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint _feeAmount
     ) public {
         vm.assume(_feeAmount == 0);
+
+        // Get balance before transfer
+        uint balanceBeforeTransfer = _token.balanceOf(treasury);
+        // Validate treasury has not tokens
+        assertEq(balanceBeforeTransfer, 0);
+        // Function call
+        bondingCurveFundingManager.call_processProtocolFeeViaMinting(
+            treasury, _feeAmount
+        );
+        // Get balance after transfer
+        uint balanceAfterTransfer = _token.balanceOf(treasury);
+
+        // Assert eq
+        assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
+    }
+
+    function testInternalProcessProtocolFeeViaMinting_worksGivenFeeAmountIsNotZero(
+        uint _feeAmount
+    ) public {
+        _feeAmount = bound(_feeAmount, 1, type(uint).max);
+
+        // Get balance before transfer
+        uint balanceBeforeTransfer =
+            bondingCurveFundingManager.balanceOf(treasury);
+        // Validate treasury has not tokens
+        assertEq(balanceBeforeTransfer, 0);
+
+        // Expect event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit ProtocolFeeMinted(
+            address(bondingCurveFundingManager), treasury, _feeAmount
+        );
+        // Function call
+        bondingCurveFundingManager.call_processProtocolFeeViaMinting(
+            treasury, _feeAmount
+        );
+
+        // Get balance after transfer
+        uint balanceAfterTransfer =
+            bondingCurveFundingManager.balanceOf(treasury);
+        // Assert eq
+        assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
+    }
+
+    /* Test _processProtocolFeeViaTransfer() function
+        ├── Given the feeAmount == 0
+        │   └── When the function _processProtocolFeeViaTransfer() is called
+        │       └── Then no amount of token should be transferred
+        ├── Given the fee amount > 0
+        │   └── And the treasury address is invalid
+        │       └── When the function _processProtocolFeeViaTransfer() is called
+        │           └── Then the the transaction should revert
+        └── Given the feeAmount > 0
+            └── And the treasury address is valid
+                └── When the function _processProtocolFeeViaTransfer() is called
+                    └── Then the _feeAmount should be transferred to treasury address
+    */
+
+    function testInternalProcessProtocolFeeViaTransfer_failsGivenTreasuryAddressInvalid(
+        uint _feeAmount
+    ) public {
+        vm.assume(_feeAmount > 0);
+        address _treasury = address(0);
+
+        vm.expectRevert(
+            IBondingCurveFundingManagerBase
+                .BondingCurveFundingManagerBase__InvalidRecipient
+                .selector
+        );
+        bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
+            _treasury, IERC20(_token), _feeAmount
+        );
+    }
+
+    function testInternalProcessProtocolFeeViaTransfer_worksGivenFeeAmountIsZero(
+    ) public {
+        uint _feeAmount = 0;
 
         // Get balance before transfer
         uint balanceBeforeTransfer = _token.balanceOf(treasury);
@@ -641,7 +806,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
     }
 
-    function testInternalProcessProtocolFeeViaMinting_worksGivenFeeAmountIsNotZero(
+    function testInternalProcessProtocolFeeViaTransfer_worksGivenFeeAmountIsNotZero(
         uint _feeAmount
     ) public {
         _feeAmount = bound(_feeAmount, 1, type(uint).max);
@@ -666,21 +831,6 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         // Assert eq
         assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
     }
-
-    /* Test _processProtocolFeeViaTransfer() function
-        ├── Given the feeAmount == 0
-        │   └── When the function _processProtocolFeeViaTransfer() is called
-        │       └── Then no amount of token should be transferred
-        ├── Given the fee amount > 0
-        │   └── And the treasury address is invalid
-        │       └── When the function _processProtocolFeeViaTransfer() is called
-        │           └── Then the the transaction should revert
-        └── Given the feeAmount > 0
-            └── And the treasury address is valid
-                └── When the function _processProtocolFeeViaTransfer() is called
-                    └── Then the _feeAmount should be transferred to treasury address
-    */
-    // TODO: write test
 
     /* Test _calculateNetAndSplitFees() function
         ├── Given the (protocol fee + project fee) == 0
@@ -707,7 +857,77 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                         └── And it should return the correct projectFeeAmount
     */
 
-    // TODO: Write test
+    function testInternalCalculateNetAndSplitFees_CombinedFee0() public {
+        (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount) =
+            bondingCurveFundingManager.call_calculateNetAndSplitFees(0, 0, 0);
+        assertEq(netAmount, 0);
+        assertEq(protocolFeeAmount, 0);
+        assertEq(projectFeeAmount, 0);
+    }
+
+    function testInternalCalculateNetAndSplitFees_ProtocolFee0(
+        uint totalAmount,
+        uint projectFee
+    ) public {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        totalAmount = bound(totalAmount, 1, 2 ^ 128);
+        projectFee = bound(projectFee, 1, _bps);
+
+        (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount) =
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            totalAmount, 0, projectFee
+        );
+        assertEq(netAmount, totalAmount - projectFeeAmount);
+        assertEq(protocolFeeAmount, 0);
+        assertEq(projectFeeAmount, totalAmount * projectFee / _bps);
+    }
+
+    function testInternalCalculateNetAndSplitFees_ProjectFee0(
+        uint totalAmount,
+        uint protocolFee
+    ) public {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        totalAmount = bound(totalAmount, 1, 2 ^ 128);
+        protocolFee = bound(protocolFee, 1, _bps);
+
+        (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount) =
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            totalAmount, protocolFee, 0
+        );
+        assertEq(netAmount, totalAmount - protocolFeeAmount);
+        assertEq(protocolFeeAmount, totalAmount * protocolFee / _bps);
+        assertEq(projectFeeAmount, 0);
+    }
+
+    event hm();
+
+    function testInternalCalculateNetAndSplitFees_FeesBiggerThan0(
+        uint totalAmount,
+        uint protocolFee,
+        uint projectFee
+    ) public {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        totalAmount = bound(totalAmount, 1, 2 ^ 128);
+        protocolFee = bound(protocolFee, 1, _bps);
+        projectFee = bound(projectFee, 1, _bps);
+        vm.assume(projectFee + protocolFee < _bps); //@todo add assumption in base code
+
+        (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount) =
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            totalAmount, protocolFee, projectFee
+        );
+        assertEq(netAmount, totalAmount - protocolFeeAmount - projectFeeAmount);
+        assertApproxEqAbs(
+            protocolFeeAmount,
+            totalAmount * protocolFee / _bps,
+            1 //Max 1 delta  @note is this fine?
+        );
+        assertApproxEqAbs(
+            projectFeeAmount,
+            totalAmount * projectFee / _bps,
+            1 //Max 1 delta
+        );
+    }
 
     /* Test _setDecimals function
        
