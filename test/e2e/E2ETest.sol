@@ -9,6 +9,8 @@ import {E2EModuleRegistry} from "test/e2e/E2EModuleRegistry.sol";
 
 import {Governor} from "src/external/governance/Governor.sol";
 
+import {TaxMan} from "src/external/taxation/TaxMan.sol";
+
 import {TransactionForwarder} from
     "src/external/forwarder/TransactionForwarder.sol";
 
@@ -53,8 +55,11 @@ contract E2ETest is E2EModuleRegistry {
     // Forwarder
     TransactionForwarder forwarder;
 
-    address communityMultisig = address(0x11111);
-    address teamMultisig = address(0x22222);
+    TaxMan taxMan;
+
+    address communityMultisig = makeAddr("communityMultisig");
+    address teamMultisig = makeAddr("teamMultisig");
+    address treasury = makeAddr("treasury");
 
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
@@ -71,6 +76,13 @@ contract E2ETest is E2EModuleRegistry {
         );
 
         gov.init(communityMultisig, teamMultisig, 1 weeks);
+
+        taxMan = new TaxMan();
+        taxMan.init(address(this), treasury, 0, 0); //@todo check if it works for 1%
+
+        vm.prank(communityMultisig);
+        gov.setTaxMan(address(taxMan));
+
         // Deploy a Mock funding token for testing.
 
         //Set gov as the default beacon owner
