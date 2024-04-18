@@ -62,7 +62,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
     //--------------------------------------------------------------------------
     // Initialization
 
-    function init(
+    function init( //@note instead constructor?
         address owner,
         address _defaultProtocolTreasury,
         uint _defaultCollateralFee,
@@ -75,7 +75,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         validFee(_defaultCollateralFee)
         validFee(_defaultIssuanceFee)
     {
-        __Ownable_init(owner);
+        __Ownable_init(owner); //@note instead constructor -> not upgradeable?
 
         defaultProtocolTreasury = _defaultProtocolTreasury;
         defaultCollateralFee = _defaultCollateralFee;

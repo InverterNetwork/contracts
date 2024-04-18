@@ -11,6 +11,8 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
+import {IGovernor} from "src/external/governance/IGovernor.sol";
+
 interface IOrchestrator is IModuleManager {
     //--------------------------------------------------------------------------
     // Errors
@@ -53,7 +55,8 @@ interface IOrchestrator is IModuleManager {
         address fundingManager,
         address authorizer,
         address paymentProcessor,
-        address[] modules
+        address[] modules,
+        address governor
     );
 
     //--------------------------------------------------------------------------
@@ -65,7 +68,8 @@ interface IOrchestrator is IModuleManager {
         address[] calldata modules,
         IFundingManager fundingManager,
         IAuthorizer authorizer,
-        IPaymentProcessor paymentProcessor
+        IPaymentProcessor paymentProcessor,
+        IGovernor governor
     ) external;
 
     /// @notice Replaces the current authorizer with `_authorizer`
@@ -115,4 +119,7 @@ interface IOrchestrator is IModuleManager {
         external
         view
         returns (address);
+
+    /// @notice The governor contract implementation used for protocol level interactions.
+    function governor() external view returns (IGovernor);
 }

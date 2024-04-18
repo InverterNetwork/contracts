@@ -32,6 +32,7 @@ import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {GovernorMock} from "test/utils/mocks/external/GovernorMock.sol";
 
 contract RoleAuthorizerTest is Test {
     bool hasDependency;
@@ -43,6 +44,7 @@ contract RoleAuthorizerTest is Test {
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
+    GovernorMock internal governor = new GovernorMock();
     TransactionForwarder _forwarder =
         new TransactionForwarder("TransactionForwarder");
     address ALBA = address(0xa1ba); //default authorized person
@@ -113,7 +115,8 @@ contract RoleAuthorizerTest is Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         address initialAuth = ALBA;

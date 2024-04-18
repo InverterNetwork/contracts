@@ -13,10 +13,13 @@ import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
 import {IPaymentProcessor} from
     "src/modules/paymentProcessor/IPaymentProcessor.sol";
 
+import {IGovernor} from "src/external/governance/IGovernor.sol";
+
 contract OrchestratorAccessMock is IOrchestrator {
     IERC20 public token;
     IPaymentProcessor public paymentProcessor;
     IFundingManager public fundingManager;
+    IGovernor public governor;
 
     bool public executeTxBoolReturn;
     bytes public executeTxData;
@@ -55,7 +58,8 @@ contract OrchestratorAccessMock is IOrchestrator {
         address[] calldata,
         IFundingManager,
         IAuthorizer,
-        IPaymentProcessor
+        IPaymentProcessor,
+        IGovernor
     ) external {}
 
     function setAuthorizer(IAuthorizer authorizer_) external {}

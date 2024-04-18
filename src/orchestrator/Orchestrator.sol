@@ -17,7 +17,8 @@ import {
     IOrchestrator,
     IFundingManager,
     IPaymentProcessor,
-    IAuthorizer
+    IAuthorizer,
+    IGovernor
 } from "src/orchestrator/IOrchestrator.sol";
 import {IModule} from "src/modules/base/IModule.sol";
 
@@ -81,6 +82,9 @@ contract Orchestrator is IOrchestrator, ModuleManager {
     /// @inheritdoc IOrchestrator
     IPaymentProcessor public override(IOrchestrator) paymentProcessor;
 
+    /// @inheritdoc IOrchestrator
+    IGovernor public override(IOrchestrator) governor;
+
     //--------------------------------------------------------------------------
     // Initializer
 
@@ -94,7 +98,8 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         address[] calldata modules,
         IFundingManager fundingManager_,
         IAuthorizer authorizer_,
-        IPaymentProcessor paymentProcessor_
+        IPaymentProcessor paymentProcessor_,
+        IGovernor governor_
     ) external override(IOrchestrator) initializer {
         // Initialize upstream contracts.
         __ModuleManager_init(modules);
@@ -105,6 +110,8 @@ contract Orchestrator is IOrchestrator, ModuleManager {
         fundingManager = fundingManager_;
         authorizer = authorizer_;
         paymentProcessor = paymentProcessor_;
+
+        governor = governor_;
 
         // Add necessary modules.
         // Note to not use the public addModule function as the factory
@@ -118,7 +125,8 @@ contract Orchestrator is IOrchestrator, ModuleManager {
             address(fundingManager_),
             address(authorizer_),
             address(paymentProcessor_),
-            modules
+            modules,
+            address(governor_)
         );
     }
 

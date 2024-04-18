@@ -36,6 +36,7 @@ import {FundingManagerMock} from
     "test/utils/mocks/modules/FundingManagerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {GovernorMock} from "test/utils/mocks/external/GovernorMock.sol";
 
 // Run through the RoleAuthorizer tests with the TokenGatedRoleAuthorizer
 contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
@@ -55,7 +56,8 @@ contract TokenGatedRoleAuthorizerUpstreamTests is RoleAuthorizerTest {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         address initialAuth = ALBA;
@@ -88,6 +90,7 @@ contract TokenGatedRoleAuthorizerTest is Test {
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerMock _fundingManager = new FundingManagerMock();
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
+    GovernorMock internal governor = new GovernorMock();
 
     ModuleMock mockModule = new ModuleMock();
 
@@ -140,7 +143,8 @@ contract TokenGatedRoleAuthorizerTest is Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         address initialAuth = ALBA;

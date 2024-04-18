@@ -31,6 +31,7 @@ import {
 import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {GovernorMock} from "test/utils/mocks/external/GovernorMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
@@ -50,6 +51,8 @@ contract OrchestratorTest is Test {
     FundingManagerMock fundingManager;
     AuthorizerMock authorizer;
     PaymentProcessorMock paymentProcessor;
+    GovernorMock governor;
+
     ERC20Mock token;
     TransactionForwarder forwarder;
 
@@ -61,13 +64,15 @@ contract OrchestratorTest is Test {
         address fundingManager,
         address authorizer,
         address paymentProcessor,
-        address[] modules
+        address[] modules,
+        address governor
     );
 
     function setUp() public {
         fundingManager = new FundingManagerMock();
         authorizer = new AuthorizerMock();
         paymentProcessor = new PaymentProcessorMock();
+        governor = new GovernorMock();
         forwarder = new TransactionForwarder("TransactionForwarder");
         token = new ERC20Mock("TestToken", "TST");
 
@@ -100,7 +105,8 @@ contract OrchestratorTest is Test {
                 address(fundingManager),
                 address(authorizer),
                 address(paymentProcessor),
-                truncatedModules
+                truncatedModules,
+                address(governor)
             );
 
             // Initialize orchestrator.
@@ -109,7 +115,8 @@ contract OrchestratorTest is Test {
                 truncatedModules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         } else {
             // Make sure mock addresses are not in set of modules.
@@ -121,7 +128,8 @@ contract OrchestratorTest is Test {
                 address(fundingManager),
                 address(authorizer),
                 address(paymentProcessor),
-                truncatedModules
+                truncatedModules,
+                address(governor)
             );
 
             // Initialize orchestrator.
@@ -130,7 +138,8 @@ contract OrchestratorTest is Test {
                 modules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         }
 
@@ -164,7 +173,8 @@ contract OrchestratorTest is Test {
                 truncatedModules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
 
             vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
@@ -173,7 +183,8 @@ contract OrchestratorTest is Test {
                 truncatedModules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         } else {
             types.assumeValidModules(modules);
@@ -186,7 +197,8 @@ contract OrchestratorTest is Test {
                 modules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
 
             vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
@@ -195,7 +207,8 @@ contract OrchestratorTest is Test {
                 modules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         }
     }
@@ -222,7 +235,8 @@ contract OrchestratorTest is Test {
             modules,
             fundingManager,
             authorizer,
-            paymentProcessor
+            paymentProcessor,
+            governor
         );
 
         authorizer.setIsAuthorized(address(this), true);
@@ -269,7 +283,8 @@ contract OrchestratorTest is Test {
             modules,
             fundingManager,
             authorizer,
-            paymentProcessor
+            paymentProcessor,
+            governor
         );
 
         authorizer.setIsAuthorized(address(this), true);
@@ -311,7 +326,8 @@ contract OrchestratorTest is Test {
             modules,
             fundingManager,
             authorizer,
-            paymentProcessor
+            paymentProcessor,
+            governor
         );
 
         authorizer.setIsAuthorized(address(this), true);
@@ -354,7 +370,8 @@ contract OrchestratorTest is Test {
             modules,
             fundingManager,
             authorizer,
-            paymentProcessor
+            paymentProcessor,
+            governor
         );
 
         authorizer.setIsAuthorized(address(this), true);
@@ -397,7 +414,8 @@ contract OrchestratorTest is Test {
             modules,
             fundingManager,
             authorizer,
-            paymentProcessor
+            paymentProcessor,
+            governor
         );
 
         authorizer.setIsAuthorized(address(this), true);
@@ -434,7 +452,8 @@ contract OrchestratorTest is Test {
             modules,
             fundingManager,
             authorizer,
-            paymentProcessor
+            paymentProcessor,
+            governor
         );
 
         authorizer.setIsAuthorized(address(this), true);
@@ -482,7 +501,8 @@ contract OrchestratorTest is Test {
                 truncatedModules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         } else {
             types.assumeValidModules(modules);
@@ -496,7 +516,8 @@ contract OrchestratorTest is Test {
                 modules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         }
         authorizer.setIsAuthorized(address(this), true);
@@ -529,7 +550,8 @@ contract OrchestratorTest is Test {
                 truncatedModules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         } else {
             types.assumeValidModules(modules);
@@ -543,7 +565,8 @@ contract OrchestratorTest is Test {
                 modules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         }
 
@@ -578,7 +601,8 @@ contract OrchestratorTest is Test {
                 truncatedModules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         } else {
             types.assumeValidModules(modules);
@@ -592,7 +616,8 @@ contract OrchestratorTest is Test {
                 modules,
                 fundingManager,
                 authorizer,
-                paymentProcessor
+                paymentProcessor,
+                governor
             );
         }
 

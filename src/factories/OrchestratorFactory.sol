@@ -20,7 +20,8 @@ import {
 import {
     IFundingManager,
     IAuthorizer,
-    IPaymentProcessor
+    IPaymentProcessor,
+    IGovernor
 } from "src/orchestrator/IOrchestrator.sol";
 import {IModuleFactory} from "src/factories/IModuleFactory.sol";
 
@@ -145,7 +146,8 @@ contract OrchestratorFactory is IOrchestratorFactory, ERC2771Context, ERC165 {
             modules,
             IFundingManager(fundingManager),
             IAuthorizer(authorizer),
-            IPaymentProcessor(paymentProcessor)
+            IPaymentProcessor(paymentProcessor),
+            IGovernor(IModuleFactory(moduleFactory).governor())
         );
 
         // Second round of module initializations to satisfy cross-referencing between modules

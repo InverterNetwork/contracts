@@ -27,6 +27,7 @@ import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {PaymentProcessorMock} from
     "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {GovernorMock} from "test/utils/mocks/external/GovernorMock.sol";
 
 /**
  * @dev Base class for module implementation test contracts.
@@ -39,6 +40,8 @@ abstract contract ModuleTest is Test {
     AuthorizerMock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
+
+    GovernorMock governor = new GovernorMock();
 
     //Deploy a forwarder used to enable metatransactions
     TransactionForwarder _forwarder =
@@ -77,7 +80,8 @@ abstract contract ModuleTest is Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
