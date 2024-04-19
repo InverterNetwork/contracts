@@ -23,6 +23,7 @@ import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
 import {RecurringPaymentManager} from
     "src/modules/logicModule/RecurringPaymentManager.sol";
 import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
+import {KPIRewarder} from "src/modules/logicModule/KPIRewarder.sol";
 import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
 import {TokenGatedRoleAuthorizer} from
     "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
@@ -463,6 +464,43 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             stakingManagerMetadata, IInverterBeacon(stakingManagerBeacon)
+        );
+    }
+
+    //KPIRewarder
+
+    KPIRewarder kpiRewarderImpl;
+
+    InverterBeacon kpiRewarderBeacon;
+
+    IModule.Metadata kpiRewarderMetadata = IModule.Metadata(
+        1, 0, "https://github.com/inverter/KPI-Rewarder", "KpiRewarder"
+    );
+
+    /*
+     IOrchestratorFactory.ModuleConfig kpiRewarderFactoryConfig =
+    IOrchestratorFactory.ModuleConfig(
+        kpiRewarderMetadata,
+        abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address) ),
+        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+    ); 
+    */
+
+    function setUpKPIRewarder() internal {
+        // Deploy module implementations.
+        kpiRewarderImpl = new KPIRewarder();
+
+        // Deploy module beacons.
+        kpiRewarderBeacon = new InverterBeacon(
+            DEFAULT_BEACON_OWNER,
+            kpiRewarderMetadata.majorVersion,
+            address(kpiRewarderImpl),
+            kpiRewarderMetadata.minorVersion
+        );
+
+        // Register modules at moduleFactory.
+        moduleFactory.registerMetadata(
+            kpiRewarderMetadata, IInverterBeacon(kpiRewarderBeacon)
         );
     }
 
