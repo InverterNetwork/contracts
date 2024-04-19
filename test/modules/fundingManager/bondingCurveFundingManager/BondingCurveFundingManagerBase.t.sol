@@ -369,6 +369,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint amount,
         uint _collateralFee
     ) public {
+        uint _issuanceFee = 0;
+        uint _projectFee = 0;
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         _collateralFee = bound(_collateralFee, 1, _bps);
@@ -376,62 +378,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
         amount = bound(amount, 1, maxAmount);
 
-        //Set Collateral Fee
-
+        //Set Issuance Fee
         taxMan.setDefaultCollateralFee(_collateralFee);
-
-        address buyer = makeAddr("buyer");
-        _prepareBuyConditions(buyer, amount);
-
-        // Pre-checks
-        uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
-
-        // Calculate receiving amount
-        uint amountMinusFee = amount
-            - (amount * _collateralFee / bondingCurveFundingManager.call_BPS());
-
-        // Emit event
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit TokensBought(buyer, amountMinusFee, amountMinusFee, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
-
-        // Execution
-        vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount, amountMinusFee);
-
-        // Post-checks
-        assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount)
-        );
-        assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), amountMinusFee);
-    }
-
-    // Protocol fee for collateral > 0 //@todo
-    // Protocol fee for issuance == 0
-    // Project fee > 0
-    function test_buyOrderWithProtocolFeeCase1WithProjectFeeWorks(
-        uint amount,
-        uint _collateralFee,
-        uint _projectFee
-    ) public {
-        // Setup
-        uint _bps = bondingCurveFundingManager.call_BPS();
-        _collateralFee = bound(_collateralFee, 1, _bps);
-        _projectFee = bound(_projectFee, 1, _bps);
-        vm.assume(_collateralFee + _projectFee < _bps);
-
-        uint maxAmount = type(uint).max / _bps; // to prevent overflows
-        amount = bound(amount, 1, maxAmount);
-
-        //Set Collateral Fee
-
-        taxMan.setDefaultCollateralFee(_collateralFee);
+        taxMan.setDefaultIssuanceFee(_issuanceFee);
 
         vm.prank(owner_address);
         bondingCurveFundingManager.setBuyFee(_projectFee);
@@ -446,21 +395,24 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
 
         // Calculate receiving amount
-        uint amountMinusFee = amount
-            - (
-                (amount * _collateralFee + amount * _projectFee) //add colleteral Fees together
-                    / _bps
-            );
+
+        uint collateralAmountAfterFee =
+            amount - (amount * _collateralFee + amount * _projectFee / _bps);
+
+        uint finalAmountMinusFee = collateralAmountAfterFee
+            - (collateralAmountAfterFee * _issuanceFee / _bps);
 
         // Emit event
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amountMinusFee, amountMinusFee, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+        emit TokensBought(
+            buyer, finalAmountMinusFee, finalAmountMinusFee, buyer
+        ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount, amountMinusFee);
+        bondingCurveFundingManager.buy(amount, finalAmountMinusFee);
 
         // Post-checks
         assertEq(
@@ -468,28 +420,332 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(buyer), amountMinusFee);
+        assertEq(
+            bondingCurveFundingManager.balanceOf(buyer), finalAmountMinusFee
+        );
+    }
+
+    // Protocol fee for collateral > 0
+    // Protocol fee for issuance == 0
+    // Project fee > 0
+    function test_buyOrderWithProtocolFeeCase1WithProjectFeeWorks(
+        uint amount,
+        uint _collateralFee,
+        uint _projectFee
+    ) public {
+        uint _issuanceFee = 0;
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        _collateralFee = bound(_collateralFee, 1, _bps);
+        _projectFee = bound(_projectFee, 1, _bps);
+        vm.assume(_collateralFee + _projectFee < _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        //Set Issuance Fee
+        taxMan.setDefaultCollateralFee(_collateralFee);
+        taxMan.setDefaultIssuanceFee(_issuanceFee);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(_projectFee);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Pre-checks
+        uint balanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Calculate receiving amount
+
+        uint collateralAmountAfterFee =
+            amount - (amount * _collateralFee + amount * _projectFee / _bps);
+
+        uint finalAmountMinusFee = collateralAmountAfterFee
+            - (collateralAmountAfterFee * _issuanceFee / _bps);
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(
+            buyer, finalAmountMinusFee, finalAmountMinusFee, buyer
+        ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, finalAmountMinusFee);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (balanceBefore + amount)
+        );
+        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(
+            bondingCurveFundingManager.balanceOf(buyer), finalAmountMinusFee
+        );
     }
 
     // Protocol fee for collateral > 0
     // Protocol fee for issuance > 0
     // Project fee == 0
-    function test_buyOrderWithProtocolFeeCase2Works() public {}
+    function test_buyOrderWithProtocolFeeCase2Works(
+        uint amount,
+        uint _collateralFee,
+        uint _issuanceFee
+    ) public {
+        uint _projectFee = 0;
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        _collateralFee = bound(_collateralFee, 1, _bps);
+        _issuanceFee = bound(_issuanceFee, 1, _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        //Set Issuance Fee
+        taxMan.setDefaultCollateralFee(_collateralFee);
+        taxMan.setDefaultIssuanceFee(_issuanceFee);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(_projectFee);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Pre-checks
+        uint balanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Calculate receiving amount
+
+        uint collateralAmountAfterFee =
+            amount - (amount * _collateralFee + amount * _projectFee / _bps);
+
+        uint finalAmountMinusFee = collateralAmountAfterFee
+            - (collateralAmountAfterFee * _issuanceFee / _bps);
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(
+            buyer, finalAmountMinusFee, finalAmountMinusFee, buyer
+        ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, finalAmountMinusFee);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (balanceBefore + amount)
+        );
+        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(
+            bondingCurveFundingManager.balanceOf(buyer), finalAmountMinusFee
+        );
+    }
 
     // Protocol fee for collateral > 0
     // Protocol fee for issuance > 0
     // Project fee > 0
-    function test_buyOrderWithProtocolFeeCase2WithProjectFeeWorks() public {}
+    function test_buyOrderWithProtocolFeeCase2WithProjectFeeWorks(
+        uint amount,
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _projectFee
+    ) public {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        _collateralFee = bound(_collateralFee, 1, _bps);
+        _issuanceFee = bound(_issuanceFee, 1, _bps);
+        _projectFee = bound(_projectFee, 1, _bps);
+        vm.assume(_collateralFee + _projectFee < _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        //Set Issuance Fee
+        taxMan.setDefaultCollateralFee(_collateralFee);
+        taxMan.setDefaultIssuanceFee(_issuanceFee);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(_projectFee);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Pre-checks
+        uint balanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Calculate receiving amount
+
+        uint collateralAmountAfterFee =
+            amount - (amount * _collateralFee + amount * _projectFee / _bps);
+
+        uint finalAmountMinusFee = collateralAmountAfterFee
+            - (collateralAmountAfterFee * _issuanceFee / _bps);
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(
+            buyer, finalAmountMinusFee, finalAmountMinusFee, buyer
+        ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, finalAmountMinusFee);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (balanceBefore + amount)
+        );
+        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(
+            bondingCurveFundingManager.balanceOf(buyer), finalAmountMinusFee
+        );
+    }
 
     // Protocol fee for collateral == 0
     // Protocol fee for issuance > 0
     // Project fee == 0
-    function test_buyOrderWithProtocolFeeCase3Works() public {}
+    function test_buyOrderWithProtocolFeeCase3Works(
+        uint amount,
+        uint _issuanceFee
+    ) public {
+        uint _collateralFee = 0;
+        uint _projectFee = 0;
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        _issuanceFee = bound(_issuanceFee, 1, _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        //Set Issuance Fee
+        taxMan.setDefaultCollateralFee(_collateralFee);
+        taxMan.setDefaultIssuanceFee(_issuanceFee);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(_projectFee);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Pre-checks
+        uint balanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Calculate receiving amount
+
+        uint collateralAmountAfterFee =
+            amount - (amount * _collateralFee + amount * _projectFee / _bps);
+
+        uint finalAmountMinusFee = collateralAmountAfterFee
+            - (collateralAmountAfterFee * _issuanceFee / _bps);
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(
+            buyer, finalAmountMinusFee, finalAmountMinusFee, buyer
+        ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, finalAmountMinusFee);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (balanceBefore + amount)
+        );
+        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(
+            bondingCurveFundingManager.balanceOf(buyer), finalAmountMinusFee
+        );
+    }
 
     // Protocol fee for collateral == 0
     // Protocol fee for issuance > 0
     // Project fee > 0
-    function test_buyOrderWithProtocolFeeCase3WithProjectFeeWorks() public {}
+    function test_buyOrderWithProtocolFeeCase3WithProjectFeeWorks(
+        uint amount,
+        uint _issuanceFee,
+        uint _projectFee
+    ) public {
+        uint _collateralFee = 0;
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        _issuanceFee = bound(_issuanceFee, 1, _bps);
+        _projectFee = bound(_projectFee, 1, _bps);
+
+        uint maxAmount = type(uint).max / _bps; // to prevent overflows
+        amount = bound(amount, 1, maxAmount);
+
+        //Set Issuance Fee
+        taxMan.setDefaultCollateralFee(_collateralFee);
+        taxMan.setDefaultIssuanceFee(_issuanceFee);
+
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setBuyFee(_projectFee);
+
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amount);
+
+        // Pre-checks
+        uint balanceBefore =
+            _token.balanceOf(address(bondingCurveFundingManager));
+        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), 0);
+
+        // Calculate receiving amount
+
+        uint collateralAmountAfterFee =
+            amount - (amount * _collateralFee + amount * _projectFee / _bps);
+
+        uint finalAmountMinusFee = collateralAmountAfterFee
+            - (collateralAmountAfterFee * _issuanceFee / _bps);
+
+        // Emit event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit TokensBought(
+            buyer, finalAmountMinusFee, finalAmountMinusFee, buyer
+        ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+
+        // Execution
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amount, finalAmountMinusFee);
+
+        // Post-checks
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            (balanceBefore + amount)
+        );
+        assertEq(_token.balanceOf(buyer), 0);
+        assertEq(
+            bondingCurveFundingManager.balanceOf(buyer), finalAmountMinusFee
+        );
+    }
 
     /* Test openBuy and _openBuy function
         ├── when caller is not the Orchestrator owner
@@ -916,17 +1172,10 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
             totalAmount, protocolFee, projectFee
         );
+
         assertEq(netAmount, totalAmount - protocolFeeAmount - projectFeeAmount);
-        assertApproxEqAbs(
-            protocolFeeAmount,
-            totalAmount * protocolFee / _bps,
-            1 //Max 1 delta  @note is this fine?
-        );
-        assertApproxEqAbs(
-            projectFeeAmount,
-            totalAmount * projectFee / _bps,
-            1 //Max 1 delta
-        );
+        assertEq(protocolFeeAmount, totalAmount * protocolFee / _bps);
+        assertEq(projectFeeAmount, totalAmount * projectFee / _bps);
     }
 
     /* Test _setDecimals function

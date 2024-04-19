@@ -292,16 +292,17 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         ) = _getBuyFeesAndTreasuryAddresses();
 
         // Deduct protocol and project buy fee from collateral, if applicable
-        (_depositAmount, /* feeAmount */ ) = _calculateNetAmountAndFee(
-            _depositAmount, (collateralBuyFeePercentage + buyFee)
+        (_depositAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            _depositAmount, collateralBuyFeePercentage, buyFee
         );
 
         // Calculate issuance token return from formula
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
 
         // Deduct protocol buy fee from issuance, if applicable
-        (mintAmount, /* feeAmount */ ) =
-            _calculateNetAmountAndFee(mintAmount, issuanceBuyFeePercentage);
+        (mintAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
 
         // Return expected purchase return amount
         return mintAmount;
@@ -328,15 +329,16 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         ) = _getSellFeesAndTreasuryAddresses();
 
         // Deduct protocol sell fee from issuance, if applicable
-        (_depositAmount, /* feeAmount */ ) =
-            _calculateNetAmountAndFee(_depositAmount, issuanceSellFeePercentage);
+        (_depositAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
 
         // Calculate redeem amount from formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
 
         // Deduct protocol and project sell fee from collateral, if applicable
-        (redeemAmount, /* feeAmount */ ) = _calculateNetAmountAndFee(
-            redeemAmount, (collateralSellFeePercentage + sellFee)
+        (redeemAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            redeemAmount, collateralSellFeePercentage, sellFee
         );
 
         // Return redeem amount

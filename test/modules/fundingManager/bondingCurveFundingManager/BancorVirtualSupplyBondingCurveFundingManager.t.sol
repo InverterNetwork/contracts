@@ -842,8 +842,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
 
         // We calculate how much if the initial deposit we should get back based on the fee
-        uint feeAmount = (normalized_formulaReturn * fee)
-            / bondingCurveFundingManager.call_BPS();
+        uint feeAmount = (normalized_formulaReturn * fee) / _bps;
         uint sellAmountMinusFee = normalized_formulaReturn - feeAmount;
 
         // Perform the sell
