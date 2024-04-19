@@ -11,7 +11,7 @@ import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 /**
- * @title   Module Manager Base V1
+ * @title   ModuleManagerBase_v1: Module Manager Base v1 for Inverter Network
  *
  * @dev     A contract to manage modules that can execute transactions via this
  *          contract and manage own role-based access control mechanisms.

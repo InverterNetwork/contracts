@@ -16,8 +16,8 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 // Internal Interfaces
 import {
     IOrchestrator_v1,
-    IAuthorizer,
-    IPaymentProcessor
+    IAuthorizer_v1,
+    IPaymentProcessor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {TransactionForwarder_v1} from
@@ -25,12 +25,12 @@ import {TransactionForwarder_v1} from
 
 // Mocks
 import {
-    FundingManagerMock,
+    FundingManagerV1Mock,
     IFundingManager_v1
-} from "test/utils/mocks/modules/FundingManagerMock.sol";
-import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
-import {PaymentProcessorMock} from
-    "test/utils/mocks/modules/PaymentProcessorMock.sol";
+} from "test/utils/mocks/modules/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
+import {PaymentProcessorV1Mock} from
+    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
@@ -47,9 +47,9 @@ contract OrchestratorV1Test is Test {
     TypeSanityHelper types;
 
     // Mocks
-    FundingManagerMock fundingManager;
-    AuthorizerMock authorizer;
-    PaymentProcessorMock paymentProcessor;
+    FundingManagerV1Mock fundingManager;
+    AuthorizerV1Mock authorizer;
+    PaymentProcessorV1Mock paymentProcessor;
     ERC20Mock token;
     TransactionForwarder_v1 forwarder;
 
@@ -65,9 +65,9 @@ contract OrchestratorV1Test is Test {
     );
 
     function setUp() public {
-        fundingManager = new FundingManagerMock();
-        authorizer = new AuthorizerMock();
-        paymentProcessor = new PaymentProcessorMock();
+        fundingManager = new FundingManagerV1Mock();
+        authorizer = new AuthorizerV1Mock();
+        paymentProcessor = new PaymentProcessorV1Mock();
         forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
         token = new ERC20Mock("TestToken", "TST");
 
@@ -228,7 +228,7 @@ contract OrchestratorV1Test is Test {
         authorizer.setIsAuthorized(address(this), true);
 
         // Create new authorizer module
-        AuthorizerMock newAuthorizer = new AuthorizerMock();
+        AuthorizerV1Mock newAuthorizer = new AuthorizerV1Mock();
         vm.assume(newAuthorizer != authorizer);
         types.assumeElemNotInSet(modules, address(newAuthorizer));
 
@@ -288,7 +288,7 @@ contract OrchestratorV1Test is Test {
             )
         );
 
-        orchestrator.setAuthorizer(IAuthorizer(newAuthorizer));
+        orchestrator.setAuthorizer(IAuthorizer_v1(newAuthorizer));
         assertTrue(orchestrator.authorizer() == authorizer);
     }
 
@@ -315,12 +315,12 @@ contract OrchestratorV1Test is Test {
         );
 
         authorizer.setIsAuthorized(address(this), true);
-        FundingManagerMock(address(orchestrator.fundingManager())).setToken(
+        FundingManagerV1Mock(address(orchestrator.fundingManager())).setToken(
             IERC20(address(0xA11CE))
         );
 
         // Create new funding manager module
-        FundingManagerMock newFundingManager = new FundingManagerMock();
+        FundingManagerV1Mock newFundingManager = new FundingManagerV1Mock();
         vm.assume(newFundingManager != fundingManager);
         types.assumeElemNotInSet(modules, address(newFundingManager));
 
@@ -358,7 +358,7 @@ contract OrchestratorV1Test is Test {
         );
 
         authorizer.setIsAuthorized(address(this), true);
-        FundingManagerMock(address(orchestrator.fundingManager())).setToken(
+        FundingManagerV1Mock(address(orchestrator.fundingManager())).setToken(
             IERC20(address(0xA11CE))
         );
 
@@ -403,7 +403,8 @@ contract OrchestratorV1Test is Test {
         authorizer.setIsAuthorized(address(this), true);
 
         // Create new payment processor module
-        PaymentProcessorMock newPaymentProcessor = new PaymentProcessorMock();
+        PaymentProcessorV1Mock newPaymentProcessor =
+            new PaymentProcessorV1Mock();
         vm.assume(newPaymentProcessor != paymentProcessor);
         types.assumeElemNotInSet(modules, address(newPaymentProcessor));
 
@@ -452,7 +453,9 @@ contract OrchestratorV1Test is Test {
                 newPaymentProcessor
             )
         );
-        orchestrator.setPaymentProcessor(IPaymentProcessor(newPaymentProcessor));
+        orchestrator.setPaymentProcessor(
+            IPaymentProcessor_v1(newPaymentProcessor)
+        );
 
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
     }

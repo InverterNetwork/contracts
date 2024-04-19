@@ -8,7 +8,16 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 import {Proxy} from "@oz/proxy/Proxy.sol";
 
 /**
- * @title BeaconProxy
+ * @title   InverterBeaconProxy_v1: Beacon Proxy for Implementation Upgrades for the Inverter Network.
+ *
+ * @notice  Acts as a proxy for Inverter Network's smart contracts, allowing for upgrades
+ *          to contract implementations without affecting the existing state or contract
+ *          addresses, thereby achieving upgradeable contracts.
+ *
+ * @dev     Implements the Proxy pattern by referencing the {InverterBeacon_v1}, which holds
+ *          the address of the current implementation to which calls are delegated.
+ *
+ * @author  Inverter Network.
  */
 contract InverterBeaconProxy_v1 is Proxy {
     //--------------------------------------------------------------------------------

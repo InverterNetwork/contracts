@@ -29,7 +29,7 @@ forge script script/modules/governance/DeployListAuthorizer.s.sol:DeployListAuth
     --broadcast
 
 # - SingleVoteGovernance
-forge script script/modules/governance/DeploySingleVoteGovernor.s.sol:DeploySingleVoteGovernor \
+forge script script/modules/governance/DeploySingleVoteGovernor_v1.s.sol:DeploySingleVoteGovernor_v1 \
     --fork-url $RPC_URL \
     --sender $WALLET_DEPLOYER \
     --private-key $WALLET_DEPLOYER_PK \

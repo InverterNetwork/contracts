@@ -21,12 +21,12 @@ import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 // Mocks
 import {OrchestratorV1Mock} from
     "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
-import {FundingManagerMock} from
-    "test/utils/mocks/modules/FundingManagerMock.sol";
-import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
+import {FundingManagerV1Mock} from
+    "test/utils/mocks/modules/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-import {PaymentProcessorMock} from
-    "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {PaymentProcessorV1Mock} from
+    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 
 /**
  * @dev Base class for module implementation test contracts.
@@ -35,10 +35,10 @@ abstract contract ModuleTest is Test {
     OrchestratorV1Mock _orchestrator;
 
     // Mocks
-    FundingManagerMock _fundingManager;
-    AuthorizerMock _authorizer;
+    FundingManagerV1Mock _fundingManager;
+    AuthorizerV1Mock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
-    PaymentProcessorMock _paymentProcessor = new PaymentProcessorMock();
+    PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
 
     //Deploy a forwarder used to enable metatransactions
     TransactionForwarder_v1 _forwarder =
@@ -66,11 +66,11 @@ abstract contract ModuleTest is Test {
         address impl = address(new OrchestratorV1Mock(address(_forwarder)));
         _orchestrator = OrchestratorV1Mock(Clones.clone(impl));
 
-        impl = address(new FundingManagerMock());
-        _fundingManager = FundingManagerMock(Clones.clone(impl));
+        impl = address(new FundingManagerV1Mock());
+        _fundingManager = FundingManagerV1Mock(Clones.clone(impl));
 
-        impl = address(new AuthorizerMock());
-        _authorizer = AuthorizerMock(Clones.clone(impl));
+        impl = address(new AuthorizerV1Mock());
+        _authorizer = AuthorizerV1Mock(Clones.clone(impl));
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,

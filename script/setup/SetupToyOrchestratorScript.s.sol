@@ -13,9 +13,9 @@ import {IOrchestratorFactory_v1} from
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {
-    BountyManager,
-    IBountyManager
-} from "src/modules/logicModule/BountyManager.sol";
+    LM_PC_Bounty_v1,
+    ILM_PC_Bounty_v1
+} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
 import {ScriptConstants} from "../script-constants.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
@@ -109,7 +109,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             abi.encode(true, dependencies)
         );
 
-        // Add the configuration for all the non-mandatory modules. In this case only the BountyManager.
+        // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounty_v1.
         IOrchestratorFactory_v1.ModuleConfig[] memory additionalModuleConfig =
             new IOrchestratorFactory_v1.ModuleConfig[](1);
         additionalModuleConfig[0] = bountyManagerFactoryConfig;
@@ -150,7 +150,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         address orchestratorCreatedBountyManagerAddress;
 
         for (uint i; i < lenModules;) {
-            try IBountyManager(moduleAddresses[i]).isExistingBountyId(0)
+            try ILM_PC_Bounty_v1(moduleAddresses[i]).isExistingBountyId(0)
             returns (bool) {
                 orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
                 break;
@@ -159,8 +159,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             }
         }
 
-        BountyManager orchestratorCreatedBountyManager =
-            BountyManager(orchestratorCreatedBountyManagerAddress);
+        LM_PC_Bounty_v1 orchestratorCreatedBountyManager =
+            LM_PC_Bounty_v1(orchestratorCreatedBountyManagerAddress);
 
         assertEq(
             address(orchestratorCreatedBountyManager.orchestrator()),
@@ -169,11 +169,11 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         assertFalse(
             orchestratorCreatedBountyManager.isExistingBountyId(0),
-            "Error in the BountyManager"
+            "Error in the LM_PC_Bounty_v1"
         );
         assertFalse(
             orchestratorCreatedBountyManager.isExistingBountyId(type(uint).max),
-            "Error in the BountyManager"
+            "Error in the LM_PC_Bounty_v1"
         );
 
         console2.log("\n\n");
@@ -199,7 +199,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         );
 
         console2.log(
-            "\t-BountyManager deployed at address: %s ",
+            "\t-LM_PC_Bounty_v1 deployed at address: %s ",
             address(orchestratorCreatedBountyManager)
         );
         console2.log(

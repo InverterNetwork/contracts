@@ -101,19 +101,19 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol
 	
 	## governance
-	@forge script script/modules/governance/DeployRoleAuthorizer.s.sol
-	@forge script script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol
+	@forge script script/modules/governance/DeployAUT_Role_v1.s.sol
+	@forge script script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol
 
 	## logicModule
-	@forge script script/modules/logicModule/DeployBountyManager.s.sol
-	@forge script script/modules/logicModule/DeployRecurringPaymentManager.s.sol
+	@forge script script/modules/logicModule/DeployLM_PC_Bounty_v1.s.sol
+	@forge script script/modules/logicModule/DeployLM_PC_Recurring_v1.s.sol
 
 	## paymentProcessor
-	@forge script script/modules/paymentProcessor/DeploySimplePaymentProcessor.s.sol
-	@forge script script/modules/paymentProcessor/DeployStreamingPaymentProcessor.s.sol
+	@forge script script/modules/paymentProcessor/DeployPP_Simple_v1.s.sol
+	@forge script script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol
 
 	## utils
-	@forge script script/modules/utils/DeploySingleVoteGovernor.s.sol
+	@forge script script/modules/utils/DeploySingleVoteGovernor_v1.s.sol
 	
 	## orchestrator
 	@forge script script/orchestrator/DeployOrchestrator_v1.s.sol

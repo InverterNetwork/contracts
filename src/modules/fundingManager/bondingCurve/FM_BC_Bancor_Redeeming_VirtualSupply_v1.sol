@@ -36,7 +36,8 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   Bancor Virtual Supply Bonding Curve Funding Manager Contract.
+ * @title   FM_BC_Bancor_Redeeming_VirtualSupply_v1: Bancor Virtual Supply Bonding Curve Funding
+ *          Manager v1 for Inverter Network.
  *
  * @notice  This contract enables the issuance and redeeming of tokens on a bonding curve, using
  *          a virtual supply for both the issuance and the collateral as input. It integrates

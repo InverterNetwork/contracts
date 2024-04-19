@@ -27,11 +27,11 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Mocks
 import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
-import {FundingManagerMock} from
-    "test/utils/mocks/modules/FundingManagerMock.sol";
-import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
-import {PaymentProcessorMock} from
-    "test/utils/mocks/modules/PaymentProcessorMock.sol";
+import {FundingManagerV1Mock} from
+    "test/utils/mocks/modules/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
+import {PaymentProcessorV1Mock} from
+    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors

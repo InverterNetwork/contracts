@@ -9,12 +9,12 @@ import {IVirtualCollateralSupplyBase_v1} from
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 /**
- * @title   Virtual Collateral Supply Base v1 Contract
+ * @title   VirtualCollateralSupplyBase_v1: Virtual Collateral Supply Base v1 for Inverter Network.
  *
  * @notice  Manages a virtual collateral supply to facilitate interactions with Inverter's
  *          Funding Manager
  *
- * @dev     Implements IVirtualCollateralSupplyBase_v1 for handling virtual collateral.
+ * @dev     Implements {IVirtualCollateralSupplyBase_v1} for handling virtual collateral.
  *          Includes functions to set, get, add, and subtract virtual collateral amounts.
  *
  * @author  Inverter Network

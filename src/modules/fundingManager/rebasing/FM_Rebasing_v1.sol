@@ -25,7 +25,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
 
 /**
- * @title   Rebasing Funding Manager.
+ * @title   FM_Rebasing_v1: Rebasing Funding Manager v1 for Inverter Network.
  *
  * @notice  This contract manages the issuance and redemption of rebasable funding tokens
  *          within the Inverter Network. It supports operations like deposits and withdrawals,

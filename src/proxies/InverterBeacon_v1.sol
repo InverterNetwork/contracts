@@ -13,14 +13,14 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 /**
- * @title   Inverter Beacon for Upgradable Contract Management
+ * @title   InverterBeacon_v1: Inverter Beacon for Upgradable Contract Management for the Inverter Network.
  *
  * @notice  Manages upgrades and versioning for smart contract implementations, allowing
  *          contract administrators to dynamically change contract logic while maintaining
  *          the state. Supports emergency shutdown mechanisms to halt operations if needed.
  *
- * @dev     Extends ERC165 for interface detection and implements both IInverterBeacon_v1 and
- *          IBeacon. Uses modifiers to enforce constraints on implementation upgrades. Unique
+ * @dev     Extends {ERC165} for interface detection and implements both {IInverterBeacon_v1} and
+ *          {IBeacon}. Uses modifiers to enforce constraints on implementation upgrades. Unique
  *          features include emergency mode control and strict version handling with major
  *          and minor version concepts.
  *

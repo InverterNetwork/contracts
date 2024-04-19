@@ -9,8 +9,8 @@ import {
 } from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {
     IFundingManager_v1,
-    IAuthorizer,
-    IPaymentProcessor
+    IAuthorizer_v1,
+    IPaymentProcessor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IModuleFactory_v1} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
@@ -25,13 +25,13 @@ import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 /**
- * @title   Orchestrator_v1 Factory V1
+ * @title   OrchestratorFactory_v1: Orchestrator Factory v1 for the Inverter Network
  *
- * @notice  Orchestrator_v1 Factory V1 facilitates the deployment of orchestrators and their
+ * @notice  {OrchestratorFactory_v1} facilitates the deployment of orchestrators and their
  *          associated modules for the Inverter Network, ensuring seamless creation and
  *          configuration of various components in a single transaction.
  *
- * @dev     Utilizes ERC2771Context for meta-transaction capabilities and ERC165 for interface
+ * @dev     Utilizes {ERC2771Context} for meta-transaction capabilities and {ERC165} for interface
  *          detection. Orchestrators are deployed through EIP-1167 minimal proxies for efficiency.
  *          Integrates with the module factory to instantiate necessary modules with custom
  *          configurations, supporting complex setup with interdependencies among modules.
@@ -119,14 +119,14 @@ contract OrchestratorFactory_v1 is
             fundingManagerConfig.configData
         );
 
-        // Deploy and cache {IAuthorizer} module.
+        // Deploy and cache {IAuthorizer_v1} module.
         address authorizer = IModuleFactory_v1(moduleFactory).createModule(
             authorizerConfig.metadata,
             IOrchestrator_v1(clone),
             authorizerConfig.configData
         );
 
-        // Deploy and cache {IPaymentProcessor} module.
+        // Deploy and cache {IPaymentProcessor_v1} module.
         address paymentProcessor = IModuleFactory_v1(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
             IOrchestrator_v1(clone),
@@ -155,8 +155,8 @@ contract OrchestratorFactory_v1 is
             _orchestratorIdCounter,
             modules,
             IFundingManager_v1(fundingManager),
-            IAuthorizer(authorizer),
-            IPaymentProcessor(paymentProcessor)
+            IAuthorizer_v1(authorizer),
+            IPaymentProcessor_v1(paymentProcessor)
         );
 
         // Second round of module initializations to satisfy cross-referencing between modules

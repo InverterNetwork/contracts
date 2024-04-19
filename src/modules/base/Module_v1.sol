@@ -3,8 +3,8 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
@@ -82,7 +82,7 @@ abstract contract Module_v1 is
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Orchestrator_v1.
     modifier onlyOrchestratorOwner() {
-        IAuthorizer authorizer = __Module_orchestrator.authorizer();
+        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
 
         bytes32 ownerRole = authorizer.getOwnerRole();
 
@@ -95,7 +95,7 @@ abstract contract Module_v1 is
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Orchestrator_v1 or the Orchestrator_v1's manager.
     modifier onlyOrchestratorOwnerOrManager() {
-        IAuthorizer authorizer = __Module_orchestrator.authorizer();
+        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
 
         bytes32 ownerRole = authorizer.getOwnerRole();
         bytes32 managerRole = authorizer.getManagerRole();
@@ -237,7 +237,7 @@ abstract contract Module_v1 is
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer roleAuthorizer = __Module_orchestrator.authorizer();
+        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
         roleAuthorizer.grantRoleFromModule(role, addr);
     }
 
@@ -245,7 +245,7 @@ abstract contract Module_v1 is
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer roleAuthorizer = __Module_orchestrator.authorizer();
+        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
         roleAuthorizer.revokeRoleFromModule(role, addr);
     }
 

@@ -9,17 +9,17 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 // Modules that are used in this E2E test
-import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
 import {
-    BountyManager,
-    IBountyManager
-} from "src/modules/logicModule/BountyManager.sol";
+    LM_PC_Bounty_v1,
+    ILM_PC_Bounty_v1
+} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
 
 //SuT
 import {
-    SingleVoteGovernor,
-    ISingleVoteGovernor
-} from "src/modules/utils/SingleVoteGovernor.sol";
+    SingleVoteGovernor_v1,
+    ISingleVoteGovernor_v1
+} from "src/modules/utils/SingleVoteGovernor_v1.sol";
 
 contract SingleVoteGovernorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -106,31 +106,30 @@ contract SingleVoteGovernorE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        RoleAuthorizer authorizer =
-            RoleAuthorizer(address(orchestrator.authorizer()));
+        AUT_Role_v1 authorizer = AUT_Role_v1(address(orchestrator.authorizer()));
 
-        // Find BountyManager
-        BountyManager bountyManager;
+        // Find LM_PC_Bounty_v1
+        LM_PC_Bounty_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
+            try ILM_PC_Bounty_v1(modulesList[i]).isExistingBountyId(0) returns (
                 bool
             ) {
-                bountyManager = BountyManager(modulesList[i]);
+                bountyManager = LM_PC_Bounty_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
             }
         }
 
-        // Find SingleVoteGovernor
-        SingleVoteGovernor singleVoteGovernor;
+        // Find SingleVoteGovernor_v1
+        SingleVoteGovernor_v1 singleVoteGovernor;
 
         for (uint i; i < modulesList.length; ++i) {
-            try ISingleVoteGovernor(modulesList[i]).isVoter(address(0))
+            try ISingleVoteGovernor_v1(modulesList[i]).isVoter(address(0))
             returns (bool) {
-                singleVoteGovernor = SingleVoteGovernor(modulesList[i]);
+                singleVoteGovernor = SingleVoteGovernor_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -146,7 +145,7 @@ contract SingleVoteGovernorE2E is E2ETest {
             bountyManager.BOUNTY_ISSUER_ROLE(), address(singleVoteGovernor)
         );
 
-        // By having address(this) renounce the Owner Role, all changes from now on need to go through the SingleVoteGovernor
+        // By having address(this) renounce the Owner Role, all changes from now on need to go through the SingleVoteGovernor_v1
         authorizer.renounceRole(ownerRole, address(this));
 
         //--------------------------------------------------------------------------------
@@ -163,7 +162,7 @@ contract SingleVoteGovernorE2E is E2ETest {
         uint motionId = singleVoteGovernor.createMotion(
             address(bountyManager),
             abi.encodeWithSelector(
-                IBountyManager.addBounty.selector,
+                ILM_PC_Bounty_v1.addBounty.selector,
                 minimumPayoutAmount,
                 maximumPayoutAmount,
                 details
@@ -192,7 +191,7 @@ contract SingleVoteGovernorE2E is E2ETest {
         vm.warp(block.timestamp + 2);
 
         // check that the bounty was created
-        IBountyManager.Bounty memory bounty =
+        ILM_PC_Bounty_v1.Bounty memory bounty =
             bountyManager.getBountyInformation(1);
         assertEq(bounty.minimumPayoutAmount, minimumPayoutAmount);
         assertEq(bounty.maximumPayoutAmount, maximumPayoutAmount);
@@ -200,7 +199,7 @@ contract SingleVoteGovernorE2E is E2ETest {
     }
 
     function _getMotionExecutionResult(
-        SingleVoteGovernor singleVoteGovernor,
+        SingleVoteGovernor_v1 singleVoteGovernor,
         uint motionId
     ) internal view returns (bool, bytes memory) {
         (

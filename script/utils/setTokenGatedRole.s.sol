@@ -5,19 +5,19 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
 import {
-    TokenGatedRoleAuthorizer,
-    ITokenGatedRoleAuthorizer,
-    IAuthorizer
-} from "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
-import {DeployTokenGatedRoleAuthorizer} from
-    "script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol";
+    AUT_TokenGated_Role_v1,
+    IAUT_TokenGated_Role_v1,
+    IAuthorizer_v1
+} from "@aut/role/AUT_TokenGated_Role_v1.sol";
+import {DeployAUT_TokenGated_Role_v1} from
+    "script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol";
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {
     Orchestrator_v1,
     IOrchestrator_v1
 } from "src/orchestrator/Orchestrator_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
+import {LM_PC_Bounty_v1} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
 import {DeployAndSetUpInverterBeacon_v1} from
@@ -36,20 +36,20 @@ contract deployAndSwitchTokenAuthorizer is Script {
 
     function run() public {
         // ===============================================================================================================
-        // Introduce addresses of the deployed Orchestrator_v1, BountyManager and Authorizer
+        // Introduce addresses of the deployed Orchestrator_v1, LM_PC_Bounty_v1 and Authorizer
         // ===============================================================================================================
 
         address orchestratorAddress = scriptConstants.orchestratorAddress();
         Orchestrator_v1 orchestrator = Orchestrator_v1(orchestratorAddress);
 
-        // The address of the deployed TokenGatedRoleAuthorizer.
+        // The address of the deployed AUT_TokenGated_Role_v1.
         address authorizerAddress = address(orchestrator.authorizer());
-        TokenGatedRoleAuthorizer deployedAuthorizer =
-            TokenGatedRoleAuthorizer(authorizerAddress);
+        AUT_TokenGated_Role_v1 deployedAuthorizer =
+            AUT_TokenGated_Role_v1(authorizerAddress);
 
-        // This script assumes we want to set the Role in the BountyManager. Change if appropriate.
+        // This script assumes we want to set the Role in the LM_PC_Bounty_v1. Change if appropriate.
         address bountyManagerAddress = scriptConstants.bountyManagerAddress();
-        BountyManager bountyManager = BountyManager(bountyManagerAddress);
+        LM_PC_Bounty_v1 bountyManager = LM_PC_Bounty_v1(bountyManagerAddress);
 
         // ===============================================================================================================
         // Introduce authentication conditions here:

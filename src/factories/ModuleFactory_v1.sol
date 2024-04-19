@@ -24,7 +24,7 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Context, Ownable} from "@oz/access/Ownable.sol";
 
 /**
- * @title  Module Factory V1 for Managing and Deploying Inverter Modules
+ * @title   ModuleFactory_v1: Module Factory v1 for the Inverter Network.
  *
  * @notice  Enables the creation and registration of Inverter Modules,
  *          facilitating the deployment of module instances linked to specific beacons.

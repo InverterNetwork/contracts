@@ -12,15 +12,15 @@ import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Context} from "@oz/utils/Context.sol";
 
 /**
- * @title   Transaction Forwarder V1 for Meta-Transactions and Multi-Call Execution.
+ * @title   TransactionForwarder_v1: Transaction Forwarder v1 for Inverter Network.
  *
  * @notice  This contract enables users to interact with smart contracts indirectly through
  *          a trusted forwarder. It supports meta transactions, allowing transactions to be
  *          sent by one party but signed and paid for by another. It also handles batch
- *          transactions, facilitating complex, multi-step interactions within a single
+ *          transactions (multi-call), facilitating complex, multi-step interactions within a single
  *          transaction.
  *
- * @dev     Integrates ERC2771Forwarder and Context to manage and relay meta transactions.
+ * @dev     Integrates {ERC2771Forwarder} and Context to manage and relay meta transactions.
  *          It handles nonce management, signature verification, and ensures only trusted calls
  *          are forwarded.
  *

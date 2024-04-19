@@ -3,3 +3,5 @@
 @fm/=src/modules/fundingManager/
 @pp/=src/modules/paymentProcessor/
 @lm/=src/modules/logicModule/
+@lm_pc/=src/modules/logicModule/paymentClient/
+@aut/=src/modules/authorizer/

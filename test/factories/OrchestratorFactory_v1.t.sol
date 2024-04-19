@@ -19,8 +19,8 @@ import {
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Mocks
-import {ModuleFactoryMock} from
-    "test/utils/mocks/factories/ModuleFactoryMock.sol";
+import {ModuleFactoryV1Mock} from
+    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
@@ -46,7 +46,7 @@ contract OrchestratorFactoryV1Test is Test {
     );
 
     // Mocks
-    ModuleFactoryMock moduleFactory;
+    ModuleFactoryV1Mock moduleFactory;
 
     // Metadata
     IOrchestratorFactory_v1.OrchestratorConfig orchestratorConfig =
@@ -74,7 +74,7 @@ contract OrchestratorFactoryV1Test is Test {
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         IModule_v1.Metadata(
-            1, 1, "https://paymentprocessor.com", "SimplePaymentProcessor"
+            1, 1, "https://paymentprocessor.com", "PP_Simple_v1"
         ),
         bytes("data"),
         abi.encode(hasDependency, dependencies)
@@ -88,7 +88,7 @@ contract OrchestratorFactoryV1Test is Test {
     );
 
     function setUp() public {
-        moduleFactory = new ModuleFactoryMock();
+        moduleFactory = new ModuleFactoryV1Mock();
 
         target = new Orchestrator_v1(address(0));
 

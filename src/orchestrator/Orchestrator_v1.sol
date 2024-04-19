@@ -5,16 +5,16 @@ pragma solidity 0.8.23;
 import {
     IOrchestrator_v1,
     IFundingManager_v1,
-    IPaymentProcessor,
-    IAuthorizer
+    IPaymentProcessor_v1,
+    IAuthorizer_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 
 // Internal Dependencies
-import {RecurringPaymentManager} from
-    "src/modules/logicModule/RecurringPaymentManager.sol";
+import {LM_PC_Recurring_v1} from
+    "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
 import {ModuleManagerBase_v1} from
     "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
 
@@ -25,18 +25,18 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
 /**
- * @title   Orchestrator V1
+ * @title   Orchestrator_v1: Orchestrator v1 for Inverter Network.
  *
  * @dev     A new funding primitive to enable multiple actors within a decentralized
  *          network to collaborate on orchestrators.
  *
- *          An orchestrator is composed of a [funding mechanism](./base/FundingVault)
- *          and a set of [modules](./base/ModuleManagerBase_v1).
+ *          An orchestrator is composed of a funding mechanism
+ *          and a set of modules.
  *
  *          The token being accepted for funding is non-changeable and set during
  *          initialization. Authorization is performed via calling a non-changeable
- *          {IAuthorizer} instance. Payments, initiated by modules, are processed
- *          via a non-changeable {IPaymentProcessor} instance.
+ *          {IAuthorizer_v1} instance. Payments, initiated by modules, are processed
+ *          via a non-changeable {IPaymentProcessor_v1} instance.
  *
  *          Each orchestrator has a unique id set during initialization.
  *
@@ -78,10 +78,10 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     IFundingManager_v1 public override(IOrchestrator_v1) fundingManager;
 
     /// @inheritdoc IOrchestrator_v1
-    IAuthorizer public override(IOrchestrator_v1) authorizer;
+    IAuthorizer_v1 public override(IOrchestrator_v1) authorizer;
 
     /// @inheritdoc IOrchestrator_v1
-    IPaymentProcessor public override(IOrchestrator_v1) paymentProcessor;
+    IPaymentProcessor_v1 public override(IOrchestrator_v1) paymentProcessor;
 
     //--------------------------------------------------------------------------
     // Initializer
@@ -97,8 +97,8 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         uint orchestratorId_,
         address[] calldata modules,
         IFundingManager_v1 fundingManager_,
-        IAuthorizer authorizer_,
-        IPaymentProcessor paymentProcessor_
+        IAuthorizer_v1 authorizer_,
+        IPaymentProcessor_v1 paymentProcessor_
     ) external override(IOrchestrator_v1) initializer {
         // Initialize upstream contracts.
         __ModuleManager_init(modules);
@@ -183,7 +183,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
-    /// @dev Only addresses authorized via the {IAuthorizer} instance can manage
+    /// @dev Only addresses authorized via the {IAuthorizer_v1} instance can manage
     ///      modules.
     function __ModuleManager_isAuthorized(address who)
         internal
@@ -198,13 +198,13 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // onlyOrchestratorOwner Functions
 
     /// @inheritdoc IOrchestrator_v1
-    function setAuthorizer(IAuthorizer authorizer_)
+    function setAuthorizer(IAuthorizer_v1 authorizer_)
         external
         onlyOrchestratorOwner
     {
         address authorizerContract = address(authorizer_);
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
-        bytes4 authorizerInterfaceId = type(IAuthorizer).interfaceId;
+        bytes4 authorizerInterfaceId = type(IAuthorizer_v1).interfaceId;
         if (
             ERC165Checker.supportsInterface(
                 authorizerContract, moduleInterfaceId
@@ -248,13 +248,14 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
+    function setPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
         external
         onlyOrchestratorOwner
     {
         address paymentProcessorContract = address(paymentProcessor_);
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
-        bytes4 paymentProcessorInterfaceId = type(IPaymentProcessor).interfaceId;
+        bytes4 paymentProcessorInterfaceId =
+            type(IPaymentProcessor_v1).interfaceId;
         if (
             ERC165Checker.supportsInterface(
                 paymentProcessorContract, moduleInterfaceId

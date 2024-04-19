@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {
-    BountyManager,
-    IBountyManager
-} from "src/modules/logicModule/BountyManager.sol";
+    LM_PC_Bounty_v1,
+    ILM_PC_Bounty_v1
+} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
 import {ScriptConstants} from "../script-constants.sol";
 
 contract addClaim is Script {
@@ -19,19 +19,19 @@ contract addClaim is Script {
     // Introduce corresponding bounty manager and user addresses here
     // ===============================================================================================================
     address bountyManagerAddress = scriptConstants.bountyManagerAddress();
-    BountyManager bountyManager = BountyManager(bountyManagerAddress);
+    LM_PC_Bounty_v1 bountyManager = LM_PC_Bounty_v1(bountyManagerAddress);
 
     address user1 = scriptConstants.addBountyManagerClaim_user1();
     address user2 = scriptConstants.addBountyManagerClaim_user2();
 
     function run() public {
-        IBountyManager.Contributor[] memory contributors =
-            new IBountyManager.Contributor[](2);
-        contributors[0] = IBountyManager.Contributor({
+        ILM_PC_Bounty_v1.Contributor[] memory contributors =
+            new ILM_PC_Bounty_v1.Contributor[](2);
+        contributors[0] = ILM_PC_Bounty_v1.Contributor({
             addr: user1,
             claimAmount: scriptConstants.addBountyManagerClaim_user1_amount()
         });
-        contributors[1] = IBountyManager.Contributor({
+        contributors[1] = ILM_PC_Bounty_v1.Contributor({
             addr: user2,
             claimAmount: scriptConstants.addBountyManagerClaim_user2_amount()
         });

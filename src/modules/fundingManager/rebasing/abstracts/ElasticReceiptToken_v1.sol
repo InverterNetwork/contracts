@@ -6,7 +6,7 @@ import {ElasticReceiptTokenBase_v1} from
     "@fm/rebasing/abstracts/ElasticReceiptTokenBase_v1.sol";
 
 /**
- * @title   Elastic Receipt Token V1 Contract.
+ * @title   ElasticReceiptToken_v1: Elastic Receipt Token v1 for Inverter Network.
  *
  * @notice  Provides a token contract with elastic supply properties
  *

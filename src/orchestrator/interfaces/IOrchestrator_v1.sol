@@ -5,9 +5,9 @@ pragma solidity ^0.8.0;
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IPaymentProcessor} from
-    "src/modules/paymentProcessor/IPaymentProcessor.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IPaymentProcessor_v1} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -65,14 +65,14 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         uint orchestratorId,
         address[] calldata modules,
         IFundingManager_v1 fundingManager,
-        IAuthorizer authorizer,
-        IPaymentProcessor paymentProcessor
+        IAuthorizer_v1 authorizer,
+        IPaymentProcessor_v1 paymentProcessor
     ) external;
 
     /// @notice Replaces the current authorizer with `_authorizer`
     /// @dev Only callable by authorized caller.
     /// @param authorizer_ The address of the new authorizer module.
-    function setAuthorizer(IAuthorizer authorizer_) external;
+    function setAuthorizer(IAuthorizer_v1 authorizer_) external;
 
     /// @notice Replaces the current funding manager with `fundingManager_`
     /// @dev Only callable by authorized caller.
@@ -82,7 +82,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice Replaces the current payment processor with `paymentProcessor_`
     /// @dev Only callable by authorized caller.
     /// @param paymentProcessor_ The address of the new payment processor module.
-    function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
+    function setPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
         external;
 
     /// @notice Executes a call on target `target` with call data `data`.
@@ -101,12 +101,12 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice The {IFundingManager_v1} implementation used to hold and distribute Funds.
     function fundingManager() external view returns (IFundingManager_v1);
 
-    /// @notice The {IAuthorizer} implementation used to authorize addresses.
-    function authorizer() external view returns (IAuthorizer);
+    /// @notice The {IAuthorizer_v1} implementation used to authorize addresses.
+    function authorizer() external view returns (IAuthorizer_v1);
 
-    /// @notice The {IPaymentProcessor} implementation used to process module
+    /// @notice The {IPaymentProcessor_v1} implementation used to process module
     ///         payments.
-    function paymentProcessor() external view returns (IPaymentProcessor);
+    function paymentProcessor() external view returns (IPaymentProcessor_v1);
 
     /// @notice The version of the orchestrator instance.
     function version() external pure returns (string memory);

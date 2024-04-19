@@ -11,15 +11,13 @@ import {
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 // SuT
 import {
-    RecurringPaymentManager,
-    IRecurringPaymentManager
-} from "src/modules/logicModule/RecurringPaymentManager.sol";
+    LM_PC_Recurring_v1,
+    ILM_PC_Recurring_v1
+} from "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
 
-import {StreamingPaymentProcessor} from
-    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
+import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 
-import {IStreamingPaymentProcessor} from
-    "src/modules/paymentProcessor/IStreamingPaymentProcessor.sol";
+import {IPP_Streaming_v1} from "@pp/interfaces/IPP_Streaming_v1.sol";
 
 contract StreamingPaymentProcessorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -41,8 +39,8 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     // Modules, for reference between functions
     IOrchestrator_v1 orchestrator;
     FM_Rebasing_v1 fundingManager;
-    RecurringPaymentManager recurringPaymentManager;
-    StreamingPaymentProcessor streamingPaymentProcessor;
+    LM_PC_Recurring_v1 recurringPaymentManager;
+    PP_Streaming_v1 streamingPaymentProcessor;
 
     function setUp() public override {
         // Setup common E2E framework
@@ -112,18 +110,14 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
         fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        recurringPaymentManager = RecurringPaymentManager(
-            orchestrator.findModuleAddressInOrchestrator(
-                "RecurringPaymentManager"
-            )
+        recurringPaymentManager = LM_PC_Recurring_v1(
+            orchestrator.findModuleAddressInOrchestrator("LM_PC_Recurring_v1")
         );
         // check if the recurringPaymentManager is initialized correctly or not.
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
 
-        streamingPaymentProcessor = StreamingPaymentProcessor(
-            orchestrator.findModuleAddressInOrchestrator(
-                "StreamingPaymentProcessor"
-            )
+        streamingPaymentProcessor = PP_Streaming_v1(
+            orchestrator.findModuleAddressInOrchestrator("PP_Streaming_v1")
         );
 
         //deposit some funds to fundingManager
@@ -140,7 +134,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         init();
 
         // ---------------------------------------------------------------------------------------------------
-        // User side of the StreamingPaymentProcessor
+        // User side of the PP_Streaming_v1
 
         //Create 3 different Payments
 
@@ -164,7 +158,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         //Check Payments
         //viewAllPaymentOrders
         //Lets see all avaialable orders
-        IStreamingPaymentProcessor.VestingWallet[] memory vestings =
+        IPP_Streaming_v1.VestingWallet[] memory vestings =
         streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), alice
         );
@@ -296,7 +290,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         recurringPaymentManager.trigger();
 
         //Check if everyone has a running payment active
-        IStreamingPaymentProcessor.VestingWallet[] memory vestings =
+        IPP_Streaming_v1.VestingWallet[] memory vestings =
         streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), alice
         );

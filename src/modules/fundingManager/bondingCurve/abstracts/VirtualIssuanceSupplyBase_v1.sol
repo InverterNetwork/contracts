@@ -9,12 +9,12 @@ import {IVirtualIssuanceSupplyBase_v1} from
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 /**
- * @title   Virtual Issuance Supply Base v1 Contract
+ * @title   VirtualIssuanceSupplyBase_v1: Virtual Issuance Supply Base v1 for Inverter Network
  *
  * @notice  Manages a virtual issuance supply to facilitate interactions with Inverter's
  *          Funding Manager
  *
- * @dev     Implements IVirtualIssuancelSupplyBase_v1 for handling virtual issuance.
+ * @dev     Implements {IVirtualIssuancelSupplyBase_v1} for handling virtual issuance.
  *          Includes functions to set, get, add, and subtract virtual issuance amounts.
  *
  * @author  Inverter Network

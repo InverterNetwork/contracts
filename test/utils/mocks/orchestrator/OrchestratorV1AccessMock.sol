@@ -11,13 +11,13 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
-import {IPaymentProcessor} from
-    "src/modules/paymentProcessor/IPaymentProcessor.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IPaymentProcessor_v1} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 
 contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     IERC20 public token;
-    IPaymentProcessor public paymentProcessor;
+    IPaymentProcessor_v1 public paymentProcessor;
     IFundingManager_v1 public fundingManager;
 
     bool public executeTxBoolReturn;
@@ -56,17 +56,17 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         uint,
         address[] calldata,
         IFundingManager_v1,
-        IAuthorizer,
-        IPaymentProcessor
+        IAuthorizer_v1,
+        IPaymentProcessor_v1
     ) external {}
 
-    function setAuthorizer(IAuthorizer authorizer_) external {}
+    function setAuthorizer(IAuthorizer_v1 authorizer_) external {}
 
     function setFundingManager(IFundingManager_v1 fundingManager_) external {
         fundingManager = fundingManager_;
     }
 
-    function setPaymentProcessor(IPaymentProcessor paymentProcessor_)
+    function setPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
         external
     {
         paymentProcessor = paymentProcessor_;
@@ -79,7 +79,7 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
 
     function orchestratorId() external view returns (uint) {}
 
-    function authorizer() external view returns (IAuthorizer) {}
+    function authorizer() external view returns (IAuthorizer_v1) {}
 
     function version() external pure returns (string memory) {}
 

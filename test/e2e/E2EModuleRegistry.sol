@@ -14,18 +14,16 @@ import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
-import {SimplePaymentProcessor} from
-    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
-import {StreamingPaymentProcessor} from
-    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
-import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
-import {RecurringPaymentManager} from
-    "src/modules/logicModule/RecurringPaymentManager.sol";
-import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
-import {TokenGatedRoleAuthorizer} from
-    "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
-import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
-import {MetadataManager} from "src/modules/utils/MetadataManager.sol";
+import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
+import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
+import {LM_PC_Bounty_v1} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
+import {LM_PC_Recurring_v1} from
+    "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
+import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
+import {AUT_TokenGated_Role_v1} from "@aut/role/AUT_TokenGated_Role_v1.sol";
+import {SingleVoteGovernor_v1} from
+    "src/modules/utils/SingleVoteGovernor_v1.sol";
+import {MetadataManager_v1} from "src/modules/utils/MetadataManager_v1.sol";
 
 // Beacon
 import {
@@ -186,16 +184,16 @@ contract E2EModuleRegistry is Test {
 
     // Role Authorizer
 
-    RoleAuthorizer roleAuthorizerImpl;
+    AUT_Role_v1 roleAuthorizerImpl;
 
     InverterBeacon_v1 roleAuthorizerBeacon;
 
     IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
+        1, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Role_v1"
     );
 
     /* 
-    // Note that RoleAuthorizer owner and manager are the same
+    // Note that AUT_Role_v1 owner and manager are the same
     IOrchestratorFactory_v1.ModuleConfig roleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         roleAuthorizerMetadata,
@@ -205,7 +203,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpRoleAuthorizer() internal {
         // Deploy module implementations.
-        roleAuthorizerImpl = new RoleAuthorizer();
+        roleAuthorizerImpl = new AUT_Role_v1();
 
         // Deploy module beacons.
         roleAuthorizerBeacon = new InverterBeacon_v1(
@@ -223,7 +221,7 @@ contract E2EModuleRegistry is Test {
 
     // Token Gated Role Authorizer
 
-    TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
+    AUT_TokenGated_Role_v1 tokenRoleAuthorizerImpl;
 
     InverterBeacon_v1 tokenRoleAuthorizerBeacon;
 
@@ -231,11 +229,11 @@ contract E2EModuleRegistry is Test {
         1,
         0,
         "https://github.com/inverter/tokenRoleAuthorizer",
-        "TokenGatedRoleAuthorizer"
+        "AUT_TokenGated_Role_v1"
     );
 
     /* 
-    // Note that RoleAuthorizer owner and manager are the same
+    // Note that AUT_Role_v1 owner and manager are the same
     IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         tokenRoleAuthorizerMetadata,
@@ -246,7 +244,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpTokenGatedRoleAuthorizer() internal {
         // Deploy module implementations.
-        tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer();
+        tokenRoleAuthorizerImpl = new AUT_TokenGated_Role_v1();
 
         // Deploy module beacons.
         tokenRoleAuthorizerBeacon = new InverterBeacon_v1(
@@ -267,17 +265,14 @@ contract E2EModuleRegistry is Test {
     // Payment Processors
     //--------------------------------------------------------------------------
 
-    // SimplePaymentProcessor
+    // PP_Simple_v1
 
-    SimplePaymentProcessor simplePaymentProcessorImpl;
+    PP_Simple_v1 simplePaymentProcessorImpl;
 
     InverterBeacon_v1 simplePaymentProcessorBeacon;
 
     IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        "https://github.com/inverter/payment-processor",
-        "SimplePaymentProcessor"
+        1, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v1"
     );
 
     /*
@@ -290,7 +285,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpSimplePaymentProcessor() internal {
         // Deploy module implementations.
-        simplePaymentProcessorImpl = new SimplePaymentProcessor();
+        simplePaymentProcessorImpl = new PP_Simple_v1();
 
         // Deploy module beacons.
         simplePaymentProcessorBeacon = new InverterBeacon_v1(
@@ -307,9 +302,9 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // StreamingPaymentProcessor
+    // PP_Streaming_v1
 
-    StreamingPaymentProcessor streamingPaymentProcessorImpl;
+    PP_Streaming_v1 streamingPaymentProcessorImpl;
 
     InverterBeacon_v1 streamingPaymentProcessorBeacon;
 
@@ -317,7 +312,7 @@ contract E2EModuleRegistry is Test {
         1,
         0,
         "https://github.com/inverter/streaming-payment-processor",
-        "StreamingPaymentProcessor"
+        "PP_Streaming_v1"
     );
 
     /*
@@ -330,7 +325,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpStreamingPaymentProcessor() internal {
         // Deploy module implementations.
-        streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
+        streamingPaymentProcessorImpl = new PP_Streaming_v1();
 
         // Deploy module beacons.
         streamingPaymentProcessorBeacon = new InverterBeacon_v1(
@@ -350,9 +345,9 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // logicModules
 
-    // RecurringPaymentManager
+    // LM_PC_Recurring_v1
 
-    RecurringPaymentManager recurringPaymentManagerImpl;
+    LM_PC_Recurring_v1 recurringPaymentManagerImpl;
 
     InverterBeacon_v1 recurringPaymentManagerBeacon;
 
@@ -360,7 +355,7 @@ contract E2EModuleRegistry is Test {
         1,
         0,
         "https://github.com/inverter/recurring-payment-manager",
-        "RecurringPaymentManager"
+        "LM_PC_Recurring_v1"
     );
     /*
     IOrchestratorFactory_v1.ModuleConfig recurringPaymentManagerFactoryConfig =
@@ -373,7 +368,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpRecurringPaymentManager() internal {
         // Deploy module implementations.
-        recurringPaymentManagerImpl = new RecurringPaymentManager();
+        recurringPaymentManagerImpl = new LM_PC_Recurring_v1();
 
         // Deploy module beacons.
         recurringPaymentManagerBeacon = new InverterBeacon_v1(
@@ -390,14 +385,14 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // BountyManager
+    // LM_PC_Bounty_v1
 
-    BountyManager bountyManagerImpl;
+    LM_PC_Bounty_v1 bountyManagerImpl;
 
     InverterBeacon_v1 bountyManagerBeacon;
 
     IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/bounty-manager", "BountyManager"
+        1, 0, "https://github.com/inverter/bounty-manager", "LM_PC_Bounty_v1"
     );
     /*
      IOrchestratorFactory_v1.ModuleConfig bountyManagerFactoryConfig =
@@ -410,7 +405,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpBountyManager() internal {
         // Deploy module implementations.
-        bountyManagerImpl = new BountyManager();
+        bountyManagerImpl = new LM_PC_Bounty_v1();
 
         // Deploy module beacons.
         bountyManagerBeacon = new InverterBeacon_v1(
@@ -429,9 +424,9 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // utils
 
-    // SingleVoteGovernor
+    // SingleVoteGovernor_v1
 
-    SingleVoteGovernor singleVoteGovernorImpl;
+    SingleVoteGovernor_v1 singleVoteGovernorImpl;
 
     InverterBeacon_v1 singleVoteGovernorBeacon;
 
@@ -439,7 +434,7 @@ contract E2EModuleRegistry is Test {
         1,
         0,
         "https://github.com/inverter/single-vote-governor",
-        "SingleVoteGovernor"
+        "SingleVoteGovernor_v1"
     );
 
     /*    
@@ -456,7 +451,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpSingleVoteGovernor() internal {
         // Deploy module implementations.
-        singleVoteGovernorImpl = new SingleVoteGovernor();
+        singleVoteGovernorImpl = new SingleVoteGovernor_v1();
 
         // Deploy module beacons.
         singleVoteGovernorBeacon = new InverterBeacon_v1(
@@ -473,19 +468,22 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // MetadataManager
+    // MetadataManager_v1
 
-    MetadataManager metadataManagerImpl;
+    MetadataManager_v1 metadataManagerImpl;
 
     InverterBeacon_v1 metadataManagerBeacon;
 
     IModule_v1.Metadata metadataManagerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/metadata-manager", "MetadataManager"
+        1,
+        0,
+        "https://github.com/inverter/metadata-manager",
+        "MetadataManager_v1"
     );
 
     function setUpMetadataManager() internal {
         // Deploy module implementations.
-        metadataManagerImpl = new MetadataManager();
+        metadataManagerImpl = new MetadataManager_v1();
 
         // Deploy module beacons.
         metadataManagerBeacon = new InverterBeacon_v1(

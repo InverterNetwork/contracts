@@ -49,10 +49,10 @@ interface IOrchestratorFactory_v1 {
 
     /// @notice Creates a new orchestrator_v1 with caller being the orchestrator's owner.
     /// @param orchestratorConfig The orchestrator's config data.
-    /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer}
+    /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1}
     ///                         instance.
     /// @param paymentProcessorConfig The config data for the orchestrator's
-    ///                               {IPaymentProcessor} instance.
+    ///                               {IPaymentProcessor_v1} instance.
     /// @param moduleConfigs Variable length set of optional module's config
     ///                      data.
     function createOrchestrator(

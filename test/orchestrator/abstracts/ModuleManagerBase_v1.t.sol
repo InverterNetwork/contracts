@@ -10,7 +10,7 @@ import {
 } from "test/utils/mocks/orchestrator/abstracts/ModuleManagerBaseV1Mock.sol";
 
 // Mocks
-import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
+import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";

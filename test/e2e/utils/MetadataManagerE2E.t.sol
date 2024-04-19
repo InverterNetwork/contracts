@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
 
 //Internal Dependencies
 import {
@@ -14,9 +14,9 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 import {
-    IMetadataManager,
-    MetadataManager
-} from "src/modules/utils/MetadataManager.sol";
+    IMetadataManager_v1,
+    MetadataManager_v1
+} from "src/modules/utils/MetadataManager_v1.sol";
 
 contract MetadataManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -66,20 +66,22 @@ contract MetadataManagerE2E is E2ETest {
             )
         );
 
-        // MetadataManager
+        // MetadataManager_v1
         // !!! Note !!!
         // In contrary to most other modules most of the purpose of the MetadataManeger can already be fulfilled during its creation.
         // As the purpose of the Metadatamanager is to provide users of the orchestrator with information about it.
         // This can already be done during initialization:
 
         //ManagerMetadata contains data about the manager of the orchestrator
-        IMetadataManager.ManagerMetadata memory MANAGER_METADATA =
+        IMetadataManager_v1.ManagerMetadata memory MANAGER_METADATA =
         // Name, Address, Twitter Handle
-        IMetadataManager.ManagerMetadata("John Doe", address(0xBEEF), "@JonDoe");
+        IMetadataManager_v1.ManagerMetadata(
+            "John Doe", address(0xBEEF), "@JonDoe"
+        );
 
         //OrchestratorMetadata contains data about the orchestrator itself
-        IMetadataManager.OrchestratorMetadata memory ORCHESTRATOR_METADATA =
-        IMetadataManager.OrchestratorMetadata(
+        IMetadataManager_v1.OrchestratorMetadata memory ORCHESTRATOR_METADATA =
+        IMetadataManager_v1.OrchestratorMetadata(
             //Title of the project
             "Inverter Project",
             //Short description
@@ -99,16 +101,16 @@ contract MetadataManagerE2E is E2ETest {
 
         //TeamMetadata contains data about the people behind the project
         //Its an array of MemberMetadata so multiple members can be put in here
-        IMetadataManager.MemberMetadata[] memory TEAM_METADATA =
-            new IMetadataManager.MemberMetadata[](2);
+        IMetadataManager_v1.MemberMetadata[] memory TEAM_METADATA =
+            new IMetadataManager_v1.MemberMetadata[](2);
 
-        TEAM_METADATA[0] = IMetadataManager.MemberMetadata(
+        TEAM_METADATA[0] = IMetadataManager_v1.MemberMetadata(
             // Name, Address, Twitter Handle
             "Jane Doe",
             address(0xADA),
             "@JaneDoe"
         );
-        TEAM_METADATA[1] = IMetadataManager.MemberMetadata(
+        TEAM_METADATA[1] = IMetadataManager_v1.MemberMetadata(
             "Max Mustermann", address(0xB0B), "@MaxMustermann"
         );
 
@@ -143,17 +145,16 @@ contract MetadataManagerE2E is E2ETest {
         // Module E2E Test
         //--------------------------------------------------------------------------------
 
-        // Find MetadataManager
-        IMetadataManager metadataManager;
+        // Find MetadataManager_v1
+        IMetadataManager_v1 metadataManager;
 
         //Get all Modules
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             //Find the one that can fulfill the IMetadataFunction
-            try IMetadataManager(modulesList[i]).getManagerMetadata() returns (
-                IMetadataManager.ManagerMetadata memory
-            ) {
-                metadataManager = MetadataManager(modulesList[i]);
+            try IMetadataManager_v1(modulesList[i]).getManagerMetadata()
+            returns (IMetadataManager_v1.ManagerMetadata memory) {
+                metadataManager = MetadataManager_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -174,18 +175,18 @@ contract MetadataManagerE2E is E2ETest {
         // For example another person joined the team
 
         // First we need to adapt the TeamMetadata
-        IMetadataManager.MemberMetadata[] memory TEAM_METADATA =
-            new IMetadataManager.MemberMetadata[](3);
+        IMetadataManager_v1.MemberMetadata[] memory TEAM_METADATA =
+            new IMetadataManager_v1.MemberMetadata[](3);
 
-        TEAM_METADATA[0] = IMetadataManager.MemberMetadata(
+        TEAM_METADATA[0] = IMetadataManager_v1.MemberMetadata(
             "Jane Doe", address(0xADA), "@JaneDoe"
         );
-        TEAM_METADATA[1] = IMetadataManager.MemberMetadata(
+        TEAM_METADATA[1] = IMetadataManager_v1.MemberMetadata(
             "Max Mustermann", address(0xB0B), "@MaxMustermann"
         );
         TEAM_METADATA[2] =
         // this person is newly added
-        IMetadataManager.MemberMetadata(
+        IMetadataManager_v1.MemberMetadata(
             "Castellan Crowe", address(0x666), "@CastellanCrowe"
         );
 

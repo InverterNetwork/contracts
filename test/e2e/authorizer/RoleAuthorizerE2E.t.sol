@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
 
 //Internal Dependencies
 import {
@@ -16,10 +16,10 @@ import {
 // Modules that are used in this E2E test
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {
-    BountyManager,
-    IBountyManager,
-    IERC20PaymentClient
-} from "src/modules/logicModule/BountyManager.sol";
+    LM_PC_Bounty_v1,
+    ILM_PC_Bounty_v1,
+    IERC20PaymentClientBase_v1
+} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
 
 contract RoleAuthorizerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -99,18 +99,17 @@ contract RoleAuthorizerE2E is E2ETest {
         FM_Rebasing_v1 fundingManager =
             FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        RoleAuthorizer authorizer =
-            RoleAuthorizer(address(orchestrator.authorizer()));
+        AUT_Role_v1 authorizer = AUT_Role_v1(address(orchestrator.authorizer()));
 
-        // Find BountyManager
-        BountyManager bountyManager;
+        // Find LM_PC_Bounty_v1
+        LM_PC_Bounty_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
+            try ILM_PC_Bounty_v1(modulesList[i]).isExistingBountyId(0) returns (
                 bool
             ) {
-                bountyManager = BountyManager(modulesList[i]);
+                bountyManager = LM_PC_Bounty_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -187,7 +186,7 @@ contract RoleAuthorizerE2E is E2ETest {
         );
 
         // check that the bounty was created
-        IBountyManager.Bounty memory bounty =
+        ILM_PC_Bounty_v1.Bounty memory bounty =
             bountyManager.getBountyInformation(1);
         assertEq(bounty.minimumPayoutAmount, minimumPayoutAmount);
         assertEq(bounty.maximumPayoutAmount, maximumPayoutAmount);
@@ -197,11 +196,11 @@ contract RoleAuthorizerE2E is E2ETest {
         // Worker submits bounty
         //--------------------------------------------------------------------------------
         vm.startPrank(bountySubmitter);
-        IBountyManager.Contributor memory BOB =
-            IBountyManager.Contributor(bountySubmitter, 200e18);
+        ILM_PC_Bounty_v1.Contributor memory BOB =
+            ILM_PC_Bounty_v1.Contributor(bountySubmitter, 200e18);
 
-        IBountyManager.Contributor[] memory contribs =
-            new IBountyManager.Contributor[](1);
+        ILM_PC_Bounty_v1.Contributor[] memory contribs =
+            new ILM_PC_Bounty_v1.Contributor[](1);
         contribs[0] = BOB;
 
         uint claimId = bountyManager.addClaim(
