@@ -100,7 +100,7 @@ contract KPIRewarderLifecycle is E2ETest {
     uint constant MOCK_ASSERTED_VALUE = 250;
 
     // KPI mock data
-    uint constant NUM_OF_TRANCHES =4;
+    uint constant NUM_OF_TRANCHES = 4;
     uint[NUM_OF_TRANCHES] trancheValues = [100, 200, 300, 400];
     uint[NUM_OF_TRANCHES] trancheRewards = [100e18, 100e18, 100e18, 100e18];
 
@@ -408,12 +408,14 @@ contract KPIRewarderLifecycle is E2ETest {
         uint[] memory _trancheValues = new uint[](4);
         uint[] memory _trancheRewards = new uint[](4);
 
-        for(uint i; i < NUM_OF_TRANCHES; i++){
+        for (uint i; i < NUM_OF_TRANCHES; i++) {
             _trancheValues[i] = trancheValues[i];
             _trancheRewards[i] = trancheRewards[i];
         }
 
-        IKPIRewarder(kpiManager).createKPI(true, _trancheValues, _trancheRewards);
+        IKPIRewarder(kpiManager).createKPI(
+            true, _trancheValues, _trancheRewards
+        );
     }
 
     // =========================================================================
