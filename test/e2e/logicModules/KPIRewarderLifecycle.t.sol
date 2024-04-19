@@ -108,6 +108,8 @@ contract KPIRewarderLifecycle is E2ETest {
     // Test Run Parameters
     //--------------------------------------------------------------------------------
 
+    uint constant REWARD_DEPOSIT_AMOUNT = 50_000_000e18;
+
     uint constant DEPOSIT_ROUNDS = 2;
     uint constant USERS_PER_ROUND = 25;
     uint constant TOTAL_USERS = USERS_PER_ROUND * DEPOSIT_ROUNDS;
@@ -253,9 +255,9 @@ contract KPIRewarderLifecycle is E2ETest {
         _prepareKPIRewarder();
 
         // Initialize KPIRewarder setup:
-        rewardToken.mint(address(this), 50_000_000e18);
-        rewardToken.approve(address(fundingManager), 50_000_000e18);
-        fundingManager.deposit(50_000_000e18);
+        rewardToken.mint(address(this), REWARD_DEPOSIT_AMOUNT);
+        rewardToken.approve(address(fundingManager), REWARD_DEPOSIT_AMOUNT);
+        fundingManager.deposit(REWARD_DEPOSIT_AMOUNT);
 
         //--------------------------------------------------------------------------------
         // Test Rounds
@@ -266,6 +268,7 @@ contract KPIRewarderLifecycle is E2ETest {
         uint roundCounter = 0;
         uint[] memory accumulatedRewards = new uint[](TOTAL_USERS);
         uint totalDepositedAmounts = 0;
+        //uint totalDistributed = 0;
 
         do {
             // - Start an assertion with assertedData[0]
@@ -304,17 +307,17 @@ contract KPIRewarderLifecycle is E2ETest {
             vm.warp(block.timestamp + 1);
 
             // - Check the rewards
-            uint totalDistributed = 0;
             uint rewardBalanceBefore =
                 rewardToken.balanceOf(address(fundingManager));
-
+            uint distributedInRound = 0;
             for (uint i; i < TOTAL_USERS; i++) {
                 uint reward = kpiRewarder.earned(users[i]);
 
                 if (reward > 0) {
                     vm.prank(users[i]);
                     kpiRewarder.claimRewards();
-                    totalDistributed += reward;
+                    accumulatedRewards[i] += reward;
+                    distributedInRound += reward;
                     assertEq(reward, rewardToken.balanceOf(users[i]));
                 }
                 //console.log("User %s has a reward of %s", users[i], reward);
@@ -325,14 +328,31 @@ contract KPIRewarderLifecycle is E2ETest {
 
             assertApproxEqAbs(
                 rewardBalanceAfter,
-                (rewardBalanceBefore - totalDistributed),
+                (rewardBalanceBefore - distributedInRound),
                 1e8
             );
 
+            //totalDistributed += distributedInRound;
             roundCounter++;
         } while (roundCounter < DEPOSIT_ROUNDS);
 
         // Withdraw all funds and check balances
+
+        for (uint i; i < TOTAL_USERS; i++) {
+            vm.prank(users[i]);
+            kpiRewarder.unstake(amounts[i]);
+
+            console.log("Current staking Balance:", stakingToken.balanceOf(address(kpiRewarder)));
+
+            assertEq(kpiRewarder.balanceOf(users[i]), 0);
+            assertEq(stakingToken.balanceOf(users[i]), amounts[i]);
+            assertEq(rewardToken.balanceOf(users[i]), accumulatedRewards[i]);
+        }
+
+        /*assertEq(
+            rewardToken.balanceOf(address(fundingManager)),
+            (REWARD_DEPOSIT_AMOUNT - totalDistributed)
+        );*/
     }
 
     function _validateAddressesAndAmounts(
