@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+import "forge-std/console.sol";
+
 // Internal Dependencies
 import {Module} from "src/modules/base/Module.sol";
 
@@ -95,17 +97,15 @@ contract KPIRewarder is
     {
         __Module_init(orchestrator_, metadata);
 
-        (address stakingTokenAddr, address currencyAddr, address ooAddr) =
-            abi.decode(configData, (address, address, address));
+        (
+            address stakingTokenAddr,
+            address currencyAddr,
+            address ooAddr,
+            uint64 liveness
+        ) = abi.decode(configData, (address, address, address, uint64));
 
-        _setStakingToken(stakingTokenAddr);
-
-        // TODO ERC165 Interface Validation for the OO, for now it just reverts
-        oo = OptimisticOracleV3Interface(ooAddr);
-        defaultIdentifier = oo.defaultIdentifier();
-
-        setDefaultCurrency(currencyAddr);
-        setOptimisticOracle(ooAddr);
+        __StakingManager_init(stakingTokenAddr);
+        __OptimisticOracleIntegrator_init(currencyAddr, ooAddr, liveness);
     }
 
     // ======================================================================

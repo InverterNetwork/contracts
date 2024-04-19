@@ -74,7 +74,15 @@ contract StakingManager is
     ) external virtual override(Module) initializer {
         __Module_init(orchestrator_, metadata);
 
-        _setStakingToken(abi.decode(configData, (address)));
+        address _stakingToken = abi.decode(configData, (address));
+        __StakingManager_init(_stakingToken);
+    }
+
+    function __StakingManager_init(address _stakingToken)
+        internal
+        onlyInitializing
+    {
+        _setStakingToken(_stakingToken);
     }
 
     //--------------------------------------------------------------------------

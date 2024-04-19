@@ -55,7 +55,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
         //console.log("Token address: ", address(_token));
         //console.log("Optimistic Oracle address: ",address(ooV3));
-        bytes memory _configData = abi.encode(address(_token), address(ooV3));
+        bytes memory _configData =
+            abi.encode(address(_token), address(ooV3), DEFAULT_LIVENESS);
         //console.log("Optimistic Oracle config data (next line): ");
         //console.logBytes(_configData);
 

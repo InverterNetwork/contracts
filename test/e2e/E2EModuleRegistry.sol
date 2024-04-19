@@ -481,7 +481,7 @@ contract E2EModuleRegistry is Test {
      IOrchestratorFactory.ModuleConfig kpiRewarderFactoryConfig =
     IOrchestratorFactory.ModuleConfig(
         kpiRewarderMetadata,
-        abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address) ),
+        abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address), uint64(assertionLiveness) ),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     ); 
     */

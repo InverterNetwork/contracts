@@ -58,11 +58,20 @@ abstract contract OptimisticOracleIntegrator is
     ) external virtual override initializer {
         __Module_init(orchestrator_, metadata);
 
-        (address currencyAddr, address ooAddr) =
-            abi.decode(configData, (address, address));
+        (address currencyAddr, address ooAddr, uint64 liveness) =
+            abi.decode(configData, (address, address, uint64));
 
-        setDefaultCurrency(currencyAddr);
-        setOptimisticOracle(ooAddr);
+        __OptimisticOracleIntegrator_init(currencyAddr, ooAddr, liveness);
+    }
+
+    function __OptimisticOracleIntegrator_init(
+        address currencyAddr,
+        address ooAddr,
+        uint64 liveness
+    ) internal onlyInitializing {
+        _setDefaultCurrency(currencyAddr);
+        _setOptimisticOracle(ooAddr);
+        _setDefaultAssertionLiveness(liveness);
     }
 
     //--------------------------------------------------------------------------
@@ -91,14 +100,33 @@ abstract contract OptimisticOracleIntegrator is
         public
         onlyOrchestratorOwner
     {
+        _setDefaultCurrency(_newCurrency);
+    }
+
+    /// @inheritdoc IOptimisticOracleIntegrator
+    function setOptimisticOracle(address _newOO) public onlyOrchestratorOwner {
+        _setOptimisticOracle(_newOO);
+    }
+
+    /// @inheritdoc IOptimisticOracleIntegrator
+    function setDefaultAssertionLiveness(uint64 _newLiveness)
+        public
+        onlyOrchestratorOwner
+    {
+        _setDefaultAssertionLiveness(_newLiveness);
+    }
+
+    //==========================================================================
+    // Internal Functions
+
+    function _setDefaultCurrency(address _newCurrency) internal {
         if (address(_newCurrency) == address(0)) {
             revert Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
         }
         defaultCurrency = IERC20(_newCurrency);
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
-    function setOptimisticOracle(address _newOO) public onlyOrchestratorOwner {
+    function _setOptimisticOracle(address _newOO) internal {
         if (_newOO == address(0)) {
             revert Module__OptimisticOracleIntegrator__InvalidOOInstance();
         }
@@ -107,11 +135,7 @@ abstract contract OptimisticOracleIntegrator is
         defaultIdentifier = oo.defaultIdentifier();
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
-    function setDefaultAssertionLiveness(uint64 _newLiveness)
-        public
-        onlyOrchestratorOwner
-    {
+    function _setDefaultAssertionLiveness(uint64 _newLiveness) internal {
         if (_newLiveness == 0) {
             revert Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
         }

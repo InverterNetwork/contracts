@@ -98,8 +98,9 @@ contract KPIRewarderTest is ModuleTest {
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        bytes memory configData =
-            abi.encode(address(stakingToken), address(feeToken), ooV3);
+        bytes memory configData = abi.encode(
+            address(stakingToken), address(feeToken), ooV3, DEFAULT_LIVENESS
+        );
 
         kpiManager.init(_orchestrator, _METADATA, configData);
 
@@ -121,8 +122,9 @@ contract KPIRewarderTest is ModuleTest {
 
         _setUpOrchestrator(kpiManager);
 
-        bytes memory configData =
-            abi.encode(address(stakingToken), address(_token), ooV3);
+        bytes memory configData = abi.encode(
+            address(stakingToken), address(_token), ooV3, DEFAULT_LIVENESS
+        );
 
         //Init Module wrongly
         vm.expectRevert(IModule.Module__InvalidOrchestratorAddress.selector);
@@ -135,7 +137,9 @@ contract KPIRewarderTest is ModuleTest {
         kpiManager.init(
             _orchestrator,
             _METADATA,
-            abi.encode(address(0), address(_token), address(ooV3))
+            abi.encode(
+                address(0), address(_token), address(ooV3), DEFAULT_LIVENESS
+            )
         );
 
         // Test invalid reward token
@@ -147,7 +151,12 @@ contract KPIRewarderTest is ModuleTest {
         kpiManager.init(
             _orchestrator,
             _METADATA,
-            abi.encode(address(stakingToken), address(0), address(ooV3))
+            abi.encode(
+                address(stakingToken),
+                address(0),
+                address(ooV3),
+                DEFAULT_LIVENESS
+            )
         );
 
         // Test invalid OOAddress. See comment in OOIntegrator contract
@@ -271,8 +280,9 @@ contract KPIRewarder_postAssertionTest is KPIRewarderTest {
 
         _orchestrator.addModule(address(alt_kpiManager));
 
-        bytes memory configData =
-            abi.encode(address(feeToken), address(feeToken), ooV3);
+        bytes memory configData = abi.encode(
+            address(feeToken), address(feeToken), ooV3, DEFAULT_LIVENESS
+        );
 
         alt_kpiManager.init(_orchestrator, _METADATA, configData);
 
