@@ -43,11 +43,6 @@ forge test --match-contract KPIRewarderLifecycle -vvv --fork-url $SEPOLIA_RPC_UR
 */
 
 contract KPIRewarderLifecycle is E2ETest {
-    // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
-
-    uint sepoliaForkId;
-
     /*
     - This needs to be a fork test using an actual UMA instance.
     - Where are the UMA test deployments? => https://github.com/UMAprotocol/protocol/tree/master/packages/core/networks
@@ -63,20 +58,24 @@ contract KPIRewarderLifecycle is E2ETest {
 
 
     */
+
+    //--------------------------------------------------------------------------------
+    // Chain Configuration
+    //--------------------------------------------------------------------------------
+
+    uint sepoliaForkId;
+
     // Constants
     address ooV3_address = 0xFd9e2642a170aDD10F53Ee14a93FcF2F31924944; // Sepolia Optimistic Oracle V3
     address USDC_address = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238; // Sepolia USDC address
     address USDC_Minter = 0x39B3756655A34F869208c72b661f1afdEc1d428F; // Sepolia USDC Master Minter
 
-    address OWNER = address(0x1); //Workflow owner
-    address AUTOMATION_SERVICE = address(0x6E1A70); // The automation service that will post the assertion and do the callback
+    //--------------------------------------------------------------------------------
+    // Global Variables
+    //--------------------------------------------------------------------------------
 
-    // Mock data for assertions
-    uint64 constant ASSERTION_LIVENESS = 5000;
-    bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
-    bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
-    address constant MOCK_ASSERTER_ADDRESS = address(0x1);
-    uint constant MOCK_ASSERTED_VALUE = 50_000_000; // TODO remove when generalizing
+    // Module Configurations for the current E2E test. Should be filled during setUp() call.
+    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
 
     IOrchestrator orchestrator;
     RebasingFundingManager fundingManager;
@@ -85,11 +84,33 @@ contract KPIRewarderLifecycle is E2ETest {
     ERC20Mock USDC;
     ERC20Mock rewardToken;
     ERC20Mock stakingToken;
-    // Mock data for the KPI
 
-            uint DEPOSIT_ROUNDS = 2;
-        uint USERS_PER_ROUND = 25;
-        uint TOTAL_USERS = USERS_PER_ROUND * DEPOSIT_ROUNDS;
+    //--------------------------------------------------------------------------------
+    // Mock Data
+    //--------------------------------------------------------------------------------
+
+    address OWNER = address(0x1); //Workflow owner
+    address AUTOMATION_SERVICE = address(0x6E1A70); // The automation service that will post the assertion and do the callback
+
+    // Assertion mock data
+    uint64 constant ASSERTION_LIVENESS = 5000;
+    bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
+    bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
+    address constant MOCK_ASSERTER_ADDRESS = address(0x1);
+    uint constant MOCK_ASSERTED_VALUE = 250;
+
+    // KPI mock data
+    uint constant NUM_OF_TRANCHES =4;
+    uint[NUM_OF_TRANCHES] trancheValues = [100, 200, 300, 400];
+    uint[NUM_OF_TRANCHES] trancheRewards = [100e18, 100e18, 100e18, 100e18];
+
+    //--------------------------------------------------------------------------------
+    // Test Run Parameters
+    //--------------------------------------------------------------------------------
+
+    uint constant DEPOSIT_ROUNDS = 2;
+    uint constant USERS_PER_ROUND = 25;
+    uint constant TOTAL_USERS = USERS_PER_ROUND * DEPOSIT_ROUNDS;
 
     function setUp() public override {
         // Pin tests to a block o save in RPC calls
@@ -175,8 +196,6 @@ contract KPIRewarderLifecycle is E2ETest {
     }
 
     function test_e2e_KPIRewarderLifecycle() public {
-
-
         //--------------------------------------------------------------------------------
         // Generate Users and Amounts
         //--------------------------------------------------------------------------------
@@ -207,7 +226,7 @@ contract KPIRewarderLifecycle is E2ETest {
         fundingManager =
             RebasingFundingManager(address(orchestrator.fundingManager()));
 
-        // ------------------ FROM ModuleTest.sol
+        // Get the KPIRewarder module
         bytes4 kpiRewarderInterfaceId = type(IKPIRewarder).interfaceId;
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
@@ -219,26 +238,31 @@ contract KPIRewarderLifecycle is E2ETest {
             }
         }
 
+        //--------------------------------------------------------------------------------
+        // Test Context Setup
+        //--------------------------------------------------------------------------------
 
         // We ensure there is no address overlap and the amounts are reasonable
         (address[] memory users, uint[] memory amounts) =
             _validateAddressesAndAmounts(_users, _amounts);
 
-
-
+        // Mint enough USDC to the participants
         _setupUSDC();
 
-       
         // give the automation service the rights to post assertions
-         _prepareKPIRewarder();
+        _prepareKPIRewarder();
 
         // Initialize KPIRewarder setup:
         rewardToken.mint(address(this), 50_000_000e18);
         rewardToken.approve(address(fundingManager), 50_000_000e18);
         fundingManager.deposit(50_000_000e18);
 
+        //--------------------------------------------------------------------------------
+        // Test Rounds
+        //--------------------------------------------------------------------------------
 
-        // Now we loop through the rounds. First rounf happens with no stakers
+        // Now we loop through the rounds. First round happens with no stakers and the rewards are not distributed, but the reward value is modified. Since the funds stay in the FundingManager until claiming, there are no locked funds in the KPIRewarder.
+
         uint roundCounter = 0;
         uint[] memory accumulatedRewards = new uint[](TOTAL_USERS);
         uint totalDepositedAmounts = 0;
@@ -260,16 +284,15 @@ contract KPIRewarderLifecycle is E2ETest {
 
             for (uint i; i < USERS_PER_ROUND; i++) {
                 users_round[i] = users[(roundCounter * USERS_PER_ROUND) + i];
-                amounts_round[i] =
-                    amounts[(roundCounter * USERS_PER_ROUND) + i];
+                amounts_round[i] = amounts[(roundCounter * USERS_PER_ROUND) + i];
                 totalDepositedAmounts +=
                     amounts[(roundCounter * USERS_PER_ROUND) + i];
-                //console.log("user1[%s]: %s", i, users[i]);
             }
 
             // Perform user staking with current batch of users
             _setUpStakers(users_round, amounts_round);
 
+            // - Warp to the end of the assertion liveness
             vm.warp(block.timestamp + ASSERTION_LIVENESS + 1);
 
             // - Resolve the assertion
@@ -278,9 +301,9 @@ contract KPIRewarderLifecycle is E2ETest {
                 assertionId
             );
 
-            // - Check the rewards
-            vm.warp(block.timestamp + 5);
+            vm.warp(block.timestamp + 1);
 
+            // - Check the rewards
             uint totalDistributed = 0;
             uint rewardBalanceBefore =
                 rewardToken.balanceOf(address(fundingManager));
@@ -294,7 +317,7 @@ contract KPIRewarderLifecycle is E2ETest {
                     totalDistributed += reward;
                     assertEq(reward, rewardToken.balanceOf(users[i]));
                 }
-                console.log("User %s has a reward of %s", users[i], reward);
+                //console.log("User %s has a reward of %s", users[i], reward);
             }
 
             uint rewardBalanceAfter =
@@ -309,7 +332,6 @@ contract KPIRewarderLifecycle is E2ETest {
             roundCounter++;
         } while (roundCounter < DEPOSIT_ROUNDS);
 
-      
         // Withdraw all funds and check balances
     }
 
@@ -350,7 +372,7 @@ contract KPIRewarderLifecycle is E2ETest {
         private
     {
         for (uint i = 0; i < users.length; i++) {
-            console.log("SetupStakers: Staking %s for %s", amounts[i], users[i]);
+            //console.log("SetupStakers: Staking %s for %s", amounts[i], users[i]);
 
             stakingToken.mint(users[i], amounts[i]);
             vm.startPrank(users[i]);
@@ -372,9 +394,6 @@ contract KPIRewarderLifecycle is E2ETest {
                 USDC_address
             )
         );
-
-        // Add USDC to UMA whitelist:
-        //address Whitelist_Owner = 0x9A8f92a830A5cB89a3816e3D267CB7791c16b04D;
     }
 
     function _prepareKPIRewarder() internal {
@@ -386,18 +405,15 @@ contract KPIRewarderLifecycle is E2ETest {
 
     // Creates  dummy incontinuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards
     function _createDummyContinuousKPI(address kpiManager) internal {
-        uint[] memory trancheValues = new uint[](3);
-        uint[] memory trancheRewards = new uint[](3);
+        uint[] memory _trancheValues = new uint[](4);
+        uint[] memory _trancheRewards = new uint[](4);
 
-        trancheValues[0] = 100;
-        trancheValues[1] = 200;
-        trancheValues[2] = 300;
+        for(uint i; i < NUM_OF_TRANCHES; i++){
+            _trancheValues[i] = trancheValues[i];
+            _trancheRewards[i] = trancheRewards[i];
+        }
 
-        trancheRewards[0] = 100e18;
-        trancheRewards[1] = 100e18;
-        trancheRewards[2] = 100e18;
-
-        IKPIRewarder(kpiManager).createKPI(true, trancheValues, trancheRewards);
+        IKPIRewarder(kpiManager).createKPI(true, _trancheValues, _trancheRewards);
     }
 
     // =========================================================================
