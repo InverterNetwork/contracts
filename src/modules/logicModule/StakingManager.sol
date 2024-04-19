@@ -170,6 +170,13 @@ contract StakingManager is
         emit Unstaked(sender, amount);
     }
 
+    function claimRewards() external virtual nonReentrant {
+        address recipient = _msgSender();
+
+        _update(recipient);
+        _distributeRewards(recipient);
+    }
+
     /// @inheritdoc IStakingManager
     function setRewards(uint amount, uint duration)
         external
