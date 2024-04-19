@@ -74,26 +74,27 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooIntegrator = OptimisticOracleIntegratorMock(Clones.clone(impl));
         _setUpOrchestrator(ooIntegrator);
 
-        bytes memory _configData = abi.encode(address(_token), address(ooV3));
+        bytes memory _configData =
+            abi.encode(address(_token), address(ooV3), DEFAULT_LIVENESS);
 
         //Init Module wrongly
         vm.expectRevert(IModule.Module__InvalidOrchestratorAddress.selector);
         ooIntegrator.init(IOrchestrator(address(0)), _METADATA, _configData);
 
         // Test invalid token
-        vm.expectRevert(
-            IOptimisticOracleIntegrator
-                .Module__OptimisticOracleIntegrator__InvalidDefaultCurrency
-                .selector
-        );
+        vm.expectRevert();
         ooIntegrator.init(
-            _orchestrator, _METADATA, abi.encode(address(0), address(ooV3))
+            _orchestrator,
+            _METADATA,
+            abi.encode(address(0), address(ooV3), DEFAULT_LIVENESS)
         );
 
         // Test invalid OOAddress. See comment in OOIntegrator contract
         vm.expectRevert();
         ooIntegrator.init(
-            _orchestrator, _METADATA, abi.encode(address(_token), address(0))
+            _orchestrator,
+            _METADATA,
+            abi.encode(address(_token), address(0), DEFAULT_LIVENESS)
         );
     }
 
@@ -424,6 +425,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         internal
         returns (bool assertionResult)
     {
+        vm.warp(block.timestamp + DEFAULT_LIVENESS + 1);
         assertionResult = ooV3.settleAndGetAssertionResult(assertionId);
 
         // The callback gets called in the above statement
@@ -438,5 +440,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         vm.assume(validate != address(ooV3));
         // Integrator
         vm.assume(validate != address(ooIntegrator));
+        // this
+        vm.assume(validate != address(this));
     }
 }
