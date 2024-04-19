@@ -87,6 +87,10 @@ contract KPIRewarderLifecycle is E2ETest {
     ERC20Mock stakingToken;
     // Mock data for the KPI
 
+            uint DEPOSIT_ROUNDS = 2;
+        uint USERS_PER_ROUND = 25;
+        uint TOTAL_USERS = USERS_PER_ROUND * DEPOSIT_ROUNDS;
+
     function setUp() public override {
         // Pin tests to a block o save in RPC calls
         uint forkBlock = 5_723_995; //April 18 2024 12:15 EST
@@ -171,17 +175,20 @@ contract KPIRewarderLifecycle is E2ETest {
     }
 
     function test_e2e_KPIRewarderLifecycle() public {
-        uint ROUNDS = 2;
 
-        address[] memory _users = new address[](25);
-        uint[] memory _amounts = new uint[](25);
 
-        for (uint i = 0; i < 25; i++) {
-            _users[i] = vm.addr(i * 2 + 1);
-            _amounts[i] = i * 1_000_000e18;
+        //--------------------------------------------------------------------------------
+        // Generate Users and Amounts
+        //--------------------------------------------------------------------------------
+
+        address[] memory _users = new address[](TOTAL_USERS);
+        uint[] memory _amounts = new uint[](TOTAL_USERS);
+
+        for (uint i = 0; i < TOTAL_USERS; i++) {
+            _users[i] = vm.addr(i + 1);
+            _amounts[i] = i * 1000e18;
         }
 
-        uint rounds;
         uint[] calldata assertedData;
 
         //--------------------------------------------------------------------------------
@@ -212,102 +219,97 @@ contract KPIRewarderLifecycle is E2ETest {
             }
         }
 
-        // TODO actually do the capping here, and then set up stake separately
-        //address[] memory users;
-        //uint[] memory amounts;
+
+        // We ensure there is no address overlap and the amounts are reasonable
         (address[] memory users, uint[] memory amounts) =
             _validateAddressesAndAmounts(_users, _amounts);
 
-        //console.log("Users: %s", users[0]);
-        //console.log("Amounts: %s", amounts[0]);
-        //console.log("Users.length: %s", users.length);
+
 
         _setupUSDC();
 
-        _prepareKPIRewarder();
+       
         // give the automation service the rights to post assertions
+         _prepareKPIRewarder();
 
         // Initialize KPIRewarder setup:
         rewardToken.mint(address(this), 50_000_000e18);
         rewardToken.approve(address(fundingManager), 50_000_000e18);
         fundingManager.deposit(50_000_000e18);
 
-        uint halfOfUsers = users.length / 2;
 
-        address[] memory users_round1 = new address[](halfOfUsers);
-        uint[] memory amounts_round1 = new uint[](halfOfUsers);
-        uint totalUserFunds_round1;
+        // Now we loop through the rounds. First rounf happens with no stakers
+        uint roundCounter = 0;
+        uint[] memory accumulatedRewards = new uint[](TOTAL_USERS);
+        uint totalDepositedAmounts = 0;
 
-        address[] memory users_round2 =
-            new address[](users.length - halfOfUsers);
-        uint[] memory amounts_round2 = new uint[](users.length - halfOfUsers);
-        uint totalUserFunds_round2;
+        do {
+            // - Start an assertion with assertedData[0]
+            vm.prank(AUTOMATION_SERVICE);
+            bytes32 assertionId = kpiRewarder.postAssertion(
+                MOCK_ASSERTION_DATA_ID,
+                MOCK_ASSERTION_DATA,
+                MOCK_ASSERTER_ADDRESS,
+                MOCK_ASSERTED_VALUE,
+                0 // target KPI
+            );
 
-        for (uint i; i < users.length; i++) {
-            if (i < halfOfUsers) {
-                users_round1[i] = users[i];
-                amounts_round1[i] = amounts[i];
-                totalUserFunds_round1 += amounts[i];
+            // Copy the users and amounts for the current round into memory
+            address[] memory users_round = new address[](USERS_PER_ROUND);
+            uint[] memory amounts_round = new uint[](USERS_PER_ROUND);
+
+            for (uint i; i < USERS_PER_ROUND; i++) {
+                users_round[i] = users[(roundCounter * USERS_PER_ROUND) + i];
+                amounts_round[i] =
+                    amounts[(roundCounter * USERS_PER_ROUND) + i];
+                totalDepositedAmounts +=
+                    amounts[(roundCounter * USERS_PER_ROUND) + i];
                 //console.log("user1[%s]: %s", i, users[i]);
-            } else {
-                users_round2[i - halfOfUsers] = users[i];
-                amounts_round2[i - halfOfUsers] = amounts[i];
-                totalUserFunds_round2 += amounts[i];
-                //console.log("user2[%s]: %s", i - halfOfUsers, users[i]);
             }
-        }
 
-        // Perform user staking with half of the users
-        _setUpStakers(users_round1, amounts_round1);
+            // Perform user staking with current batch of users
+            _setUpStakers(users_round, amounts_round);
 
-        // - Start an assertion with assertedData[0]
-        vm.prank(AUTOMATION_SERVICE);
-        bytes32 assertionId = kpiRewarder.postAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            MOCK_ASSERTED_VALUE,
-            0 // target KPI
-        );
+            vm.warp(block.timestamp + ASSERTION_LIVENESS + 1);
 
-        // - Deposit the others
-        _setUpStakers(users_round2, amounts_round2);
+            // - Resolve the assertion
+            vm.prank(AUTOMATION_SERVICE);
+            OptimisticOracleV3Interface(ooV3_address).settleAssertion(
+                assertionId
+            );
 
-        vm.warp(block.timestamp + ASSERTION_LIVENESS + 1);
+            // - Check the rewards
+            vm.warp(block.timestamp + 5);
 
-        // - Resolve the assertion
-        vm.prank(AUTOMATION_SERVICE);
-        OptimisticOracleV3Interface(ooV3_address).settleAssertion(assertionId);
-        // - Check the rewards
+            uint totalDistributed = 0;
+            uint rewardBalanceBefore =
+                rewardToken.balanceOf(address(fundingManager));
 
-        vm.warp(block.timestamp + 5);
+            for (uint i; i < TOTAL_USERS; i++) {
+                uint reward = kpiRewarder.earned(users[i]);
 
-        uint totalDistributed = 0;
-        uint rewardBalanceBefore = rewardToken.balanceOf(address(fundingManager));
-
-        for (uint i; i < users_round1.length; i++) {
-            uint reward = kpiRewarder.earned(users_round1[i]);
-
-            if (reward > 0) {
-                vm.prank(users_round1[i]);
-                kpiRewarder.claimRewards();
-                totalDistributed += reward;
-                assertEq(reward, rewardToken.balanceOf(users_round1[i]));
-                
+                if (reward > 0) {
+                    vm.prank(users[i]);
+                    kpiRewarder.claimRewards();
+                    totalDistributed += reward;
+                    assertEq(reward, rewardToken.balanceOf(users[i]));
+                }
+                console.log("User %s has a reward of %s", users[i], reward);
             }
-            console.log(
-                    "User %s has a reward of %s", users_round1[i], reward
-                );
-        }
 
-        uint rewardBalanceAfter = rewardToken.balanceOf(address(fundingManager));
+            uint rewardBalanceAfter =
+                rewardToken.balanceOf(address(fundingManager));
 
-        
-        assertApproxEqAbs(rewardBalanceAfter, (rewardBalanceBefore-totalDistributed), 1e8);
-        console.log("Balance left in Rewarder: %s", rewardToken.balanceOf(address(fundingManager)));
-        // - Repeat for the next rounds
-        //          - This time all should get rewards
+            assertApproxEqAbs(
+                rewardBalanceAfter,
+                (rewardBalanceBefore - totalDistributed),
+                1e8
+            );
 
+            roundCounter++;
+        } while (roundCounter < DEPOSIT_ROUNDS);
+
+      
         // Withdraw all funds and check balances
     }
 
@@ -348,6 +350,8 @@ contract KPIRewarderLifecycle is E2ETest {
         private
     {
         for (uint i = 0; i < users.length; i++) {
+            console.log("SetupStakers: Staking %s for %s", amounts[i], users[i]);
+
             stakingToken.mint(users[i], amounts[i]);
             vm.startPrank(users[i]);
             stakingToken.approve(address(kpiRewarder), amounts[i]);
