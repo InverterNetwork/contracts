@@ -171,6 +171,8 @@ contract KPIRewarderLifecycle is E2ETest {
     }
 
     function test_e2e_KPIRewarderLifecycle() public {
+        uint ROUNDS = 2;
+
         address[] memory _users = new address[](25);
         uint[] memory _amounts = new uint[](25);
 
@@ -280,10 +282,29 @@ contract KPIRewarderLifecycle is E2ETest {
 
         vm.warp(block.timestamp + 5);
 
+        uint totalDistributed = 0;
+        uint rewardBalanceBefore = rewardToken.balanceOf(address(fundingManager));
+
         for (uint i; i < users_round1.length; i++) {
-            uint reward = rewardToken.balanceOf(users_round1[i]);
-            console.log("User %s has a reward of %s", users_round1[i], reward);
+            uint reward = kpiRewarder.earned(users_round1[i]);
+
+            if (reward > 0) {
+                vm.prank(users_round1[i]);
+                kpiRewarder.claimRewards();
+                totalDistributed += reward;
+                assertEq(reward, rewardToken.balanceOf(users_round1[i]));
+                
+            }
+            console.log(
+                    "User %s has a reward of %s", users_round1[i], reward
+                );
         }
+
+        uint rewardBalanceAfter = rewardToken.balanceOf(address(fundingManager));
+
+        
+        assertApproxEqAbs(rewardBalanceAfter, (rewardBalanceBefore-totalDistributed), 1e8);
+        console.log("Balance left in Rewarder: %s", rewardToken.balanceOf(address(fundingManager)));
         // - Repeat for the next rounds
         //          - This time all should get rewards
 
