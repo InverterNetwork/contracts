@@ -23,7 +23,7 @@ import {
     LM_PC_Recurring_v1,
     ILM_PC_Recurring_v1,
     IERC20PaymentClientBase_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
+} from "@lm/LM_PC_Recurring_v1.sol";
 
 contract LM_PC_RecurringV1Test is ModuleTest {
     bool hasDependency;
@@ -68,7 +68,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     function testInit() public override(ModuleTest) {
         vm.expectRevert(
             ILM_PC_Recurring_v1
-                .Module__LM_PC_Recurring_v1__InvalidEpochLength
+                .Module__LM_PC_Recurring__InvalidEpochLength
                 .selector
         );
 
@@ -79,7 +79,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         vm.expectRevert(
             ILM_PC_Recurring_v1
-                .Module__LM_PC_Recurring_v1__InvalidEpochLength
+                .Module__LM_PC_Recurring__InvalidEpochLength
                 .selector
         );
 
@@ -149,7 +149,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         if (id > usedIds || id == 0) {
             vm.expectRevert(
                 ILM_PC_Recurring_v1
-                    .Module__LM_PC_Recurring_v1__InvalidRecurringPaymentId
+                    .Module__LM_PC_Recurring__InvalidRecurringPaymentId
                     .selector
             );
         }
@@ -165,7 +165,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         if (currentEpoch > startEpoch) {
             vm.expectRevert(
                 ILM_PC_Recurring_v1
-                    .Module__LM_PC_Recurring_v1__InvalidStartEpoch
+                    .Module__LM_PC_Recurring__InvalidStartEpoch
                     .selector
             );
         }
@@ -182,7 +182,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     function testGetRecurringPaymentInformationModifierInPosition() public {
         vm.expectRevert(
             ILM_PC_Recurring_v1
-                .Module__LM_PC_Recurring_v1__InvalidRecurringPaymentId
+                .Module__LM_PC_Recurring__InvalidRecurringPaymentId
                 .selector
         );
         recurringPaymentManager.getRecurringPaymentInformation(0);
@@ -285,7 +285,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         //validAmount
         vm.expectRevert(
             IERC20PaymentClientBase_v1
-                .Module__ERC20PaymentClientBase_v1__InvalidAmount
+                .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
         recurringPaymentManager.addRecurringPayment(0, 2 weeks, address(0xBEEF));
@@ -294,7 +294,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         vm.expectRevert(
             ILM_PC_Recurring_v1
-                .Module__LM_PC_Recurring_v1__InvalidStartEpoch
+                .Module__LM_PC_Recurring__InvalidStartEpoch
                 .selector
         );
         recurringPaymentManager.addRecurringPayment(1, 0, address(0xBEEF));
@@ -303,7 +303,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         vm.expectRevert(
             IERC20PaymentClientBase_v1
-                .Module__ERC20PaymentClientBase_v1__InvalidRecipient
+                .Module__ERC20PaymentClientBase__InvalidRecipient
                 .selector
         );
         recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0));
@@ -565,21 +565,21 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         vm.expectRevert(
             ILM_PC_Recurring_v1
-                .Module__LM_PC_Recurring_v1__InvalidRecurringPaymentId
+                .Module__LM_PC_Recurring__InvalidRecurringPaymentId
                 .selector
         );
         recurringPaymentManager.triggerFor(0, 1);
 
         vm.expectRevert(
             ILM_PC_Recurring_v1
-                .Module__LM_PC_Recurring_v1__InvalidRecurringPaymentId
+                .Module__LM_PC_Recurring__InvalidRecurringPaymentId
                 .selector
         );
         recurringPaymentManager.triggerFor(1, 0);
 
         vm.expectRevert(
             ILM_PC_Recurring_v1
-                .Module__LM_PC_Recurring_v1__StartIdNotBeforeEndId
+                .Module__LM_PC_Recurring__StartIdNotBeforeEndId
                 .selector
         );
         recurringPaymentManager.triggerFor(2, 1);

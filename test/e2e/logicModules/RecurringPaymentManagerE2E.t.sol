@@ -13,7 +13,7 @@ import {
     LM_PC_Recurring_v1,
     ILM_PC_Recurring_v1,
     IERC20PaymentClientBase_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
+} from "@lm/LM_PC_Recurring_v1.sol";
 
 // Modules that are used in this E2E test
 import {

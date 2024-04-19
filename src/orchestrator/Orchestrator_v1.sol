@@ -13,8 +13,7 @@ import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 
 // Internal Dependencies
-import {LM_PC_Recurring_v1} from
-    "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
+import {LM_PC_Recurring_v1} from "@lm/LM_PC_Recurring_v1.sol";
 import {ModuleManagerBase_v1} from
     "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
 
@@ -27,8 +26,10 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 /**
  * @title   Orchestrator_v1: Orchestrator v1 for Inverter Network.
  *
- * @dev     A new funding primitive to enable multiple actors within a decentralized
- *          network to collaborate on orchestrators.
+ * @dev     This Contract is the center and connecting block of all Modules in a
+ *          Inverter Network Workflow. It contains references to the essential contracts
+ *          that make up a workflow. By inheriting the ModuleManager it allows for managing
+ *          which modules make up the workflow.
  *
  *          An orchestrator is composed of a funding mechanism
  *          and a set of modules.
@@ -63,7 +64,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         bytes32 ownerRole = authorizer.getOwnerRole();
 
         if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Orchestrator_v1__CallerNotAuthorized(ownerRole, _msgSender());
+            revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
         }
         _;
     }
@@ -174,7 +175,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
             _isModuleUsedInOrchestrator(moduleName);
         if (moduleIndex == type(uint).max) {
             revert
-                Orchestrator_v1__DependencyInjection__ModuleNotUsedInOrchestrator();
+                Orchestrator__DependencyInjection__ModuleNotUsedInOrchestrator();
         }
 
         return moduleAddress;
@@ -218,7 +219,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
             authorizer = authorizer_;
             emit AuthorizerUpdated(address(authorizer_));
         } else {
-            revert Orchestrator_v1__InvalidModuleType(address(authorizer_));
+            revert Orchestrator__InvalidModuleType(address(authorizer_));
         }
     }
 
@@ -243,7 +244,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
             fundingManager = fundingManager_;
             emit FundingManagerUpdated(address(fundingManager_));
         } else {
-            revert Orchestrator_v1__InvalidModuleType(address(fundingManager_));
+            revert Orchestrator__InvalidModuleType(address(fundingManager_));
         }
     }
 
@@ -269,9 +270,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
             paymentProcessor = paymentProcessor_;
             emit PaymentProcessorUpdated(address(paymentProcessor_));
         } else {
-            revert Orchestrator_v1__InvalidModuleType(
-                address(paymentProcessor_)
-            );
+            revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
         }
     }
 
@@ -288,7 +287,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         if (ok) {
             return returnData;
         } else {
-            revert Orchestrator_v1__ExecuteTxFailed();
+            revert Orchestrator__ExecuteTxFailed();
         }
     }
 

@@ -362,7 +362,7 @@ contract BancorFormula is IBancorFormula, Utils, ERC165 {
             return (
                 generalExp(
                     baseLogTimesExp >> (MAX_PRECISION - precision), precision
-                    ),
+                ),
                 precision
             );
         }

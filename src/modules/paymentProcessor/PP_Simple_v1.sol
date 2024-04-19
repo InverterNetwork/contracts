@@ -50,7 +50,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     /// @notice checks that the caller is an active module
     modifier onlyModule() {
         if (!orchestrator().isModule(_msgSender())) {
-            revert Module__PaymentProcessor_v1__OnlyCallableByModule();
+            revert Module__PaymentProcessor__OnlyCallableByModule();
         }
         _;
     }
@@ -58,7 +58,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     /// @notice checks that the client is calling for itself
     modifier validClient(IERC20PaymentClientBase_v1 client) {
         if (_msgSender() != address(client)) {
-            revert Module__PaymentProcessor_v1__CannotCallOnOtherClientsOrders();
+            revert Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
         }
         _;
     }

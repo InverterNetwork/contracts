@@ -5,18 +5,17 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
-import {ILM_PC_Bounty_v1} from
-    "@lm_pc/ERC20PaymentClient/interfaces/ILM_PC_Bounty_v1.sol";
+import {ILM_PC_Bounty_v1} from "@lm/interfaces/ILM_PC_Bounty_v1.sol";
 import {
     IERC20PaymentClientBase_v1,
     IPaymentProcessor_v1
-} from "@lm_pc/ERC20PaymentClient/abstracts/ERC20PaymentClientBase_v1.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v1,
     Module_v1
-} from "@lm_pc/ERC20PaymentClient/abstracts/ERC20PaymentClientBase_v1.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
@@ -74,7 +73,7 @@ contract LM_PC_Bounty_v1 is ILM_PC_Bounty_v1, ERC20PaymentClientBase_v1 {
 
         //If i is length or higher the sender wasnt found in the contib list
         if (i >= length) {
-            revert Module__LM_PC_Bounty_v1__OnlyClaimContributor();
+            revert Module__LM_PC_Bounty__OnlyClaimContributor();
         }
         _;
     }
@@ -87,21 +86,21 @@ contract LM_PC_Bounty_v1 is ILM_PC_Bounty_v1, ERC20PaymentClientBase_v1 {
             minimumPayoutAmount == 0
                 || maximumPayoutAmount < minimumPayoutAmount
         ) {
-            revert Module__LM_PC_Bounty_v1__InvalidPayoutAmounts();
+            revert Module__LM_PC_Bounty__InvalidPayoutAmounts();
         }
         _;
     }
 
     modifier validBountyId(uint bountyId) {
         if (!isExistingBountyId(bountyId)) {
-            revert Module__LM_PC_Bounty_v1__InvalidBountyId();
+            revert Module__LM_PC_Bounty__InvalidBountyId();
         }
         _;
     }
 
     modifier validClaimId(uint claimId) {
         if (!isExistingClaimId(claimId)) {
-            revert Module__LM_PC_Bounty_v1__InvalidClaimId();
+            revert Module__LM_PC_Bounty__InvalidClaimId();
         }
         _;
     }
@@ -114,7 +113,7 @@ contract LM_PC_Bounty_v1 is ILM_PC_Bounty_v1, ERC20PaymentClientBase_v1 {
         uint length = contributors.length;
         //length cant be zero
         if (length == 0) {
-            revert Module__LM_PC_Bounty_v1__InvalidContributorsLength();
+            revert Module__LM_PC_Bounty__InvalidContributorsLength();
         }
         uint totalAmount;
         uint currentAmount;
@@ -125,7 +124,7 @@ contract LM_PC_Bounty_v1 is ILM_PC_Bounty_v1, ERC20PaymentClientBase_v1 {
 
             //amount cant be zero
             if (currentAmount == 0) {
-                revert Module__LM_PC_Bounty_v1__InvalidContributorAmount();
+                revert Module__LM_PC_Bounty__InvalidContributorAmount();
             }
 
             contrib = contributors[i].addr;
@@ -133,7 +132,7 @@ contract LM_PC_Bounty_v1 is ILM_PC_Bounty_v1, ERC20PaymentClientBase_v1 {
                 contrib == address(0) || contrib == address(this)
                     || contrib == orchestratorAddress
             ) {
-                revert Module__LM_PC_Bounty_v1__InvalidContributorAddress();
+                revert Module__LM_PC_Bounty__InvalidContributorAddress();
             }
 
             totalAmount += currentAmount;
@@ -146,20 +145,20 @@ contract LM_PC_Bounty_v1 is ILM_PC_Bounty_v1, ERC20PaymentClientBase_v1 {
             totalAmount > bounty.maximumPayoutAmount
                 || totalAmount < bounty.minimumPayoutAmount
         ) {
-            revert Module__LM_PC_Bounty_v1__ClaimExceedsGivenPayoutAmounts();
+            revert Module__LM_PC_Bounty__ClaimExceedsGivenPayoutAmounts();
         }
     }
 
     modifier notLocked(uint bountyId) {
         if (_bountyRegistry[bountyId].locked) {
-            revert Module__LM_PC_Bounty_v1__BountyLocked();
+            revert Module__LM_PC_Bounty__BountyLocked();
         }
         _;
     }
 
     modifier notClaimed(uint claimId) {
         if (_claimRegistry[claimId].claimed) {
-            revert Module__LM_PC_Bounty_v1__AlreadyClaimed();
+            revert Module__LM_PC_Bounty__AlreadyClaimed();
         }
         _;
     }
@@ -176,7 +175,7 @@ contract LM_PC_Bounty_v1 is ILM_PC_Bounty_v1, ERC20PaymentClientBase_v1 {
             if (
                 contributors[i].addr != claimContribs[i].addr
                     || contributors[i].claimAmount != claimContribs[i].claimAmount
-            ) revert Module__LM_PC_Bounty_v1__ContributorsChanged();
+            ) revert Module__LM_PC_Bounty__ContributorsChanged();
             unchecked {
                 i++;
             }

@@ -15,10 +15,7 @@ import {
 
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
-import {
-    LM_PC_Bounty_v1,
-    ILM_PC_Bounty_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
+import {LM_PC_Bounty_v1, ILM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
 import {
     TransactionForwarder_v1,
     ITransactionForwarder_v1,

@@ -64,7 +64,7 @@ contract AUT_Role_v1 is
     /// @notice Verifies that the caller is an active module
     modifier onlyModule(address module) {
         if (!orchestrator().isModule(module)) {
-            revert Module__Authorizer_v1__NotActiveModule(module);
+            revert Module__Authorizer__NotActiveModule(module);
         }
         _;
     }
@@ -75,7 +75,7 @@ contract AUT_Role_v1 is
             role == ORCHESTRATOR_OWNER_ROLE
                 && getRoleMemberCount(ORCHESTRATOR_OWNER_ROLE) <= 1
         ) {
-            revert Module__Authorizer_v1__OwnerRoleCannotBeEmpty();
+            revert Module__Authorizer__OwnerRoleCannotBeEmpty();
         }
         _;
     }

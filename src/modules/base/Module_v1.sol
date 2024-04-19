@@ -20,7 +20,10 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 /**
  * @title   Module_v1
  *
- * @dev     The base contract for modules.
+ * @dev     This Contract is the basic building block for all Modules in the Inverter Network.
+ *          It contains references to other contracts, modifier for access restriction,
+ *          metadata to identify the module type as well as utility functions for general
+ *          module interactions.
  *
  *          This contract provides a framework for triggering and receiving orchestrator
  *          callbacks (via `call`) and a modifier to authenticate
@@ -28,10 +31,6 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
  *
  *          Each module is identified via a unique identifier based on its major
  *          version, title, and url given in the metadata.
- *
- *          Using proxy contracts, e.g. beacons, enables globally updating module
- *          instances when its minor version changes, but supports differentiating
- *          otherwise equal modules with different major versions.
  *
  * @author  Inverter Network
  */

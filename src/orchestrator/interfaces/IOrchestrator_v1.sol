@@ -17,16 +17,16 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Orchestrator_v1__CallerNotAuthorized(bytes32 role, address caller);
+    error Orchestrator__CallerNotAuthorized(bytes32 role, address caller);
 
     /// @notice Execution of transaction failed.
-    error Orchestrator_v1__ExecuteTxFailed();
+    error Orchestrator__ExecuteTxFailed();
 
     /// @notice The given module is not used in the orchestrator
-    error Orchestrator_v1__InvalidModuleType(address module);
+    error Orchestrator__InvalidModuleType(address module);
 
     /// @notice The given module is not used in the orchestrator
-    error Orchestrator_v1__DependencyInjection__ModuleNotUsedInOrchestrator();
+    error Orchestrator__DependencyInjection__ModuleNotUsedInOrchestrator();
 
     //--------------------------------------------------------------------------
     // Events

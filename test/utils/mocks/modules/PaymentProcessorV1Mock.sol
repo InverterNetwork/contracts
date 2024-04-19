@@ -8,7 +8,7 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 import {IERC20PaymentClientBase_v1} from
-    "@lm_pc/ERC20paymentClient/interfaces/IERC20PaymentClientBase_v1.sol";
+    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 import {IModule_v1} from "src/modules/base/Module_v1.sol";
 
 contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {

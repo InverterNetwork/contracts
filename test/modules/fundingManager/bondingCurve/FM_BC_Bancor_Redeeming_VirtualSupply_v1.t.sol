@@ -1089,7 +1089,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidDepositAmount
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount
                 .selector
         );
         bondingCurveFundingManager.calculatePurchaseReturn(depositAmount);
@@ -1183,7 +1183,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidDepositAmount
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount
                 .selector
         );
         bondingCurveFundingManager.calculateSaleReturn(depositAmount);
@@ -1339,7 +1339,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         vm.expectRevert(
             IVirtualIssuanceSupplyBase_v1
-                .Module__VirtualIssuanceSupplyBase_v1__VirtualSupplyCannotBeZero
+                .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
                 .selector
         );
         bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
@@ -1381,7 +1381,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         vm.expectRevert(
             IVirtualCollateralSupplyBase_v1
-                .Module__VirtualCollateralSupplyBase_v1__VirtualSupplyCannotBeZero
+                .Module__VirtualCollateralSupplyBase__VirtualSupplyCannotBeZero
                 .selector
         );
         bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
@@ -1424,7 +1424,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
                 .selector
         );
         bondingCurveFundingManager.setReserveRatioForBuying(0);
@@ -1436,7 +1436,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.assume(_newRatio > bondingCurveFundingManager.call_PPM());
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
                 .selector
         );
         bondingCurveFundingManager.setReserveRatioForBuying(_newRatio);
@@ -1483,7 +1483,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
                 .selector
         );
         bondingCurveFundingManager.setReserveRatioForSelling(0);
@@ -1495,7 +1495,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.assume(_newRatio > bondingCurveFundingManager.call_PPM());
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
                 .selector
         );
         bondingCurveFundingManager.setReserveRatioForSelling(_newRatio);
@@ -1532,7 +1532,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.assume(_newDecimals < 7);
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidTokenDecimal
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidTokenDecimal
                 .selector
         );
         // No authentication since it's an internal function exposed by the mock contract
@@ -1545,7 +1545,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.assume(_newDecimals < _token.decimals());
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidTokenDecimal
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidTokenDecimal
                 .selector
         );
         // No authentication since it's an internal function exposed by the mock contract

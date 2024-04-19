@@ -11,9 +11,8 @@ import {
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 // SuT
 import {
-    LM_PC_Recurring_v1,
-    ILM_PC_Recurring_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
+    LM_PC_Recurring_v1, ILM_PC_Recurring_v1
+} from "@lm/LM_PC_Recurring_v1.sol";
 
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 

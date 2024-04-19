@@ -13,12 +13,9 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 /**
  * @title   ModuleManagerBase_v1: Module Manager Base v1 for Inverter Network
  *
- * @dev     A contract to manage modules that can execute transactions via this
- *          contract and manage own role-based access control mechanisms.
- *
- *          The role-based access control mechanism is based on OpenZeppelin's
- *          AccessControl contract. Each module has it's own access control context
- *          which it is able to freely manage.
+ * @dev     A contract to manage Inverter Network modules. It allows for adding and
+ *          removing modules in a local registry for reference. Additional functionality
+ *          includes the execution of calls from this contract.
  *
  *          The transaction execution and module management is copied from Gnosis
  *          Safe's [ModuleManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/ModuleManager.sol).
@@ -48,14 +45,14 @@ abstract contract ModuleManagerBase_v1 is
 
     modifier __ModuleManager_onlyAuthorized() {
         if (!__ModuleManager_isAuthorized(_msgSender())) {
-            revert ModuleManagerBase_v1__CallerNotAuthorized();
+            revert ModuleManagerBase__CallerNotAuthorized();
         }
         _;
     }
 
     modifier onlyModule() {
         if (!isModule(_msgSender())) {
-            revert ModuleManagerBase_v1__OnlyCallableByModule();
+            revert ModuleManagerBase__OnlyCallableByModule();
         }
         _;
     }
@@ -67,7 +64,7 @@ abstract contract ModuleManagerBase_v1 is
 
     modifier isModule_(address module) {
         if (!isModule(module)) {
-            revert ModuleManagerBase_v1__IsNotModule();
+            revert ModuleManagerBase__IsNotModule();
         }
         _;
     }
@@ -79,7 +76,7 @@ abstract contract ModuleManagerBase_v1 is
 
     modifier moduleLimitNotExceeded() {
         if (_modules.length >= MAX_MODULE_AMOUNT) {
-            revert ModuleManagerBase_v1__ModuleAmountOverLimits();
+            revert ModuleManagerBase__ModuleAmountOverLimits();
         }
         _;
     }
@@ -124,7 +121,7 @@ abstract contract ModuleManagerBase_v1 is
         // Check that the initial list of Modules doesn't exceed the max amount
         // The subtraction by 3 is to ensure enough space for the compulsory modules: fundingManager, authorizer and paymentProcessor
         if (len > (MAX_MODULE_AMOUNT - 3)) {
-            revert ModuleManagerBase_v1__ModuleAmountOverLimits();
+            revert ModuleManagerBase__ModuleAmountOverLimits();
         }
 
         for (uint i; i < len; ++i) {
@@ -263,13 +260,13 @@ abstract contract ModuleManagerBase_v1 is
 
     function _ensureValidModule(address module) private view {
         if (module == address(0) || module == address(this)) {
-            revert ModuleManagerBase_v1__InvalidModuleAddress();
+            revert ModuleManagerBase__InvalidModuleAddress();
         }
     }
 
     function _ensureNotModule(address module) private view {
         if (isModule(module)) {
-            revert ModuleManagerBase_v1__IsModule();
+            revert ModuleManagerBase__IsModule();
         }
     }
 

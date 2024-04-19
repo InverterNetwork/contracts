@@ -19,7 +19,7 @@ import {
     LM_PC_Bounty_v1,
     ILM_PC_Bounty_v1,
     IERC20PaymentClientBase_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
+} from "@lm/LM_PC_Bounty_v1.sol";
 
 contract RoleAuthorizerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.

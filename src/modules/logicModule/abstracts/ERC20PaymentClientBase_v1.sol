@@ -12,7 +12,7 @@ import {Module_v1, ContextUpgradeable} from "src/modules/base/Module_v1.sol";
 import {
     IERC20PaymentClientBase_v1,
     IPaymentProcessor_v1
-} from "@lm_pc/ERC20paymentClient/interfaces/IERC20PaymentClientBase_v1.sol";
+} from "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
@@ -145,7 +145,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
         {
-            revert Module__ERC20PaymentClientBase_v1__CallerNotAuthorized();
+            revert Module__ERC20PaymentClientBase__CallerNotAuthorized();
         }
 
         // Create a copy of all orders to return.
@@ -177,7 +177,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
         {
-            revert Module__ERC20PaymentClientBase_v1__CallerNotAuthorized();
+            revert Module__ERC20PaymentClientBase__CallerNotAuthorized();
         }
 
         // reduce outstanding token amount by the given amount
@@ -189,22 +189,22 @@ abstract contract ERC20PaymentClientBase_v1 is
 
     function _ensureValidRecipient(address recipient) private view {
         if (recipient == address(0) || recipient == address(this)) {
-            revert Module__ERC20PaymentClientBase_v1__InvalidRecipient();
+            revert Module__ERC20PaymentClientBase__InvalidRecipient();
         }
     }
 
     function _ensureValidAmount(uint amount) private pure {
         if (amount == 0) {
-            revert Module__ERC20PaymentClientBase_v1__InvalidAmount();
+            revert Module__ERC20PaymentClientBase__InvalidAmount();
         }
     }
 
     function _ensureValidPaymentOrder(PaymentOrder memory order) private view {
         if (order.amount == 0) {
-            revert Module__ERC20PaymentClientBase_v1__InvalidAmount();
+            revert Module__ERC20PaymentClientBase__InvalidAmount();
         }
         if (order.recipient == address(0) || order.recipient == address(this)) {
-            revert Module__ERC20PaymentClientBase_v1__InvalidRecipient();
+            revert Module__ERC20PaymentClientBase__InvalidRecipient();
         }
     }
 
@@ -230,7 +230,7 @@ abstract contract ERC20PaymentClientBase_v1 is
             );
 
             if (!ok) {
-                revert Module__ERC20PaymentClientBase_v1__TokenTransferFailed();
+                revert Module__ERC20PaymentClientBase__TokenTransferFailed();
             }
         }
     }

@@ -283,7 +283,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator_v1__InvalidModuleType.selector,
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
                 newAuthorizer
             )
         );
@@ -370,7 +370,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator_v1__InvalidModuleType.selector,
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
                 newFundingManager
             )
         );
@@ -449,7 +449,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert();
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator_v1__InvalidModuleType.selector,
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
                 newPaymentProcessor
             )
         );
@@ -552,9 +552,7 @@ contract OrchestratorV1Test is Test {
 
         authorizer.setIsAuthorized(address(this), true);
 
-        vm.expectRevert(
-            IOrchestrator_v1.Orchestrator_v1__ExecuteTxFailed.selector
-        );
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__ExecuteTxFailed.selector);
         orchestrator.executeTx(
             address(this), abi.encodeWithSignature("fails()")
         );
@@ -605,7 +603,7 @@ contract OrchestratorV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator_v1__CallerNotAuthorized.selector,
+                IOrchestrator_v1.Orchestrator__CallerNotAuthorized.selector,
                 authorizer.getOwnerRole(),
                 address(this)
             )

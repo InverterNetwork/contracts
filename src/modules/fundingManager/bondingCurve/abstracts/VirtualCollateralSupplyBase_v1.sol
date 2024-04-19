@@ -70,7 +70,7 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     /// @param _amount The amount to add to the virtual collateral supply.
     function _addVirtualCollateralAmount(uint _amount) internal {
         if (_amount > (MAX_UINT - virtualCollateralSupply)) {
-            revert Module__VirtualCollateralSupply_v1__AddResultsInOverflow();
+            revert Module__VirtualCollateralSupplyBase__AddResultsInOverflow();
         }
         unchecked {
             virtualCollateralSupply += _amount;
@@ -85,12 +85,12 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     function _subVirtualCollateralAmount(uint _amount) internal {
         if (_amount > virtualCollateralSupply) {
             revert
-                Module__VirtualCollateralSupplyBase_v1__SubtractResultsInUnderflow();
+                Module__VirtualCollateralSupplyBase__SubtractResultsInUnderflow();
         }
 
         if (_amount == virtualCollateralSupply) {
             revert
-                Module__VirtualCollateralSupplyBase_v1__VirtualSupplyCannotBeZero();
+                Module__VirtualCollateralSupplyBase__VirtualSupplyCannotBeZero();
         }
         unchecked {
             virtualCollateralSupply -= _amount;
@@ -104,7 +104,7 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     function _setVirtualCollateralSupply(uint _virtualSupply) internal {
         if (_virtualSupply == 0) {
             revert
-                Module__VirtualCollateralSupplyBase_v1__VirtualSupplyCannotBeZero();
+                Module__VirtualCollateralSupplyBase__VirtualSupplyCannotBeZero();
         }
         emit VirtualCollateralSupplySet(_virtualSupply, virtualCollateralSupply);
         virtualCollateralSupply = _virtualSupply;

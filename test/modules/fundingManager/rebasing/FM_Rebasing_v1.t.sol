@@ -194,7 +194,7 @@ contract FM_RebasingV1Test is ModuleTest {
 
         vm.expectRevert(
             IFundingManager_v1
-                .Module__FundingManager_v1__CannotSelfDeposit
+                .Module__FundingManager__CannotSelfDeposit
                 .selector
         );
 
@@ -216,7 +216,7 @@ contract FM_RebasingV1Test is ModuleTest {
         if (amount + 1 > DEPOSIT_CAP) {
             vm.expectRevert(
                 IFundingManager_v1
-                    .Module__FundingManager_v1__CannotSelfDeposit
+                    .Module__FundingManager__CannotSelfDeposit
                     .selector
             );
         }
@@ -463,7 +463,7 @@ contract FM_RebasingV1Test is ModuleTest {
         if (to == address(0) || to == address(fundingManager)) {
             vm.expectRevert(
                 IFundingManager_v1
-                    .Module__FundingManager_v1__InvalidAddress
+                    .Module__FundingManager__InvalidAddress
                     .selector
             );
         }

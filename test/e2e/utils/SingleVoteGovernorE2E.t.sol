@@ -10,16 +10,13 @@ import {
 
 // Modules that are used in this E2E test
 import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
-import {
-    LM_PC_Bounty_v1,
-    ILM_PC_Bounty_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
+import {LM_PC_Bounty_v1, ILM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
 
 //SuT
 import {
-    SingleVoteGovernor_v1,
-    ISingleVoteGovernor_v1
-} from "src/modules/utils/SingleVoteGovernor_v1.sol";
+    VotingRoleManager_v1,
+    IVotingRoleManager_v1
+} from "src/modules/utils/VotingRoleManager_v1.sol";
 
 contract SingleVoteGovernorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -123,13 +120,13 @@ contract SingleVoteGovernorE2E is E2ETest {
             }
         }
 
-        // Find SingleVoteGovernor_v1
-        SingleVoteGovernor_v1 singleVoteGovernor;
+        // Find VotingRoleManager_v1
+        VotingRoleManager_v1 singleVoteGovernor;
 
         for (uint i; i < modulesList.length; ++i) {
-            try ISingleVoteGovernor_v1(modulesList[i]).isVoter(address(0))
+            try IVotingRoleManager_v1(modulesList[i]).isVoter(address(0))
             returns (bool) {
-                singleVoteGovernor = SingleVoteGovernor_v1(modulesList[i]);
+                singleVoteGovernor = VotingRoleManager_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -145,7 +142,7 @@ contract SingleVoteGovernorE2E is E2ETest {
             bountyManager.BOUNTY_ISSUER_ROLE(), address(singleVoteGovernor)
         );
 
-        // By having address(this) renounce the Owner Role, all changes from now on need to go through the SingleVoteGovernor_v1
+        // By having address(this) renounce the Owner Role, all changes from now on need to go through the VotingRoleManager_v1
         authorizer.renounceRole(ownerRole, address(this));
 
         //--------------------------------------------------------------------------------
@@ -199,7 +196,7 @@ contract SingleVoteGovernorE2E is E2ETest {
     }
 
     function _getMotionExecutionResult(
-        SingleVoteGovernor_v1 singleVoteGovernor,
+        VotingRoleManager_v1 singleVoteGovernor,
         uint motionId
     ) internal view returns (bool, bytes memory) {
         (

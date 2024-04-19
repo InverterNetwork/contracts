@@ -11,10 +11,7 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
-import {
-    LM_PC_Bounty_v1,
-    ILM_PC_Bounty_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
+import {LM_PC_Bounty_v1, ILM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1

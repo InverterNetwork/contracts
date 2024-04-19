@@ -113,7 +113,7 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol
 
 	## utils
-	@forge script script/modules/utils/DeploySingleVoteGovernor_v1.s.sol
+	@forge script script/modules/utils/DeployVotingRoleManager_v1.s.sol
 	
 	## orchestrator
 	@forge script script/orchestrator/DeployOrchestrator_v1.s.sol

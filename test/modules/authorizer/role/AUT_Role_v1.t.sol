@@ -338,7 +338,7 @@ contract AUT_RoleV1Test is Test {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1
-                    .Module__Authorizer_v1__OwnerRoleCannotBeEmpty
+                    .Module__Authorizer__OwnerRoleCannotBeEmpty
                     .selector
             )
         );
@@ -522,7 +522,7 @@ contract AUT_RoleV1Test is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer_v1__NotActiveModule.selector,
+                IAuthorizer_v1.Module__Authorizer__NotActiveModule.selector,
                 newModule
             )
         );
@@ -623,7 +623,7 @@ contract AUT_RoleV1Test is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer_v1__NotActiveModule.selector,
+                IAuthorizer_v1.Module__Authorizer__NotActiveModule.selector,
                 newModule
             )
         );
@@ -701,7 +701,7 @@ contract AUT_RoleV1Test is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer_v1__NotActiveModule.selector,
+                IAuthorizer_v1.Module__Authorizer__NotActiveModule.selector,
                 newModule
             )
         );
@@ -799,7 +799,7 @@ contract AUT_RoleV1Test is Test {
         vm.prank(newModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAuthorizer_v1.Module__Authorizer_v1__NotActiveModule.selector,
+                IAuthorizer_v1.Module__Authorizer__NotActiveModule.selector,
                 newModule
             )
         );

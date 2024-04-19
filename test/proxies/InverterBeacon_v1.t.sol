@@ -73,7 +73,7 @@ contract InverterBeaconV1Test is Test {
 
         vm.expectRevert(
             IInverterBeacon_v1
-                .InverterBeacon_v1__InvalidImplementationMinorVersion
+                .InverterBeacon__InvalidImplementationMinorVersion
                 .selector
         );
 
@@ -102,7 +102,7 @@ contract InverterBeaconV1Test is Test {
         if (newMinorVersion <= initialMinorVersion) {
             vm.expectRevert(
                 IInverterBeacon_v1
-                    .InverterBeacon_v1__InvalidImplementationMinorVersion
+                    .InverterBeacon__InvalidImplementationMinorVersion
                     .selector
             );
         }
@@ -119,7 +119,7 @@ contract InverterBeaconV1Test is Test {
         if (!(newImplementation.code.length > 0)) {
             vm.expectRevert(
                 IInverterBeacon_v1
-                    .InverterBeacon_v1__InvalidImplementation
+                    .InverterBeacon__InvalidImplementation
                     .selector
             );
         }
@@ -195,7 +195,7 @@ contract InverterBeaconV1Test is Test {
         beacon.upgradeTo(address(this), 1, false);
 
         vm.expectRevert(
-            IInverterBeacon_v1.InverterBeacon_v1__InvalidImplementation.selector
+            IInverterBeacon_v1.InverterBeacon__InvalidImplementation.selector
         );
         beacon.upgradeTo(address(0), 1, false);
     }
@@ -306,7 +306,7 @@ contract InverterBeaconV1Test is Test {
 
     function test_setImplementationModifierInPosition() public {
         vm.expectRevert(
-            IInverterBeacon_v1.InverterBeacon_v1__InvalidImplementation.selector
+            IInverterBeacon_v1.InverterBeacon__InvalidImplementation.selector
         );
         beacon.original_setImplementation(address(0), false);
     }

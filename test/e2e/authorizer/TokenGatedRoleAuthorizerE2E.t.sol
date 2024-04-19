@@ -13,10 +13,7 @@ import {
 import {AUT_TokenGated_Role_v1} from "@aut/role/AUT_TokenGated_Role_v1.sol";
 
 // Modules that are used in this E2E test
-import {
-    LM_PC_Bounty_v1,
-    ILM_PC_Bounty_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
+import {LM_PC_Bounty_v1, ILM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract TokenGatedRoleAuthorizerE2E is E2ETest {

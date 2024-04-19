@@ -66,7 +66,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
     /// @param _amount The amount to add to the virtual issuance supply.
     function _addVirtualIssuanceAmount(uint _amount) internal {
         if (_amount > (MAX_UINT - virtualIssuanceSupply)) {
-            revert Module__VirtualIssuanceSupplyBase_v1__AddResultsInOverflow();
+            revert Module__VirtualIssuanceSupplyBase__AddResultsInOverflow();
         }
         unchecked {
             virtualIssuanceSupply += _amount;
@@ -80,13 +80,13 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
     /// @param _amount The amount to subtract from the virtual issuance supply.
     function _subVirtualIssuanceAmount(uint _amount) internal {
         if (_amount > virtualIssuanceSupply) {
-            revert
-                Module__VirtualIssuanceSupplyBase_v1__SubtractResultsInUnderflow();
+            revert Module__VirtualIssuanceSupplyBase__SubtractResultsInUnderflow(
+            );
         }
 
         if (_amount == virtualIssuanceSupply) {
-            revert
-                Module__VirtualIssuanceSupplyBase_v1__VirtualSupplyCannotBeZero();
+            revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
+            );
         }
         unchecked {
             virtualIssuanceSupply -= _amount;
@@ -98,8 +98,8 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
     /// @param _virtualSupply The new value to set for the virtual issuance supply.
     function _setVirtualIssuanceSupply(uint _virtualSupply) internal {
         if (_virtualSupply == 0) {
-            revert
-                Module__VirtualIssuanceSupplyBase_v1__VirtualSupplyCannotBeZero();
+            revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
+            );
         }
         emit VirtualIssuanceSupplySet(_virtualSupply, virtualIssuanceSupply);
         virtualIssuanceSupply = _virtualSupply;

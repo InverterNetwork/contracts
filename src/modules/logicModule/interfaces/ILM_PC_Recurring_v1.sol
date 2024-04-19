@@ -15,16 +15,16 @@ interface ILM_PC_Recurring_v1 {
     // Errors
 
     /// @notice Given RecurringPayment id is invalid.
-    error Module__LM_PC_Recurring_v1__InvalidRecurringPaymentId();
+    error Module__LM_PC_Recurring__InvalidRecurringPaymentId();
 
     /// @notice Start epoch cant be placed before the current epoch.
-    error Module__LM_PC_Recurring_v1__InvalidStartEpoch();
+    error Module__LM_PC_Recurring__InvalidStartEpoch();
 
     /// @notice Given EpochLength is invalid.
-    error Module__LM_PC_Recurring_v1__InvalidEpochLength();
+    error Module__LM_PC_Recurring__InvalidEpochLength();
 
     /// @notice Given startId is not position before endId
-    error Module__LM_PC_Recurring_v1__StartIdNotBeforeEndId();
+    error Module__LM_PC_Recurring__StartIdNotBeforeEndId();
 
     //--------------------------------------------------------------------------
     // Events

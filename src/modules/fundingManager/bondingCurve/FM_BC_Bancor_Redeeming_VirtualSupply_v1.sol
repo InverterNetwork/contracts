@@ -286,8 +286,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     {
         if (_depositAmount == 0) {
             revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidDepositAmount(
-            );
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount();
         }
         if (buyFee > 0) {
             (_depositAmount, /* feeAmount */ ) =
@@ -304,8 +303,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     {
         if (_depositAmount == 0) {
             revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidDepositAmount(
-            );
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount();
         }
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
         if (sellFee > 0) {
@@ -491,8 +489,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         // that's too significant to be acceptable for tokens with fewer than 7 decimals.
         if (_decimals < 7 || _decimals < collateralTokenDecimals) {
             revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidTokenDecimal(
-            );
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidTokenDecimal();
         }
         tokenDecimals = _decimals;
     }
@@ -538,13 +535,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function _setReserveRatioForBuying(uint32 _reserveRatio) internal {
         if (_reserveRatio == 0) {
             revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio(
-            );
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
         }
         if (_reserveRatio > PPM) {
             revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio(
-            );
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
         }
         emit BuyReserveRatioSet(_reserveRatio, reserveRatioForBuying);
         reserveRatioForBuying = _reserveRatio;
@@ -558,13 +553,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function _setReserveRatioForSelling(uint32 _reserveRatio) internal {
         if (_reserveRatio == 0) {
             revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio(
-            );
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
         }
         if (_reserveRatio > PPM) {
             revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio(
-            );
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
         }
         emit SellReserveRatioSet(_reserveRatio, reserveRatioForSelling);
         reserveRatioForSelling = _reserveRatio;

@@ -60,7 +60,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     modifier sellingIsEnabled() {
         if (sellIsOpen == false) {
             revert
-                Module__RedeemingBondingCurveBase_v1__SellingFunctionaltiesClosed();
+                Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
         }
         _;
     }
@@ -149,7 +149,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         uint _minAmountOut
     ) internal returns (uint redeemAmount, uint feeAmount) {
         if (_depositAmount == 0) {
-            revert Module__RedeemingBondingCurveBase_v1__InvalidDepositAmount();
+            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
         }
         // Calculate redeem amount based on upstream formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
@@ -166,8 +166,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         }
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (redeemAmount < _minAmountOut) {
-            revert
-                Module__RedeemingBondingCurveBase_v1__InsufficientOutputAmount();
+            revert Module__RedeemingBondingCurveBase__InsufficientOutputAmount();
         }
         // Require that enough collateral token is held to be redeemable
         if (
@@ -177,7 +176,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
                 )
         ) {
             revert
-                Module__RedeemingBondingCurveBase_v1__InsufficientCollateralForRedemption(
+                Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption(
             );
         }
         // Transfer tokens to receiver
@@ -191,7 +190,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
     function _openSell() internal {
         if (sellIsOpen == true) {
-            revert Module__RedeemingBondingCurveBase_v1__SellingAlreadyOpen();
+            revert Module__RedeemingBondingCurveBase__SellingAlreadyOpen();
         }
         sellIsOpen = true;
         emit SellingEnabled();
@@ -200,7 +199,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev Closes the sell functionality by setting the state variable `sellIsOpen` to false.
     function _closeSell() internal {
         if (sellIsOpen == false) {
-            revert Module__RedeemingBondingCurveBase_v1__SellingAlreadyClosed();
+            revert Module__RedeemingBondingCurveBase__SellingAlreadyClosed();
         }
         sellIsOpen = false;
         emit SellingDisabled();
@@ -210,7 +209,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @param _fee The fee percentage to set for sell transactions.
     function _setSellFee(uint _fee) internal {
         if (_fee > BPS) {
-            revert Module__RedeemingBondingCurveBase_v1__InvalidFeePercentage();
+            revert Module__RedeemingBondingCurveBase__InvalidFeePercentage();
         }
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;

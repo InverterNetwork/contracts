@@ -79,7 +79,7 @@ contract OrchestratorFactory_v1 is
     /// @notice Modifier to guarantee that the given id is valid
     modifier validOrchestratorId(uint id) {
         if (id > _orchestratorIdCounter) {
-            revert OrchestratorFactory_v1__InvalidId();
+            revert OrchestratorFactory__InvalidId();
         }
         _;
     }
@@ -145,7 +145,7 @@ contract OrchestratorFactory_v1 is
         }
 
         if (orchestratorConfig.owner == address(0)) {
-            revert OrchestratorFactory_v1__OrchestratorOwnerIsInvalid();
+            revert OrchestratorFactory__OrchestratorOwnerIsInvalid();
         }
 
         emit OrchestratorCreated(_orchestratorIdCounter, clone);

@@ -23,7 +23,7 @@ import {
     LM_PC_Bounty_v1,
     ILM_PC_Bounty_v1,
     IERC20PaymentClientBase_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
+} from "@lm/LM_PC_Bounty_v1.sol";
 
 contract LM_PC_BountyV1Test is ModuleTest {
     // SuT
@@ -127,7 +127,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         if (!contains(contribs, addr)) {
             vm.expectRevert(
                 ILM_PC_Bounty_v1
-                    .Module__LM_PC_Bounty_v1__OnlyClaimContributor
+                    .Module__LM_PC_Bounty__OnlyClaimContributor
                     .selector
             );
         }
@@ -145,7 +145,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         ) {
             vm.expectRevert(
                 ILM_PC_Bounty_v1
-                    .Module__LM_PC_Bounty_v1__InvalidPayoutAmounts
+                    .Module__LM_PC_Bounty__InvalidPayoutAmounts
                     .selector
             );
         }
@@ -164,9 +164,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         if (id > usedIds || id == 0) {
             vm.expectRevert(
-                ILM_PC_Bounty_v1
-                    .Module__LM_PC_Bounty_v1__InvalidBountyId
-                    .selector
+                ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidBountyId.selector
             );
         }
 
@@ -184,9 +182,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         if (id > usedIds + bountyId || id == 0 || id == bountyId) {
             vm.expectRevert(
-                ILM_PC_Bounty_v1
-                    .Module__LM_PC_Bounty_v1__InvalidClaimId
-                    .selector
+                ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidClaimId.selector
             );
         }
 
@@ -221,7 +217,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         if (length == 0) {
             vm.expectRevert(
                 ILM_PC_Bounty_v1
-                    .Module__LM_PC_Bounty_v1__InvalidContributorsLength
+                    .Module__LM_PC_Bounty__InvalidContributorsLength
                     .selector
             );
 
@@ -247,7 +243,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
                 if (currentContrib.claimAmount == 0) {
                     vm.expectRevert(
                         ILM_PC_Bounty_v1
-                            .Module__LM_PC_Bounty_v1__InvalidContributorAmount
+                            .Module__LM_PC_Bounty__InvalidContributorAmount
                             .selector
                     );
                     break;
@@ -260,7 +256,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
                 ) {
                     vm.expectRevert(
                         ILM_PC_Bounty_v1
-                            .Module__LM_PC_Bounty_v1__InvalidContributorAddress
+                            .Module__LM_PC_Bounty__InvalidContributorAddress
                             .selector
                     );
                     break;
@@ -280,7 +276,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
             ) {
                 vm.expectRevert(
                     ILM_PC_Bounty_v1
-                        .Module__LM_PC_Bounty_v1__ClaimExceedsGivenPayoutAmounts
+                        .Module__LM_PC_Bounty__ClaimExceedsGivenPayoutAmounts
                         .selector
                 );
             }
@@ -299,9 +295,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         if (isClaimed) {
             bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
             vm.expectRevert(
-                ILM_PC_Bounty_v1
-                    .Module__LM_PC_Bounty_v1__AlreadyClaimed
-                    .selector
+                ILM_PC_Bounty_v1.Module__LM_PC_Bounty__AlreadyClaimed.selector
             );
         }
         bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
@@ -317,7 +311,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         if (isLocked) {
             bountyManager.lockBounty(bountyId);
             vm.expectRevert(
-                ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__BountyLocked.selector
+                ILM_PC_Bounty_v1.Module__LM_PC_Bounty__BountyLocked.selector
             );
         }
         bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
@@ -353,7 +347,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
             bountyManager.updateClaimContributors(claimId, changedContributors);
             vm.expectRevert(
                 ILM_PC_Bounty_v1
-                    .Module__LM_PC_Bounty_v1__ContributorsChanged
+                    .Module__LM_PC_Bounty__ContributorsChanged
                     .selector
             );
         }
@@ -366,14 +360,14 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
     function testGetBountyInformationModifierInPosition() public {
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__InvalidBountyId.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidBountyId.selector
         );
         bountyManager.getBountyInformation(0);
     }
 
     function testGetClaimInformationModifierInPosition() public {
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__InvalidClaimId.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidClaimId.selector
         );
         bountyManager.getClaimInformation(0);
     }
@@ -415,9 +409,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
     function testAddBountyModifierInPosition() public {
         //validPayoutAmounts
         vm.expectRevert(
-            ILM_PC_Bounty_v1
-                .Module__LM_PC_Bounty_v1__InvalidPayoutAmounts
-                .selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidPayoutAmounts.selector
         );
         bountyManager.addBounty(0, 0, bytes(""));
 
@@ -482,14 +474,14 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         //validBountyId
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__InvalidBountyId.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidBountyId.selector
         );
         bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
 
         //validContributorsForBounty
         vm.expectRevert(
             ILM_PC_Bounty_v1
-                .Module__LM_PC_Bounty_v1__InvalidContributorAmount
+                .Module__LM_PC_Bounty__InvalidContributorAmount
                 .selector
         );
         bountyManager.addClaim(1, INVALID_CONTRIBUTORS, bytes(""));
@@ -498,7 +490,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         bountyManager.lockBounty(1);
 
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__BountyLocked.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
@@ -537,7 +529,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         //validBountyId
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__InvalidBountyId.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidBountyId.selector
         );
         bountyManager.updateBounty(0, bytes(""));
 
@@ -562,7 +554,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         bountyManager.lockBounty(1);
 
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__BountyLocked.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
         bountyManager.updateBounty(1, bytes(""));
     }
@@ -586,14 +578,14 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         //validBountyId
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__InvalidBountyId.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidBountyId.selector
         );
         bountyManager.lockBounty(0);
 
         //NotLocked
         bountyManager.lockBounty(1);
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__BountyLocked.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
         bountyManager.lockBounty(1);
 
@@ -670,14 +662,14 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         //validClaimId
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__InvalidClaimId.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidClaimId.selector
         );
         bountyManager.updateClaimContributors(0, DEFAULT_CONTRIBUTORS);
 
         //validContributorsForBounty
         vm.expectRevert(
             ILM_PC_Bounty_v1
-                .Module__LM_PC_Bounty_v1__InvalidContributorAmount
+                .Module__LM_PC_Bounty__InvalidContributorAmount
                 .selector
         );
         bountyManager.updateClaimContributors(2, INVALID_CONTRIBUTORS);
@@ -704,7 +696,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         //notLocked
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__BountyLocked.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
 
         bountyManager.updateClaimContributors(2, DEFAULT_CONTRIBUTORS);
@@ -714,7 +706,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         bountyManager.verifyClaim(4, DEFAULT_CONTRIBUTORS);
 
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__AlreadyClaimed.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__AlreadyClaimed.selector
         );
         bountyManager.updateClaimContributors(4, DEFAULT_CONTRIBUTORS);
     }
@@ -743,15 +735,13 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         //validClaimId
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__InvalidClaimId.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidClaimId.selector
         );
         bountyManager.updateClaimDetails(0, bytes(""));
 
         //onlyClaimContributor
         vm.expectRevert(
-            ILM_PC_Bounty_v1
-                .Module__LM_PC_Bounty_v1__OnlyClaimContributor
-                .selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__OnlyClaimContributor.selector
         );
         bountyManager.updateClaimDetails(2, bytes(""));
 
@@ -759,7 +749,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         bountyManager.lockBounty(1);
 
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__BountyLocked.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
         vm.prank(DEFAULT_CONTRIBUTORS[0].addr);
         bountyManager.updateClaimDetails(2, bytes(""));
@@ -769,7 +759,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         bountyManager.verifyClaim(4, DEFAULT_CONTRIBUTORS);
 
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__AlreadyClaimed.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__AlreadyClaimed.selector
         );
         vm.prank(DEFAULT_CONTRIBUTORS[0].addr);
         bountyManager.updateClaimDetails(4, bytes(""));
@@ -857,16 +847,14 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         //validClaimId
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__InvalidClaimId.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__InvalidClaimId.selector
         );
         bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);
 
         //contributorsNotChanged
 
         vm.expectRevert(
-            ILM_PC_Bounty_v1
-                .Module__LM_PC_Bounty_v1__ContributorsChanged
-                .selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__ContributorsChanged.selector
         );
         bountyManager.verifyClaim(2, INVALID_CONTRIBUTORS);
 
@@ -875,7 +863,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         bountyManager.verifyClaim(2, DEFAULT_CONTRIBUTORS);
 
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__AlreadyClaimed.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__AlreadyClaimed.selector
         );
         bountyManager.verifyClaim(2, DEFAULT_CONTRIBUTORS);
 
@@ -883,7 +871,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
         bountyManager.lockBounty(3);
 
         vm.expectRevert(
-            ILM_PC_Bounty_v1.Module__LM_PC_Bounty_v1__BountyLocked.selector
+            ILM_PC_Bounty_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
         bountyManager.verifyClaim(4, DEFAULT_CONTRIBUTORS);
     }

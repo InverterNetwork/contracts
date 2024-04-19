@@ -10,16 +10,16 @@ interface IModuleFactory_v1 {
     // Errors
 
     /// @notice Given metadata invalid.
-    error ModuleFactory_v1__InvalidMetadata();
+    error ModuleFactory__InvalidMetadata();
 
     /// @notice Given beacon invalid.
-    error ModuleFactory_v1__InvalidInverterBeacon();
+    error ModuleFactory__InvalidInverterBeacon();
 
     /// @notice Given metadata unregistered.
-    error ModuleFactory_v1__UnregisteredMetadata();
+    error ModuleFactory__UnregisteredMetadata();
 
     /// @notice Given metadata already registered.
-    error ModuleFactory_v1__MetadataAlreadyRegistered();
+    error ModuleFactory__MetadataAlreadyRegistered();
 
     //--------------------------------------------------------------------------
     // Events

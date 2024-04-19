@@ -74,7 +74,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice checks that the caller is an active module
     modifier onlyModule() {
         if (!orchestrator().isModule(_msgSender())) {
-            revert Module__PaymentProcessor_v1__OnlyCallableByModule();
+            revert Module__PaymentProcessor__OnlyCallableByModule();
         }
         _;
     }
@@ -82,14 +82,14 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice checks that the client is calling for itself
     modifier validClient(address client) {
         if (_msgSender() != client) {
-            revert Module__PaymentProcessor_v1__CannotCallOnOtherClientsOrders();
+            revert Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
         }
         _;
     }
 
     modifier activePaymentReceiver(address client, address paymentReceiver) {
         if (activeVestingWallets[client][paymentReceiver].length == 0) {
-            revert Module__PP_Streaming_v1__InvalidPaymentReceiver(
+            revert Module__PP_Streaming__InvalidPaymentReceiver(
                 client, paymentReceiver
             );
         }
@@ -116,7 +116,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     || activeVestingWallets[client][_msgSender()].length > 0
             )
         ) {
-            revert Module__PP_Streaming_v1__NothingToClaim(client, _msgSender());
+            revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
         }
 
         _claimAll(client, _msgSender());
@@ -132,7 +132,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             activeVestingWallets[client][_msgSender()].length == 0
                 || walletId > numVestingWallets[client][_msgSender()]
         ) {
-            revert Module__PP_Streaming_v1__InvalidWallet(
+            revert Module__PP_Streaming__InvalidWallet(
                 client, _msgSender(), walletId
             );
         }
@@ -141,7 +141,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             _findActiveWalletId(client, _msgSender(), walletId)
                 == type(uint).max
         ) {
-            revert Module__PP_Streaming_v1__InactiveWallet(
+            revert Module__PP_Streaming__InactiveWallet(
                 client, _msgSender(), walletId
             );
         }
@@ -165,8 +165,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             (orders, totalAmount) = client.collectPaymentOrders();
 
             if (token().balanceOf(address(client)) < totalAmount) {
-                revert Module__PP_Streaming_v1__InsufficientTokenBalanceInClient(
-                );
+                revert Module__PP_Streaming__InsufficientTokenBalanceInClient();
             }
 
             // Generate Streaming Payments for all orders
@@ -228,7 +227,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             _findAddressInActiveVestings(client, paymentReceiver)
                 == type(uint).max
         ) {
-            revert Module__PP_Streaming_v1__InvalidPaymentReceiver(
+            revert Module__PP_Streaming__InvalidPaymentReceiver(
                 client, paymentReceiver
             );
         }
@@ -511,7 +510,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             _findActiveWalletId(client, paymentReceiver, walletId);
 
         if (walletIdIndex == type(uint).max) {
-            revert Module__PP_Streaming_v1__InactiveWallet(
+            revert Module__PP_Streaming__InactiveWallet(
                 address(client), _msgSender(), walletId
             );
         }
@@ -563,7 +562,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             _findAddressInActiveVestings(client, paymentReceiver);
 
         if (paymentReceiverIndex == type(uint).max) {
-            revert Module__PP_Streaming_v1__InvalidPaymentReceiver(
+            revert Module__PP_Streaming__InvalidPaymentReceiver(
                 client, paymentReceiver
             );
         }

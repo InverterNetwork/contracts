@@ -79,7 +79,7 @@ abstract contract BondingCurveBase_v1 is
 
     modifier buyingIsEnabled() {
         if (buyIsOpen == false) {
-            revert Module__BondingCurveBase_v1__BuyingFunctionaltiesClosed();
+            revert Module__BondingCurveBase__BuyingFunctionaltiesClosed();
         }
         _;
     }
@@ -87,7 +87,7 @@ abstract contract BondingCurveBase_v1 is
     /// @dev Modifier to guarantee token recipient is valid.
     modifier validReceiver(address _receiver) {
         if (_receiver == address(0) || _receiver == address(this)) {
-            revert Module__BondingCurveBase_v1__InvalidRecipient();
+            revert Module__BondingCurveBase__InvalidRecipient();
         }
         _;
     }
@@ -182,7 +182,7 @@ abstract contract BondingCurveBase_v1 is
         uint _minAmountOut
     ) internal returns (uint mintAmount, uint feeAmount) {
         if (_depositAmount == 0) {
-            revert Module__BondingCurveBase_v1__InvalidDepositAmount();
+            revert Module__BondingCurveBase__InvalidDepositAmount();
         }
         // Transfer collateral, confirming that correct amount == allowance
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
@@ -199,7 +199,7 @@ abstract contract BondingCurveBase_v1 is
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
         // Revert when the mint amount is lower than minimum amount the user expects
         if (mintAmount < _minAmountOut) {
-            revert Module__BondingCurveBase_v1__InsufficientOutputAmount();
+            revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
         // Mint tokens to address
         _mint(_receiver, mintAmount);
@@ -210,7 +210,7 @@ abstract contract BondingCurveBase_v1 is
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
     function _openBuy() internal {
         if (buyIsOpen == true) {
-            revert Module__BondingCurveBase_v1__BuyingAlreadyOpen();
+            revert Module__BondingCurveBase__BuyingAlreadyOpen();
         }
         buyIsOpen = true;
         emit BuyingEnabled();
@@ -219,7 +219,7 @@ abstract contract BondingCurveBase_v1 is
     /// @dev Closes the buy functionality by setting the state variable `buyIsOpen` to false.
     function _closeBuy() internal {
         if (buyIsOpen == false) {
-            revert Module__BondingCurveBase_v1__BuyingAlreadyClosed();
+            revert Module__BondingCurveBase__BuyingAlreadyClosed();
         }
         buyIsOpen = false;
         emit BuyingDisabled();
@@ -229,7 +229,7 @@ abstract contract BondingCurveBase_v1 is
     /// @param _fee The fee percentage to set for buy transactions.
     function _setBuyFee(uint _fee) internal {
         if (_fee >= BPS) {
-            revert Module__BondingCurveBase_v1__InvalidFeePercentage();
+            revert Module__BondingCurveBase__InvalidFeePercentage();
         }
         emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;

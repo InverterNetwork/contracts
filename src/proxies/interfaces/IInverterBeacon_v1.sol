@@ -12,10 +12,10 @@ interface IInverterBeacon_v1 is IBeacon {
     // Errors
 
     /// @notice Given implementation invalid.
-    error InverterBeacon_v1__InvalidImplementation();
+    error InverterBeacon__InvalidImplementation();
 
     /// @notice Given implementation minor version is not higher than previous minor version.
-    error InverterBeacon_v1__InvalidImplementationMinorVersion();
+    error InverterBeacon__InvalidImplementationMinorVersion();
 
     //--------------------------------------------------------------------------
     // Events

@@ -5,18 +5,17 @@ pragma solidity 0.8.23;
 import {
     ERC20PaymentClientBase_v1,
     Module_v1
-} from "@lm_pc/ERC20PaymentClient/abstracts/ERC20PaymentClientBase_v1.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {ILM_PC_Recurring_v1} from
-    "@lm_pc/ERC20PaymentClient/interfaces/ILM_PC_Recurring_v1.sol";
+import {ILM_PC_Recurring_v1} from "@lm/interfaces/ILM_PC_Recurring_v1.sol";
 
 import {
     IERC20PaymentClientBase_v1,
     IPaymentProcessor_v1
-} from "@lm_pc/ERC20PaymentClient/abstracts/ERC20PaymentClientBase_v1.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
@@ -57,21 +56,21 @@ contract LM_PC_Recurring_v1 is
 
     modifier validId(uint recurringPaymentId) {
         if (!isExistingRecurringPaymentId(recurringPaymentId)) {
-            revert Module__LM_PC_Recurring_v1__InvalidRecurringPaymentId();
+            revert Module__LM_PC_Recurring__InvalidRecurringPaymentId();
         }
         _;
     }
 
     modifier validStartEpoch(uint startEpoch) {
         if (getCurrentEpoch() > startEpoch) {
-            revert Module__LM_PC_Recurring_v1__InvalidStartEpoch();
+            revert Module__LM_PC_Recurring__InvalidStartEpoch();
         }
         _;
     }
 
     modifier startIdBeforeEndId(uint startId, uint endId) {
         if (startId > endId) {
-            revert Module__LM_PC_Recurring_v1__StartIdNotBeforeEndId();
+            revert Module__LM_PC_Recurring__StartIdNotBeforeEndId();
         }
         _;
     }
@@ -114,7 +113,7 @@ contract LM_PC_Recurring_v1 is
 
         //revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
-            revert Module__LM_PC_Recurring_v1__InvalidEpochLength();
+            revert Module__LM_PC_Recurring__InvalidEpochLength();
         }
     }
 

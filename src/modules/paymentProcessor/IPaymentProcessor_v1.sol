@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Internal Interfaces
 import {IERC20PaymentClientBase_v1} from
-    "@lm_pc/ERC20paymentClient/interfaces/IERC20PaymentClientBase_v1.sol";
+    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -13,10 +13,10 @@ interface IPaymentProcessor_v1 {
     // Errors
 
     /// @notice invalid caller
-    error Module__PaymentProcessor_v1__OnlyCallableByModule();
+    error Module__PaymentProcessor__OnlyCallableByModule();
 
     /// @notice a client can only execute on its own orders
-    error Module__PaymentProcessor_v1__CannotCallOnOtherClientsOrders();
+    error Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
 
     //--------------------------------------------------------------------------
     // Events

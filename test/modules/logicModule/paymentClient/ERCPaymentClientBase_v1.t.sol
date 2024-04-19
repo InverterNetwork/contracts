@@ -125,7 +125,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase_v1__InvalidRecipient
+                    .Module__ERC20PaymentClientBase__InvalidRecipient
                     .selector
             );
             paymentClient.addPaymentOrder(
@@ -147,7 +147,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase_v1__InvalidAmount
+                    .Module__ERC20PaymentClientBase__InvalidAmount
                     .selector
             );
             paymentClient.addPaymentOrder(
@@ -269,7 +269,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testCollectPaymentOrdersFailsCallerNotAuthorized() public {
         vm.expectRevert(
             IERC20PaymentClientBase_v1
-                .Module__ERC20PaymentClientBase_v1__CallerNotAuthorized
+                .Module__ERC20PaymentClientBase__CallerNotAuthorized
                 .selector
         );
         paymentClient.collectPaymentOrders();
@@ -294,7 +294,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         if (caller != address(_paymentProcessor)) {
             vm.expectRevert(
                 IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase_v1__CallerNotAuthorized
+                    .Module__ERC20PaymentClientBase__CallerNotAuthorized
                     .selector
             );
         }
@@ -322,7 +322,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             //Check that Error works correctly
             vm.expectRevert(
                 IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase_v1__TokenTransferFailed
+                    .Module__ERC20PaymentClientBase__TokenTransferFailed
                     .selector
             );
             paymentClient.originalEnsureTokenBalance(amountRequired);

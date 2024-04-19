@@ -149,7 +149,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.prank(non_owner_address);
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase_v1__BuyingFunctionaltiesClosed
+                .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
         bondingCurveFundingManager.buyFor(non_owner_address, 100, 100);
@@ -169,7 +169,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         // Test for address(0)
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase_v1__InvalidRecipient
+                .Module__BondingCurveBase__InvalidRecipient
                 .selector
         );
         bondingCurveFundingManager.buyFor(address(0), 100, 100);
@@ -177,7 +177,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         // Test for its own address)
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase_v1__InvalidRecipient
+                .Module__BondingCurveBase__InvalidRecipient
                 .selector
         );
         bondingCurveFundingManager.buyFor(
@@ -244,7 +244,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase_v1__InvalidDepositAmount
+                .Module__BondingCurveBase__InvalidDepositAmount
                 .selector
         );
         bondingCurveFundingManager.buy(0, 0);
@@ -264,7 +264,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.startPrank(buyer);
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase_v1__InsufficientOutputAmount
+                .Module__BondingCurveBase__InsufficientOutputAmount
                 .selector
         );
         bondingCurveFundingManager.buy(amount, minAmountOut);
@@ -361,7 +361,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
     {
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase_v1__BuyingAlreadyOpen
+                .Module__BondingCurveBase__BuyingAlreadyOpen
                 .selector
         );
         bondingCurveFundingManager.openBuy();
@@ -400,7 +400,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase_v1__BuyingAlreadyClosed
+                .Module__BondingCurveBase__BuyingAlreadyClosed
                 .selector
         );
         bondingCurveFundingManager.closeBuy();
@@ -436,7 +436,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.assume(_fee >= bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase_v1__InvalidFeePercentage
+                .Module__BondingCurveBase__InvalidFeePercentage
                 .selector
         );
         bondingCurveFundingManager.setBuyFee(_fee);

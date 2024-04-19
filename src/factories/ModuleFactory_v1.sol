@@ -28,7 +28,7 @@ import {Context, Ownable} from "@oz/access/Ownable.sol";
  *
  * @notice  Enables the creation and registration of Inverter Modules,
  *          facilitating the deployment of module instances linked to specific beacons.
- *          Provides management functionality to govern module behavior and interactions.
+ *          Allows for configuration of modules starting state via provided deployment data.
  *
  * @dev     An owned factory for deploying modules.
  *          The owner can register module metadata's to an {IInverterBeacon_v1}
@@ -60,7 +60,7 @@ contract ModuleFactory_v1 is
     ///         metadata.
     modifier validMetadata(IModule_v1.Metadata memory data) {
         if (!LibMetadata.isValid(data)) {
-            revert ModuleFactory_v1__InvalidMetadata();
+            revert ModuleFactory__InvalidMetadata();
         }
         _;
     }
@@ -74,7 +74,7 @@ contract ModuleFactory_v1 is
             beacon.implementation() == address(0)
                 || Ownable(address(beacon)).owner() != governor
         ) {
-            revert ModuleFactory_v1__InvalidInverterBeacon();
+            revert ModuleFactory__InvalidInverterBeacon();
         }
         _;
     }
@@ -115,7 +115,7 @@ contract ModuleFactory_v1 is
         (beacon, /*id*/ ) = getBeaconAndId(metadata);
 
         if (address(beacon) == address(0)) {
-            revert ModuleFactory_v1__UnregisteredMetadata();
+            revert ModuleFactory__UnregisteredMetadata();
         }
 
         address implementation = address(new InverterBeaconProxy_v1(beacon));
@@ -159,7 +159,7 @@ contract ModuleFactory_v1 is
 
         // Revert if metadata already registered for different beacon.
         if (address(oldBeacon) != address(0)) {
-            revert ModuleFactory_v1__MetadataAlreadyRegistered();
+            revert ModuleFactory__MetadataAlreadyRegistered();
         }
 
         // Register Metadata for beacon.

@@ -109,9 +109,7 @@ contract OrchestratorFactoryV1Test is Test {
 
         if (getId > orchestratorsCreated) {
             vm.expectRevert(
-                IOrchestratorFactory_v1
-                    .OrchestratorFactory_v1__InvalidId
-                    .selector
+                IOrchestratorFactory_v1.OrchestratorFactory__InvalidId.selector
             );
         }
         factory.getOrchestratorByID(getId);

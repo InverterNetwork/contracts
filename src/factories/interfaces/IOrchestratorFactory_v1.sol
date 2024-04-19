@@ -12,18 +12,18 @@ interface IOrchestratorFactory_v1 {
     // Errors
 
     /// @notice Given id is invalid.
-    error OrchestratorFactory_v1__InvalidId();
+    error OrchestratorFactory__InvalidId();
 
     /// @notice The module's data arrays length mismatch.
-    error OrchestratorFactory_v1__ModuleDataLengthMismatch();
+    error OrchestratorFactory__ModuleDataLengthMismatch();
 
     /// @notice The orchestrator owner is address(0)
-    error OrchestratorFactory_v1__OrchestratorOwnerIsInvalid();
+    error OrchestratorFactory__OrchestratorOwnerIsInvalid();
 
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when a new orchestrator_v1 is created.
+    /// @notice Event emitted when a new orchestrator is created.
     /// @param orchestratorId The id of the orchestrator.
     /// @param orchestratorAddress The address of the orchestrator.
     event OrchestratorCreated(
@@ -47,7 +47,7 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Creates a new orchestrator_v1 with caller being the orchestrator's owner.
+    /// @notice Creates a new orchestrator with caller being the orchestrator's owner.
     /// @param orchestratorConfig The orchestrator's config data.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1}
     ///                         instance.

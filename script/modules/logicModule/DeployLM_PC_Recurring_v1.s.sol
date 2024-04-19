@@ -2,8 +2,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {LM_PC_Recurring_v1} from
-    "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
+import {LM_PC_Recurring_v1} from "@lm/LM_PC_Recurring_v1.sol";
 
 /**
  * @title LM_PC_Recurring_v1 Deployment Script

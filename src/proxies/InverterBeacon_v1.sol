@@ -48,14 +48,14 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
 
     modifier validImplementation(address newImplementation) {
         if (!(newImplementation.code.length > 0)) {
-            revert InverterBeacon_v1__InvalidImplementation();
+            revert InverterBeacon__InvalidImplementation();
         }
         _;
     }
 
     modifier validNewMinorVersion(uint newMinorVersion) {
         if (newMinorVersion <= minorVersion) {
-            revert InverterBeacon_v1__InvalidImplementationMinorVersion();
+            revert InverterBeacon__InvalidImplementationMinorVersion();
         }
         _;
     }

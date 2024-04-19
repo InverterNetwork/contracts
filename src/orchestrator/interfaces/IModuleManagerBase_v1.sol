@@ -9,25 +9,25 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     // Errors
 
     /// @notice Function is only callable by authorized address.
-    error ModuleManagerBase_v1__CallerNotAuthorized();
+    error ModuleManagerBase__CallerNotAuthorized();
 
     /// @notice Function is only callable by modules.
-    error ModuleManagerBase_v1__OnlyCallableByModule();
+    error ModuleManagerBase__OnlyCallableByModule();
 
     /// @notice Given module address invalid.
-    error ModuleManagerBase_v1__InvalidModuleAddress();
+    error ModuleManagerBase__InvalidModuleAddress();
 
     /// @notice Given address is a module.
-    error ModuleManagerBase_v1__IsModule();
+    error ModuleManagerBase__IsModule();
 
     /// @notice Given address is not a module.
-    error ModuleManagerBase_v1__IsNotModule();
+    error ModuleManagerBase__IsNotModule();
 
     /// @notice The supplied modules are not consecutive.
-    error ModuleManagerBase_v1__ModulesNotConsecutive();
+    error ModuleManagerBase__ModulesNotConsecutive();
 
     /// @notice The Manager has reached the maximum amount of modules.
-    error ModuleManagerBase_v1__ModuleAmountOverLimits();
+    error ModuleManagerBase__ModuleAmountOverLimits();
 
     //--------------------------------------------------------------------------
     // Events
