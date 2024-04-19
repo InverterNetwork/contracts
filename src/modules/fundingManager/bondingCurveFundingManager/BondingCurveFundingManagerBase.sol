@@ -319,17 +319,9 @@ abstract contract BondingCurveFundingManagerBase is
         pure
         returns (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount)
     {
-        // Get total fee percentage
-        uint totalFeePercentage = _protocolFee + _projectFee;
-        // Return total amount as net amount if combined fee is 0
-        if (totalFeePercentage == 0) return (_totalAmount, 0, 0);
-        uint feeAmount;
-        // Get net amount and total fee amount
-        (netAmount, feeAmount) =
-            _calculateNetAmountAndFee(_totalAmount, totalFeePercentage);
-        // Calculate the proportion of the total fees that each fee type represents
-        protocolFeeAmount = (feeAmount * _protocolFee) / totalFeePercentage;
-        projectFeeAmount = feeAmount - protocolFeeAmount;
+        protocolFeeAmount = _totalAmount * _protocolFee / BPS;
+        projectFeeAmount = _totalAmount * _projectFee / BPS;
+        netAmount = _totalAmount - protocolFeeAmount - projectFeeAmount;
     }
 
     function _processProtocolFeeViaTransfer(
