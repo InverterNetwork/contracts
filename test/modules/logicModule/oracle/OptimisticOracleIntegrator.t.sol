@@ -201,7 +201,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         address notOracle
     ) public {
         _validateAddress(notOracle);
-        vm.expectRevert(); //TODO ERC165 interface check
+        vm.expectRevert();
         ooIntegrator.setOptimisticOracle(notOracle);
     }
 

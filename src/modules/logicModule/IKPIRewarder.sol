@@ -19,8 +19,6 @@ import {
 } from "./oracle/OptimisticOracleIntegrator.sol";
 
 interface IKPIRewarder {
-    // TODO Natspec
-
     //--------------------------------------------------------------------------
     // Types
 

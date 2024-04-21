@@ -123,7 +123,7 @@ contract KPIRewarderLifecycle is E2ETest {
         sepoliaForkId = vm.createSelectFork(vm.rpcUrl("sepolia"), forkBlock);
 
         // We deploy and label the necessary tokens for the tests
-        USDC = ERC20Mock(USDC_address); //we use it  mock so we can call mint functions TODO: Replace with real USDC contract?
+        USDC = ERC20Mock(USDC_address); //we use it  mock so we can call mint functions
         rewardToken = new ERC20Mock("Project Reward Mock Token", "REWARD MOCK");
         stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
 

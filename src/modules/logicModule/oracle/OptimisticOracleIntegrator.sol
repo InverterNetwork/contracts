@@ -130,7 +130,6 @@ abstract contract OptimisticOracleIntegrator is
         if (_newOO == address(0)) {
             revert Module__OptimisticOracleIntegrator__InvalidOOInstance();
         }
-        //TODO  check interface support with ERC165Checker.supportsInterface()
         oo = OptimisticOracleV3Interface(_newOO);
         defaultIdentifier = oo.defaultIdentifier();
     }
