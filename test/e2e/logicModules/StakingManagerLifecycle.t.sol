@@ -49,10 +49,18 @@ contract StakingManagerLifecycle is E2ETest {
 
     // Constants
 
-    ERC20Mock rewardToken = new ERC20Mock("Mock", "MOCK");
-    ERC20Mock stakingToken = new ERC20Mock("Mock", "MOCK");
+    ERC20Mock rewardToken = new ERC20Mock("Reward Mock", "R_MOCK");
+    ERC20Mock stakingToken = new ERC20Mock("Staking Mock", "S_MOCK");
 
     function setUp() public override {
+        vm.label({
+            account: address(rewardToken),
+            newLabel: ERC20Mock(address(rewardToken)).symbol()
+        });
+        vm.label({
+            account: address(stakingToken),
+            newLabel: ERC20Mock(address(stakingToken)).symbol()
+        });
         // Setup common E2E framework
         super.setUp();
 
@@ -85,10 +93,10 @@ contract StakingManagerLifecycle is E2ETest {
         );
 
         // PaymentProcessor
-        setUpStreamingPaymentProcessor();
+        setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory.ModuleConfig(
-                streamingPaymentProcessorMetadata,
+                simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
@@ -100,7 +108,7 @@ contract StakingManagerLifecycle is E2ETest {
             IOrchestratorFactory.ModuleConfig(
                 stakingManagerMetadata,
                 abi.encode(stakingToken),
-                abi.encode(true, EMPTY_DEPENDENCY_LIST)
+                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
         );
     }
