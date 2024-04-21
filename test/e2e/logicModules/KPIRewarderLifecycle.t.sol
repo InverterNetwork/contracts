@@ -113,7 +113,7 @@ contract KPIRewarderLifecycle is E2ETest {
 
     uint constant REWARD_DEPOSIT_AMOUNT = 50_000_000e18;
 
-    uint constant DEPOSIT_ROUNDS = 2;
+    uint constant DEPOSIT_ROUNDS = 3;
     uint constant USERS_PER_ROUND = 25;
     uint constant TOTAL_USERS = USERS_PER_ROUND * DEPOSIT_ROUNDS;
 
@@ -234,16 +234,14 @@ contract KPIRewarderLifecycle is E2ETest {
         //--------------------------------------------------------------------------------
 
         // Generate Users and Amounts
-        address[] memory _users = new address[](TOTAL_USERS);
-        uint[] memory _amounts = new uint[](TOTAL_USERS);
+        users = new address[](TOTAL_USERS);
+        amounts = new uint[](TOTAL_USERS);
 
         for (uint i = 0; i < TOTAL_USERS; i++) {
-            _users[i] = vm.addr(i + 1);
-            _amounts[i] = i * 1000e18;
+            users[i] = vm.addr(i + 1);
+            amounts[i] = bound((i * 1000e18), 1, 100_000_000e18);
         }
-
-        // We ensure there is no address overlap and the amounts are reasonable and store them globally
-        (users, amounts) = _validateAddressesAndAmounts(_users, _amounts);
+        _assumeValidAddresses(users);
 
         // Mint enough USDC to the participants
         _setupUSDC();
@@ -477,38 +475,6 @@ contract KPIRewarderLifecycle is E2ETest {
     }
     // =========================================================================
     // Helper to use fuzzed addresses
-
-    function _validateAddressesAndAmounts(
-        address[] memory users,
-        uint[] memory amounts
-    )
-        private
-        returns (address[] memory cappedUsers, uint[] memory cappedAmounts)
-    {
-        vm.assume(users.length > 1 && amounts.length >= users.length);
-
-        uint maxLength = kpiRewarder.MAX_QUEUE_LENGTH();
-
-        if (users.length > maxLength) {
-            cappedUsers = new address[](maxLength);
-            cappedAmounts = new uint[](maxLength);
-            for (uint i = 0; i < maxLength; i++) {
-                cappedUsers[i] = users[i];
-                cappedAmounts[i] = bound(amounts[i], 1, 100_000_000e18);
-            }
-        } else {
-            cappedUsers = new address[](users.length);
-            cappedAmounts = new uint[](users.length);
-            for (uint i = 0; i < users.length; i++) {
-                cappedUsers[i] = users[i];
-                cappedAmounts[i] = bound(amounts[i], 1, 100_000_000e18);
-            }
-        }
-
-        _assumeValidAddresses(cappedUsers);
-
-        // (returns cappedUsers, cappedAmounts)
-    }
 
     // Address Sanity Checkers
     mapping(address => bool) addressCache;
