@@ -134,7 +134,8 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
             string(abi.encodePacked(issuanceTokenData.symbol)),
             issuanceTokenData.decimals,
             issuanceTokenData.maxSupply,
-            tokenAdmin
+            tokenAdmin,
+            address(this)
         );
 
         // Set issuance token. This also caches the decimals

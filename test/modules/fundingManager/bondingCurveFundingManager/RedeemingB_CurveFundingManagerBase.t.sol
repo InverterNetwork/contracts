@@ -70,9 +70,13 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         issuanceToken = new ERC20Issuance();
         issuanceToken.init(
-            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
+            NAME,
+            SYMBOL,
+            DECIMALS,
+            type(uint).max,
+            address(this),
+            address(bondingCurveFundingManager)
         );
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 

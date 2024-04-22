@@ -178,9 +178,6 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         issuanceToken =
             ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
-
-        vm.prank(owner_address);
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
     }
 
     function testSupportsInterface() public {
@@ -1549,7 +1546,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         ERC20Issuance newIssuanceToken = new ERC20Issuance();
         newIssuanceToken.init(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+            _name,
+            _symbol,
+            _newDecimals,
+            _newMaxSupply,
+            address(this),
+            address(this)
         );
 
         vm.expectRevert(
@@ -1574,7 +1576,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         ERC20Issuance newIssuanceToken = new ERC20Issuance();
         newIssuanceToken.init(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+            _name,
+            _symbol,
+            _newDecimals,
+            _newMaxSupply,
+            address(this),
+            address(this)
         );
 
         vm.expectRevert(
@@ -1598,7 +1605,12 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
         ERC20Issuance newIssuanceToken = new ERC20Issuance();
         newIssuanceToken.init(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+            _name,
+            _symbol,
+            _newDecimals,
+            _newMaxSupply,
+            address(this),
+            address(this)
         );
 
         // No authentication since it's an internal function exposed by the mock contract
