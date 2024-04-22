@@ -132,7 +132,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             string(abi.encodePacked(issuanceTokenData.symbol)),
             issuanceTokenData.decimals,
             issuanceTokenData.maxSupply,
-            tokenAdmin
+            tokenAdmin,
+            address(this)
         );
 
         // Set issuance token. This also caches the decimals

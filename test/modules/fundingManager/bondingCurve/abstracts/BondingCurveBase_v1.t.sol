@@ -67,9 +67,13 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         issuanceToken = new ERC20Issuance_v1();
         issuanceToken.init(
-            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
+            NAME,
+            SYMBOL,
+            DECIMALS,
+            type(uint).max,
+            address(this),
+            address(bondingCurveFundingManager)
         );
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -506,7 +510,12 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
         newIssuanceToken.init(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
+            _name,
+            _symbol,
+            _newDecimals,
+            _newMaxSupply,
+            address(this),
+            address(this)
         );
 
         // Emit event

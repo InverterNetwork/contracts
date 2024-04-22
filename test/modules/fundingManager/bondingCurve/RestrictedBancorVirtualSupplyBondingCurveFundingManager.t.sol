@@ -87,9 +87,6 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         issuanceToken =
             ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
 
-        vm.prank(owner_address);
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
-
         // Grant necessary roles for the Upstream tests to pass
 
         bytes32 CURVE_INTERACTION_ROLE = "CURVE_USER";
@@ -234,9 +231,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         );
 
         issuanceToken =
-            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
-        vm.prank(owner_address);
-        issuanceToken.setMinter(address(bondingCurveFundingManager));
+            ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
 
         // Since we tested the success case in the Upstream tests, we now only need to verify revert on unauthorized calls
     }
