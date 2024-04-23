@@ -78,7 +78,7 @@ contract GovernorTest is Test {
         }
 
         vm.prank(communityMultisig);
-        gov.setTaxMan(adr);
+        gov.setFeeManager(adr);
     }
 
     function testValidTimelockPeriod(uint amt) public {
@@ -259,14 +259,14 @@ contract GovernorTest is Test {
     }
 
     //--------------------------------------------------------------------------
-    // Test: TaxMan Functions
+    // Test: FeeManager Functions
 
-    function testGetTaxMan() public {
+    function testGetFeeManager() public {
         //Tivial Test
-        gov.getTaxMan();
+        gov.getFeeManager();
     }
 
-    function testSetTaxManModifierInPosition() public {
+    function testSetFeeManagerModifierInPosition() public {
         //onlyRole(COMMUNITY_MULTISIG_ROLE)
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -275,16 +275,16 @@ contract GovernorTest is Test {
                 gov.COMMUNITY_MULTISIG_ROLE()
             )
         );
-        gov.setTaxMan(address(0x1));
+        gov.setFeeManager(address(0x1));
 
-        //validAddress(newTaxMan)
+        //validAddress(newFeeManager)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor.Governor__InvalidAddress.selector, address(0)
             )
         );
         vm.prank(address(communityMultisig));
-        gov.setTaxMan(address(0));
+        gov.setFeeManager(address(0));
     }
 
     //--------------------------------------------------------------------------

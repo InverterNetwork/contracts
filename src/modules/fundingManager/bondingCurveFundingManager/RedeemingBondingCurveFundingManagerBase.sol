@@ -238,7 +238,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         sellFee = _fee;
     }
 
-    /// @dev Returns the collateral and issuance fee percentage retrieved from the tax manager for
+    /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
     ///     sell operations
     /// @return collateralTreasury The address the protocol fee in collateral should be sent to
     /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
@@ -257,11 +257,11 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         )
     {
         (collateralSellFeePercentage, collateralTreasury) =
-        getTaxManCollateralFeeData(
+        getFeeManagerCollateralFeeData(
             bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
         );
         (issuanceSellFeePercentage, issuanceTreasury) =
-        getTaxManCollateralFeeData(
+        getFeeManagerCollateralFeeData(
             bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
         );
     }

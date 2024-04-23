@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {ITaxMan} from "src/external/taxation/ITaxMan.sol";
+import {IFeeManager} from "src/external/fees/IFeeManager.sol";
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
@@ -10,7 +10,7 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Ownable2StepUpgradeable} from
     "@oz-up/access/Ownable2StepUpgradeable.sol";
 
-contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
+contract FeeManager is ERC165, IFeeManager, Ownable2StepUpgradeable {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -18,7 +18,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         override(ERC165)
         returns (bool)
     {
-        return interfaceId == type(ITaxMan).interfaceId
+        return interfaceId == type(IFeeManager).interfaceId
             || ERC165.supportsInterface(interfaceId);
     }
 
@@ -27,14 +27,14 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
 
     modifier validAddress(address adr) {
         if (adr == address(0)) {
-            revert TaxMan__InvalidAddress();
+            revert FeeManager__InvalidAddress();
         }
         _;
     }
 
     modifier validFee(uint fee) {
         if (fee > BPS) {
-            revert TaxMan__InvalidFee();
+            revert FeeManager__InvalidFee();
         }
         _;
     }
@@ -88,12 +88,12 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
     //---------------------------
     // Treasuries
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function getDefaultProtocolTreasury() public view returns (address) {
         return defaultProtocolTreasury;
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function getWorkflowTreasuries(address workflow)
         public
         view
@@ -110,17 +110,17 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
     //---------------------------
     // Fees
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function getDefaultCollateralFee() external view returns (uint) {
         return defaultCollateralFee;
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function getDefaultIssuanceFee() external view returns (uint) {
         return defaultIssuanceFee;
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function getCollateralWorkflowFee(
         address workflow,
         address module,
@@ -138,7 +138,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         }
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function getIssuanceWorkflowFee(
         address workflow,
         address module,
@@ -156,7 +156,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         }
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function getCollateralWorkflowFeeAndTreasury(
         address workflow,
         address module,
@@ -168,7 +168,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         );
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function getIssuanceWorkflowFeeAndTreasury(
         address workflow,
         address module,
@@ -186,7 +186,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
     //---------------------------
     // Treasuries
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function setDefaultProtocolTreasury(address _defaultProtocolTreasury)
         external
         onlyOwner
@@ -196,7 +196,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         emit DefaultProtocolTreasurySet(_defaultProtocolTreasury);
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function setWorkflowTreasuries(address workflow, address treasury)
         external
         onlyOwner
@@ -209,7 +209,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
     //---------------------------
     // Fees
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function setDefaultCollateralFee(uint _defaultCollateralFee)
         external
         onlyOwner
@@ -219,7 +219,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         emit DefaultCollateralFeeSet(_defaultCollateralFee);
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function setDefaultIssuanceFee(uint _defaultIssuanceFee)
         external
         onlyOwner
@@ -229,7 +229,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         emit DefaultIssuanceFeeSet(_defaultIssuanceFee);
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function setCollateralWorkflowFee(
         address workflow,
         address module,
@@ -249,7 +249,7 @@ contract TaxMan is ERC165, ITaxMan, Ownable2StepUpgradeable {
         );
     }
 
-    /// @inheritdoc ITaxMan
+    /// @inheritdoc IFeeManager
     function setIssuanceWorkflowFee(
         address workflow,
         address module,

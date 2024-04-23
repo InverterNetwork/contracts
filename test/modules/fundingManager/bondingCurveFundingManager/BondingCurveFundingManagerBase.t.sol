@@ -99,7 +99,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     // Test: Invariant
 
     function testBPS() public {
-        assertEq(taxMan.BPS(), bondingCurveFundingManager.call_BPS());
+        assertEq(feeManager.BPS(), bondingCurveFundingManager.call_BPS());
     }
 
     //--------------------------------------------------------------------------
@@ -379,8 +379,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         amount = bound(amount, 1, maxAmount);
 
         //Set Issuance Fee
-        taxMan.setDefaultCollateralFee(_collateralFee);
-        taxMan.setDefaultIssuanceFee(_issuanceFee);
+        feeManager.setDefaultCollateralFee(_collateralFee);
+        feeManager.setDefaultIssuanceFee(_issuanceFee);
 
         vm.prank(owner_address);
         bondingCurveFundingManager.setBuyFee(_projectFee);
@@ -444,8 +444,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         amount = bound(amount, 1, maxAmount);
 
         //Set Issuance Fee
-        taxMan.setDefaultCollateralFee(_collateralFee);
-        taxMan.setDefaultIssuanceFee(_issuanceFee);
+        feeManager.setDefaultCollateralFee(_collateralFee);
+        feeManager.setDefaultIssuanceFee(_issuanceFee);
 
         vm.prank(owner_address);
         bondingCurveFundingManager.setBuyFee(_projectFee);
@@ -508,8 +508,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         amount = bound(amount, 1, maxAmount);
 
         //Set Issuance Fee
-        taxMan.setDefaultCollateralFee(_collateralFee);
-        taxMan.setDefaultIssuanceFee(_issuanceFee);
+        feeManager.setDefaultCollateralFee(_collateralFee);
+        feeManager.setDefaultIssuanceFee(_issuanceFee);
 
         vm.prank(owner_address);
         bondingCurveFundingManager.setBuyFee(_projectFee);
@@ -574,8 +574,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         amount = bound(amount, 1, maxAmount);
 
         //Set Issuance Fee
-        taxMan.setDefaultCollateralFee(_collateralFee);
-        taxMan.setDefaultIssuanceFee(_issuanceFee);
+        feeManager.setDefaultCollateralFee(_collateralFee);
+        feeManager.setDefaultIssuanceFee(_issuanceFee);
 
         vm.prank(owner_address);
         bondingCurveFundingManager.setBuyFee(_projectFee);
@@ -637,8 +637,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         amount = bound(amount, 1, maxAmount);
 
         //Set Issuance Fee
-        taxMan.setDefaultCollateralFee(_collateralFee);
-        taxMan.setDefaultIssuanceFee(_issuanceFee);
+        feeManager.setDefaultCollateralFee(_collateralFee);
+        feeManager.setDefaultIssuanceFee(_issuanceFee);
 
         vm.prank(owner_address);
         bondingCurveFundingManager.setBuyFee(_projectFee);
@@ -701,8 +701,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         amount = bound(amount, 1, maxAmount);
 
         //Set Issuance Fee
-        taxMan.setDefaultCollateralFee(_collateralFee);
-        taxMan.setDefaultIssuanceFee(_issuanceFee);
+        feeManager.setDefaultCollateralFee(_collateralFee);
+        feeManager.setDefaultIssuanceFee(_issuanceFee);
 
         vm.prank(owner_address);
         bondingCurveFundingManager.setBuyFee(_projectFee);
@@ -898,20 +898,20 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         vm.assume(_collateralFee <= _bps && _issuanceFee <= _bps);
         vm.assume(_treasury != address(0));
 
-        // Set values in taxMan
+        // Set values in feeManager
 
-        taxMan.setWorkflowTreasuries(address(_orchestrator), _treasury);
+        feeManager.setWorkflowTreasuries(address(_orchestrator), _treasury);
         bytes4 buyFeeFunctionSelector =
             bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")));
 
-        taxMan.setCollateralWorkflowFee(
+        feeManager.setCollateralWorkflowFee(
             address(_orchestrator),
             address(bondingCurveFundingManager),
             buyFeeFunctionSelector,
             true,
             _collateralFee
         );
-        taxMan.setIssuanceWorkflowFee(
+        feeManager.setIssuanceWorkflowFee(
             address(_orchestrator),
             address(bondingCurveFundingManager),
             buyFeeFunctionSelector,

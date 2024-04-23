@@ -4,14 +4,14 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // SuT
-import {TaxMan, ITaxMan} from "src/external/taxation/TaxMan.sol";
+import {FeeManager, IFeeManager} from "src/external/fees/FeeManager.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract TaxManTest is Test {
+contract FeeManagerTest is Test {
     // SuT
-    TaxMan tax;
+    FeeManager feeMan;
 
     //State
     address defaultProtocolTreasury = address(0x111111);
@@ -28,39 +28,39 @@ contract TaxManTest is Test {
     //Events
     event DefaultProtocolTreasurySet(address defaultProtocolTreasury);
     event WorkflowTreasurySet(address workflow, address treasury);
-    event DefaultCollateralFeeSet(uint fee);
-    event DefaultIssuanceFeeSet(uint fee);
+    event DefaultCollateralFeeSet(uint feeMan);
+    event DefaultIssuanceFeeSet(uint feeMan);
     event CollateralWorkflowFeeSet(
         address workflow,
         address module,
         bytes4 functionSelector,
         bool set,
-        uint fee
+        uint feeMan
     );
     event IssuanceWorkflowFeeSet(
         address workflow,
         address module,
         bytes4 functionSelector,
         bool set,
-        uint fee
+        uint feeMan
     );
 
     function setUp() public {
-        tax = new TaxMan();
-        tax.init(
+        feeMan = new FeeManager();
+        feeMan.init(
             address(this),
             defaultProtocolTreasury,
             defaultCollateralFee,
             defaultIssuanceFee
         );
-        INVALID_FEE = tax.BPS() + 1;
+        INVALID_FEE = feeMan.BPS() + 1;
     }
 
     //--------------------------------------------------------------------------
     // Test: SupportsInterface
 
     function testSupportsInterface() public {
-        assertTrue(tax.supportsInterface(type(ITaxMan).interfaceId));
+        assertTrue(feeMan.supportsInterface(type(IFeeManager).interfaceId));
     }
 
     //--------------------------------------------------------------------------
@@ -69,48 +69,54 @@ contract TaxManTest is Test {
     function testValidAddress(address adr) public {
         if (adr == address(0)) {
             vm.expectRevert(
-                abi.encodeWithSelector(ITaxMan.TaxMan__InvalidAddress.selector)
+                abi.encodeWithSelector(
+                    IFeeManager.FeeManager__InvalidAddress.selector
+                )
             );
         }
-        tax.setDefaultProtocolTreasury(adr);
+        feeMan.setDefaultProtocolTreasury(adr);
     }
 
     function testValidFee(uint amt) public {
-        if (amt > tax.BPS()) {
+        if (amt > feeMan.BPS()) {
             vm.expectRevert(
-                abi.encodeWithSelector(ITaxMan.TaxMan__InvalidFee.selector)
+                abi.encodeWithSelector(
+                    IFeeManager.FeeManager__InvalidFee.selector
+                )
             );
         }
 
-        tax.setDefaultCollateralFee(amt);
+        feeMan.setDefaultCollateralFee(amt);
     }
 
     //--------------------------------------------------------------------------
     // Test: Init
 
     function testInit() public {
-        assertEq(tax.owner(), address(this));
-        assertEq(tax.getDefaultProtocolTreasury(), defaultProtocolTreasury);
-        assertEq(tax.getDefaultCollateralFee(), defaultCollateralFee);
-        assertEq(tax.getDefaultIssuanceFee(), defaultIssuanceFee);
+        assertEq(feeMan.owner(), address(this));
+        assertEq(feeMan.getDefaultProtocolTreasury(), defaultProtocolTreasury);
+        assertEq(feeMan.getDefaultCollateralFee(), defaultCollateralFee);
+        assertEq(feeMan.getDefaultIssuanceFee(), defaultIssuanceFee);
     }
 
     function testInitModifierInPosition() public {
         //initializer
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        tax.init(
+        feeMan.init(
             address(this),
             defaultProtocolTreasury,
             defaultCollateralFee,
             defaultIssuanceFee
         );
 
-        tax = new TaxMan();
+        feeMan = new FeeManager();
         //validAddress(owner)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidAddress.selector)
+            abi.encodeWithSelector(
+                IFeeManager.FeeManager__InvalidAddress.selector
+            )
         );
-        tax.init(
+        feeMan.init(
             address(0),
             defaultProtocolTreasury,
             defaultCollateralFee,
@@ -119,17 +125,19 @@ contract TaxManTest is Test {
 
         // validAddress(_defaultProtocolTreasury)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidAddress.selector)
+            abi.encodeWithSelector(
+                IFeeManager.FeeManager__InvalidAddress.selector
+            )
         );
-        tax.init(
+        feeMan.init(
             address(this), address(0), defaultCollateralFee, defaultIssuanceFee
         );
 
         //validFee(_defaultCollateralFee)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidFee.selector)
+            abi.encodeWithSelector(IFeeManager.FeeManager__InvalidFee.selector)
         );
-        tax.init(
+        feeMan.init(
             address(this),
             defaultProtocolTreasury,
             INVALID_FEE,
@@ -138,9 +146,9 @@ contract TaxManTest is Test {
 
         //validFee(_defaultIssuanceFee)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidFee.selector)
+            abi.encodeWithSelector(IFeeManager.FeeManager__InvalidFee.selector)
         );
-        tax.init(
+        feeMan.init(
             address(this),
             defaultProtocolTreasury,
             defaultCollateralFee,
@@ -153,7 +161,7 @@ contract TaxManTest is Test {
 
     function testGetDefaultProtocolTreasury() public {
         //Trivial
-        tax.getDefaultProtocolTreasury();
+        feeMan.getDefaultProtocolTreasury();
     }
 
     function testGetWorkflowTreasuries(bool shouldBeSet, address workflow)
@@ -162,10 +170,10 @@ contract TaxManTest is Test {
         address expectedAddress = defaultProtocolTreasury;
         if (shouldBeSet) {
             expectedAddress = alternativeTreasury;
-            tax.setWorkflowTreasuries(workflow, alternativeTreasury);
+            feeMan.setWorkflowTreasuries(workflow, alternativeTreasury);
         }
 
-        assertEq(tax.getWorkflowTreasuries(workflow), expectedAddress);
+        assertEq(feeMan.getWorkflowTreasuries(workflow), expectedAddress);
     }
 
     function testGetCollateralWorkflowFee(
@@ -177,13 +185,13 @@ contract TaxManTest is Test {
         uint expectedFee = defaultCollateralFee;
         if (shouldBeSet) {
             expectedFee = alternativeCollateralFee;
-            tax.setCollateralWorkflowFee(
+            feeMan.setCollateralWorkflowFee(
                 workflow, module, functionSelec, true, alternativeCollateralFee
             );
         }
 
         assertEq(
-            tax.getCollateralWorkflowFee(workflow, module, functionSelec),
+            feeMan.getCollateralWorkflowFee(workflow, module, functionSelec),
             expectedFee
         );
     }
@@ -197,27 +205,27 @@ contract TaxManTest is Test {
         uint expectedFee = defaultIssuanceFee;
         if (shouldBeSet) {
             expectedFee = alternativeIssuanceFee;
-            tax.setIssuanceWorkflowFee(
+            feeMan.setIssuanceWorkflowFee(
                 workflow, module, functionSelec, true, alternativeIssuanceFee
             );
         }
 
         assertEq(
-            tax.getIssuanceWorkflowFee(workflow, module, functionSelec),
+            feeMan.getIssuanceWorkflowFee(workflow, module, functionSelec),
             expectedFee
         );
     }
 
     function testGetCollateralWorkflowFeeAndTreasury() public {
         //Trivial
-        tax.getCollateralWorkflowFeeAndTreasury(
+        feeMan.getCollateralWorkflowFeeAndTreasury(
             address(0), address(0), bytes4("0")
         );
     }
 
     function testGetIssuanceWorkflowFeeAndTreasury() public {
         //Trivial
-        tax.getIssuanceWorkflowFeeAndTreasury(
+        feeMan.getIssuanceWorkflowFeeAndTreasury(
             address(0), address(0), bytes4("0")
         );
     }
@@ -231,8 +239,8 @@ contract TaxManTest is Test {
         vm.expectEmit(true, true, true, true);
         emit DefaultProtocolTreasurySet(adr);
 
-        tax.setDefaultProtocolTreasury(adr);
-        assertEq(tax.getDefaultProtocolTreasury(), adr);
+        feeMan.setDefaultProtocolTreasury(adr);
+        assertEq(feeMan.getDefaultProtocolTreasury(), adr);
     }
 
     function testSetDefaultProtocolTreasuryModifierInPosition() public {
@@ -243,14 +251,16 @@ contract TaxManTest is Test {
             )
         );
         vm.prank(address(0));
-        tax.setDefaultProtocolTreasury(address(0x1));
+        feeMan.setDefaultProtocolTreasury(address(0x1));
 
         //validAddress(_defaultProtocolTreasury)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidAddress.selector)
+            abi.encodeWithSelector(
+                IFeeManager.FeeManager__InvalidAddress.selector
+            )
         );
 
-        tax.setDefaultProtocolTreasury(address(0));
+        feeMan.setDefaultProtocolTreasury(address(0));
     }
 
     function testSetWorkflowTreasuries(address workflow, address adr) public {
@@ -259,8 +269,8 @@ contract TaxManTest is Test {
         vm.expectEmit(true, true, true, true);
         emit WorkflowTreasurySet(workflow, adr);
 
-        tax.setWorkflowTreasuries(workflow, adr);
-        assertEq(tax.getWorkflowTreasuries(workflow), adr);
+        feeMan.setWorkflowTreasuries(workflow, adr);
+        assertEq(feeMan.getWorkflowTreasuries(workflow), adr);
     }
 
     function testSetWorkflowTreasuriesModifierInPosition() public {
@@ -271,27 +281,29 @@ contract TaxManTest is Test {
             )
         );
         vm.prank(address(0));
-        tax.setWorkflowTreasuries(address(0x1), address(0x1));
+        feeMan.setWorkflowTreasuries(address(0x1), address(0x1));
 
         //validAddress(treasury)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidAddress.selector)
+            abi.encodeWithSelector(
+                IFeeManager.FeeManager__InvalidAddress.selector
+            )
         );
 
-        tax.setWorkflowTreasuries(address(0x1), address(0));
+        feeMan.setWorkflowTreasuries(address(0x1), address(0));
     }
 
     //---------------------------
     // Fees
 
     function testDefaultCollateralFeey(uint fee) public {
-        vm.assume(fee <= tax.BPS());
+        vm.assume(fee <= feeMan.BPS());
 
         vm.expectEmit(true, true, true, true);
         emit DefaultCollateralFeeSet(fee);
 
-        tax.setDefaultCollateralFee(fee);
-        assertEq(tax.getDefaultCollateralFee(), fee);
+        feeMan.setDefaultCollateralFee(fee);
+        assertEq(feeMan.getDefaultCollateralFee(), fee);
     }
 
     function testSetDefaultCollateralFeeModifierInPosition() public {
@@ -302,24 +314,24 @@ contract TaxManTest is Test {
             )
         );
         vm.prank(address(0));
-        tax.setDefaultCollateralFee(0);
+        feeMan.setDefaultCollateralFee(0);
 
         //validFee(_defaultCollateralFee)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidFee.selector)
+            abi.encodeWithSelector(IFeeManager.FeeManager__InvalidFee.selector)
         );
 
-        tax.setDefaultCollateralFee(INVALID_FEE);
+        feeMan.setDefaultCollateralFee(INVALID_FEE);
     }
 
     function testDefaultIssuanceFeey(uint fee) public {
-        vm.assume(fee <= tax.BPS());
+        vm.assume(fee <= feeMan.BPS());
 
         vm.expectEmit(true, true, true, true);
         emit DefaultIssuanceFeeSet(fee);
 
-        tax.setDefaultIssuanceFee(fee);
-        assertEq(tax.getDefaultIssuanceFee(), fee);
+        feeMan.setDefaultIssuanceFee(fee);
+        assertEq(feeMan.getDefaultIssuanceFee(), fee);
     }
 
     function testSetDefaultIssuanceFeeModifierInPosition() public {
@@ -330,14 +342,14 @@ contract TaxManTest is Test {
             )
         );
         vm.prank(address(0));
-        tax.setDefaultIssuanceFee(0);
+        feeMan.setDefaultIssuanceFee(0);
 
         //validFee(_defaultIssuanceFee)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidFee.selector)
+            abi.encodeWithSelector(IFeeManager.FeeManager__InvalidFee.selector)
         );
 
-        tax.setDefaultIssuanceFee(INVALID_FEE);
+        feeMan.setDefaultIssuanceFee(INVALID_FEE);
     }
 
     function testSetCollateralWorkflowFee(
@@ -347,25 +359,29 @@ contract TaxManTest is Test {
         bool set,
         uint fee
     ) public {
-        vm.assume(fee <= tax.BPS());
+        vm.assume(fee <= feeMan.BPS());
 
         vm.expectEmit(true, true, true, true);
         emit CollateralWorkflowFeeSet(
             workflow, module, functionSelector, set, fee
         );
 
-        tax.setCollateralWorkflowFee(
+        feeMan.setCollateralWorkflowFee(
             workflow, module, functionSelector, set, fee
         );
 
         if (set) {
             assertEq(
-                tax.getCollateralWorkflowFee(workflow, module, functionSelector),
+                feeMan.getCollateralWorkflowFee(
+                    workflow, module, functionSelector
+                ),
                 fee
             );
         } else {
             assertEq(
-                tax.getCollateralWorkflowFee(workflow, module, functionSelector),
+                feeMan.getCollateralWorkflowFee(
+                    workflow, module, functionSelector
+                ),
                 defaultCollateralFee
             );
         }
@@ -379,16 +395,16 @@ contract TaxManTest is Test {
             )
         );
         vm.prank(address(0));
-        tax.setCollateralWorkflowFee(
+        feeMan.setCollateralWorkflowFee(
             address(0x1), address(0x1), bytes4("1"), true, 0
         );
 
-        //validFee(fee)
+        //validFee(feeMan)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidFee.selector)
+            abi.encodeWithSelector(IFeeManager.FeeManager__InvalidFee.selector)
         );
 
-        tax.setCollateralWorkflowFee(
+        feeMan.setCollateralWorkflowFee(
             address(0x1), address(0x1), bytes4("1"), true, INVALID_FEE
         );
     }
@@ -400,23 +416,29 @@ contract TaxManTest is Test {
         bool set,
         uint fee
     ) public {
-        vm.assume(fee <= tax.BPS());
+        vm.assume(fee <= feeMan.BPS());
 
         vm.expectEmit(true, true, true, true);
         emit IssuanceWorkflowFeeSet(
             workflow, module, functionSelector, set, fee
         );
 
-        tax.setIssuanceWorkflowFee(workflow, module, functionSelector, set, fee);
+        feeMan.setIssuanceWorkflowFee(
+            workflow, module, functionSelector, set, fee
+        );
 
         if (set) {
             assertEq(
-                tax.getIssuanceWorkflowFee(workflow, module, functionSelector),
+                feeMan.getIssuanceWorkflowFee(
+                    workflow, module, functionSelector
+                ),
                 fee
             );
         } else {
             assertEq(
-                tax.getIssuanceWorkflowFee(workflow, module, functionSelector),
+                feeMan.getIssuanceWorkflowFee(
+                    workflow, module, functionSelector
+                ),
                 defaultIssuanceFee
             );
         }
@@ -430,16 +452,16 @@ contract TaxManTest is Test {
             )
         );
         vm.prank(address(0));
-        tax.setIssuanceWorkflowFee(
+        feeMan.setIssuanceWorkflowFee(
             address(0x1), address(0x1), bytes4("1"), true, 0
         );
 
-        //validFee(fee)
+        //validFee(feeMan)
         vm.expectRevert(
-            abi.encodeWithSelector(ITaxMan.TaxMan__InvalidFee.selector)
+            abi.encodeWithSelector(IFeeManager.FeeManager__InvalidFee.selector)
         );
 
-        tax.setIssuanceWorkflowFee(
+        feeMan.setIssuanceWorkflowFee(
             address(0x1), address(0x1), bytes4("1"), true, INVALID_FEE
         );
     }

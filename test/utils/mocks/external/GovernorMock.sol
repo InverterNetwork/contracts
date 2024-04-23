@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {IGovernor} from "src/external/governance/IGovernor.sol";
 
 contract GovernorMock is IGovernor {
-    address taxMan;
+    address feeManager;
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -23,14 +23,14 @@ contract GovernorMock is IGovernor {
     {}
 
     //--------------------------------------------------------------------------
-    // TaxMan
+    // FeeManager
 
-    function getTaxMan() external view returns (address) {
-        return taxMan;
+    function getFeeManager() external view returns (address) {
+        return feeManager;
     }
 
-    function setTaxMan(address newTaxMan) external {
-        taxMan = newTaxMan;
+    function setFeeManager(address newFeeManager) external {
+        feeManager = newFeeManager;
     }
 
     //--------------------------------------------------------------------------

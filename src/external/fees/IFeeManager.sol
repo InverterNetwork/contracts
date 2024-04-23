@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface ITaxMan {
+interface IFeeManager {
     //--------------------------------------------------------------------------
     // Structs
 
@@ -19,10 +19,10 @@ interface ITaxMan {
     // Errors
 
     /// @notice The given address is invalid
-    error TaxMan__InvalidAddress();
+    error FeeManager__InvalidAddress();
 
     /// @notice The given fee is invalid
-    error TaxMan__InvalidFee();
+    error FeeManager__InvalidFee();
 
     //--------------------------------------------------------------------------
     // Events
