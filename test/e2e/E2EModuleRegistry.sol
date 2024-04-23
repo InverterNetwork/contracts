@@ -17,7 +17,7 @@ import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 import {LM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
-import {LM_PC_Recurring_v1} from "@lm/LM_PC_Recurring_v1.sol";
+import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
 import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
 import {AUT_TokenGated_Role_v1} from "@aut/role/AUT_TokenGated_Role_v1.sol";
 import {VotingRoleManager_v1} from "src/modules/utils/VotingRoleManager_v1.sol";
@@ -343,9 +343,9 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // logicModules
 
-    // LM_PC_Recurring_v1
+    // LM_PC_RecurringPayments_v1
 
-    LM_PC_Recurring_v1 recurringPaymentManagerImpl;
+    LM_PC_RecurringPayments_v1 recurringPaymentManagerImpl;
 
     InverterBeacon_v1 recurringPaymentManagerBeacon;
 
@@ -353,7 +353,7 @@ contract E2EModuleRegistry is Test {
         1,
         0,
         "https://github.com/inverter/recurring-payment-manager",
-        "LM_PC_Recurring_v1"
+        "LM_PC_RecurringPayments_v1"
     );
     /*
     IOrchestratorFactory_v1.ModuleConfig recurringPaymentManagerFactoryConfig =
@@ -366,7 +366,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpRecurringPaymentManager() internal {
         // Deploy module implementations.
-        recurringPaymentManagerImpl = new LM_PC_Recurring_v1();
+        recurringPaymentManagerImpl = new LM_PC_RecurringPayments_v1();
 
         // Deploy module beacons.
         recurringPaymentManagerBeacon = new InverterBeacon_v1(

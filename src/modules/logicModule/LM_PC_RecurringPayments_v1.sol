@@ -10,7 +10,8 @@ import {
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {ILM_PC_Recurring_v1} from "@lm/interfaces/ILM_PC_Recurring_v1.sol";
+import {ILM_PC_RecurringPayments_v1} from
+    "@lm/interfaces/ILM_PC_RecurringPayments_v1.sol";
 
 import {
     IERC20PaymentClientBase_v1,
@@ -21,7 +22,7 @@ import {
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
 /**
- * @title   LM_PC_Recurring_v1: Recurring Payment for Inverter Network.
+ * @title   LM_PC_RecurringPayments_v1: Recurring Payment for Inverter Network.
  *
  * @notice  Facilitates the creation, management, and execution of scheduled recurring
  *          payments within the Inverter Network, allowing for systematic and timed
@@ -34,8 +35,8 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
  *
  * @author  Inverter Network.
  */
-contract LM_PC_Recurring_v1 is
-    ILM_PC_Recurring_v1,
+contract LM_PC_RecurringPayments_v1 is
+    ILM_PC_RecurringPayments_v1,
     ERC20PaymentClientBase_v1
 {
     function supportsInterface(bytes4 interfaceId)
@@ -45,7 +46,7 @@ contract LM_PC_Recurring_v1 is
         override(ERC20PaymentClientBase_v1)
         returns (bool)
     {
-        return interfaceId == type(ILM_PC_Recurring_v1).interfaceId
+        return interfaceId == type(ILM_PC_RecurringPayments_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -56,21 +57,21 @@ contract LM_PC_Recurring_v1 is
 
     modifier validId(uint recurringPaymentId) {
         if (!isExistingRecurringPaymentId(recurringPaymentId)) {
-            revert Module__LM_PC_Recurring__InvalidRecurringPaymentId();
+            revert Module__LM_PC_RecurringPayments__InvalidRecurringPaymentId();
         }
         _;
     }
 
     modifier validStartEpoch(uint startEpoch) {
         if (getCurrentEpoch() > startEpoch) {
-            revert Module__LM_PC_Recurring__InvalidStartEpoch();
+            revert Module__LM_PC_RecurringPayments__InvalidStartEpoch();
         }
         _;
     }
 
     modifier startIdBeforeEndId(uint startId, uint endId) {
         if (startId > endId) {
-            revert Module__LM_PC_Recurring__StartIdNotBeforeEndId();
+            revert Module__LM_PC_RecurringPayments__StartIdNotBeforeEndId();
         }
         _;
     }
@@ -113,19 +114,19 @@ contract LM_PC_Recurring_v1 is
 
         //revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
-            revert Module__LM_PC_Recurring__InvalidEpochLength();
+            revert Module__LM_PC_RecurringPayments__InvalidEpochLength();
         }
     }
 
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function getEpochLength() external view returns (uint) {
         return epochLength;
     }
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function getRecurringPaymentInformation(uint id)
         external
         view
@@ -135,17 +136,17 @@ contract LM_PC_Recurring_v1 is
         return _paymentRegistry[id];
     }
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function listRecurringPaymentIds() external view returns (uint[] memory) {
         return _paymentList.listIds();
     }
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function getPreviousPaymentId(uint id) external view returns (uint) {
         return _paymentList.getPreviousId(id);
     }
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function isExistingRecurringPaymentId(uint id) public view returns (bool) {
         return _paymentList.isExistingId(id);
     }
@@ -153,7 +154,7 @@ contract LM_PC_Recurring_v1 is
     //--------------------------------------------------------------------------
     // Epoch Functions
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function getEpochFromTimestamp(uint timestamp)
         external
         view
@@ -162,12 +163,12 @@ contract LM_PC_Recurring_v1 is
         return timestamp / epochLength;
     }
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function getCurrentEpoch() public view returns (uint epoch) {
         return block.timestamp / epochLength;
     }
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function getFutureEpoch(uint xEpochsInTheFuture)
         external
         view
@@ -179,7 +180,7 @@ contract LM_PC_Recurring_v1 is
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function addRecurringPayment(
         uint amount,
         uint startEpoch,
@@ -215,7 +216,7 @@ contract LM_PC_Recurring_v1 is
         return recurringPaymentId;
     }
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function removeRecurringPayment(uint prevId, uint id)
         external
         onlyOrchestratorOwnerOrManager
@@ -235,12 +236,12 @@ contract LM_PC_Recurring_v1 is
     //--------------------------------------------------------------------------
     // Trigger
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function trigger() external {
         _triggerFor(_paymentList.getNextId(_SENTINEL), _SENTINEL);
     }
 
-    /// @inheritdoc ILM_PC_Recurring_v1
+    /// @inheritdoc ILM_PC_RecurringPayments_v1
     function triggerFor(uint startId, uint endId)
         external
         validId(startId)

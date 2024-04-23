@@ -13,7 +13,7 @@ import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 
 // Internal Dependencies
-import {LM_PC_Recurring_v1} from "@lm/LM_PC_Recurring_v1.sol";
+import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
 import {ModuleManagerBase_v1} from
     "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
 

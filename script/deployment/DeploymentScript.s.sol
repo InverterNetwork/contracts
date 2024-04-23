@@ -210,7 +210,7 @@ contract DeploymentScript is Script {
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_Recurring_v1"
+        "LM_PC_RecurringPayments_v1"
     );
 
     IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(

@@ -10,10 +10,10 @@ import {
 
 // SuT
 import {
-    LM_PC_Recurring_v1,
-    ILM_PC_Recurring_v1,
+    LM_PC_RecurringPayments_v1,
+    ILM_PC_RecurringPayments_v1,
     IERC20PaymentClientBase_v1
-} from "@lm/LM_PC_Recurring_v1.sol";
+} from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 // Modules that are used in this E2E test
 import {
@@ -99,7 +99,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {
         paymentAmount = bound(paymentAmount, 1, 1e18);
-        LM_PC_Recurring_v1 recurringPaymentManager;
+        LM_PC_RecurringPayments_v1 recurringPaymentManager;
 
         //--------------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
@@ -119,10 +119,10 @@ contract RecurringPaymentManagerE2E is E2ETest {
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Recurring_v1(modulesList[i]).getCurrentEpoch() returns (
-                uint
-            ) {
-                recurringPaymentManager = LM_PC_Recurring_v1(modulesList[i]);
+            try ILM_PC_RecurringPayments_v1(modulesList[i]).getCurrentEpoch()
+            returns (uint) {
+                recurringPaymentManager =
+                    LM_PC_RecurringPayments_v1(modulesList[i]);
                 break;
             } catch {
                 continue;

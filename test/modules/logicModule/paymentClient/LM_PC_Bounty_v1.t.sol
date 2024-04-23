@@ -799,7 +799,7 @@ contract LM_PC_BountyV1Test is ModuleTest {
 
         assertEq(length, orders.length);
 
-        //Amount of tokens that should be in the LM_PC_Recurring_v1
+        //Amount of tokens that should be in the LM_PC_RecurringPayments_v1
         uint totalAmount;
 
         //Amount of tokens in a single order
