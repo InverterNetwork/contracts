@@ -20,7 +20,7 @@ import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
 /**
- * @title   Role Authorizer
+ * @title   Roles Authorizer
  *
  * @notice  Provides a robust access control mechanism for managing roles and permissions
  *          across different modules within the Inverter Network, ensuring secure and
@@ -32,7 +32,7 @@ import {AccessControlEnumerableUpgradeable} from
  *
  * @author  Inverter Network
  */
-contract AUT_Role_v1 is
+contract AUT_Roles_v1 is
     IAuthorizer_v1,
     AccessControlEnumerableUpgradeable,
     Module_v1

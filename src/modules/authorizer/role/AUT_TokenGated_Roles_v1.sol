@@ -7,7 +7,7 @@ import {IAUT_TokenGated_Role_v1} from
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
 // Internal Dependencies
-import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 
 // External Interfaces
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
@@ -30,18 +30,18 @@ interface TokenInterface {
  *          This mechanism allows for dynamic permissioning tied to specific token
  *          holdings.
  *
- * @dev     Builds on {AUT_Role_v1} by integrating token-based access checks before
+ * @dev     Builds on {AUT_Roles_v1} by integrating token-based access checks before
  *          role assignment. Utilizes checks on token balances to gate access,
  *          supporting both ERC20 and ERC721 tokens as qualifiers for role eligibility.
  *
  * @author  Inverter Network
  */
-contract AUT_TokenGated_Role_v1 is IAUT_TokenGated_Role_v1, AUT_Role_v1 {
+contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(AUT_Role_v1)
+        override(AUT_Roles_v1)
         returns (bool)
     {
         return interfaceId == type(IAUT_TokenGated_Role_v1).interfaceId
@@ -49,7 +49,7 @@ contract AUT_TokenGated_Role_v1 is IAUT_TokenGated_Role_v1, AUT_Role_v1 {
     }
 
     /*
-    * This Module expands on the AUT_Role_v1 by adding the possibility to set a role as "Token-Gated"
+    * This Module expands on the AUT_Roles_v1 by adding the possibility to set a role as "Token-Gated"
     * Instead of whitelisting a user address, the whitelisted addresses will correspond to a token address, and on authotrization the contract will check on ownership
     * of one of the specifed tokens.
     */

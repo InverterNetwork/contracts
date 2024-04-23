@@ -4,15 +4,15 @@ pragma solidity ^0.8.0;
 // SuT
 import {Test} from "forge-std/Test.sol";
 
-import {AUT_RoleV1Test} from "test/modules/authorizer/role/AUT_Role_v1.t.sol";
+import {AUT_RolesV1Test} from "test/modules/authorizer/role/AUT_Roles_v1.t.sol";
 
 // SuT
 import {
-    AUT_TokenGated_Role_v1,
+    AUT_TokenGated_Roles_v1,
     IAUT_TokenGated_Role_v1
-} from "@aut/role/AUT_TokenGated_Role_v1.sol";
+} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 
-import {AUT_Role_v1, IAuthorizer_v1} from "@aut/role/AUT_Role_v1.sol";
+import {AUT_Roles_v1, IAuthorizer_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -34,12 +34,12 @@ import {FundingManagerV1Mock} from
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 
-// Run through the AUT_Role_v1 tests with the AUT_TokenGated_Role_v1
-contract AUT_TokenGated_RoleV1Test is AUT_RoleV1Test {
+// Run through the AUT_Roles_v1 tests with the AUT_TokenGated_Roles_v1
+contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
     function setUp() public override {
-        //==== We use the AUT_TokenGated_Role_v1 as a regular AUT_Role_v1 =====
-        address authImpl = address(new AUT_TokenGated_Role_v1());
-        _authorizer = AUT_Role_v1(Clones.clone(authImpl));
+        //==== We use the AUT_TokenGated_Roles_v1 as a regular AUT_Roles_v1 =====
+        address authImpl = address(new AUT_TokenGated_Roles_v1());
+        _authorizer = AUT_Roles_v1(Clones.clone(authImpl));
         //==========================================================================
 
         address propImpl = address(new Orchestrator_v1(address(0)));
@@ -80,7 +80,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     string[] dependencies = new string[](0);
 
     // Mocks
-    AUT_TokenGated_Role_v1 _authorizer;
+    AUT_TokenGated_Roles_v1 _authorizer;
     Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerV1Mock _fundingManager = new FundingManagerV1Mock();
@@ -126,8 +126,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
     event ChangedTokenThreshold(bytes32 role, address token, uint newValue);
 
     function setUp() public {
-        address authImpl = address(new AUT_TokenGated_Role_v1());
-        _authorizer = AUT_TokenGated_Role_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_TokenGated_Roles_v1());
+        _authorizer = AUT_TokenGated_Roles_v1(Clones.clone(authImpl));
         address propImpl = address(new Orchestrator_v1(address(0)));
         _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
         address[] memory modules = new address[](1);

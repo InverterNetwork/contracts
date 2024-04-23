@@ -20,7 +20,9 @@ import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
-import {ILM_PC_Bounty_v1, LM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
+import {
+    ILM_PC_Bounties_v1, LM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
 import {
     IMetadataManager_v1,
     MetadataManager_v1
@@ -83,7 +85,7 @@ contract OrchestratorE2E is E2ETest {
             )
         );
 
-        // We also set up the LM_PC_Bounty_v1, even though we'll add it later
+        // We also set up the LM_PC_Bounties_v1, even though we'll add it later
         setUpBountyManager();
 
         //==========================================

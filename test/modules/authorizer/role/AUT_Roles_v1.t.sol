@@ -6,8 +6,10 @@ import {Test} from "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 import {
-    AUT_Role_v1, IAuthorizer_v1, IModule_v1
-} from "@aut/role/AUT_Role_v1.sol";
+    AUT_Roles_v1,
+    IAuthorizer_v1,
+    IModule_v1
+} from "@aut/role/AUT_Roles_v1.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -31,12 +33,12 @@ import {FundingManagerV1Mock} from
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 
-contract AUT_RoleV1Test is Test {
+contract AUT_RolesV1Test is Test {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // Mocks
-    AUT_Role_v1 _authorizer;
+    AUT_Roles_v1 _authorizer;
     Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerV1Mock _fundingManager = new FundingManagerV1Mock();
@@ -99,8 +101,8 @@ contract AUT_RoleV1Test is Test {
     );
 
     function setUp() public virtual {
-        address authImpl = address(new AUT_Role_v1());
-        _authorizer = AUT_Role_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_Roles_v1());
+        _authorizer = AUT_Roles_v1(Clones.clone(authImpl));
         address propImpl = address(new Orchestrator_v1(address(_forwarder)));
         _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
         ModuleV1Mock module = new ModuleV1Mock();
@@ -150,8 +152,8 @@ contract AUT_RoleV1Test is Test {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new AUT_Role_v1());
-        AUT_Role_v1 testAuthorizer = AUT_Role_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_Roles_v1());
+        AUT_Roles_v1 testAuthorizer = AUT_Roles_v1(Clones.clone(authImpl));
 
         vm.assume(initialAuth != address(0));
         vm.assume(initialAuth != address(this));
@@ -176,8 +178,8 @@ contract AUT_RoleV1Test is Test {
         //Checks that address list gets correctly stored on initialization if there are no owners given
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new AUT_Role_v1());
-        AUT_Role_v1 testAuthorizer = AUT_Role_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_Roles_v1());
+        AUT_Roles_v1 testAuthorizer = AUT_Roles_v1(Clones.clone(authImpl));
 
         address initialAuth = address(0);
 
@@ -199,8 +201,8 @@ contract AUT_RoleV1Test is Test {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new AUT_Role_v1());
-        AUT_Role_v1 testAuthorizer = AUT_Role_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_Roles_v1());
+        AUT_Roles_v1 testAuthorizer = AUT_Roles_v1(Clones.clone(authImpl));
 
         address initialAuth = address(this);
 

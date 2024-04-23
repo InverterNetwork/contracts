@@ -15,8 +15,8 @@ import {DeployModuleFactory_v1} from
     "script/factories/DeployModuleFactory_v1.s.sol";
 import {DeployOrchestratorFactory_v1} from
     "script/factories/DeployOrchestratorFactory_v1.s.sol";
-import {DeployLM_PC_Bounty_v1} from
-    "script/modules/logicModule/DeployLM_PC_Bounty_v1.s.sol";
+import {DeployLM_PC_Bounties_v1} from
+    "script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol";
 
 import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
 import {DeployTransactionForwarder_v1} from
@@ -37,8 +37,8 @@ import {DeployAUT_TokenGated_Role_v1} from
     "script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol";
 import {DeployPP_Streaming_v1} from
     "script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol";
-import {DeployLM_PC_Recurring_v1} from
-    "script/modules/logicModule/DeployLM_PC_Recurring_v1.s.sol";
+import {DeployLM_PC_RecurringPayments_v1} from
+    "script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol";
 import {DeployVotingRoleManager_v1} from
     "script/modules/utils/DeployVotingRoleManager_v1.s.sol";
 import {DeployMetadataManager} from "script/utils/DeployMetadataManager.s.sol";
@@ -69,9 +69,9 @@ contract DeploymentScript is Script {
     DeployPP_Streaming_v1 deployStreamingPaymentProcessor =
         new DeployPP_Streaming_v1();
     // Logic Module
-    DeployLM_PC_Bounty_v1 deployBountyManager = new DeployLM_PC_Bounty_v1();
-    DeployLM_PC_Recurring_v1 deployRecurringPaymentManager =
-        new DeployLM_PC_Recurring_v1();
+    DeployLM_PC_Bounties_v1 deployBountyManager = new DeployLM_PC_Bounties_v1();
+    DeployLM_PC_RecurringPayments_v1 deployRecurringPaymentManager =
+        new DeployLM_PC_RecurringPayments_v1();
     // Utils
     DeployVotingRoleManager_v1 deploySingleVoteGovernor =
         new DeployVotingRoleManager_v1();
@@ -176,14 +176,14 @@ contract DeploymentScript is Script {
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "AUT_Role_v1"
+        "AUT_Roles_v1"
     );
 
     IModule_v1.Metadata tokenGatedRoleAuthorizerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "AUT_TokenGated_Role_v1"
+        "AUT_TokenGated_Roles_v1"
     );
 
     // ------------------------------------------------------------------------
@@ -217,7 +217,7 @@ contract DeploymentScript is Script {
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_Bounty_v1"
+        "LM_PC_Bounties_v1"
     );
 
     // ------------------------------------------------------------------------

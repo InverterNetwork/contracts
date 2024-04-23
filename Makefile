@@ -105,8 +105,8 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol
 
 	## logicModule
-	@forge script script/modules/logicModule/DeployLM_PC_Bounty_v1.s.sol
-	@forge script script/modules/logicModule/DeployLM_PC_Recurring_v1.s.sol
+	@forge script script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol
+	@forge script script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol
 
 	## paymentProcessor
 	@forge script script/modules/paymentProcessor/DeployPP_Simple_v1.s.sol

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 
 //Internal Dependencies
 import {
@@ -15,7 +15,9 @@ import {
 
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
-import {LM_PC_Bounty_v1, ILM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
+import {
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
 import {
     TransactionForwarder_v1,
     ITransactionForwarder_v1,
@@ -158,14 +160,13 @@ contract MetaTxAndMulticallE2E is E2ETest {
         //The function needs a role to access it
 
         //Lets get the bountyManager address
-        LM_PC_Bounty_v1 bountyManager;
+        LM_PC_Bounties_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounty_v1(modulesList[i]).isExistingBountyId(0) returns (
-                bool
-            ) {
-                bountyManager = LM_PC_Bounty_v1(modulesList[i]);
+            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            returns (bool) {
+                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -268,14 +269,13 @@ contract MetaTxAndMulticallE2E is E2ETest {
         //The function needs a role to access it
 
         //Lets get the bountyManager address
-        LM_PC_Bounty_v1 bountyManager;
+        LM_PC_Bounties_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounty_v1(modulesList[i]).isExistingBountyId(0) returns (
-                bool
-            ) {
-                bountyManager = LM_PC_Bounty_v1(modulesList[i]);
+            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            returns (bool) {
+                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
             } catch {
                 continue;

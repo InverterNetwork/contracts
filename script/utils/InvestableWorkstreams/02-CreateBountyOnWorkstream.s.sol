@@ -11,7 +11,9 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
-import {LM_PC_Bounty_v1, ILM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
+import {
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 //import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -38,7 +40,7 @@ contract CreateBountyInWorkstream is Script {
     // ========================================
 
     function run() public {
-        // Find LM_PC_Bounty_v1
+        // Find LM_PC_Bounties_v1
 
         address[] memory moduleAddresses =
             IOrchestrator_v1(_orchestrator).listModules();
@@ -46,7 +48,7 @@ contract CreateBountyInWorkstream is Script {
         address orchestratorCreatedBountyManagerAddress;
 
         for (uint i; i < lenModules;) {
-            try ILM_PC_Bounty_v1(moduleAddresses[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v1(moduleAddresses[i]).isExistingBountyId(0)
             returns (bool) {
                 orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
                 break;
@@ -55,8 +57,8 @@ contract CreateBountyInWorkstream is Script {
             }
         }
 
-        LM_PC_Bounty_v1 orchestratorCreatedBountyManager =
-            LM_PC_Bounty_v1(orchestratorCreatedBountyManagerAddress);
+        LM_PC_Bounties_v1 orchestratorCreatedBountyManager =
+            LM_PC_Bounties_v1(orchestratorCreatedBountyManagerAddress);
 
         vm.startBroadcast(bountyCreatorPrivateKey);
         {

@@ -12,7 +12,7 @@ import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
  *
  * @author Inverter Network
  */
-contract DeployLM_PC_Recurring_v1 is Script {
+contract DeployLM_PC_RecurringPayments_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");

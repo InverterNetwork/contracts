@@ -16,10 +16,10 @@ import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
-import {LM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
+import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
 import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
-import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
-import {AUT_TokenGated_Role_v1} from "@aut/role/AUT_TokenGated_Role_v1.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {VotingRoleManager_v1} from "src/modules/utils/VotingRoleManager_v1.sol";
 import {MetadataManager_v1} from "src/modules/utils/MetadataManager_v1.sol";
 
@@ -182,16 +182,16 @@ contract E2EModuleRegistry is Test {
 
     // Role Authorizer
 
-    AUT_Role_v1 roleAuthorizerImpl;
+    AUT_Roles_v1 roleAuthorizerImpl;
 
     InverterBeacon_v1 roleAuthorizerBeacon;
 
     IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Role_v1"
+        1, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Roles_v1"
     );
 
     /* 
-    // Note that AUT_Role_v1 owner and manager are the same
+    // Note that AUT_Roles_v1 owner and manager are the same
     IOrchestratorFactory_v1.ModuleConfig roleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         roleAuthorizerMetadata,
@@ -201,7 +201,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpRoleAuthorizer() internal {
         // Deploy module implementations.
-        roleAuthorizerImpl = new AUT_Role_v1();
+        roleAuthorizerImpl = new AUT_Roles_v1();
 
         // Deploy module beacons.
         roleAuthorizerBeacon = new InverterBeacon_v1(
@@ -219,7 +219,7 @@ contract E2EModuleRegistry is Test {
 
     // Token Gated Role Authorizer
 
-    AUT_TokenGated_Role_v1 tokenRoleAuthorizerImpl;
+    AUT_TokenGated_Roles_v1 tokenRoleAuthorizerImpl;
 
     InverterBeacon_v1 tokenRoleAuthorizerBeacon;
 
@@ -227,11 +227,11 @@ contract E2EModuleRegistry is Test {
         1,
         0,
         "https://github.com/inverter/tokenRoleAuthorizer",
-        "AUT_TokenGated_Role_v1"
+        "AUT_TokenGated_Roles_v1"
     );
 
     /* 
-    // Note that AUT_Role_v1 owner and manager are the same
+    // Note that AUT_Roles_v1 owner and manager are the same
     IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         tokenRoleAuthorizerMetadata,
@@ -242,7 +242,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpTokenGatedRoleAuthorizer() internal {
         // Deploy module implementations.
-        tokenRoleAuthorizerImpl = new AUT_TokenGated_Role_v1();
+        tokenRoleAuthorizerImpl = new AUT_TokenGated_Roles_v1();
 
         // Deploy module beacons.
         tokenRoleAuthorizerBeacon = new InverterBeacon_v1(
@@ -383,14 +383,14 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // LM_PC_Bounty_v1
+    // LM_PC_Bounties_v1
 
-    LM_PC_Bounty_v1 bountyManagerImpl;
+    LM_PC_Bounties_v1 bountyManagerImpl;
 
     InverterBeacon_v1 bountyManagerBeacon;
 
     IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/bounty-manager", "LM_PC_Bounty_v1"
+        1, 0, "https://github.com/inverter/bounty-manager", "LM_PC_Bounties_v1"
     );
     /*
      IOrchestratorFactory_v1.ModuleConfig bountyManagerFactoryConfig =
@@ -403,7 +403,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpBountyManager() internal {
         // Deploy module implementations.
-        bountyManagerImpl = new LM_PC_Bounty_v1();
+        bountyManagerImpl = new LM_PC_Bounties_v1();
 
         // Deploy module beacons.
         bountyManagerBeacon = new InverterBeacon_v1(

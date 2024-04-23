@@ -9,8 +9,10 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 // Modules that are used in this E2E test
-import {AUT_Role_v1} from "@aut/role/AUT_Role_v1.sol";
-import {LM_PC_Bounty_v1, ILM_PC_Bounty_v1} from "@lm/LM_PC_Bounty_v1.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
 
 //SuT
 import {
@@ -103,17 +105,17 @@ contract SingleVoteGovernorE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        AUT_Role_v1 authorizer = AUT_Role_v1(address(orchestrator.authorizer()));
+        AUT_Roles_v1 authorizer =
+            AUT_Roles_v1(address(orchestrator.authorizer()));
 
-        // Find LM_PC_Bounty_v1
-        LM_PC_Bounty_v1 bountyManager;
+        // Find LM_PC_Bounties_v1
+        LM_PC_Bounties_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounty_v1(modulesList[i]).isExistingBountyId(0) returns (
-                bool
-            ) {
-                bountyManager = LM_PC_Bounty_v1(modulesList[i]);
+            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            returns (bool) {
+                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -159,7 +161,7 @@ contract SingleVoteGovernorE2E is E2ETest {
         uint motionId = singleVoteGovernor.createMotion(
             address(bountyManager),
             abi.encodeWithSelector(
-                ILM_PC_Bounty_v1.addBounty.selector,
+                ILM_PC_Bounties_v1.addBounty.selector,
                 minimumPayoutAmount,
                 maximumPayoutAmount,
                 details
@@ -188,7 +190,7 @@ contract SingleVoteGovernorE2E is E2ETest {
         vm.warp(block.timestamp + 2);
 
         // check that the bounty was created
-        ILM_PC_Bounty_v1.Bounty memory bounty =
+        ILM_PC_Bounties_v1.Bounty memory bounty =
             bountyManager.getBountyInformation(1);
         assertEq(bounty.minimumPayoutAmount, minimumPayoutAmount);
         assertEq(bounty.maximumPayoutAmount, maximumPayoutAmount);
