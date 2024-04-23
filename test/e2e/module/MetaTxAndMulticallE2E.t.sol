@@ -4,29 +4,29 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 
 //Internal Dependencies
 import {
-    E2ETest, IOrchestratorFactory, IOrchestrator
+    E2ETest,
+    IOrchestratorFactory_v1,
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 import {
-    BountyManager,
-    IBountyManager
-} from "src/modules/logicModule/BountyManager.sol";
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
 import {
-    TransactionForwarder,
-    ITransactionForwarder,
+    TransactionForwarder_v1,
+    ITransactionForwarder_v1,
     ERC2771Forwarder
-} from "src/external/forwarder/TransactionForwarder.sol";
+} from "src/external/forwarder/TransactionForwarder_v1.sol";
 
 contract MetaTxAndMulticallE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     function setUp() public override {
         // Setup common E2E framework
@@ -43,7 +43,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(token)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -53,7 +53,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 tokenRoleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -63,7 +63,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -73,7 +73,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // Additional Logic Modules
         setUpBountyManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 bountyManagerMetadata,
                 bytes(""),
                 abi.encode(true, EMPTY_DEPENDENCY_LIST)
@@ -83,16 +83,16 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
     function test_e2e_SendMetaTransaction() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------------
@@ -150,9 +150,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
         //Check if successful
         assertEq(
-            RebasingFundingManager(fundingManager).token().balanceOf(
-                fundingManager
-            ),
+            FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
 
@@ -162,14 +160,13 @@ contract MetaTxAndMulticallE2E is E2ETest {
         //The function needs a role to access it
 
         //Lets get the bountyManager address
-        BountyManager bountyManager;
+        LM_PC_Bounties_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
-                bool
-            ) {
-                bountyManager = BountyManager(modulesList[i]);
+            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            returns (bool) {
+                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -217,16 +214,16 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
     function test_e2e_SendMulticall() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //lets use this example user
@@ -234,8 +231,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
         // for the multicall to work we need to collect all the individual calls we want to make
         // For this we use an array of Singlecall Structs from the Transaction Forwarder
-        ITransactionForwarder.SingleCall[] memory callCollection =
-            new ITransactionForwarder.SingleCall[](2);
+        ITransactionForwarder_v1.SingleCall[] memory callCollection =
+            new ITransactionForwarder_v1.SingleCall[](2);
 
         //-----------------------------------------------------
         // Call Function without role
@@ -253,8 +250,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
         token.approve(fundingManager, depositAmount);
 
         //We create a call struct containing the call we want to make
-        ITransactionForwarder.SingleCall memory call1 = ITransactionForwarder
-            .SingleCall({
+        ITransactionForwarder_v1.SingleCall memory call1 =
+        ITransactionForwarder_v1.SingleCall({
             //target of the call should be the fundingmanager
             target: fundingManager,
             //We dont allow the call to fail. In some circumstances this might be useful though
@@ -272,14 +269,13 @@ contract MetaTxAndMulticallE2E is E2ETest {
         //The function needs a role to access it
 
         //Lets get the bountyManager address
-        BountyManager bountyManager;
+        LM_PC_Bounties_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
-                bool
-            ) {
-                bountyManager = BountyManager(modulesList[i]);
+            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            returns (bool) {
+                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -290,8 +286,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
         bountyManager.grantModuleRole(bountyManager.BOUNTY_ISSUER_ROLE(), user);
 
         //We create a call struct containing the call we want to make
-        ITransactionForwarder.SingleCall memory call2 = ITransactionForwarder
-            .SingleCall({
+        ITransactionForwarder_v1.SingleCall memory call2 =
+        ITransactionForwarder_v1.SingleCall({
             //target of the call should be the fundingmanager
             target: address(bountyManager),
             //We dont allow the call to fail. In some circumstances this might be useful though
@@ -316,9 +312,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         //Check if successful
         //For the fundingmanager
         assertEq(
-            RebasingFundingManager(fundingManager).token().balanceOf(
-                fundingManager
-            ),
+            FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
         //For the bountyManager

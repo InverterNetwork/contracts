@@ -4,23 +4,28 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {
-    TokenGatedRoleAuthorizer,
-    ITokenGatedRoleAuthorizer,
-    IAuthorizer
-} from "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
-import {DeployTokenGatedRoleAuthorizer} from
-    "script/modules/governance/DeployTokenGatedRoleAuthorizer.s.sol";
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
-import {Orchestrator, IOrchestrator} from "src/orchestrator/Orchestrator.sol";
-import {IModule} from "src/modules/base/IModule.sol";
-import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
+    AUT_TokenGated_Roles_v1,
+    IAUT_TokenGated_Role_v1,
+    IAuthorizer_v1
+} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {DeployAUT_TokenGated_Role_v1} from
+    "script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {
+    Orchestrator_v1,
+    IOrchestrator_v1
+} from "src/orchestrator/Orchestrator_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
+import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
-import {DeployAndSetUpBeacon} from "script/proxies/DeployAndSetUpBeacon.s.sol";
+import {DeployAndSetUpInverterBeacon_v1} from
+    "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 import {ScriptConstants} from "../script-constants.sol";
 
 contract deployAndSwitchTokenAuthorizer is Script {
-    DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
+    DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
+        new DeployAndSetUpInverterBeacon_v1();
     ScriptConstants scriptConstants = new ScriptConstants();
 
     bool hasDependency;
@@ -30,11 +35,11 @@ contract deployAndSwitchTokenAuthorizer is Script {
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
-    DeployTokenGatedRoleAuthorizer deployTokenRoleAuthorizer =
-        new DeployTokenGatedRoleAuthorizer();
+    DeployAUT_TokenGated_Role_v1 deployTokenRoleAuthorizer =
+        new DeployAUT_TokenGated_Role_v1();
 
     // ===============================================================================================================
-    // Introduce addresses of the deployed Orchestrator here
+    // Introduce addresses of the deployed Orchestrator_v1 here
     // ===============================================================================================================
     address moduleFactoryAddress = scriptConstants.moduleFactoryAddress();
     address orchestratorAddress = scriptConstants.orchestratorAddress();
@@ -44,29 +49,29 @@ contract deployAndSwitchTokenAuthorizer is Script {
     // ===============================================================================================================
     // Set the Module Metadata.
     // ===============================================================================================================
-    IModule.Metadata authorizerMetadata = IModule.Metadata(
+    IModule_v1.Metadata authorizerMetadata = IModule_v1.Metadata(
         1, 0, "https://github.com/InverterNetwork", "TokenAuthorizer"
     );
 
-    ModuleFactory moduleFactory = ModuleFactory(moduleFactoryAddress);
-    Orchestrator orchestrator = Orchestrator(orchestratorAddress);
+    ModuleFactory_v1 moduleFactory = ModuleFactory_v1(moduleFactoryAddress);
+    Orchestrator_v1 orchestrator = Orchestrator_v1(orchestratorAddress);
 
-    BountyManager bountyManager = BountyManager(bountyManagerAddress);
+    LM_PC_Bounties_v1 bountyManager = LM_PC_Bounties_v1(bountyManagerAddress);
 
     function run() public {
         /*
-        // In case the module Beacon hasn't been deployed yet, deploy it and register it in the ModuleFactory   
+        // In case the module Beacon hasn't been deployed yet, deploy it and register it in the ModuleFactory_v1   
 
         address authorizerImpl = deployTokenRoleAuthorizer.run();
 
-        address authorizerBeacon = deployAndSetUpBeacon.run(
+        address authorizerBeacon = deployAndSetupInverterBeacon_v1.run(
             authorizerImpl, address(moduleFactory), authorizerMetadata
         ); 
         */
 
         // Authorizer: Metadata, initial authorized addresses
-        IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             authorizerMetadata,
             abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
@@ -77,11 +82,11 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // moduleFactory -> create Module
         address deployedAuthorizerAddress = moduleFactory.createModule(
             authorizerMetadata,
-            IOrchestrator(orchestrator),
+            IOrchestrator_v1(orchestrator),
             authorizerFactoryConfig.configData
         );
-        TokenGatedRoleAuthorizer deployedAuthorizer =
-            TokenGatedRoleAuthorizer(deployedAuthorizerAddress);
+        AUT_TokenGated_Roles_v1 deployedAuthorizer =
+            AUT_TokenGated_Roles_v1(deployedAuthorizerAddress);
 
         console.log(
             "Deployed Token Authorizer at address: ", deployedAuthorizerAddress
@@ -95,7 +100,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
             deployedAuthorizer.DEFAULT_ADMIN_ROLE(), orchestratorOwner
         );
 
-        // make all BountyManager roles tokenGated
+        // make all LM_PC_Bounties_v1 roles tokenGated
         bytes32 claimRoleId = deployedAuthorizer.generateRoleId(
             bountyManagerAddress, bountyManager.CLAIMANT_ROLE()
         );

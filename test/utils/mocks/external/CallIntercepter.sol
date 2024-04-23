@@ -12,7 +12,7 @@ contract CallIntercepter is Test {
     }
 
     // ERC2771Context
-    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator
+    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
     // we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
     function isTrustedForwarder(address) public view virtual returns (bool) {
         return isTrusted;

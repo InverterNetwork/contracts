@@ -5,13 +5,16 @@ import "forge-std/Test.sol";
 //Internal Dependencies
 import {
     E2ETest,
-    IOrchestratorFactory,
-    IOrchestrator,
-    ModuleFactory
+    IOrchestratorFactory_v1,
+    IOrchestrator_v1,
+    ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
-import {IModuleFactory, IModule} from "src/factories/IModuleFactory.sol";
+import {
+    IModuleFactory_v1,
+    IModule_v1
+} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
-import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
+import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -20,17 +23,17 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleImplementationMock,
     ModuleImplementationV1Mock
-} from "test/utils/mocks/factories/beacon/ModuleImplementationV1Mock.sol";
+} from "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
 import {
     IModuleImplementationMock,
     ModuleImplementationV2Mock
-} from "test/utils/mocks/factories/beacon/ModuleImplementationV2Mock.sol";
+} from "test/utils/mocks/proxies/ModuleImplementationV2Mock.sol";
 
 contract InverterBeaconE2E is E2ETest {
     // Mocks
     ModuleImplementationV1Mock moduleImpl1;
     ModuleImplementationV2Mock moduleImpl2;
-    InverterBeacon beacon;
+    InverterBeacon_v1 beacon;
 
     // Mock Metadata
     uint constant MAJOR_VERSION = 1;
@@ -38,11 +41,11 @@ contract InverterBeaconE2E is E2ETest {
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
-    IModule.Metadata DATA =
-        IModule.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+    IModule_v1.Metadata DATA =
+        IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     // E2E Test Variables
 
@@ -61,7 +64,7 @@ contract InverterBeaconE2E is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(token)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -71,7 +74,7 @@ contract InverterBeaconE2E is E2ETest {
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 tokenRoleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -81,7 +84,7 @@ contract InverterBeaconE2E is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -96,7 +99,7 @@ contract InverterBeaconE2E is E2ETest {
 
         // Deploy module beacons.
 
-        beacon = new InverterBeacon(
+        beacon = new InverterBeacon_v1(
             address(gov), //The governor contract will be the owner of the beacon
             MAJOR_VERSION,
             address(moduleImpl1),
@@ -104,11 +107,11 @@ contract InverterBeaconE2E is E2ETest {
         );
 
         // Register modules at moduleFactory.
-        moduleFactory.registerMetadata(DATA, InverterBeacon(beacon));
+        moduleFactory.registerMetadata(DATA, InverterBeacon_v1(beacon));
 
         //Add new Beacon to this moduleConfiguration
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 DATA,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -117,20 +120,20 @@ contract InverterBeaconE2E is E2ETest {
     }
 
     //--------------------------------------------------------------------------
-    // Tests: InverterBeacon Upgrades
+    // Tests: InverterBeacon_v1 Upgrades
 
     function test_e2e_InverterBeaconUpgrade() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------------
@@ -166,16 +169,16 @@ contract InverterBeaconE2E is E2ETest {
 
     function test_e2e_InverterBeaconShutdown() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
 
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //--------------------------------------------------------------------------------
@@ -248,7 +251,7 @@ contract InverterBeaconE2E is E2ETest {
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
-    function _assumeValidMetadata(IModule.Metadata memory metadata)
+    function _assumeValidMetadata(IModule_v1.Metadata memory metadata)
         public
         pure
     {

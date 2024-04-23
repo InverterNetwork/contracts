@@ -6,18 +6,17 @@ import "forge-std/Test.sol";
 
 import "../deployment/DeploymentScript.s.sol";
 
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IModule} from "src/modules/base/IModule.sol";
-import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
-import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {
-    BountyManager,
-    IBountyManager
-} from "src/modules/logicModule/BountyManager.sol";
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
 import {ScriptConstants} from "../script-constants.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     ScriptConstants scriptConstants = new ScriptConstants();
@@ -41,7 +40,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
     // Storage
 
     ERC20Mock token;
-    IOrchestrator test_orchestrator;
+    IOrchestrator_v1 test_orchestrator;
 
     address[] initialAuthorizedAddresses;
 
@@ -69,56 +68,57 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
-        // Orchestrator: Owner, funding token
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        // Orchestrator_v1: Owner, funding token
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: orchestratorOwner,
             token: token
         });
 
         // Funding Manager: Metadata, token address
-        IOrchestratorFactory.ModuleConfig memory fundingManagerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             rebasingFundingManagerMetadata,
             abi.encode(address(token)),
             abi.encode(hasDependency, dependencies)
         );
 
         // Payment Processor: only Metadata
-        IOrchestratorFactory.ModuleConfig memory paymentProcessorFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
-            simplePaymentProcessorMetadata,
-            bytes(""),
-            abi.encode(hasDependency, dependencies)
-        );
+        IOrchestratorFactory_v1.ModuleConfig memory
+            paymentProcessorFactoryConfig = IOrchestratorFactory_v1
+                .ModuleConfig(
+                simplePaymentProcessorMetadata,
+                bytes(""),
+                abi.encode(hasDependency, dependencies)
+            );
 
         // Authorizer: Metadata, initial authorized addresses
-        IOrchestratorFactory.ModuleConfig memory authorizerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             roleAuthorizerMetadata,
             abi.encode(orchestratorOwner, orchestratorOwner),
             abi.encode(hasDependency, dependencies)
         );
 
         // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
-        IOrchestratorFactory.ModuleConfig memory bountyManagerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             bountyManagerMetadata,
             abi.encode(""),
             abi.encode(true, dependencies)
         );
 
-        // Add the configuration for all the non-mandatory modules. In this case only the BountyManager.
-        IOrchestratorFactory.ModuleConfig[] memory additionalModuleConfig =
-            new IOrchestratorFactory.ModuleConfig[](1);
+        // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.
+        IOrchestratorFactory_v1.ModuleConfig[] memory additionalModuleConfig =
+            new IOrchestratorFactory_v1.ModuleConfig[](1);
         additionalModuleConfig[0] = bountyManagerFactoryConfig;
 
         // ------------------------------------------------------------------------
-        // Orchestrator Creation
+        // Orchestrator_v1 Creation
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
-            test_orchestrator = IOrchestratorFactory(orchestratorFactory)
+            test_orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
                 orchestratorConfig,
                 fundingManagerFactoryConfig,
@@ -133,22 +133,23 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         assert(address(test_orchestrator) != address(0));
 
-        address orchestratorToken =
-            address(IOrchestrator(test_orchestrator).fundingManager().token());
+        address orchestratorToken = address(
+            IOrchestrator_v1(test_orchestrator).fundingManager().token()
+        );
         assertEq(orchestratorToken, address(token));
 
-        // Now we need to find the MilestoneManager. ModuleManager has a function called `listModules` that returns a list of
+        // Now we need to find the MilestoneManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
         // active modules, let's use that to get the address of the MilestoneManager.
 
         // TODO: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
 
         address[] memory moduleAddresses =
-            IOrchestrator(test_orchestrator).listModules();
+            IOrchestrator_v1(test_orchestrator).listModules();
         uint lenModules = moduleAddresses.length;
         address orchestratorCreatedBountyManagerAddress;
 
         for (uint i; i < lenModules;) {
-            try IBountyManager(moduleAddresses[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v1(moduleAddresses[i]).isExistingBountyId(0)
             returns (bool) {
                 orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
                 break;
@@ -157,8 +158,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             }
         }
 
-        BountyManager orchestratorCreatedBountyManager =
-            BountyManager(orchestratorCreatedBountyManagerAddress);
+        LM_PC_Bounties_v1 orchestratorCreatedBountyManager =
+            LM_PC_Bounties_v1(orchestratorCreatedBountyManagerAddress);
 
         assertEq(
             address(orchestratorCreatedBountyManager.orchestrator()),
@@ -167,11 +168,11 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         assertFalse(
             orchestratorCreatedBountyManager.isExistingBountyId(0),
-            "Error in the BountyManager"
+            "Error in the LM_PC_Bounties_v1"
         );
         assertFalse(
             orchestratorCreatedBountyManager.isExistingBountyId(type(uint).max),
-            "Error in the BountyManager"
+            "Error in the LM_PC_Bounties_v1"
         );
 
         console2.log("\n\n");
@@ -179,7 +180,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             "=================================================================================="
         );
         console2.log(
-            "Orchestrator with Id %s created at address: %s ",
+            "Orchestrator_v1 with Id %s created at address: %s ",
             test_orchestrator.orchestratorId(),
             address(test_orchestrator)
         );
@@ -197,7 +198,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         );
 
         console2.log(
-            "\t-BountyManager deployed at address: %s ",
+            "\t-LM_PC_Bounties_v1 deployed at address: %s ",
             address(orchestratorCreatedBountyManager)
         );
         console2.log(
@@ -214,8 +215,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // It's best, if the owner deposits them right after deployment.
 
         // Initial Deposit => 10e18;
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(test_orchestrator.fundingManager()));
+        FM_Rebasing_v1 fundingManager =
+            FM_Rebasing_v1(address(test_orchestrator.fundingManager()));
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {

@@ -4,42 +4,44 @@ pragma solidity ^0.8.0;
 //Internal Dependencies
 import {
     E2ETest,
-    IOrchestratorFactory,
-    IOrchestrator,
-    ModuleFactory
+    IOrchestratorFactory_v1,
+    IOrchestrator_v1,
+    ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
 
 //SuT
-import {IOrchestrator, Orchestrator} from "src/orchestrator/Orchestrator.sol";
+import {
+    IOrchestrator_v1,
+    Orchestrator_v1
+} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Modules that are used in this E2E test
-import {IPaymentProcessor} from
-    "src/modules/paymentProcessor/IPaymentProcessor.sol";
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IAuthorizer} from "src/modules/authorizer/IAuthorizer.sol";
+import {IPaymentProcessor_v1} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {
-    IBountyManager,
-    BountyManager
-} from "src/modules/logicModule/BountyManager.sol";
+    ILM_PC_Bounties_v1, LM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
 import {
-    IMetadataManager,
-    MetadataManager
-} from "src/modules/utils/MetadataManager.sol";
+    IMetadataManager_v1,
+    MetadataManager_v1
+} from "src/modules/utils/MetadataManager_v1.sol";
 
 //Beacon
-import {InverterBeacon} from "src/factories/beacon/InverterBeacon.sol";
+import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
 /**
- * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory}.
+ * e2e PoC test to show how to create a new orchestrator via the {OrchestratorFactory_v1}.
  */
 contract OrchestratorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    //Orchestrator Metadata
-    IMetadataManager.ManagerMetadata ownerMetadata;
-    IMetadataManager.OrchestratorMetadata orchestratorMetadata;
-    IMetadataManager.MemberMetadata[] teamMetadata;
+    //Orchestrator_v1 Metadata
+    IMetadataManager_v1.ManagerMetadata ownerMetadata;
+    IMetadataManager_v1.OrchestratorMetadata orchestratorMetadata;
+    IMetadataManager_v1.MemberMetadata[] teamMetadata;
 
     function setUp() public override {
         // Setup common E2E framework
@@ -56,7 +58,7 @@ contract OrchestratorE2E is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(token)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -66,7 +68,7 @@ contract OrchestratorE2E is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 roleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -76,24 +78,24 @@ contract OrchestratorE2E is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
             )
         );
 
-        // We also set up the BountyManager, even though we'll add it later
+        // We also set up the LM_PC_Bounties_v1, even though we'll add it later
         setUpBountyManager();
 
         //==========================================
-        //Set up Orchestrator Metadata
+        //Set up Orchestrator_v1 Metadata
 
-        ownerMetadata = IMetadataManager.ManagerMetadata(
+        ownerMetadata = IMetadataManager_v1.ManagerMetadata(
             "Name", address(0xBEEF), "TwitterHandle"
         );
 
-        orchestratorMetadata = IMetadataManager.OrchestratorMetadata(
+        orchestratorMetadata = IMetadataManager_v1.OrchestratorMetadata(
             "Title",
             "DescriptionShort",
             "DescriptionLong",
@@ -110,7 +112,7 @@ contract OrchestratorE2E is E2ETest {
         orchestratorMetadata.categories.push("category3");
 
         teamMetadata.push(
-            IMetadataManager.MemberMetadata(
+            IMetadataManager_v1.MemberMetadata(
                 "Name", address(0xBEEF), "Something"
             )
         );
@@ -119,14 +121,14 @@ contract OrchestratorE2E is E2ETest {
     //We're adding and removing a Module during the lifetime of the orchestrator
     function testManageModulesLiveOnPorposal() public {
         // address(this) creates a new orchestrator.
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        //Create Orchestrator
-        IOrchestrator orchestrator =
+        //Create Orchestrator_v1
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         //------------------------------------------------------------------------------------------------
@@ -182,9 +184,11 @@ contract OrchestratorE2E is E2ETest {
         address originalAuthorizer = address(orchestrator.authorizer());
 
         //Replace the old modules with the new ones
-        orchestrator.setPaymentProcessor(IPaymentProcessor(newPaymentProcessor));
-        orchestrator.setFundingManager(IFundingManager(newFundingManager));
-        orchestrator.setAuthorizer(IAuthorizer(newAuthorizer));
+        orchestrator.setPaymentProcessor(
+            IPaymentProcessor_v1(newPaymentProcessor)
+        );
+        orchestrator.setFundingManager(IFundingManager_v1(newFundingManager));
+        orchestrator.setAuthorizer(IAuthorizer_v1(newAuthorizer));
 
         //Assert post-state
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules

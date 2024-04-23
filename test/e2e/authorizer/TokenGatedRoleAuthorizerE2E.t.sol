@@ -4,26 +4,23 @@ pragma solidity ^0.8.0;
 //Internal Dependencies
 import {
     E2ETest,
-    IOrchestratorFactory,
-    IOrchestrator,
+    IOrchestratorFactory_v1,
+    IOrchestrator_v1,
     ERC20Mock
 } from "test/e2e/E2ETest.sol";
 
 // SuT
-import {TokenGatedRoleAuthorizer} from
-    "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
+import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 
 // Modules that are used in this E2E test
 import {
-    BountyManager,
-    IBountyManager
-} from "src/modules/logicModule/BountyManager.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract TokenGatedRoleAuthorizerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     // E2E Test Variables
     address orchestratorOwner = makeAddr("orchestratorOwner");
@@ -47,7 +44,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(token)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -57,7 +54,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 tokenRoleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -67,7 +64,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -77,7 +74,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Additional Logic Modules
         setUpBountyManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 bountyManagerMetadata,
                 bytes(""),
                 abi.encode(true, EMPTY_DEPENDENCY_LIST)
@@ -87,32 +84,31 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
 
     function test_e2e_TokenGatedRoleAuthorizer() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        TokenGatedRoleAuthorizer authorizer =
-            TokenGatedRoleAuthorizer(address(orchestrator.authorizer()));
+        AUT_TokenGated_Roles_v1 authorizer =
+            AUT_TokenGated_Roles_v1(address(orchestrator.authorizer()));
 
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
+        FM_Rebasing_v1 fundingManager =
+            FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        // Find BountyManager
-        BountyManager bountyManager;
+        // Find LM_PC_Bounties_v1
+        LM_PC_Bounties_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
-                bool
-            ) {
-                bountyManager = BountyManager(modulesList[i]);
+            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            returns (bool) {
+                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -123,7 +119,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Set up Bounty Manager Roles with different thresholds
         //--------------------------------------------------------------------------------
 
-        //Give the Orchestrator owner the power to change module roles
+        //Give the Orchestrator_v1 owner the power to change module roles
         authorizer.grantRole(authorizer.DEFAULT_ADMIN_ROLE(), orchestratorOwner);
 
         vm.startPrank(orchestratorOwner);
@@ -200,7 +196,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         bountyManager.addBounty(100e18, 500e18, "This is a test bounty");
 
         // Validate
-        IBountyManager.Bounty memory bounty =
+        ILM_PC_Bounties_v1.Bounty memory bounty =
             bountyManager.getBountyInformation(1);
         assertEq(bounty.minimumPayoutAmount, 100e18);
         assertEq(bounty.maximumPayoutAmount, 500e18);
@@ -210,11 +206,11 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Worker submits bounty
         //--------------------------------------------------------------------------------
         vm.startPrank(bountySubmitter);
-        IBountyManager.Contributor memory BOB =
-            IBountyManager.Contributor(bountySubmitter, 200e18);
+        ILM_PC_Bounties_v1.Contributor memory BOB =
+            ILM_PC_Bounties_v1.Contributor(bountySubmitter, 200e18);
 
-        IBountyManager.Contributor[] memory contribs =
-            new IBountyManager.Contributor[](1);
+        ILM_PC_Bounties_v1.Contributor[] memory contribs =
+            new ILM_PC_Bounties_v1.Contributor[](1);
         contribs[0] = BOB;
 
         uint claimId = bountyManager.addClaim(
