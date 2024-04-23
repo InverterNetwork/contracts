@@ -6,7 +6,7 @@ import {ElasticReceiptTokenBase_v1} from
     "@fm/rebasing/abstracts/ElasticReceiptTokenBase_v1.sol";
 
 /**
- * @title   ElasticReceiptToken_v1: Elastic Receipt Token v1 for Inverter Network.
+ * @title   Elastic Receipt Token
  *
  * @notice  Provides a token contract with elastic supply properties
  *
@@ -14,7 +14,7 @@ import {ElasticReceiptTokenBase_v1} from
  *          are initially assigned to the zero address to manage the elastic supply during mint
  *          and burn.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 abstract contract ElasticReceiptToken_v1 is ElasticReceiptTokenBase_v1 {
     //--------------------------------------------------------------------------

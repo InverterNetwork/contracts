@@ -17,7 +17,7 @@ import {
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 /**
- * @title   ERC20PaymentClientBase_v1: Payment Order Management for ERC20 Tokens for the Inverter Network.
+ * @title   ERC20 Payment Client Base
  *
  * @notice  Enables modules within the Inverter Network to create and manage payment orders
  *          that can be processed by authorized payment processors, ensuring efficient
@@ -27,7 +27,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
  *          to handle token payments. This abstract contract must be extended by modules
  *          that manage ERC20 payment orders, supporting complex payment scenarios.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 abstract contract ERC20PaymentClientBase_v1 is
     IERC20PaymentClientBase_v1,

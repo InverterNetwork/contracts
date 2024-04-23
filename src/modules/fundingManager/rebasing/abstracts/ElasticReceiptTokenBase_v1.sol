@@ -12,7 +12,7 @@ import {
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 /**
- * @title ElasticReceiptTokenBase_v1: The Elastic Receipt Token Base v1 for Inverter Network.
+ * @title Elastic Receipt Token Base
  *
  * @dev The Elastic Receipt Token is a rebase token that "continuously"
  *      syncs the token supply with a supply target.

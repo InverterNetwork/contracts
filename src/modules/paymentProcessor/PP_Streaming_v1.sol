@@ -20,7 +20,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 /**
- * @title   PP_Streaming_v1: Linear Streaming Payment Processor v1 for Inverter Network.
+ * @title   Linear Streaming Payment Processor
  *
  * @notice  Manages continuous and linear vesting payment streams within the Inverter
  *          Network, allowing multiple concurrent vestings per recipient. Provides tools
@@ -30,7 +30,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
  *          multiple clients and recipients, integrated with error handling for
  *          payments and managing active vesting schedules and their cancellations.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function supportsInterface(bytes4 interfaceId)

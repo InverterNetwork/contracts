@@ -9,7 +9,7 @@ import {IVirtualIssuanceSupplyBase_v1} from
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 /**
- * @title   VirtualIssuanceSupplyBase_v1: Virtual Issuance Supply Base v1 for Inverter Network
+ * @title   Virtual Issuance Supply Base
  *
  * @notice  Manages a virtual issuance supply to facilitate interactions with Inverter's
  *          Funding Manager

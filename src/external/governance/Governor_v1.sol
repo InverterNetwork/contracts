@@ -16,7 +16,7 @@ import {AccessControlUpgradeable} from
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 /**
- * @title   Governor_v1: Governor Contract V1 for the Inverter Network.
+ * @title   Governor Contract
  *
  * @notice  This contract manages various administrative functions that can be executed only by
  *          specified multisig addresses. It supports upgrades to beacon contracts through
@@ -27,7 +27,7 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
  *          functionalities, i.e. setting the fee manager, setting the timelock, upgrading the
  *          beacons and exposing the emergency shutdown.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     function supportsInterface(bytes4 interfaceId)

@@ -22,7 +22,7 @@ import {
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
 /**
- * @title   LM_PC_RecurringPayments_v1: Recurring Payment for Inverter Network.
+ * @title   Recurring Payment Manager
  *
  * @notice  Facilitates the creation, management, and execution of scheduled recurring
  *          payments within the Inverter Network, allowing for systematic and timed
@@ -33,7 +33,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
  *          Integrates with {ERC20PaymentClientBase_v1} for handling actual payment
  *          transactions.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract LM_PC_RecurringPayments_v1 is
     ILM_PC_RecurringPayments_v1,

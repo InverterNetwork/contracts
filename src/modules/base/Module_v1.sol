@@ -18,7 +18,7 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 /**
- * @title   Module_v1
+ * @title   Module
  *
  * @dev     This Contract is the basic building block for all Modules in the Inverter Network.
  *          It contains references to other contracts, modifier for access restriction,

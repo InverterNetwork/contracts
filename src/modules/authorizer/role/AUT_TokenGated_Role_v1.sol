@@ -23,7 +23,7 @@ interface TokenInterface {
 }
 
 /**
- * @title   AUT_TokenGated_Role_v1: Token-Gated Role Management for the Inverter Network.
+ * @title   Token-Gated Role Authorizer
  *
  * @notice  Extends the Inverter's role-based access control to include token gating,
  *          enabling roles to be conditionally assigned based on token ownership.
@@ -34,7 +34,7 @@ interface TokenInterface {
  *          role assignment. Utilizes checks on token balances to gate access,
  *          supporting both ERC20 and ERC721 tokens as qualifiers for role eligibility.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract AUT_TokenGated_Role_v1 is IAUT_TokenGated_Role_v1, AUT_Role_v1 {
     function supportsInterface(bytes4 interfaceId)

@@ -19,7 +19,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   PP_Simple_v1: Simple Payment Processor v1
+ * @title   Simple Payment Processor
  *
  * @notice  Manages ERC20 payment processing for modules within the Inverter Network
  *          that are compliant with the {IERC20PaymentClientBase_v1} interface.
@@ -28,7 +28,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          orders from registered modules, ensuring only eligible modules can initiate
  *          payments. Utilizes {SafeERC20} for secure token transfers.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     function supportsInterface(bytes4 interfaceId)

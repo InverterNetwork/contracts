@@ -16,7 +16,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   RedeemingBondingCurveBase_v1: Redeeming Bonding Curve Base v1 for Inverter Network.
+ * @title   Redeeming Bonding Curve Funding Manager Base
  *
  * @notice  Manages the redemption of issuance for collateral along a bonding curve in the
  *          Inverter Network, including fee handling and sell functionality control.

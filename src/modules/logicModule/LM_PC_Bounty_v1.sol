@@ -24,7 +24,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 /**
- * @title   LM_PC_Bounty_v1: Bounty Management v1 for the Inverter Network.
+ * @title   Bounty Manager
  *
  * @notice  Provides functionality to manage bounties and process claims,
  *          allowing participants to propose, update, and claim bounties securely
@@ -35,7 +35,7 @@ import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
  *          of bounties. Utilizes roles for managing permissions and maintaining robust
  *          control over bounty operations.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract LM_PC_Bounty_v1 is ILM_PC_Bounty_v1, ERC20PaymentClientBase_v1 {
     function supportsInterface(bytes4 interfaceId)

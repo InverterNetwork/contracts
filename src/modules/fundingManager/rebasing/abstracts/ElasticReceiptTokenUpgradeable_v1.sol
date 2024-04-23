@@ -6,7 +6,7 @@ import {ElasticReceiptTokenBase_v1} from
     "@fm/rebasing/abstracts/ElasticReceiptTokenBase_v1.sol";
 
 /**
- * @title   ElasticReceiptTokenUpgradeable_v1: Elastic Receipt Token Upgradeable v1 for Inverter Network.
+ * @title   Elastic Receipt Token Upgradeable
  *
  * @notice  Provides an upgradeable token contract with elastic supply properties
  *
@@ -14,7 +14,7 @@ import {ElasticReceiptTokenBase_v1} from
  *          initial states as long as no tokens have been minted yet. It utilizes a system where all bits
  *          are initially assigned to the zero address to manage the elastic supply during mint and burn.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 abstract contract ElasticReceiptTokenUpgradeable_v1 is
     ElasticReceiptTokenBase_v1

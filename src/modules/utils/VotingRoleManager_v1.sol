@@ -10,7 +10,7 @@ import {IVotingRoleManager_v1} from
     "src/modules/utils/interfaces/IVotingRoleManager_v1.sol";
 
 /**
- * @title   VotingRoleManager_v1: Voting and Motion Management for the Inverter Network.
+ * @title   Voting Role Manager
  *
  * @notice  Facilitates voting and motion management within the Inverter Network,
  *          allowing designated voters to participate in governance through proposals,
@@ -20,7 +20,7 @@ import {IVotingRoleManager_v1} from
  *          creating motions, casting votes, and executing actions based on collective
  *          decisions. This structure enhances governance transparency and efficacy.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract VotingRoleManager_v1 is IVotingRoleManager_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
