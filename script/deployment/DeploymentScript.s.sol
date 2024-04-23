@@ -18,6 +18,7 @@ import {DeployBountyManager} from
     "script/modules/logicModule/DeployBountyManager.s.sol";
 
 import {DeployGovernor} from "script/external/DeployGovernor.s.sol";
+import {DeployFeeManager} from "script/external/DeployFeeManager.s.sol";
 import {DeployTransactionForwarder} from
     "script/external/DeployTransactionForwarder.s.sol";
 import {DeployOrchestrator} from "script/orchestrator/DeployOrchestrator.s.sol";
@@ -80,6 +81,8 @@ contract DeploymentScript is Script {
         new DeployTransactionForwarder();
     //Governor
     DeployGovernor deployGovernor = new DeployGovernor();
+    //FeeManager
+    DeployFeeManager deployFeeManager = new DeployFeeManager();
 
     //Beacon
     DeployAndSetUpBeacon deployAndSetUpBeacon = new DeployAndSetUpBeacon();
@@ -138,6 +141,9 @@ contract DeploymentScript is Script {
 
     //Governor
     address governor;
+
+    //FeeManager
+    address feeManager;
 
     //TransactionForwarder
     address forwarder;
@@ -256,6 +262,23 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+        console2.log("Fee Manager \n");
+
+        feeManager = deployFeeManager.run(
+            address(governor), //owner
+            communityMultisig, //@note This is not the real target is it?
+            100, //Colleteral Fee 1%
+            100 //Issuance Fee 1%
+        ); //@todo late dependency injection of feemanager into Governor
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+
         console2.log("Deploy orchestrator implementation \n");
         //Orchestrator
         orchestrator = deployOrchestrator.run();

@@ -89,6 +89,7 @@ testScripts: ## Run e2e test suite
 	## external
 	@forge script script/external/DeployGovernor.s.sol
 	@forge script script/external/DeployTransactionForwarder.s.sol
+	@forge script script/external/DeployFeeManager.s.sol
 
 	## factories
 	@forge script script/factories/DeployModuleFactory.s.sol
