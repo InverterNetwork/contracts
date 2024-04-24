@@ -2,25 +2,19 @@
 pragma solidity ^0.8.0;
 
 import {IGovernor} from "src/external/governance/IGovernor.sol";
+import {IFeeManager} from "src/external/fees/IFeeManager.sol";
 
 contract GovernorMock is IGovernor {
     address feeManager;
     //--------------------------------------------------------------------------
     // Initialization
 
-    function init(
-        address communityMultisig,
-        address teamMultisig,
-        uint timelockPeriod
-    ) external {}
+    function init(address, address, uint) external {}
 
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    function getBeaconTimelock(address beacon)
-        external
-        returns (Timelock memory)
-    {}
+    function getBeaconTimelock(address) external returns (Timelock memory) {}
 
     //--------------------------------------------------------------------------
     // FeeManager
@@ -32,6 +26,30 @@ contract GovernorMock is IGovernor {
     function setFeeManager(address newFeeManager) external {
         feeManager = newFeeManager;
     }
+
+    function setFeeManagerDefaultProtocolTreasury(address) external {}
+
+    function setFeeManagerWorkflowTreasuries(address, address) external {}
+
+    function setFeeManagerDefaultCollateralFee(uint) external {}
+
+    function setFeeManagerDefaultIssuanceFee(uint) external {}
+
+    function setFeeManagerCollateralWorkflowFee(
+        address,
+        address,
+        bytes4,
+        bool,
+        uint
+    ) external {}
+
+    function setFeeManagerIssuanceWorkflowFee(
+        address,
+        address,
+        bytes4,
+        bool,
+        uint
+    ) external {}
 
     //--------------------------------------------------------------------------
     // Beacon Functions
@@ -45,26 +63,24 @@ contract GovernorMock is IGovernor {
         uint newMinorVersion
     ) external {}
 
-    function triggerUpgradeBeaconWithTimelock(address beacon) external {}
+    function triggerUpgradeBeaconWithTimelock(address) external {}
 
-    function cancelUpgrade(address beacon) external {}
+    function cancelUpgrade(address) external {}
 
-    function setTimelockPeriod(uint newtimelockPeriod) external {}
+    function setTimelockPeriod(uint) external {}
 
     //---------------------------
     //Emergency Shutdown
 
-    function initiateBeaconShutdown(address beacon) external {}
+    function initiateBeaconShutdown(address) external {}
 
-    function forceUpgradeBeaconAndRestartImplementation(
-        address beacon,
-        address newImplementation,
-        uint newMinorVersion
-    ) external {}
+    function forceUpgradeBeaconAndRestartImplementation(address, address, uint)
+        external
+    {}
 
-    function restartBeaconImplementation(address beacon) external {}
+    function restartBeaconImplementation(address) external {}
     //---------------------------
     //Ownable2Step
 
-    function acceptOwnership(address adr) external {}
+    function acceptOwnership(address) external {}
 }

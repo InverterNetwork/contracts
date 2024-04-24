@@ -287,6 +287,86 @@ contract GovernorTest is Test {
         gov.setFeeManager(address(0));
     }
 
+    function testSetFeeManagerDefaultProtocolTreasuryModifierInPosition()
+        public
+    {
+        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setFeeManagerDefaultProtocolTreasury(address(0x1));
+    }
+
+    function testSetFeeManagerWorkflowTreasuriesModifierInPosition() public {
+        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setFeeManagerWorkflowTreasuries(address(0x1), address(0x1));
+    }
+
+    function testSetFeeManagerDefaultCollateralFeeModifierInPosition() public {
+        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setFeeManagerDefaultCollateralFee(1);
+    }
+
+    function testSetFeeManagerDefaultIssuanceFeeModifierInPosition() public {
+        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setFeeManagerDefaultIssuanceFee(1);
+    }
+
+    function testSetFeeManagerCollateralWorkflowFeeModifierInPosition()
+        public
+    {
+        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setFeeManagerCollateralWorkflowFee(
+            address(0x1), address(0x1), bytes4(""), true, 1
+        );
+    }
+
+    function testSetFeeManagerIssuanceWorkflowFeeModifierInPosition() public {
+        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setFeeManagerIssuanceWorkflowFee(
+            address(0x1), address(0x1), bytes4(""), true, 1
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Test: Beacon Functions
 

@@ -123,6 +123,68 @@ interface IGovernor {
     /// @param newFeeManager The address of the new FeeManager
     function setFeeManager(address newFeeManager) external;
 
+    /// @notice Sets the default protocol treasury address in the linked FeeManager
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev The given treasury address can not be address(0)
+    /// @param _defaultProtocolTreasury The address of the default protocol treasury
+    function setFeeManagerDefaultProtocolTreasury(
+        address _defaultProtocolTreasury
+    ) external;
+
+    /// @notice Sets the protocol treasury address for a specific workflow in the linked FeeManager
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev The given treasury address can not be address(0)
+    /// @param workflow The address of the workflow
+    /// @param treasury The address of the protocol treasury for that specific workflow
+    function setFeeManagerWorkflowTreasuries(address workflow, address treasury)
+        external;
+
+    /// @notice Sets the default collateral fee of the protocol in the linked FeeManager
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev The given fee needs to be less than the BPS
+    /// @param _defaultCollateralFee The default collateral fee of the protocol in relation to the BPS
+    function setFeeManagerDefaultCollateralFee(uint _defaultCollateralFee)
+        external;
+
+    /// @notice Sets the default issuance fee of the protocol in the linked FeeManager
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev The given fee needs to be less than the BPS
+    /// @param _defaultIssuanceFee The default issuance fee of the protocol in relation to the BPS
+    function setFeeManagerDefaultIssuanceFee(uint _defaultIssuanceFee)
+        external;
+
+    /// @notice Sets the collateral fee for a specific workflow module function in the linked FeeManager
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev The given fee needs to be less than the BPS
+    /// @param workflow The address of the workflow that contains the module function
+    /// @param module The address of the module that contains the function
+    /// @param functionSelector The function selector of the target function
+    /// @param set Boolean that determines if the fee is actually used or not
+    /// @param fee The collateral fee in relation to the BPS
+    function setFeeManagerCollateralWorkflowFee(
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) external;
+
+    /// @notice Sets the issuance fee for a specific workflow module function in the linked FeeManager
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev The given fee needs to be less than the BPS
+    /// @param workflow The address of the workflow that contains the module function
+    /// @param module The address of the module that contains the function
+    /// @param functionSelector The function selector of the target function
+    /// @param set Boolean that determines if the fee is actually used or not
+    /// @param fee The issuance fee in relation to the BPS
+    function setFeeManagerIssuanceWorkflowFee(
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) external;
+
     //--------------------------------------------------------------------------
     // Beacon Functions
 

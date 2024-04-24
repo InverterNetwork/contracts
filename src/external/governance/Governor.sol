@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {IGovernor} from "src/external/governance/IGovernor.sol";
+import {IFeeManager} from "src/external/fees/IFeeManager.sol";
 import {
     InverterBeacon,
     IInverterBeacon
@@ -83,7 +84,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
     bytes32 public constant COMMUNITY_MULTISIG_ROLE = "0x01";
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
-    address private feeManager;
+    IFeeManager private feeManager;
 
     uint public timelockPeriod;
 
@@ -143,7 +144,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
 
     /// @inheritdoc IGovernor
     function getFeeManager() external view returns (address) {
-        return feeManager;
+        return address(feeManager);
     }
 
     /// @inheritdoc IGovernor
@@ -152,7 +153,64 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         onlyRole(COMMUNITY_MULTISIG_ROLE)
         validAddress(newFeeManager)
     {
-        feeManager = newFeeManager;
+        feeManager = IFeeManager(newFeeManager);
+    }
+
+    /// @inheritdoc IGovernor
+    function setFeeManagerDefaultProtocolTreasury(
+        address _defaultProtocolTreasury
+    ) external onlyRole(COMMUNITY_MULTISIG_ROLE) {
+        feeManager.setDefaultProtocolTreasury(_defaultProtocolTreasury);
+    }
+
+    /// @inheritdoc IGovernor
+    function setFeeManagerWorkflowTreasuries(address workflow, address treasury)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        feeManager.setWorkflowTreasuries(workflow, treasury);
+    }
+
+    /// @inheritdoc IGovernor
+    function setFeeManagerDefaultCollateralFee(uint _defaultCollateralFee)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        feeManager.setDefaultCollateralFee(_defaultCollateralFee);
+    }
+
+    /// @inheritdoc IGovernor
+    function setFeeManagerDefaultIssuanceFee(uint _defaultIssuanceFee)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        feeManager.setDefaultIssuanceFee(_defaultIssuanceFee);
+    }
+
+    /// @inheritdoc IGovernor
+    function setFeeManagerCollateralWorkflowFee(
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) external onlyRole(COMMUNITY_MULTISIG_ROLE) {
+        feeManager.setCollateralWorkflowFee(
+            workflow, module, functionSelector, set, fee
+        );
+    }
+
+    /// @inheritdoc IGovernor
+    function setFeeManagerIssuanceWorkflowFee(
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) external onlyRole(COMMUNITY_MULTISIG_ROLE) {
+        feeManager.setIssuanceWorkflowFee(
+            workflow, module, functionSelector, set, fee
+        );
     }
 
     //--------------------------------------------------------------------------
