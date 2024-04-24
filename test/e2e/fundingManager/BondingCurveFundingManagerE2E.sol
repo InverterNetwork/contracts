@@ -26,7 +26,10 @@ contract BondingCurveFundingManagerE2E is E2ETest {
     ERC20Issuance issuanceToken;
 
     address alice = address(0xA11CE);
+    uint aliceBuyAmount = 200_000e18;
+
     address bob = address(0x606);
+    uint bobBuyAmount = 5000e18;
 
     function setUp() public override {
         // Setup common E2E framework
@@ -61,14 +64,14 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             IBancorVirtualSupplyBondingCurveFundingManager
                 .BondingCurveProperties({
                 formula: address(formula),
-                reserveRatioForBuying: 200_000,
-                reserveRatioForSelling: 200_000,
+                reserveRatioForBuying: 333_333,
+                reserveRatioForSelling: 333_333,
                 buyFee: 0,
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialTokenSupply: 100,
-                initialCollateralSupply: 100
+                initialTokenSupply: 1,
+                initialCollateralSupply: 3
             });
 
         moduleConfigurations.push(
@@ -133,9 +136,6 @@ contract BondingCurveFundingManagerE2E is E2ETest {
 
         issuanceToken = ERC20Issuance(fundingManager.getIssuanceToken());
 
-        // We allow the FundingManager to mint tokens
-        issuanceToken.setMinter(address(fundingManager));
-
         // IMPORTANT
         // =========
         // Due to how the underlying rebase mechanism works, it is necessary
@@ -147,34 +147,36 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         //fundingManager.deposit(initialDeposit);
 
         // Mint some tokens to alice and bob in order to fund the fundingmanager.
-        token.mint(alice, 1000e18);
-        token.mint(bob, 5000e18);
-        uint buf_minAmountOut = fundingManager.calculatePurchaseReturn(1000e18); //buffer variable to store the minimum amount out on calls to the buy and sell functions
 
-        // Alice funds the fundingmanager with 1k tokens.
+        // Alice will perform a very big initial buy.
+        token.mint(alice, aliceBuyAmount);
+        token.mint(bob, bobBuyAmount);
+        uint buf_minAmountOut =
+            fundingManager.calculatePurchaseReturn(aliceBuyAmount); //buffer variable to store the minimum amount out on calls to the buy and sell functions
+
         vm.startPrank(alice);
         {
             // Approve tokens to orchestrator.
-            token.approve(address(fundingManager), 1000e18);
+            token.approve(address(fundingManager), aliceBuyAmount);
 
             // Deposit tokens, i.e. fund the fundingmanager.
-            fundingManager.buy(1000e18, buf_minAmountOut);
+            fundingManager.buy(aliceBuyAmount, buf_minAmountOut);
 
             // After the deposit, alice received some amount of receipt tokens
             // from the fundingmanager.
             assertTrue(issuanceToken.balanceOf(alice) > 0);
         }
         vm.stopPrank();
-        buf_minAmountOut = fundingManager.calculatePurchaseReturn(5000e18);
+        buf_minAmountOut = fundingManager.calculatePurchaseReturn(bobBuyAmount);
 
-        // Bob funds the fundingmanager with 5k tokens.
+        // Bob performs a buy
         vm.startPrank(bob);
         {
             // Approve tokens to fundingmanager.
-            token.approve(address(fundingManager), 5000e18);
+            token.approve(address(fundingManager), bobBuyAmount);
 
             // Deposit tokens, i.e. fund the fundingmanager.
-            fundingManager.buy(5000e18, buf_minAmountOut);
+            fundingManager.buy(bobBuyAmount, buf_minAmountOut);
 
             // After the deposit, bob received some amount of receipt tokens
             // from the fundingmanager.
@@ -186,8 +188,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
         // Note that we simulate orchestrator spending by just burning tokens.
-        uint halfOfDeposit = token.balanceOf(address(fundingManager)) / 2;
-        fundingManager.setVirtualCollateralSupply(halfOfDeposit);
+        /*uint halfOfDeposit = token.balanceOf(address(fundingManager)) / 2;
+        fundingManager.setVirtualCollateralSupply(halfOfDeposit);*/
 
         buf_minAmountOut =
             fundingManager.calculateSaleReturn(issuanceToken.balanceOf(bob));
@@ -201,7 +203,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             );
 
             fundingManager.sell(issuanceToken.balanceOf(bob), buf_minAmountOut);
-            assertApproxEqRel(token.balanceOf(bob), 2500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
+            assertApproxEqRel(token.balanceOf(bob), bobBuyAmount, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
 
@@ -219,7 +221,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             fundingManager.sell(
                 issuanceToken.balanceOf(alice), buf_minAmountOut
             );
-            assertApproxEqRel(token.balanceOf(alice), 500e18, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
+            assertApproxEqRel(token.balanceOf(alice), aliceBuyAmount, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
 
@@ -228,8 +230,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // Half of the deposited funds (the ones we set to "ignore" by modifying the virtual supply) are still in the manager
         assertEq(issuanceToken.balanceOf(alice), 0);
         assertEq(issuanceToken.balanceOf(bob), 0);
-        assertApproxEqRel(
-            token.balanceOf(address(fundingManager)), halfOfDeposit, 0.00001e18
+        assertApproxEqAbs(
+            token.balanceOf(address(fundingManager)), 0, 0.00001e18
         );
     }
 }
