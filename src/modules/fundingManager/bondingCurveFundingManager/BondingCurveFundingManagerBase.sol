@@ -68,6 +68,12 @@ abstract contract BondingCurveFundingManagerBase is
     /// when engaging with the bonding curve-based funding manager.
     uint internal tradeFeeCollected;
 
+    //@note talk about this later
+    // Reserve Ratio should be 100% -> >100%
+    // Reserve is colleteral + fee / issuance
+    // Project Fee drain the amount of tokens that are above 100%
+    // Project Fee -> +2% to Reserve Ratio
+
     //--------------------------------------------------------------------------
     // Modifiers
 
