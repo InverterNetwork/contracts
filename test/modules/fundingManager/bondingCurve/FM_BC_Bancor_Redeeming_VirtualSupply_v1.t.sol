@@ -65,18 +65,20 @@ import {RedeemingBondingCurveBaseV1Test} from
 
     */
 
-contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
-    string private constant NAME = "Bonding Curve Token";
-    string private constant SYMBOL = "BCT";
-    uint8 private constant DECIMALS = 18;
-    uint private constant INITIAL_ISSUANCE_SUPPLY = 1;
-    uint private constant INITIAL_COLLATERAL_SUPPLY = 1;
-    uint32 private constant RESERVE_RATIO_FOR_BUYING = 200_000;
-    uint32 private constant RESERVE_RATIO_FOR_SELLING = 200_000;
-    uint private constant BUY_FEE = 0;
-    uint private constant SELL_FEE = 0;
-    bool private constant BUY_IS_OPEN = true;
-    bool private constant SELL_IS_OPEN = true;
+contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
+    string internal constant NAME = "Bonding Curve Token";
+    string internal constant SYMBOL = "BCT";
+    uint8 internal constant DECIMALS = 18;
+    uint internal constant MAX_SUPPLY = type(uint).max;
+
+    uint internal constant INITIAL_TOKEN_SUPPLY = 1;
+    uint internal constant INITIAL_COLLATERAL_SUPPLY = 3;
+    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 333_333;
+    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 333_333;
+    uint internal constant BUY_FEE = 0;
+    uint internal constant SELL_FEE = 0;
+    bool internal constant BUY_IS_OPEN = true;
+    bool internal constant SELL_IS_OPEN = true;
 
     FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock bondingCurveFundingManager;
     address formula;
@@ -500,7 +502,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             true, true, true, true, address(bondingCurveFundingManager)
         );
         emit VirtualCollateralAmountAdded(
-            buyAmountMinusFee, (INITIAL_ISSUANCE_SUPPLY + buyAmountMinusFee)
+            buyAmountMinusFee, (INITIAL_COLLATERAL_SUPPLY + buyAmountMinusFee)
         );
         bondingCurveFundingManager.buy(amount, formulaReturn);
 
