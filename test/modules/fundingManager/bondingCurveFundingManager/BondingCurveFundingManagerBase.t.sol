@@ -554,6 +554,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         );
     }
 
+    event hm(uint);
+
     // Protocol fee for collateral > 0
     // Protocol fee for issuance > 0
     // Project fee > 0
@@ -581,6 +583,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         bondingCurveFundingManager.setBuyFee(_projectFee);
 
         address buyer = makeAddr("buyer");
+
+        // vm.assume(buyer != address(bondingCurveFundingManager) && buyer != address(tr) )
         _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
@@ -599,7 +603,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         (
             amountAfterFirstFeeCollection,
-            projectCollateralFeeAmount,
+            protocolCollateralFeeAmount,
             projectCollateralFeeAmount
         ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
             amount, _collateralFee, _projectFee
@@ -625,6 +629,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         vm.prank(buyer);
         bondingCurveFundingManager.buy(amount, finalAmount);
 
+        emit hm(finalAmount);
         // Post-checks
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
