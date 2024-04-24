@@ -11,6 +11,7 @@ on:
 
 env:
   FOUNDRY_PROFILE: ci
+  SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
 
 jobs:
   run-ci:
