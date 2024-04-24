@@ -539,7 +539,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
     ) internal {
         (uint amountIssued, uint feeAmount) =
             _buyOrder(_receiver, _depositAmount, _minAmountOut);
-        _addVirtualTokenAmount(amountIssued);
+        _addVirtualTokenAmount(amountIssued); //@todo include fee correctly
         _addVirtualCollateralAmount(_depositAmount - feeAmount);
     }
 
