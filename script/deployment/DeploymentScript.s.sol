@@ -273,7 +273,7 @@ contract DeploymentScript is Script {
             communityMultisig, //@note This is not the real target is it?
             100, //Colleteral Fee 1%
             100 //Issuance Fee 1%
-        ); //@todo late dependency injection of feemanager into Governor
+        );
 
         console2.log(
             "-----------------------------------------------------------------------------"
