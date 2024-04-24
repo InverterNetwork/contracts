@@ -116,6 +116,19 @@ contract RedeemingBondingCurveFundingManagerMock is
         return _getSellFeesAndTreasuryAddresses();
     }
 
+    function call_calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _projectFee
+    )
+        external
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount)
+    {
+        return
+            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _projectFee);
+    }
+
     //--------------------------------------------------------------------------
     // Will be removed once we update base fundingManager
 

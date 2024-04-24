@@ -155,17 +155,16 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
 
         uint protocolFeeAmount;
         uint projectFeeAmount;
+        uint netDeposit;
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (_depositAmount, protocolFeeAmount, /* projectFee */ ) =
+        (netDeposit, protocolFeeAmount, /* projectFee */ ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
         // Process the protocol fee
-        _processProtocolFeeViaTransfer(
-            issuanceTreasury, IERC20(address(this)), protocolFeeAmount
-        );
+        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
         // Calculate redeem amount based on upstream formula
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
+        redeemAmount = _redeemTokensFormulaWrapper(netDeposit);
 
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
@@ -261,7 +260,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
         );
         (issuanceSellFeePercentage, issuanceTreasury) =
-        getFeeManagerCollateralFeeData(
+        getFeeManagerIssuanceFeeData(
             bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
         );
     }
