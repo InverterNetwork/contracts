@@ -591,33 +591,47 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Calculate receiving amount
 
-        uint collateralAmountAfterFee =
-            amount - (amount * _collateralFee + amount * _projectFee / _bps);
+        uint protocolCollateralFeeAmount;
+        uint protocolIssuanceFeeAmount;
+        uint projectCollateralFeeAmount;
+        uint finalAmount;
+        uint amountAfterFirstFeeCollection;
 
-        uint finalAmountMinusFee = collateralAmountAfterFee
-            - (collateralAmountAfterFee * _issuanceFee / _bps);
+        (
+            amountAfterFirstFeeCollection,
+            projectCollateralFeeAmount,
+            projectCollateralFeeAmount
+        ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            amount, _collateralFee, _projectFee
+        );
+
+        (finalAmount, protocolIssuanceFeeAmount,) = bondingCurveFundingManager
+            .call_calculateNetAndSplitFees(
+            amountAfterFirstFeeCollection, _issuanceFee, 0
+        );
+        // uint collateralAmountAfterFee =
+        //     amount - (amount * _collateralFee + amount * _projectFee) / _bps;
+
+        // uint finalAmountMinusFee = collateralAmountAfterFee
+        //     - (collateralAmountAfterFee * _issuanceFee) / _bps;
 
         // Emit event
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(
-            buyer, finalAmountMinusFee, finalAmountMinusFee, buyer
-        ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+        emit TokensBought(buyer, amount, finalAmount, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount, finalAmountMinusFee);
+        bondingCurveFundingManager.buy(amount, finalAmount);
 
         // Post-checks
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount)
+            (balanceBefore + amount - protocolCollateralFeeAmount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(
-            bondingCurveFundingManager.balanceOf(buyer), finalAmountMinusFee
-        );
+        assertEq(bondingCurveFundingManager.balanceOf(buyer), finalAmount);
     }
 
     // Protocol fee for collateral == 0
