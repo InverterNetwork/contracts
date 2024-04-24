@@ -192,8 +192,9 @@ abstract contract BondingCurveFundingManagerBase is
 
         uint protocolFeeAmount;
         uint projectFeeAmount;
+        uint netDeposit;
         // Get net amount, protocol and project fee amounts
-        (_depositAmount, protocolFeeAmount, projectFeeAmount) =
+        (netDeposit, protocolFeeAmount, projectFeeAmount) =
         _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
@@ -207,7 +208,7 @@ abstract contract BondingCurveFundingManagerBase is
         if (projectFeeAmount > 0) tradeFeeCollected += feeAmount;
 
         // Calculate mint amount based on upstream formula
-        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+        mintAmount = _issueTokensFormulaWrapper(netDeposit);
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
