@@ -940,10 +940,10 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             console.log(userReward);
 
             //Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
-            assertApproxEqRel(
+            assertApproxEqAbs(
                 kpiManager.earned(users[i]),
                 userReward,
-                0.00001e18 //This is 0,001 %
+                1e8 // Below this it reverts due to precision error
             );
         }
 
@@ -1016,10 +1016,10 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             console.log(userReward);
 
             //Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
-            assertApproxEqRel(
+            assertApproxEqAbs(
                 kpiManager.earned(users[i]),
                 userReward,
-                1e9 // Below this it reverts due to precision error
+                1e8 // Below this it reverts due to precision error
             );
         }
 
