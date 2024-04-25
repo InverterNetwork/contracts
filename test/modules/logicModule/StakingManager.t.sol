@@ -7,7 +7,11 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule_v1, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -97,8 +101,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         setUpReasonableStakers(seed);
 
         address user = address(uint160(1)); //Addresslikely to have stake in setUpReasonableStakers()
-        uint providedRewardValue =
-            stakingManager.direct_calculateRewardValue();
+        uint providedRewardValue = stakingManager.direct_calculateRewardValue();
         uint userRewardValue = stakingManager.getRewards(user);
         uint userBalance = stakingManager.balanceOf(user);
         uint previousUserRewards = stakingManager.getRewards(user);
@@ -228,9 +231,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         //Check _distributeRewards() is triggered
         if (expectedEarnings != 0) {
-            assertEq(
-                expectedEarnings, stakingManager.paymentOrders()[0].amount
-            );
+            assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
         }
 
         assertEq(prevBalance + stakeAmount, stakingManager.balanceOf(staker));
@@ -328,17 +329,11 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         //Check _distributeRewards() is triggered
         if (expectedEarnings != 0) {
-            assertEq(
-                expectedEarnings, stakingManager.paymentOrders()[0].amount
-            );
+            assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
         }
 
-        assertEq(
-            prevBalance - unstakeAmount, stakingManager.balanceOf(staker)
-        );
-        assertEq(
-            prevTotalAmount - unstakeAmount, stakingManager.totalSupply()
-        );
+        assertEq(prevBalance - unstakeAmount, stakingManager.balanceOf(staker));
+        assertEq(prevTotalAmount - unstakeAmount, stakingManager.totalSupply());
         assertEq(
             stakingToken.balanceOf(address(stakingManager)),
             stakingManager.totalSupply()
@@ -530,9 +525,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             stakingManager.direct_calculateRewardValue(), //works because time between last update and RewardDistributionTimestamp value is 0 and therefor just returns the older rewardValue
             stakingManager.getRewardValue()
         );
-        assertEq(
-            stakingManager.getLastUpdate(), stakingManager.getLastUpdate()
-        );
+        assertEq(stakingManager.getLastUpdate(), stakingManager.getLastUpdate());
 
         if (trigger != address(0)) {
             assertEq(expectedRewards, stakingManager.getRewards(trigger));
@@ -563,8 +556,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         );
 
         assertEq(
-            calculatedRewardValue,
-            stakingManager.direct_calculateRewardValue()
+            calculatedRewardValue, stakingManager.direct_calculateRewardValue()
         );
     }
 

@@ -14,7 +14,11 @@ import {OptimisticOracleV3Mock} from
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule_v1, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -23,7 +27,8 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     OptimisticOracleIntegrator,
     IOptimisticOracleIntegrator
-} from "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
+} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
 contract OptimisticOracleIntegratorTest is ModuleTest {
     OptimisticOracleIntegratorMock ooIntegrator;

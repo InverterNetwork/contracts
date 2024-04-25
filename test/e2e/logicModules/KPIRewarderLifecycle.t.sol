@@ -16,10 +16,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {FM_Rebasing_v1} from
     "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
 
-import {
-    PP_Simple_v1,
-    IPaymentProcessor_v1
-} from "@pp/PP_Simple_v1.sol";
+import {PP_Simple_v1, IPaymentProcessor_v1} from "@pp/PP_Simple_v1.sol";
 
 import {
     LM_PC_KPIRewarder_v1,
@@ -220,8 +217,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        fundingManager =
-            FM_Rebasing_v1(address(orchestrator.fundingManager()));
+        fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
         // Get the kpiRewarder module
         bytes4 LM_PC_KPIRewarder_v1InterfaceId =
@@ -361,9 +357,8 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
 
         distributedInRound = 0;
 
-        expectedDistributed = _getExpectedRewardAmount(
-            kpiRewarder.getKPI(0), MOCK_ASSERTED_VALUE
-        );
+        expectedDistributed =
+            _getExpectedRewardAmount(kpiRewarder.getKPI(0), MOCK_ASSERTED_VALUE);
 
         for (uint i; i < TOTAL_USERS; i++) {
             uint currentUserBalance = rewardToken.balanceOf(users[i]);

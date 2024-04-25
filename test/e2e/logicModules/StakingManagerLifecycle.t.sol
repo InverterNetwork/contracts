@@ -5,7 +5,11 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule_v1, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 
@@ -15,10 +19,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {FM_Rebasing_v1} from
     "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
 // SuT
-import {
-    LM_PC_Staking_v1,
-    ILM_PC_Staking_v1
-} from "@lm/LM_PC_Staking_v1.sol";
+import {LM_PC_Staking_v1, ILM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 
 // Mocks
 //import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -255,9 +256,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         //Staker 4: 5   |   Staker 4: 1/8 amount2               |   Staker 4:
 
         //Check if values are accurate
-        assertEq(
-            amount1 / 2 + amount2 * 3 / 4, stakingManager.earned(staker1)
-        );
+        assertEq(amount1 / 2 + amount2 * 3 / 4, stakingManager.earned(staker1));
         assertEq(amount2 * 1 / 8, rewardToken.balanceOf(staker3));
         assertEq(amount2 * 1 / 8, stakingManager.earned(staker4));
 

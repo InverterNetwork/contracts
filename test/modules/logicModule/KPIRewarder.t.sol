@@ -7,7 +7,11 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule_v1, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
+import {
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
+} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";

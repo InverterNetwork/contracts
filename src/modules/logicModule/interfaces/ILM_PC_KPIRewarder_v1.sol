@@ -16,7 +16,8 @@ import {
     OptimisticOracleV3CallbackRecipientInterface,
     OptimisticOracleV3Interface,
     ClaimData
-} from "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
+} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
 interface ILM_PC_KPIRewarder_v1 {
     //--------------------------------------------------------------------------

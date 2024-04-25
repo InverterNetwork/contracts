@@ -4,10 +4,11 @@ pragma solidity 0.8.23;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {Module_v1}from "src/modules/base/Module_v1.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 // Internal Interfaces
-import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {ILM_PC_KPIRewarder_v1} from "@lm/interfaces/ILM_PC_KPIRewarder_v1.sol";
 
@@ -27,7 +28,8 @@ import {
     OptimisticOracleV3CallbackRecipientInterface,
     OptimisticOracleV3Interface,
     ClaimData
-} from "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
+} from
+    "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
 contract LM_PC_KPIRewarder_v1 is
     ILM_PC_KPIRewarder_v1,

@@ -5,12 +5,14 @@ pragma solidity 0.8.23;
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 // Internal Interfaces
-import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {
     OptimisticOracleIntegrator,
     IOptimisticOracleIntegrator
-} from "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
+} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
 // External Dependencies
 import {OptimisticOracleV3CallbackRecipientInterface} from

@@ -22,8 +22,7 @@ import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol"
 import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
 import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
 import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
-import {LM_PC_KPIRewarder_v1} from
-    "@lm/LM_PC_KPIRewarder_v1.sol";
+import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {VotingRoleManager_v1} from "src/modules/utils/VotingRoleManager_v1.sol";
