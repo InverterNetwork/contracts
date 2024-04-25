@@ -722,7 +722,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificWalletId(
-            address(paymentClient), paymentReceiver1, walletId, false
+            address(paymentClient), paymentReceiver1, walletId
         );
 
         paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
@@ -827,9 +827,7 @@ contract PP_StreamingV1Test is ModuleTest {
         // Now we claim the entire salary from the first payment order
         vm.prank(paymentReceiver1);
         paymentProcessor.claimForSpecificWalletId(
-            address(paymentClient),
-            paymentReceiverWallets[0]._vestingWalletID,
-            false
+            address(paymentClient), paymentReceiverWallets[0]._vestingWalletID
         );
 
         // Now we note down the balance of the paymentReceiver1 again after claiming for the first wallet.
@@ -854,8 +852,7 @@ contract PP_StreamingV1Test is ModuleTest {
         paymentProcessor.removePaymentForSpecificWalletId(
             address(paymentClient),
             paymentReceiver1,
-            paymentReceiverWallets[1]._vestingWalletID,
-            false
+            paymentReceiverWallets[1]._vestingWalletID
         );
 
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
@@ -886,9 +883,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.prank(paymentReceiver1);
         paymentProcessor.claimForSpecificWalletId(
-            address(paymentClient),
-            paymentReceiverWallets[0]._vestingWalletID,
-            false
+            address(paymentClient), paymentReceiverWallets[0]._vestingWalletID
         );
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, salary3);
@@ -1327,14 +1322,13 @@ contract PP_StreamingV1Test is ModuleTest {
         // recipient is whitelisted.
         unblockAddress(recipient);
 
-        // FF 25% and claim.
-        vm.warp(block.timestamp + duration / 4);
+        // claim the previously unclaimable amount
         vm.prank(recipient);
-        paymentProcessor.claimAll(address(paymentClient));
+        paymentProcessor.claimPreviouslyUnclaimable(address(paymentClient));
 
-        // after successful claim attempt receiver should 50% total,
+        // after successful claim of the previously unclaimable amount the receiver should have 25% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
-        assertEq(_token.balanceOf(address(recipient)), amount / 2);
+        assertEq(_token.balanceOf(address(recipient)), amount / 4);
         assertEq(
             paymentProcessor.releasableForSpecificWalletId(
                 address(paymentClient), recipient, 1
@@ -1393,14 +1387,13 @@ contract PP_StreamingV1Test is ModuleTest {
         // transfers will work normally again
         _token.toggleReturnFalse();
 
-        // FF 25% and claim.
-        vm.warp(block.timestamp + duration / 4);
+        // claim the previously unclaimable amount
         vm.prank(recipient);
-        paymentProcessor.claimAll(address(paymentClient));
+        paymentProcessor.claimPreviouslyUnclaimable(address(paymentClient));
 
-        // after successful claim attempt receiver should 50% total,
+        // after successful claim of the previously unclaimable amount the receiver should have 25% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
-        assertEq(_token.balanceOf(address(recipient)), amount / 2);
+        assertEq(_token.balanceOf(address(recipient)), amount / 4);
         assertEq(
             paymentProcessor.releasableForSpecificWalletId(
                 address(paymentClient), recipient, 1

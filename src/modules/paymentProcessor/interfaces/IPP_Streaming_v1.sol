@@ -109,22 +109,21 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     // Functions
 
     /// @notice claim everything that the paymentClient owes to the _msgSender till the current timestamp
-    /// @dev This function should be callable if the _msgSender is either an activePaymentReceiver or has some unclaimedAmounts
+    /// @dev This function should be callable if the _msgSender is an activePaymentReceiver
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
     function claimAll(address client) external;
+
+    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender
+    /// @dev This function should be callable if the _msgSender is either an activePaymentReceiver or has some unclaimedAmounts
+    /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
+    function claimPreviouslyUnclaimable(address client) external;
 
     /// @notice claim the salary uptil block.timestamp from the client for a payment order with id = walletId by _msgSender
     /// @dev If for a specific walletId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
     ///      of the paymentReceiver, and the amount would no longer hold any co-relation with the specific walletId of the paymentReceiver.
     /// @param client The {IERC20PaymentClientBase_v1} instance address that processes the walletId claim from _msgSender
     /// @param walletId The ID of the payment order for which claim is being made
-    /// @param retryForUnclaimableAmounts boolean which determines if the function will try to pay the unclaimable amounts from earlier
-    ///        along with the vested salary from the payment order with id = walletId
-    function claimForSpecificWalletId(
-        address client,
-        uint walletId,
-        bool retryForUnclaimableAmounts
-    ) external;
+    function claimForSpecificWalletId(address client, uint walletId) external;
 
     /// @notice Deletes all payments related to a paymentReceiver & leaves unvested tokens in the ERC20PaymentClientBase_v1.
     /// @dev this function calls _removePayment which goes through all the payment orders for a paymentReceiver. For the payment orders
@@ -143,13 +142,10 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param client The {IERC20PaymentClientBase_v1} instance address from which we will remove the payment
     /// @param paymentReceiver address of the paymentReceiver whose payment order is to be removed
     /// @param walletId The ID of the paymentReceiver's payment order which is to be removed
-    /// @param retryForUnclaimableAmounts boolean that determines whether the function would try to return the unclaimableAmounts along
-    ///        with the vested amounts from the payment order with id = walletId to the paymentReceiver
     function removePaymentForSpecificWalletId(
         address client,
         address paymentReceiver,
-        uint walletId,
-        bool retryForUnclaimableAmounts
+        uint walletId
     ) external;
 
     /// @notice Getter for the start timestamp of a particular payment order with id = walletId associated with a particular paymentReceiver

@@ -110,24 +110,23 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @inheritdoc IPP_Streaming_v1
     function claimAll(address client) external {
-        if (
-            !(
-                unclaimable(client, _msgSender()) > 0
-                    || activeVestingWallets[client][_msgSender()].length > 0
-            )
-        ) {
+        if (activeVestingWallets[client][_msgSender()].length == 0) {
             revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
         }
 
         _claimAll(client, _msgSender());
     }
 
+    function claimPreviouslyUnclaimable(address client) external {
+        if (unclaimable(client, _msgSender()) == 0) {
+            revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
+        }
+
+        _claimPreviouslyUnclaimable(client, _msgSender());
+    }
+
     /// @inheritdoc IPP_Streaming_v1
-    function claimForSpecificWalletId(
-        address client,
-        uint walletId,
-        bool retryForUnclaimableAmounts
-    ) external {
+    function claimForSpecificWalletId(address client, uint walletId) external {
         if (
             activeVestingWallets[client][_msgSender()].length == 0
                 || walletId > numVestingWallets[client][_msgSender()]
@@ -146,9 +145,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             );
         }
 
-        _claimForSpecificWalletId(
-            client, _msgSender(), walletId, retryForUnclaimableAmounts
-        );
+        _claimForSpecificWalletId(client, _msgSender(), walletId);
     }
 
     /// @inheritdoc IPaymentProcessor_v1
@@ -238,13 +235,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function removePaymentForSpecificWalletId(
         address client,
         address paymentReceiver,
-        uint walletId,
-        bool retryForUnclaimableAmounts
+        uint walletId
     ) external onlyOrchestratorOwner {
         // First, we give the vested funds from this specific walletId to the beneficiary
-        _claimForSpecificWalletId(
-            client, paymentReceiver, walletId, retryForUnclaimableAmounts
-        );
+        _claimForSpecificWalletId(client, paymentReceiver, walletId);
 
         // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
         // We will delete the payment order in question, if it hasn't already reached the end of its duration.
@@ -478,7 +472,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint walletId;
         for (index; index < vestingWalletsArrayLength;) {
             walletId = vestingWalletsArray[index];
-            _claimForSpecificWalletId(client, paymentReceiver, walletId, true);
+            _claimForSpecificWalletId(client, paymentReceiver, walletId);
 
             // If the paymentOrder being removed was already past its duration, then it would have been removed in the earlier _claimForSpecificWalletId call
             // Otherwise, we would remove that paymentOrder in the following lines.
@@ -626,7 +620,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice used to claim all the payment orders associated with a particular paymentReceiver for a given payment client
     /// @dev Calls the _claimForSpecificWalletId function for all the active wallets of a particular paymentReceiver for the
     ///      given payment client. Depending on the time this function is called, the vested payments are transferred to the
-    ///      paymentReceiver or accounted in unclaimableAmounts.
+    ///      paymentReceiver.
     ///      For payment orders that are fully vested, their details are deleted and changes are made to the state of the contract accordingly.
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver for which every payment order will be claimed
@@ -638,7 +632,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint index;
         for (index; index < vestingWalletsArrayLength;) {
             _claimForSpecificWalletId(
-                client, paymentReceiver, vestingWalletsArray[index], true
+                client, paymentReceiver, vestingWalletsArray[index]
             );
 
             unchecked {
@@ -653,25 +647,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver for which every payment order will be claimed
     /// @param walletId ID of the payment order that is to be claimed
-    /// @param retryForUnclaimableAmounts boolean which determines if the function will try to pay the unclaimable amounts from earlier
-    ///        along with the vested salary from the payment order with id = walletId
     function _claimForSpecificWalletId(
         address client,
         address paymentReceiver,
-        uint walletId,
-        bool retryForUnclaimableAmounts
+        uint walletId
     ) internal {
         uint amount =
             releasableForSpecificWalletId(client, paymentReceiver, walletId);
-        vestings[client][paymentReceiver][walletId]._released += amount;
 
-        if (
-            retryForUnclaimableAmounts
-                && unclaimableAmounts[client][paymentReceiver] > 0
-        ) {
-            amount += unclaimable(client, paymentReceiver);
-            delete unclaimableAmounts[client][paymentReceiver];
-        }
+        vestings[client][paymentReceiver][walletId]._released += amount;
 
         address _token = address(token());
 
@@ -699,6 +683,37 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         // This if conditional block represents that nothing more remains to be vested from the specific walletId
         if (block.timestamp >= dueToPaymentReceiver) {
             _afterClaimCleanup(client, paymentReceiver, walletId);
+        }
+    }
+
+    /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
+    /// @param client address of the payment client
+    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
+    function _claimPreviouslyUnclaimable(
+        address client,
+        address paymentReceiver
+    ) internal {
+        uint amount = unclaimable(client, paymentReceiver); //@note instead reentrancy guard?
+        delete unclaimableAmounts[client][paymentReceiver];
+
+        address _token = address(token());
+
+        (bool success, bytes memory data) = _token.call(
+            abi.encodeWithSelector(
+                IERC20(_token).transferFrom.selector,
+                client,
+                paymentReceiver,
+                amount
+            )
+        );
+
+        if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+            emit TokensReleased(paymentReceiver, _token, amount);
+
+            //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+            IERC20PaymentClientBase_v1(client).amountPaid(amount);
+        } else {
+            unclaimableAmounts[client][paymentReceiver] += amount;
         }
     }
 
