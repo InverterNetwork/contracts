@@ -1541,8 +1541,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
-        newIssuanceToken.init(
+        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
             _name,
             _symbol,
             _newDecimals,
@@ -1571,8 +1570,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
-        newIssuanceToken.init(
+        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
             _name,
             _symbol,
             _newDecimals,
@@ -1600,8 +1598,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1();
-        newIssuanceToken.init(
+        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
             _name,
             _symbol,
             _newDecimals,

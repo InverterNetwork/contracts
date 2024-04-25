@@ -6,21 +6,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
-// External Dependencies
-import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
-
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-/// @title Bonding Curve Funding Manager Base Contract.
-/// @author Inverter Network.
-/// @notice This contract enables the base functionalities for issuing tokens along a bonding curve.
-/// @dev The contract implements functionalties for:
-///         - opening and closing the issuance of tokens.
-///         - setting and subtracting of fees, expressed in BPS and subtracted from the collateral.
-///         - calculating the issuance amount by means of an abstract function to be implemented in
-///             the downstream contract.
 interface IERC20Issuance_v1 {
     // Events
 

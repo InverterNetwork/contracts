@@ -6,26 +6,28 @@ import {IERC20Issuance_v1} from
     "@fm/bondingCurve/interfaces/IERC20Issuance_v1.sol";
 
 // External Dependencies
-import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
-import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
+import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+import {Context} from "@oz/utils/Context.sol";
+import {Ownable} from "@oz/access/Ownable.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-/// @title ERC20Issuance_v1 Token
-/// @author Inverter Network.
-/// @notice This contract creates an ERC20 token with the ability to mint and burn tokens and a supply cap.
-/// @dev The contract implements functionalties for:
-///         - opening and closing the issuance of tokens.
-///         - setting and subtracting of fees, expressed in BPS and subtracted from the collateral.
-///         - calculating the issuance amount by means of an abstract function to be implemented in
-///             the downstream contract.
-contract ERC20Issuance_v1 is
-    IERC20Issuance_v1,
-    ERC20Upgradeable,
-    OwnableUpgradeable
-{
+/**
+ * @title   ERC20 Issuance Token
+ *
+ * @notice  This contract creates an ERC20 token with the ability to mint and burn tokens and a
+ *          supply cap.
+ *
+ * @dev     The contract implements functionalties for:
+ *          - opening and closing the issuance of tokens.
+ *          - setting and subtracting of fees, expressed in BPS and subtracted from the collateral.
+ *          - calculating the issuance amount by means of an abstract function to be implemented in
+ *             the downstream contract.
+ *
+ * @author Inverter Network
+ */
+contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
     // State Variables
     address public allowedMinter;
     uint public MAX_SUPPLY;
@@ -41,18 +43,16 @@ contract ERC20Issuance_v1 is
     }
 
     //------------------------------------------------------------------------------------
-    // Initializer
+    // Constructor
 
-    function init(
+    constructor(
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
         uint maxSupply_,
         address initialAdmin_,
         address initialMinter_
-    ) external virtual initializer {
-        __ERC20_init(name_, symbol_);
-        __Ownable_init(initialAdmin_);
+    ) ERC20(name_, symbol_) Ownable(initialAdmin_) {
         _setMinter(initialMinter_);
         MAX_SUPPLY = maxSupply_;
         _decimals = decimals_;
