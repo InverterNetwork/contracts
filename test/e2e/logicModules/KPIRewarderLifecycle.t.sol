@@ -5,30 +5,30 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
 //Internal Dependencies
-import {ModuleTest, IOrchestrator} from "test/modules/ModuleTest.sol";
-import {IModule, ERC165} from "src/modules/base/Module.sol";
-import {IOrchestratorFactory} from "src/factories/OrchestratorFactory.sol";
-import {AuthorizerMock} from "test/utils/mocks/modules/AuthorizerMock.sol";
+import {ModuleTest, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
+import {IModule_v1, ERC165} from "src/modules/base/Module_v1.sol";
+import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
+import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+import {FM_Rebasing_v1} from
+    "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
 
 import {
-    SimplePaymentProcessor,
-    IPaymentProcessor
-} from "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
+    PP_Simple_v1,
+    IPaymentProcessor_v1
+} from "@pp/PP_Simple_v1.sol";
 
 import {
-    KPIRewarder,
-    IKPIRewarder,
+    LM_PC_KPIRewarder_v1,
+    ILM_PC_KPIRewarder_v1,
     IOptimisticOracleIntegrator,
     OptimisticOracleV3Interface,
-    IStakingManager,
-    IERC20PaymentClient
-} from "src/modules/logicModule/KPIRewarder.sol";
+    ILM_PC_Staking_v1,
+    IERC20PaymentClientBase_v1
+} from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -46,7 +46,7 @@ Fork testing necessary. Make sure to have a sepolia rpc configured in foundry.to
 
 */
 
-contract KPIRewarderLifecycle is E2ETest {
+contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     /*
     - This needs to be a fork test using an actual UMA instance.
     - Where are the UMA test deployments? => https://github.com/UMAprotocol/protocol/tree/master/packages/core/networks
@@ -81,11 +81,11 @@ contract KPIRewarderLifecycle is E2ETest {
     //--------------------------------------------------------------------------------
 
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    IOrchestrator orchestrator;
-    RebasingFundingManager fundingManager;
-    KPIRewarder kpiRewarder;
+    IOrchestrator_v1 orchestrator;
+    FM_Rebasing_v1 fundingManager;
+    LM_PC_KPIRewarder_v1 kpiRewarder;
 
     ERC20Mock USDC;
     ERC20Mock rewardToken;
@@ -160,7 +160,7 @@ contract KPIRewarderLifecycle is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(rewardToken)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -170,7 +170,7 @@ contract KPIRewarderLifecycle is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 roleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -180,7 +180,7 @@ contract KPIRewarderLifecycle is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -191,10 +191,10 @@ contract KPIRewarderLifecycle is E2ETest {
 
         // KPI Rewarder
 
-        setUpKPIRewarder();
+        setUpLM_PC_KPIRewarder_v1();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
-                kpiRewarderMetadata,
+            IOrchestratorFactory_v1.ModuleConfig(
+                LM_PC_KPIRewarder_v1Metadata,
                 abi.encode(
                     address(stakingToken),
                     USDC_address,
@@ -206,13 +206,13 @@ contract KPIRewarderLifecycle is E2ETest {
         );
     }
 
-    function test_e2e_KPIRewarderLifecycle() public {
+    function test_e2e_LM_PC_KPIRewarder_v1Lifecycle() public {
         //--------------------------------------------------------------------------------
         // Orchestrator Initialization
         //--------------------------------------------------------------------------------
 
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: rewardToken
         });
@@ -221,16 +221,19 @@ contract KPIRewarderLifecycle is E2ETest {
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
         fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
+            FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        // Get the KPIRewarder module
-        bytes4 kpiRewarderInterfaceId = type(IKPIRewarder).interfaceId;
+        // Get the kpiRewarder module
+        bytes4 LM_PC_KPIRewarder_v1InterfaceId =
+            type(ILM_PC_KPIRewarder_v1).interfaceId;
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(kpiRewarderInterfaceId)
+                ERC165(modulesList[i]).supportsInterface(
+                    LM_PC_KPIRewarder_v1InterfaceId
+                )
             ) {
-                kpiRewarder = KPIRewarder(modulesList[i]);
+                kpiRewarder = LM_PC_KPIRewarder_v1(modulesList[i]);
                 break;
             }
         }
@@ -253,9 +256,9 @@ contract KPIRewarderLifecycle is E2ETest {
         _setupUSDC();
 
         // give the automation service the rights to post assertions
-        _prepareKPIRewarder();
+        _prepareLM_PC_KPIRewarder_v1();
 
-        // Initialize KPIRewarder setup:
+        // Initialize kpiRewarder setup:
         rewardToken.mint(address(this), REWARD_DEPOSIT_AMOUNT);
         rewardToken.approve(address(fundingManager), REWARD_DEPOSIT_AMOUNT);
         fundingManager.deposit(REWARD_DEPOSIT_AMOUNT);
@@ -264,7 +267,7 @@ contract KPIRewarderLifecycle is E2ETest {
         // Test Rounds
         //--------------------------------------------------------------------------------
 
-        // Now we loop through the rounds. First round happens with no stakers and the rewards are not distributed, but the reward value is modified. Since the funds stay in the FundingManager until claiming, there are no locked funds in the KPIRewarder.
+        // Now we loop through the rounds. First round happens with no stakers and the rewards are not distributed, but the reward value is modified. Since the funds stay in the FundingManager until claiming, there are no locked funds in the kpiRewarder.
 
         uint roundCounter = 0;
         uint[] memory accumulatedRewards = new uint[](TOTAL_USERS);
@@ -358,8 +361,9 @@ contract KPIRewarderLifecycle is E2ETest {
 
         distributedInRound = 0;
 
-        expectedDistributed =
-            _getExpectedRewardAmount(kpiRewarder.getKPI(0), MOCK_ASSERTED_VALUE);
+        expectedDistributed = _getExpectedRewardAmount(
+            kpiRewarder.getKPI(0), MOCK_ASSERTED_VALUE
+        );
 
         for (uint i; i < TOTAL_USERS; i++) {
             uint currentUserBalance = rewardToken.balanceOf(users[i]);
@@ -395,7 +399,7 @@ contract KPIRewarderLifecycle is E2ETest {
     //--------------------------------------------------------------------------------
 
     function _getExpectedRewardAmount(
-        IKPIRewarder.KPI memory resolvedKPI,
+        ILM_PC_KPIRewarder_v1.KPI memory resolvedKPI,
         uint assertedValue
     ) internal view returns (uint) {
         uint rewardAmount;
@@ -458,7 +462,7 @@ contract KPIRewarderLifecycle is E2ETest {
         );
     }
 
-    function _prepareKPIRewarder() internal {
+    function _prepareLM_PC_KPIRewarder_v1() internal {
         kpiRewarder.grantModuleRole(
             kpiRewarder.ASSERTER_ROLE(), AUTOMATION_SERVICE
         );
@@ -475,7 +479,7 @@ contract KPIRewarderLifecycle is E2ETest {
             _trancheRewards[i] = trancheRewards[i];
         }
 
-        IKPIRewarder(kpiManager).createKPI(
+        ILM_PC_KPIRewarder_v1(kpiManager).createKPI(
             true, _trancheValues, _trancheRewards
         );
     }

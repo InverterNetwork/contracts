@@ -4,21 +4,21 @@ pragma solidity 0.8.23;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {Module} from "src/modules/base/Module.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 // Internal Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {IOptimisticOracleIntegrator} from
-    "src/modules/logicModule/oracle/IOptimisticOracleIntegrator.sol";
+    "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/IOptimisticOracleIntegrator.sol";
 
 // External Dependencies
 import {OptimisticOracleV3CallbackRecipientInterface} from
-    "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
 import {OptimisticOracleV3Interface} from
-    "src/modules/logicModule/oracle/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 import {ClaimData} from
-    "src/modules/logicModule/oracle/optimistic-oracle-v3/ClaimData.sol";
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/ClaimData.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -26,7 +26,7 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
 abstract contract OptimisticOracleIntegrator is
     IOptimisticOracleIntegrator,
-    Module
+    Module_v1
 {
     using SafeERC20 for IERC20;
 
@@ -50,9 +50,9 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Initialization
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     ) external virtual override initializer {

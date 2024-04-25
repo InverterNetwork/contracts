@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 
 import {
-    IStakingManager,
-    StakingManager,
+    ILM_PC_Staking_v1,
+    LM_PC_Staking_v1,
     SafeERC20,
     IERC20,
-    IERC20PaymentClient,
+    IERC20PaymentClientBase_v1,
     ReentrancyGuard
-} from "./StakingManager.sol";
+} from "src/modules/logicModule/LM_PC_Staking_v1.sol";
 
 import {
     IOptimisticOracleIntegrator,
@@ -16,9 +16,9 @@ import {
     OptimisticOracleV3CallbackRecipientInterface,
     OptimisticOracleV3Interface,
     ClaimData
-} from "./oracle/OptimisticOracleIntegrator.sol";
+} from "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
-interface IKPIRewarder {
+interface ILM_PC_KPIRewarder_v1 {
     //--------------------------------------------------------------------------
     // Types
 
@@ -52,25 +52,25 @@ interface IKPIRewarder {
     // Errors
 
     /// @notice The KPI beinge created has either no tranches or too many
-    error Module__KPIRewarder__InvalidTrancheNumber();
+    error Module__LM_PC_KPIRewarder_v1__InvalidTrancheNumber();
 
     /// @notice The number of tranches in the KPI does not match the number of rewards
-    error Module__KPIRewarder__InvalidKPIValueLengths();
+    error Module__LM_PC_KPIRewarder_v1__InvalidKPIValueLengths();
 
     /// @notice The values for the tranches are not in ascending order
-    error Module__KPIRewarder__InvalidKPITrancheValues();
+    error Module__LM_PC_KPIRewarder_v1__InvalidKPITrancheValues();
 
     /// @notice The KPI number is invalid
-    error Module__KPIRewarder__InvalidKPINumber();
+    error Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
 
     /// @notice The target value for the assertion cannot be zero
-    error Module__KPIRewarder__InvalidTargetValue();
+    error Module__LM_PC_KPIRewarder_v1__InvalidTargetValue();
 
     /// @notice The Queue for new stakers is full
-    error Module__KPIRewarder__StakingQueueIsFull();
+    error Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
 
     /// @notice The Token used paying the bond cannot be the same that is being staked.
-    error Module__KPIRewarder__ModuleCannotUseStakingTokenAsBond();
+    error Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond();
 
     //--------------------------------------------------------------------------
     // Events

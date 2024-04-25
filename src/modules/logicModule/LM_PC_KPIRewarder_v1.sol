@@ -4,22 +4,22 @@ pragma solidity 0.8.23;
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {Module} from "src/modules/base/Module.sol";
+import {Module_v1}from "src/modules/base/Module_v1.sol";
 
 // Internal Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
-import {IKPIRewarder} from "./IKPIRewarder.sol";
+import {ILM_PC_KPIRewarder_v1} from "@lm/interfaces/ILM_PC_KPIRewarder_v1.sol";
 
 import {
-    IStakingManager,
-    StakingManager,
+    ILM_PC_Staking_v1,
+    LM_PC_Staking_v1,
     SafeERC20,
     IERC20,
-    ERC20PaymentClient,
-    IERC20PaymentClient,
+    ERC20PaymentClientBase_v1,
+    IERC20PaymentClientBase_v1,
     ReentrancyGuard
-} from "./StakingManager.sol";
+} from "./LM_PC_Staking_v1.sol";
 
 import {
     IOptimisticOracleIntegrator,
@@ -27,11 +27,11 @@ import {
     OptimisticOracleV3CallbackRecipientInterface,
     OptimisticOracleV3Interface,
     ClaimData
-} from "./oracle/OptimisticOracleIntegrator.sol";
+} from "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
-contract KPIRewarder is
-    IKPIRewarder,
-    StakingManager,
+contract LM_PC_KPIRewarder_v1 is
+    ILM_PC_KPIRewarder_v1,
+    LM_PC_Staking_v1,
     OptimisticOracleIntegrator
 {
     using SafeERC20 for IERC20;
@@ -40,10 +40,10 @@ contract KPIRewarder is
         public
         view
         virtual
-        override(ERC20PaymentClient, Module)
+        override(ERC20PaymentClientBase_v1, Module_v1)
         returns (bool)
     {
-        return interfaceId == type(IKPIRewarder).interfaceId
+        return interfaceId == type(ILM_PC_KPIRewarder_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -84,15 +84,15 @@ contract KPIRewarder is
 
     */
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
     )
         external
         virtual
-        override(StakingManager, OptimisticOracleIntegrator)
+        override(LM_PC_Staking_v1, OptimisticOracleIntegrator)
         initializer
     {
         __Module_init(orchestrator_, metadata);
@@ -104,19 +104,19 @@ contract KPIRewarder is
             uint64 liveness
         ) = abi.decode(configData, (address, address, address, uint64));
 
-        __StakingManager_init(stakingTokenAddr);
+        __LM_PC_Staking_v1_init(stakingTokenAddr);
         __OptimisticOracleIntegrator_init(currencyAddr, ooAddr, liveness);
     }
 
     // ======================================================================
     // View functions
 
-    /// @inheritdoc IKPIRewarder
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
     function getKPI(uint KPInum) public view returns (KPI memory) {
         return registryOfKPIs[KPInum];
     }
 
-    /// @inheritdoc IKPIRewarder
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
     function getAssertionConfig(bytes32 assertionId)
         public
         view
@@ -125,7 +125,7 @@ contract KPIRewarder is
         return assertionConfig[assertionId];
     }
 
-    /// @inheritdoc IKPIRewarder
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
     function getStakingQueue() public view returns (address[] memory) {
         return stakingQueue;
     }
@@ -133,7 +133,7 @@ contract KPIRewarder is
     // ========================================================================
     // Assertion Manager functions:
 
-    /// @inheritdoc IKPIRewarder
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
     /// @dev about the asserter address: any address can be set as asserter, it will be expected to pay for the bond on posting.
     /// The bond tokens can also be deposited in the Module and used to pay for itself, but ONLY if the bond token is different from the one being used for staking.
     /// If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
@@ -152,12 +152,13 @@ contract KPIRewarder is
             asserter == address(this)
                 && address(defaultCurrency) == stakingToken
         ) {
-            revert Module__KPIRewarder__ModuleCannotUseStakingTokenAsBond();
+            revert
+                Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond();
         }
 
         // Make sure that we are targeting an existing KPI
         if (KPICounter == 0 || targetKPI >= KPICounter) {
-            revert Module__KPIRewarder__InvalidKPINumber();
+            revert Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
         }
 
         // Question: what kind of checks should or can we implement on the data side?
@@ -190,7 +191,7 @@ contract KPIRewarder is
     // Owner Configuration Functions:
 
     // Top up funds to pay the optimistic oracle fee
-    /// @inheritdoc IKPIRewarder
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
     function depositFeeFunds(uint amount)
         external
         onlyOrchestratorOwner
@@ -202,7 +203,7 @@ contract KPIRewarder is
         emit FeeFundsDeposited(address(defaultCurrency), amount);
     }
 
-    /// @inheritdoc IKPIRewarder
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
     function createKPI(
         bool _continuous,
         uint[] calldata _trancheValues,
@@ -211,18 +212,19 @@ contract KPIRewarder is
         uint _numOfTranches = _trancheValues.length;
 
         if (_numOfTranches < 1 || _numOfTranches > 20) {
-            revert Module__KPIRewarder__InvalidTrancheNumber();
+            revert Module__LM_PC_KPIRewarder_v1__InvalidTrancheNumber();
         }
 
         if (_numOfTranches != _trancheRewards.length) {
-            revert Module__KPIRewarder__InvalidKPIValueLengths();
+            revert Module__LM_PC_KPIRewarder_v1__InvalidKPIValueLengths();
         }
 
         uint _totalKPIRewards = _trancheRewards[0];
         if (_numOfTranches > 1) {
             for (uint i = 1; i < _numOfTranches; i++) {
                 if (_trancheValues[i - 1] >= _trancheValues[i]) {
-                    revert Module__KPIRewarder__InvalidKPITrancheValues();
+                    revert Module__LM_PC_KPIRewarder_v1__InvalidKPITrancheValues(
+                    );
                 }
 
                 _totalKPIRewards += _trancheRewards[i];
@@ -253,9 +255,9 @@ contract KPIRewarder is
     }
 
     // ===========================================================
-    // New user facing functions (stake() is a StakingManager override) :
+    // New user facing functions (stake() is a LM_PC_Staking_v1 override) :
 
-    /// @inheritdoc IStakingManager
+    /// @inheritdoc ILM_PC_Staking_v1
     function stake(uint amount)
         external
         override
@@ -263,7 +265,7 @@ contract KPIRewarder is
         validAmount(amount)
     {
         if (stakingQueue.length >= MAX_QUEUE_LENGTH) {
-            revert Module__KPIRewarder__StakingQueueIsFull();
+            revert Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
         }
 
         address sender = _msgSender();
@@ -275,13 +277,13 @@ contract KPIRewarder is
         stakingQueueAmounts[sender] += amount;
         totalQueuedFunds += amount;
 
-        //transfer funds to stakingManager
+        //transfer funds to LM_PC_Staking_v1
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
 
         emit StakeEnqueued(sender, amount);
     }
 
-    /// @inheritdoc IKPIRewarder
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
     function dequeueStake() public nonReentrant {
         address user = _msgSender();
 

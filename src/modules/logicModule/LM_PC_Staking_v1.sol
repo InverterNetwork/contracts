@@ -3,19 +3,19 @@ pragma solidity 0.8.23;
 
 // Internal Dependencies
 import {
-    ERC20PaymentClient,
-    Module
-} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
+    ERC20PaymentClientBase_v1,
+    Module_v1
+} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Interfaces
-import {IOrchestrator} from "src/orchestrator/IOrchestrator.sol";
+import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {
-    IERC20PaymentClient,
-    IPaymentProcessor
-} from "src/modules/logicModule/paymentClient/ERC20PaymentClient.sol";
+    IERC20PaymentClientBase_v1,
+    IPaymentProcessor_v1
+} from "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 
-import {IStakingManager} from "src/modules/logicModule/IStakingManager.sol";
+import {ILM_PC_Staking_v1} from "@lm/interfaces/ILM_PC_Staking_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -24,9 +24,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@oz/utils/ReentrancyGuard.sol";
 
-contract StakingManager is
-    IStakingManager,
-    ERC20PaymentClient,
+contract LM_PC_Staking_v1 is
+    ILM_PC_Staking_v1,
+    ERC20PaymentClientBase_v1,
     ReentrancyGuard
 {
     using SafeERC20 for IERC20;
@@ -35,7 +35,7 @@ contract StakingManager is
 
     modifier validDuration(uint duration) {
         if (duration == 0) {
-            revert Module__StakingManager__InvalidDuration();
+            revert Module__LM_PC_Staking_v1__InvalidDuration();
         }
         _;
     }
@@ -66,19 +66,19 @@ contract StakingManager is
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @inheritdoc Module
+    /// @inheritdoc Module_v1
     function init(
-        IOrchestrator orchestrator_,
+        IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external virtual override(Module) initializer {
+    ) external virtual override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
         address _stakingToken = abi.decode(configData, (address));
-        __StakingManager_init(_stakingToken);
+        __LM_PC_Staking_v1_init(_stakingToken);
     }
 
-    function __StakingManager_init(address _stakingToken)
+    function __LM_PC_Staking_v1_init(address _stakingToken)
         internal
         onlyInitializing
     {
@@ -88,17 +88,17 @@ contract StakingManager is
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc IStakingManager
+    /// @inheritdoc ILM_PC_Staking_v1
     function balanceOf(address user) external view returns (uint) {
         return _balances[user];
     }
 
-    /// @inheritdoc IStakingManager
+    /// @inheritdoc ILM_PC_Staking_v1
     function earned(address user) external view returns (uint) {
         return _earned(user, _calculateRewardValue());
     }
 
-    /// @inheritdoc IStakingManager
+    /// @inheritdoc ILM_PC_Staking_v1
     function estimateReward(uint amount, uint duration)
         external
         view
@@ -126,7 +126,7 @@ contract StakingManager is
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc IStakingManager
+    /// @inheritdoc ILM_PC_Staking_v1
     function stake(uint amount)
         external
         virtual
@@ -137,11 +137,11 @@ contract StakingManager is
 
         _stake(sender, amount);
 
-        //transfer funds to stakingManager
+        //transfer funds to LM_PC_Staking_v1
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
     }
 
-    /// @inheritdoc IStakingManager
+    /// @inheritdoc ILM_PC_Staking_v1
     /// @dev this function will revert with a Over/Underflow error in case amount is higher than balance
     function unstake(uint amount)
         external
@@ -177,7 +177,7 @@ contract StakingManager is
         _distributeRewards(recipient);
     }
 
-    /// @inheritdoc IStakingManager
+    /// @inheritdoc ILM_PC_Staking_v1
     function setRewards(uint amount, uint duration)
         external
         onlyOrchestratorOwnerOrManager
@@ -276,7 +276,7 @@ contract StakingManager is
         );
 
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClient(address(this))
+            IERC20PaymentClientBase_v1(address(this))
         );
 
         emit RewardsDistributed(recipient, amount);
@@ -302,7 +302,7 @@ contract StakingManager is
 
         //RewardRate cant be zero
         if (rewardRate == 0) {
-            revert Module__StakingManager__InvalidRewardRate();
+            revert Module__LM_PC_Staking_v1__InvalidRewardRate();
         }
 
         //Rewards end is now plus duration
@@ -315,7 +315,7 @@ contract StakingManager is
 
     function _setStakingToken(address _token) internal {
         if (_token == address(0)) {
-            revert Module__StakingManager__InvalidStakingToken();
+            revert Module__LM_PC_Staking_v1__InvalidStakingToken();
         }
         stakingToken = _token;
     }

@@ -14,7 +14,7 @@ import {OptimisticOracleV3Mock} from
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule_v1, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -23,7 +23,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     OptimisticOracleIntegrator,
     IOptimisticOracleIntegrator
-} from "src/modules/logicModule/oracle/OptimisticOracleIntegrator.sol";
+} from "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
 contract OptimisticOracleIntegratorTest is ModuleTest {
     OptimisticOracleIntegratorMock ooIntegrator;
@@ -78,8 +78,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
             abi.encode(address(_token), address(ooV3), DEFAULT_LIVENESS);
 
         //Init Module wrongly
-        vm.expectRevert(IModule.Module__InvalidOrchestratorAddress.selector);
-        ooIntegrator.init(IOrchestrator(address(0)), _METADATA, _configData);
+        vm.expectRevert(IModule_v1.Module__InvalidOrchestratorAddress.selector);
+        ooIntegrator.init(IOrchestrator_v1(address(0)), _METADATA, _configData);
 
         // Test invalid token
         vm.expectRevert();
@@ -273,7 +273,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         vm.prank(address(0xBEEF));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector,
+                IModule_v1.Module__CallerNotAuthorized.selector,
                 roleId,
                 address(0xBEEF)
             )

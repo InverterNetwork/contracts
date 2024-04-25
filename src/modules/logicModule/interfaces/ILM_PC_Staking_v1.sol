@@ -1,17 +1,17 @@
 pragma solidity ^0.8.0;
 
-interface IStakingManager {
+interface ILM_PC_Staking_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Given stakinng token address is invalid.
-    error Module__StakingManager__InvalidStakingToken();
+    error Module__LM_PC_Staking_v1__InvalidStakingToken();
 
     /// @notice Given Duration is invalid.
-    error Module__StakingManager__InvalidDuration();
+    error Module__LM_PC_Staking_v1__InvalidDuration();
 
     /// @notice The calculated Reward rate is too low to be used.
-    error Module__StakingManager__InvalidRewardRate();
+    error Module__LM_PC_Staking_v1__InvalidRewardRate();
 
     //--------------------------------------------------------------------------
     // Events

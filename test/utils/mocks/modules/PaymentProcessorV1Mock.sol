@@ -32,7 +32,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
     //--------------------------------------------------------------------------
     // IPaymentProcessor_v1 Functions
 
-    function processPayments(IERC20PaymentClient /*client*/ ) external {
+    function processPayments(IERC20PaymentClientBase_v1 /*client*/ ) external {
         processPaymentsTriggered += 1;
     }
 

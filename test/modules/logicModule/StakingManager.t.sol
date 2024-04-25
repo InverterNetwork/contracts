@@ -7,28 +7,28 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 //Internal Dependencies
-import {ModuleTest, IModule, IOrchestrator} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule_v1, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // SuT
 import {
-    StakingManager,
-    IStakingManager,
+    LM_PC_Staking_v1,
+    ILM_PC_Staking_v1,
     ReentrancyGuard,
-    IERC20PaymentClient
-} from "src/modules/logicModule/StakingManager.sol";
+    IERC20PaymentClientBase_v1
+} from "@lm/LM_PC_Staking_v1.sol";
 
-import {StakingManagerAccessMock} from
-    "test/utils/mocks/modules/logicModules/StakingManagerAccessMock.sol";
+import {LM_PC_Staking_v1AccessMock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_Staking_v1AccessMock.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract StakingManagerTest is ModuleTest {
+contract LM_PC_Staking_v1Test is ModuleTest {
     // SuT
-    StakingManagerAccessMock stakingManager;
+    LM_PC_Staking_v1AccessMock stakingManager;
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
 
@@ -48,8 +48,8 @@ contract StakingManagerTest is ModuleTest {
 
     function setUp() public {
         //Add Module to Mock Orchestrator
-        address impl = address(new StakingManagerAccessMock());
-        stakingManager = StakingManagerAccessMock(Clones.clone(impl));
+        address impl = address(new LM_PC_Staking_v1AccessMock());
+        stakingManager = LM_PC_Staking_v1AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(stakingManager);
         _authorizer.setIsAuthorized(address(this), true);
@@ -81,7 +81,9 @@ contract StakingManagerTest is ModuleTest {
         duration = bound(duration, 0, 31_536_000_000); //31536000000 = 1000 years in seconds
         if (duration == 0) {
             vm.expectRevert(
-                IStakingManager.Module__StakingManager__InvalidDuration.selector
+                ILM_PC_Staking_v1
+                    .Module__LM_PC_Staking_v1__InvalidDuration
+                    .selector
             );
         }
         stakingManager.setRewards(type(uint).max, duration);
@@ -95,7 +97,8 @@ contract StakingManagerTest is ModuleTest {
         setUpReasonableStakers(seed);
 
         address user = address(uint160(1)); //Addresslikely to have stake in setUpReasonableStakers()
-        uint providedRewardValue = stakingManager.direct_calculateRewardValue();
+        uint providedRewardValue =
+            stakingManager.direct_calculateRewardValue();
         uint userRewardValue = stakingManager.getRewards(user);
         uint userBalance = stakingManager.balanceOf(user);
         uint previousUserRewards = stakingManager.getRewards(user);
@@ -163,8 +166,8 @@ contract StakingManagerTest is ModuleTest {
     function testEstimateRewardModifierInPosition() public {
         //validAmount
         vm.expectRevert(
-            IERC20PaymentClient
-                .Module__ERC20PaymentClient__InvalidAmount
+            IERC20PaymentClientBase_v1
+                .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
 
@@ -172,7 +175,7 @@ contract StakingManagerTest is ModuleTest {
 
         //validDuration
         vm.expectRevert(
-            IStakingManager.Module__StakingManager__InvalidDuration.selector
+            ILM_PC_Staking_v1.Module__LM_PC_Staking_v1__InvalidDuration.selector
         );
 
         stakingManager.estimateReward(1, 0);
@@ -225,7 +228,9 @@ contract StakingManagerTest is ModuleTest {
 
         //Check _distributeRewards() is triggered
         if (expectedEarnings != 0) {
-            assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
+            assertEq(
+                expectedEarnings, stakingManager.paymentOrders()[0].amount
+            );
         }
 
         assertEq(prevBalance + stakeAmount, stakingManager.balanceOf(staker));
@@ -239,8 +244,8 @@ contract StakingManagerTest is ModuleTest {
     function testStakeModifierInPosition() public {
         //validAmount
         vm.expectRevert(
-            IERC20PaymentClient
-                .Module__ERC20PaymentClient__InvalidAmount
+            IERC20PaymentClientBase_v1
+                .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
 
@@ -323,11 +328,17 @@ contract StakingManagerTest is ModuleTest {
 
         //Check _distributeRewards() is triggered
         if (expectedEarnings != 0) {
-            assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
+            assertEq(
+                expectedEarnings, stakingManager.paymentOrders()[0].amount
+            );
         }
 
-        assertEq(prevBalance - unstakeAmount, stakingManager.balanceOf(staker));
-        assertEq(prevTotalAmount - unstakeAmount, stakingManager.totalSupply());
+        assertEq(
+            prevBalance - unstakeAmount, stakingManager.balanceOf(staker)
+        );
+        assertEq(
+            prevTotalAmount - unstakeAmount, stakingManager.totalSupply()
+        );
         assertEq(
             stakingToken.balanceOf(address(stakingManager)),
             stakingManager.totalSupply()
@@ -337,8 +348,8 @@ contract StakingManagerTest is ModuleTest {
     function testUnstakeModifierInPosition() public {
         //validAmount
         vm.expectRevert(
-            IERC20PaymentClient
-                .Module__ERC20PaymentClient__InvalidAmount
+            IERC20PaymentClientBase_v1
+                .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
 
@@ -412,8 +423,8 @@ contract StakingManagerTest is ModuleTest {
 
         if (expectedRewardRate == 0) {
             vm.expectRevert(
-                IStakingManager
-                    .Module__StakingManager__InvalidRewardRate
+                ILM_PC_Staking_v1
+                    .Module__LM_PC_Staking_v1__InvalidRewardRate
                     .selector
             );
             stakingManager.setRewards(amount, duration);
@@ -441,8 +452,8 @@ contract StakingManagerTest is ModuleTest {
 
         if (expectedRewardRate == 0) {
             vm.expectRevert(
-                IStakingManager
-                    .Module__StakingManager__InvalidRewardRate
+                ILM_PC_Staking_v1
+                    .Module__LM_PC_Staking_v1__InvalidRewardRate
                     .selector
             );
             stakingManager.setRewards(secondAmount, secondDuration);
@@ -465,7 +476,7 @@ contract StakingManagerTest is ModuleTest {
         //onlyOrchestratorOwnerOrManager
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule.Module__CallerNotAuthorized.selector,
+                IModule_v1.Module__CallerNotAuthorized.selector,
                 _authorizer.getOwnerRole(),
                 address(0xBEEF)
             )
@@ -476,8 +487,8 @@ contract StakingManagerTest is ModuleTest {
 
         //validAmount
         vm.expectRevert(
-            IERC20PaymentClient
-                .Module__ERC20PaymentClient__InvalidAmount
+            IERC20PaymentClientBase_v1
+                .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
 
@@ -485,7 +496,7 @@ contract StakingManagerTest is ModuleTest {
 
         //validDuration
         vm.expectRevert(
-            IStakingManager.Module__StakingManager__InvalidDuration.selector
+            ILM_PC_Staking_v1.Module__LM_PC_Staking_v1__InvalidDuration.selector
         );
 
         stakingManager.setRewards(1, 0);
@@ -519,7 +530,9 @@ contract StakingManagerTest is ModuleTest {
             stakingManager.direct_calculateRewardValue(), //works because time between last update and RewardDistributionTimestamp value is 0 and therefor just returns the older rewardValue
             stakingManager.getRewardValue()
         );
-        assertEq(stakingManager.getLastUpdate(), stakingManager.getLastUpdate());
+        assertEq(
+            stakingManager.getLastUpdate(), stakingManager.getLastUpdate()
+        );
 
         if (trigger != address(0)) {
             assertEq(expectedRewards, stakingManager.getRewards(trigger));
@@ -550,7 +563,8 @@ contract StakingManagerTest is ModuleTest {
         );
 
         assertEq(
-            calculatedRewardValue, stakingManager.direct_calculateRewardValue()
+            calculatedRewardValue,
+            stakingManager.direct_calculateRewardValue()
         );
     }
 
@@ -613,7 +627,7 @@ contract StakingManagerTest is ModuleTest {
         assertEq(0, stakingManager.getRewards(user));
 
         //Expect paymentOrder to be correct
-        IERC20PaymentClient.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             stakingManager.paymentOrders();
 
         assertEq(1, orders.length);

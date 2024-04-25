@@ -11,8 +11,6 @@ import {IOrchestratorFactory_v1} from
 // Modules
 
 //TODO: rename
-import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
-import {KPIRewarder} from "src/modules/logicModule/KPIRewarder.sol";
 
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
@@ -23,6 +21,9 @@ import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
 import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
+import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
+import {LM_PC_KPIRewarder_v1} from
+    "@lm/LM_PC_KPIRewarder_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {VotingRoleManager_v1} from "src/modules/utils/VotingRoleManager_v1.sol";
@@ -424,77 +425,78 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // StakingManager
+    // LM_PC_Staking_v1
 
-    StakingManager stakingManagerImpl;
+    LM_PC_Staking_v1 LM_PC_Staking_v1Impl;
 
-    InverterBeacon stakingManagerBeacon;
+    InverterBeacon_v1 LM_PC_Staking_v1Beacon;
 
-    IModule.Metadata stakingManagerMetadata = IModule.Metadata(
-        1, 0, "https://github.com/inverter/staking-manager", "StakingManager"
+    IModule_v1.Metadata LM_PC_Staking_v1Metadata = IModule_v1.Metadata(
+        1, 0, "https://github.com/inverter/staking-manager", "LM_PC_Staking_v1"
     );
 
     /*
-     IOrchestratorFactory.ModuleConfig stakingManagerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
-        stakingManagerMetadata,
+     IOrchestratorFactory_v1.ModuleConfig LM_PC_Staking_v1FactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
+        LM_PC_Staking_v1Metadata,
         bytes(address(stakingToken)),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     ); 
     */
 
-    function setUpStakingManager() internal {
+    function setUpLM_PC_Staking_v1() internal {
         // Deploy module implementations.
-        stakingManagerImpl = new StakingManager();
+        LM_PC_Staking_v1Impl = new LM_PC_Staking_v1();
 
         // Deploy module beacons.
-        stakingManagerBeacon = new InverterBeacon(
+        LM_PC_Staking_v1Beacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
-            stakingManagerMetadata.majorVersion,
-            address(stakingManagerImpl),
-            stakingManagerMetadata.minorVersion
+            LM_PC_Staking_v1Metadata.majorVersion,
+            address(LM_PC_Staking_v1Impl),
+            LM_PC_Staking_v1Metadata.minorVersion
         );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            stakingManagerMetadata, IInverterBeacon(stakingManagerBeacon)
+            LM_PC_Staking_v1Metadata, IInverterBeacon_v1(LM_PC_Staking_v1Beacon)
         );
     }
 
-    //KPIRewarder
+    //LM_PC_KPIRewarder_v1
 
-    KPIRewarder kpiRewarderImpl;
+    LM_PC_KPIRewarder_v1 LM_PC_KPIRewarder_v1Impl;
 
-    InverterBeacon kpiRewarderBeacon;
+    InverterBeacon_v1 LM_PC_KPIRewarder_v1Beacon;
 
-    IModule.Metadata kpiRewarderMetadata = IModule.Metadata(
-        1, 0, "https://github.com/inverter/KPI-Rewarder", "KpiRewarder"
+    IModule_v1.Metadata LM_PC_KPIRewarder_v1Metadata = IModule_v1.Metadata(
+        1, 0, "https://github.com/inverter/KPI-Rewarder", "LM_PC_KPIRewarder_v1"
     );
 
     /*
-     IOrchestratorFactory.ModuleConfig kpiRewarderFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
-        kpiRewarderMetadata,
+     IOrchestratorFactory_v1.ModuleConfig LM_PC_KPIRewarder_v1FactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
+        LM_PC_KPIRewarder_v1Metadata,
         abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address), uint64(assertionLiveness) ),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     ); 
     */
 
-    function setUpKPIRewarder() internal {
+    function setUpLM_PC_KPIRewarder_v1() internal {
         // Deploy module implementations.
-        kpiRewarderImpl = new KPIRewarder();
+        LM_PC_KPIRewarder_v1Impl = new LM_PC_KPIRewarder_v1();
 
         // Deploy module beacons.
-        kpiRewarderBeacon = new InverterBeacon(
+        LM_PC_KPIRewarder_v1Beacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
-            kpiRewarderMetadata.majorVersion,
-            address(kpiRewarderImpl),
-            kpiRewarderMetadata.minorVersion
+            LM_PC_KPIRewarder_v1Metadata.majorVersion,
+            address(LM_PC_KPIRewarder_v1Impl),
+            LM_PC_KPIRewarder_v1Metadata.minorVersion
         );
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            kpiRewarderMetadata, IInverterBeacon(kpiRewarderBeacon)
+            LM_PC_KPIRewarder_v1Metadata,
+            IInverterBeacon_v1(LM_PC_KPIRewarder_v1Beacon)
         );
     }
 

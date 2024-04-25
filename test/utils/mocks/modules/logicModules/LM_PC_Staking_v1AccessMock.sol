@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
+import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 
-contract StakingManagerAccessMock is StakingManager {
+contract LM_PC_Staking_v1AccessMock is LM_PC_Staking_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
