@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // SuT
-import {RestrictedBancorVirtualSupplyBondingCurveFundingManager} from
-    "@fm/bondingCurve/RestrictedBancorVirtualSupplyBondingCurveFundingManager.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -30,11 +30,11 @@ import {
     "test/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock} from
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
-import {RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock} from
-    "test/modules/fundingManager/bondingCurve/utils/mocks/RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock} from
+    "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
+contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
     FM_BC_Bancor_Redeeming_VirtualSupplyV1Test
 {
     function setUp() public override {
@@ -61,9 +61,8 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         bc_properties.initialIssuanceSupply = INITIAL_ISSUANCE_SUPPLY;
         bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
-        address impl = address(
-            new RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock()
-        );
+        address impl =
+            address(new FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock());
 
         bondingCurveFundingManager =
             FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock(Clones.clone(impl));
@@ -117,8 +116,8 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    RestrictedBancorVirtualSupplyBondingCurveFundingManager
-                        .RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated
+                    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
+                        .Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated
                         .selector
                 )
             );
@@ -139,8 +138,8 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    RestrictedBancorVirtualSupplyBondingCurveFundingManager
-                        .RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated
+                    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
+                        .Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated
                         .selector
                 )
             );
@@ -155,7 +154,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
     }
 }
 
-contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
+contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
     ModuleTest
 {
     string internal constant NAME = "Bonding Curve Token";
@@ -172,7 +171,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
     bool internal constant BUY_IS_OPEN = true;
     bool internal constant SELL_IS_OPEN = true;
 
-    RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock
+    FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock
         bondingCurveFundingManager;
     address formula;
 
@@ -205,12 +204,11 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         bc_properties.initialIssuanceSupply = INITIAL_ISSUANCE_SUPPLY;
         bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
-        address impl = address(
-            new RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock()
-        );
+        address impl =
+            address(new FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock());
 
         bondingCurveFundingManager =
-        RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock(
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock(
             Clones.clone(impl)
         );
 

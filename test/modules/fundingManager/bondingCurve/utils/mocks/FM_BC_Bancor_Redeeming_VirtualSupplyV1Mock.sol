@@ -55,13 +55,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
     }
 
     function call_staticPricePPM(
-        uint _issuanceTokenSupply,
+        uint _issuanceSupply,
         uint _collateralSupply,
         uint32 _reserveRatio
     ) external pure returns (uint) {
-        return _staticPricePPM(
-            _issuanceTokenSupply, _collateralSupply, _reserveRatio
-        );
+        return
+            _staticPricePPM(_issuanceSupply, _collateralSupply, _reserveRatio);
     }
 
     function call_convertAmountToRequiredDecimal(

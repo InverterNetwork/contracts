@@ -8,8 +8,8 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 // SuT
-import {RestrictedBancorVirtualSupplyBondingCurveFundingManager} from
-    "@fm/bondingCurve/RestrictedBancorVirtualSupplyBondingCurveFundingManager.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
@@ -18,11 +18,11 @@ import {
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
-contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock is
-    RestrictedBancorVirtualSupplyBondingCurveFundingManager
+contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
+    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
 {
     //--------------------------------------------------------------------------
-    // The RestrictedBancorVirtualSupplyBondingCurveFundingManager is not abstract, so all the necessary functions are already implemented
+    // The FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is not abstract, so all the necessary functions are already implemented
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
     //--------------------------------------------------------------------------
@@ -58,13 +58,12 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerMock is
     }
 
     function call_staticPricePPM(
-        uint _issuanceTokenSupply,
+        uint _issuanceSupply,
         uint _collateralSupply,
         uint32 _reserveRatio
     ) external pure returns (uint) {
-        return _staticPricePPM(
-            _issuanceTokenSupply, _collateralSupply, _reserveRatio
-        );
+        return
+            _staticPricePPM(_issuanceSupply, _collateralSupply, _reserveRatio);
     }
 
     function call_convertAmountToRequiredDecimal(

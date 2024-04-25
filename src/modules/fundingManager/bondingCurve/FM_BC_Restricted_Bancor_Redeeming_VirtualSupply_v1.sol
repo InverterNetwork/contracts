@@ -9,25 +9,35 @@ import {
     IFundingManager_v1
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
-/// @title Restricted Bancor Virtual Supply Bonding Curve Funding Manager Contract.
-/// @author Inverter Network.
-/// @notice This contract enables the issuance and redeeming of tokens on a bonding curve, using
-/// a virtual supply for both the token and the collateral as input. The contract makes use of the
-/// Aragon's Bancor Formula contract to calculate the issuance and redeeming rates. The mint and burn functions are gated through a Role in the Inverter Workflow
-/// @dev This contract inherits functionalties from the contracts:
-/// - BancorVirtualSupplyBondingCurveFundingManager
-/// It overrides several functions of its parent contract to deactivate or otherwise limit them:
-/// - It defines a "Curve Interaction" role that is required to buy and sell on the curve.
-/// - It deactivates the transferOrchestratorToken and mintIssuanceTokenTo functions from the workflow.
-/// PLEASE NOTICE: This means that the workflow itself can only mint tokens through buying and selling, but NOT that there are no other ways to mint tokens. The Bonding Curve uses an external token contract, and there is no guarantee that said contract won't have an additional way to mint tokens (and potentially sell them on the cruve to receive backing collateral)
-contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
+/**
+ * @title   Restricted Bancor Virtual Supply Bonding Curve Funding Manager
+ *
+ * @notice  This contract enables the issuance and redeeming of tokens on a bonding curve, using
+ *          a virtual supply for both the issuance and the collateral as input. It integrates
+ *          Aragon's Bancor Formula to manage the calculations for token issuance and redemption
+ *          rates based on specified reserve ratios.
+ *
+ * @dev     It overrides several functions of its parent contract to deactivate or otherwise limit
+ *          them:
+ *              It defines a "Curve Interaction" role that is required to buy and sell on the curve.
+ *              It deactivates the transferOrchestratorToken and mintIssuanceTokenTo functions from
+ *                  the workflow.
+ *          PLEASE NOTE: This means that the workflow itself can only mint tokens through buying
+ *          and selling, but NOT that there are no other ways to mint tokens. The Bonding Curve
+ *          uses an external token contract, and there is no guarantee that said contract won't
+ *          have an additional way to mint tokens (and potentially sell them on the cruve to receive
+ *          backing collateral)
+ *
+ * @author  Inverter Network
+ */
+contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     FM_BC_Bancor_Redeeming_VirtualSupply_v1
 {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice The feature is deactivated in this implementation.
-    error RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated(
+    error Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(
     );
 
     //--------------------------------------------------------------------------
@@ -93,7 +103,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
         onlyOrchestratorOwner
     {
         revert
-            RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated(
+            Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(
         );
     }
 
@@ -108,7 +118,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManager is
         onlyOrchestrator
     {
         revert
-            RestrictedBancorVirtualSupplyBondingCurveFundingManager__FeatureDeactivated(
+            Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(
         );
     }
 }

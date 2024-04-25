@@ -416,7 +416,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         returns (uint mintAmount)
     {
         // Convert virtual supply and balance to 18 decimals
-        uint decimalConvertedVirtualTokenSupply =
+        uint decimalConvertedVirtualIssuanceSupply =
         _convertAmountToRequiredDecimal(
             virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
         );
@@ -433,7 +433,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
         // Calculate mint amount through bonding curve
         uint decimalConvertedMintAmount = formula.calculatePurchaseReturn(
-            decimalConvertedVirtualTokenSupply,
+            decimalConvertedVirtualIssuanceSupply,
             decimalConvertedVirtualCollateralSupply,
             reserveRatioForBuying,
             decimalConvertedDepositAmount
@@ -450,17 +450,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// The formula used is: PPM * PPM * collateralSupply / (issuanceTokenSupply * reserveRatio).
     /// The formula is based on Aragon's BatchedBancorMarketMaker, which can be found here:
     /// https://github.com/AragonBlack/fundraising/blob/5ad1332955bab9d36cfad345ae92b7ad7dc0bdbe/apps/batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol#L415
-    /// @param _issuanceTokenSupply The total supply of the issuance tokens.
+    /// @param _issuanceSupply The total supply of the issuance tokens.
     /// @param _collateralSupply The total supply of the collateral held by the FundingManager.
     /// @param _reserveRatio The reserve ratio, specified as either sell or buy reserve ratio.
     /// @return uint The calculated static price for the specified operation, formatted in PPM
     function _staticPricePPM(
-        uint _issuanceTokenSupply,
+        uint _issuanceSupply,
         uint _collateralSupply,
         uint32 _reserveRatio
     ) internal pure returns (uint) {
         return uint(PPM) * uint(PPM) * _collateralSupply
-            / (_issuanceTokenSupply * uint(_reserveRatio));
+            / (_issuanceSupply * uint(_reserveRatio));
     }
 
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
@@ -475,7 +475,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         returns (uint redeemAmount)
     {
         // Convert virtual supply and balance to 18 decimals
-        uint decimalConvertedVirtualTokenSupply =
+        uint decimalConvertedVirtualIssuanceSupply =
         _convertAmountToRequiredDecimal(
             virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
         );
@@ -492,7 +492,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
         // Calculate redeem amount through bonding curve
         uint decimalConvertedRedeemAmount = formula.calculateSaleReturn(
-            decimalConvertedVirtualTokenSupply,
+            decimalConvertedVirtualIssuanceSupply,
             decimalConvertedVirtualCollateralSupply,
             reserveRatioForSelling,
             decimalConvertedDepositAmount
