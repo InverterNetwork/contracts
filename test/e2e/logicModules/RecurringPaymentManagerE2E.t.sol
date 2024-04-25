@@ -3,28 +3,29 @@ pragma solidity ^0.8.0;
 
 //Internal Dependencies
 import {
-    E2ETest, IOrchestratorFactory, IOrchestrator
+    E2ETest,
+    IOrchestratorFactory_v1,
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
 // SuT
 import {
-    RecurringPaymentManager,
-    IRecurringPaymentManager,
-    IERC20PaymentClient
-} from "src/modules/logicModule/RecurringPaymentManager.sol";
+    LM_PC_RecurringPayments_v1,
+    ILM_PC_RecurringPayments_v1,
+    IERC20PaymentClientBase_v1
+} from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 // Modules that are used in this E2E test
 import {
-    StreamingPaymentProcessor,
-    IStreamingPaymentProcessor,
-    IERC20PaymentClient
-} from "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    PP_Streaming_v1,
+    IPP_Streaming_v1,
+    IERC20PaymentClientBase_v1
+} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract RecurringPaymentManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     // Let's create a list of paymentReceivers
     address paymentReceiver1 = makeAddr("paymentReceiver 1");
@@ -58,7 +59,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(token)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -68,7 +69,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 roleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -78,7 +79,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         // PaymentProcessor
         setUpStreamingPaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 streamingPaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -88,7 +89,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         // Additional Logic Modules
         setUpRecurringPaymentManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 recurringPaymentManagerMetadata,
                 abi.encode(1 weeks),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -98,30 +99,30 @@ contract RecurringPaymentManagerE2E is E2ETest {
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {
         paymentAmount = bound(paymentAmount, 1, 1e18);
-        RecurringPaymentManager recurringPaymentManager;
+        LM_PC_RecurringPayments_v1 recurringPaymentManager;
 
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
+        FM_Rebasing_v1 fundingManager =
+            FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try IRecurringPaymentManager(modulesList[i]).getCurrentEpoch()
+            try ILM_PC_RecurringPayments_v1(modulesList[i]).getCurrentEpoch()
             returns (uint) {
                 recurringPaymentManager =
-                    RecurringPaymentManager(modulesList[i]);
+                    LM_PC_RecurringPayments_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -171,13 +172,12 @@ contract RecurringPaymentManagerE2E is E2ETest {
 
         // 4. Let the paymentReceivers claim their vested tokens
         /// Let's first find the address of the streamingPaymentProcessor
-        StreamingPaymentProcessor streamingPaymentProcessor;
+        PP_Streaming_v1 streamingPaymentProcessor;
         for (uint i; i < modulesList.length; ++i) {
-            try IStreamingPaymentProcessor(modulesList[i]).unclaimable(
+            try IPP_Streaming_v1(modulesList[i]).unclaimable(
                 paymentReceiver1, paymentReceiver2
             ) returns (uint) {
-                streamingPaymentProcessor =
-                    StreamingPaymentProcessor(modulesList[i]);
+                streamingPaymentProcessor = PP_Streaming_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -185,7 +185,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         }
 
         // Checking whether we got the right address for streamingPaymentProcessor
-        IStreamingPaymentProcessor.VestingWallet[] memory wallets =
+        IPP_Streaming_v1.VestingWallet[] memory wallets =
         streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), paymentReceiver1
         );

@@ -4,41 +4,39 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Factories
-import {ModuleFactory} from "src/factories/ModuleFactory.sol";
-import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
 // Modules
-import {IModule} from "src/modules/base/IModule.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
-import {BancorVirtualSupplyBondingCurveFundingManager} from
-    "src/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.sol";
-import {BancorFormula} from
-    "src/modules/fundingManager/bondingCurveFundingManager/formula/BancorFormula.sol";
-import {SimplePaymentProcessor} from
-    "src/modules/paymentProcessor/SimplePaymentProcessor.sol";
-import {StreamingPaymentProcessor} from
-    "src/modules/paymentProcessor/StreamingPaymentProcessor.sol";
-import {BountyManager} from "src/modules/logicModule/BountyManager.sol";
-import {RecurringPaymentManager} from
-    "src/modules/logicModule/RecurringPaymentManager.sol";
+
+//TODO: rename
 import {StakingManager} from "src/modules/logicModule/StakingManager.sol";
 import {KPIRewarder} from "src/modules/logicModule/KPIRewarder.sol";
-import {RoleAuthorizer} from "src/modules/authorizer/RoleAuthorizer.sol";
-import {TokenGatedRoleAuthorizer} from
-    "src/modules/authorizer/TokenGatedRoleAuthorizer.sol";
-import {SingleVoteGovernor} from "src/modules/utils/SingleVoteGovernor.sol";
-import {MetadataManager} from "src/modules/utils/MetadataManager.sol";
+
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
+import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
+import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
+import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {VotingRoleManager_v1} from "src/modules/utils/VotingRoleManager_v1.sol";
+import {MetadataManager_v1} from "src/modules/utils/MetadataManager_v1.sol";
 
 // Beacon
 import {
-    InverterBeacon,
-    IInverterBeacon
-} from "src/factories/beacon/InverterBeacon.sol";
+    InverterBeacon_v1,
+    IInverterBeacon_v1
+} from "src/proxies/InverterBeacon_v1.sol";
 
 contract E2EModuleRegistry is Test {
     // General Storage and  QOL-constants
-    ModuleFactory moduleFactory;
+    ModuleFactory_v1 moduleFactory;
 
     address public DEFAULT_BEACON_OWNER = address(0x3BEAC0);
 
@@ -51,15 +49,15 @@ contract E2EModuleRegistry is Test {
     // # TEMPLATE
     // Each module should declare:
     //      Module moduleImpl;
-    //      InverterBeacon moduleBeacon;
+    //      InverterBeacon_v1 moduleBeacon;
     //      address moduleBeaconOwner = DEFAULT_BEACON_OWNER;
-    //      IModule.Metadata moduleMetadata = IModule.Metadata(
+    //      IModule_v1.Metadata moduleMetadata = IModule_v1.Metadata(
     //          1, 1, "https://github.com/inverter/module", "ModuleName"
     //      );
     // And AS A COMMENT:
     // /*
     //  //Example Config:
-    //      IOrchestratorFactory.ModuleConfig(
+    //      IOrchestratorFactory_v1.ModuleConfig(
     //          moduleMetadata,
     //          abi.encode(address(this)),
     //          abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -73,22 +71,19 @@ contract E2EModuleRegistry is Test {
     // Funding Managers
     //--------------------------------------------------------------------------
 
-    // RebasingFundingManager
+    // FM_Rebasing_v1
 
-    RebasingFundingManager rebasingFundingManagerImpl;
+    FM_Rebasing_v1 rebasingFundingManagerImpl;
 
-    InverterBeacon rebasingFundingManagerBeacon;
+    InverterBeacon_v1 rebasingFundingManagerBeacon;
 
-    IModule.Metadata rebasingFundingManagerMetadata = IModule.Metadata(
-        1,
-        0,
-        "https://github.com/inverter/funding-manager",
-        "RebasingFundingManager"
+    IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata(
+        1, 0, "https://github.com/inverter/funding-manager", "FM_Rebasing_v1"
     );
 
     /*
-    IOrchestratorFactory.ModuleConfig rebasingFundingManagerFactoryConfig =
-        IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig rebasingFundingManagerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             rebasingFundingManagerMetadata,
             abi.encode(address(token)),
             abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -97,10 +92,10 @@ contract E2EModuleRegistry is Test {
 
     function setUpRebasingFundingManager() internal {
         // Deploy module implementations.
-        rebasingFundingManagerImpl = new RebasingFundingManager();
+        rebasingFundingManagerImpl = new FM_Rebasing_v1();
 
         // Deploy module beacons.
-        rebasingFundingManagerBeacon = new InverterBeacon(
+        rebasingFundingManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             rebasingFundingManagerMetadata.majorVersion,
             address(rebasingFundingManagerImpl),
@@ -110,39 +105,39 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             rebasingFundingManagerMetadata,
-            IInverterBeacon(rebasingFundingManagerBeacon)
+            IInverterBeacon_v1(rebasingFundingManagerBeacon)
         );
     }
 
-    // BancorVirtualSupplyBondingCurveFundingManager
+    // FM_BC_Bancor_Redeeming_VirtualSupply_v1
 
     BancorFormula formula = new BancorFormula();
 
-    BancorVirtualSupplyBondingCurveFundingManager
+    FM_BC_Bancor_Redeeming_VirtualSupply_v1
         bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
-    InverterBeacon bancorVirtualSupplyBondingCurveFundingManagerBeacon;
+    InverterBeacon_v1 bancorVirtualSupplyBondingCurveFundingManagerBeacon;
 
-    IModule.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
-    IModule.Metadata(
+    IModule_v1.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
+    IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/bonding-curve-funding-manager",
-        "BancorVirtualSupplyBondingCurveFundingManager"
+        "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
     );
 
     /*
-        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
-            issuanceToken = IBancorVirtualSupplyBondingCurveFundingManager
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
+            issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .IssuanceToken({
                 name: bytes32(abi.encodePacked("Bonding Curve Token")),
                 symbol: bytes32(abi.encodePacked("BCT")),
                 decimals: uint8(18)
             });
 
-        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
             memory bc_properties =
-            IBancorVirtualSupplyBondingCurveFundingManager
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .BondingCurveProperties({
                 formula: address(formula),
                 reserveRatioForBuying: 200_000,
@@ -151,12 +146,12 @@ contract E2EModuleRegistry is Test {
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialTokenSupply: 100,
+                initialIssuanceSupply: 100,
                 initialCollateralSupply: 100
             });
 
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(issuanceToken, bc_properties, token),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -167,10 +162,10 @@ contract E2EModuleRegistry is Test {
     function setUpBancorVirtualSupplyBondingCurveFundingManager() internal {
         // Deploy module implementations.
         bancorVirtualSupplyBondingCurveFundingManagerImpl =
-            new BancorVirtualSupplyBondingCurveFundingManager();
+            new FM_BC_Bancor_Redeeming_VirtualSupply_v1();
 
         // Deploy module beacons.
-        bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon(
+        bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             bancorVirtualSupplyBondingCurveFundingManagerMetadata.majorVersion,
             address(bancorVirtualSupplyBondingCurveFundingManagerImpl),
@@ -180,7 +175,9 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-            IInverterBeacon(bancorVirtualSupplyBondingCurveFundingManagerBeacon)
+            IInverterBeacon_v1(
+                bancorVirtualSupplyBondingCurveFundingManagerBeacon
+            )
         );
     }
 
@@ -190,18 +187,18 @@ contract E2EModuleRegistry is Test {
 
     // Role Authorizer
 
-    RoleAuthorizer roleAuthorizerImpl;
+    AUT_Roles_v1 roleAuthorizerImpl;
 
-    InverterBeacon roleAuthorizerBeacon;
+    InverterBeacon_v1 roleAuthorizerBeacon;
 
-    IModule.Metadata roleAuthorizerMetadata = IModule.Metadata(
-        1, 0, "https://github.com/inverter/roleAuthorizer", "RoleAuthorizer"
+    IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
+        1, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Roles_v1"
     );
 
     /* 
-    // Note that RoleAuthorizer owner and manager are the same
-    IOrchestratorFactory.ModuleConfig roleAuthorizerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+    // Note that AUT_Roles_v1 owner and manager are the same
+    IOrchestratorFactory_v1.ModuleConfig roleAuthorizerFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         roleAuthorizerMetadata,
         abi.encode(address(this), address(this)),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -209,10 +206,10 @@ contract E2EModuleRegistry is Test {
     */
     function setUpRoleAuthorizer() internal {
         // Deploy module implementations.
-        roleAuthorizerImpl = new RoleAuthorizer();
+        roleAuthorizerImpl = new AUT_Roles_v1();
 
         // Deploy module beacons.
-        roleAuthorizerBeacon = new InverterBeacon(
+        roleAuthorizerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             roleAuthorizerMetadata.majorVersion,
             address(roleAuthorizerImpl),
@@ -221,27 +218,27 @@ contract E2EModuleRegistry is Test {
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            roleAuthorizerMetadata, IInverterBeacon(roleAuthorizerBeacon)
+            roleAuthorizerMetadata, IInverterBeacon_v1(roleAuthorizerBeacon)
         );
     }
 
     // Token Gated Role Authorizer
 
-    TokenGatedRoleAuthorizer tokenRoleAuthorizerImpl;
+    AUT_TokenGated_Roles_v1 tokenRoleAuthorizerImpl;
 
-    InverterBeacon tokenRoleAuthorizerBeacon;
+    InverterBeacon_v1 tokenRoleAuthorizerBeacon;
 
-    IModule.Metadata tokenRoleAuthorizerMetadata = IModule.Metadata(
+    IModule_v1.Metadata tokenRoleAuthorizerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/tokenRoleAuthorizer",
-        "TokenGatedRoleAuthorizer"
+        "AUT_TokenGated_Roles_v1"
     );
 
     /* 
-    // Note that RoleAuthorizer owner and manager are the same
-    IOrchestratorFactory.ModuleConfig tokenRoleAuthorizerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+    // Note that AUT_Roles_v1 owner and manager are the same
+    IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         tokenRoleAuthorizerMetadata,
         abi.encode(address(this), address(this)),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -250,10 +247,10 @@ contract E2EModuleRegistry is Test {
 
     function setUpTokenGatedRoleAuthorizer() internal {
         // Deploy module implementations.
-        tokenRoleAuthorizerImpl = new TokenGatedRoleAuthorizer();
+        tokenRoleAuthorizerImpl = new AUT_TokenGated_Roles_v1();
 
         // Deploy module beacons.
-        tokenRoleAuthorizerBeacon = new InverterBeacon(
+        tokenRoleAuthorizerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             tokenRoleAuthorizerMetadata.majorVersion,
             address(tokenRoleAuthorizerImpl),
@@ -263,7 +260,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             tokenRoleAuthorizerMetadata,
-            IInverterBeacon(tokenRoleAuthorizerBeacon)
+            IInverterBeacon_v1(tokenRoleAuthorizerBeacon)
         );
     }
 
@@ -271,22 +268,19 @@ contract E2EModuleRegistry is Test {
     // Payment Processors
     //--------------------------------------------------------------------------
 
-    // SimplePaymentProcessor
+    // PP_Simple_v1
 
-    SimplePaymentProcessor simplePaymentProcessorImpl;
+    PP_Simple_v1 simplePaymentProcessorImpl;
 
-    InverterBeacon simplePaymentProcessorBeacon;
+    InverterBeacon_v1 simplePaymentProcessorBeacon;
 
-    IModule.Metadata simplePaymentProcessorMetadata = IModule.Metadata(
-        1,
-        0,
-        "https://github.com/inverter/payment-processor",
-        "SimplePaymentProcessor"
+    IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
+        1, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v1"
     );
 
     /*
-     IOrchestratorFactory.ModuleConfig simplePaymentProcessorFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+     IOrchestratorFactory_v1.ModuleConfig simplePaymentProcessorFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         simplePaymentProcessorMetadata,
         bytes(""),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -294,10 +288,10 @@ contract E2EModuleRegistry is Test {
     */
     function setUpSimplePaymentProcessor() internal {
         // Deploy module implementations.
-        simplePaymentProcessorImpl = new SimplePaymentProcessor();
+        simplePaymentProcessorImpl = new PP_Simple_v1();
 
         // Deploy module beacons.
-        simplePaymentProcessorBeacon = new InverterBeacon(
+        simplePaymentProcessorBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             simplePaymentProcessorMetadata.majorVersion,
             address(simplePaymentProcessorImpl),
@@ -307,26 +301,26 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             simplePaymentProcessorMetadata,
-            IInverterBeacon(simplePaymentProcessorBeacon)
+            IInverterBeacon_v1(simplePaymentProcessorBeacon)
         );
     }
 
-    // StreamingPaymentProcessor
+    // PP_Streaming_v1
 
-    StreamingPaymentProcessor streamingPaymentProcessorImpl;
+    PP_Streaming_v1 streamingPaymentProcessorImpl;
 
-    InverterBeacon streamingPaymentProcessorBeacon;
+    InverterBeacon_v1 streamingPaymentProcessorBeacon;
 
-    IModule.Metadata streamingPaymentProcessorMetadata = IModule.Metadata(
+    IModule_v1.Metadata streamingPaymentProcessorMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/streaming-payment-processor",
-        "StreamingPaymentProcessor"
+        "PP_Streaming_v1"
     );
 
     /*
-     IOrchestratorFactory.ModuleConfig streamingPaymentProcessorFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+     IOrchestratorFactory_v1.ModuleConfig streamingPaymentProcessorFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         streamingPaymentProcessorMetadata,
         bytes(""),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -334,10 +328,10 @@ contract E2EModuleRegistry is Test {
     */
     function setUpStreamingPaymentProcessor() internal {
         // Deploy module implementations.
-        streamingPaymentProcessorImpl = new StreamingPaymentProcessor();
+        streamingPaymentProcessorImpl = new PP_Streaming_v1();
 
         // Deploy module beacons.
-        streamingPaymentProcessorBeacon = new InverterBeacon(
+        streamingPaymentProcessorBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             streamingPaymentProcessorMetadata.majorVersion,
             address(streamingPaymentProcessorImpl),
@@ -347,28 +341,28 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             streamingPaymentProcessorMetadata,
-            IInverterBeacon(streamingPaymentProcessorBeacon)
+            IInverterBeacon_v1(streamingPaymentProcessorBeacon)
         );
     }
 
     //--------------------------------------------------------------------------
     // logicModules
 
-    // RecurringPaymentManager
+    // LM_PC_RecurringPayments_v1
 
-    RecurringPaymentManager recurringPaymentManagerImpl;
+    LM_PC_RecurringPayments_v1 recurringPaymentManagerImpl;
 
-    InverterBeacon recurringPaymentManagerBeacon;
+    InverterBeacon_v1 recurringPaymentManagerBeacon;
 
-    IModule.Metadata recurringPaymentManagerMetadata = IModule.Metadata(
+    IModule_v1.Metadata recurringPaymentManagerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/recurring-payment-manager",
-        "RecurringPaymentManager"
+        "LM_PC_RecurringPayments_v1"
     );
     /*
-    IOrchestratorFactory.ModuleConfig recurringPaymentManagerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig recurringPaymentManagerFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         recurringPaymentManagerMetadata,
         abi.encode(1 weeks),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -377,10 +371,10 @@ contract E2EModuleRegistry is Test {
 
     function setUpRecurringPaymentManager() internal {
         // Deploy module implementations.
-        recurringPaymentManagerImpl = new RecurringPaymentManager();
+        recurringPaymentManagerImpl = new LM_PC_RecurringPayments_v1();
 
         // Deploy module beacons.
-        recurringPaymentManagerBeacon = new InverterBeacon(
+        recurringPaymentManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             recurringPaymentManagerMetadata.majorVersion,
             address(recurringPaymentManagerImpl),
@@ -390,22 +384,22 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             recurringPaymentManagerMetadata,
-            IInverterBeacon(recurringPaymentManagerBeacon)
+            IInverterBeacon_v1(recurringPaymentManagerBeacon)
         );
     }
 
-    // BountyManager
+    // LM_PC_Bounties_v1
 
-    BountyManager bountyManagerImpl;
+    LM_PC_Bounties_v1 bountyManagerImpl;
 
-    InverterBeacon bountyManagerBeacon;
+    InverterBeacon_v1 bountyManagerBeacon;
 
-    IModule.Metadata bountyManagerMetadata = IModule.Metadata(
-        1, 0, "https://github.com/inverter/bounty-manager", "BountyManager"
+    IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
+        1, 0, "https://github.com/inverter/bounty-manager", "LM_PC_Bounties_v1"
     );
     /*
-     IOrchestratorFactory.ModuleConfig bountyManagerFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+     IOrchestratorFactory_v1.ModuleConfig bountyManagerFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         bountyManagerMetadata,
         bytes(""),
         abi.encode(true, EMPTY_DEPENDENCY_LIST)
@@ -414,10 +408,10 @@ contract E2EModuleRegistry is Test {
 
     function setUpBountyManager() internal {
         // Deploy module implementations.
-        bountyManagerImpl = new BountyManager();
+        bountyManagerImpl = new LM_PC_Bounties_v1();
 
         // Deploy module beacons.
-        bountyManagerBeacon = new InverterBeacon(
+        bountyManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             bountyManagerMetadata.majorVersion,
             address(bountyManagerImpl),
@@ -426,7 +420,7 @@ contract E2EModuleRegistry is Test {
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            bountyManagerMetadata, IInverterBeacon(bountyManagerBeacon)
+            bountyManagerMetadata, IInverterBeacon_v1(bountyManagerBeacon)
         );
     }
 
@@ -507,25 +501,25 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // utils
 
-    // SingleVoteGovernor
+    // VotingRoleManager_v1
 
-    SingleVoteGovernor singleVoteGovernorImpl;
+    VotingRoleManager_v1 singleVoteGovernorImpl;
 
-    InverterBeacon singleVoteGovernorBeacon;
+    InverterBeacon_v1 singleVoteGovernorBeacon;
 
-    IModule.Metadata singleVoteGovernorMetadata = IModule.Metadata(
+    IModule_v1.Metadata singleVoteGovernorMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/inverter/single-vote-governor",
-        "SingleVoteGovernor"
+        "VotingRoleManager_v1"
     );
 
     /*    
     address[] initialVoters =
         [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
 
-    IOrchestratorFactory.ModuleConfig singleVoteGovernorFactoryConfig =
-    IOrchestratorFactory.ModuleConfig(
+    IOrchestratorFactory_v1.ModuleConfig singleVoteGovernorFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
         singleVoteGovernorMetadata,
         abi.encode(initialVoters, 2, 3 days),
         abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -534,10 +528,10 @@ contract E2EModuleRegistry is Test {
 
     function setUpSingleVoteGovernor() internal {
         // Deploy module implementations.
-        singleVoteGovernorImpl = new SingleVoteGovernor();
+        singleVoteGovernorImpl = new VotingRoleManager_v1();
 
         // Deploy module beacons.
-        singleVoteGovernorBeacon = new InverterBeacon(
+        singleVoteGovernorBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             singleVoteGovernorMetadata.majorVersion,
             address(singleVoteGovernorImpl),
@@ -547,26 +541,29 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
             singleVoteGovernorMetadata,
-            IInverterBeacon(singleVoteGovernorBeacon)
+            IInverterBeacon_v1(singleVoteGovernorBeacon)
         );
     }
 
-    // MetadataManager
+    // MetadataManager_v1
 
-    MetadataManager metadataManagerImpl;
+    MetadataManager_v1 metadataManagerImpl;
 
-    InverterBeacon metadataManagerBeacon;
+    InverterBeacon_v1 metadataManagerBeacon;
 
-    IModule.Metadata metadataManagerMetadata = IModule.Metadata(
-        1, 0, "https://github.com/inverter/metadata-manager", "MetadataManager"
+    IModule_v1.Metadata metadataManagerMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        "https://github.com/inverter/metadata-manager",
+        "MetadataManager_v1"
     );
 
     function setUpMetadataManager() internal {
         // Deploy module implementations.
-        metadataManagerImpl = new MetadataManager();
+        metadataManagerImpl = new MetadataManager_v1();
 
         // Deploy module beacons.
-        metadataManagerBeacon = new InverterBeacon(
+        metadataManagerBeacon = new InverterBeacon_v1(
             DEFAULT_BEACON_OWNER,
             metadataManagerMetadata.majorVersion,
             address(metadataManagerImpl),
@@ -575,7 +572,7 @@ contract E2EModuleRegistry is Test {
 
         // Register modules at moduleFactory.
         moduleFactory.registerMetadata(
-            metadataManagerMetadata, IInverterBeacon(metadataManagerBeacon)
+            metadataManagerMetadata, IInverterBeacon_v1(metadataManagerBeacon)
         );
     }
 }

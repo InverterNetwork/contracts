@@ -3,19 +3,21 @@ pragma solidity ^0.8.0;
 
 //Internal Dependencies
 import {
-    E2ETest, IOrchestratorFactory, IOrchestrator
+    E2ETest,
+    IOrchestratorFactory_v1,
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
 //SuT
 import {
-    BancorVirtualSupplyBondingCurveFundingManager,
-    IBancorVirtualSupplyBondingCurveFundingManager
+    FM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from
-    "test/modules/fundingManager/bondingCurveFundingManager/BancorVirtualSupplyBondingCurveFundingManager.t.sol";
+    "test/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
 
 contract BondingCurveFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     address alice = address(0xA11CE);
     address bob = address(0x606);
@@ -35,8 +37,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // FundingManager
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
-        IBancorVirtualSupplyBondingCurveFundingManager.IssuanceToken memory
-            issuanceToken = IBancorVirtualSupplyBondingCurveFundingManager
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
+            issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .IssuanceToken({
                 name: bytes32(abi.encodePacked("Bonding Curve Token")),
                 symbol: bytes32(abi.encodePacked("BCT")),
@@ -45,9 +47,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
 
         //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 
-        IBancorVirtualSupplyBondingCurveFundingManager.BondingCurveProperties
-            memory bc_properties =
-            IBancorVirtualSupplyBondingCurveFundingManager
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .BondingCurveProperties({
                 formula: address(formula),
                 reserveRatioForBuying: 200_000,
@@ -56,12 +57,12 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialTokenSupply: 100,
+                initialIssuanceSupply: 100,
                 initialCollateralSupply: 100
             });
 
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(issuanceToken, bc_properties, token),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -71,7 +72,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 roleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -81,7 +82,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -91,7 +92,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // Additional Logic Modules
         setUpBountyManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 bountyManagerMetadata,
                 bytes(""),
                 abi.encode(true, EMPTY_DEPENDENCY_LIST)
@@ -101,17 +102,17 @@ contract BondingCurveFundingManagerE2E is E2ETest {
 
     function test_e2e_OrchestratorFundManagement() public {
         // address(this) creates a new orchestrator.
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        BancorVirtualSupplyBondingCurveFundingManager fundingManager =
-        BancorVirtualSupplyBondingCurveFundingManager(
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
             address(orchestrator.fundingManager())
         );
 

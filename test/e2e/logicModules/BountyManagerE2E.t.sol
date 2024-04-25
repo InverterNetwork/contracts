@@ -3,20 +3,20 @@ pragma solidity ^0.8.0;
 
 //Internal Dependencies
 import {
-    E2ETest, IOrchestratorFactory, IOrchestrator
+    E2ETest,
+    IOrchestratorFactory_v1,
+    IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
 // SuT
 import {
-    BountyManager,
-    IBountyManager
-} from "src/modules/logicModule/BountyManager.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract BountyManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
-    IOrchestratorFactory.ModuleConfig[] moduleConfigurations;
+    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     address bountyAdmin = makeAddr("bountyAdmin");
     address claimAdmin = makeAddr("claimAdmin");
@@ -45,7 +45,7 @@ contract BountyManagerE2E is E2ETest {
         // FundingManager
         setUpRebasingFundingManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 rebasingFundingManagerMetadata,
                 abi.encode(address(token)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -55,7 +55,7 @@ contract BountyManagerE2E is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 roleAuthorizerMetadata,
                 abi.encode(address(this), address(this)),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -65,7 +65,7 @@ contract BountyManagerE2E is E2ETest {
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 simplePaymentProcessorMetadata,
                 bytes(""),
                 abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
@@ -75,7 +75,7 @@ contract BountyManagerE2E is E2ETest {
         // Additional Logic Modules
         setUpBountyManager();
         moduleConfigurations.push(
-            IOrchestratorFactory.ModuleConfig(
+            IOrchestratorFactory_v1.ModuleConfig(
                 bountyManagerMetadata,
                 bytes(""),
                 abi.encode(true, EMPTY_DEPENDENCY_LIST)
@@ -85,29 +85,28 @@ contract BountyManagerE2E is E2ETest {
 
     function test_e2e_BountyManagerLifecycle() public {
         //--------------------------------------------------------------------------------
-        // Orchestrator Initialization
+        // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
-        IOrchestratorFactory.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory.OrchestratorConfig({
+        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
+        IOrchestratorFactory_v1.OrchestratorConfig({
             owner: address(this),
             token: token
         });
 
-        IOrchestrator orchestrator =
+        IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
 
-        RebasingFundingManager fundingManager =
-            RebasingFundingManager(address(orchestrator.fundingManager()));
+        FM_Rebasing_v1 fundingManager =
+            FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        BountyManager bountyManager;
+        LM_PC_Bounties_v1 bountyManager;
 
-        // Find BountyManager
+        // Find LM_PC_Bounties_v1
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try IBountyManager(modulesList[i]).isExistingBountyId(0) returns (
-                bool
-            ) {
-                bountyManager = BountyManager(modulesList[i]);
+            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            returns (bool) {
+                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -153,18 +152,18 @@ contract BountyManagerE2E is E2ETest {
         );
 
         // Workers submit bounty
-        IBountyManager.Contributor memory contrib1 =
-            IBountyManager.Contributor(address(0xA11CE), 150e18);
-        IBountyManager.Contributor memory contrib2 =
-            IBountyManager.Contributor(address(0xb0b), 150e18);
+        ILM_PC_Bounties_v1.Contributor memory contrib1 =
+            ILM_PC_Bounties_v1.Contributor(address(0xA11CE), 150e18);
+        ILM_PC_Bounties_v1.Contributor memory contrib2 =
+            ILM_PC_Bounties_v1.Contributor(address(0xb0b), 150e18);
 
         //auth.setIsAuthorized(address(0xA11CE), true);
         bountyManager.grantModuleRole(
             bountyManager.CLAIMANT_ROLE(), address(0xA11CE)
         );
 
-        IBountyManager.Contributor[] memory contribs =
-            new IBountyManager.Contributor[](2);
+        ILM_PC_Bounties_v1.Contributor[] memory contribs =
+            new ILM_PC_Bounties_v1.Contributor[](2);
         contribs[0] = contrib1;
         contribs[1] = contrib2;
 

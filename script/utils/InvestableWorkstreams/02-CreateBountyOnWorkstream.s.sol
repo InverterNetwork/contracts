@@ -6,16 +6,15 @@ import "forge-std/Test.sol";
 
 import "../../deployment/DeploymentScript.s.sol";
 
-import {IFundingManager} from "src/modules/fundingManager/IFundingManager.sol";
-import {IModule} from "src/modules/base/IModule.sol";
-import {IOrchestratorFactory} from "src/factories/IOrchestratorFactory.sol";
-import {IOrchestrator} from "src/orchestrator/Orchestrator.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {
-    BountyManager,
-    IBountyManager
-} from "src/modules/logicModule/BountyManager.sol";
-import {RebasingFundingManager} from
-    "src/modules/fundingManager/RebasingFundingManager.sol";
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 //import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 //import {ScriptConstants} from "../script-constants.sol";
@@ -26,7 +25,8 @@ contract CreateBountyInWorkstream is Script {
 
     address deployedOrchestratorAddress =
         vm.envAddress("DEPLOYED_ORCHESTRATOR_ADDRESS");
-    IOrchestrator _orchestrator = IOrchestrator(deployedOrchestratorAddress);
+    IOrchestrator_v1 _orchestrator =
+        IOrchestrator_v1(deployedOrchestratorAddress);
 
     uint bountyCreatorPrivateKey = vm.envUint("BOUNTY_CREATOR_PRIVATE_KEY");
     address bountyCreator = vm.addr(bountyCreatorPrivateKey);
@@ -40,15 +40,15 @@ contract CreateBountyInWorkstream is Script {
     // ========================================
 
     function run() public {
-        // Find BountyManager
+        // Find LM_PC_Bounties_v1
 
         address[] memory moduleAddresses =
-            IOrchestrator(_orchestrator).listModules();
+            IOrchestrator_v1(_orchestrator).listModules();
         uint lenModules = moduleAddresses.length;
         address orchestratorCreatedBountyManagerAddress;
 
         for (uint i; i < lenModules;) {
-            try IBountyManager(moduleAddresses[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v1(moduleAddresses[i]).isExistingBountyId(0)
             returns (bool) {
                 orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
                 break;
@@ -57,8 +57,8 @@ contract CreateBountyInWorkstream is Script {
             }
         }
 
-        BountyManager orchestratorCreatedBountyManager =
-            BountyManager(orchestratorCreatedBountyManagerAddress);
+        LM_PC_Bounties_v1 orchestratorCreatedBountyManager =
+            LM_PC_Bounties_v1(orchestratorCreatedBountyManagerAddress);
 
         vm.startBroadcast(bountyCreatorPrivateKey);
         {
