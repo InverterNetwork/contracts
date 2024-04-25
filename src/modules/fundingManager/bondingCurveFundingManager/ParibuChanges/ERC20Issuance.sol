@@ -89,6 +89,6 @@ contract ERC20Issuance is
     function _setMinter(address _minter) internal {
         // Note to @Zitzak: Since the token should work independently, I wouldn't control that the minter is a module. Also, setting the minter to zero may be useful in some cases.
         allowedMinter = _minter;
-        emit minterSet(_minter);
+        emit MinterSet(_minter);
     }
 }
