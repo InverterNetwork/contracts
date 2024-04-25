@@ -19,6 +19,9 @@ import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
@@ -49,8 +52,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // ========================================================================
     // BONDING CURVE PARAMETERS
 
-    bytes32 CURVE_TOKEN_NAME = "Conding Burve Token";
-    bytes32 CURVE_TOKEN_SYMBOL = "BCRG";
+    string CURVE_TOKEN_NAME = "Conding Burve Token";
+    string CURVE_TOKEN_SYMBOL = "BCRG";
     uint8 CURVE_TOKEN_DECIMALS = 18;
 
     uint32 RESERVE_RATIO_FOR_BUYING = 330_000;
@@ -95,20 +98,20 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
-        // Orchestrator_v1: Owner, funding token
+        // Orchestrator: Owner, funding token
         IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
         IOrchestratorFactory_v1.OrchestratorConfig({
             owner: orchestratorOwner,
             token: collateralToken
         });
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
-            buf_issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .IssuanceToken({
-                name: CURVE_TOKEN_NAME,
-                symbol: CURVE_TOKEN_SYMBOL,
-                decimals: CURVE_TOKEN_DECIMALS
-            });
+        IBondingCurveBase_v1.IssuanceToken memory buf_issuanceToken =
+        IBondingCurveBase_v1.IssuanceToken({
+            name: CURVE_TOKEN_NAME,
+            symbol: CURVE_TOKEN_SYMBOL,
+            decimals: CURVE_TOKEN_DECIMALS,
+            maxSupply: type(uint).max
+        });
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             buf_bondingCurveProperties =
@@ -168,7 +171,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         additionalModuleConfig[0] = bountyManagerFactoryConfig;
 
         // ------------------------------------------------------------------------
-        // Orchestrator_v1 Creation
+        // Orchestrator Creation
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
@@ -191,7 +194,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             address(IOrchestrator_v1(_orchestrator).fundingManager().token());
         assertEq(orchestratorToken, address(collateralToken));
 
-        // Now we need to find the MilestoneManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
+        // Now we need to find the MilestoneManager. ModuleManager has a function called `listModules` that returns a list of
         // active modules, let's use that to get the address of the MilestoneManager.
 
         // TODO: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
@@ -235,7 +238,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             "=================================================================================="
         );
         console2.log(
-            "Orchestrator_v1 with Id %s created at address: %s ",
+            "Orchestrator with Id %s created at address: %s ",
             _orchestrator.orchestratorId(),
             address(_orchestrator)
         );

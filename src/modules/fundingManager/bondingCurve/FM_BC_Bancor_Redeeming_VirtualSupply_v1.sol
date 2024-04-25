@@ -15,6 +15,7 @@ import {IVirtualCollateralSupplyBase_v1} from
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -54,6 +55,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  */
 contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    IFundingManager_v1,
     VirtualIssuanceSupplyBase_v1,
     VirtualCollateralSupplyBase_v1,
     RedeemingBondingCurveBase_v1
@@ -71,6 +73,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     {
         return interfaceId
             == type(IFM_BC_Bancor_Redeeming_VirtualSupply_v1).interfaceId
+            || interfaceId == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -98,7 +101,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     uint32 internal constant PPM = 1_000_000;
     /// @dev Token that is accepted by this funding manager for deposits.
     IERC20 private _token;
-    /// @dev Token decimals of the Orchestrator_v1 token, which is used as collateral and stores within
+    /// @dev Token decimals of the Orchestrator token, which is used as collateral and stores within
     /// implementation for gas saving.
     uint8 internal collateralTokenDecimals;
     /// @dev Token decimals of the issuance token, which is stored within the implementation for gas saving.
@@ -185,6 +188,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
+        virtual
         override(BondingCurveBase_v1)
         validReceiver(_receiver)
         buyingIsEnabled
@@ -204,6 +208,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buy(uint _depositAmount, uint _minAmountOut)
         external
+        virtual
         override(BondingCurveBase_v1)
         buyingIsEnabled
     {
@@ -222,6 +227,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         external
+        virtual
         override(RedeemingBondingCurveBase_v1)
         validReceiver(_receiver)
         sellingIsEnabled
@@ -241,11 +247,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut)
         external
+        virtual
         override(RedeemingBondingCurveBase_v1)
         sellingIsEnabled
     {
         _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
+
+    //--------------------------------------------------------------------------
+    // Public Data Query Functions
 
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
     function getReserveRatioForBuying() external view returns (uint32) {
@@ -324,9 +334,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         return redeemAmount;
     }
 
-    //--------------------------------------------------------------------------
-    // Public Mutating Functions
-
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
         return _token;
@@ -334,6 +341,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Functions
+
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to, uint amount)
+        external
+        virtual
+        onlyOrchestrator
+    {
+        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
+
+        emit TransferOrchestratorToken(to, amount);
+    }
 
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
     function mintIssuanceTokenTo(address _receiver, uint _amount)
@@ -348,6 +366,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @inheritdoc IVirtualIssuanceSupplyBase_v1
     function setVirtualIssuanceSupply(uint _virtualSupply)
         external
+        virtual
         override(VirtualIssuanceSupplyBase_v1)
         onlyOrchestratorOwner
     {
@@ -357,6 +376,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @inheritdoc IVirtualCollateralSupplyBase_v1
     function setVirtualCollateralSupply(uint _virtualSupply)
         external
+        virtual
         override(VirtualCollateralSupplyBase_v1)
         onlyOrchestratorOwner
     {
@@ -396,9 +416,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         returns (uint mintAmount)
     {
         // Convert virtual supply and balance to 18 decimals
-        uint decimalConvertedVirtualIssuanceSupply =
+        uint decimalConvertedVirtualTokenSupply =
         _convertAmountToRequiredDecimal(
-            virtualIssuanceSupply, decimals(), eighteenDecimals
+            virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
         );
 
         uint decimalConvertedVirtualCollateralSupply =
@@ -413,7 +433,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
         // Calculate mint amount through bonding curve
         uint decimalConvertedMintAmount = formula.calculatePurchaseReturn(
-            decimalConvertedVirtualIssuanceSupply,
+            decimalConvertedVirtualTokenSupply,
             decimalConvertedVirtualCollateralSupply,
             reserveRatioForBuying,
             decimalConvertedDepositAmount
@@ -443,10 +463,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             / (_issuanceTokenSupply * uint(_reserveRatio));
     }
 
-    /// @dev Calculates the amount of collateral to be received when redeeming a given amount of issuance tokens.
+    /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
     /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula assumes 18 decimals for all tokens
-    /// @param _depositAmount The amount of issuance tokens to be redeemed for collateral.
+    /// @param _depositAmount The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
@@ -455,9 +475,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         returns (uint redeemAmount)
     {
         // Convert virtual supply and balance to 18 decimals
-        uint decimalConvertedVirtualIssuanceSupply =
+        uint decimalConvertedVirtualTokenSupply =
         _convertAmountToRequiredDecimal(
-            virtualIssuanceSupply, decimals(), eighteenDecimals
+            virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
         );
 
         uint decimalConvertedVirtualCollateralSupply =
@@ -472,7 +492,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
         // Calculate redeem amount through bonding curve
         uint decimalConvertedRedeemAmount = formula.calculateSaleReturn(
-            decimalConvertedVirtualIssuanceSupply,
+            decimalConvertedVirtualTokenSupply,
             decimalConvertedVirtualCollateralSupply,
             reserveRatioForSelling,
             decimalConvertedDepositAmount
@@ -489,7 +509,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Sets the number of decimals for the token.
+    /// @dev Sets the issuance token for the Bonding Curve Funding Manager.
     /// This function overrides the internal function set in BondingCurveBase_v1, adding
     /// an input validation specific for the Bancor Formula utilizing implementation, after which
     /// it updates the `issuanceToken` state variable and caches the decimals as `issuanceTokenDecimals`.
@@ -527,11 +547,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _addVirtualCollateralAmount(_depositAmount - feeAmount);
     }
 
-    /// @dev Executes a sell order and updates the virtual supply of issuance and collateral.
+    /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
     /// This function internally calls `_sellOrder` to get the redeem amount and updates the
     /// virtual balances accordingly.
     /// @param _receiver The address that will receive the redeem amount.
-    /// @param _depositAmount The amount of issuance tokens that are being sold.
+    /// @param _depositAmount The amount of tokens that are being sold.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function _virtualSellOrder(
         address _receiver,

@@ -306,8 +306,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalIssuanceSupplyBefore =
-            bondingCurveFundingManager.totalSupply();
+        uint totalTokenSupplyBefore = issuanceToken.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
 
         // Emit event
@@ -326,11 +325,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             (bondingCurveCollateralBalanceBefore - amount)
         );
         assertEq(_token.balanceOf(seller), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
-        assertEq(
-            bondingCurveFundingManager.totalSupply(),
-            totalIssuanceSupplyBefore - amount
-        );
+        assertEq(issuanceToken.balanceOf(seller), 0);
+        assertEq(issuanceToken.totalSupply(), totalTokenSupplyBefore - amount);
     }
 
     function testSellOrderWithFee(uint amount, uint fee) public {
@@ -351,8 +347,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalIssuanceSupplyBefore =
-            bondingCurveFundingManager.totalSupply();
+        uint totalTokenSupplyBefore = issuanceToken.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
 
         // Calculate receive amount
@@ -375,17 +370,14 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             (bondingCurveCollateralBalanceBefore - amountMinusFee)
         );
         assertEq(_token.balanceOf(seller), amountMinusFee);
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
-        assertEq(
-            bondingCurveFundingManager.totalSupply(),
-            totalIssuanceSupplyBefore - amount
-        );
+        assertEq(issuanceToken.balanceOf(seller), 0);
+        assertEq(issuanceToken.totalSupply(), totalTokenSupplyBefore - amount);
     }
 
     /* Test openSell and _openSell function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module modifier tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                └── when sell functionality is already open
                 │      └── it should revert
                 └── when sell functionality is not open
@@ -420,9 +412,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test closeSell and _closeSell function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                └── when sell functionality is already closed
                 │      └── it should revert -> 
                 └── when sell functionality is not closed
@@ -455,9 +447,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test setSellFee and _setSellFee function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                └── when fee is over 100% 
                 │      └── it should revert
                 ├── when fee is 100% 

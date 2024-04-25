@@ -18,10 +18,14 @@ import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from
     "test/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 contract BondingCurveFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
+
+    ERC20Issuance_v1 issuanceToken;
 
     address alice = address(0xA11CE);
     uint aliceBuyAmount = 200_000e18;
@@ -44,15 +48,17 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // FundingManager
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
-            issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .IssuanceToken({
-                name: bytes32(abi.encodePacked("Bonding Curve Token")),
-                symbol: bytes32(abi.encodePacked("BCT")),
-                decimals: uint8(18)
-            });
-
         //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
+
+        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties =
+        IBondingCurveBase_v1.IssuanceToken({
+            name: "Bonding Curve Token",
+            symbol: "BCT",
+            decimals: 18,
+            maxSupply: type(uint).max - 1
+        });
+
+        address issuanceTokenAdmin = address(this);
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -64,7 +70,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialTokenSupply: 1,
+                initialIssuanceSupply: 1,
                 initialCollateralSupply: 3
             });
 
@@ -128,7 +134,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             address(orchestrator.fundingManager())
         );
 
-        issuanceToken = ERC20Issuance(fundingManager.getIssuanceToken());
+        issuanceToken = ERC20Issuance_v1(fundingManager.getIssuanceToken());
 
         // IMPORTANT
         // =========
@@ -215,7 +221,9 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             fundingManager.sell(
                 issuanceToken.balanceOf(alice), buf_minAmountOut
             );
-            assertApproxEqRel(token.balanceOf(alice), aliceBuyAmount, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
+            assertApproxEqRel(
+                token.balanceOf(alice), aliceBuyAmount, 0.00001e18
+            ); //ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
 

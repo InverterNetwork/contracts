@@ -25,7 +25,7 @@ interface IERC20Issuance_v1 {
     // Events
 
     /// @notice Emitted when the minter is set.
-    event minterSet(address indexed minter);
+    event MinterSet(address indexed minter);
 
     //--------------------------------------------------------------------------
     // Errors

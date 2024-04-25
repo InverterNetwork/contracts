@@ -60,7 +60,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     modifier onlyEmptyRole(bytes32 roleId) {
         //Check that the role is empty
         if (getRoleMemberCount(roleId) != 0) {
-            revert Module__AUT_TokenGated_Role__RoleNotEmpty();
+            revert Module__AUT_TokenGated_Roles__RoleNotEmpty();
         }
 
         _;
@@ -68,7 +68,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
 
     modifier onlyTokenGated(bytes32 roleId) {
         if (!isTokenGated[roleId]) {
-            revert Module__AUT_TokenGated_Role__RoleNotTokenGated();
+            revert Module__AUT_TokenGated_Roles__RoleNotTokenGated();
         }
         _;
     }
@@ -76,7 +76,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     modifier validThreshold(uint threshold) {
         // Since base ERC721 does not have a total/max supply, we can only enforce that the value should be non-zero
         if (threshold == 0) {
-            revert Module__AUT_TokenGated_Role__InvalidThreshold(threshold);
+            revert Module__AUT_TokenGated_Roles__InvalidThreshold(threshold);
         }
         _;
     }
@@ -120,7 +120,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         if (isTokenGated[role]) {
             try TokenInterface(account).balanceOf(address(this)) {}
             catch {
-                revert Module__AUT_TokenGated_Role__InvalidToken(account);
+                revert Module__AUT_TokenGated_Roles__InvalidToken(account);
             }
         }
 

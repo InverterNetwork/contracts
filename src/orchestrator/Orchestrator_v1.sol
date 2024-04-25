@@ -270,9 +270,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
             paymentProcessor = paymentProcessor_;
             emit PaymentProcessorUpdated(address(paymentProcessor_));
         } else {
-            revert Orchestrator__InvalidModuleType(
-                address(paymentProcessor_)
-            );
+            revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
         }
     }
 

@@ -13,7 +13,7 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-/// @title ERC20Issuance Token
+/// @title ERC20Issuance_v1 Token
 /// @author Inverter Network.
 /// @notice This contract creates an ERC20 token with the ability to mint and burn tokens and a supply cap.
 /// @dev The contract implements functionalties for:

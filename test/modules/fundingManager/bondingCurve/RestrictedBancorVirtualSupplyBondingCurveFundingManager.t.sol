@@ -58,7 +58,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerUpstreamTests is
         bc_properties.sellFee = SELL_FEE;
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
-        bc_properties.initialIssuanceSupply = INITIAL_TOKEN_SUPPLY;
+        bc_properties.initialIssuanceSupply = INITIAL_ISSUANCE_SUPPLY;
         bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
         address impl = address(
@@ -163,7 +163,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
     uint8 internal constant DECIMALS = 18;
     uint internal constant MAX_SUPPLY = type(uint).max;
 
-    uint internal constant INITIAL_TOKEN_SUPPLY = 1;
+    uint internal constant INITIAL_ISSUANCE_SUPPLY = 1;
     uint internal constant INITIAL_COLLATERAL_SUPPLY = 1;
     uint32 internal constant RESERVE_RATIO_FOR_BUYING = 200_000;
     uint32 internal constant RESERVE_RATIO_FOR_SELLING = 200_000;
@@ -202,7 +202,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         bc_properties.sellFee = SELL_FEE;
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
-        bc_properties.initialIssuanceSupply = INITIAL_TOKEN_SUPPLY;
+        bc_properties.initialIssuanceSupply = INITIAL_ISSUANCE_SUPPLY;
         bc_properties.initialCollateralSupply = INITIAL_COLLATERAL_SUPPLY;
 
         address impl = address(
@@ -231,7 +231,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         );
 
         issuanceToken =
-            ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
+            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
 
         // Since we tested the success case in the Upstream tests, we now only need to verify revert on unauthorized calls
     }
@@ -264,7 +264,7 @@ contract RestrictedBancorVirtualSupplyBondingCurveFundingManagerTests is
         );
         assertEq(
             bondingCurveFundingManager.getVirtualIssuanceSupply(),
-            INITIAL_TOKEN_SUPPLY,
+            INITIAL_ISSUANCE_SUPPLY,
             "Virtual token supply has not been set correctly"
         );
         assertEq(

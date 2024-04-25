@@ -65,13 +65,13 @@ import {RedeemingBondingCurveBaseV1Test} from
 
     */
 
-contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
+contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     string internal constant NAME = "Bonding Curve Token";
     string internal constant SYMBOL = "BCT";
     uint8 internal constant DECIMALS = 18;
     uint internal constant MAX_SUPPLY = type(uint).max;
 
-    uint internal constant INITIAL_TOKEN_SUPPLY = 1;
+    uint internal constant INITIAL_ISSUANCE_SUPPLY = 1;
     uint internal constant INITIAL_COLLATERAL_SUPPLY = 3;
     uint32 internal constant RESERVE_RATIO_FOR_BUYING = 333_333;
     uint32 internal constant RESERVE_RATIO_FOR_SELLING = 333_333;
@@ -133,8 +133,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
 
     function setUp() public virtual {
         // Deploy contracts
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
-            issuanceToken;
+        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties;
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bc_properties;
 
@@ -178,7 +177,7 @@ contract BancorVirtualSupplyBondingCurveFundingManagerTest is ModuleTest {
         );
 
         issuanceToken =
-            ERC20Issuance(bondingCurveFundingManager.getIssuanceToken());
+            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
     }
 
     function testSupportsInterface() public {

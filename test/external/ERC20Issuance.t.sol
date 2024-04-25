@@ -15,7 +15,7 @@ contract ERC20IssuanceTest is Test {
     ERC20Issuance_v1 token;
 
     function setUp() public {
-        token = new ERC20Issuance();
+        token = new ERC20Issuance_v1();
         token.init(
             "Test Token",
             "TT",

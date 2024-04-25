@@ -32,12 +32,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  Inverter Network
  */
-abstract contract BondingCurveBase_v1 is
-    IBondingCurveBase_v1,
-    IFundingManager_v1,
-    ERC20Upgradeable,
-    Module_v1
-{
+abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -254,16 +249,13 @@ abstract contract BondingCurveBase_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // OnlyOrchestrator Mutating Functions
+    // Calls to the external ERC20 contract
 
-    /// @inheritdoc IFundingManager_v1
-    function transferOrchestratorToken(address to, uint amount)
-        external
-        onlyOrchestrator
-    {
-        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
-
-        emit TransferOrchestratorToken(to, amount);
+    /// @dev Mints new tokens
+    /// @param _to The address of the recipient.
+    /// @param _amount The amount of tokens to mint.
+    function _mint(address _to, uint _amount) internal {
+        issuanceToken.mint(_to, _amount);
     }
     /// @dev Burns tokens
     /// @param _from The address of the owner.
