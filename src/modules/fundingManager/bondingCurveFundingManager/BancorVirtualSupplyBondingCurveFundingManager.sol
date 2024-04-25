@@ -537,10 +537,11 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         uint _depositAmount,
         uint _minAmountOut
     ) internal {
-        (uint amountIssued, uint feeAmount) =
+        (uint amountIssued, uint collateralFeeAmount) =
             _buyOrder(_receiver, _depositAmount, _minAmountOut);
-        _addVirtualTokenAmount(amountIssued); //@todo include fee correctly
-        _addVirtualCollateralAmount(_depositAmount - feeAmount);
+
+        _addVirtualTokenAmount(amountIssued);
+        _addVirtualCollateralAmount(_depositAmount - collateralFeeAmount);
     }
 
     /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
@@ -554,10 +555,10 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         uint _depositAmount,
         uint _minAmountOut
     ) internal {
-        (uint redeemAmount, uint feeAmount) =
+        (uint redeemAmount, uint issuanceFeeAmount) =
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
-        _subVirtualTokenAmount(_depositAmount);
-        _subVirtualCollateralAmount(redeemAmount + feeAmount);
+        _subVirtualTokenAmount(_depositAmount - issuanceFeeAmount);
+        _subVirtualCollateralAmount(redeemAmount);
     }
 
     /// @dev Sets the reserve ratio for buying tokens.

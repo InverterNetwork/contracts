@@ -69,10 +69,12 @@ abstract contract BondingCurveFundingManagerBase is
     uint internal tradeFeeCollected;
 
     //@note talk about this later
-    // Reserve Ratio should be 100% -> >100%
-    // Reserve is colleteral + fee / issuance
+    // Colleteralisation should be 100% -> >100%
+    // Colleteralisation is colleteral + fee / issuance
     // Project Fee drain the amount of tokens that are above 100%
+    // Maybe set to nees at least 80% or even 0%
     // Project Fee -> +2% to Reserve Ratio
+    // Might work for Private  / Workflow
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -174,13 +176,16 @@ abstract contract BondingCurveFundingManagerBase is
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral to deposit for buying tokens.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    /// @return mintAmount The amount of issuance token minted to the receiver address
-    /// @return feeAmount The amount of collateral token subtracted as fee
+    /// @return totalIssuanceTokenMinted The total amount of issuance token minted during this function call
+    /// @return collateralFeeAmount The amount of collateral token subtracted as fee
     function _buyOrder(
         address _receiver,
         uint _depositAmount,
         uint _minAmountOut
-    ) internal returns (uint mintAmount, uint feeAmount) {
+    )
+        internal
+        returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
+    {
         if (_depositAmount == 0) {
             revert BondingCurveFundingManager__InvalidDepositAmount();
         }
@@ -204,6 +209,10 @@ abstract contract BondingCurveFundingManagerBase is
         _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
+
+        //collateral Fee Amount is the combination of protocolFeeAmount plus the projectFeeAmount
+        collateralFeeAmount = protocolFeeAmount + projectFeeAmount;
+
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
             collateralTreasury,
@@ -211,26 +220,31 @@ abstract contract BondingCurveFundingManagerBase is
             protocolFeeAmount
         );
         // Add project fee if applicable
-        if (projectFeeAmount > 0) tradeFeeCollected += feeAmount;
+        if (projectFeeAmount > 0) tradeFeeCollected += projectFeeAmount;
 
         // Calculate mint amount based on upstream formula
-        mintAmount = _issueTokensFormulaWrapper(netDeposit);
+        uint issuanceMintAmount = _issueTokensFormulaWrapper(netDeposit);
+        totalIssuanceTokenMinted = issuanceMintAmount;
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (mintAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
-            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
+        (issuanceMintAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            issuanceMintAmount, issuanceBuyFeePercentage, 0
+        );
         // collect protocol fee on outgoing issuance token
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
 
         // Revert when the mint amount is lower than minimum amount the user expects
-        if (mintAmount < _minAmountOut) {
+        if (issuanceMintAmount < _minAmountOut) {
             revert BondingCurveFundingManagerBase__InsufficientOutputAmount();
         }
         // Mint tokens to address
-        _mint(_receiver, mintAmount);
+        _mint(_receiver, issuanceMintAmount);
         // Emit event
-        emit TokensBought(_receiver, _depositAmount, mintAmount, _msgSender());
+        emit TokensBought(
+            _receiver, _depositAmount, issuanceMintAmount, _msgSender()
+        );
     }
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.

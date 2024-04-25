@@ -135,13 +135,16 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @param _receiver The address receiving the redeem amount.
     /// @param _depositAmount The amount of tokens being sold by the receiver.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    /// @return redeemAmount The amount of tokens that are transfered to the receiver in exchange for _depositAmount.
-    /// @return feeAmount The amount of collateral token subtracted as fee
+    /// @return totalCollateralTokenMovedOut The total amount of collateral tokens that are transfered away from this contract.
+    /// @return issuanceFeeAmount The amount of issuance token subtracted as fee
     function _sellOrder(
         address _receiver,
         uint _depositAmount,
         uint _minAmountOut
-    ) internal returns (uint redeemAmount, uint feeAmount) {
+    )
+        internal
+        returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
+    {
         if (_depositAmount == 0) {
             revert RedeemingBondingCurveFundingManager__InvalidDepositAmount();
         }
@@ -164,14 +167,16 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         // Process the protocol fee
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
         // Calculate redeem amount based on upstream formula
-        redeemAmount = _redeemTokensFormulaWrapper(netDeposit);
+        uint collateralRedeemAmount = _redeemTokensFormulaWrapper(netDeposit);
+
+        totalCollateralTokenMovedOut = collateralRedeemAmount;
 
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
 
         // Require that enough collateral token is held to be redeemable
         if (
-            redeemAmount
+            collateralRedeemAmount
                 > __Module_orchestrator.fundingManager().token().balanceOf(
                     address(this)
                 )
@@ -182,9 +187,9 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         }
 
         // Get net amount, protocol and project fee amounts
-        (redeemAmount, protocolFeeAmount, projectFeeAmount) =
+        (collateralRedeemAmount, protocolFeeAmount, projectFeeAmount) =
         _calculateNetAndSplitFees(
-            redeemAmount, collateralSellFeePercentage, sellFee
+            collateralRedeemAmount, collateralSellFeePercentage, sellFee
         );
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
@@ -197,16 +202,18 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         if (projectFeeAmount > 0) tradeFeeCollected += projectFeeAmount; // Add fee amount to total collected fee
 
         // Revert when the redeem amount is lower than minimum amount the user expects
-        if (redeemAmount < _minAmountOut) {
+        if (collateralRedeemAmount < _minAmountOut) {
             revert RedeemingBondingCurveFundingManager__InsufficientOutputAmount(
             );
         }
         // Transfer tokens to receiver
         __Module_orchestrator.fundingManager().token().transfer(
-            _receiver, redeemAmount
+            _receiver, collateralRedeemAmount
         );
         // Emit event
-        emit TokensSold(_receiver, _depositAmount, redeemAmount, _msgSender());
+        emit TokensSold(
+            _receiver, _depositAmount, collateralRedeemAmount, _msgSender()
+        );
     }
 
     /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
