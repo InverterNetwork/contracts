@@ -333,6 +333,9 @@ abstract contract BondingCurveFundingManagerBase is
         pure
         returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
     {
+        if ((_protocolFee + _workflowFee) > BPS) {
+            revert BondingCurveFundingManagerBase__FeeAmountToHigh();
+        }
         protocolFeeAmount = _totalAmount * _protocolFee / BPS;
         workflowFeeAmount = _totalAmount * _workflowFee / BPS;
         netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;

@@ -709,6 +709,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test _calculateNetAndSplitFees() function
+        ├── Given the (protocol fee + workflow fee) > BPS / 100%
+        │   └── When the function _calculateNetAndSplitFees() is called
+        │       └── Then it should revert with BondingCurveFundingManagerBase__FeeAmountToHigh
         ├── Given the (protocol fee + workflow fee) == 0
         │   └── When the function _calculateNetAndSplitFees() is called
         │       └── Then it should return totalAmount as netAmount
@@ -732,6 +735,26 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
                         ├── And it should return the correct protocolFeeAmount
                         └── And it should return the correct workflowFeeAmount
     */
+
+    function testInternalCalculateNetAndSplitFees_FailsIfFeeIsToHigh(
+        uint protocolFee,
+        uint workflowFee
+    ) public {
+        protocolFee = bound(protocolFee, 1, 2 ^ 128);
+        workflowFee = bound(workflowFee, 1, 2 ^ 128);
+
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        if (protocolFee + workflowFee > _bps) {
+            vm.expectRevert(
+                IBondingCurveFundingManagerBase
+                    .BondingCurveFundingManagerBase__FeeAmountToHigh
+                    .selector
+            );
+        }
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            0, protocolFee, workflowFee
+        );
+    }
 
     function testInternalCalculateNetAndSplitFees_CombinedFee0() public {
         (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
@@ -784,7 +807,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         totalAmount = bound(totalAmount, 1, 2 ^ 128);
         protocolFee = bound(protocolFee, 1, _bps);
         workflowFee = bound(workflowFee, 1, _bps);
-        vm.assume(workflowFee + protocolFee < _bps); //@todo add assumption in base code
+        vm.assume(workflowFee + protocolFee < _bps);
 
         (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
         bondingCurveFundingManager.call_calculateNetAndSplitFees(

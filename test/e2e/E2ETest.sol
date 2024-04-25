@@ -78,7 +78,7 @@ contract E2ETest is E2EModuleRegistry {
         gov.init(communityMultisig, teamMultisig, 1 weeks);
 
         feeManager = new FeeManager();
-        feeManager.init(address(this), treasury, 0, 0); //@todo check if it works for 1%
+        feeManager.init(address(this), treasury, 0, 0);
 
         vm.prank(communityMultisig);
         gov.setFeeManager(address(feeManager));

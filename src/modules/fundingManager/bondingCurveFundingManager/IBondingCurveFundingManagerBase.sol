@@ -27,6 +27,9 @@ interface IBondingCurveFundingManagerBase {
     /// @notice Actual buy amount is lower than the minimum acceptable amount
     error BondingCurveFundingManagerBase__InsufficientOutputAmount();
 
+    /// @notice The combination of protocol fee and workflow fee cant be higher than 100%
+    error BondingCurveFundingManagerBase__FeeAmountToHigh();
+
     //--------------------------------------------------------------------------
     // Events
 
