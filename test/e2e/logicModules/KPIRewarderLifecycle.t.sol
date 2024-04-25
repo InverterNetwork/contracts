@@ -36,9 +36,13 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 /*
-Fork testing necessary:
+Fork testing necessary. Make sure to have a sepolia rpc configured in foundry.toml . Example:
+       >> foundry.toml
+            [rpc_endpoints]
+            mainnet = "${RPC_URL}"
+            sepolia = "${SEPOLIA_RPC_URL}"
 
-forge test --match-contract KPIRewarderLifecycle -vvv --fork-url $SEPOLIA_RPC_URL
+(this assumes a sepolia rpc url is present in the environment)    
 
 */
 
@@ -51,10 +55,12 @@ contract KPIRewarderLifecycle is E2ETest {
             "contractName": "OptimisticOracleV3",
             "address": "0xFd9e2642a170aDD10F53Ee14a93FcF2F31924944"
         },
-    - What Tokens are whitelisted? Which ones could we mint freely for non-fork tests? =>
+    - What Tokens are whitelisted? Which ones could we mint freely for non-fork tests? 
+        Sepolia:
+        {
         USDC clone: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
         Minter for impersonation: 0x39B3756655A34F869208c72b661f1afdEc1d428F
-    
+        }
 
 
     */
