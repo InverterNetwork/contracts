@@ -157,12 +157,12 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         ) = _getSellFeesAndTreasuryAddresses();
 
         uint protocolFeeAmount;
-        uint projectFeeAmount;
+        uint workflowFeeAmount;
         uint netDeposit;
 
-        // Get net amount, protocol and project fee amounts. Currently there is no issuance project
+        // Get net amount, protocol and workflow fee amounts. Currently there is no issuance project
         // fee enabled
-        (netDeposit, protocolFeeAmount, /* projectFee */ ) =
+        (netDeposit, protocolFeeAmount, /* workflowFee */ ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
         // Process the protocol fee
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
@@ -186,8 +186,8 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             );
         }
 
-        // Get net amount, protocol and project fee amounts
-        (collateralRedeemAmount, protocolFeeAmount, projectFeeAmount) =
+        // Get net amount, protocol and workflow fee amounts
+        (collateralRedeemAmount, protocolFeeAmount, workflowFeeAmount) =
         _calculateNetAndSplitFees(
             collateralRedeemAmount, collateralSellFeePercentage, sellFee
         );
@@ -198,8 +198,8 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
             protocolFeeAmount
         );
 
-        // Add project fee if applicable
-        if (projectFeeAmount > 0) tradeFeeCollected += projectFeeAmount; // Add fee amount to total collected fee
+        // Add workflow fee if applicable
+        if (workflowFeeAmount > 0) tradeFeeCollected += workflowFeeAmount; // Add fee amount to total collected fee
 
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (collateralRedeemAmount < _minAmountOut) {

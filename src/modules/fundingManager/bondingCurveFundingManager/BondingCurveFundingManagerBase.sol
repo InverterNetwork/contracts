@@ -68,14 +68,6 @@ abstract contract BondingCurveFundingManagerBase is
     /// when engaging with the bonding curve-based funding manager.
     uint internal tradeFeeCollected;
 
-    //@note talk about this later
-    // Colleteralisation should be 100% -> >100%
-    // Colleteralisation is colleteral + fee / issuance
-    // Project Fee drain the amount of tokens that are above 100%
-    // Maybe set to nees at least 80% or even 0%
-    // Project Fee -> +2% to Reserve Ratio
-    // Might work for Private  / Workflow
-
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -202,16 +194,16 @@ abstract contract BondingCurveFundingManagerBase is
         ) = _getBuyFeesAndTreasuryAddresses();
 
         uint protocolFeeAmount;
-        uint projectFeeAmount;
+        uint workflowFeeAmount;
         uint netDeposit;
-        // Get net amount, protocol and project fee amounts
-        (netDeposit, protocolFeeAmount, projectFeeAmount) =
+        // Get net amount, protocol and workflow fee amounts
+        (netDeposit, protocolFeeAmount, workflowFeeAmount) =
         _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
 
-        //collateral Fee Amount is the combination of protocolFeeAmount plus the projectFeeAmount
-        collateralFeeAmount = protocolFeeAmount + projectFeeAmount;
+        //collateral Fee Amount is the combination of protocolFeeAmount plus the workflowFeeAmount
+        collateralFeeAmount = protocolFeeAmount + workflowFeeAmount;
 
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
@@ -219,16 +211,16 @@ abstract contract BondingCurveFundingManagerBase is
             __Module_orchestrator.fundingManager().token(),
             protocolFeeAmount
         );
-        // Add project fee if applicable
-        if (projectFeeAmount > 0) tradeFeeCollected += projectFeeAmount;
+        // Add workflow fee if applicable
+        if (workflowFeeAmount > 0) tradeFeeCollected += workflowFeeAmount;
 
         // Calculate mint amount based on upstream formula
         uint issuanceMintAmount = _issueTokensFormulaWrapper(netDeposit);
         totalIssuanceTokenMinted = issuanceMintAmount;
 
-        // Get net amount, protocol and project fee amounts. Currently there is no issuance project
+        // Get net amount, protocol and workflow fee amounts. Currently there is no issuance project
         // fee enabled
-        (issuanceMintAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
+        (issuanceMintAmount, protocolFeeAmount, /* workflowFeeAmount */ ) =
         _calculateNetAndSplitFees(
             issuanceMintAmount, issuanceBuyFeePercentage, 0
         );
@@ -335,15 +327,15 @@ abstract contract BondingCurveFundingManagerBase is
     function _calculateNetAndSplitFees(
         uint _totalAmount,
         uint _protocolFee,
-        uint _projectFee
+        uint _workflowFee
     )
         public
         pure
-        returns (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount)
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
     {
         protocolFeeAmount = _totalAmount * _protocolFee / BPS;
-        projectFeeAmount = _totalAmount * _projectFee / BPS;
-        netAmount = _totalAmount - protocolFeeAmount - projectFeeAmount;
+        workflowFeeAmount = _totalAmount * _workflowFee / BPS;
+        netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;
     }
 
     function _processProtocolFeeViaTransfer(

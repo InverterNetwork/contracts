@@ -292,7 +292,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         ) = _getBuyFeesAndTreasuryAddresses();
 
         // Deduct protocol and project buy fee from collateral, if applicable
-        (_depositAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
         _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
@@ -301,7 +301,7 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
 
         // Deduct protocol buy fee from issuance, if applicable
-        (mintAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        (mintAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
             _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
 
         // Return expected purchase return amount
@@ -329,14 +329,14 @@ contract BancorVirtualSupplyBondingCurveFundingManager is
         ) = _getSellFeesAndTreasuryAddresses();
 
         // Deduct protocol sell fee from issuance, if applicable
-        (_depositAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
 
         // Calculate redeem amount from formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
 
         // Deduct protocol and project sell fee from collateral, if applicable
-        (redeemAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
         _calculateNetAndSplitFees(
             redeemAmount, collateralSellFeePercentage, sellFee
         );

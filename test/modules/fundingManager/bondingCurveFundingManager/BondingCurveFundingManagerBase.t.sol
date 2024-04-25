@@ -237,14 +237,14 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         └── when the deposit amount is not 0
                 ├── when the return amount is lower than minimum expected amount out
                 │       └── it should revert 
-                ├── when the project fee is higher than 0
+                ├── when the workflow fee is higher than 0
                 │       └── it should substract the fee from the deposit amount
                 │               ├── it should pull the buy amount from the caller  
                 │               ├── it should take the fee out from the pulled amount 
                 │               ├── it should determine the mint amount of tokens to mint from the rest
                 │               ├── it should mint the tokens to the receiver 
                 │               └── it should emit an event?  
-                ├── when the project fee is 0
+                ├── when the workflow fee is 0
                 │               ├── it should pull the buy amount from the caller  
                 │               ├── it should determine the mint amount of tokens to mint 
                 │               ├── it should mint the tokens to the receiver     
@@ -291,14 +291,14 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         uint amount,
         uint _collateralFee,
         uint _issuanceFee,
-        uint _projectFee
+        uint _workflowFee
     ) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         _collateralFee = bound(_collateralFee, 0, _bps);
         _issuanceFee = bound(_issuanceFee, 0, _bps);
-        _projectFee = bound(_projectFee, 0, _bps - 1);
-        vm.assume(_collateralFee + _projectFee < _bps);
+        _workflowFee = bound(_workflowFee, 0, _bps - 1);
+        vm.assume(_collateralFee + _workflowFee < _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
         amount = bound(amount, 1, maxAmount);
@@ -311,9 +311,9 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
             feeManager.setDefaultIssuanceFee(_issuanceFee);
         }
 
-        if (_projectFee != 0) {
+        if (_workflowFee != 0) {
             vm.prank(owner_address);
-            bondingCurveFundingManager.setBuyFee(_projectFee);
+            bondingCurveFundingManager.setBuyFee(_workflowFee);
         }
 
         address buyer = makeAddr("buyer");
@@ -340,7 +340,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
             protocolCollateralFeeAmount,
             projectCollateralFeeAmount
         ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
-            amount, _collateralFee, _projectFee
+            amount, _collateralFee, _workflowFee
         );
 
         (finalAmount, protocolIssuanceFeeAmount,) = bondingCurveFundingManager
@@ -709,53 +709,53 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
     }
 
     /* Test _calculateNetAndSplitFees() function
-        ├── Given the (protocol fee + project fee) == 0
+        ├── Given the (protocol fee + workflow fee) == 0
         │   └── When the function _calculateNetAndSplitFees() is called
         │       └── Then it should return totalAmount as netAmount
-        │           └── And it should return 0 for protocol and project fee amount
+        │           └── And it should return 0 for protocol and workflow fee amount
         ├── Given the protocol fee == 0
-        │   └── And the project fee  > 0
+        │   └── And the workflow fee  > 0
         │       └── When the function _calculateNetAndSplitFees() is called
         │           └── Then it should return the correct netAmount
         │               ├── And it should return protocolFeeAmount as 0
-        │               └── And it should return the correct projectFeeAmount
+        │               └── And it should return the correct workflowFeeAmount
         ├── Given the protocol fee > 0
-        │   └── And the project fee == 0
+        │   └── And the workflow fee == 0
         │       └── When the function _calculateNetAndSplitFees() is called
         │           └── Then it should return the correct netAmount
         │               ├── And it should return the correct protocolFeeAmount
-        │               └── And it should return the projectFeeAmount == 0
+        │               └── And it should return the workflowFeeAmount == 0
         └── Given the protocol fee > 0
-            └── And the project fee > 0
+            └── And the workflow fee > 0
                 └── When the function _calculateNetAndSplitFees() is called
                     └── Then it should return the correct netAmount
                         ├── And it should return the correct protocolFeeAmount
-                        └── And it should return the correct projectFeeAmount
+                        └── And it should return the correct workflowFeeAmount
     */
 
     function testInternalCalculateNetAndSplitFees_CombinedFee0() public {
-        (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount) =
+        (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
             bondingCurveFundingManager.call_calculateNetAndSplitFees(0, 0, 0);
         assertEq(netAmount, 0);
         assertEq(protocolFeeAmount, 0);
-        assertEq(projectFeeAmount, 0);
+        assertEq(workflowFeeAmount, 0);
     }
 
     function testInternalCalculateNetAndSplitFees_ProtocolFee0(
         uint totalAmount,
-        uint projectFee
+        uint workflowFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
         totalAmount = bound(totalAmount, 1, 2 ^ 128);
-        projectFee = bound(projectFee, 1, _bps);
+        workflowFee = bound(workflowFee, 1, _bps);
 
-        (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount) =
+        (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
-            totalAmount, 0, projectFee
+            totalAmount, 0, workflowFee
         );
-        assertEq(netAmount, totalAmount - projectFeeAmount);
+        assertEq(netAmount, totalAmount - workflowFeeAmount);
         assertEq(protocolFeeAmount, 0);
-        assertEq(projectFeeAmount, totalAmount * projectFee / _bps);
+        assertEq(workflowFeeAmount, totalAmount * workflowFee / _bps);
     }
 
     function testInternalCalculateNetAndSplitFees_ProjectFee0(
@@ -766,34 +766,34 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         totalAmount = bound(totalAmount, 1, 2 ^ 128);
         protocolFee = bound(protocolFee, 1, _bps);
 
-        (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount) =
+        (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
             totalAmount, protocolFee, 0
         );
         assertEq(netAmount, totalAmount - protocolFeeAmount);
         assertEq(protocolFeeAmount, totalAmount * protocolFee / _bps);
-        assertEq(projectFeeAmount, 0);
+        assertEq(workflowFeeAmount, 0);
     }
 
     function testInternalCalculateNetAndSplitFees_FeesBiggerThan0(
         uint totalAmount,
         uint protocolFee,
-        uint projectFee
+        uint workflowFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
         totalAmount = bound(totalAmount, 1, 2 ^ 128);
         protocolFee = bound(protocolFee, 1, _bps);
-        projectFee = bound(projectFee, 1, _bps);
-        vm.assume(projectFee + protocolFee < _bps); //@todo add assumption in base code
+        workflowFee = bound(workflowFee, 1, _bps);
+        vm.assume(workflowFee + protocolFee < _bps); //@todo add assumption in base code
 
-        (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount) =
+        (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
-            totalAmount, protocolFee, projectFee
+            totalAmount, protocolFee, workflowFee
         );
 
-        assertEq(netAmount, totalAmount - protocolFeeAmount - projectFeeAmount);
+        assertEq(netAmount, totalAmount - protocolFeeAmount - workflowFeeAmount);
         assertEq(protocolFeeAmount, totalAmount * protocolFee / _bps);
-        assertEq(projectFeeAmount, totalAmount * projectFee / _bps);
+        assertEq(workflowFeeAmount, totalAmount * workflowFee / _bps);
     }
 
     /* Test _setDecimals function

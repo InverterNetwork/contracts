@@ -283,14 +283,14 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
         uint amount,
         uint _collateralFee,
         uint _issuanceFee,
-        uint _projectFee
+        uint _workflowFee
     ) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         _collateralFee = bound(_collateralFee, 0, _bps);
         _issuanceFee = bound(_issuanceFee, 0, _bps);
-        _projectFee = bound(_projectFee, 0, _bps - 1);
-        vm.assume(_collateralFee + _projectFee < _bps);
+        _workflowFee = bound(_workflowFee, 0, _bps - 1);
+        vm.assume(_collateralFee + _workflowFee < _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
         amount = bound(amount, 1, maxAmount);
@@ -306,9 +306,9 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
             feeManager.setDefaultIssuanceFee(_issuanceFee);
         }
 
-        if (_projectFee != 0) {
+        if (_workflowFee != 0) {
             vm.prank(owner_address);
-            bondingCurveFundingManager.setSellFee(_projectFee);
+            bondingCurveFundingManager.setSellFee(_workflowFee);
         }
 
         // Calculate receive amount
@@ -325,7 +325,7 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         (finalAmount,, projectCollateralFeeAmount) = bondingCurveFundingManager
             .call_calculateNetAndSplitFees(
-            amountAfterFirstFeeCollection, _collateralFee, _projectFee
+            amountAfterFirstFeeCollection, _collateralFee, _workflowFee
         );
 
         // Emit event

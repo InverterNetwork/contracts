@@ -119,14 +119,14 @@ contract RedeemingBondingCurveFundingManagerMock is
     function call_calculateNetAndSplitFees(
         uint _totalAmount,
         uint _protocolFee,
-        uint _projectFee
+        uint _workflowFee
     )
         external
         pure
-        returns (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount)
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
     {
         return
-            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _projectFee);
+            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
     }
 
     //--------------------------------------------------------------------------
