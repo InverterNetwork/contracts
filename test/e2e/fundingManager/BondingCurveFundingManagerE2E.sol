@@ -15,7 +15,6 @@ import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 //SuT
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IBondingCurveBase_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from
     "test/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
@@ -23,8 +22,6 @@ import {
 contract BondingCurveFundingManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
-
-    ERC20Issuance_v1 issuanceToken;
 
     address alice = address(0xA11CE);
     address bob = address(0x606);
@@ -44,17 +41,15 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // FundingManager
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
+            issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .IssuanceToken({
+                name: bytes32(abi.encodePacked("Bonding Curve Token")),
+                symbol: bytes32(abi.encodePacked("BCT")),
+                decimals: uint8(18)
+            });
+
         //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
-
-        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties =
-        IBondingCurveBase_v1.IssuanceToken({
-            name: "Bonding Curve Token",
-            symbol: "BCT",
-            decimals: 18,
-            maxSupply: type(uint).max - 1
-        });
-
-        address issuanceTokenAdmin = address(this);
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1

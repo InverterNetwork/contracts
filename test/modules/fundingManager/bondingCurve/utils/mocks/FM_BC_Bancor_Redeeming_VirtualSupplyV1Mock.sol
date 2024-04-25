@@ -45,13 +45,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         return collateralTokenDecimals;
     }
 
-    function call_issuanceTokenDecimals() external view returns (uint8) {
-        return issuanceTokenDecimals;
-    }
-
-    // Since the init calls are not registered for coverage, we call expose setIssuanceToken to get to 100% test coverage.
-    function call_setIssuanceToken(address _newIssuanceToken) external {
-        _setIssuanceToken(_newIssuanceToken);
+    // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
+    function call_setDecimals(uint8 _newDecimals) external {
+        _setTokenDecimals(_newDecimals);
     }
 
     function call_staticPricePPM(
@@ -84,9 +80,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         returns (uint)
     {
         uint decimalConvertedVirtualIssuanceSupply =
-        _convertAmountToRequiredDecimal(
-            virtualIssuanceSupply, issuanceTokenDecimals, 18
-        );
+        _convertAmountToRequiredDecimal(virtualIssuanceSupply, decimals(), 18);
         return decimalConvertedVirtualIssuanceSupply;
     }
 

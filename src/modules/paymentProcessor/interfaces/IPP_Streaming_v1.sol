@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20PaymentClientBase_v1} from
-    "@lm_pc/ERC20paymentClient/interfaces/IERC20PaymentClientBase_v1.sol";
+    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 
@@ -83,25 +83,25 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     // Errors
 
     /// @notice insufficient tokens in the client to do payments
-    error Module__PP_Streaming_v1__InsufficientTokenBalanceInClient();
+    error Module__PP_Streaming__InsufficientTokenBalanceInClient();
 
     /// @notice the paymentReceiver is not owed any money by the paymentClient
-    error Module__PP_Streaming_v1__NothingToClaim(
+    error Module__PP_Streaming__NothingToClaim(
         address paymentClient, address paymentReceiver
     );
 
     /// @notice paymentReceiver's walletId for the paymentClient is not valid
-    error Module__PP_Streaming_v1__InvalidWallet(
+    error Module__PP_Streaming__InvalidWallet(
         address paymentClient, address paymentReceiver, uint walletId
     );
 
     /// @notice paymentReceiver's walletId for the paymentClient is no longer active
-    error Module__PP_Streaming_v1__InactiveWallet(
+    error Module__PP_Streaming__InactiveWallet(
         address paymentClient, address paymentReceiver, uint walletId
     );
 
     /// @notice the paymentReceiver for the given paymentClient does not exist (anymore)
-    error Module__PP_Streaming_v1__InvalidPaymentReceiver(
+    error Module__PP_Streaming__InvalidPaymentReceiver(
         address paymentClient, address paymentReceiver
     );
 

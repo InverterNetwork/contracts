@@ -171,7 +171,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.prank(non_owner_address);
         vm.expectRevert(
             IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase_v1__SellingFunctionaltiesClosed
+                .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
                 .selector
         );
         bondingCurveFundingManager.sellFor(non_owner_address, 100, 100);
@@ -240,7 +240,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         {
             vm.expectRevert(
                 IRedeemingBondingCurveBase_v1
-                    .Module__RedeemingBondingCurveBase_v1__InvalidDepositAmount
+                    .Module__RedeemingBondingCurveBase__InvalidDepositAmount
                     .selector
             );
             bondingCurveFundingManager.sell(0, 0);
@@ -264,7 +264,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         {
             vm.expectRevert(
                 IRedeemingBondingCurveBase_v1
-                    .Module__RedeemingBondingCurveBase_v1__InsufficientCollateralForRedemption
+                    .Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption
                     .selector
             );
             bondingCurveFundingManager.sell(amount, amount);
@@ -286,7 +286,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.startPrank(seller);
         vm.expectRevert(
             IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase_v1__InsufficientOutputAmount
+                .Module__RedeemingBondingCurveBase__InsufficientOutputAmount
                 .selector
         );
         bondingCurveFundingManager.sell(amount, minAmountOut);
@@ -302,7 +302,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalTokenSupplyBefore = issuanceToken.totalSupply();
+        uint totalIssuanceSupplyBefore =
+            bondingCurveFundingManager.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
 
         // Emit event
@@ -321,8 +322,11 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             (bondingCurveCollateralBalanceBefore - amount)
         );
         assertEq(_token.balanceOf(seller), amount);
-        assertEq(issuanceToken.balanceOf(seller), 0);
-        assertEq(issuanceToken.totalSupply(), totalTokenSupplyBefore - amount);
+        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(
+            bondingCurveFundingManager.totalSupply(),
+            totalIssuanceSupplyBefore - amount
+        );
     }
 
     function testSellOrderWithFee(uint amount, uint fee) public {
@@ -343,7 +347,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Pre-checks
         uint bondingCurveCollateralBalanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalTokenSupplyBefore = issuanceToken.totalSupply();
+        uint totalIssuanceSupplyBefore =
+            bondingCurveFundingManager.totalSupply();
         assertEq(_token.balanceOf(seller), 0);
 
         // Calculate receive amount
@@ -366,8 +371,11 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             (bondingCurveCollateralBalanceBefore - amountMinusFee)
         );
         assertEq(_token.balanceOf(seller), amountMinusFee);
-        assertEq(issuanceToken.balanceOf(seller), 0);
-        assertEq(issuanceToken.totalSupply(), totalTokenSupplyBefore - amount);
+        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(
+            bondingCurveFundingManager.totalSupply(),
+            totalIssuanceSupplyBefore - amount
+        );
     }
 
     /* Test openSell and _openSell function
@@ -386,7 +394,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     {
         vm.expectRevert(
             IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase_v1__SellingAlreadyOpen
+                .Module__RedeemingBondingCurveBase__SellingAlreadyOpen
                 .selector
         );
         bondingCurveFundingManager.openSell();
@@ -426,7 +434,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         vm.expectRevert(
             IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase_v1__SellingAlreadyClosed
+                .Module__RedeemingBondingCurveBase__SellingAlreadyClosed
                 .selector
         );
         bondingCurveFundingManager.closeSell();
@@ -463,7 +471,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
             IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase_v1__InvalidFeePercentage
+                .Module__RedeemingBondingCurveBase__InvalidFeePercentage
                 .selector
         );
         bondingCurveFundingManager.setSellFee(_fee);

@@ -25,7 +25,7 @@ import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 /**
- * @title   OrchestratorFactory_v1: Orchestrator Factory v1 for the Inverter Network
+ * @title   Orchestrator Factory
  *
  * @notice  {OrchestratorFactory_v1} facilitates the deployment of orchestrators and their
  *          associated modules for the Inverter Network, ensuring seamless creation and
@@ -36,7 +36,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
  *          Integrates with the module factory to instantiate necessary modules with custom
  *          configurations, supporting complex setup with interdependencies among modules.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract OrchestratorFactory_v1 is
     IOrchestratorFactory_v1,
@@ -79,7 +79,7 @@ contract OrchestratorFactory_v1 is
     /// @notice Modifier to guarantee that the given id is valid
     modifier validOrchestratorId(uint id) {
         if (id > _orchestratorIdCounter) {
-            revert OrchestratorFactory_v1__InvalidId();
+            revert OrchestratorFactory__InvalidId();
         }
         _;
     }
@@ -145,7 +145,7 @@ contract OrchestratorFactory_v1 is
         }
 
         if (orchestratorConfig.owner == address(0)) {
-            revert OrchestratorFactory_v1__OrchestratorOwnerIsInvalid();
+            revert OrchestratorFactory__OrchestratorOwnerIsInvalid();
         }
 
         emit OrchestratorCreated(_orchestratorIdCounter, clone);

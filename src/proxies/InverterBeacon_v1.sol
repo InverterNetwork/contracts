@@ -13,7 +13,7 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 /**
- * @title   InverterBeacon_v1: Inverter Beacon for Upgradable Contract Management for the Inverter Network.
+ * @title   Inverter Beacon
  *
  * @notice  Manages upgrades and versioning for smart contract implementations, allowing
  *          contract administrators to dynamically change contract logic while maintaining
@@ -24,7 +24,7 @@ import {Ownable} from "@oz/access/Ownable.sol";
  *          features include emergency mode control and strict version handling with major
  *          and minor version concepts.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------------
@@ -48,14 +48,14 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
 
     modifier validImplementation(address newImplementation) {
         if (!(newImplementation.code.length > 0)) {
-            revert InverterBeacon_v1__InvalidImplementation();
+            revert InverterBeacon__InvalidImplementation();
         }
         _;
     }
 
     modifier validNewMinorVersion(uint newMinorVersion) {
         if (newMinorVersion <= minorVersion) {
-            revert InverterBeacon_v1__InvalidImplementationMinorVersion();
+            revert InverterBeacon__InvalidImplementationMinorVersion();
         }
         _;
     }

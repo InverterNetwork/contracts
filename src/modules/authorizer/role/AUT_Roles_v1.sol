@@ -20,7 +20,7 @@ import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
 /**
- * @title   AUT_Role_v1: Role Management and Authorization for the Inverter Network.
+ * @title   Roles Authorizer
  *
  * @notice  Provides a robust access control mechanism for managing roles and permissions
  *          across different modules within the Inverter Network, ensuring secure and
@@ -30,9 +30,9 @@ import {AccessControlEnumerableUpgradeable} from
  *          offer fine-grained access control through role-based permissions. Utilizes
  *          ERC2771 for meta-transactions to enhance module interaction experiences.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
-contract AUT_Role_v1 is
+contract AUT_Roles_v1 is
     IAuthorizer_v1,
     AccessControlEnumerableUpgradeable,
     Module_v1
@@ -64,7 +64,7 @@ contract AUT_Role_v1 is
     /// @notice Verifies that the caller is an active module
     modifier onlyModule(address module) {
         if (!orchestrator().isModule(module)) {
-            revert Module__Authorizer_v1__NotActiveModule(module);
+            revert Module__Authorizer__NotActiveModule(module);
         }
         _;
     }
@@ -75,7 +75,7 @@ contract AUT_Role_v1 is
             role == ORCHESTRATOR_OWNER_ROLE
                 && getRoleMemberCount(ORCHESTRATOR_OWNER_ROLE) <= 1
         ) {
-            revert Module__Authorizer_v1__OwnerRoleCannotBeEmpty();
+            revert Module__Authorizer__OwnerRoleCannotBeEmpty();
         }
         _;
     }

@@ -11,9 +11,9 @@ import {
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 // SuT
 import {
-    LM_PC_Recurring_v1,
-    ILM_PC_Recurring_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Recurring_v1.sol";
+    LM_PC_RecurringPayments_v1,
+    ILM_PC_RecurringPayments_v1
+} from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 
@@ -39,7 +39,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     // Modules, for reference between functions
     IOrchestrator_v1 orchestrator;
     FM_Rebasing_v1 fundingManager;
-    LM_PC_Recurring_v1 recurringPaymentManager;
+    LM_PC_RecurringPayments_v1 recurringPaymentManager;
     PP_Streaming_v1 streamingPaymentProcessor;
 
     function setUp() public override {
@@ -110,8 +110,10 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
         fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        recurringPaymentManager = LM_PC_Recurring_v1(
-            orchestrator.findModuleAddressInOrchestrator("LM_PC_Recurring_v1")
+        recurringPaymentManager = LM_PC_RecurringPayments_v1(
+            orchestrator.findModuleAddressInOrchestrator(
+                "LM_PC_RecurringPayments_v1"
+            )
         );
         // check if the recurringPaymentManager is initialized correctly or not.
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);

@@ -7,13 +7,13 @@ interface IVirtualCollateralSupplyBase_v1 {
     // Errors
 
     /// @notice The virtual supply cannot be zero.
-    error Module__VirtualCollateralSupplyBase_v1__VirtualSupplyCannotBeZero();
+    error Module__VirtualCollateralSupplyBase__VirtualSupplyCannotBeZero();
 
     // @notice Subtracting would result in an underflow.
-    error Module__VirtualCollateralSupplyBase_v1__SubtractResultsInUnderflow();
+    error Module__VirtualCollateralSupplyBase__SubtractResultsInUnderflow();
 
     /// @notice Adding would result in and overflow.
-    error Module__VirtualCollateralSupply_v1__AddResultsInOverflow();
+    error Module__VirtualCollateralSupplyBase__AddResultsInOverflow();
 
     //--------------------------------------------------------------------------
     // Events

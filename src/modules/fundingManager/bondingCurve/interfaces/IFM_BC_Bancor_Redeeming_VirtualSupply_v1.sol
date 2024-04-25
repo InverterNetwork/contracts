@@ -6,17 +6,16 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     // Errors
 
     /// @notice Reserve ratio can not be be bigger than 100% expressed in PPM
-    error Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidReserveRatio();
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
 
     /// @notice To avoid destructive precision loss when using the Bancor Formula,
     ///         the Token decimals should:
     //              - Not be lower than 7 decimals
     //              - Higher or equal to the collateral token decimals
-    error Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidTokenDecimal();
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidTokenDecimal();
 
     /// @notice Invalid deposit amount
-    error Module__FM_BC_Bancor_Redeeming_VirtualSupply_v1__InvalidDepositAmount(
-    );
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount();
 
     //--------------------------------------------------------------------------
     // Events

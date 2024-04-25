@@ -9,13 +9,13 @@ interface IFundingManager_v1 {
     // Errors
 
     /// @dev Invalid Address
-    error Module__FundingManager_v1__InvalidAddress();
+    error Module__FundingManager__InvalidAddress();
 
     /// @notice Function is only callable by authorized address.
-    error Module__FundingManager_v1__CannotSelfDeposit();
+    error Module__FundingManager__CannotSelfDeposit();
 
     /// @notice There is a cap on deposits.
-    error Module__FundingManager_v1__DepositCapReached();
+    error Module__FundingManager__DepositCapReached();
 
     //--------------------------------------------------------------------------
     // Events

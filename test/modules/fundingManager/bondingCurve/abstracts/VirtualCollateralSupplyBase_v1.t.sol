@@ -58,7 +58,7 @@ contract VirtualCollateralSupplyBaseV1Test is Test {
 
         vm.expectRevert(
             IVirtualCollateralSupplyBase_v1
-                .Module__VirtualCollateralSupply_v1__AddResultsInOverflow
+                .Module__VirtualCollateralSupplyBase__AddResultsInOverflow
                 .selector
         );
         virtualCollateralSupplyBase.addVirtualCollateralAmount(amount);
@@ -91,7 +91,7 @@ contract VirtualCollateralSupplyBaseV1Test is Test {
 
         vm.expectRevert(
             IVirtualCollateralSupplyBase_v1
-                .Module__VirtualCollateralSupplyBase_v1__SubtractResultsInUnderflow
+                .Module__VirtualCollateralSupplyBase__SubtractResultsInUnderflow
                 .selector
         );
         virtualCollateralSupplyBase.subVirtualCollateralAmount(amount);
@@ -102,7 +102,7 @@ contract VirtualCollateralSupplyBaseV1Test is Test {
 
         vm.expectRevert(
             IVirtualCollateralSupplyBase_v1
-                .Module__VirtualCollateralSupplyBase_v1__VirtualSupplyCannotBeZero
+                .Module__VirtualCollateralSupplyBase__VirtualSupplyCannotBeZero
                 .selector
         );
         virtualCollateralSupplyBase.subVirtualCollateralAmount(amount);
@@ -132,7 +132,7 @@ contract VirtualCollateralSupplyBaseV1Test is Test {
 
         vm.expectRevert(
             IVirtualCollateralSupplyBase_v1
-                .Module__VirtualCollateralSupplyBase_v1__VirtualSupplyCannotBeZero
+                .Module__VirtualCollateralSupplyBase__VirtualSupplyCannotBeZero
                 .selector
         );
         virtualCollateralSupplyBase.setVirtualCollateralSupply(amount);

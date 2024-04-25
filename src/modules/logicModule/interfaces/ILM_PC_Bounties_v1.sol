@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 import {IERC20PaymentClientBase_v1} from
-    "@lm_pc/ERC20paymentClient/interfaces/IERC20PaymentClientBase_v1.sol";
+    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 
-interface ILM_PC_Bounty_v1 is IERC20PaymentClientBase_v1 {
+interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // Types
 
@@ -43,37 +43,37 @@ interface ILM_PC_Bounty_v1 is IERC20PaymentClientBase_v1 {
     // Errors
 
     /// @notice Access only to addresses that are listed as contributors in the according claim
-    error Module__LM_PC_Bounty_v1__OnlyClaimContributor();
+    error Module__LM_PC_Bounty__OnlyClaimContributor();
 
     /// @notice Given payoutAmounts are either zero or maximumPayoutAmount is smaller than minimumPayoutAmount
-    error Module__LM_PC_Bounty_v1__InvalidPayoutAmounts();
+    error Module__LM_PC_Bounty__InvalidPayoutAmounts();
 
     /// @notice Given Bounty id is not existing
-    error Module__LM_PC_Bounty_v1__InvalidBountyId();
+    error Module__LM_PC_Bounty__InvalidBountyId();
 
     /// @notice Given Claim id is not existing
-    error Module__LM_PC_Bounty_v1__InvalidClaimId();
+    error Module__LM_PC_Bounty__InvalidClaimId();
 
     /// @notice Given Contributors list is empty
-    error Module__LM_PC_Bounty_v1__InvalidContributorsLength();
+    error Module__LM_PC_Bounty__InvalidContributorsLength();
 
     /// @notice Given claim Amount for contributor is zero
-    error Module__LM_PC_Bounty_v1__InvalidContributorAmount();
+    error Module__LM_PC_Bounty__InvalidContributorAmount();
 
     /// @notice Given Contributor address is invalid
-    error Module__LM_PC_Bounty_v1__InvalidContributorAddress();
+    error Module__LM_PC_Bounty__InvalidContributorAddress();
 
     /// @notice Given total claims of contributors exceed or are below the given payout amounts of the bounty
-    error Module__LM_PC_Bounty_v1__ClaimExceedsGivenPayoutAmounts();
+    error Module__LM_PC_Bounty__ClaimExceedsGivenPayoutAmounts();
 
     /// @notice Given Bounty id is Locked
-    error Module__LM_PC_Bounty_v1__BountyLocked();
+    error Module__LM_PC_Bounty__BountyLocked();
 
     /// @notice Given Claim id got already claimed
-    error Module__LM_PC_Bounty_v1__AlreadyClaimed();
+    error Module__LM_PC_Bounty__AlreadyClaimed();
 
     /// @notice The given Contributors are not the same as in the claim. This might be connected to a tried front run of the given transaction.
-    error Module__LM_PC_Bounty_v1__ContributorsChanged();
+    error Module__LM_PC_Bounty__ContributorsChanged();
 
     //--------------------------------------------------------------------------
     // Events

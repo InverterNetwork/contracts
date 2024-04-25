@@ -79,8 +79,16 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         return BPS;
     }
 
-    // Since the init calls are not registered for coverage, we call expose setIssuanceToken to get to 100% test coverage.
-    function call_setIssuanceToken(address _newIssuanceToken) external {
-        _setIssuanceToken(_newIssuanceToken);
+    // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
+    function call_setDecimals(uint8 _newDecimals) external {
+        _setTokenDecimals(_newDecimals);
+    }
+
+    //--------------------------------------------------------------------------
+    // Will be removed once we update base fundingManager
+
+    /// @inheritdoc IFundingManager_v1
+    function token() public view returns (IERC20) {
+        return __Module_orchestrator.fundingManager().token();
     }
 }

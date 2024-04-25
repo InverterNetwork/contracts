@@ -35,7 +35,7 @@ contract ERC20Issuance_v1 is
     // Modifiers
     modifier onlyMinter() {
         if (_msgSender() != allowedMinter) {
-            revert IERC20Issuance_v1__CallerIsNotMinter();
+            revert IERC20Issuance__CallerIsNotMinter();
         }
         _;
     }
@@ -72,7 +72,7 @@ contract ERC20Issuance_v1 is
     /// @inheritdoc IERC20Issuance_v1
     function mint(address _to, uint _amount) external onlyMinter {
         if (totalSupply() + _amount > MAX_SUPPLY) {
-            revert IERC20Issuance_v1__MintExceedsSupplyCap();
+            revert IERC20Issuance__MintExceedsSupplyCap();
         }
         _mint(_to, _amount);
     }

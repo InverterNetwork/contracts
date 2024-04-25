@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface ILM_PC_Recurring_v1 {
+interface ILM_PC_RecurringPayments_v1 {
     struct RecurringPayment {
         uint amount;
         //in which epoch this should start
@@ -15,16 +15,16 @@ interface ILM_PC_Recurring_v1 {
     // Errors
 
     /// @notice Given RecurringPayment id is invalid.
-    error Module__LM_PC_Recurring_v1__InvalidRecurringPaymentId();
+    error Module__LM_PC_RecurringPayments__InvalidRecurringPaymentId();
 
     /// @notice Start epoch cant be placed before the current epoch.
-    error Module__LM_PC_Recurring_v1__InvalidStartEpoch();
+    error Module__LM_PC_RecurringPayments__InvalidStartEpoch();
 
     /// @notice Given EpochLength is invalid.
-    error Module__LM_PC_Recurring_v1__InvalidEpochLength();
+    error Module__LM_PC_RecurringPayments__InvalidEpochLength();
 
     /// @notice Given startId is not position before endId
-    error Module__LM_PC_Recurring_v1__StartIdNotBeforeEndId();
+    error Module__LM_PC_RecurringPayments__StartIdNotBeforeEndId();
 
     //--------------------------------------------------------------------------
     // Events

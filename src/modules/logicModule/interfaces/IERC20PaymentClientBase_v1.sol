@@ -21,22 +21,22 @@ interface IERC20PaymentClientBase_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized address.
-    error Module__ERC20PaymentClientBase_v1__CallerNotAuthorized();
+    error Module__ERC20PaymentClientBase__CallerNotAuthorized();
 
     /// @notice ERC20 token transfer failed.
-    error Module__ERC20PaymentClientBase_v1__TokenTransferFailed();
+    error Module__ERC20PaymentClientBase__TokenTransferFailed();
 
     /// @notice Given recipient invalid.
-    error Module__ERC20PaymentClientBase_v1__InvalidRecipient();
+    error Module__ERC20PaymentClientBase__InvalidRecipient();
 
     /// @notice Given amount invalid.
-    error Module__ERC20PaymentClientBase_v1__InvalidAmount();
+    error Module__ERC20PaymentClientBase__InvalidAmount();
 
     /// @notice Given dueTo invalid.
-    error Module__ERC20PaymentClientBase_v1__InvalidDueTo();
+    error Module__ERC20PaymentClientBase__InvalidDueTo();
 
     /// @notice Given arrays' length mismatch.
-    error Module__ERC20PaymentClientBase_v1__ArrayLengthMismatch();
+    error Module__ERC20PaymentClientBase__ArrayLengthMismatch();
 
     //--------------------------------------------------------------------------
     // Events

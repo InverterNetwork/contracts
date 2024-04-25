@@ -11,7 +11,7 @@ import {IOrchestrator_v1} from
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 /**
- * @title   MetadataManager_v1:  Metadata Management for Modules in the Inverter Network
+ * @title   Metadata Management
  *
  * @notice  Manages metadata storage for the Inverter Network's orchestrator and its
  *          associated modules, allowing for a structured approach to store and retrieve
@@ -22,7 +22,7 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
  *          across the network. This setup promotes a unified interface for metadata
  *          management across different network components.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract MetadataManager_v1 is IMetadataManager_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)

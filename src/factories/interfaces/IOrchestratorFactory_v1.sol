@@ -12,13 +12,13 @@ interface IOrchestratorFactory_v1 {
     // Errors
 
     /// @notice Given id is invalid.
-    error OrchestratorFactory_v1__InvalidId();
+    error OrchestratorFactory__InvalidId();
 
     /// @notice The module's data arrays length mismatch.
-    error OrchestratorFactory_v1__ModuleDataLengthMismatch();
+    error OrchestratorFactory__ModuleDataLengthMismatch();
 
     /// @notice The orchestrator owner is address(0)
-    error OrchestratorFactory_v1__OrchestratorOwnerIsInvalid();
+    error OrchestratorFactory__OrchestratorOwnerIsInvalid();
 
     //--------------------------------------------------------------------------
     // Events

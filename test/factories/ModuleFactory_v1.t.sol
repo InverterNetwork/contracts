@@ -108,7 +108,7 @@ contract ModuleFactoryV1Test is Test {
     function testRegisterMetadataFailsIfMetadataInvalid() public {
         // Invalid if url empty.
         vm.expectRevert(
-            IModuleFactory_v1.ModuleFactory_v1__InvalidMetadata.selector
+            IModuleFactory_v1.ModuleFactory__InvalidMetadata.selector
         );
         factory.registerMetadata(
             IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE), beacon
@@ -116,7 +116,7 @@ contract ModuleFactoryV1Test is Test {
 
         // Invalid if title empty.
         vm.expectRevert(
-            IModuleFactory_v1.ModuleFactory_v1__InvalidMetadata.selector
+            IModuleFactory_v1.ModuleFactory__InvalidMetadata.selector
         );
         factory.registerMetadata(
             IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""), beacon
@@ -133,9 +133,7 @@ contract ModuleFactoryV1Test is Test {
         factory.registerMetadata(DATA, beacon);
 
         vm.expectRevert(
-            IModuleFactory_v1
-                .ModuleFactory_v1__MetadataAlreadyRegistered
-                .selector
+            IModuleFactory_v1.ModuleFactory__MetadataAlreadyRegistered.selector
         );
         factory.registerMetadata(DATA, additionalBeacon);
     }
@@ -144,7 +142,7 @@ contract ModuleFactoryV1Test is Test {
         beacon.overrideImplementation(address(0));
 
         vm.expectRevert(
-            IModuleFactory_v1.ModuleFactory_v1__InvalidInverterBeacon.selector
+            IModuleFactory_v1.ModuleFactory__InvalidInverterBeacon.selector
         );
         factory.registerMetadata(DATA, beacon);
     }
@@ -156,7 +154,7 @@ contract ModuleFactoryV1Test is Test {
         notOwnedBeacon.overrideImplementation(address(0x1));
 
         vm.expectRevert(
-            IModuleFactory_v1.ModuleFactory_v1__InvalidInverterBeacon.selector
+            IModuleFactory_v1.ModuleFactory__InvalidInverterBeacon.selector
         );
         factory.registerMetadata(DATA, notOwnedBeacon);
     }
@@ -205,7 +203,7 @@ contract ModuleFactoryV1Test is Test {
         _assumeValidOrchestrator(orchestrator);
 
         vm.expectRevert(
-            IModuleFactory_v1.ModuleFactory_v1__UnregisteredMetadata.selector
+            IModuleFactory_v1.ModuleFactory__UnregisteredMetadata.selector
         );
         factory.createModule(
             metadata, IOrchestrator_v1(orchestrator), configData

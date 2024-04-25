@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
-interface IAUT_TokenGated_Role_v1 is IAuthorizer_v1 {
+interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     //--------------------------------------------------------------------------
     // Events
 
@@ -22,16 +22,16 @@ interface IAUT_TokenGated_Role_v1 is IAuthorizer_v1 {
     // Errors
 
     /// @notice The function is only callable by an active Module.
-    error Module__AUT_TokenGated_Role_v1__RoleNotTokenGated();
+    error Module__AUT_TokenGated_Roles__RoleNotTokenGated();
 
     /// @notice The function is only callable if the Module is self-managing its roles.
-    error Module__AUT_TokenGated_Role_v1__RoleNotEmpty();
+    error Module__AUT_TokenGated_Roles__RoleNotEmpty();
 
     /// @notice The token doesn't support balance query.
-    error Module__AUT_TokenGated_Role_v1__InvalidToken(address token);
+    error Module__AUT_TokenGated_Roles__InvalidToken(address token);
 
     /// @notice The given threshold is invalid
-    error Module__AUT_TokenGated_Role_v1__InvalidThreshold(uint threshold);
+    error Module__AUT_TokenGated_Roles__InvalidThreshold(uint threshold);
 
     //--------------------------------------------------------------------------
     // Public functions

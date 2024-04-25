@@ -6,26 +6,26 @@ interface IBondingCurveBase_v1 {
     // Errors
 
     /// @notice Function is only callable if buying is not already enabled.
-    error Module__BondingCurveBase_v1__BuyingAlreadyOpen();
+    error Module__BondingCurveBase__BuyingAlreadyOpen();
 
     /// @notice Function is only callable if buying is not already closed.
-    error Module__BondingCurveBase_v1__BuyingAlreadyClosed();
+    error Module__BondingCurveBase__BuyingAlreadyClosed();
 
     /// @notice Percentage amount is bigger than 100%, i.e. 10_000
-    error Module__BondingCurveBase_v1__InvalidFeePercentage();
+    error Module__BondingCurveBase__InvalidFeePercentage();
 
     /// @notice Deposit amount has to be larger than zero
-    error Module__BondingCurveBase_v1__InvalidDepositAmount();
+    error Module__BondingCurveBase__InvalidDepositAmount();
 
     /// @notice Buying functionalities are set to closed
-    error Module__BondingCurveBase_v1__BuyingFunctionaltiesClosed();
+    error Module__BondingCurveBase__BuyingFunctionaltiesClosed();
 
     /// @notice Receiver address can not be zero address or
     /// Bonding Curve Funding Manager itself
-    error Module__BondingCurveBase_v1__InvalidRecipient();
+    error Module__BondingCurveBase__InvalidRecipient();
 
     /// @notice Actual buy amount is lower than the minimum acceptable amount
-    error Module__BondingCurveBase_v1__InsufficientOutputAmount();
+    error Module__BondingCurveBase__InsufficientOutputAmount();
 
     //--------------------------------------------------------------------------
     // Events

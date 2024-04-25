@@ -8,7 +8,7 @@ import {IOrchestrator_v1} from
 import {
     ERC20PaymentClientBase_v1,
     IERC20PaymentClientBase_v1
-} from "@lm_pc/ERC20PaymentClient/abstracts/ERC20PaymentClientBase_v1.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Interfaces
 import {IPaymentProcessor_v1} from

@@ -60,7 +60,7 @@ contract ModuleManagerBaseV1Test is Test {
         if (modules.length > (MAX_MODULES - 3)) {
             vm.expectRevert(
                 IModuleManagerBase_v1
-                    .ModuleManagerBase_v1__ModuleAmountOverLimits
+                    .ModuleManagerBase__ModuleAmountOverLimits
                     .selector
             );
 
@@ -102,7 +102,7 @@ contract ModuleManagerBaseV1Test is Test {
 
             vm.expectRevert(
                 IModuleManagerBase_v1
-                    .ModuleManagerBase_v1__InvalidModuleAddress
+                    .ModuleManagerBase__InvalidModuleAddress
                     .selector
             );
             moduleManager.init(modules);
@@ -118,7 +118,7 @@ contract ModuleManagerBaseV1Test is Test {
         modules[1] = address(0xCAFE);
 
         vm.expectRevert(
-            IModuleManagerBase_v1.ModuleManagerBase_v1__IsModule.selector
+            IModuleManagerBase_v1.ModuleManagerBase__IsModule.selector
         );
         moduleManager.init(modules);
     }
@@ -131,7 +131,7 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager = new ModuleManagerBaseV1Mock(address(0));
         vm.expectRevert(
             IModuleManagerBase_v1
-                .ModuleManagerBase_v1__ModuleAmountOverLimits
+                .ModuleManagerBase__ModuleAmountOverLimits
                 .selector
         );
         moduleManager.init(modules);
@@ -146,7 +146,7 @@ contract ModuleManagerBaseV1Test is Test {
     function testExecuteTxFromModuleOnlyCallableByModule() public {
         vm.expectRevert(
             IModuleManagerBase_v1
-                .ModuleManagerBase_v1__OnlyCallableByModule
+                .ModuleManagerBase__OnlyCallableByModule
                 .selector
         );
         moduleManager.executeTxFromModule(address(this), bytes(""));
@@ -226,7 +226,7 @@ contract ModuleManagerBaseV1Test is Test {
 
         vm.expectRevert(
             IModuleManagerBase_v1
-                .ModuleManagerBase_v1__CallerNotAuthorized
+                .ModuleManagerBase__CallerNotAuthorized
                 .selector
         );
         moduleManager.addModule(who);
@@ -238,7 +238,7 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager.addModule(who);
 
         vm.expectRevert(
-            IModuleManagerBase_v1.ModuleManagerBase_v1__IsModule.selector
+            IModuleManagerBase_v1.ModuleManagerBase__IsModule.selector
         );
         moduleManager.addModule(who);
     }
@@ -249,7 +249,7 @@ contract ModuleManagerBaseV1Test is Test {
         for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
                 IModuleManagerBase_v1
-                    .ModuleManagerBase_v1__InvalidModuleAddress
+                    .ModuleManagerBase__InvalidModuleAddress
                     .selector
             );
             moduleManager.addModule(invalids[i]);
@@ -271,7 +271,7 @@ contract ModuleManagerBaseV1Test is Test {
 
         vm.expectRevert(
             IModuleManagerBase_v1
-                .ModuleManagerBase_v1__ModuleAmountOverLimits
+                .ModuleManagerBase__ModuleAmountOverLimits
                 .selector
         );
         moduleManager.addModule(whos[MAX_MODULES]);
@@ -336,7 +336,7 @@ contract ModuleManagerBaseV1Test is Test {
 
         vm.expectRevert(
             IModuleManagerBase_v1
-                .ModuleManagerBase_v1__CallerNotAuthorized
+                .ModuleManagerBase__CallerNotAuthorized
                 .selector
         );
         moduleManager.removeModule(who);
@@ -346,7 +346,7 @@ contract ModuleManagerBaseV1Test is Test {
         types.assumeValidModule(who);
 
         vm.expectRevert(
-            IModuleManagerBase_v1.ModuleManagerBase_v1__IsNotModule.selector
+            IModuleManagerBase_v1.ModuleManagerBase__IsNotModule.selector
         );
         moduleManager.removeModule(who);
     }

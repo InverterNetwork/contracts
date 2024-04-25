@@ -60,7 +60,7 @@ contract ERC20IssuanceTest is Test {
         vm.startPrank(address(0xB0B));
         {
             vm.expectRevert(
-                IERC20Issuance_v1.IERC20Issuance_v1__CallerIsNotMinter.selector
+                IERC20Issuance_v1.IERC20Issuance__CallerIsNotMinter.selector
             );
             token.mint(address(this), 100);
         }
@@ -70,7 +70,7 @@ contract ERC20IssuanceTest is Test {
         uint excessiveSupply = token.MAX_SUPPLY() + 1;
 
         vm.expectRevert(
-            IERC20Issuance_v1.IERC20Issuance_v1__MintExceedsSupplyCap.selector
+            IERC20Issuance_v1.IERC20Issuance__MintExceedsSupplyCap.selector
         );
         token.mint(address(this), excessiveSupply);
     }
@@ -97,7 +97,7 @@ contract ERC20IssuanceTest is Test {
         vm.startPrank(address(0xB0B));
         {
             vm.expectRevert(
-                IERC20Issuance_v1.IERC20Issuance_v1__CallerIsNotMinter.selector
+                IERC20Issuance_v1.IERC20Issuance__CallerIsNotMinter.selector
             );
             token.burn(address(this), 100);
         }

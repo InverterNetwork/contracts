@@ -25,7 +25,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {Strings} from "@oz/utils/Strings.sol";
 
 /**
- * @title   FM_Rebasing_v1: Rebasing Funding Manager v1 for Inverter Network.
+ * @title   Rebasing Funding Manager
  *
  * @notice  This contract manages the issuance and redemption of rebasable funding tokens
  *          within the Inverter Network. It supports operations like deposits and withdrawals,
@@ -36,7 +36,7 @@ import {Strings} from "@oz/utils/Strings.sol";
  *          preventing excess balance accumulation and ensuring operational integrity.
  *          Custom rebase mechanics are applied based on the actual token reserves.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract FM_Rebasing_v1 is
     IFundingManager_v1,
@@ -63,7 +63,7 @@ contract FM_Rebasing_v1 is
     /// @dev Checks if the given Address is valid.
     modifier validAddress(address to) {
         if (to == address(0) || to == address(this)) {
-            revert Module__FundingManager_v1__InvalidAddress();
+            revert Module__FundingManager__InvalidAddress();
         }
         _;
     }
@@ -153,11 +153,11 @@ contract FM_Rebasing_v1 is
     function _deposit(address from, address to, uint amount) internal {
         //Depositing from itself with its own balance would mint tokens without increasing underlying balance.
         if (from == address(this)) {
-            revert Module__FundingManager_v1__CannotSelfDeposit();
+            revert Module__FundingManager__CannotSelfDeposit();
         }
 
         if ((amount + token().balanceOf(address(this))) > DEPOSIT_CAP) {
-            revert Module__FundingManager_v1__DepositCapReached();
+            revert Module__FundingManager__DepositCapReached();
         }
 
         _mint(to, amount);

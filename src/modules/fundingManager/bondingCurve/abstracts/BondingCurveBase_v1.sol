@@ -20,7 +20,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   BondingCurveBase_v1: Bonding Curve Base v1 for Inverter Network.
+ * @title   Bonding Curve Funding Manager Base
  *
  * @notice  Manages the issuance of token for collateral along a bonding curve in the
  *          Inverter Network, including fee handling and sell functionality control.
@@ -32,7 +32,12 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  Inverter Network
  */
-abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
+abstract contract BondingCurveBase_v1 is
+    IBondingCurveBase_v1,
+    IFundingManager_v1,
+    ERC20Upgradeable,
+    Module_v1
+{
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -41,6 +46,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         returns (bool)
     {
         return interfaceId == type(IBondingCurveBase_v1).interfaceId
+            || interfaceId == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -69,7 +75,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     modifier buyingIsEnabled() {
         if (buyIsOpen == false) {
-            revert Module__BondingCurveBase_v1__BuyingFunctionaltiesClosed();
+            revert Module__BondingCurveBase__BuyingFunctionaltiesClosed();
         }
         _;
     }
@@ -77,7 +83,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev Modifier to guarantee token recipient is valid.
     modifier validReceiver(address _receiver) {
         if (_receiver == address(0) || _receiver == address(this)) {
-            revert Module__BondingCurveBase_v1__InvalidRecipient();
+            revert Module__BondingCurveBase__InvalidRecipient();
         }
         _;
     }
@@ -167,7 +173,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         uint _minAmountOut
     ) internal returns (uint mintAmount, uint feeAmount) {
         if (_depositAmount == 0) {
-            revert Module__BondingCurveBase_v1__InvalidDepositAmount();
+            revert Module__BondingCurveBase__InvalidDepositAmount();
         }
         // Transfer collateral, confirming that correct amount == allowance
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
@@ -184,7 +190,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
         // Revert when the mint amount is lower than minimum amount the user expects
         if (mintAmount < _minAmountOut) {
-            revert Module__BondingCurveBase_v1__InsufficientOutputAmount();
+            revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
         // Mint tokens to address
         _mint(_receiver, mintAmount);
@@ -195,7 +201,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
     function _openBuy() internal {
         if (buyIsOpen == true) {
-            revert Module__BondingCurveBase_v1__BuyingAlreadyOpen();
+            revert Module__BondingCurveBase__BuyingAlreadyOpen();
         }
         buyIsOpen = true;
         emit BuyingEnabled();
@@ -204,7 +210,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev Closes the buy functionality by setting the state variable `buyIsOpen` to false.
     function _closeBuy() internal {
         if (buyIsOpen == false) {
-            revert Module__BondingCurveBase_v1__BuyingAlreadyClosed();
+            revert Module__BondingCurveBase__BuyingAlreadyClosed();
         }
         buyIsOpen = false;
         emit BuyingDisabled();
@@ -214,7 +220,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @param _fee The fee percentage to set for buy transactions.
     function _setBuyFee(uint _fee) internal {
         if (_fee >= BPS) {
-            revert Module__BondingCurveBase_v1__InvalidFeePercentage();
+            revert Module__BondingCurveBase__InvalidFeePercentage();
         }
         emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;
@@ -248,13 +254,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     //--------------------------------------------------------------------------
-    // Calls to the external ERC20 contract
+    // OnlyOrchestrator Mutating Functions
 
-    /// @dev Mints new tokens
-    /// @param _to The address of the recipient.
-    /// @param _amount The amount of tokens to mint.
-    function _mint(address _to, uint _amount) internal {
-        issuanceToken.mint(_to, _amount);
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to, uint amount)
+        external
+        onlyOrchestrator
+    {
+        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
+
+        emit TransferOrchestratorToken(to, amount);
     }
     /// @dev Burns tokens
     /// @param _from The address of the owner.

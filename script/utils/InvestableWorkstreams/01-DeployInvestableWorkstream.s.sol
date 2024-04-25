@@ -12,13 +12,11 @@ import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {
-    LM_PC_Bounty_v1,
-    ILM_PC_Bounty_v1
-} from "@lm_pc/ERC20PaymentClient/LM_PC_Bounty_v1.sol";
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+} from "@lm/LM_PC_Bounties_v1.sol";
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IBondingCurveBase_v1
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
@@ -51,8 +49,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // ========================================================================
     // BONDING CURVE PARAMETERS
 
-    string CURVE_TOKEN_NAME = "Conding Burve Token";
-    string CURVE_TOKEN_SYMBOL = "BCRG";
+    bytes32 CURVE_TOKEN_NAME = "Conding Burve Token";
+    bytes32 CURVE_TOKEN_SYMBOL = "BCRG";
     uint8 CURVE_TOKEN_DECIMALS = 18;
 
     uint32 RESERVE_RATIO_FOR_BUYING = 330_000;
@@ -104,13 +102,13 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             token: collateralToken
         });
 
-        IBondingCurveBase_v1.IssuanceToken memory buf_issuanceToken =
-        IBondingCurveBase_v1.IssuanceToken({
-            name: CURVE_TOKEN_NAME,
-            symbol: CURVE_TOKEN_SYMBOL,
-            decimals: CURVE_TOKEN_DECIMALS,
-            maxSupply: type(uint).max
-        });
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
+            buf_issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .IssuanceToken({
+                name: CURVE_TOKEN_NAME,
+                symbol: CURVE_TOKEN_SYMBOL,
+                decimals: CURVE_TOKEN_DECIMALS
+            });
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             buf_bondingCurveProperties =
@@ -164,7 +162,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             abi.encode(hasDependency, dependencies)
         );
 
-        // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounty_v1.
+        // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.
         IOrchestratorFactory_v1.ModuleConfig[] memory additionalModuleConfig =
             new IOrchestratorFactory_v1.ModuleConfig[](1);
         additionalModuleConfig[0] = bountyManagerFactoryConfig;
@@ -204,7 +202,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         address orchestratorCreatedBountyManagerAddress;
 
         for (uint i; i < lenModules;) {
-            try ILM_PC_Bounty_v1(moduleAddresses[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v1(moduleAddresses[i]).isExistingBountyId(0)
             returns (bool) {
                 orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
                 break;
@@ -213,8 +211,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             }
         }
 
-        LM_PC_Bounty_v1 orchestratorCreatedBountyManager =
-            LM_PC_Bounty_v1(orchestratorCreatedBountyManagerAddress);
+        LM_PC_Bounties_v1 orchestratorCreatedBountyManager =
+            LM_PC_Bounties_v1(orchestratorCreatedBountyManagerAddress);
 
         assertEq(
             address(orchestratorCreatedBountyManager.orchestrator()),
@@ -223,11 +221,11 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
 
         assertFalse(
             orchestratorCreatedBountyManager.isExistingBountyId(0),
-            "Error in the LM_PC_Bounty_v1"
+            "Error in the LM_PC_Bounties_v1"
         );
         assertFalse(
             orchestratorCreatedBountyManager.isExistingBountyId(type(uint).max),
-            "Error in the LM_PC_Bounty_v1"
+            "Error in the LM_PC_Bounties_v1"
         );
 
         assertEq(formula.version(), "0.3");
@@ -255,7 +253,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         );
 
         console2.log(
-            "\t-LM_PC_Bounty_v1 deployed at address: %s ",
+            "\t-LM_PC_Bounties_v1 deployed at address: %s ",
             address(orchestratorCreatedBountyManager)
         );
         console2.log(

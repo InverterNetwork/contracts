@@ -12,7 +12,7 @@ import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Context} from "@oz/utils/Context.sol";
 
 /**
- * @title   TransactionForwarder_v1: Transaction Forwarder v1 for Inverter Network.
+ * @title   Meta-Transaction & Multicall Forwarder
  *
  * @notice  This contract enables users to interact with smart contracts indirectly through
  *          a trusted forwarder. It supports meta transactions, allowing transactions to be
@@ -24,7 +24,7 @@ import {Context} from "@oz/utils/Context.sol";
  *          It handles nonce management, signature verification, and ensures only trusted calls
  *          are forwarded.
  *
- * @author  Inverter Network.
+ * @author  Inverter Network
  */
 contract TransactionForwarder_v1 is
     ITransactionForwarder_v1,

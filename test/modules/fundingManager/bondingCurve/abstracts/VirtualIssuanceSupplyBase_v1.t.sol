@@ -57,7 +57,7 @@ contract VirtualIssuanceSupplyBaseV1Test is Test {
 
         vm.expectRevert(
             IVirtualIssuanceSupplyBase_v1
-                .Module__VirtualIssuanceSupplyBase_v1__AddResultsInOverflow
+                .Module__VirtualIssuanceSupplyBase__AddResultsInOverflow
                 .selector
         );
         virtualIssuanceSupplyBase.addVirtualIssuanceAmount(amount);
@@ -88,7 +88,7 @@ contract VirtualIssuanceSupplyBaseV1Test is Test {
 
         vm.expectRevert(
             IVirtualIssuanceSupplyBase_v1
-                .Module__VirtualIssuanceSupplyBase_v1__SubtractResultsInUnderflow
+                .Module__VirtualIssuanceSupplyBase__SubtractResultsInUnderflow
                 .selector
         );
         virtualIssuanceSupplyBase.subVirtualIssuanceAmount(amount);
@@ -99,7 +99,7 @@ contract VirtualIssuanceSupplyBaseV1Test is Test {
 
         vm.expectRevert(
             IVirtualIssuanceSupplyBase_v1
-                .Module__VirtualIssuanceSupplyBase_v1__VirtualSupplyCannotBeZero
+                .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
                 .selector
         );
         virtualIssuanceSupplyBase.subVirtualIssuanceAmount(amount);
@@ -127,7 +127,7 @@ contract VirtualIssuanceSupplyBaseV1Test is Test {
 
         vm.expectRevert(
             IVirtualIssuanceSupplyBase_v1
-                .Module__VirtualIssuanceSupplyBase_v1__VirtualSupplyCannotBeZero
+                .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
                 .selector
         );
         virtualIssuanceSupplyBase.setVirtualIssuanceSupply(amount);

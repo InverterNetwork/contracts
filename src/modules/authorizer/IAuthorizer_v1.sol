@@ -9,13 +9,13 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // Errors
 
     /// @notice The function is only callable by an active Module.
-    error Module__Authorizer_v1__NotActiveModule(address module);
+    error Module__Authorizer__NotActiveModule(address module);
 
     /// @notice The function is only callable if the Module is self-managing its roles.
-    error Module__Authorizer_v1__ModuleNotSelfManaged();
+    error Module__Authorizer__ModuleNotSelfManaged();
 
     /// @notice There always needs to be at least one owner.
-    error Module__Authorizer_v1__OwnerRoleCannotBeEmpty();
+    error Module__Authorizer__OwnerRoleCannotBeEmpty();
 
     //--------------------------------------------------------------------------
     // Functions

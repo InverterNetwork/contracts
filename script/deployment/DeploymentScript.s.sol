@@ -10,13 +10,13 @@ import {IModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 
 // Import scripts:
 import {DeployAndSetUpInverterBeacon_v1} from
-    "script/proxies/deployAndSetupInverterBeacon_v1.s.sol";
+    "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 import {DeployModuleFactory_v1} from
     "script/factories/DeployModuleFactory_v1.s.sol";
 import {DeployOrchestratorFactory_v1} from
     "script/factories/DeployOrchestratorFactory_v1.s.sol";
-import {DeployLM_PC_Bounty_v1} from
-    "script/modules/logicModule/DeployLM_PC_Bounty_v1.s.sol";
+import {DeployLM_PC_Bounties_v1} from
+    "script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol";
 
 import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
 import {DeployTransactionForwarder_v1} from
@@ -37,10 +37,10 @@ import {DeployAUT_TokenGated_Role_v1} from
     "script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol";
 import {DeployPP_Streaming_v1} from
     "script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol";
-import {DeployLM_PC_Recurring_v1} from
-    "script/modules/logicModule/DeployLM_PC_Recurring_v1.s.sol";
-import {DeploySingleVoteGovernor_v1} from
-    "script/modules/utils/DeploySingleVoteGovernor_v1.s.sol";
+import {DeployLM_PC_RecurringPayments_v1} from
+    "script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol";
+import {DeployVotingRoleManager_v1} from
+    "script/modules/utils/DeployVotingRoleManager_v1.s.sol";
 import {DeployMetadataManager} from "script/utils/DeployMetadataManager.s.sol";
 
 contract DeploymentScript is Script {
@@ -69,12 +69,12 @@ contract DeploymentScript is Script {
     DeployPP_Streaming_v1 deployStreamingPaymentProcessor =
         new DeployPP_Streaming_v1();
     // Logic Module
-    DeployLM_PC_Bounty_v1 deployBountyManager = new DeployLM_PC_Bounty_v1();
-    DeployLM_PC_Recurring_v1 deployRecurringPaymentManager =
-        new DeployLM_PC_Recurring_v1();
+    DeployLM_PC_Bounties_v1 deployBountyManager = new DeployLM_PC_Bounties_v1();
+    DeployLM_PC_RecurringPayments_v1 deployRecurringPaymentManager =
+        new DeployLM_PC_RecurringPayments_v1();
     // Utils
-    DeploySingleVoteGovernor_v1 deploySingleVoteGovernor =
-        new DeploySingleVoteGovernor_v1();
+    DeployVotingRoleManager_v1 deploySingleVoteGovernor =
+        new DeployVotingRoleManager_v1();
     DeployMetadataManager deployMetadataManager = new DeployMetadataManager();
     // TransactionForwarder_v1
     DeployTransactionForwarder_v1 deployTransactionForwarder =
@@ -176,14 +176,14 @@ contract DeploymentScript is Script {
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "AUT_Role_v1"
+        "AUT_Roles_v1"
     );
 
     IModule_v1.Metadata tokenGatedRoleAuthorizerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "AUT_TokenGated_Role_v1"
+        "AUT_TokenGated_Roles_v1"
     );
 
     // ------------------------------------------------------------------------
@@ -210,14 +210,14 @@ contract DeploymentScript is Script {
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_Recurring_v1"
+        "LM_PC_RecurringPayments_v1"
     );
 
     IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_Bounty_v1"
+        "LM_PC_Bounties_v1"
     );
 
     // ------------------------------------------------------------------------
@@ -227,7 +227,7 @@ contract DeploymentScript is Script {
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "SingleVoteGovernor_v1"
+        "VotingRoleManager_v1"
     );
 
     IModule_v1.Metadata metadataManagerMetadata = IModule_v1.Metadata(

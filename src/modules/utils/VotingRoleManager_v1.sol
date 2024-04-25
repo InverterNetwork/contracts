@@ -6,10 +6,23 @@ import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
-import {ISingleVoteGovernor_v1} from
-    "src/modules/utils/interfaces/ISingleVoteGovernor_v1.sol";
+import {IVotingRoleManager_v1} from
+    "src/modules/utils/interfaces/IVotingRoleManager_v1.sol";
 
-contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
+/**
+ * @title   Voting Role Manager
+ *
+ * @notice  Facilitates voting and motion management within the Inverter Network,
+ *          allowing designated voters to participate in governance through proposals,
+ *          voting, and execution of decisions.
+ *
+ * @dev     Supports setting thresholds for decision-making, managing voter lists,
+ *          creating motions, casting votes, and executing actions based on collective
+ *          decisions. This structure enhances governance transparency and efficacy.
+ *
+ * @author  Inverter Network
+ */
+contract VotingRoleManager_v1 is IVotingRoleManager_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -17,7 +30,7 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
         override(Module_v1)
         returns (bool)
     {
-        return interfaceId == type(ISingleVoteGovernor_v1).interfaceId
+        return interfaceId == type(IVotingRoleManager_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -35,7 +48,7 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
 
     modifier onlyVoter() {
         if (!isVoter[_msgSender()]) {
-            revert Module__SingleVoteGovernor_v1__CallerNotVoter();
+            revert Module__VotingRoleManager__CallerNotVoter();
         }
         _;
     }
@@ -45,7 +58,7 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
             voter == address(0) || voter == address(this)
                 || voter == address(orchestrator())
         ) {
-            revert Module__SingleVoteGovernor_v1__InvalidVoterAddress();
+            revert Module__VotingRoleManager__InvalidVoterAddress();
         }
         _;
     }
@@ -53,31 +66,31 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @inheritdoc ISingleVoteGovernor_v1
+    /// @inheritdoc IVotingRoleManager_v1
     uint public constant MAX_VOTING_DURATION = 2 weeks;
 
-    /// @inheritdoc ISingleVoteGovernor_v1
+    /// @inheritdoc IVotingRoleManager_v1
     uint public constant MIN_VOTING_DURATION = 1 days;
 
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @inheritdoc ISingleVoteGovernor_v1
+    /// @inheritdoc IVotingRoleManager_v1
     mapping(address => bool) public isVoter;
 
-    /// @inheritdoc ISingleVoteGovernor_v1
+    /// @inheritdoc IVotingRoleManager_v1
     mapping(uint => Motion) public motions;
 
-    /// @inheritdoc ISingleVoteGovernor_v1
+    /// @inheritdoc IVotingRoleManager_v1
     uint public motionCount;
 
-    /// @inheritdoc ISingleVoteGovernor_v1
+    /// @inheritdoc IVotingRoleManager_v1
     uint public voterCount;
 
-    /// @inheritdoc ISingleVoteGovernor_v1
+    /// @inheritdoc IVotingRoleManager_v1
     uint public threshold;
 
-    /// @inheritdoc ISingleVoteGovernor_v1
+    /// @inheritdoc IVotingRoleManager_v1
     uint public voteDuration;
 
     //--------------------------------------------------------------------------
@@ -103,13 +116,13 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
 
         // Revert if list of voters is empty.
         if (votersLen == 0) {
-            revert Module__SingleVoteGovernor_v1__EmptyVoters();
+            revert Module__VotingRoleManager__EmptyVoters();
         }
 
         // Revert if threshold higher than number of voters, i.e. threshold being
         // unreachable.
         if (threshold_ > votersLen) {
-            revert Module__SingleVoteGovernor_v1__UnreachableThreshold();
+            revert Module__VotingRoleManager__UnreachableThreshold();
         }
 
         // Revert if votingDuration outside of bounds.
@@ -117,7 +130,7 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
             voteDuration_ < MIN_VOTING_DURATION
                 || voteDuration_ > MAX_VOTING_DURATION
         ) {
-            revert Module__SingleVoteGovernor_v1__InvalidVotingDuration();
+            revert Module__VotingRoleManager__InvalidVotingDuration();
         }
 
         // Write voters to storage.
@@ -129,11 +142,11 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
                 voter == address(0) || voter == address(this)
                     || voter == address(orchestrator())
             ) {
-                revert Module__SingleVoteGovernor_v1__InvalidVoterAddress();
+                revert Module__VotingRoleManager__InvalidVoterAddress();
             }
 
             if (isVoter[voter]) {
-                revert Module__SingleVoteGovernor_v1__IsAlreadyVoter();
+                revert Module__VotingRoleManager__IsAlreadyVoter();
             }
 
             isVoter[voter] = true;
@@ -171,7 +184,7 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
     function setThreshold(uint newThreshold) external onlySelf {
         // Revert if newThreshold higher than number of voters.
         if (newThreshold > voterCount) {
-            revert Module__SingleVoteGovernor_v1__UnreachableThreshold();
+            revert Module__VotingRoleManager__UnreachableThreshold();
         }
 
         // Note that a threshold of zero is valid because a orchestrator can only be
@@ -187,7 +200,7 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
             newVoteDuration < MIN_VOTING_DURATION
                 || newVoteDuration > MAX_VOTING_DURATION
         ) {
-            revert Module__SingleVoteGovernor_v1__InvalidVotingDuration();
+            revert Module__VotingRoleManager__InvalidVotingDuration();
         }
 
         emit VoteDurationUpdated(voteDuration, newVoteDuration);
@@ -210,12 +223,12 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
     function removeVoter(address who) external onlySelf {
         //Revert if trying to remove the last voter
         if (voterCount == 1) {
-            revert Module__SingleVoteGovernor_v1__EmptyVoters();
+            revert Module__VotingRoleManager__EmptyVoters();
         }
 
         //Revert if removal would leave threshold unreachable
         if (voterCount <= threshold) {
-            revert Module__SingleVoteGovernor_v1__UnreachableThreshold();
+            revert Module__VotingRoleManager__UnreachableThreshold();
         }
 
         if (isVoter[who]) {
@@ -266,12 +279,12 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
         // 1 = against
         // 2 = abstain
         if (support > 2) {
-            revert Module__SingleVoteGovernor_v1__InvalidSupport();
+            revert Module__VotingRoleManager__InvalidSupport();
         }
 
         //Revert if motionID invalid
         if (motionId >= motionCount) {
-            revert Module__SingleVoteGovernor_v1__InvalidMotionId();
+            revert Module__VotingRoleManager__InvalidMotionId();
         }
 
         // Get pointer to the motion.
@@ -279,12 +292,12 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
 
         // Revert if voting duration exceeded
         if (block.timestamp > motion_.endTimestamp) {
-            revert Module__SingleVoteGovernor_v1__MotionVotingPhaseClosed();
+            revert Module__VotingRoleManager__MotionVotingPhaseClosed();
         }
 
         // Revert if caller attempts to double vote.
         if (motion_.receipts[_msgSender()].hasVoted) {
-            revert Module__SingleVoteGovernor_v1__AttemptedDoubleVote();
+            revert Module__VotingRoleManager__AttemptedDoubleVote();
         }
 
         if (support == 0) {
@@ -310,22 +323,22 @@ contract SingleVoteGovernor_v1 is ISingleVoteGovernor_v1, Module_v1 {
 
         // Revert if motionId invalid.
         if (motionId >= motionCount) {
-            revert Module__SingleVoteGovernor_v1__InvalidMotionId();
+            revert Module__VotingRoleManager__InvalidMotionId();
         }
 
         // Revert if voting duration not exceeded.
         if (block.timestamp <= motion_.endTimestamp) {
-            revert Module__SingleVoteGovernor_v1__MotionInVotingPhase();
+            revert Module__VotingRoleManager__MotionInVotingPhase();
         }
 
         //Revert if necessary threshold was not reached
         if (motion_.forVotes < motion_.requiredThreshold) {
-            revert Module__SingleVoteGovernor_v1__ThresholdNotReached();
+            revert Module__VotingRoleManager__ThresholdNotReached();
         }
 
         // Revert if motion already executed.
         if (motion_.executedAt != 0) {
-            revert Module__SingleVoteGovernor_v1__MotionAlreadyExecuted();
+            revert Module__VotingRoleManager__MotionAlreadyExecuted();
         }
 
         // Updating executedAt here to prevent reentrancy

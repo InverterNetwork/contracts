@@ -187,7 +187,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPaymentProcessor_v1
-                    .Module__PaymentProcessor_v1__OnlyCallableByModule
+                    .Module__PaymentProcessor__OnlyCallableByModule
                     .selector
             )
         );
@@ -212,7 +212,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPaymentProcessor_v1
-                    .Module__PaymentProcessor_v1__CannotCallOnOtherClientsOrders
+                    .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                     .selector
             )
         );
@@ -234,7 +234,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPaymentProcessor_v1
-                    .Module__PaymentProcessor_v1__OnlyCallableByModule
+                    .Module__PaymentProcessor__OnlyCallableByModule
                     .selector
             )
         );
@@ -259,7 +259,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPaymentProcessor_v1
-                    .Module__PaymentProcessor_v1__CannotCallOnOtherClientsOrders
+                    .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                     .selector
             )
         );
