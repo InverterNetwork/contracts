@@ -130,8 +130,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         );
 
         ERC20Issuance_v1 _issuanceToken = new ERC20Issuance_v1(
-            string(abi.encodePacked(issuanceTokenData.name)),
-            string(abi.encodePacked(issuanceTokenData.symbol)),
+            issuanceTokenData.name,
+            issuanceTokenData.symbol,
             issuanceTokenData.decimals,
             issuanceTokenData.maxSupply,
             tokenAdmin,
