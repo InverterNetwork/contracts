@@ -9,4 +9,3 @@
 6. Run the following command:
    `forge script script/deployment/DeploymentScript.s.sol --fork-url http://localhost:8545/ --broadcast`
 7. Access the communityMultisig and call setFeeManager() in the governor contract. Use the address of the newly creatd
-   @note is this enough to properly represent that you have to set the feemanager seperately?
