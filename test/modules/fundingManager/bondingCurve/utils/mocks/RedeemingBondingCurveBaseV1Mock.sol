@@ -92,4 +92,40 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     function call_BPS() external pure returns (uint) {
         return BPS;
     }
+
+    function call_sellOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    )
+        external
+        returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
+    {
+        return _sellOrder(_receiver, _depositAmount, _minAmountOut);
+    }
+
+    function call_getSellFeesAndTreasuryAddresses()
+        external
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        )
+    {
+        return _getSellFeesAndTreasuryAddresses();
+    }
+
+    function call_calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _workflowFee
+    )
+        external
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
+    {
+        return
+            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
+    }
 }
