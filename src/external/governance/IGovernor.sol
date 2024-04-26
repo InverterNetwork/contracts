@@ -154,7 +154,7 @@ interface IGovernor {
         external;
 
     /// @notice Sets the collateral fee for a specific workflow module function in the linked FeeManager
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
     /// @dev The given fee needs to be less than the BPS
     /// @param workflow The address of the workflow that contains the module function
     /// @param module The address of the module that contains the function
@@ -170,7 +170,7 @@ interface IGovernor {
     ) external;
 
     /// @notice Sets the issuance fee for a specific workflow module function in the linked FeeManager
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
     /// @dev The given fee needs to be less than the BPS
     /// @param workflow The address of the workflow that contains the module function
     /// @param module The address of the module that contains the function

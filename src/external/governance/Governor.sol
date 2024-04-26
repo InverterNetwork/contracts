@@ -194,7 +194,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         bytes4 functionSelector,
         bool set,
         uint fee
-    ) external onlyRole(COMMUNITY_MULTISIG_ROLE) {
+    ) external onlyCommunityOrTeamMultisig {
         feeManager.setCollateralWorkflowFee(
             workflow, module, functionSelector, set, fee
         );
@@ -207,7 +207,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         bytes4 functionSelector,
         bool set,
         uint fee
-    ) external onlyRole(COMMUNITY_MULTISIG_ROLE) {
+    ) external onlyCommunityOrTeamMultisig {
         feeManager.setIssuanceWorkflowFee(
             workflow, module, functionSelector, set, fee
         );

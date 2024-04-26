@@ -340,12 +340,10 @@ contract GovernorTest is Test {
     function testSetFeeManagerCollateralWorkflowFeeModifierInPosition()
         public
     {
-        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        //onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                address(this),
-                gov.COMMUNITY_MULTISIG_ROLE()
+                IGovernor.Governor__OnlyCommunityOrTeamMultisig.selector
             )
         );
         gov.setFeeManagerCollateralWorkflowFee(
@@ -354,12 +352,10 @@ contract GovernorTest is Test {
     }
 
     function testSetFeeManagerIssuanceWorkflowFeeModifierInPosition() public {
-        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        //onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                address(this),
-                gov.COMMUNITY_MULTISIG_ROLE()
+                IGovernor.Governor__OnlyCommunityOrTeamMultisig.selector
             )
         );
         gov.setFeeManagerIssuanceWorkflowFee(
