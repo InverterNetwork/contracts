@@ -61,9 +61,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     uint public buyFee;
     /// @dev Base Points used for percentage calculation. This value represents 100%
     uint internal constant BPS = 10_000;
-    /// @notice Accumulated trading fees collected from deposits made by users
-    /// when engaging with the bonding curve-based funding manager.
-    uint internal tradeFeeCollected;
+    /// @notice Accumulated project trading fees collected from deposits made by users
+    /// when engaging with the bonding curve-based funding manager. Collected in collateral
+    uint public projectCollateralFeeCollected;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -109,25 +109,45 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IBondingCurveBase_v1
-    function openBuy() external onlyOrchestratorOwner {
+    function openBuy() external virtual onlyOrchestratorOwner {
         _openBuy();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function closeBuy() external onlyOrchestratorOwner {
+    function closeBuy() external virtual onlyOrchestratorOwner {
         _closeBuy();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function setBuyFee(uint _fee) external onlyOrchestratorOwner {
+    function setBuyFee(uint _fee) external virtual onlyOrchestratorOwner {
         _setBuyFee(_fee);
+    }
+
+    /// @inheritdoc IBondingCurveBase_v1
+    function calculatePurchaseReturn(uint _depositAmount)
+        external
+        view
+        virtual
+        returns (uint mintAmount)
+    {
+        return _calculatePurchaseReturn(_depositAmount);
+    }
+
+    /// @inheritdoc IBondingCurveBase_v1
+    function withdrawProjectCollateralFee(address _receiver, uint _amount)
+        external
+        virtual
+        validReceiver(_receiver)
+        onlyOrchestratorOwner
+    {
+        _withdrawProjectCollateralFee(_receiver, _amount);
     }
 
     //--------------------------------------------------------------------------
     // Public Functions
 
     /// @notice Returns the address of the issuance token
-    function getIssuanceToken() public view returns (address) {
+    function getIssuanceToken() public view virtual returns (address) {
         return address(issuanceToken);
     }
 
@@ -166,7 +186,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         address _receiver,
         uint _depositAmount,
         uint _minAmountOut
-    ) internal returns (uint mintAmount, uint feeAmount) {
+    ) internal virtual returns (uint mintAmount, uint feeAmount) {
         if (_depositAmount == 0) {
             revert Module__BondingCurveBase__InvalidDepositAmount();
         }
@@ -179,7 +199,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             (_depositAmount, feeAmount) =
                 _calculateNetAmountAndFee(_depositAmount, buyFee);
             // Add fee amount to total collected fee
-            tradeFeeCollected += feeAmount;
+            projectCollateralFeeCollected += feeAmount;
         }
         // Calculate mint amount based on upstream formula
         mintAmount = _issueTokensFormulaWrapper(_depositAmount);
@@ -194,7 +214,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
-    function _openBuy() internal {
+    function _openBuy() internal virtual {
         if (buyIsOpen == true) {
             revert Module__BondingCurveBase__BuyingAlreadyOpen();
         }
@@ -203,7 +223,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @dev Closes the buy functionality by setting the state variable `buyIsOpen` to false.
-    function _closeBuy() internal {
+    function _closeBuy() internal virtual {
         if (buyIsOpen == false) {
             revert Module__BondingCurveBase__BuyingAlreadyClosed();
         }
@@ -213,7 +233,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev Sets the buy transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for buy transactions.
-    function _setBuyFee(uint _fee) internal {
+    function _setBuyFee(uint _fee) internal virtual {
         if (_fee >= BPS) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
         }
@@ -230,12 +250,33 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function _calculateNetAmountAndFee(uint _transactionAmount, uint _feePct)
         internal
         pure
+        virtual
         returns (uint netAmount, uint feeAmount)
     {
         // Calculate fee amount
         feeAmount = (_transactionAmount * _feePct) / BPS;
         // Calculate net amount after fee deduction
         netAmount = _transactionAmount - feeAmount;
+    }
+
+    /// @dev This function takes into account any applicable buy fees before computing the
+    /// token amount to be minted. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
+    function _calculatePurchaseReturn(uint _depositAmount)
+        internal
+        view
+        virtual
+        returns (uint mintAmount)
+    {
+        if (_depositAmount == 0) {
+            revert Module__BondingCurveBase__InvalidDepositAmount();
+        }
+        if (buyFee > 0) {
+            (_depositAmount, /* feeAmount */ ) =
+                _calculateNetAmountAndFee(_depositAmount, buyFee);
+        }
+        return _issueTokensFormulaWrapper(_depositAmount);
     }
 
     /// @dev Sets the issuance token for the FundingManager.
@@ -248,20 +289,40 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         emit IssuanceTokenUpdated(oldToken, _issuanceToken);
     }
 
+    /// @dev Witdraw project collateral fee amount to  to receiver.
+    /// Reverts when the amount is bigger than witdrawable colllateral fee amount
+    /// Deducts the _amount from the project fee collected
+    function _withdrawProjectCollateralFee(address _receiver, uint _amount)
+        internal
+        virtual
+    {
+        if (_amount > projectCollateralFeeCollected) {
+            revert Module__BondingCurveBase__InvalidWithdrawAmount();
+        }
+
+        projectCollateralFeeCollected -= _amount;
+
+        __Module_orchestrator.fundingManager().token().safeTransfer(
+            _receiver, _amount
+        );
+
+        emit ProjectCollateralFeeWithdrawn(_receiver, _amount);
+    }
+
     //--------------------------------------------------------------------------
     // Calls to the external ERC20 contract
 
     /// @dev Mints new tokens
     /// @param _to The address of the recipient.
     /// @param _amount The amount of tokens to mint.
-    function _mint(address _to, uint _amount) internal {
+    function _mint(address _to, uint _amount) internal virtual {
         issuanceToken.mint(_to, _amount);
     }
     /// @dev Burns tokens
     /// @param _from The address of the owner.
     /// @param _amount The amount of tokens to burn.
 
-    function _burn(address _from, uint _amount) internal {
+    function _burn(address _from, uint _amount) internal virtual {
         issuanceToken.burn(_from, _amount);
     }
 }

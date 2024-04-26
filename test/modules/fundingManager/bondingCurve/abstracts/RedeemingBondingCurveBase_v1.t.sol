@@ -485,6 +485,86 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellFee(), _fee);
     }
 
+    /* Test internal _calculateSaleReturn function
+        ├── When deposit amount is 0
+        │       └── it should revert 
+        └── When deposit amount is not 0
+                ├── when the fee is 0
+                │       └── it should succeed 
+                └── when the fee is not 0
+                        └── it should succeed 
+    */
+
+    function testInternalCalculateSaleReturn_FailsIfDepositAmountZero()
+        public
+    {
+        uint depositAmount = 0;
+
+        vm.expectRevert(
+            IRedeemingBondingCurveBase_v1
+                .Module__RedeemingBondingCurveBase__InvalidDepositAmount
+                .selector
+        );
+        bondingCurveFundingManager.call_calculateSaleReturn(depositAmount);
+    }
+
+    function testInternalCalculateSaleReturnWithZeroFee(uint _depositAmount)
+        public
+    {
+        // Above an amount of 1e26 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e26);
+
+        // As the implementation is a mock, we return the deposit amount in a 1:1 ratio
+        uint functionReturn =
+            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+        assertEq(functionReturn, _depositAmount);
+    }
+
+    function testInternalCalculateSaleReturnWithFee(
+        uint _depositAmount,
+        uint _fee
+    ) public {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+
+        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
+            // Above an amount of 1e26 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e26);
+
+        // Set sell fee
+        vm.prank(owner_address);
+        bondingCurveFundingManager.setSellFee(_fee);
+
+        // As the implementation is a mock, we return the deposit amount in a 1:1 ratio
+        // We calculate how much if the initial deposit we should get back based on the fee
+        uint feeAmount =
+            (_depositAmount * _fee) / bondingCurveFundingManager.call_BPS();
+        uint sellAmountMinusFee = _depositAmount - feeAmount;
+
+        uint functionReturn =
+            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+
+        assertEq(functionReturn, sellAmountMinusFee);
+    }
+    /*    Test calculateSaleReturn function
+            └── when function calculateSaleReturn is called
+                └── then it should return the same as the internal _calculateSaleReturn function
+    */
+
+    function testCalculateSaleReturn_workGivenSameValueReturnedAsInternalFunction(
+        uint _depositAmount
+    ) public {
+        _depositAmount = bound(_depositAmount, 1, 1e38);
+
+        uint internalFunctionReturnValue =
+            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+
+        uint functionReturnValue =
+            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
+
+        assertEq(internalFunctionReturnValue, functionReturnValue);
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 

@@ -89,4 +89,14 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @notice Calculates and returns the static price for selling the issuance token.
     /// @return uint The static price for selling the issuance token.
     function getStaticPriceForSelling() external returns (uint);
+
+    /// @notice Calculates the amount of tokens to be redeemed based on a given deposit amount.
+    /// @dev This function takes into account any applicable sell fees before computing the
+    /// collateral amount to be redeemed. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
+    function calculateSaleReturn(uint _depositAmount)
+        external
+        view
+        returns (uint redeemAmount);
 }

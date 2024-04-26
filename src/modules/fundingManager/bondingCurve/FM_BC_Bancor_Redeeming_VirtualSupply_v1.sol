@@ -298,41 +298,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         );
     }
 
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-    function calculatePurchaseReturn(uint _depositAmount)
-        external
-        view
-        returns (uint mintAmount)
-    {
-        if (_depositAmount == 0) {
-            revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount();
-        }
-        if (buyFee > 0) {
-            (_depositAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(_depositAmount, buyFee);
-        }
-        return _issueTokensFormulaWrapper(_depositAmount);
-    }
-
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-    function calculateSaleReturn(uint _depositAmount)
-        external
-        view
-        returns (uint redeemAmount)
-    {
-        if (_depositAmount == 0) {
-            revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount();
-        }
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-        if (sellFee > 0) {
-            (redeemAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(redeemAmount, sellFee);
-        }
-        return redeemAmount;
-    }
-
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
         return _token;
