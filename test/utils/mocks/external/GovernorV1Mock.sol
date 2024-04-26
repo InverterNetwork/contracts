@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
+import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
 contract GovernorV1Mock is IGovernor_v1 {
     address feeManager;
@@ -28,27 +29,39 @@ contract GovernorV1Mock is IGovernor_v1 {
 
     function setFeeManagerDefaultProtocolTreasury(address) external {}
 
-    function setFeeManagerWorkflowTreasuries(address, address) external {}
+    function setFeeManagerWorkflowTreasuries(address workflow, address treasury)
+        external
+    {
+        IFeeManager_v1(feeManager).setWorkflowTreasury(workflow, treasury);
+    }
 
     function setFeeManagerDefaultCollateralFee(uint) external {}
 
     function setFeeManagerDefaultIssuanceFee(uint) external {}
 
     function setFeeManagerCollateralWorkflowFee(
-        address,
-        address,
-        bytes4,
-        bool,
-        uint
-    ) external {}
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) external {
+        IFeeManager_v1(feeManager).setCollateralWorkflowFee(
+            workflow, module, functionSelector, set, fee
+        );
+    }
 
     function setFeeManagerIssuanceWorkflowFee(
-        address,
-        address,
-        bytes4,
-        bool,
-        uint
-    ) external {}
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) external {
+        IFeeManager_v1(feeManager).setIssuanceWorkflowFee(
+            workflow, module, functionSelector, set, fee
+        );
+    }
 
     //--------------------------------------------------------------------------
     // Beacon Functions

@@ -4,7 +4,8 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
+import {IFeeManager_v1} from "@ex/fees//interfaces/IFeeManager_v1.sol";
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
@@ -250,6 +251,42 @@ abstract contract Module_v1 is
 
     //--------------------------------------------------------------------------
     // Internal Functions
+
+    /// @notice Returns the collateral fee for the specified workflow module function and the according treasury address of this workflow
+    /// @param functionSelector The function selector of the target function
+    /// @dev FunctionSelector is always passed as selector of this module / address
+    /// @return fee The collateral fee amount in relation to the BPS of the feeManager
+    /// @return treasury The address of the treasury
+    function _getFeeManagerCollateralFeeData(bytes4 functionSelector)
+        internal
+        returns (uint fee, address treasury)
+    {
+        //Fetch fee manager address from orchestrator
+        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) //Fetch feeManager address from orchestrator
+            .getCollateralWorkflowFeeAndTreasury(
+            address(__Module_orchestrator), //Always take this modules orchestrator as the workflow address
+            address(this), //always take this as the module address
+            functionSelector
+        );
+    }
+
+    /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address of this workflow
+    /// @param functionSelector The function selector of the target function
+    /// @dev FunctionSelector is always passed as selector of this module / address
+    /// @return fee The issuance fee amount in relation to the BPS of the feeManager
+    /// @return treasury The address of the treasury
+    function _getFeeManagerIssuanceFeeData(bytes4 functionSelector)
+        internal
+        returns (uint fee, address treasury)
+    {
+        //Fetch fee manager address from orchestrator
+        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) //Fetch feeManager address from orchestrator
+            .getIssuanceWorkflowFeeAndTreasury(
+            address(__Module_orchestrator), //Always take this modules orchestrator as the workflow address
+            address(this), //always take this as the module address
+            functionSelector
+        );
+    }
 
     /// @dev Internal function to trigger a callback from the orchestrator.
     /// @param data The call data for the orchestrator to call.
