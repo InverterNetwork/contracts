@@ -135,7 +135,7 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
     /// @param _receiver The address receiving the redeem amount.
     /// @param _depositAmount The amount of tokens being sold by the receiver.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    /// @return totalCollateralTokenMovedOut The total amount of collateral tokens that are transfered away from this contract.
+    /// @return totalCollateralTokenMovedOut The total amount of collateral tokens that are transfered away from the collateral token amount of this contract.
     /// @return issuanceFeeAmount The amount of issuance token subtracted as fee
     function _sellOrder(
         address _receiver,
@@ -164,6 +164,9 @@ abstract contract RedeemingBondingCurveFundingManagerBase is
         // fee enabled
         (netDeposit, protocolFeeAmount, /* workflowFee */ ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
+
+        issuanceFeeAmount = protocolFeeAmount;
+
         // Process the protocol fee
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
         // Calculate redeem amount based on upstream formula

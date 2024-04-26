@@ -91,6 +91,17 @@ contract BondingCurveFundingManagerMock is BondingCurveFundingManagerBase {
         _setTokenDecimals(_newDecimals);
     }
 
+    function call_buyOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    )
+        external
+        returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
+    {
+        return _buyOrder(_receiver, _depositAmount, _minAmountOut);
+    }
+
     function call_processProtocolFeeViaTransfer(
         address _treasury,
         IERC20 _token,

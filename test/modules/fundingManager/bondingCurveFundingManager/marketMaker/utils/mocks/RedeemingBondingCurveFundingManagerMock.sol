@@ -104,6 +104,17 @@ contract RedeemingBondingCurveFundingManagerMock is
         return BPS;
     }
 
+    function call_sellOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    )
+        external
+        returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
+    {
+        return _sellOrder(_receiver, _depositAmount, _minAmountOut);
+    }
+
     function call_getSellFeesAndTreasuryAddresses()
         external
         returns (

@@ -336,7 +336,11 @@ contract RedeemingBondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sell(amount, finalAmount);
+        (uint totalCollateralTokenMovedOut, uint returnedIssuanceFeeAmount) =
+        bondingCurveFundingManager.call_sellOrder(seller, amount, finalAmount);
+
+        assertEq(totalCollateralTokenMovedOut, amountAfterFirstFeeCollection);
+        assertEq(returnedIssuanceFeeAmount, protocolIssuanceFeeAmount);
 
         // Post-checks
         assertEq(

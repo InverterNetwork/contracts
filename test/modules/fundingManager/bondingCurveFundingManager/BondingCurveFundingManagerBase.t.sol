@@ -300,8 +300,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
-        uint maxAmount = type(uint).max / _bps; // to prevent overflows
-        amount = bound(amount, 1, maxAmount);
+        amount = bound(amount, 1, (type(uint).max / _bps)); // to prevent overflows
 
         //Set Fee
         if (_collateralFee != 0) {
@@ -330,7 +329,6 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         // Calculate receiving amount
 
         uint protocolCollateralFeeAmount;
-        uint protocolIssuanceFeeAmount;
         uint projectCollateralFeeAmount;
         uint finalAmount;
         uint amountAfterFirstFeeCollection;
@@ -343,7 +341,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
             amount, _collateralFee, _workflowFee
         );
 
-        (finalAmount, protocolIssuanceFeeAmount,) = bondingCurveFundingManager
+        (finalAmount,,) = bondingCurveFundingManager
             .call_calculateNetAndSplitFees(
             amountAfterFirstFeeCollection, _issuanceFee, 0
         );
@@ -356,7 +354,18 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount, finalAmount);
+        (uint totalIssuanceTokenMinted, uint collateralFeeAmount) =
+            bondingCurveFundingManager.call_buyOrder(buyer, amount, finalAmount);
+
+        emit hm(1);
+        assertEq(
+            totalIssuanceTokenMinted, bondingCurveFundingManager.totalSupply()
+        );
+        emit hm(2);
+        assertEq(
+            collateralFeeAmount,
+            protocolCollateralFeeAmount + projectCollateralFeeAmount
+        );
 
         // Post-checks
         assertEq(
@@ -366,6 +375,8 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(bondingCurveFundingManager.balanceOf(buyer), finalAmount);
     }
+
+    event hm(uint);
 
     /* Test openBuy and _openBuy function
         ├── when caller is not the Orchestrator owner
