@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IAUT_TokenGated_Role_v1} from
-    "@aut/role/interfaces/IAUT_TokenGated_Role_v1.sol";
+import {IAUT_TokenGated_Roles_v1} from
+    "@aut/role/interfaces/IAUT_TokenGated_Roles_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
 // Internal Dependencies
@@ -36,7 +36,7 @@ interface TokenInterface {
  *
  * @author  Inverter Network
  */
-contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
+contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -44,7 +44,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
         override(AUT_Roles_v1)
         returns (bool)
     {
-        return interfaceId == type(IAUT_TokenGated_Role_v1).interfaceId
+        return interfaceId == type(IAUT_TokenGated_Roles_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -60,7 +60,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
     modifier onlyEmptyRole(bytes32 roleId) {
         //Check that the role is empty
         if (getRoleMemberCount(roleId) != 0) {
-            revert Module__AUT_TokenGated_Role__RoleNotEmpty();
+            revert Module__AUT_TokenGated_Roles__RoleNotEmpty();
         }
 
         _;
@@ -68,7 +68,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
 
     modifier onlyTokenGated(bytes32 roleId) {
         if (!isTokenGated[roleId]) {
-            revert Module__AUT_TokenGated_Role__RoleNotTokenGated();
+            revert Module__AUT_TokenGated_Roles__RoleNotTokenGated();
         }
         _;
     }
@@ -76,7 +76,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
     modifier validThreshold(uint threshold) {
         // Since base ERC721 does not have a total/max supply, we can only enforce that the value should be non-zero
         if (threshold == 0) {
-            revert Module__AUT_TokenGated_Role__InvalidThreshold(threshold);
+            revert Module__AUT_TokenGated_Roles__InvalidThreshold(threshold);
         }
         _;
     }
@@ -120,7 +120,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
         if (isTokenGated[role]) {
             try TokenInterface(account).balanceOf(address(this)) {}
             catch {
-                revert Module__AUT_TokenGated_Role__InvalidToken(account);
+                revert Module__AUT_TokenGated_Roles__InvalidToken(account);
             }
         }
 
@@ -130,7 +130,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
     //--------------------------------------------------------------------------
     // View functions
 
-    /// @inheritdoc IAUT_TokenGated_Role_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v1
     function hasTokenRole(bytes32 role, address who)
         external
         view
@@ -140,7 +140,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
         return _hasTokenRole(role, who);
     }
 
-    /// @inheritdoc IAUT_TokenGated_Role_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v1
     function getThresholdValue(bytes32 roleId, address token)
         public
         view
@@ -153,7 +153,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
     //--------------------------------------------------------------------------
     // State-altering functions
 
-    /// @inheritdoc IAUT_TokenGated_Role_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v1
     function makeRoleTokenGatedFromModule(bytes32 role)
         public
         onlyModule(_msgSender())
@@ -165,7 +165,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
         emit ChangedTokenGating(roleId, true);
     }
 
-    /// @inheritdoc IAUT_TokenGated_Role_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v1
     function grantTokenRoleFromModule(
         bytes32 role,
         address token,
@@ -176,7 +176,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
         _setThreshold(roleId, token, threshold);
     }
 
-    /// @inheritdoc IAUT_TokenGated_Role_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v1
     function setThresholdFromModule(bytes32 role, address token, uint threshold)
         public
         onlyModule(_msgSender())
@@ -188,7 +188,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
     //--------------------------------------------------------------------------
     // Setters for the Admin
 
-    /// @inheritdoc IAUT_TokenGated_Role_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v1
     function setTokenGated(bytes32 role, bool to)
         public
         onlyRole(getRoleAdmin(role))
@@ -198,7 +198,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Role_v1, AUT_Roles_v1 {
         emit ChangedTokenGating(role, to);
     }
 
-    /// @inheritdoc IAUT_TokenGated_Role_v1
+    /// @inheritdoc IAUT_TokenGated_Roles_v1
     function setThreshold(bytes32 roleId, address token, uint threshold)
         public
         onlyRole(getRoleAdmin(roleId))

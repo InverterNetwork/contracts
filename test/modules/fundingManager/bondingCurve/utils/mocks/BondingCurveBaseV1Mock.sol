@@ -28,24 +28,18 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
+        // NOTE: The final BancorBondingCurve deploys an issuance token on intialization. or ease of testing, these mocks of the abstract contracts receive the address of a pre-deployed one
+
         (
-            bytes32 _name,
-            bytes32 _symbol,
-            uint8 _decimals,
+            address _issuanceToken,
             address _formula,
             uint _buyFee,
             bool _buyIsOpen
-        ) = abi.decode(
-            configData, (bytes32, bytes32, uint8, address, uint, bool)
-        );
+        ) = abi.decode(configData, (address, address, uint, bool));
 
-        __ERC20_init(
-            string(abi.encodePacked(_name)), string(abi.encodePacked(_symbol))
-        );
+        _setIssuanceToken(address(_issuanceToken));
 
         formula = IBancorFormula(_formula);
-
-        _setTokenDecimals(_decimals);
 
         _setBuyFee(_buyFee);
 
@@ -85,16 +79,8 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         return BPS;
     }
 
-    // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
-    function call_setDecimals(uint8 _newDecimals) external {
-        _setTokenDecimals(_newDecimals);
-    }
-
-    //--------------------------------------------------------------------------
-    // Will be removed once we update base fundingManager
-
-    /// @inheritdoc IFundingManager_v1
-    function token() public view returns (IERC20) {
-        return __Module_orchestrator.fundingManager().token();
+    // Since the init calls are not registered for coverage, we call expose setIssuanceToken to get to 100% test coverage.
+    function call_setIssuanceToken(address _newIssuanceToken) external {
+        _setIssuanceToken(_newIssuanceToken);
     }
 }

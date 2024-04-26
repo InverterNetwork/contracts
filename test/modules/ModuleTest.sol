@@ -93,6 +93,7 @@ abstract contract ModuleTest is Test {
 
         _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
 
+        _fundingManager.init(_orchestrator, _METADATA, abi.encode(""));
         _fundingManager.setToken(IERC20(address(_token)));
     }
 
@@ -137,7 +138,7 @@ abstract contract ModuleTest is Test {
         uint decimalDiff = referenceDecimals - tokenDecimals;
         uint newMax = max / 10 ** decimalDiff;
 
-        amount = bound(amount, min, newMax);
+        amount = bound(number, min, newMax);
     }
 
     function _assumeNonEmptyString(string memory a) internal pure {
@@ -184,5 +185,49 @@ abstract contract ModuleTest is Test {
                     != keccak256(abi.encodePacked(set[i]))
             );
         }
+    }
+
+    // Address Sanity Checkers
+    mapping(address => bool) addressCache;
+
+    function _assumeValidAddresses(address[] memory addresses) internal {
+        for (uint i; i < addresses.length; ++i) {
+            _assumeValidAddress(addresses[i]);
+
+            // Assume address unique.
+            vm.assume(!addressCache[addresses[i]]);
+
+            // Add address to cache.
+            addressCache[addresses[i]] = true;
+        }
+    }
+
+    function _assumeValidAddress(address user) internal view {
+        address[] memory invalids = _createInvalidAddresses();
+
+        for (uint i; i < invalids.length; ++i) {
+            vm.assume(user != invalids[i]);
+        }
+    }
+
+    function _createInvalidAddresses()
+        internal
+        view
+        returns (address[] memory)
+    {
+        address[] memory modules = _orchestrator.listModules();
+
+        address[] memory invalids = new address[](modules.length + 4);
+
+        for (uint i; i < modules.length; ++i) {
+            invalids[i] = modules[i];
+        }
+
+        invalids[invalids.length - 4] = address(0);
+        invalids[invalids.length - 3] = address(this);
+        invalids[invalids.length - 2] = address(_orchestrator);
+        invalids[invalids.length - 1] = address(_token);
+
+        return invalids;
     }
 }

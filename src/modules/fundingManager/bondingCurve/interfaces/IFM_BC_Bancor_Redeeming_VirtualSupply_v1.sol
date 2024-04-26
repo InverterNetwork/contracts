@@ -36,12 +36,6 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
 
     //--------------------------------------------------------------------------
     // Structs
-    struct IssuanceToken {
-        bytes32 name; // The name of the issuance token
-        bytes32 symbol; // The symbol of the issuance token
-        uint8 decimals; // The decimals used within the issuance token
-    }
-
     struct BondingCurveProperties {
         address formula; // The formula contract used to calculate the issucance and redemption rate
         uint32 reserveRatioForBuying; // The reserve ratio, expressed in PPM, used for issuance on the bonding curve
