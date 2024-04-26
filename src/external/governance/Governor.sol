@@ -168,7 +168,7 @@ contract Governor is ERC165, IGovernor, AccessControlUpgradeable {
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
     {
-        feeManager.setWorkflowTreasuries(workflow, treasury);
+        feeManager.setWorkflowTreasury(workflow, treasury);
     }
 
     /// @inheritdoc IGovernor

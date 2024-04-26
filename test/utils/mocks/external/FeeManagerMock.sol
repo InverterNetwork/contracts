@@ -57,9 +57,7 @@ contract FeeManagerMock is IFeeManager {
         external
     {}
 
-    function setWorkflowTreasuries(address workflow, address treasury)
-        external
-    {}
+    function setWorkflowTreasury(address workflow, address treasury) external {}
 
     //---------------------------
     // Fees

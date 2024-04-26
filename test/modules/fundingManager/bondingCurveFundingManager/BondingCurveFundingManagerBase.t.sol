@@ -531,7 +531,7 @@ contract BondingCurveFundingManagerBaseTest is ModuleTest {
 
         // Set values in feeManager
 
-        feeManager.setWorkflowTreasuries(address(_orchestrator), _treasury);
+        feeManager.setWorkflowTreasury(address(_orchestrator), _treasury);
         bytes4 buyFeeFunctionSelector =
             bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")));
 

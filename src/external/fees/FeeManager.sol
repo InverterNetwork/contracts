@@ -197,7 +197,7 @@ contract FeeManager is ERC165, IFeeManager, Ownable2StepUpgradeable {
     }
 
     /// @inheritdoc IFeeManager
-    function setWorkflowTreasuries(address workflow, address treasury)
+    function setWorkflowTreasury(address workflow, address treasury)
         external
         onlyOwner
         validAddress(treasury)

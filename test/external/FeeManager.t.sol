@@ -170,7 +170,7 @@ contract FeeManagerTest is Test {
         address expectedAddress = defaultProtocolTreasury;
         if (shouldBeSet) {
             expectedAddress = alternativeTreasury;
-            feeMan.setWorkflowTreasuries(workflow, alternativeTreasury);
+            feeMan.setWorkflowTreasury(workflow, alternativeTreasury);
         }
 
         assertEq(feeMan.getWorkflowTreasuries(workflow), expectedAddress);
@@ -263,17 +263,17 @@ contract FeeManagerTest is Test {
         feeMan.setDefaultProtocolTreasury(address(0));
     }
 
-    function testSetWorkflowTreasuries(address workflow, address adr) public {
+    function testsetWorkflowTreasury(address workflow, address adr) public {
         vm.assume(adr != address(0));
 
         vm.expectEmit(true, true, true, true);
         emit WorkflowTreasurySet(workflow, adr);
 
-        feeMan.setWorkflowTreasuries(workflow, adr);
+        feeMan.setWorkflowTreasury(workflow, adr);
         assertEq(feeMan.getWorkflowTreasuries(workflow), adr);
     }
 
-    function testSetWorkflowTreasuriesModifierInPosition() public {
+    function testsetWorkflowTreasuryModifierInPosition() public {
         //onlyOwner
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -281,7 +281,7 @@ contract FeeManagerTest is Test {
             )
         );
         vm.prank(address(0));
-        feeMan.setWorkflowTreasuries(address(0x1), address(0x1));
+        feeMan.setWorkflowTreasury(address(0x1), address(0x1));
 
         //validAddress(treasury)
         vm.expectRevert(
@@ -290,7 +290,7 @@ contract FeeManagerTest is Test {
             )
         );
 
-        feeMan.setWorkflowTreasuries(address(0x1), address(0));
+        feeMan.setWorkflowTreasury(address(0x1), address(0));
     }
 
     //---------------------------

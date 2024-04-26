@@ -168,8 +168,7 @@ interface IFeeManager {
     /// @dev The given treasury address can not be address(0)
     /// @param workflow The address of the workflow
     /// @param treasury The address of the protocol treasury for that specific workflow
-    function setWorkflowTreasuries(address workflow, address treasury)
-        external;
+    function setWorkflowTreasury(address workflow, address treasury) external;
 
     //---------------------------
     // Fees
