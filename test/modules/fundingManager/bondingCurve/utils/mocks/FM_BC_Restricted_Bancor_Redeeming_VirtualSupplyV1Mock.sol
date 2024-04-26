@@ -8,6 +8,9 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 // SuT
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
+
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -15,11 +18,11 @@ import {
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
-contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1
+contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
+    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
 {
     //--------------------------------------------------------------------------
-    // The FM_BC_Bancor_Redeeming_VirtualSupply_v1 is not abstract, so all the necessary functions are already implemented
+    // The FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is not abstract, so all the necessary functions are already implemented
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
     //--------------------------------------------------------------------------
@@ -77,7 +80,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         _mint(_receiver, _amount);
     }
 
-    // Note: this function returns the virtual issuance supply in the same format it will be fed to the Bancor formula
+    // Note: this function returns the virtual token supply in the same format it will be fed to the Bancor formula
     function call_getFormulaVirtualIssuanceSupply()
         external
         view

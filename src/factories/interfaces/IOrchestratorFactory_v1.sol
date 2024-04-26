@@ -23,7 +23,7 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when a new orchestrator is created.
+    /// @notice Event emitted when a new orchestrator_v1 is created.
     /// @param orchestratorId The id of the orchestrator.
     /// @param orchestratorAddress The address of the orchestrator.
     event OrchestratorCreated(
@@ -47,7 +47,7 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Creates a new orchestrator with caller being the orchestrator's owner.
+    /// @notice Creates a new orchestrator_v1 with caller being the orchestrator's owner.
     /// @param orchestratorConfig The orchestrator's config data.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1}
     ///                         instance.
