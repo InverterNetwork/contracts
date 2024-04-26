@@ -2,7 +2,8 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IGovernor_v1} from "src/external/governance/interfaces/IGovernor_v1.sol";
+import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
+import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // Internal Dependencies
@@ -97,7 +98,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     bytes32 public constant COMMUNITY_MULTISIG_ROLE = "0x01";
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
-    address private feeManager;
+    IFeeManager_v1 private feeManager;
 
     uint public timelockPeriod;
 
@@ -157,7 +158,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
 
     /// @inheritdoc IGovernor_v1
     function getFeeManager() external view returns (address) {
-        return feeManager;
+        return address(feeManager);
     }
 
     /// @inheritdoc IGovernor_v1
@@ -166,7 +167,64 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         onlyRole(COMMUNITY_MULTISIG_ROLE)
         validAddress(newFeeManager)
     {
-        feeManager = newFeeManager;
+        feeManager = IFeeManager_v1(newFeeManager);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setFeeManagerDefaultProtocolTreasury(
+        address _defaultProtocolTreasury
+    ) external onlyRole(COMMUNITY_MULTISIG_ROLE) {
+        feeManager.setDefaultProtocolTreasury(_defaultProtocolTreasury);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setFeeManagerWorkflowTreasuries(address workflow, address treasury)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        feeManager.setWorkflowTreasury(workflow, treasury);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setFeeManagerDefaultCollateralFee(uint _defaultCollateralFee)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        feeManager.setDefaultCollateralFee(_defaultCollateralFee);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setFeeManagerDefaultIssuanceFee(uint _defaultIssuanceFee)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        feeManager.setDefaultIssuanceFee(_defaultIssuanceFee);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setFeeManagerCollateralWorkflowFee(
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) external onlyCommunityOrTeamMultisig {
+        feeManager.setCollateralWorkflowFee(
+            workflow, module, functionSelector, set, fee
+        );
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setFeeManagerIssuanceWorkflowFee(
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) external onlyCommunityOrTeamMultisig {
+        feeManager.setIssuanceWorkflowFee(
+            workflow, module, functionSelector, set, fee
+        );
     }
 
     //--------------------------------------------------------------------------
