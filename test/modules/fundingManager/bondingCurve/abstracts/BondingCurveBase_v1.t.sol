@@ -7,6 +7,7 @@ import "forge-std/console.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
@@ -56,6 +57,12 @@ contract BondingCurveBaseV1Test is ModuleTest {
     event IssuanceTokenUpdated(
         address indexed oldToken, address indexed issuanceToken
     );
+    event ProtocolFeeTransferred(
+        address indexed token, address indexed treasury, uint indexed feeAmount
+    );
+    event ProtocolFeeMinted(
+        address indexed token, address indexed treasury, uint indexed feeAmount
+    );
 
     function setUp() public {
         // Deploy contracts
@@ -97,6 +104,13 @@ contract BondingCurveBaseV1Test is ModuleTest {
                 type(IFundingManager_v1).interfaceId
             )
         );
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: Invariant
+
+    function testBPS() public {
+        assertEq(feeManager.BPS(), bondingCurveFundingManager.call_BPS());
     }
 
     //--------------------------------------------------------------------------
@@ -234,7 +248,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         └── when the deposit amount is not 0
                 ├── when the return amount is lower than minimum expected amount out
                 │       └── it should revert 
-                ├── when the fee is higher than 0
+                ├── when the workflow fee is higher than 0
                 │       └── it should substract the fee from the deposit amount
                 │               ├── it should pull the buy amount from the caller  
                 │               ├── it should take the fee out from the pulled amount 
@@ -311,18 +325,36 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(issuanceToken.balanceOf(buyer), amount);
     }
 
-    function testBuyOrderWithFee(uint amount, uint fee) public {
+    function test_buyOrder(
+        uint amount,
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _workflowFee
+    ) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
-        vm.assume(fee < _bps);
+        _collateralFee = bound(_collateralFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _workflowFee = bound(_workflowFee, 0, _bps - 1);
+        vm.assume(_collateralFee + _workflowFee < _bps);
 
-        uint maxAmount = type(uint).max / _bps; // to prevent overflows
-        amount = bound(amount, 1, maxAmount);
+        amount = bound(amount, 1, (type(uint).max / _bps)); // to prevent overflows
 
-        vm.prank(owner_address);
-        bondingCurveFundingManager.setBuyFee(fee);
+        //Set Fee
+        if (_collateralFee != 0) {
+            feeManager.setDefaultCollateralFee(_collateralFee);
+        }
+        if (_issuanceFee != 0) {
+            feeManager.setDefaultIssuanceFee(_issuanceFee);
+        }
+
+        if (_workflowFee != 0) {
+            vm.prank(owner_address);
+            bondingCurveFundingManager.setBuyFee(_workflowFee);
+        }
 
         address buyer = makeAddr("buyer");
+
         _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
@@ -332,26 +364,366 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Calculate receiving amount
-        uint amountMinusFee =
-            amount - (amount * fee / bondingCurveFundingManager.call_BPS());
+
+        uint protocolCollateralFeeAmount;
+        uint projectCollateralFeeAmount;
+        uint finalAmount;
+        uint amountAfterFirstFeeCollection;
+
+        (
+            amountAfterFirstFeeCollection,
+            protocolCollateralFeeAmount,
+            projectCollateralFeeAmount
+        ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            amount, _collateralFee, _workflowFee
+        );
+
+        (finalAmount,,) = bondingCurveFundingManager
+            .call_calculateNetAndSplitFees(
+            amountAfterFirstFeeCollection, _issuanceFee, 0
+        );
 
         // Emit event
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amountMinusFee, amountMinusFee, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+        emit TokensBought(buyer, amount, finalAmount, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
 
         // Execution
         vm.prank(buyer);
-        bondingCurveFundingManager.buy(amount, amountMinusFee);
+        (uint totalIssuanceTokenMinted, uint collateralFeeAmount) =
+            bondingCurveFundingManager.call_buyOrder(buyer, amount, finalAmount);
+
+        assertEq(totalIssuanceTokenMinted, issuanceToken.totalSupply());
+
+        assertEq(
+            collateralFeeAmount,
+            protocolCollateralFeeAmount + projectCollateralFeeAmount
+        );
 
         // Post-checks
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount)
+            (balanceBefore + amount - protocolCollateralFeeAmount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), amountMinusFee);
+        assertEq(issuanceToken.balanceOf(buyer), finalAmount);
+    }
+
+    /* Test _getBuyFeesAndTreasuryAddresses() function
+        └── When the function _getBuyFeesAndTreasuryAddresses() is called
+            └── Then it should return the correct collateral treasury address
+                └── And it should return the correct issuance treasury address
+                    └── And it should return the correct collateral buy fee percentage
+                        └── And it should return the correct issuance buy fee percentage
+    */
+
+    function testInternalGetBuyFeesAndTreasuryAddresses_works(
+        address _treasury,
+        uint _collateralFee,
+        uint _issuanceFee
+    ) public {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        vm.assume(_collateralFee <= _bps && _issuanceFee <= _bps);
+        vm.assume(_treasury != address(0));
+
+        // Set values in feeManager
+
+        feeManager.setWorkflowTreasury(address(_orchestrator), _treasury);
+        bytes4 buyFeeFunctionSelector =
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")));
+
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(bondingCurveFundingManager),
+            buyFeeFunctionSelector,
+            true,
+            _collateralFee
+        );
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(bondingCurveFundingManager),
+            buyFeeFunctionSelector,
+            true,
+            _issuanceFee
+        );
+
+        (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralFee,
+            uint issuanceFee
+        ) = bondingCurveFundingManager.call_getBuyFeesAndTreasuryAddresses();
+
+        assertEq(collateralTreasury, _treasury);
+        assertEq(issuanceTreasury, _treasury);
+        assertEq(collateralFee, _collateralFee);
+        assertEq(issuanceFee, _issuanceFee);
+    }
+
+    /* Test _processProtocolFeeViaMinting() function
+        ├── Given the fee amount > 0
+        │   └── And the treasury address is invalid
+        │       └── When the function _processProtocolFeeViaMinting() is called
+        │           └── Then the the transaction should revert
+        ├── Given the feeAmount == 0
+        │   └── When the function _processProtocolFeeViaMinting() is called
+        │       └── Then no amount of token should be transferred
+        └── Given the feeAmount > 0
+            └── And the treasury address is valid
+                └── When the function _processProtocolFeeViaMinting() is called
+                    └── Then the _feeAmount should be transferred to treasury address
+                        └── And an event should be emitted
+    */
+
+    function testInternalProcessProtocolFeeViaMinting_failsGivenTreasuryAddressInvalid(
+        uint _feeAmount
+    ) public {
+        vm.assume(_feeAmount > 0);
+        address _treasury = address(0);
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidRecipient
+                .selector
+        );
+        bondingCurveFundingManager.call_processProtocolFeeViaMinting(
+            _treasury, _feeAmount
+        );
+    }
+
+    function testInternalProcessProtocolFeeViaMinting_worksGivenFeeAmountIsZero(
+        uint _feeAmount
+    ) public {
+        vm.assume(_feeAmount == 0);
+
+        // Get balance before transfer
+        uint balanceBeforeTransfer = _token.balanceOf(treasury);
+        // Validate treasury has not tokens
+        assertEq(balanceBeforeTransfer, 0);
+        // Function call
+        bondingCurveFundingManager.call_processProtocolFeeViaMinting(
+            treasury, _feeAmount
+        );
+        // Get balance after transfer
+        uint balanceAfterTransfer = _token.balanceOf(treasury);
+
+        // Assert eq
+        assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
+    }
+
+    function testInternalProcessProtocolFeeViaMinting_worksGivenFeeAmountIsNotZero(
+        uint _feeAmount
+    ) public {
+        _feeAmount = bound(_feeAmount, 1, type(uint).max);
+
+        // Get balance before transfer
+        uint balanceBeforeTransfer = issuanceToken.balanceOf(treasury);
+        // Validate treasury has not tokens
+        assertEq(balanceBeforeTransfer, 0);
+
+        // Expect event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit ProtocolFeeMinted(
+            address(bondingCurveFundingManager), treasury, _feeAmount
+        );
+        // Function call
+        bondingCurveFundingManager.call_processProtocolFeeViaMinting(
+            treasury, _feeAmount
+        );
+
+        // Get balance after transfer
+        uint balanceAfterTransfer = issuanceToken.balanceOf(treasury);
+        // Assert eq
+        assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
+    }
+
+    /* Test _processProtocolFeeViaTransfer() function
+        ├── Given the feeAmount == 0
+        │   └── When the function _processProtocolFeeViaTransfer() is called
+        │       └── Then no amount of token should be transferred
+        ├── Given the fee amount > 0
+        │   └── And the treasury address is invalid
+        │       └── When the function _processProtocolFeeViaTransfer() is called
+        │           └── Then the the transaction should revert
+        └── Given the feeAmount > 0
+            └── And the treasury address is valid
+                └── When the function _processProtocolFeeViaTransfer() is called
+                    └── Then the _feeAmount should be transferred to treasury address
+    */
+
+    function testInternalProcessProtocolFeeViaTransfer_failsGivenTreasuryAddressInvalid(
+        uint _feeAmount
+    ) public {
+        vm.assume(_feeAmount > 0);
+        address _treasury = address(0);
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidRecipient
+                .selector
+        );
+        bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
+            _treasury, IERC20(_token), _feeAmount
+        );
+    }
+
+    function testInternalProcessProtocolFeeViaTransfer_worksGivenFeeAmountIsZero(
+    ) public {
+        uint _feeAmount = 0;
+
+        // Get balance before transfer
+        uint balanceBeforeTransfer = _token.balanceOf(treasury);
+        // Validate treasury has not tokens
+        assertEq(balanceBeforeTransfer, 0);
+        // Function call
+        bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
+            treasury, IERC20(_token), _feeAmount
+        );
+        // Get balance after transfer
+        uint balanceAfterTransfer = _token.balanceOf(treasury);
+
+        // Assert eq
+        assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
+    }
+
+    function testInternalProcessProtocolFeeViaTransfer_worksGivenFeeAmountIsNotZero(
+        uint _feeAmount
+    ) public {
+        _feeAmount = bound(_feeAmount, 1, type(uint).max);
+        _token.mint(address(bondingCurveFundingManager), _feeAmount);
+        // Get balance before transfer
+        uint balanceBeforeTransfer = _token.balanceOf(treasury);
+        // Validate treasury has not tokens
+        assertEq(balanceBeforeTransfer, 0);
+
+        // Expect event
+        vm.expectEmit(
+            true, true, true, true, address(bondingCurveFundingManager)
+        );
+        emit ProtocolFeeTransferred(address(_token), treasury, _feeAmount);
+        // Function call
+        bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
+            treasury, IERC20(_token), _feeAmount
+        );
+
+        // Get balance after transfer
+        uint balanceAfterTransfer = _token.balanceOf(treasury);
+        // Assert eq
+        assertEq(balanceAfterTransfer, balanceBeforeTransfer + _feeAmount);
+    }
+
+    /* Test _calculateNetAndSplitFees() function
+        ├── Given the (protocol fee + workflow fee) > BPS / 100%
+        │   └── When the function _calculateNetAndSplitFees() is called
+        │       └── Then it should revert with BondingCurveFundingManagerBase__FeeAmountToHigh
+        ├── Given the (protocol fee + workflow fee) == 0
+        │   └── When the function _calculateNetAndSplitFees() is called
+        │       └── Then it should return totalAmount as netAmount
+        │           └── And it should return 0 for protocol and workflow fee amount
+        ├── Given the protocol fee == 0
+        │   └── And the workflow fee  > 0
+        │       └── When the function _calculateNetAndSplitFees() is called
+        │           └── Then it should return the correct netAmount
+        │               ├── And it should return protocolFeeAmount as 0
+        │               └── And it should return the correct workflowFeeAmount
+        ├── Given the protocol fee > 0
+        │   └── And the workflow fee == 0
+        │       └── When the function _calculateNetAndSplitFees() is called
+        │           └── Then it should return the correct netAmount
+        │               ├── And it should return the correct protocolFeeAmount
+        │               └── And it should return the workflowFeeAmount == 0
+        └── Given the protocol fee > 0
+            └── And the workflow fee > 0
+                └── When the function _calculateNetAndSplitFees() is called
+                    └── Then it should return the correct netAmount
+                        ├── And it should return the correct protocolFeeAmount
+                        └── And it should return the correct workflowFeeAmount
+    */
+
+    function testInternalCalculateNetAndSplitFees_FailsIfFeeIsToHigh(
+        uint protocolFee,
+        uint workflowFee
+    ) public {
+        protocolFee = bound(protocolFee, 1, 2 ^ 128);
+        workflowFee = bound(workflowFee, 1, 2 ^ 128);
+
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        if (protocolFee + workflowFee > _bps) {
+            vm.expectRevert(
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__FeeAmountToHigh
+                    .selector
+            );
+        }
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            0, protocolFee, workflowFee
+        );
+    }
+
+    function testInternalCalculateNetAndSplitFees_CombinedFee0() public {
+        (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
+            bondingCurveFundingManager.call_calculateNetAndSplitFees(0, 0, 0);
+        assertEq(netAmount, 0);
+        assertEq(protocolFeeAmount, 0);
+        assertEq(workflowFeeAmount, 0);
+    }
+
+    function testInternalCalculateNetAndSplitFees_ProtocolFee0(
+        uint totalAmount,
+        uint workflowFee
+    ) public {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        totalAmount = bound(totalAmount, 1, 2 ^ 128);
+        workflowFee = bound(workflowFee, 1, _bps);
+
+        (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            totalAmount, 0, workflowFee
+        );
+        assertEq(netAmount, totalAmount - workflowFeeAmount);
+        assertEq(protocolFeeAmount, 0);
+        assertEq(workflowFeeAmount, totalAmount * workflowFee / _bps);
+    }
+
+    function testInternalCalculateNetAndSplitFees_ProjectFee0(
+        uint totalAmount,
+        uint protocolFee
+    ) public {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        totalAmount = bound(totalAmount, 1, 2 ^ 128);
+        protocolFee = bound(protocolFee, 1, _bps);
+
+        (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            totalAmount, protocolFee, 0
+        );
+        assertEq(netAmount, totalAmount - protocolFeeAmount);
+        assertEq(protocolFeeAmount, totalAmount * protocolFee / _bps);
+        assertEq(workflowFeeAmount, 0);
+    }
+
+    function testInternalCalculateNetAndSplitFees_FeesBiggerThan0(
+        uint totalAmount,
+        uint protocolFee,
+        uint workflowFee
+    ) public {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        totalAmount = bound(totalAmount, 1, 2 ^ 128);
+        protocolFee = bound(protocolFee, 1, _bps);
+        workflowFee = bound(workflowFee, 1, _bps);
+        vm.assume(workflowFee + protocolFee < _bps);
+
+        (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            totalAmount, protocolFee, workflowFee
+        );
+
+        assertEq(netAmount, totalAmount - protocolFeeAmount - workflowFeeAmount);
+        assertEq(protocolFeeAmount, totalAmount * protocolFee / _bps);
+        assertEq(workflowFeeAmount, totalAmount * workflowFee / _bps);
     }
 
     /* Test openBuy and _openBuy function

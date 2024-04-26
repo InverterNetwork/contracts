@@ -33,6 +33,7 @@ import {FundingManagerV1Mock} from
     "test/utils/mocks/modules/FundingManagerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
 
 // Run through the AUT_Roles_v1 tests with the AUT_TokenGated_Roles_v1
 contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
@@ -52,7 +53,8 @@ contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         address initialAuth = ALBA;
@@ -85,6 +87,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerV1Mock _fundingManager = new FundingManagerV1Mock();
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
+    GovernorV1Mock internal governor = new GovernorV1Mock();
 
     ModuleV1Mock mockModule = new ModuleV1Mock();
 
@@ -137,7 +140,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         address initialAuth = ALBA;

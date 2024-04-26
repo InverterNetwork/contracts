@@ -42,4 +42,18 @@ contract ModuleV1Mock is Module_v1 {
     {
         return _msgData();
     }
+
+    function original_getFeeManagerCollateralFeeData(bytes4 functionSelector)
+        external
+        returns (uint, address)
+    {
+        return _getFeeManagerCollateralFeeData(functionSelector);
+    }
+
+    function original_getFeeManagerIssuanceFeeData(bytes4 functionSelector)
+        external
+        returns (uint, address)
+    {
+        return _getFeeManagerIssuanceFeeData(functionSelector);
+    }
 }

@@ -10,7 +10,8 @@ import {
 import {
     IFundingManager_v1,
     IAuthorizer_v1,
-    IPaymentProcessor_v1
+    IPaymentProcessor_v1,
+    IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IModuleFactory_v1} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
@@ -156,7 +157,8 @@ contract OrchestratorFactory_v1 is
             modules,
             IFundingManager_v1(fundingManager),
             IAuthorizer_v1(authorizer),
-            IPaymentProcessor_v1(paymentProcessor)
+            IPaymentProcessor_v1(paymentProcessor),
+            IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );
 
         // Second round of module initializations to satisfy cross-referencing between modules

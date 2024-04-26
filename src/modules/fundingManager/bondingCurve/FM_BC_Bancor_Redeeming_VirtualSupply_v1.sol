@@ -301,35 +301,72 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
     function calculatePurchaseReturn(uint _depositAmount)
         external
-        view
         returns (uint mintAmount)
     {
         if (_depositAmount == 0) {
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount();
         }
-        if (buyFee > 0) {
-            (_depositAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(_depositAmount, buyFee);
-        }
-        return _issueTokensFormulaWrapper(_depositAmount);
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        ) = _getBuyFeesAndTreasuryAddresses();
+
+        // Deduct protocol and project buy fee from collateral, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            _depositAmount, collateralBuyFeePercentage, buyFee
+        );
+
+        // Calculate issuance token return from formula
+        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol buy fee from issuance, if applicable
+        (mintAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
+
+        // Return expected purchase return amount
+        return mintAmount;
     }
 
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
     function calculateSaleReturn(uint _depositAmount)
         external
-        view
         returns (uint redeemAmount)
     {
         if (_depositAmount == 0) {
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount();
         }
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        ) = _getSellFeesAndTreasuryAddresses();
+
+        // Deduct protocol sell fee from issuance, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
+
+        // Calculate redeem amount from formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-        if (sellFee > 0) {
-            (redeemAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(redeemAmount, sellFee);
-        }
+
+        // Deduct protocol and project sell fee from collateral, if applicable
+        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            redeemAmount, collateralSellFeePercentage, sellFee
+        );
+
+        // Return redeem amount
         return redeemAmount;
     }
 
@@ -540,10 +577,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         uint _depositAmount,
         uint _minAmountOut
     ) internal {
-        (uint amountIssued, uint feeAmount) =
+        (uint amountIssued, uint collateralFeeAmount) =
             _buyOrder(_receiver, _depositAmount, _minAmountOut);
         _addVirtualIssuanceAmount(amountIssued);
-        _addVirtualCollateralAmount(_depositAmount - feeAmount);
+        _addVirtualCollateralAmount(_depositAmount - collateralFeeAmount);
     }
 
     /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
@@ -557,10 +594,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         uint _depositAmount,
         uint _minAmountOut
     ) internal {
-        (uint redeemAmount, uint feeAmount) =
+        (uint redeemAmount, uint issuanceFeeAmount) =
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
-        _subVirtualIssuanceAmount(_depositAmount);
-        _subVirtualCollateralAmount(redeemAmount + feeAmount);
+        _subVirtualIssuanceAmount(_depositAmount - issuanceFeeAmount);
+        _subVirtualCollateralAmount(redeemAmount);
     }
 
     /// @dev Sets the reserve ratio for buying tokens.

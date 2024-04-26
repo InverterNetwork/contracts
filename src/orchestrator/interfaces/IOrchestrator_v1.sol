@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 // Internal Interfaces
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
+import {IGovernor_v1} from "src/external/governance/interfaces/IGovernor_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {IPaymentProcessor_v1} from
@@ -49,12 +50,14 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @param authorizer The address of the authorizer module.
     /// @param paymentProcessor The address of the payment processor module.
     /// @param modules The addresses of the other modules used in the orchestrator.
+    /// @param governor The address of the governor contract used to reference protocol level interactions
     event OrchestratorInitialized(
         uint indexed orchestratorId_,
         address fundingManager,
         address authorizer,
         address paymentProcessor,
-        address[] modules
+        address[] modules,
+        address governor
     );
 
     //--------------------------------------------------------------------------
@@ -66,7 +69,8 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         address[] calldata modules,
         IFundingManager_v1 fundingManager,
         IAuthorizer_v1 authorizer,
-        IPaymentProcessor_v1 paymentProcessor
+        IPaymentProcessor_v1 paymentProcessor,
+        IGovernor_v1 governor
     ) external;
 
     /// @notice Replaces the current authorizer with `_authorizer`
@@ -116,4 +120,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         external
         view
         returns (address);
+
+    /// @notice The governor contract implementation used for protocol level interactions.
+    function governor() external view returns (IGovernor_v1);
 }
