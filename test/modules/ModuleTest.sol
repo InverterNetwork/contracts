@@ -44,7 +44,7 @@ abstract contract ModuleTest is Test {
 
     GovernorV1Mock governor = new GovernorV1Mock();
 
-    FeeManager_v1 feeManager = new FeeManager_v1();
+    FeeManager_v1 feeManager;
     address treasury = makeAddr("treasury");
 
     //Deploy a forwarder used to enable metatransactions
@@ -65,8 +65,8 @@ abstract contract ModuleTest is Test {
 
     //--------------------------------------------------------------------------------
     // Setup
-
     function _setUpOrchestrator(IModule_v1 module) internal virtual {
+        feeManager = new FeeManager_v1();
         feeManager.init(address(this), treasury, 0, 0);
         governor.setFeeManager(address(feeManager));
 
