@@ -12,6 +12,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Dependencies
 import {OrchestratorV1Mock} from
     "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
+import {FeeManager_v1} from "src/external/fees/FeeManager_v1.sol";
+import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
@@ -40,6 +42,11 @@ abstract contract ModuleTest is Test {
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
 
+    GovernorV1Mock governor = new GovernorV1Mock();
+
+    FeeManager_v1 feeManager = new FeeManager_v1();
+    address treasury = makeAddr("treasury");
+
     //Deploy a forwarder used to enable metatransactions
     TransactionForwarder_v1 _forwarder =
         new TransactionForwarder_v1("TransactionForwarder_v1");
@@ -60,6 +67,9 @@ abstract contract ModuleTest is Test {
     // Setup
 
     function _setUpOrchestrator(IModule_v1 module) internal virtual {
+        feeManager.init(address(this), treasury, 0, 0);
+        governor.setFeeManager(address(feeManager));
+
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
@@ -77,7 +87,8 @@ abstract contract ModuleTest is Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
