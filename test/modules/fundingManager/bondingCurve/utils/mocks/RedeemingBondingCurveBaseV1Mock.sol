@@ -32,24 +32,16 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         __Module_init(orchestrator_, metadata);
 
         (
-            bytes32 _name,
-            bytes32 _symbol,
-            uint8 _decimals,
+            address _issuanceToken,
             address _formula,
             uint _buyFee,
             bool _buyIsOpen,
             bool _sellIsOpen
-        ) = abi.decode(
-            configData, (bytes32, bytes32, uint8, address, uint, bool, bool)
-        );
+        ) = abi.decode(configData, (address, address, uint, bool, bool));
 
-        __ERC20_init(
-            string(abi.encodePacked(_name)), string(abi.encodePacked(_symbol))
-        );
+        _setIssuanceToken(_issuanceToken);
 
         formula = IBancorFormula(_formula);
-
-        _setTokenDecimals(_decimals);
 
         _setBuyFee(_buyFee);
 
@@ -101,11 +93,39 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         return BPS;
     }
 
-    //--------------------------------------------------------------------------
-    // Will be removed once we update base fundingManager
+    function call_sellOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    )
+        external
+        returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
+    {
+        return _sellOrder(_receiver, _depositAmount, _minAmountOut);
+    }
 
-    /// @inheritdoc IFundingManager_v1
-    function token() public view returns (IERC20) {
-        return __Module_orchestrator.fundingManager().token();
+    function call_getSellFeesAndTreasuryAddresses()
+        external
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        )
+    {
+        return _getSellFeesAndTreasuryAddresses();
+    }
+
+    function call_calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _workflowFee
+    )
+        external
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
+    {
+        return
+            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
     }
 }

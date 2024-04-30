@@ -27,6 +27,9 @@ interface IBondingCurveBase_v1 {
     /// @notice Actual buy amount is lower than the minimum acceptable amount
     error Module__BondingCurveBase__InsufficientOutputAmount();
 
+    /// @notice The combination of protocol fee and workflow fee cant be higher than 100%
+    error Module__BondingCurveBase__FeeAmountToHigh();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -38,6 +41,11 @@ interface IBondingCurveBase_v1 {
 
     /// @notice Event emitted when buy fee is updated
     event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
+
+    /// @notice Event emitted when the issuance token is updated
+    event IssuanceTokenUpdated(
+        address indexed oldToken, address indexed issuanceToken
+    );
 
     /// @notice Event emitted when tokens have been succesfully issued
     /// @param receiver The address that will receive the issued tokens.
@@ -57,6 +65,31 @@ interface IBondingCurveBase_v1 {
     event TokenDecimalsUpdated(
         uint8 indexed oldDecimals, uint8 indexed newDecimals
     );
+
+    /// @notice Event emitted when protocol fee has been minted to the treasury
+    /// @param token The token minted as protocol fee
+    /// @param treasury The protocol treasury address receiving the token fee amount
+    /// @param feeAmount The fee amount minted to the treasury
+    event ProtocolFeeMinted(
+        address indexed token, address indexed treasury, uint indexed feeAmount
+    );
+
+    /// @notice Event emitted when protocol fee has been transferred to the treasury
+    /// @param token The token received as protocol fee
+    /// @param treasury The protocol treasury address receiving the token fee amount
+    /// @param feeAmount The fee amount transferred to the treasury
+    event ProtocolFeeTransferred(
+        address indexed token, address indexed treasury, uint indexed feeAmount
+    );
+
+    //--------------------------------------------------------------------------
+    // Structs
+    struct IssuanceToken {
+        string name; // The name of the issuance token
+        string symbol; // The symbol of the issuance token
+        uint8 decimals; // The decimals used within the issuance token
+        uint maxSupply; // The maximum supply of the issuance token
+    }
 
     //--------------------------------------------------------------------------
     // Functions

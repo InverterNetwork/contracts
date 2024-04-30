@@ -9,7 +9,7 @@ import {AUT_RolesV1Test} from "test/modules/authorizer/role/AUT_Roles_v1.t.sol";
 // SuT
 import {
     AUT_TokenGated_Roles_v1,
-    IAUT_TokenGated_Role_v1
+    IAUT_TokenGated_Roles_v1
 } from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 
 import {AUT_Roles_v1, IAuthorizer_v1} from "@aut/role/AUT_Roles_v1.sol";
@@ -33,6 +33,7 @@ import {FundingManagerV1Mock} from
     "test/utils/mocks/modules/FundingManagerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
 
 // Run through the AUT_Roles_v1 tests with the AUT_TokenGated_Roles_v1
 contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
@@ -52,7 +53,8 @@ contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         address initialAuth = ALBA;
@@ -85,6 +87,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerV1Mock _fundingManager = new FundingManagerV1Mock();
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
+    GovernorV1Mock internal governor = new GovernorV1Mock();
 
     ModuleV1Mock mockModule = new ModuleV1Mock();
 
@@ -137,7 +140,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         address initialAuth = ALBA;
@@ -169,7 +173,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     function testSupportsInterface() public {
         assertTrue(
             _authorizer.supportsInterface(
-                type(IAUT_TokenGated_Role_v1).interfaceId
+                type(IAUT_TokenGated_Roles_v1).interfaceId
             )
         );
     }
@@ -275,8 +279,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__RoleNotEmpty
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotEmpty
                     .selector
             )
         );
@@ -307,8 +311,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__RoleNotEmpty
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotEmpty
                     .selector
             )
         );
@@ -316,8 +320,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__RoleNotEmpty
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotEmpty
                     .selector
             )
         );
@@ -355,8 +359,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
         //Then the contract handles the reversion and sends the correct error message
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__InvalidToken
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__InvalidToken
                     .selector,
                 CLOE
             )
@@ -378,8 +382,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
         //Then the contract handles the reversion and sends the correct error message
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__InvalidToken
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__InvalidToken
                     .selector,
                 CLOE
             )
@@ -405,8 +409,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__InvalidThreshold
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__InvalidThreshold
                     .selector,
                 0
             )
@@ -429,8 +433,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
         vm.prank(BOB);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__InvalidThreshold
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__InvalidThreshold
                     .selector,
                 0
             )
@@ -446,8 +450,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
         //We didn't make the role token-gated beforehand
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__RoleNotTokenGated
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotTokenGated
                     .selector
             )
         );
@@ -462,8 +466,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
         vm.prank(BOB);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__RoleNotTokenGated
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotTokenGated
                     .selector
             )
         );
@@ -494,8 +498,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__InvalidThreshold
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__InvalidThreshold
                     .selector,
                 0
             )
@@ -513,8 +517,8 @@ contract TokenGatedAUT_RoleV1Test is Test {
         //We didn't make the role token-gated beforehand
         vm.expectRevert(
             abi.encodeWithSelector(
-                IAUT_TokenGated_Role_v1
-                    .Module__AUT_TokenGated_Role__RoleNotTokenGated
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotTokenGated
                     .selector
             )
         );

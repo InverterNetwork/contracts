@@ -12,6 +12,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // Internal Dependencies
 import {OrchestratorV1Mock} from
     "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
+import {FeeManager_v1} from "src/external/fees/FeeManager_v1.sol";
+import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
@@ -40,6 +42,11 @@ abstract contract ModuleTest is Test {
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
 
+    GovernorV1Mock governor = new GovernorV1Mock();
+
+    FeeManager_v1 feeManager;
+    address treasury = makeAddr("treasury");
+
     //Deploy a forwarder used to enable metatransactions
     TransactionForwarder_v1 _forwarder =
         new TransactionForwarder_v1("TransactionForwarder_v1");
@@ -58,8 +65,11 @@ abstract contract ModuleTest is Test {
 
     //--------------------------------------------------------------------------------
     // Setup
-
     function _setUpOrchestrator(IModule_v1 module) internal virtual {
+        feeManager = new FeeManager_v1();
+        feeManager.init(address(this), treasury, 0, 0);
+        governor.setFeeManager(address(feeManager));
+
         address[] memory modules = new address[](1);
         modules[0] = address(module);
 
@@ -77,11 +87,13 @@ abstract contract ModuleTest is Test {
             modules,
             _fundingManager,
             _authorizer,
-            _paymentProcessor
+            _paymentProcessor,
+            governor
         );
 
         _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
 
+        _fundingManager.init(_orchestrator, _METADATA, abi.encode(""));
         _fundingManager.setToken(IERC20(address(_token)));
     }
 
@@ -126,7 +138,7 @@ abstract contract ModuleTest is Test {
         uint decimalDiff = referenceDecimals - tokenDecimals;
         uint newMax = max / 10 ** decimalDiff;
 
-        amount = bound(amount, min, newMax);
+        amount = bound(number, min, newMax);
     }
 
     function _assumeNonEmptyString(string memory a) internal pure {
@@ -173,5 +185,49 @@ abstract contract ModuleTest is Test {
                     != keccak256(abi.encodePacked(set[i]))
             );
         }
+    }
+
+    // Address Sanity Checkers
+    mapping(address => bool) addressCache;
+
+    function _assumeValidAddresses(address[] memory addresses) internal {
+        for (uint i; i < addresses.length; ++i) {
+            _assumeValidAddress(addresses[i]);
+
+            // Assume address unique.
+            vm.assume(!addressCache[addresses[i]]);
+
+            // Add address to cache.
+            addressCache[addresses[i]] = true;
+        }
+    }
+
+    function _assumeValidAddress(address user) internal view {
+        address[] memory invalids = _createInvalidAddresses();
+
+        for (uint i; i < invalids.length; ++i) {
+            vm.assume(user != invalids[i]);
+        }
+    }
+
+    function _createInvalidAddresses()
+        internal
+        view
+        returns (address[] memory)
+    {
+        address[] memory modules = _orchestrator.listModules();
+
+        address[] memory invalids = new address[](modules.length + 4);
+
+        for (uint i; i < modules.length; ++i) {
+            invalids[i] = modules[i];
+        }
+
+        invalids[invalids.length - 4] = address(0);
+        invalids[invalids.length - 3] = address(this);
+        invalids[invalids.length - 2] = address(_orchestrator);
+        invalids[invalids.length - 1] = address(_token);
+
+        return invalids;
     }
 }

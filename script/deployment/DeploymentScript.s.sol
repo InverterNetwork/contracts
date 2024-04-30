@@ -19,6 +19,7 @@ import {DeployLM_PC_Bounties_v1} from
     "script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol";
 
 import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
+import {DeployFeeManager_v1} from "script/external/DeployFeeManager_v1.s.sol";
 import {DeployTransactionForwarder_v1} from
     "script/external/DeployTransactionForwarder_v1.s.sol";
 import {DeployOrchestrator_v1} from
@@ -81,6 +82,8 @@ contract DeploymentScript is Script {
         new DeployTransactionForwarder_v1();
     //Governor_v1
     DeployGovernor_v1 deployGovernor = new DeployGovernor_v1();
+    //FeeManager_v1
+    DeployFeeManager_v1 deployFeeManager = new DeployFeeManager_v1();
 
     //Beacon
     DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
@@ -140,6 +143,9 @@ contract DeploymentScript is Script {
 
     //Governor_v1
     address governor;
+
+    //FeeManager
+    address feeManager;
 
     //TransactionForwarder_v1
     address forwarder;
@@ -258,6 +264,20 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
+
+        console2.log("Fee Manager \n");
+
+        feeManager = deployFeeManager.run(
+            address(governor), //owner
+            communityMultisig, //@note This is not the real target is it?
+            100, //Collateral Fee 1%
+            100 //Issuance Fee 1%
+        );
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+
         console2.log("Deploy orchestrator implementation \n");
         //Orchestrator_v1
         orchestrator = deployOrchestrator.run();

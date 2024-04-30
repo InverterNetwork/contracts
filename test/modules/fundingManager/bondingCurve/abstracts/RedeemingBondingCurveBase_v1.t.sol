@@ -8,6 +8,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
+import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+
 // Internal Dependencies
 import {
     ModuleTest,
@@ -34,6 +36,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     string private constant NAME = "Bonding Curve Token";
     string private constant SYMBOL = "BCT";
     uint8 private constant DECIMALS = 18;
+    uint internal constant MAX_SUPPLY = type(uint).max;
+
     uint private constant BUY_FEE = 0;
     uint private constant SELL_FEE = 0;
     bool private constant BUY_IS_OPEN = true;
@@ -41,6 +45,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     RedeemingBondingCurveBaseV1Mock bondingCurveFundingManager;
     address formula;
+
+    ERC20Issuance_v1 issuanceToken;
 
     address owner_address = address(0xA1BA);
     address non_owner_address = address(0xB0B);
@@ -64,6 +70,14 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         formula = address(new BancorFormula());
 
+        issuanceToken = new ERC20Issuance_v1(
+            NAME,
+            SYMBOL,
+            DECIMALS,
+            type(uint).max,
+            address(this),
+            address(bondingCurveFundingManager)
+        );
         _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
@@ -73,9 +87,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                bytes32(abi.encodePacked(NAME)),
-                bytes32(abi.encodePacked(SYMBOL)),
-                DECIMALS,
+                address(issuanceToken),
                 formula,
                 BUY_FEE,
                 BUY_IS_OPEN,
@@ -101,17 +113,17 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     function testInit() public override {
         assertEq(
-            bondingCurveFundingManager.name(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(NAME)))),
+            issuanceToken.name(),
+            string(abi.encodePacked(NAME)),
             "Name has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.symbol(),
-            string(abi.encodePacked(bytes32(abi.encodePacked(SYMBOL)))),
+            issuanceToken.symbol(),
+            string(abi.encodePacked(SYMBOL)),
             "Symbol has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.decimals(),
+            issuanceToken.decimals(),
             DECIMALS,
             "Decimals has not been set correctly"
         );
@@ -184,7 +196,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         uint receiverBalanceBefore = _token.balanceOf(receiver);
         assertEq(_token.balanceOf(seller), 0);
         assertEq(_token.balanceOf(receiver), 0);
-        assertEq(bondingCurveFundingManager.balanceOf(seller), sellAmount);
+        assertEq(issuanceToken.balanceOf(seller), sellAmount);
 
         // Execution
         vm.prank(seller);
@@ -196,7 +208,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             _token.balanceOf(address(bondingCurveFundingManager)),
             (bondingCurveBalanceBefore - redeemAmount)
         );
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
+        assertEq(issuanceToken.balanceOf(seller), 0);
         assertEq(_token.balanceOf(seller), 0);
     }
 
@@ -282,97 +294,85 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.sell(amount, minAmountOut);
     }
 
-    function testSellOrderWithZeroFee(uint amount) public {
-        // Setup
-        vm.assume(amount > 0);
-
-        address seller = makeAddr("seller");
-        _prepareSellConditions(seller, amount);
-
-        // Pre-checks
-        uint bondingCurveCollateralBalanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalIssuanceSupplyBefore =
-            bondingCurveFundingManager.totalSupply();
-        assertEq(_token.balanceOf(seller), 0);
-        //uint userTokenBalanceBefore = bondingCurveFundingManager.balanceOf(seller);
-
-        // Emit event
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit TokensSold(seller, amount, amount, seller);
-
-        // Execution
-        vm.prank(seller);
-        bondingCurveFundingManager.sell(amount, amount);
-
-        // Post-checks
-        assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (bondingCurveCollateralBalanceBefore - amount)
-        );
-        assertEq(_token.balanceOf(seller), amount);
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
-        assertEq(
-            bondingCurveFundingManager.totalSupply(),
-            totalIssuanceSupplyBefore - amount
-        );
-    }
-
-    function testSellOrderWithFee(uint amount, uint fee) public {
+    function test_sellOrder(
+        uint amount,
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _workflowFee
+    ) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
-        vm.assume(fee < _bps);
+        _collateralFee = bound(_collateralFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _workflowFee = bound(_workflowFee, 0, _bps - 1);
+        vm.assume(_collateralFee + _workflowFee < _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
         amount = bound(amount, 1, maxAmount);
 
-        vm.prank(owner_address);
-        bondingCurveFundingManager.setSellFee(fee);
-        assertEq(bondingCurveFundingManager.sellFee(), fee);
-
         address seller = makeAddr("seller");
         _prepareSellConditions(seller, amount);
 
-        // Pre-checks
-        uint bondingCurveCollateralBalanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalIssuanceSupplyBefore =
-            bondingCurveFundingManager.totalSupply();
-        assertEq(_token.balanceOf(seller), 0);
+        //Set Fee
+        if (_collateralFee != 0) {
+            feeManager.setDefaultCollateralFee(_collateralFee);
+        }
+        if (_issuanceFee != 0) {
+            feeManager.setDefaultIssuanceFee(_issuanceFee);
+        }
+
+        if (_workflowFee != 0) {
+            vm.prank(owner_address);
+            bondingCurveFundingManager.setSellFee(_workflowFee);
+        }
 
         // Calculate receive amount
-        uint amountMinusFee =
-            amount - ((amount * fee) / bondingCurveFundingManager.call_BPS());
+
+        uint protocolIssuanceFeeAmount;
+        uint projectCollateralFeeAmount;
+        uint finalAmount;
+        uint amountAfterFirstFeeCollection;
+
+        (amountAfterFirstFeeCollection, protocolIssuanceFeeAmount,) =
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            amount, _issuanceFee, 0
+        );
+
+        (finalAmount,, projectCollateralFeeAmount) = bondingCurveFundingManager
+            .call_calculateNetAndSplitFees(
+            amountAfterFirstFeeCollection, _collateralFee, _workflowFee
+        );
 
         // Emit event
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensSold(seller, amount, amountMinusFee, seller);
+        emit TokensSold(seller, amount, finalAmount, seller);
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sell(amount, amountMinusFee);
+        (uint totalCollateralTokenMovedOut, uint returnedIssuanceFeeAmount) =
+        bondingCurveFundingManager.call_sellOrder(seller, amount, finalAmount);
+
+        assertEq(totalCollateralTokenMovedOut, amountAfterFirstFeeCollection);
+        assertEq(returnedIssuanceFeeAmount, protocolIssuanceFeeAmount);
 
         // Post-checks
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
-            (bondingCurveCollateralBalanceBefore - amountMinusFee)
+            protocolIssuanceFeeAmount + projectCollateralFeeAmount
         );
-        assertEq(_token.balanceOf(seller), amountMinusFee);
-        assertEq(bondingCurveFundingManager.balanceOf(seller), 0);
-        assertEq(
-            bondingCurveFundingManager.totalSupply(),
-            totalIssuanceSupplyBefore - amount
-        );
+
+        assertEq(_token.balanceOf(seller), finalAmount);
+
+        assertEq(issuanceToken.balanceOf(seller), 0);
+        assertEq(issuanceToken.totalSupply(), protocolIssuanceFeeAmount);
     }
 
     /* Test openSell and _openSell function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module modifier tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                └── when sell functionality is already open
                 │      └── it should revert
                 └── when sell functionality is not open
@@ -407,9 +407,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test closeSell and _closeSell function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                └── when sell functionality is already closed
                 │      └── it should revert -> 
                 └── when sell functionality is not closed
@@ -442,9 +442,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test setSellFee and _setSellFee function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator owner
                └── when fee is over 100% 
                 │      └── it should revert
                 ├── when fee is 100% 
@@ -496,7 +496,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     //      - Mints collateral tokens to a seller and
     //      - Deposits them so they can later be sold.
     //      - Approves the BondingCurve contract to spend the receipt tokens
-    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many toknes as they deposit
+    // This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
     function _prepareSellConditions(address seller, uint amount) internal {
         _token.mint(seller, amount);
 
@@ -505,9 +505,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
             _token.approve(address(bondingCurveFundingManager), amount);
             bondingCurveFundingManager.buy(amount, amount);
 
-            bondingCurveFundingManager.approve(
-                address(bondingCurveFundingManager), amount
-            );
+            issuanceToken.approve(address(bondingCurveFundingManager), amount);
         }
         vm.stopPrank();
     }

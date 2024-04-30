@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 
 import {
     AUT_TokenGated_Roles_v1,
-    IAUT_TokenGated_Role_v1,
+    IAUT_TokenGated_Roles_v1,
     IAuthorizer_v1
 } from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {DeployAUT_TokenGated_Role_v1} from

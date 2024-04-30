@@ -23,4 +23,8 @@ ignore = ['src/generated/*', 'src/modules/fundingManager/bondingCurveFundingMana
 fuzz = { runs = 1_024 }
 verbosity = 4
 
+[rpc_endpoints]
+mainnet = "${RPC_URL}"
+sepolia = "${SEPOLIA_RPC_URL}"
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

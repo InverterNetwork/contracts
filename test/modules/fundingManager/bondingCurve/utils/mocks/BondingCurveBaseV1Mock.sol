@@ -28,24 +28,18 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
+        // NOTE: The final BancorBondingCurve deploys an issuance token on intialization. or ease of testing, these mocks of the abstract contracts receive the address of a pre-deployed one
+
         (
-            bytes32 _name,
-            bytes32 _symbol,
-            uint8 _decimals,
+            address _issuanceToken,
             address _formula,
             uint _buyFee,
             bool _buyIsOpen
-        ) = abi.decode(
-            configData, (bytes32, bytes32, uint8, address, uint, bool)
-        );
+        ) = abi.decode(configData, (address, address, uint, bool));
 
-        __ERC20_init(
-            string(abi.encodePacked(_name)), string(abi.encodePacked(_symbol))
-        );
+        _setIssuanceToken(address(_issuanceToken));
 
         formula = IBancorFormula(_formula);
-
-        _setTokenDecimals(_decimals);
 
         _setBuyFee(_buyFee);
 
@@ -85,16 +79,59 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         return BPS;
     }
 
-    // Since the init calls are not registered for coverage, we call expose setDecimals to get to 100% test coverage.
-    function call_setDecimals(uint8 _newDecimals) external {
-        _setTokenDecimals(_newDecimals);
+    function call_buyOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    )
+        external
+        returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
+    {
+        return _buyOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
-    //--------------------------------------------------------------------------
-    // Will be removed once we update base fundingManager
+    function call_processProtocolFeeViaTransfer(
+        address _treasury,
+        IERC20 _token,
+        uint _feeAmount
+    ) external {
+        _processProtocolFeeViaTransfer(_treasury, _token, _feeAmount);
+    }
 
-    /// @inheritdoc IFundingManager_v1
-    function token() public view returns (IERC20) {
-        return __Module_orchestrator.fundingManager().token();
+    function call_processProtocolFeeViaMinting(
+        address _treasury,
+        uint _feeAmount
+    ) external {
+        _processProtocolFeeViaMinting(_treasury, _feeAmount);
+    }
+
+    function call_getBuyFeesAndTreasuryAddresses()
+        external
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        )
+    {
+        return _getBuyFeesAndTreasuryAddresses();
+    }
+
+    function call_calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _workflowFee
+    )
+        external
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
+    {
+        return
+            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
+    }
+
+    // Since the init calls are not registered for coverage, we call expose setIssuanceToken to get to 100% test coverage.
+    function call_setIssuanceToken(address _newIssuanceToken) external {
+        _setIssuanceToken(_newIssuanceToken);
     }
 }

@@ -214,9 +214,5 @@ contract RoleAuthorizerE2E is E2ETest {
         //--------------------------------------------------------------------------------
         vm.prank(orchestratorManager);
         bountyManager.verifyClaim(claimId, contribs);
-
-        // -----------------------------------------------------------------------
-        // TODO Missing: Worker claims and receives funds
-        // -----------------------------------------------------------------------
     }
 }
