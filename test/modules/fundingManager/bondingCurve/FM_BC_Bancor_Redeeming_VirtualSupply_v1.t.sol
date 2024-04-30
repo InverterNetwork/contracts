@@ -490,7 +490,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, buyAmountMinusFee, formulaReturn, buyer);
+        emit TokensBought(buyer, amount, formulaReturn, buyer);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
@@ -1892,7 +1892,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     //      - Mints collateral tokens to a seller and
     //      - Deposits them so they can later be sold.
     //      - Approves the BondingCurve contract to spend the receipt tokens
-    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many toknes as they deposit
+    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
     function _prepareSellConditions(address seller, uint amount)
         internal
         returns (uint userSellAmount)

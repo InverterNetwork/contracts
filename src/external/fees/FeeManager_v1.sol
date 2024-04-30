@@ -10,6 +10,17 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Ownable2StepUpgradeable} from
     "@oz-up/access/Ownable2StepUpgradeable.sol";
 
+/**
+ * @title   Fee Manager Contract
+ *
+ * @notice  This contract manages the different fees possible on a protocol level.
+ *          The different fees can be fetched publicly and be set by the owner of the contract.
+ *
+ *  @dev    Inherits from {ERC165} for interface detection, {Ownable2StepUpgradeable} for owner-based
+ *          access control, and implements the {IFeeManager_v1} interface.
+ *
+ * @author  Inverter Network
+ */
 contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     function supportsInterface(bytes4 interfaceId)
         public
