@@ -490,7 +490,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, buyAmountMinusFee, formulaReturn, buyer);
+        emit TokensBought(buyer, amount, formulaReturn, buyer);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
