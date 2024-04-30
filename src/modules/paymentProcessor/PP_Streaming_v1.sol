@@ -117,7 +117,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _claimAll(client, _msgSender());
     }
 
-    function claimPreviouslyUnclaimable(address client) external {
+    function claimPreviouslyUnclaimable(address client, address receiver)
+        external
+    {
+        //@todo add test
         if (unclaimable(client, _msgSender()) == 0) {
             revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
         }

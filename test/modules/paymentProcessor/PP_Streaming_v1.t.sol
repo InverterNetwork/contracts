@@ -1324,7 +1324,9 @@ contract PP_StreamingV1Test is ModuleTest {
 
         // claim the previously unclaimable amount
         vm.prank(recipient);
-        paymentProcessor.claimPreviouslyUnclaimable(address(paymentClient));
+        paymentProcessor.claimPreviouslyUnclaimable(
+            address(paymentClient), recipient
+        );
 
         // after successful claim of the previously unclaimable amount the receiver should have 25% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
@@ -1389,7 +1391,9 @@ contract PP_StreamingV1Test is ModuleTest {
 
         // claim the previously unclaimable amount
         vm.prank(recipient);
-        paymentProcessor.claimPreviouslyUnclaimable(address(paymentClient));
+        paymentProcessor.claimPreviouslyUnclaimable(
+            address(paymentClient), recipient
+        );
 
         // after successful claim of the previously unclaimable amount the receiver should have 25% total,
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0

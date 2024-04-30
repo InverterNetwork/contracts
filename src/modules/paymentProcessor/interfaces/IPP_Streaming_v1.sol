@@ -113,10 +113,12 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
     function claimAll(address client) external;
 
-    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender
+    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a specified receiver
     /// @dev This function should be callable if the _msgSender is either an activePaymentReceiver or has some unclaimedAmounts
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
-    function claimPreviouslyUnclaimable(address client) external;
+    /// @param receiver The address that will receive the previously unclaimable amount
+    function claimPreviouslyUnclaimable(address client, address receiver)
+        external;
 
     /// @notice claim the salary uptil block.timestamp from the client for a payment order with id = walletId by _msgSender
     /// @dev If for a specific walletId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
