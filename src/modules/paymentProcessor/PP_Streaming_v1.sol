@@ -56,9 +56,14 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     mapping(address => mapping(address => mapping(uint => VestingWallet)))
         private vestings;
 
+    /// @notice tracks all walletIds for payments that could not be made to the paymentReceiver due to any reason
+    /// @dev paymentClient => paymentReceiver => walletId array
+    mapping(address => mapping(address => uint[])) private unclaimableWalletIds;
+
     /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => paymentReceiver => unclaimableAmount
-    mapping(address => mapping(address => uint)) private unclaimableAmounts;
+    /// @dev paymentClient => paymentReceiver => vestingWalletID => unclaimable Amount
+    mapping(address => mapping(address => mapping(uint => uint))) private
+        unclaimableAmountsForWalletId;
 
     /// @notice list of addresses with open payment Orders per paymentClient
     /// @dev paymentClient => listOfPaymentReceivers(address[]). Duplicates are not allowed.
@@ -125,7 +130,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
         }
 
-        _claimPreviouslyUnclaimable(client, _msgSender());
+        _claimPreviouslyUnclaimable(client, receiver);
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -316,12 +321,23 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function unclaimable(address client, address paymentReceiver)
+    function unclaimable( //@todo test
+    address client, address paymentReceiver)
         public
         view
-        returns (uint)
+        returns (uint amount)
     {
-        return unclaimableAmounts[client][paymentReceiver];
+        uint[] memory ids = unclaimableWalletIds[client][paymentReceiver];
+        uint length = ids.length;
+
+        if (length == 0) {
+            return 0;
+        }
+
+        for (uint i = 0; i < length; i++) {
+            amount +=
+                unclaimableAmountsForWalletId[client][paymentReceiver][ids[i]];
+        }
     }
 
     /// @inheritdoc IPaymentProcessor_v1
@@ -512,8 +528,12 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             );
         }
 
-        uint remainingReleasable = vestings[client][paymentReceiver][walletId]
-            ._salary - vestings[client][paymentReceiver][walletId]._released;
+        uint remainingReleasable = vestings[client][paymentReceiver][walletId] //The whole salary
+            ._salary - vestings[client][paymentReceiver][walletId]._released //Minus what has already been "released"
+            //"released" does not include the unclaimable amount of the specific wallet
+            //this works under the assumption that with the deletion of this specific wallet id the unclaimableAmountsForWalletId cannot be raised anymore;
+            + unclaimableAmountsForWalletId[client][paymentReceiver][walletId];
+
         //In case there is still something to be released
         if (remainingReleasable > 0) {
             //Let PaymentClient know that the amount is not needed to be stored anymore
@@ -677,7 +697,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             //Make sure to let paymentClient know that amount doesnt have to be stored anymore
             IERC20PaymentClientBase_v1(client).amountPaid(amount);
         } else {
-            unclaimableAmounts[client][paymentReceiver] += amount;
+            //Adds the walletId to the array of unclaimable wallet ids
+            unclaimableWalletIds[client][paymentReceiver].push(walletId);
+            unclaimableAmountsForWalletId[client][paymentReceiver][walletId] +=
+                amount;
         }
 
         uint dueToPaymentReceiver =
@@ -690,34 +713,39 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
+    /// @dev assumes that the walletId array is not empty
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
-    function _claimPreviouslyUnclaimable(
-        address client,
-        address paymentReceiver
-    ) internal {
-        uint amount = unclaimable(client, paymentReceiver); //@note instead reentrancy guard?
-        delete unclaimableAmounts[client][paymentReceiver];
-
+    function _claimPreviouslyUnclaimable( //@todo test
+    address client, address paymentReceiver)
+        internal
+    {
         address _token = address(token());
 
-        (bool success, bytes memory data) = _token.call(
-            abi.encodeWithSelector(
-                IERC20(_token).transferFrom.selector,
-                client,
-                paymentReceiver,
-                amount
-            )
-        );
+        //get amount
 
-        if (success && (data.length == 0 || abi.decode(data, (bool)))) {
-            emit TokensReleased(paymentReceiver, _token, amount);
+        uint amount;
 
-            //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-            IERC20PaymentClientBase_v1(client).amountPaid(amount);
-        } else {
-            unclaimableAmounts[client][paymentReceiver] += amount;
+        address sender = _msgSender();
+        uint[] memory ids = unclaimableWalletIds[client][sender];
+        uint length = ids.length;
+
+        for (uint i = 0; i < length; i++) {
+            //Add the unclaimable amount of each id to the current amount
+            amount += unclaimableAmountsForWalletId[client][sender][ids[i]];
+            //Delete value of wallet id
+            delete unclaimableAmountsForWalletId[client][sender][ids[i]];
         }
+        //As all of the wallet ids should have been claimed we can delete the wallet id array
+        delete unclaimableWalletIds[client][sender];
+
+        //Call has to succeed otherwise no state change
+        IERC20(_token).transferFrom(client, paymentReceiver, amount);
+
+        emit TokensReleased(paymentReceiver, _token, amount);
+
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        IERC20PaymentClientBase_v1(client).amountPaid(amount);
     }
 
     /// @notice Virtual implementation of the vesting formula.
