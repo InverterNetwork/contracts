@@ -175,6 +175,57 @@ contract ModuleBaseV1Test is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
+    // FeeManager
+
+    function testGetFeeManagerCollateralFeeData(bytes4 functionSelector)
+        public
+    {
+        uint setFee = 100;
+        address treasury = makeAddr("customTreasury");
+
+        //Set treasury
+        feeManager.setWorkflowTreasury(address(_orchestrator), treasury);
+
+        //set fee
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(module),
+            functionSelector,
+            true,
+            setFee
+        );
+
+        (uint returnFee, address returnTreasury) =
+            module.original_getFeeManagerCollateralFeeData(functionSelector);
+
+        assertEq(returnFee, setFee);
+        assertEq(returnTreasury, treasury);
+    }
+
+    function testGetFeeManagerIssuanceFeeData(bytes4 functionSelector) public {
+        uint setFee = 100;
+        address treasury = makeAddr("customTreasury");
+
+        //Set treasury
+        feeManager.setWorkflowTreasury(address(_orchestrator), treasury);
+
+        //set fee
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(module),
+            functionSelector,
+            true,
+            setFee
+        );
+
+        (uint returnFee, address returnTreasury) =
+            module.original_getFeeManagerIssuanceFeeData(functionSelector);
+
+        assertEq(returnFee, setFee);
+        assertEq(returnTreasury, treasury);
+    }
+
+    //--------------------------------------------------------------------------
     // ERC2771
 
     function test_msgSender(address signer, address sender, bool fromForwarder)

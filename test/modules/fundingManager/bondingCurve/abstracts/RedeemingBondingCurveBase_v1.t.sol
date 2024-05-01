@@ -294,82 +294,79 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.sell(amount, minAmountOut);
     }
 
-    function testSellOrderWithZeroFee(uint amount) public {
-        // Setup
-        vm.assume(amount > 0);
-
-        address seller = makeAddr("seller");
-        _prepareSellConditions(seller, amount);
-
-        // Pre-checks
-        uint bondingCurveCollateralBalanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalTokenSupplyBefore = issuanceToken.totalSupply();
-        assertEq(_token.balanceOf(seller), 0);
-
-        // Emit event
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit TokensSold(seller, amount, amount, seller);
-
-        // Execution
-        vm.prank(seller);
-        bondingCurveFundingManager.sell(amount, amount);
-
-        // Post-checks
-        assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (bondingCurveCollateralBalanceBefore - amount)
-        );
-        assertEq(_token.balanceOf(seller), amount);
-        assertEq(issuanceToken.balanceOf(seller), 0);
-        assertEq(issuanceToken.totalSupply(), totalTokenSupplyBefore - amount);
-    }
-
-    function testSellOrderWithFee(uint amount, uint fee) public {
+    function test_sellOrder(
+        uint amount,
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _workflowFee
+    ) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
-        vm.assume(fee < _bps);
+        _collateralFee = bound(_collateralFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _workflowFee = bound(_workflowFee, 0, _bps - 1);
+        vm.assume(_collateralFee + _workflowFee < _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
         amount = bound(amount, 1, maxAmount);
 
-        vm.prank(owner_address);
-        bondingCurveFundingManager.setSellFee(fee);
-        assertEq(bondingCurveFundingManager.sellFee(), fee);
-
         address seller = makeAddr("seller");
         _prepareSellConditions(seller, amount);
 
-        // Pre-checks
-        uint bondingCurveCollateralBalanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        uint totalTokenSupplyBefore = issuanceToken.totalSupply();
-        assertEq(_token.balanceOf(seller), 0);
+        //Set Fee
+        if (_collateralFee != 0) {
+            feeManager.setDefaultCollateralFee(_collateralFee);
+        }
+        if (_issuanceFee != 0) {
+            feeManager.setDefaultIssuanceFee(_issuanceFee);
+        }
+
+        if (_workflowFee != 0) {
+            vm.prank(owner_address);
+            bondingCurveFundingManager.setSellFee(_workflowFee);
+        }
 
         // Calculate receive amount
-        uint amountMinusFee =
-            amount - ((amount * fee) / bondingCurveFundingManager.call_BPS());
+
+        uint protocolIssuanceFeeAmount;
+        uint projectCollateralFeeAmount;
+        uint finalAmount;
+        uint amountAfterFirstFeeCollection;
+
+        (amountAfterFirstFeeCollection, protocolIssuanceFeeAmount,) =
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            amount, _issuanceFee, 0
+        );
+
+        (finalAmount,, projectCollateralFeeAmount) = bondingCurveFundingManager
+            .call_calculateNetAndSplitFees(
+            amountAfterFirstFeeCollection, _collateralFee, _workflowFee
+        );
 
         // Emit event
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensSold(seller, amount, amountMinusFee, seller);
+        emit TokensSold(seller, amount, finalAmount, seller);
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sell(amount, amountMinusFee);
+        (uint totalCollateralTokenMovedOut, uint returnedIssuanceFeeAmount) =
+        bondingCurveFundingManager.call_sellOrder(seller, amount, finalAmount);
+
+        assertEq(totalCollateralTokenMovedOut, amountAfterFirstFeeCollection);
+        assertEq(returnedIssuanceFeeAmount, protocolIssuanceFeeAmount);
 
         // Post-checks
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
-            (bondingCurveCollateralBalanceBefore - amountMinusFee)
+            protocolIssuanceFeeAmount + projectCollateralFeeAmount
         );
-        assertEq(_token.balanceOf(seller), amountMinusFee);
+
+        assertEq(_token.balanceOf(seller), finalAmount);
+
         assertEq(issuanceToken.balanceOf(seller), 0);
-        assertEq(issuanceToken.totalSupply(), totalTokenSupplyBefore - amount);
+        assertEq(issuanceToken.totalSupply(), protocolIssuanceFeeAmount);
     }
 
     /* Test openSell and _openSell function
@@ -579,7 +576,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     //      - Mints collateral tokens to a seller and
     //      - Deposits them so they can later be sold.
     //      - Approves the BondingCurve contract to spend the receipt tokens
-    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many toknes as they deposit
+    // This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
     function _prepareSellConditions(address seller, uint amount) internal {
         _token.mint(seller, amount);
 

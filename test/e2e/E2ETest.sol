@@ -7,7 +7,8 @@ import "forge-std/console.sol";
 // Internal Dependencies:
 import {E2EModuleRegistry} from "test/e2e/E2EModuleRegistry.sol";
 
-import {Governor_v1} from "src/external/governance/Governor_v1.sol";
+import {Governor_v1} from "@ex/governance/Governor_v1.sol";
+import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
@@ -58,8 +59,11 @@ contract E2ETest is E2EModuleRegistry {
     // Forwarder
     TransactionForwarder_v1 forwarder;
 
-    address communityMultisig = address(0x11111);
-    address teamMultisig = address(0x22222);
+    FeeManager_v1 feeManager;
+
+    address communityMultisig = makeAddr("communityMultisig");
+    address teamMultisig = makeAddr("teamMultisig");
+    address treasury = makeAddr("treasury");
 
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
@@ -76,6 +80,13 @@ contract E2ETest is E2EModuleRegistry {
         );
 
         gov.init(communityMultisig, teamMultisig, 1 weeks);
+
+        feeManager = new FeeManager_v1();
+        feeManager.init(address(this), treasury, 0, 0);
+
+        vm.prank(communityMultisig);
+        gov.setFeeManager(address(feeManager));
+
         // Deploy a Mock funding token for testing.
 
         //Set gov as the default beacon owner

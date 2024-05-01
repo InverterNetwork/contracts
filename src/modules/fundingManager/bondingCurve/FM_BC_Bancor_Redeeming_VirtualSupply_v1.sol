@@ -505,10 +505,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         uint _depositAmount,
         uint _minAmountOut
     ) internal {
-        (uint amountIssued, uint feeAmount) =
+        (uint amountIssued, uint collateralFeeAmount) =
             _buyOrder(_receiver, _depositAmount, _minAmountOut);
         _addVirtualIssuanceAmount(amountIssued);
-        _addVirtualCollateralAmount(_depositAmount - feeAmount);
+        _addVirtualCollateralAmount(_depositAmount - collateralFeeAmount);
     }
 
     /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
@@ -522,10 +522,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         uint _depositAmount,
         uint _minAmountOut
     ) internal {
-        (uint redeemAmount, uint feeAmount) =
+        (uint redeemAmount, uint issuanceFeeAmount) =
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
-        _subVirtualIssuanceAmount(_depositAmount);
-        _subVirtualCollateralAmount(redeemAmount + feeAmount);
+        _subVirtualIssuanceAmount(_depositAmount - issuanceFeeAmount);
+        _subVirtualCollateralAmount(redeemAmount);
     }
 
     /// @dev Sets the reserve ratio for buying tokens.

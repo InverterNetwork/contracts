@@ -27,6 +27,9 @@ interface IBondingCurveBase_v1 {
     /// @notice Actual buy amount is lower than the minimum acceptable amount
     error Module__BondingCurveBase__InsufficientOutputAmount();
 
+    /// @notice The combination of protocol fee and workflow fee cant be higher than 100%
+    error Module__BondingCurveBase__FeeAmountToHigh();
+
     /// @notice Withdrawl amount is bigger than project fee collected
     error Module__BondingCurveBase__InvalidWithdrawAmount();
 
@@ -67,6 +70,22 @@ interface IBondingCurveBase_v1 {
     /// @param newDecimals The new decimals of the issuance token
     event TokenDecimalsUpdated(
         uint8 indexed oldDecimals, uint8 indexed newDecimals
+    );
+
+    /// @notice Event emitted when protocol fee has been minted to the treasury
+    /// @param token The token minted as protocol fee
+    /// @param treasury The protocol treasury address receiving the token fee amount
+    /// @param feeAmount The fee amount minted to the treasury
+    event ProtocolFeeMinted(
+        address indexed token, address indexed treasury, uint indexed feeAmount
+    );
+
+    /// @notice Event emitted when protocol fee has been transferred to the treasury
+    /// @param token The token received as protocol fee
+    /// @param treasury The protocol treasury address receiving the token fee amount
+    /// @param feeAmount The fee amount transferred to the treasury
+    event ProtocolFeeTransferred(
+        address indexed token, address indexed treasury, uint indexed feeAmount
     );
 
     //--------------------------------------------------------------------------

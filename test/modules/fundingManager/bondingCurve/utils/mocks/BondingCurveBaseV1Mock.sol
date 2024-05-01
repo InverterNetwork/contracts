@@ -93,6 +93,57 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         return BPS;
     }
 
+    function call_buyOrder(
+        address _receiver,
+        uint _depositAmount,
+        uint _minAmountOut
+    )
+        external
+        returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
+    {
+        return _buyOrder(_receiver, _depositAmount, _minAmountOut);
+    }
+
+    function call_processProtocolFeeViaTransfer(
+        address _treasury,
+        IERC20 _token,
+        uint _feeAmount
+    ) external {
+        _processProtocolFeeViaTransfer(_treasury, _token, _feeAmount);
+    }
+
+    function call_processProtocolFeeViaMinting(
+        address _treasury,
+        uint _feeAmount
+    ) external {
+        _processProtocolFeeViaMinting(_treasury, _feeAmount);
+    }
+
+    function call_getBuyFeesAndTreasuryAddresses()
+        external
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        )
+    {
+        return _getBuyFeesAndTreasuryAddresses();
+    }
+
+    function call_calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _workflowFee
+    )
+        external
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
+    {
+        return
+            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
+    }
+
     // Since the init calls are not registered for coverage, we call expose setIssuanceToken to get to 100% test coverage.
     function call_setIssuanceToken(address _newIssuanceToken) external {
         _setIssuanceToken(_newIssuanceToken);

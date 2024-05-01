@@ -28,7 +28,7 @@ interface IVirtualCollateralSupplyBase_v1 {
         uint indexed amountAdded, uint indexed newSupply
     );
 
-    /// @notice Event emitted when virtual collateral amount has ben subtracted
+    /// @notice Event emitted when virtual collateral amount has been subtracted
     event VirtualCollateralAmountSubtracted(
         uint indexed amountSubtracted, uint indexed newSupply
     );

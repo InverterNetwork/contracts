@@ -180,13 +180,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral to deposit for buying tokens.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    /// @return mintAmount The amount of issuance token minted to the receiver address
-    /// @return feeAmount The amount of collateral token subtracted as fee
+    /// @return totalIssuanceTokenMinted The total amount of issuance token minted during this function call
+    /// @return collateralFeeAmount The amount of collateral token subtracted as fee
     function _buyOrder(
         address _receiver,
         uint _depositAmount,
         uint _minAmountOut
-    ) internal virtual returns (uint mintAmount, uint feeAmount) {
+    )
+        internal
+        returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
+    {
         if (_depositAmount == 0) {
             revert Module__BondingCurveBase__InvalidDepositAmount();
         }
@@ -194,23 +197,60 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
             _msgSender(), address(this), _depositAmount
         );
-        if (buyFee > 0) {
-            // Calculate fee amount and deposit amount subtracted by fee
-            (_depositAmount, feeAmount) =
-                _calculateNetAmountAndFee(_depositAmount, buyFee);
-            // Add fee amount to total collected fee
-            projectCollateralFeeCollected += feeAmount;
+        // Get protocol fee percentages and treasury addresses
+        (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        ) = _getBuyFeesAndTreasuryAddresses();
+
+        uint protocolFeeAmount;
+        uint workflowFeeAmount;
+        uint netDeposit;
+        // Get net amount, protocol and workflow fee amounts
+        (netDeposit, protocolFeeAmount, workflowFeeAmount) =
+        _calculateNetAndSplitFees(
+            _depositAmount, collateralBuyFeePercentage, buyFee
+        );
+
+        //collateral Fee Amount is the combination of protocolFeeAmount plus the workflowFeeAmount
+        collateralFeeAmount = protocolFeeAmount + workflowFeeAmount;
+
+        // Process the protocol fee
+        _processProtocolFeeViaTransfer(
+            collateralTreasury,
+            __Module_orchestrator.fundingManager().token(),
+            protocolFeeAmount
+        );
+        // Add workflow fee if applicable
+        if (workflowFeeAmount > 0) {
+            projectCollateralFeeCollected += workflowFeeAmount;
         }
+
         // Calculate mint amount based on upstream formula
-        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+        uint issuanceMintAmount = _issueTokensFormulaWrapper(netDeposit);
+        totalIssuanceTokenMinted = issuanceMintAmount;
+
+        // Get net amount, protocol and workflow fee amounts. Currently there is no issuance project
+        // fee enabled
+        (issuanceMintAmount, protocolFeeAmount, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            issuanceMintAmount, issuanceBuyFeePercentage, 0
+        );
+        // collect protocol fee on outgoing issuance token
+        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
+
         // Revert when the mint amount is lower than minimum amount the user expects
-        if (mintAmount < _minAmountOut) {
+        if (issuanceMintAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
         // Mint tokens to address
-        _mint(_receiver, mintAmount);
+        _mint(_receiver, issuanceMintAmount);
         // Emit event
-        emit TokensBought(_receiver, _depositAmount, mintAmount, _msgSender());
+        emit TokensBought(
+            _receiver, _depositAmount, issuanceMintAmount, _msgSender()
+        );
     }
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
@@ -253,10 +293,88 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         virtual
         returns (uint netAmount, uint feeAmount)
     {
+        // Return transaction amount as net amount if fee percentage is zero
+        if (_feePct == 0) return (_transactionAmount, feeAmount);
         // Calculate fee amount
         feeAmount = (_transactionAmount * _feePct) / BPS;
         // Calculate net amount after fee deduction
         netAmount = _transactionAmount - feeAmount;
+    }
+
+    /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
+    ///     buy operations
+    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
+    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
+    /// @return collateralBuyFeePercentage The percentage fee to be collected from the collateral
+    ///     token being deposited for minting issuance, expressed in BPS
+    /// @return issuanceBuyFeePercentage The percentage fee to be collected from the issuance token
+    ///     being minted, expressed in BPS
+    function _getBuyFeesAndTreasuryAddresses()
+        internal
+        virtual
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        )
+    {
+        (collateralBuyFeePercentage, collateralTreasury) =
+        _getFeeManagerCollateralFeeData(
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
+        (issuanceBuyFeePercentage, issuanceTreasury) =
+        _getFeeManagerIssuanceFeeData(
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
+    }
+
+    //@note missing description
+    function _calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _workflowFee
+    )
+        public
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
+    {
+        if ((_protocolFee + _workflowFee) > BPS) {
+            revert Module__BondingCurveBase__FeeAmountToHigh();
+        }
+        protocolFeeAmount = _totalAmount * _protocolFee / BPS;
+        workflowFeeAmount = _totalAmount * _workflowFee / BPS;
+        netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;
+    }
+
+    function _processProtocolFeeViaTransfer(
+        address _treasury,
+        IERC20 _token,
+        uint _feeAmount
+    ) internal {
+        // skip protocol fee collection if fee percentage set to zero
+        if (_feeAmount == 0) return;
+        if (_treasury == address(0)) {
+            revert Module__BondingCurveBase__InvalidRecipient();
+        }
+
+        // transfer fee amount
+        _token.safeTransfer(_treasury, _feeAmount);
+        emit ProtocolFeeTransferred(address(_token), _treasury, _feeAmount);
+    }
+
+    function _processProtocolFeeViaMinting(address _treasury, uint _feeAmount)
+        internal
+    {
+        // skip protocol fee collection if fee percentage set to zero
+        if (_feeAmount == 0) return;
+        if (_treasury == address(0)) {
+            revert Module__BondingCurveBase__InvalidRecipient();
+        }
+
+        // mint fee amount
+        _mint(_treasury, _feeAmount);
+        emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
     }
 
     /// @dev This function takes into account any applicable buy fees before computing the
@@ -272,11 +390,31 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         if (_depositAmount == 0) {
             revert Module__BondingCurveBase__InvalidDepositAmount();
         }
-        if (buyFee > 0) {
-            (_depositAmount, /* feeAmount */ ) =
-                _calculateNetAmountAndFee(_depositAmount, buyFee);
-        }
-        return _issueTokensFormulaWrapper(_depositAmount);
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        ) = _getBuyFeesAndTreasuryAddresses();
+
+        // Deduct protocol and project buy fee from collateral, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            _depositAmount, collateralBuyFeePercentage, buyFee
+        );
+
+        // Calculate issuance token return from formula
+        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol buy fee from issuance, if applicable
+        (mintAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
+
+        // Return expected purchase return amount
+        return mintAmount;
     }
 
     /// @dev Sets the issuance token for the FundingManager.
