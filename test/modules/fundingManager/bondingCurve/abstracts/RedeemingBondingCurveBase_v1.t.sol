@@ -519,29 +519,56 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     function testInternalCalculateSaleReturnWithFee(
         uint _depositAmount,
-        uint _fee
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _workflowFee
     ) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
+        _collateralFee = bound(_collateralFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _workflowFee = bound(_workflowFee, 0, _bps - 1);
+        vm.assume(_collateralFee + _workflowFee < _bps);
 
-        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
-            // Above an amount of 1e26 the BancorFormula starts to revert.
-        _depositAmount = bound(_depositAmount, 1, 1e26);
+        _depositAmount = bound(_depositAmount, 1, 1e38);
 
-        // Set sell fee
-        vm.prank(owner_address);
-        bondingCurveFundingManager.setSellFee(_fee);
+        //Set Fee
+        if (_collateralFee != 0) {
+            feeManager.setDefaultCollateralFee(_collateralFee);
+        }
+        if (_issuanceFee != 0) {
+            feeManager.setDefaultIssuanceFee(_issuanceFee);
+        }
 
-        // As the implementation is a mock, we return the deposit amount in a 1:1 ratio
-        // We calculate how much if the initial deposit we should get back based on the fee
-        uint feeAmount =
-            (_depositAmount * _fee) / bondingCurveFundingManager.call_BPS();
-        uint sellAmountMinusFee = _depositAmount - feeAmount;
+        if (_workflowFee != 0) {
+            vm.prank(owner_address);
+            bondingCurveFundingManager.setSellFee(_workflowFee);
+        }
 
+        // Deduct protocol sell fee from issuance
+        (
+            uint netIssuanceDepositAmount, /* protocolFeeAmount */
+            , /* workflowFeeAmount */
+        ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            _depositAmount, _issuanceFee, 0
+        );
+
+        // As the implementation is a mock and the function calculatePurchaseReturn returns the deposit amount
+        // in a 1:1 ratio, we use the collateral deposit amount without fee to withdraw the issuance fee
+
+        // Deduct protocol and project sell fee from collateral
+        (
+            uint netCollateralRedeemAmount, /* protocolFeeAmount */
+            , /* workflowFeeAmount */
+        ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            netIssuanceDepositAmount, _collateralFee, _workflowFee
+        );
+
+        // Get return value from function
         uint functionReturn =
             bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
 
-        assertEq(functionReturn, sellAmountMinusFee);
+        assertEq(functionReturn, netCollateralRedeemAmount);
     }
     /*    Test calculateSaleReturn function
             └── when function calculateSaleReturn is called
