@@ -108,7 +108,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function calculateSaleReturn(uint _depositAmount)
         external
-        view
         virtual
         returns (uint redeemAmount)
     {
@@ -195,7 +194,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Require that enough collateral token is held to be redeemable
         if (
-            (redeemAmount + projectCollateralFeeCollected)
+            (collateralRedeemAmount + projectCollateralFeeCollected)
                 > __Module_orchestrator.fundingManager().token().balanceOf(
                     address(this)
                 )
@@ -298,7 +297,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
     function _calculateSaleReturn(uint _depositAmount)
         internal
-        view
         virtual
         returns (uint redeemAmount)
     {

@@ -494,10 +494,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
     }
 
     function testInternalProcessProtocolFeeViaMinting_worksGivenFeeAmountIsZero(
-        uint _feeAmount
     ) public {
-        vm.assume(_feeAmount == 0);
-
+        uint _feeAmount = 0;
         // Get balance before transfer
         uint balanceBeforeTransfer = _token.balanceOf(treasury);
         // Validate treasury has not tokens

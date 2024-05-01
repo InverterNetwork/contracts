@@ -141,7 +141,6 @@ interface IBondingCurveBase_v1 {
     /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
     function calculatePurchaseReturn(uint _depositAmount)
         external
-        view
         returns (uint mintAmount);
 
     /// @notice Withdraw project collateral fee to the receiver address

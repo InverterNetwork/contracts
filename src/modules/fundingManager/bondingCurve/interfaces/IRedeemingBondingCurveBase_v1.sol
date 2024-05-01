@@ -97,6 +97,5 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
     function calculateSaleReturn(uint _depositAmount)
         external
-        view
         returns (uint redeemAmount);
 }

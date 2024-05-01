@@ -126,7 +126,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @inheritdoc IBondingCurveBase_v1
     function calculatePurchaseReturn(uint _depositAmount)
         external
-        view
         virtual
         returns (uint mintAmount)
     {
@@ -383,7 +382,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
     function _calculatePurchaseReturn(uint _depositAmount)
         internal
-        view
         virtual
         returns (uint mintAmount)
     {

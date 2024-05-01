@@ -77,7 +77,6 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     function call_calculatePurchaseReturn(uint _depositAmount)
         external
-        view
         returns (uint)
     {
         return _calculatePurchaseReturn(_depositAmount);

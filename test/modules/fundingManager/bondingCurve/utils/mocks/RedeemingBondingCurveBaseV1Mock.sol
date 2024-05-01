@@ -74,7 +74,6 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     function call_calculateSaleReturn(uint _depositAmount)
         external
-        view
         returns (uint)
     {
         return _calculateSaleReturn(_depositAmount);
