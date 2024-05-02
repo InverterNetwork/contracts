@@ -79,6 +79,18 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint walletId
     );
 
+    /// @notice Emitted when a payment was unclaimable due to a token error.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that wshould have received the payment.
+    /// @param walletId ID of the payment order that was processed
+    /// @param amount The amount of tokens that were unclaimable.
+    event UnclaimableAmountAdded(
+        address indexed paymentClient,
+        address recipient,
+        uint walletId,
+        uint amount
+    );
+
     //--------------------------------------------------------------------------
     // Errors
 

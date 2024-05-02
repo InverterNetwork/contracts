@@ -1409,6 +1409,59 @@ contract PP_StreamingV1Test is ModuleTest {
         );
     }
 
+    function testUnclaimable(address[] memory recipients) public {
+        vm.assume(recipients.length < 30);
+
+        for (uint i = 0; i < recipients.length; i++) {
+            //If recipient is invalid change it
+            if (
+                recipients[i] == address(0)
+                    || recipients[i] == address(_orchestrator)
+                    || recipients[i] == address(paymentProcessor)
+            ) recipients[i] = address(0x1);
+        }
+
+        // transfers will fail by returning false now
+        _token.toggleReturnFalse();
+
+        // Add payment order to client and call processPayments.
+
+        for (uint i = 0; i < recipients.length; i++) {
+            paymentClient.addPaymentOrder(
+                IERC20PaymentClientBase_v1.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: 1,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp
+                })
+            );
+            vm.prank(address(paymentClient));
+            paymentProcessor.processPayments(paymentClient);
+
+            //Immediately claim
+            //This should shift right into unclaimable
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+        }
+
+        uint amount;
+        address recipient;
+        for (uint i = 0; i < recipients.length; i++) {
+            amount = 0;
+            recipient = recipients[i];
+            //if array contains address multiple times we check for repetitions
+            for (uint j = 0; j < recipients.length; j++) {
+                if (recipients[j] == recipient) {
+                    amount += 1;
+                }
+            }
+            assertEq(
+                paymentProcessor.unclaimable(address(paymentClient), recipient),
+                amount
+            );
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 

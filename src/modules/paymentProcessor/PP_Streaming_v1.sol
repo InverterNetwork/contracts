@@ -321,8 +321,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function unclaimable( //@todo test
-    address client, address paymentReceiver)
+    function unclaimable(address client, address paymentReceiver)
         public
         view
         returns (uint amount)
@@ -697,6 +696,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             //Make sure to let paymentClient know that amount doesnt have to be stored anymore
             IERC20PaymentClientBase_v1(client).amountPaid(amount);
         } else {
+            emit UnclaimableAmountAdded(
+                client, paymentReceiver, walletId, amount
+            );
             //Adds the walletId to the array of unclaimable wallet ids
             unclaimableWalletIds[client][paymentReceiver].push(walletId);
             unclaimableAmountsForWalletId[client][paymentReceiver][walletId] +=
