@@ -75,6 +75,19 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         return _calculateNetAmountAndFee(_depositAmount, _feePct);
     }
 
+    function call_calculatePurchaseReturn(uint _depositAmount)
+        external
+        returns (uint)
+    {
+        return _calculatePurchaseReturn(_depositAmount);
+    }
+
+    function call_withdrawProjectCollateralFee(address _receiver, uint _amount)
+        public
+    {
+        _withdrawProjectCollateralFee(_receiver, _amount);
+    }
+
     function call_BPS() external pure returns (uint) {
         return BPS;
     }
@@ -133,5 +146,12 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     // Since the init calls are not registered for coverage, we call expose setIssuanceToken to get to 100% test coverage.
     function call_setIssuanceToken(address _newIssuanceToken) external {
         _setIssuanceToken(_newIssuanceToken);
+    }
+
+    //--------------------------------------------------------------------------
+    // Helper function
+
+    function setProjectCollateralFeeCollectedHelper(uint _amount) external {
+        projectCollateralFeeCollected = _amount;
     }
 }

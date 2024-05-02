@@ -285,7 +285,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     //unstake
 
     function testUnstake(uint seed, uint unstakeSeed, address staker) public {
-        if (staker == address(0)) {
+        if (staker == address(0) || staker == address(stakingManager)) {
             staker = address(uint160(1));
         }
 
