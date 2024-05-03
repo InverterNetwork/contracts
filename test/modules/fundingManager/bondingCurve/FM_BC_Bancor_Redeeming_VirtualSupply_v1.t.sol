@@ -71,10 +71,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     uint8 internal constant DECIMALS = 18;
     uint internal constant MAX_SUPPLY = type(uint).max;
 
-    uint internal constant INITIAL_ISSUANCE_SUPPLY = 1;
-    uint internal constant INITIAL_COLLATERAL_SUPPLY = 3;
-    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 333_333;
-    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 333_333;
+    //uint internal constant INITIAL_ISSUANCE_SUPPLY = 1;
+    //uint internal constant INITIAL_COLLATERAL_SUPPLY = 3;
+    uint internal  INITIAL_ISSUANCE_SUPPLY;
+    uint internal  INITIAL_COLLATERAL_SUPPLY;
+    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 160_000;
+    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 666_666;
     uint internal constant BUY_FEE = 0;
     uint internal constant SELL_FEE = 0;
     bool internal constant BUY_IS_OPEN = true;
@@ -144,6 +146,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         issuanceToken_properties.symbol = SYMBOL;
         issuanceToken_properties.decimals = DECIMALS;
         issuanceToken_properties.maxSupply = MAX_SUPPLY;
+
+        // Calculate the initial balance based on reserve ratio
+
+        // Question: setting 100 works, setting 10 works, 1 breaks 
+        INITIAL_ISSUANCE_SUPPLY = 100;
+        INITIAL_COLLATERAL_SUPPLY = (INITIAL_ISSUANCE_SUPPLY * 1e7) / RESERVE_RATIO_FOR_BUYING;
+        console.log("INITIAL_COLLATERAL_SUPPLY: ", INITIAL_COLLATERAL_SUPPLY);
+
+        // Question: how does this interact with the RR for selling? we need to ensure that it is lower, but too low and we run into curves that cross, which creates a whole new set of problems
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -1046,7 +1057,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
             bondingCurveFundingManager.getVirtualIssuanceSupply(),
             bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying()
+            bondingCurveFundingManager.call_reserveRatioForSelling()
         );
         assertEq(
             bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
@@ -1490,7 +1501,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     function testStaticPriceWithBuyReserveRatioNonFuzzing() public {
-        uint amountIn = 100;
+        // we choose an amount exptectd to return at least 1 token
+        uint amountIn = 1e10;
         uint minAmountOut =
             bondingCurveFundingManager.calculatePurchaseReturn(amountIn);
         address buyer = makeAddr("buyer");
