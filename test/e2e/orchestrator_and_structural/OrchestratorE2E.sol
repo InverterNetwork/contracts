@@ -130,7 +130,8 @@ contract OrchestratorE2E is E2ETest {
         //Create Orchestrator_v1
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
-
+        uint timelock =
+            Orchestrator_v1(address(orchestrator)).MODULE_UPDATE_TIMELOCK();
         //------------------------------------------------------------------------------------------------
         // Adding Module
 
@@ -141,14 +142,21 @@ contract OrchestratorE2E is E2ETest {
             bountyManagerMetadata, orchestrator, bytes("")
         );
 
+        orchestrator.initiateAddModuleWithTimelock(bountyManager);
+        // skip timelock
+        vm.warp(block.timestamp + timelock);
+
         //Add Module to the orchestrator
-        orchestrator.addModule(bountyManager);
+        orchestrator.executeAddModule(bountyManager);
 
         assertEq((modulesBefore + 1), orchestrator.modulesSize()); // The orchestrator now has one more module
 
         //------------------------------------------------------------------------------------------------
         // Removing Module
-        orchestrator.removeModule(bountyManager);
+        orchestrator.initiateRemoveModuleWithTimelock(bountyManager);
+        // skip timelock
+        vm.warp(block.timestamp + timelock);
+        orchestrator.executeRemoveModule(bountyManager);
 
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules
 
@@ -184,11 +192,28 @@ contract OrchestratorE2E is E2ETest {
         address originalAuthorizer = address(orchestrator.authorizer());
 
         //Replace the old modules with the new ones
-        orchestrator.setPaymentProcessor(
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
             IPaymentProcessor_v1(newPaymentProcessor)
         );
-        orchestrator.setFundingManager(IFundingManager_v1(newFundingManager));
-        orchestrator.setAuthorizer(IAuthorizer_v1(newAuthorizer));
+        vm.warp(block.timestamp + timelock);
+
+        orchestrator.executeSetPaymentProcessor(
+            IPaymentProcessor_v1(newPaymentProcessor)
+        );
+        orchestrator.initiateSetFundingManagerWithTimelock(
+            IFundingManager_v1(newFundingManager)
+        );
+        vm.warp(block.timestamp + timelock);
+
+        orchestrator.executeSetFundingManager(
+            IFundingManager_v1(newFundingManager)
+        );
+        orchestrator.initiateSetAuthorizerWithTimelock(
+            IAuthorizer_v1(newAuthorizer)
+        );
+        vm.warp(block.timestamp + timelock);
+
+        orchestrator.executeSetAuthorizer(IAuthorizer_v1(newAuthorizer));
 
         //Assert post-state
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules

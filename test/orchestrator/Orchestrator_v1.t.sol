@@ -216,9 +216,10 @@ contract OrchestratorV1Test is Test {
     // Tests: Replacing the three base modules: authorizer, funding manager,
     //        payment processor
 
-    function testSetAuthorizer(uint orchestratorId, address[] memory modules)
-        public
-    {
+    function testInitiateAndExecuteSetAuthorizer(
+        uint orchestratorId,
+        address[] memory modules
+    ) public {
         // limit to 100, otherwise we could run into the max module limit
         modules = cutArray(100, modules);
 
@@ -247,11 +248,14 @@ contract OrchestratorV1Test is Test {
 
         newAuthorizer.mockInit(abi.encode(address(0xA11CE)));
 
+        orchestrator.initiateSetAuthorizerWithTimelock(newAuthorizer);
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
         // set the new authorizer module
         vm.expectEmit(true, true, true, true);
         emit AuthorizerUpdated(address(newAuthorizer));
+        orchestrator.executeSetAuthorizer(newAuthorizer);
 
-        orchestrator.setAuthorizer(newAuthorizer);
         assertTrue(orchestrator.authorizer() == newAuthorizer);
 
         // verify whether the init value is set and not the value from the old
@@ -263,7 +267,7 @@ contract OrchestratorV1Test is Test {
         );
     }
 
-    function testSetAuthorizerFailsIfWrongModuleType(
+    function testInitiateSetAuthorizerWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
         address[] memory modules
     ) public {
@@ -301,12 +305,13 @@ contract OrchestratorV1Test is Test {
                 newAuthorizer
             )
         );
-
-        orchestrator.setAuthorizer(IAuthorizer_v1(newAuthorizer));
+        orchestrator.initiateSetAuthorizerWithTimelock(
+            IAuthorizer_v1(newAuthorizer)
+        );
         assertTrue(orchestrator.authorizer() == authorizer);
     }
 
-    function testSetFundingManager(
+    function testInitiateAndExecuteSetFundingManager(
         uint orchestratorId,
         address[] memory modules
     ) public {
@@ -339,18 +344,20 @@ contract OrchestratorV1Test is Test {
         vm.assume(newFundingManager != fundingManager);
         types.assumeElemNotInSet(modules, address(newFundingManager));
 
+        orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
         // set the new funding manager module
         vm.expectEmit(true, true, true, true);
         emit FundingManagerUpdated(address(newFundingManager));
-
-        orchestrator.setFundingManager(newFundingManager);
+        orchestrator.executeSetFundingManager(newFundingManager);
         assertTrue(orchestrator.fundingManager() == newFundingManager);
         assertTrue(
             address((orchestrator.fundingManager()).token()) == address(0)
         );
     }
 
-    function testSetFundingManagerFailsIfWrongModuleType(
+    function testInitiateSetFundingManagerWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
         address[] memory modules
     ) public {
@@ -390,11 +397,13 @@ contract OrchestratorV1Test is Test {
                 newFundingManager
             )
         );
-        orchestrator.setFundingManager(IFundingManager_v1(newFundingManager));
+        orchestrator.initiateSetFundingManagerWithTimelock(
+            IFundingManager_v1(newFundingManager)
+        );
         assertTrue(orchestrator.fundingManager() == fundingManager);
     }
 
-    function testSetPaymentProcessor(
+    function testInitiateAndExecuteSetPaymentProcessor(
         uint orchestratorId,
         address[] memory modules
     ) public {
@@ -425,15 +434,19 @@ contract OrchestratorV1Test is Test {
         vm.assume(newPaymentProcessor != paymentProcessor);
         types.assumeElemNotInSet(modules, address(newPaymentProcessor));
 
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
+            newPaymentProcessor
+        );
+        vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
+
         // set the new payment processor module
         vm.expectEmit(true, true, true, true);
         emit PaymentProcessorUpdated(address(newPaymentProcessor));
-
-        orchestrator.setPaymentProcessor(newPaymentProcessor);
+        orchestrator.executeSetPaymentProcessor(newPaymentProcessor);
         assertTrue(orchestrator.paymentProcessor() == newPaymentProcessor);
     }
 
-    function testSetPaymentProcessorFailsIfWrongModuleType(
+    function testInitiateSetPaymentProcessorWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
         address[] memory modules
     ) public {
@@ -471,7 +484,7 @@ contract OrchestratorV1Test is Test {
                 newPaymentProcessor
             )
         );
-        orchestrator.setPaymentProcessor(
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
             IPaymentProcessor_v1(newPaymentProcessor)
         );
 

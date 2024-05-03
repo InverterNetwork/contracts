@@ -73,20 +73,59 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         IGovernor_v1 governor
     ) external;
 
-    /// @notice Replaces the current authorizer with `_authorizer`
+    /// @notice Initiates replacing the current authorizer with `_authorizer` on a timelock.
     /// @dev Only callable by authorized caller.
     /// @param authorizer_ The address of the new authorizer module.
-    function setAuthorizer(IAuthorizer_v1 authorizer_) external;
+    function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 authorizer_)
+        external;
 
-    /// @notice Replaces the current funding manager with `fundingManager_`
+    /// @notice Initiates replaces the current funding manager with `fundingManager_` on a timelock.
     /// @dev Only callable by authorized caller.
     /// @param fundingManager_ The address of the new funding manager module.
-    function setFundingManager(IFundingManager_v1 fundingManager_) external;
+    function initiateSetFundingManagerWithTimelock(
+        IFundingManager_v1 fundingManager_
+    ) external;
 
-    /// @notice Replaces the current payment processor with `paymentProcessor_`
+    /// @notice Initiates replaces the current payment processor with `paymentProcessor_` on a timelock.
     /// @dev Only callable by authorized caller.
     /// @param paymentProcessor_ The address of the new payment processor module.
-    function setPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
+    function initiateSetPaymentProcessorWithTimelock(
+        IPaymentProcessor_v1 paymentProcessor_
+    ) external;
+
+    /// @notice Cancels the replacement of the current authorizer with `authorizer_`.
+    /// @dev Only callable by authorized caller.
+    /// @param authorizer_ The address of the new authorizer module, for which the update is canceled.
+    function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_) external;
+
+    /// @notice Cancels the replacement of the current funding manager with `fundingManager_`.
+    /// @dev Only callable by authorized caller.
+    /// @param fundingManager_ The address of the new funding manager module, for which the update is canceled.
+    function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
+        external;
+
+    /// @notice Cancels the replacement of the current payment processor with `paymentProcessor_`.
+    /// @dev Only callable by authorized caller.
+    /// @param paymentProcessor_ The address of the new payment processro module, for which the update is canceled.
+    function cancelPaymentProcessorUpdate(
+        IPaymentProcessor_v1 paymentProcessor_
+    ) external;
+
+    /// @notice Executes replacing the current authorizer with `_authorizer`
+    /// @dev Only callable by authorized caller.
+    /// @param authorizer_ The address of the new authorizer module.
+    function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external;
+
+    /// @notice Executes replaces the current funding manager with `fundingManager_`
+    /// @dev Only callable by authorized caller.
+    /// @param fundingManager_ The address of the new funding manager module.
+    function executeSetFundingManager(IFundingManager_v1 fundingManager_)
+        external;
+
+    /// @notice Executes replaces the current payment processor with `paymentProcessor_`
+    /// @dev Only callable by authorized caller.
+    /// @param paymentProcessor_ The address of the new payment processor module.
+    function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
         external;
 
     /// @notice Executes a call on target `target` with call data `data`.
