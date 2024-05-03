@@ -263,7 +263,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
     function getReserveRatioForSelling() external view returns (uint32) {
-        return reserveRatioForBuying;
+        return reserveRatioForSelling;
     }
 
     /// @notice Calculates and returns the static price for buying the issuance token.

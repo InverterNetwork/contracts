@@ -1046,7 +1046,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
             bondingCurveFundingManager.getVirtualIssuanceSupply(),
             bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying()
+            bondingCurveFundingManager.call_reserveRatioForSelling()
         );
         assertEq(
             bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
