@@ -106,7 +106,9 @@ contract PP_StreamingV1Test is ModuleTest {
         impl = address(new ERC20PaymentClientBaseV1Mock());
         paymentClient = ERC20PaymentClientBaseV1Mock(Clones.clone(impl));
 
-        _orchestrator.addModule(address(paymentClient));
+        _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
+        vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
+        _orchestrator.executeAddModule(address(paymentClient));
 
         paymentClient.init(_orchestrator, _METADATA, bytes(""));
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
