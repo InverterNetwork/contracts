@@ -52,18 +52,18 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // ========================================================================
     // BONDING CURVE PARAMETERS
 
-    string CURVE_TOKEN_NAME = "Conding Burve Token";
+    string CURVE_TOKEN_NAME = "Bonding Curve Issuance Token";
     string CURVE_TOKEN_SYMBOL = "BCRG";
     uint8 CURVE_TOKEN_DECIMALS = 18;
 
-    uint32 RESERVE_RATIO_FOR_BUYING = 330_000;
-    uint32 RESERVE_RATIO_FOR_SELLING = 330_000;
+    uint32 RESERVE_RATIO_FOR_BUYING = 333_333;
+    uint32 RESERVE_RATIO_FOR_SELLING = 333_333;
     uint BUY_FEE = 0;
     uint SELL_FEE = 100;
     bool BUY_IS_OPEN = true;
     bool SELL_IS_OPEN = false;
-    uint INITIAL_ISSUANCE_SUPPLY = 1;
-    uint INITIAL_COLLATERAL_SUPPLY = 1;
+    uint INITIAL_ISSUANCE_SUPPLY = 100;
+    uint INITIAL_COLLATERAL_SUPPLY = 33;
 
     // ========================================================================
 
@@ -87,8 +87,16 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
             formula = new BancorFormula();
+            console2.log(
+                "\t-Bancor Bonding Curve Formula deployed at address: %s ",
+                address(formula)
+            );
             //!!!! This is not a real ERC20 implementation. Befor going into production change this deployment!!!!
-            collateralToken = new ERC20Mock("MOCK", "MCK");
+            collateralToken = new ERC20Mock("Inverter USD", "iUSD");
+            console2.log(
+                "\t-Inverter Mock USD Deployed at address: %s ",
+                address(collateralToken)
+            );
         }
         vm.stopBroadcast();
 
@@ -134,6 +142,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(
                     buf_issuanceToken,
+                    orchestratorOwner,
                     buf_bondingCurveProperties,
                     address(collateralToken)
                 ),

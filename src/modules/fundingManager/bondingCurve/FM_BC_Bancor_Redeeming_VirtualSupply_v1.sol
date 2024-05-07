@@ -87,6 +87,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev Value is used to convert deposit amount to 18 decimals,
     /// which is required by the Bancor formula
     uint8 private constant eighteenDecimals = 18;
+    /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
+    uint32 internal constant PPM = 1_000_000;
     /// @dev The reserve ratio for buying determines the rate of price growth. It is a measure of the fraction
     /// of the Token's value that is held in reserve. The value is a number between 0 and 100%,
     /// expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
@@ -97,8 +99,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
     /// for reference.
     uint32 internal reserveRatioForSelling;
-    /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
-    uint32 internal constant PPM = 1_000_000;
     /// @dev Token that is accepted by this funding manager for deposits.
     IERC20 private _token;
     /// @dev Token decimals of the Orchestrator token, which is used as collateral and stores within
@@ -275,11 +275,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(BondingCurveBase_v1)
         returns (uint)
     {
+        /*
         return _staticPricePPM(
             virtualIssuanceSupply,
             virtualCollateralSupply,
             reserveRatioForBuying
-        );
+        );*/
+                return uint(PPM) * uint(PPM) * virtualCollateralSupply
+            / (virtualIssuanceSupply * uint(reserveRatioForBuying));
     }
 
     /// @notice Calculates and returns the static price for selling the issuance token.
@@ -291,11 +294,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(RedeemingBondingCurveBase_v1)
         returns (uint)
     {
-        return _staticPricePPM(
+        /*return _staticPricePPM(
             virtualIssuanceSupply,
             virtualCollateralSupply,
             reserveRatioForSelling
-        );
+        );*/
+        return uint(PPM) * uint(PPM) * virtualCollateralSupply
+            / (virtualIssuanceSupply * uint(reserveRatioForSelling));
     }
 
     /// @inheritdoc IFundingManager_v1
@@ -407,7 +412,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             decimalConvertedMintAmount, eighteenDecimals, issuanceTokenDecimals
         );
     }
-
+/*
     /// @dev Calculates the static price for either selling or buying the issuance token,
     /// based on the provided issuance token supply, collateral supply, and buy or sell reserve ratio.
     /// Note: The reserve ratio specifies whether the sell or buy price is returned.
@@ -426,7 +431,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         return uint(PPM) * uint(PPM) * _collateralSupply
             / (_issuanceSupply * uint(_reserveRatio));
     }
-
+*/
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
     /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula assumes 18 decimals for all tokens

@@ -82,46 +82,22 @@ abstract contract Module_v1 is
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Orchestrator_v1.
     modifier onlyOrchestratorOwner() {
-        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
-
-        bytes32 ownerRole = authorizer.getOwnerRole();
-
-        if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
-        }
+        _checkRoleModifier(__Module_orchestrator.authorizer().getOwnerRole(), _msgSender());
         _;
     }
 
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Orchestrator_v1 or the Orchestrator_v1's manager.
     modifier onlyOrchestratorOwnerOrManager() {
-        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
-
-        bytes32 ownerRole = authorizer.getOwnerRole();
-        bytes32 managerRole = authorizer.getManagerRole();
-
-        if (
-            authorizer.hasRole(ownerRole, _msgSender())
-                || authorizer.hasRole(managerRole, _msgSender())
-        ) {
-            _;
-        } else {
-            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
-        }
+        _checkOnlyOrchestratorOwnerOrManagerModifier();
+        _;
     }
 
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
-        if (
-            !__Module_orchestrator.authorizer().hasModuleRole(role, _msgSender())
-        ) {
-            revert Module__CallerNotAuthorized(
-                __Module_orchestrator.authorizer().generateRoleId(
+        _checkRoleModifier(__Module_orchestrator.authorizer().generateRoleId(
                     address(this), role
-                ),
-                _msgSender()
-            );
-        }
+                ), _msgSender());
         _;
     }
 
@@ -130,25 +106,18 @@ abstract contract Module_v1 is
     ///      `__Module_` variables.
     /// @dev Note to use function prefix `__Module_`.
     modifier onlyOrchestrator() {
-        if (_msgSender() != address(__Module_orchestrator)) {
-            revert Module__OnlyCallableByOrchestrator();
-        }
+        _onlyOrchestratorModifier();
         _;
     }
 
     /// @dev same function as OZ initializer, but for the init2 function
     modifier initializer2() {
-        if (__Module_initialization) {
-            revert Module__CannotCallInit2Again();
-        }
-        __Module_initialization = true;
+        _initializer2Modifier();
         _;
     }
 
     modifier validDependencyData(bytes memory dependencyData) {
-        if (!_dependencyInjectionRequired(dependencyData)) {
-            revert Module__NoDependencyOrMalformedDependencyData();
-        }
+        _validDependencyModifier(dependencyData);
         _;
     }
 
@@ -327,6 +296,63 @@ abstract contract Module_v1 is
             return this.decoder(dependencyData);
         } catch {
             return false;
+        }
+    }
+
+    function _checkRoleModifier(bytes32 role, address addr)
+        internal
+        view
+    {
+        if (
+            !__Module_orchestrator.authorizer().hasRole(role, addr)
+        ) {
+            revert Module__CallerNotAuthorized(
+                role,
+                addr
+            );
+        }
+    }
+
+    function _checkOnlyOrchestratorOwnerOrManagerModifier() internal view {
+        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
+
+        bytes32 ownerRole = authorizer.getOwnerRole();
+        bytes32 managerRole = authorizer.getManagerRole();
+
+        if (
+            authorizer.hasRole(ownerRole, _msgSender())
+                || authorizer.hasRole(managerRole, _msgSender())
+        ) {
+            return;
+        } else {
+            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
+        }
+    }
+
+    function _onlyOrchestratorModifier()
+        internal
+        view
+    {
+        if (_msgSender() != address(__Module_orchestrator)) {
+            revert Module__OnlyCallableByOrchestrator();
+        }
+    }
+
+    function _initializer2Modifier()
+        internal
+    {
+        if (__Module_initialization) {
+            revert Module__CannotCallInit2Again();
+        }
+        __Module_initialization = true;
+    }
+
+    function _validDependencyModifier(bytes memory dependencyData)
+        internal
+        view
+    {
+        if (!_dependencyInjectionRequired(dependencyData)) {
+            revert Module__NoDependencyOrMalformedDependencyData();
         }
     }
 

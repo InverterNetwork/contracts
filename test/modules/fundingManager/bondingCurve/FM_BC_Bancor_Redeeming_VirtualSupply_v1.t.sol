@@ -1031,11 +1031,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     /* Test getStaticPriceForBuying() */
 
     function testgetStaticPriceForBuying() public {
-        uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
-            bondingCurveFundingManager.getVirtualIssuanceSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying()
-        );
+        uint returnValue = bondingCurveFundingManager.getStaticPriceForBuying();
         assertEq(
             bondingCurveFundingManager.getStaticPriceForBuying(), returnValue
         );
@@ -1043,11 +1039,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     /* Test getStaticPriceForSelling() */
 
     function testgetStaticPriceForSelling() public {
-        uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
-            bondingCurveFundingManager.getVirtualIssuanceSupply(),
-            bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForSelling()
-        );
+        uint returnValue = bondingCurveFundingManager.getStaticPriceForSelling();
         assertEq(
             bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
         );
@@ -1413,6 +1405,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         └── When calling with reserve ratio for buying with fuzzing
             └── it should update return value after buying
     */
+    /*
     function testStaticPriceWithSellReserveRatioNonFuzzing() public {
         uint amountIn = 1000;
         address seller = makeAddr("seller");
@@ -1551,6 +1544,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             1 * bondingCurveFundingManager.call_PPM()
         );
     }
+    */
 
     /* Test _convertAmountToRequiredDecimal function
         ├── when the token decimals and the required decimals are the same

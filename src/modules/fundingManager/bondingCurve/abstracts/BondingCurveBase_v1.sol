@@ -51,6 +51,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Base Points used for percentage calculation. This value represents 100%
+    uint internal constant BPS = 10_000;
+    
     /// @dev The token the Curve will mint and burn from
     IERC20Issuance_v1 internal issuanceToken;
 
@@ -59,8 +62,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     bool public buyIsOpen;
     /// @dev Buy fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000
     uint public buyFee;
-    /// @dev Base Points used for percentage calculation. This value represents 100%
-    uint internal constant BPS = 10_000;
+
     /// @notice Accumulated project trading fees collected from deposits made by users
     /// when engaging with the bonding curve-based funding manager. Collected in collateral
     uint public projectCollateralFeeCollected;
@@ -69,17 +71,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Modifiers
 
     modifier buyingIsEnabled() {
-        if (buyIsOpen == false) {
-            revert Module__BondingCurveBase__BuyingFunctionaltiesClosed();
-        }
+        _buyingIsEnabledModifier();
         _;
     }
 
     /// @dev Modifier to guarantee token recipient is valid.
     modifier validReceiver(address _receiver) {
-        if (_receiver == address(0) || _receiver == address(this)) {
-            revert Module__BondingCurveBase__InvalidRecipient();
-        }
+        _validReceiverModifier(_receiver);
         _;
     }
 
@@ -254,7 +252,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
     function _openBuy() internal virtual {
-        if (buyIsOpen == true) {
+        if (buyIsOpen) {
             revert Module__BondingCurveBase__BuyingAlreadyOpen();
         }
         buyIsOpen = true;
@@ -263,7 +261,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev Closes the buy functionality by setting the state variable `buyIsOpen` to false.
     function _closeBuy() internal virtual {
-        if (buyIsOpen == false) {
+        if (!buyIsOpen) {
             revert Module__BondingCurveBase__BuyingAlreadyClosed();
         }
         buyIsOpen = false;
@@ -412,7 +410,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
 
         // Return expected purchase return amount
-        return mintAmount;
+        //return mintAmount;
     }
 
     /// @dev Sets the issuance token for the FundingManager.
@@ -420,9 +418,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// the implementation contract if extra validation around the token characteristics is needed.
     /// @param _issuanceToken The token which will be issued by the Bonding Curve.
     function _setIssuanceToken(address _issuanceToken) internal virtual {
-        address oldToken = address(issuanceToken);
+        emit IssuanceTokenUpdated(address(issuanceToken), _issuanceToken);
         issuanceToken = IERC20Issuance_v1(_issuanceToken);
-        emit IssuanceTokenUpdated(oldToken, _issuanceToken);
+        
     }
 
     /// @dev Witdraw project collateral fee amount to  to receiver.
@@ -443,6 +441,18 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
 
         emit ProjectCollateralFeeWithdrawn(_receiver, _amount);
+    }
+
+    function _buyingIsEnabledModifier() internal view {
+        if (buyIsOpen == false) {
+            revert Module__BondingCurveBase__BuyingFunctionaltiesClosed();
+        }
+    }
+
+    function _validReceiverModifier(address _receiver) internal view {
+        if (_receiver == address(0) || _receiver == address(this)) {
+            revert Module__BondingCurveBase__InvalidRecipient();
+        }
     }
 
     //--------------------------------------------------------------------------

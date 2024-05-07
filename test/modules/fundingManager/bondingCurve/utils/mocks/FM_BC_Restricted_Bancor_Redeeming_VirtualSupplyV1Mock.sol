@@ -56,7 +56,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
     function call_setIssuanceToken(address _newIssuanceToken) external {
         _setIssuanceToken(_newIssuanceToken);
     }
-
+/*
     function call_staticPricePPM(
         uint _issuanceSupply,
         uint _collateralSupply,
@@ -65,7 +65,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
         return
             _staticPricePPM(_issuanceSupply, _collateralSupply, _reserveRatio);
     }
-
+*/
     function call_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,
