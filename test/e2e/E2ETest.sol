@@ -7,7 +7,8 @@ import "forge-std/console.sol";
 // Internal Dependencies:
 import {E2EModuleRegistry} from "test/e2e/E2EModuleRegistry.sol";
 
-import {Governor_v1} from "src/external/governance/Governor_v1.sol";
+import {Governor_v1} from "@ex/governance/Governor_v1.sol";
+import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
@@ -43,9 +44,6 @@ import {TransparentUpgradeableProxy} from
  * @dev Base contract for e2e tests.
  */
 contract E2ETest is E2EModuleRegistry {
-    //Governance Gontract
-    Governor_v1 gov;
-
     // Factory instances.
     OrchestratorFactory_v1 orchestratorFactory;
 
@@ -58,8 +56,7 @@ contract E2ETest is E2EModuleRegistry {
     // Forwarder
     TransactionForwarder_v1 forwarder;
 
-    address communityMultisig = address(0x11111);
-    address teamMultisig = address(0x22222);
+    FeeManager_v1 feeManager;
 
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
@@ -76,6 +73,13 @@ contract E2ETest is E2EModuleRegistry {
         );
 
         gov.init(communityMultisig, teamMultisig, 1 weeks);
+
+        feeManager = new FeeManager_v1();
+        feeManager.init(address(this), treasury, 0, 0);
+
+        vm.prank(communityMultisig);
+        gov.setFeeManager(address(feeManager));
+
         // Deploy a Mock funding token for testing.
 
         //Set gov as the default beacon owner
@@ -90,12 +94,14 @@ contract E2ETest is E2EModuleRegistry {
         orchestratorImpl = new Orchestrator_v1(address(forwarder));
 
         // Deploy Factories.
-        moduleFactory = new ModuleFactory_v1(address(gov), address(forwarder));
+        moduleFactory = new ModuleFactory_v1(address(forwarder));
+        moduleFactory.init(address(gov));
 
-        orchestratorFactory = new OrchestratorFactory_v1(
+        orchestratorFactory = new OrchestratorFactory_v1(address(forwarder));
+        orchestratorFactory.init(
+            moduleFactory.governor(),
             address(orchestratorImpl),
-            address(moduleFactory),
-            address(forwarder)
+            address(moduleFactory)
         );
     }
 

@@ -17,7 +17,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     // address(0x1).
     uint public addressCounter = 10;
 
-    address public governor;
+    address public governor = address(0x99999);
 
     function createModule(
         IModule_v1.Metadata memory,

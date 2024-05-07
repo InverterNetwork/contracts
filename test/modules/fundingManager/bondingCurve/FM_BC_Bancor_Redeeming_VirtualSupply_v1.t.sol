@@ -490,7 +490,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, buyAmountMinusFee, formulaReturn, buyer);
+        emit TokensBought(buyer, amount, formulaReturn, buyer);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
@@ -847,8 +847,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         );
 
         // We calculate how much if the initial deposit we should get back based on the fee
-        uint feeAmount = (normalized_formulaReturn * fee)
-            / bondingCurveFundingManager.call_BPS();
+        uint feeAmount = (normalized_formulaReturn * fee) / _bps;
         uint sellAmountMinusFee = normalized_formulaReturn - feeAmount;
 
         // Perform the sell
@@ -1047,7 +1046,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint returnValue = bondingCurveFundingManager.call_staticPricePPM(
             bondingCurveFundingManager.getVirtualIssuanceSupply(),
             bondingCurveFundingManager.getVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying()
+            bondingCurveFundingManager.call_reserveRatioForSelling()
         );
         assertEq(
             bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
@@ -1075,230 +1074,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.setVirtualIssuanceSupply(_supply);
 
         assertEq(_supply, bondingCurveFundingManager.getVirtualIssuanceSupply());
-    }
-
-    /* Test calculatePurchaseReturn function
-        ├── When deposit amount is 0
-        │       └── it should revert 
-        └── When deposit amount is not 0
-                ├── when the fee is 0
-                │       └── it should succeed 
-                └── when the fee is not 0
-                        └── it should succeed 
-    */
-
-    function testCalculatePurchaseReturn_FailsIfDepositAmountZero() public {
-        uint depositAmount = 0;
-
-        vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount
-                .selector
-        );
-        bondingCurveFundingManager.calculatePurchaseReturn(depositAmount);
-    }
-
-    function testCalculatePurchaseReturnWithZeroFee(uint _depositAmount)
-        public
-    {
-        // see comment in testBuyOrderWithZeroFee for information on the upper bound
-        _depositAmount = _bound_for_decimal_conversion(
-            _depositAmount,
-            1,
-            1e38,
-            bondingCurveFundingManager.call_collateralTokenDecimals(),
-            issuanceToken.decimals()
-        );
-
-        uint decimalConverted_userDepositAmount = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            _depositAmount, _token.decimals(), 18
-        );
-
-        // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
-            .calculatePurchaseReturn(
-            bondingCurveFundingManager.call_getFormulaVirtualIssuanceSupply(),
-            bondingCurveFundingManager.call_getFormulaVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying(),
-            decimalConverted_userDepositAmount
-        );
-        uint functionReturn =
-            bondingCurveFundingManager.calculatePurchaseReturn(_depositAmount);
-        assertEq(functionReturn, formulaReturn);
-    }
-
-    function testCalculatePurchaseReturnWithFee(uint _depositAmount, uint _fee)
-        public
-    {
-        // Setup
-        uint _bps = bondingCurveFundingManager.call_BPS();
-
-        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
-
-        // see comment in testBuyOrderWithZeroFee for information on the upper bound
-        _depositAmount = _bound_for_decimal_conversion(
-            _depositAmount,
-            1,
-            1e38,
-            bondingCurveFundingManager.call_collateralTokenDecimals(),
-            issuanceToken.decimals()
-        );
-
-        vm.prank(owner_address);
-        bondingCurveFundingManager.setBuyFee(_fee);
-
-        // We calculate how much the real deposit amount will be after fees
-        uint feeAmount =
-            (_depositAmount * _fee) / bondingCurveFundingManager.call_BPS();
-        uint buyAmountMinusFee = _depositAmount - feeAmount;
-
-        uint decimalConverted_userBuyAmountMinusFee = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            buyAmountMinusFee, _token.decimals(), 18
-        );
-
-        // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
-            .calculatePurchaseReturn(
-            bondingCurveFundingManager.call_getFormulaVirtualIssuanceSupply(),
-            bondingCurveFundingManager.call_getFormulaVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying(),
-            decimalConverted_userBuyAmountMinusFee
-        );
-        uint functionReturn =
-            bondingCurveFundingManager.calculatePurchaseReturn(_depositAmount);
-        assertEq(functionReturn, formulaReturn);
-    }
-
-    /* Test calculateSaleReturn function
-        ├── When deposit amount is 0
-        │       └── it should revert 
-        └── When deposit amount is not 0
-                ├── when the fee is 0
-                │       └── it should succeed 
-                └── when the fee is not 0
-                        └── it should succeed 
-    */
-
-    function testCalculateSaleReturn_FailsIfDepositAmountZero() public {
-        uint depositAmount = 0;
-
-        vm.expectRevert(
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount
-                .selector
-        );
-        bondingCurveFundingManager.calculateSaleReturn(depositAmount);
-    }
-
-    function testCalculateSaleReturnWithZeroFee(uint _saleAmount) public {
-        // Above an amount of 1e26 the BancorFormula starts to revert.
-        _saleAmount = _bound_for_decimal_conversion(
-            _saleAmount, 1, 1e36, issuanceToken.decimals(), 18
-        );
-        // Set virtual supply to some number above collateral supply
-        // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = _saleAmount * 4;
-        uint newVirtualCollateral = _saleAmount * 8;
-
-        vm.startPrank(owner_address);
-        {
-            bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
-            );
-            bondingCurveFundingManager.setVirtualCollateralSupply(
-                newVirtualCollateral
-            );
-        }
-        vm.stopPrank();
-
-        uint decimalConverted_userSaleAmount = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            _saleAmount, issuanceToken.decimals(), 18
-        );
-
-        // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
-            .calculateSaleReturn(
-            bondingCurveFundingManager.call_getFormulaVirtualIssuanceSupply(),
-            bondingCurveFundingManager.call_getFormulaVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying(),
-            decimalConverted_userSaleAmount
-        );
-
-        //normalize the formulaReturn. This is the amount in the context of the collateral token
-        uint normalized_formulaReturn = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            formulaReturn, 18, _token.decimals()
-        );
-
-        uint functionReturn =
-            bondingCurveFundingManager.calculateSaleReturn(_saleAmount);
-        assertEq(functionReturn, normalized_formulaReturn);
-    }
-
-    function testCalculateSaleReturnWithFee(uint _saleAmount, uint _fee)
-        public
-    {
-        // Setup
-        uint _bps = bondingCurveFundingManager.call_BPS();
-
-        _fee = bound(_fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
-            // see comment in testBuyOrderWithZeroFee for information on the upper bound
-        _saleAmount = _bound_for_decimal_conversion(
-            _saleAmount,
-            1,
-            1e36,
-            bondingCurveFundingManager.call_collateralTokenDecimals(),
-            issuanceToken.decimals()
-        );
-
-        // Set sell Fee
-        // Set virtual supply to some number above collateral supply
-        // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = _saleAmount * 4;
-        uint newVirtualCollateral = _saleAmount * 2;
-        vm.startPrank(owner_address);
-        {
-            bondingCurveFundingManager.setSellFee(_fee);
-            bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
-            );
-            bondingCurveFundingManager.setVirtualCollateralSupply(
-                newVirtualCollateral
-            );
-        }
-        vm.stopPrank();
-
-        uint decimalConverted_userDepositAmount = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            _saleAmount, issuanceToken.decimals(), 18
-        );
-
-        // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
-            .calculateSaleReturn(
-            bondingCurveFundingManager.call_getFormulaVirtualIssuanceSupply(),
-            bondingCurveFundingManager.call_getFormulaVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForSelling(),
-            decimalConverted_userDepositAmount
-        );
-
-        //normalize the formulaReturn. This is the amount in the context of the collateral token
-        uint normalized_formulaReturn = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            formulaReturn, 18, _token.decimals()
-        );
-        // We calculate how much of the initial deposit we should get back based on the fee
-        uint feeAmount = (normalized_formulaReturn * _fee)
-            / bondingCurveFundingManager.call_BPS();
-        uint sellAmountMinusFee = normalized_formulaReturn - feeAmount;
-
-        uint functionReturn =
-            bondingCurveFundingManager.calculateSaleReturn(_saleAmount);
-
-        assertEq(functionReturn, sellAmountMinusFee);
     }
 
     //--------------------------------------------------------------------------
@@ -1893,7 +1668,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     //      - Mints collateral tokens to a seller and
     //      - Deposits them so they can later be sold.
     //      - Approves the BondingCurve contract to spend the receipt tokens
-    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many toknes as they deposit
+    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
     function _prepareSellConditions(address seller, uint amount)
         internal
         returns (uint userSellAmount)

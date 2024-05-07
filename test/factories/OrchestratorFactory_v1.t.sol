@@ -92,8 +92,9 @@ contract OrchestratorFactoryV1Test is Test {
 
         target = new Orchestrator_v1(address(0));
 
-        factory = new OrchestratorFactory_v1(
-            address(target), address(moduleFactory), address(0)
+        factory = new OrchestratorFactory_v1(address(0));
+        factory.init(
+            moduleFactory.governor(), address(target), address(moduleFactory)
         );
     }
 
@@ -147,6 +148,7 @@ contract OrchestratorFactoryV1Test is Test {
         assertEq(orchestrator.orchestratorId(), 1);
         assertTrue(address(orchestrator.authorizer()) != address(0));
         assertTrue(address(orchestrator.paymentProcessor()) != address(0));
+        assertTrue(address(orchestrator.governor()) == moduleFactory.governor());
 
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(2, address(0)); //since we don't know the address of the orchestrator

@@ -14,11 +14,13 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 
 contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     IERC20 public token;
     IPaymentProcessor_v1 public paymentProcessor;
     IFundingManager_v1 public fundingManager;
+    IGovernor_v1 public governor;
 
     bool public executeTxBoolReturn;
     bytes public executeTxData;
@@ -31,9 +33,25 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         return (executeTxBoolReturn, bytes(""));
     }
 
-    function addModule(address module) external {}
+    function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_) external {}
 
-    function removeModule(address module) external {}
+    function cancelPaymentProcessorUpdate(
+        IPaymentProcessor_v1 paymentProcessor_
+    ) external {}
+
+    function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
+        external
+    {}
+
+    function cancelModuleUpdate(address module) external {}
+
+    function initiateAddModuleWithTimelock(address module) external {}
+
+    function initiateRemoveModuleWithTimelock(address module) external {}
+
+    function executeAddModule(address module) external {}
+
+    function executeRemoveModule(address module) external {}
 
     function isModule(address module) external returns (bool) {}
 
@@ -57,16 +75,31 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         address[] calldata,
         IFundingManager_v1,
         IAuthorizer_v1,
-        IPaymentProcessor_v1
+        IPaymentProcessor_v1,
+        IGovernor_v1
     ) external {}
 
-    function setAuthorizer(IAuthorizer_v1 authorizer_) external {}
+    function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 authorizer_)
+        external
+    {}
 
-    function setFundingManager(IFundingManager_v1 fundingManager_) external {
+    function initiateSetFundingManagerWithTimelock(
+        IFundingManager_v1 fundingManager_
+    ) external {}
+
+    function initiateSetPaymentProcessorWithTimelock(
+        IPaymentProcessor_v1 paymentProcessor_
+    ) external {}
+
+    function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external {}
+
+    function executeSetFundingManager(IFundingManager_v1 fundingManager_)
+        external
+    {
         fundingManager = fundingManager_;
     }
 
-    function setPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
+    function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
         external
     {
         paymentProcessor = paymentProcessor_;

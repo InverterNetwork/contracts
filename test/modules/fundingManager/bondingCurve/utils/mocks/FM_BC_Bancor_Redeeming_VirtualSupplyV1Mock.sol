@@ -102,4 +102,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         );
         return decimalConvertedVirtualCollateralSupply;
     }
+
+    function call_calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _workflowFee
+    )
+        external
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
+    {
+        return
+            _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
+    }
 }
