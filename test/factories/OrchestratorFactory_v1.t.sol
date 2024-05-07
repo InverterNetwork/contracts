@@ -93,7 +93,9 @@ contract OrchestratorFactoryV1Test is Test {
         target = new Orchestrator_v1(address(0));
 
         factory = new OrchestratorFactory_v1(address(0));
-        factory.init(address(target), address(moduleFactory));
+        factory.init(
+            moduleFactory.governor(), address(target), address(moduleFactory)
+        );
     }
 
     function testValidOrchestratorId(uint getId, uint orchestratorsCreated)

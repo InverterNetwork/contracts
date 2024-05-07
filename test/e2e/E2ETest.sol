@@ -99,7 +99,9 @@ contract E2ETest is E2EModuleRegistry {
 
         orchestratorFactory = new OrchestratorFactory_v1(address(forwarder));
         orchestratorFactory.init(
-            address(orchestratorImpl), address(moduleFactory)
+            moduleFactory.governor(),
+            address(orchestratorImpl),
+            address(moduleFactory)
         );
     }
 
