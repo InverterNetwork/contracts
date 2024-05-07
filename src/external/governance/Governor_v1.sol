@@ -5,6 +5,10 @@ pragma solidity 0.8.23;
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+import {
+    IModuleFactory_v1,
+    IModule_v1
+} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 // Internal Dependencies
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
@@ -228,6 +232,17 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     }
 
     //--------------------------------------------------------------------------
+    // Factory Functions
+
+    function registerMetadata(
+        IModuleFactory_v1 moduleFactory,
+        IModule_v1.Metadata memory metadata,
+        IInverterBeacon_v1 beacon
+    ) external onlyCommunityOrTeamMultisig {
+        moduleFactory.registerMetadata(metadata, beacon);
+    }
+
+    //--------------------------------------------------------------------------
     // Beacon Functions
     //---------------------------
     // Upgrade
@@ -304,7 +319,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     }
 
     //---------------------------
-    //Emergency Shutdown
+    // Emergency Shutdown
 
     /// @inheritdoc IGovernor_v1
     function initiateBeaconShutdown(address beacon)

@@ -19,9 +19,14 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 //External Dependencies
-import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
-import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
-import {Context, Ownable} from "@oz/access/Ownable.sol";
+import {
+    ERC2771ContextUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
+import {
+    Ownable2StepUpgradeable,
+    Initializable
+} from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 /**
  * @title   Module Factory
@@ -39,8 +44,8 @@ import {Context, Ownable} from "@oz/access/Ownable.sol";
  */
 contract ModuleFactory_v1 is
     IModuleFactory_v1,
-    ERC2771Context,
-    Ownable2Step,
+    ERC2771ContextUpgradeable,
+    Ownable2StepUpgradeable,
     ERC165
 {
     function supportsInterface(bytes4 interfaceId)
@@ -72,7 +77,7 @@ contract ModuleFactory_v1 is
         // Revert if beacon's implementation is zero address.
         if (
             beacon.implementation() == address(0)
-                || Ownable(address(beacon)).owner() != governor
+                || Ownable2StepUpgradeable(address(beacon)).owner() != governor
         ) {
             revert ModuleFactory__InvalidInverterBeacon();
         }
@@ -90,12 +95,16 @@ contract ModuleFactory_v1 is
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
     //--------------------------------------------------------------------------
-    // Constructor
+    // Constructor & Initializer
 
-    constructor(address _governor, address _trustedForwarder)
-        ERC2771Context(_trustedForwarder)
-        Ownable(_msgSender())
-    {
+    constructor(address _trustedForwarder)
+        ERC2771ContextUpgradeable(_trustedForwarder)
+    {}
+
+    /// @notice The factories initializer function.
+    /// @param _governor The address of the governor contract.
+    function init(address _governor) external initializer {
+        __Ownable_init(_governor);
         governor = _governor;
     }
 
@@ -175,10 +184,10 @@ contract ModuleFactory_v1 is
         internal
         view
         virtual
-        override(ERC2771Context, Context)
+        override(ERC2771ContextUpgradeable, ContextUpgradeable)
         returns (address sender)
     {
-        return ERC2771Context._msgSender();
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// Needs to be overriden, because they are imported via the Ownable2Step as well
@@ -186,19 +195,19 @@ contract ModuleFactory_v1 is
         internal
         view
         virtual
-        override(ERC2771Context, Context)
+        override(ERC2771ContextUpgradeable, ContextUpgradeable)
         returns (bytes calldata)
     {
-        return ERC2771Context._msgData();
+        return ERC2771ContextUpgradeable._msgData();
     }
 
     function _contextSuffixLength()
         internal
         view
         virtual
-        override(ERC2771Context, Context)
+        override(ERC2771ContextUpgradeable, ContextUpgradeable)
         returns (uint)
     {
-        return ERC2771Context._contextSuffixLength();
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }

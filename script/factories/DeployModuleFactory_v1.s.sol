@@ -4,6 +4,9 @@ import "forge-std/Script.sol";
 
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 
+import {DeployAndSetUpInverterBeacon_v1} from
+    "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
+
 /**
  * @title ModuleFactory_v1 Deployment Script
  *
@@ -19,6 +22,8 @@ contract DeployModuleFactory_v1 is Script {
     address deployer = vm.addr(deployerPrivateKey);
 
     ModuleFactory_v1 moduleFactory;
+    DeployAndSetUpInverterBeacon_v1 deployAndSetUpInverterBeacon_v1 =
+        new DeployAndSetUpInverterBeacon_v1();
 
     function run() external returns (address) {
         // Read deployment settings from environment variables.
@@ -45,12 +50,29 @@ contract DeployModuleFactory_v1 is Script {
         public
         returns (address)
     {
+        address moduleFactoryImplementation;
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the moduleFactory.
-            moduleFactory = new ModuleFactory_v1(governor, forwarder);
+            moduleFactoryImplementation =
+                address(new ModuleFactory_v1(forwarder));
         }
+        vm.stopBroadcast();
 
+        address moduleFactoryBeacon;
+        address moduleFactoryProxy;
+
+        (moduleFactoryBeacon, moduleFactoryProxy) =
+        deployAndSetUpInverterBeacon_v1.deployBeaconAndSetupProxy(
+            governor, moduleFactoryImplementation, 1, 0
+        );
+
+        moduleFactory = ModuleFactory_v1(moduleFactoryProxy);
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            moduleFactory.init(governor);
+        }
         vm.stopBroadcast();
 
         // Log the deployed ModuleFactory_v1 contract address.

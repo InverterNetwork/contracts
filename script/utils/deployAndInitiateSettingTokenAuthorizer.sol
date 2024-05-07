@@ -16,7 +16,6 @@ import {
     IOrchestrator_v1
 } from "src/orchestrator/Orchestrator_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
 import {DeployAndSetUpInverterBeacon_v1} from
@@ -43,8 +42,6 @@ contract deployAndSwitchTokenAuthorizer is Script {
     // ===============================================================================================================
     address moduleFactoryAddress = scriptConstants.moduleFactoryAddress();
     address orchestratorAddress = scriptConstants.orchestratorAddress();
-    address receiptTokenAddress = scriptConstants.receiptTokenAddress();
-    address bountyManagerAddress = scriptConstants.bountyManagerAddress();
 
     // ===============================================================================================================
     // Set the Module Metadata.
@@ -55,8 +52,6 @@ contract deployAndSwitchTokenAuthorizer is Script {
 
     ModuleFactory_v1 moduleFactory = ModuleFactory_v1(moduleFactoryAddress);
     Orchestrator_v1 orchestrator = Orchestrator_v1(orchestratorAddress);
-
-    LM_PC_Bounties_v1 bountyManager = LM_PC_Bounties_v1(bountyManagerAddress);
 
     function run() public {
         /*
@@ -92,37 +87,15 @@ contract deployAndSwitchTokenAuthorizer is Script {
             "Deployed Token Authorizer at address: ", deployedAuthorizerAddress
         );
 
-        // add module to orchestrator
-        orchestrator.setAuthorizer(deployedAuthorizer);
+        // initiate add module to orchestrator
+        orchestrator.initiateSetAuthorizerWithTimelock(deployedAuthorizer);
 
-        //grant default admin role to orchestratorOwner
-        deployedAuthorizer.grantRole(
-            deployedAuthorizer.DEFAULT_ADMIN_ROLE(), orchestratorOwner
+        console.log(
+            "Initiated updating authorizer in Orchestrator with address: ",
+            address(orchestrator),
+            " Timelock until (unix time) : ",
+            orchestrator.MODULE_UPDATE_TIMELOCK()
         );
-
-        // make all LM_PC_Bounties_v1 roles tokenGated
-        bytes32 claimRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.CLAIMANT_ROLE()
-        );
-        bytes32 bountyRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.BOUNTY_ISSUER_ROLE()
-        );
-        bytes32 verifyRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.VERIFIER_ROLE()
-        );
-
-        //manually set tokenGated, token and threshold for all roles
-        deployedAuthorizer.setTokenGated(claimRoleId, true);
-        deployedAuthorizer.grantRole(claimRoleId, receiptTokenAddress);
-        deployedAuthorizer.setThreshold(claimRoleId, receiptTokenAddress, 1);
-
-        deployedAuthorizer.setTokenGated(bountyRoleId, true);
-        deployedAuthorizer.grantRole(bountyRoleId, receiptTokenAddress);
-        deployedAuthorizer.setThreshold(bountyRoleId, receiptTokenAddress, 1);
-
-        deployedAuthorizer.setTokenGated(verifyRoleId, true);
-        deployedAuthorizer.grantRole(verifyRoleId, receiptTokenAddress);
-        deployedAuthorizer.setThreshold(verifyRoleId, receiptTokenAddress, 1);
 
         vm.stopBroadcast();
     }

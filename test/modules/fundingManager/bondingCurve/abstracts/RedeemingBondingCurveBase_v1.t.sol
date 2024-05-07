@@ -482,6 +482,113 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellFee(), _fee);
     }
 
+    /* Test internal _calculateSaleReturn function
+        ├── When deposit amount is 0
+        │       └── it should revert 
+        └── When deposit amount is not 0
+                ├── when the fee is 0
+                │       └── it should succeed 
+                └── when the fee is not 0
+                        └── it should succeed 
+    */
+
+    function testInternalCalculateSaleReturn_FailsIfDepositAmountZero()
+        public
+    {
+        uint depositAmount = 0;
+
+        vm.expectRevert(
+            IRedeemingBondingCurveBase_v1
+                .Module__RedeemingBondingCurveBase__InvalidDepositAmount
+                .selector
+        );
+        bondingCurveFundingManager.call_calculateSaleReturn(depositAmount);
+    }
+
+    function testInternalCalculateSaleReturnWithZeroFee(uint _depositAmount)
+        public
+    {
+        // Above an amount of 1e26 the BancorFormula starts to revert.
+        _depositAmount = bound(_depositAmount, 1, 1e26);
+
+        // As the implementation is a mock, we return the deposit amount in a 1:1 ratio
+        uint functionReturn =
+            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+        assertEq(functionReturn, _depositAmount);
+    }
+
+    function testInternalCalculateSaleReturnWithFee(
+        uint _depositAmount,
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _workflowFee
+    ) public {
+        // Setup
+        uint _bps = bondingCurveFundingManager.call_BPS();
+        _collateralFee = bound(_collateralFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _workflowFee = bound(_workflowFee, 0, _bps - 1);
+        vm.assume(_collateralFee + _workflowFee < _bps);
+
+        _depositAmount = bound(_depositAmount, 1, 1e38);
+
+        //Set Fee
+        if (_collateralFee != 0) {
+            feeManager.setDefaultCollateralFee(_collateralFee);
+        }
+        if (_issuanceFee != 0) {
+            feeManager.setDefaultIssuanceFee(_issuanceFee);
+        }
+
+        if (_workflowFee != 0) {
+            vm.prank(owner_address);
+            bondingCurveFundingManager.setSellFee(_workflowFee);
+        }
+
+        // Deduct protocol sell fee from issuance
+        (
+            uint netIssuanceDepositAmount, /* protocolFeeAmount */
+            , /* workflowFeeAmount */
+        ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            _depositAmount, _issuanceFee, 0
+        );
+
+        // As the implementation is a mock and the function calculatePurchaseReturn returns the deposit amount
+        // in a 1:1 ratio, we use the collateral deposit amount without fee to withdraw the issuance fee
+
+        // Deduct protocol and project sell fee from collateral
+        (
+            uint netCollateralRedeemAmount, /* protocolFeeAmount */
+            , /* workflowFeeAmount */
+        ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            netIssuanceDepositAmount, _collateralFee, _workflowFee
+        );
+
+        // Get return value from function
+        uint functionReturn =
+            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+
+        assertEq(functionReturn, netCollateralRedeemAmount);
+    }
+    /*    Test calculateSaleReturn function
+            └── when function calculateSaleReturn is called
+                └── then it should return the same as the internal _calculateSaleReturn function
+    */
+
+    function testCalculateSaleReturn_workGivenSameValueReturnedAsInternalFunction(
+        uint _depositAmount
+    ) public {
+        _depositAmount = bound(_depositAmount, 1, 1e38);
+
+        uint internalFunctionReturnValue =
+            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+
+        uint functionReturnValue =
+            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
+
+        assertEq(internalFunctionReturnValue, functionReturnValue);
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
