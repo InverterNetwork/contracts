@@ -34,7 +34,7 @@ contract ModuleFactoryV1Test is Test {
     ModuleV1Mock module;
     InverterBeaconV1OwnableMock beacon;
 
-    address governaceContract = address(0x010101010101);
+    address governanceContract = address(0x010101010101);
 
     //--------------------------------------------------------------------------
     // Events
@@ -60,14 +60,15 @@ contract ModuleFactoryV1Test is Test {
 
     function setUp() public {
         module = new ModuleV1Mock();
-        beacon = new InverterBeaconV1OwnableMock(governaceContract);
+        beacon = new InverterBeaconV1OwnableMock(governanceContract);
 
-        factory = new ModuleFactory_v1(governaceContract, address(0));
+        factory = new ModuleFactory_v1(address(0));
+        factory.init(governanceContract);
     }
 
     function testDeploymentInvariants() public {
         // Invariants: Ownable2Step
-        assertEq(factory.owner(), address(this));
+        assertEq(factory.owner(), governanceContract);
         assertEq(factory.pendingOwner(), address(0));
     }
 
@@ -84,6 +85,7 @@ contract ModuleFactoryV1Test is Test {
                 OZErrors.Ownable__UnauthorizedAccount, caller
             )
         );
+
         factory.registerMetadata(DATA, beacon);
     }
 
@@ -97,6 +99,7 @@ contract ModuleFactoryV1Test is Test {
         // We emit the event we expect to see.
         emit MetadataRegistered(metadata, beacon);
 
+        vm.prank(governanceContract);
         factory.registerMetadata(metadata, beacon);
 
         IInverterBeacon_v1 beaconRegistered;
@@ -110,6 +113,7 @@ contract ModuleFactoryV1Test is Test {
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__InvalidMetadata.selector
         );
+        vm.prank(governanceContract);
         factory.registerMetadata(
             IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE), beacon
         );
@@ -118,6 +122,7 @@ contract ModuleFactoryV1Test is Test {
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__InvalidMetadata.selector
         );
+        vm.prank(governanceContract);
         factory.registerMetadata(
             IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""), beacon
         );
@@ -127,14 +132,16 @@ contract ModuleFactoryV1Test is Test {
         beacon.overrideImplementation(address(module));
 
         InverterBeaconV1OwnableMock additionalBeacon =
-            new InverterBeaconV1OwnableMock(governaceContract);
+            new InverterBeaconV1OwnableMock(governanceContract);
         additionalBeacon.overrideImplementation(address(module));
 
+        vm.prank(governanceContract);
         factory.registerMetadata(DATA, beacon);
 
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__MetadataAlreadyRegistered.selector
         );
+        vm.prank(governanceContract);
         factory.registerMetadata(DATA, additionalBeacon);
     }
 
@@ -144,6 +151,7 @@ contract ModuleFactoryV1Test is Test {
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__InvalidInverterBeacon.selector
         );
+        vm.prank(governanceContract);
         factory.registerMetadata(DATA, beacon);
     }
 
@@ -156,6 +164,7 @@ contract ModuleFactoryV1Test is Test {
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__InvalidInverterBeacon.selector
         );
+        vm.prank(governanceContract);
         factory.registerMetadata(DATA, notOwnedBeacon);
     }
 
@@ -173,6 +182,7 @@ contract ModuleFactoryV1Test is Test {
         beacon.overrideImplementation(address(module));
 
         // Register ModuleV1Mock for given metadata.
+        vm.prank(governanceContract);
         factory.registerMetadata(metadata, beacon);
 
         // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
