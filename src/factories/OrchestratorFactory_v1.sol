@@ -98,13 +98,14 @@ contract OrchestratorFactory_v1 is
     {}
 
     /// @notice The factories initializer function.
+    /// @param governor_ The address of the governor contract.
     /// @param target_ The address of the governor contract.
     /// @param moduleFactory_ The address of the module factory contract.
-    function init(address target_, address moduleFactory_)
+    function init(address governor_, address target_, address moduleFactory_)
         external
         initializer
     {
-        __Ownable_init(IModuleFactory_v1(moduleFactory_).governor());
+        __Ownable_init(governor_);
         target = target_;
         moduleFactory = moduleFactory_;
     }
