@@ -68,6 +68,8 @@ contract OrchestratorV1Test is Test {
     );
 
     function setUp() public {
+        /// @note This test needs refactoring. The setup does not init the Orchestrator, leading to
+        /// a lot of duplicate code.
         fundingManager = new FundingManagerV1Mock();
         authorizer = new AuthorizerV1Mock();
         paymentProcessor = new PaymentProcessorV1Mock();
@@ -147,6 +149,10 @@ contract OrchestratorV1Test is Test {
         assertEq(address(orchestrator.authorizer()), address(authorizer));
         assertEq(
             address(orchestrator.paymentProcessor()), address(paymentProcessor)
+        );
+
+        assertEq(
+            address(orchestrator.fundingManager()), address(fundingManager)
         );
         assertTrue(orchestrator.isTrustedForwarder(address(forwarder)));
     }
@@ -489,6 +495,79 @@ contract OrchestratorV1Test is Test {
         );
 
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
+    }
+
+    /*  Test function initiateRemoveModuleWithTimelock
+        ├── Given the module address to be removed is the current authorizer
+        │   └── When the function initiateRemoveModuleWithTimelock() gets called
+        │       └── Then the function should revert
+        ├── Given the module address to be removed is the current funding manager
+        │   └── When the function initiateRemoveModuleWithTimelock() gets called
+        │       └── Then the function should revert
+        └── Given the module address to be removed is the current payment processor
+            └── When the function initiateRemoveModuleWithTimelock() gets called
+                └── Then the function should revert
+    */
+
+    function testInitiateRemoveModuleWithTimelock_failsGivenModuleAddressIsCurrentAuthorizer(
+    ) public {
+        orchestrator.init(
+            1,
+            new address[](0),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+        address currentAuthorizer = address(orchestrator.authorizer());
+
+        vm.expectRevert(
+            IOrchestrator_v1.Orchestrator__InvalidRemovalOfAuthorizer.selector
+        );
+        orchestrator.initiateRemoveModuleWithTimelock(currentAuthorizer);
+    }
+
+    function testInitiateRemoveModuleWithTimelock_failsGivenModuleAddressIsCurrentFundingManager(
+    ) public {
+        orchestrator.init(
+            1,
+            new address[](0),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+        address currentFundingManager = address(orchestrator.fundingManager());
+
+        vm.expectRevert(
+            IOrchestrator_v1
+                .Orchestrator__InvalidRemovalOfFundingManager
+                .selector
+        );
+        orchestrator.initiateRemoveModuleWithTimelock(currentFundingManager);
+    }
+
+    function testInitiateRemoveModuleWithTimelock_failsGivenModuleAddressIsCurrentPaymentProcessor(
+    ) public {
+        orchestrator.init(
+            1,
+            new address[](0),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+        address currentPaymentProcessor =
+            address(orchestrator.paymentProcessor());
+
+        vm.expectRevert(
+            IOrchestrator_v1
+                .Orchestrator__InvalidRemovalOfPaymentProcessor
+                .selector
+        );
+        orchestrator.initiateRemoveModuleWithTimelock(currentPaymentProcessor);
     }
 
     //--------------------------------------------------------------------------

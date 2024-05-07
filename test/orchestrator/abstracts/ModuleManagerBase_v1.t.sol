@@ -158,9 +158,9 @@ contract ModuleManagerBaseV1Test is Test {
     function testExecuteTxFromModuleViaCall() public {
         address module = address(0xCAFE);
 
-        moduleManager.initiateAddModuleWithTimelock(module);
+        moduleManager.call_initiateAddModuleWithTimelock(module);
         vm.warp(block.timestamp + timelock);
-        moduleManager.executeAddModule(module);
+        moduleManager.call_executeAddModule(module);
 
         bool ok_;
         bytes memory returnData;
@@ -176,9 +176,9 @@ contract ModuleManagerBaseV1Test is Test {
 
     function testExecuteTxFromModuleViaCallFails() public {
         address module = address(0xCAFE);
-        moduleManager.initiateAddModuleWithTimelock(module);
+        moduleManager.call_initiateAddModuleWithTimelock(module);
         vm.warp(block.timestamp + timelock);
-        moduleManager.executeAddModule(module);
+        moduleManager.call_executeAddModule(module);
 
         bool ok_;
         bytes memory returnData;
@@ -212,13 +212,13 @@ contract ModuleManagerBaseV1Test is Test {
 
         for (uint i; i < whos.length; ++i) {
             // Timelock setup
-            moduleManager.initiateAddModuleWithTimelock(whos[i]);
+            moduleManager.call_initiateAddModuleWithTimelock(whos[i]);
             vm.warp(block.timestamp + timelock);
 
             vm.expectEmit(true, true, true, true);
             emit ModuleAdded(whos[i]);
 
-            moduleManager.executeAddModule(whos[i]);
+            moduleManager.call_executeAddModule(whos[i]);
 
             // Test timelock has been set to inactive (false)
             (timelockActive,) = moduleManager.moduleAddressToTimelock(whos[i]);
@@ -242,7 +242,7 @@ contract ModuleManagerBaseV1Test is Test {
     ) public {
         vm.assume(timePassed < timelock - 1);
         types.assumeValidModule(who);
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
 
         (, uint timelockUntil) = moduleManager.moduleAddressToTimelock(who);
 
@@ -258,17 +258,17 @@ contract ModuleManagerBaseV1Test is Test {
                 timelockUntil
             )
         );
-        moduleManager.executeAddModule(who);
+        moduleManager.call_executeAddModule(who);
     }
 
     function testExecuteAddModule_revertGivenTimelockStillActive(address who)
         public
     {
         types.assumeValidModule(who);
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
 
         // Cancel setting module
-        moduleManager.cancelModuleUpdate(who);
+        moduleManager.call_cancelModuleUpdate(who);
 
         // Expect revert
         vm.expectRevert(
@@ -277,7 +277,7 @@ contract ModuleManagerBaseV1Test is Test {
                 .selector
         );
 
-        moduleManager.executeAddModule(who);
+        moduleManager.call_executeAddModule(who);
     }
 
     function testInitiateAddModuleWithTimelock_FailsIfCallerNotAuthorized(
@@ -292,14 +292,14 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__CallerNotAuthorized
                 .selector
         );
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
     }
 
     function testExecuteAddModule_FailsIfCallerNotAuthorized(address who)
         public
     {
         types.assumeValidModule(who);
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
 
         moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
 
@@ -308,7 +308,7 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__CallerNotAuthorized
                 .selector
         );
-        moduleManager.executeAddModule(who);
+        moduleManager.call_executeAddModule(who);
     }
 
     function testInitiateAddModuleWithTimelock_FailsIfAlreadyAdded(address who)
@@ -316,14 +316,14 @@ contract ModuleManagerBaseV1Test is Test {
     {
         types.assumeValidModule(who);
 
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
         vm.warp(block.timestamp + timelock);
-        moduleManager.executeAddModule(who);
+        moduleManager.call_executeAddModule(who);
 
         vm.expectRevert(
             IModuleManagerBase_v1.ModuleManagerBase__IsModule.selector
         );
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
     }
 
     function testInitiateAddModuleWithTimelock_FailsForInvalidAddress()
@@ -337,7 +337,7 @@ contract ModuleManagerBaseV1Test is Test {
                     .ModuleManagerBase__InvalidModuleAddress
                     .selector
             );
-            moduleManager.initiateAddModuleWithTimelock(invalids[i]);
+            moduleManager.call_initiateAddModuleWithTimelock(invalids[i]);
         }
     }
 
@@ -348,11 +348,11 @@ contract ModuleManagerBaseV1Test is Test {
         types.assumeValidModules(whos[:MAX_MODULES]);
 
         for (uint i; i < MAX_MODULES; ++i) {
-            moduleManager.initiateAddModuleWithTimelock(whos[i]);
+            moduleManager.call_initiateAddModuleWithTimelock(whos[i]);
             vm.warp(block.timestamp + timelock);
             vm.expectEmit(true, true, true, true);
             emit ModuleAdded(whos[i]);
-            moduleManager.executeAddModule(whos[i]);
+            moduleManager.call_executeAddModule(whos[i]);
 
             assertTrue(moduleManager.isModule(whos[i]));
         }
@@ -362,7 +362,7 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__ModuleAmountOverLimits
                 .selector
         );
-        moduleManager.initiateAddModuleWithTimelock(whos[MAX_MODULES]);
+        moduleManager.call_initiateAddModuleWithTimelock(whos[MAX_MODULES]);
     }
 
     //----------------------------------
@@ -376,12 +376,12 @@ contract ModuleManagerBaseV1Test is Test {
         types.assumeValidModule(who);
 
         // Setup add module
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
         vm.warp(block.timestamp + timelock);
-        moduleManager.executeAddModule(who);
+        moduleManager.call_executeAddModule(who);
 
         // Initiate removing module
-        moduleManager.initiateRemoveModuleWithTimelock(who);
+        moduleManager.call_initiateRemoveModuleWithTimelock(who);
 
         (, uint timelockUntil) = moduleManager.moduleAddressToTimelock(who);
 
@@ -397,7 +397,7 @@ contract ModuleManagerBaseV1Test is Test {
                 timelockUntil
             )
         );
-        moduleManager.executeRemoveModule(who);
+        moduleManager.call_executeRemoveModule(who);
     }
 
     function testExecuteRemoveModule_revertGivenTimelockStillActive(address who)
@@ -405,13 +405,13 @@ contract ModuleManagerBaseV1Test is Test {
     {
         types.assumeValidModule(who);
         // Setup add module
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
         vm.warp(block.timestamp + timelock);
-        moduleManager.executeAddModule(who);
+        moduleManager.call_executeAddModule(who);
         // Init setting module
-        moduleManager.initiateRemoveModuleWithTimelock(who);
+        moduleManager.call_initiateRemoveModuleWithTimelock(who);
         // Cancel setting module
-        moduleManager.cancelModuleUpdate(who);
+        moduleManager.call_cancelModuleUpdate(who);
 
         // Expect revert
         vm.expectRevert(
@@ -420,7 +420,7 @@ contract ModuleManagerBaseV1Test is Test {
                 .selector
         );
 
-        moduleManager.executeRemoveModule(who);
+        moduleManager.call_executeRemoveModule(who);
     }
 
     function testRemoveModules(address[] memory whos) public {
@@ -433,22 +433,22 @@ contract ModuleManagerBaseV1Test is Test {
 
         // Add modules.
         for (uint i; i < whos.length; ++i) {
-            moduleManager.initiateAddModuleWithTimelock(whos[i]);
+            moduleManager.call_initiateAddModuleWithTimelock(whos[i]);
             vm.warp(block.timestamp + timelock);
-            moduleManager.executeAddModule(whos[i]);
+            moduleManager.call_executeAddModule(whos[i]);
         }
 
         // Remove modules from the front until list is empty.
         for (uint i; i < whos.length; ++i) {
             module = whos[whos.length - i - 1];
 
-            moduleManager.initiateRemoveModuleWithTimelock(module);
+            moduleManager.call_initiateRemoveModuleWithTimelock(module);
             vm.warp(block.timestamp + timelock);
 
             vm.expectEmit(true, true, true, true);
             emit ModuleRemoved(module);
 
-            moduleManager.executeRemoveModule(module);
+            moduleManager.call_executeRemoveModule(module);
 
             assertTrue(!moduleManager.isModule(module));
         }
@@ -456,9 +456,9 @@ contract ModuleManagerBaseV1Test is Test {
 
         // Add modules again.
         for (uint i; i < whos.length; ++i) {
-            moduleManager.initiateAddModuleWithTimelock(whos[i]);
+            moduleManager.call_initiateAddModuleWithTimelock(whos[i]);
             vm.warp(block.timestamp + timelock);
-            moduleManager.executeAddModule(whos[i]);
+            moduleManager.call_executeAddModule(whos[i]);
         }
 
         // Remove modules from the back until list is empty.
@@ -466,13 +466,13 @@ contract ModuleManagerBaseV1Test is Test {
         for (uint i; i < whos.length; ++i) {
             module = whos[i];
 
-            moduleManager.initiateRemoveModuleWithTimelock(module);
+            moduleManager.call_initiateRemoveModuleWithTimelock(module);
             vm.warp(block.timestamp + timelock);
 
             vm.expectEmit(true, true, true, true);
             emit ModuleRemoved(module);
 
-            moduleManager.executeRemoveModule(module);
+            moduleManager.call_executeRemoveModule(module);
 
             assertTrue(!moduleManager.isModule(module));
         }
@@ -485,9 +485,9 @@ contract ModuleManagerBaseV1Test is Test {
     ) public {
         types.assumeValidModule(who);
 
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
         vm.warp(block.timestamp + timelock);
-        moduleManager.executeAddModule(who);
+        moduleManager.call_executeAddModule(who);
 
         moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
 
@@ -496,7 +496,7 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__CallerNotAuthorized
                 .selector
         );
-        moduleManager.initiateRemoveModuleWithTimelock(who);
+        moduleManager.call_initiateRemoveModuleWithTimelock(who);
     }
 
     function testExecuteRemoveModule_FailsIfCallerNotAuthorized(address who)
@@ -504,9 +504,9 @@ contract ModuleManagerBaseV1Test is Test {
     {
         types.assumeValidModule(who);
 
-        moduleManager.initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(who);
         vm.warp(block.timestamp + timelock);
-        moduleManager.executeAddModule(who);
+        moduleManager.call_executeAddModule(who);
 
         moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
 
@@ -515,7 +515,7 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__CallerNotAuthorized
                 .selector
         );
-        moduleManager.initiateRemoveModuleWithTimelock(who);
+        moduleManager.call_initiateRemoveModuleWithTimelock(who);
     }
 
     function testInitiateRemoveModuleWithTimelock_FailsIfNotModule(address who)
@@ -526,7 +526,7 @@ contract ModuleManagerBaseV1Test is Test {
         vm.expectRevert(
             IModuleManagerBase_v1.ModuleManagerBase__IsNotModule.selector
         );
-        moduleManager.initiateRemoveModuleWithTimelock(who);
+        moduleManager.call_initiateRemoveModuleWithTimelock(who);
     }
 
     //----------------------------------
@@ -555,7 +555,7 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__CallerNotAuthorized
                 .selector
         );
-        moduleManager.cancelModuleUpdate(who);
+        moduleManager.call_cancelModuleUpdate(who);
     }
 
     function testCancelModuleUpdate_failsGivenModuleUpdateNotInitated(
@@ -567,7 +567,7 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__ModuleUpdateAlreadyStarted
                 .selector
         );
-        moduleManager.cancelModuleUpdate(who);
+        moduleManager.call_cancelModuleUpdate(who);
     }
 
     function testCancelModuleUpdate_worksGivenCallerAuthorizedAndUpdateInitiated(
@@ -581,15 +581,15 @@ contract ModuleManagerBaseV1Test is Test {
             // Test canceling both adding and removing modules
             if (i % 2 == 0) {
                 // Test after initiating adding the module
-                moduleManager.initiateAddModuleWithTimelock(whos[i]);
+                moduleManager.call_initiateAddModuleWithTimelock(whos[i]);
             } else {
                 // Add module to pass isModule modifier check when initiating removal of module
-                moduleManager.initiateAddModuleWithTimelock(whos[i]);
+                moduleManager.call_initiateAddModuleWithTimelock(whos[i]);
                 vm.warp(block.timestamp + timelock);
-                moduleManager.executeAddModule(whos[i]);
+                moduleManager.call_executeAddModule(whos[i]);
 
                 // Test after initiating removing the module
-                moduleManager.initiateRemoveModuleWithTimelock(whos[i]);
+                moduleManager.call_initiateRemoveModuleWithTimelock(whos[i]);
             }
             // validate timelock is active
             (timelockActive,) = moduleManager.moduleAddressToTimelock(whos[i]);
@@ -598,7 +598,7 @@ contract ModuleManagerBaseV1Test is Test {
             // check for emit event
             vm.expectEmit(true, true, true, true, address(moduleManager));
             emit ModuleUpdateCanceled(whos[i]);
-            moduleManager.cancelModuleUpdate(whos[i]);
+            moduleManager.call_cancelModuleUpdate(whos[i]);
             // validate timelock has been set to inactive
             (timelockActive,) = moduleManager.moduleAddressToTimelock(whos[i]);
             assertFalse(timelockActive);

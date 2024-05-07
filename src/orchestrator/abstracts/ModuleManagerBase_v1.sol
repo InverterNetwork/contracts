@@ -201,9 +201,8 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // onlyOrchestratorOwner Functions
 
-    /// @inheritdoc IModuleManagerBase_v1
-    function cancelModuleUpdate(address module)
-        public
+    function _cancelModuleUpdate(address module)
+        internal
         __ModuleManager_onlyAuthorized
         updatingModuleAlreadyStarted(module)
     {
@@ -211,9 +210,8 @@ abstract contract ModuleManagerBase_v1 is
         emit ModuleUpdateCanceled(module);
     }
 
-    /// @inheritdoc IModuleManagerBase_v1
-    function initiateAddModuleWithTimelock(address module)
-        public
+    function _initiateAddModuleWithTimelock(address module)
+        internal
         __ModuleManager_onlyAuthorized
         moduleLimitNotExceeded
         isNotModule(module)
@@ -222,18 +220,16 @@ abstract contract ModuleManagerBase_v1 is
         _startModuleUpdateTimelock(module);
     }
 
-    /// @inheritdoc IModuleManagerBase_v1
-    function initiateRemoveModuleWithTimelock(address module)
-        public
+    function _initiateRemoveModuleWithTimelock(address module)
+        internal
         __ModuleManager_onlyAuthorized
         isModule_(module)
     {
         _startModuleUpdateTimelock(module);
     }
 
-    /// @inheritdoc IModuleManagerBase_v1
-    function executeAddModule(address module)
-        public
+    function _executeAddModule(address module)
+        internal
         __ModuleManager_onlyAuthorized
         updatingModuleAlreadyStarted(module)
         whenTimelockExpired(module)
@@ -244,9 +240,8 @@ abstract contract ModuleManagerBase_v1 is
         _commitAddModule(module);
     }
 
-    /// @inheritdoc IModuleManagerBase_v1
-    function executeRemoveModule(address module)
-        public
+    function _executeRemoveModule(address module)
+        internal
         __ModuleManager_onlyAuthorized
         updatingModuleAlreadyStarted(module)
         whenTimelockExpired(module)

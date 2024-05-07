@@ -29,6 +29,15 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice The given module is not used in the orchestrator
     error Orchestrator__DependencyInjection__ModuleNotUsedInOrchestrator();
 
+    /// @notice The Authorizer can not be removed through this function.
+    error Orchestrator__InvalidRemovalOfAuthorizer();
+
+    /// @notice The FundingManager can not be removed through this function.
+    error Orchestrator__InvalidRemovalOfFundingManager();
+
+    /// @notice The PaymentProcessor can not be removed through this function.
+    error Orchestrator__InvalidRemovalOfPaymentProcessor();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -128,6 +137,39 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
         external;
 
+    /// @notice Initiates the adding of a module to the Orchestrator on a timelock
+    /// @dev Only callable by authorized address.
+    /// @dev Fails of adding module exeeds max modules limit
+    /// @dev Fails if address invalid or address already added as module.
+    /// @param module The module address to add.
+    function initiateAddModuleWithTimelock(address module) external;
+
+    /// @notice Initiate the removal of a module from the Orchestrator on a timelock
+    /// @dev Reverts if module to be removed is the current authorizer/fundingManager/paymentProcessor.
+    ///         The functions specific to updating these 3 module categories should be used instead
+    /// @dev Only callable by authorized address.
+    /// @dev Fails if address not added as module.
+    function initiateRemoveModuleWithTimelock(address module) external;
+
+    /// @notice Adds address `module` as module.
+    /// @dev Only callable by authorized address.
+    /// @dev Fails if adding of module has not been initiated.
+    /// @dev Fails if timelock has not been expired yet.
+    /// @param module The module address to add.
+    function executeAddModule(address module) external;
+
+    /// @notice Removes address `module` as module.
+    /// @dev Only callable by authorized address.
+    /// @dev Fails if removing of module has not been initiated.
+    /// @dev Fails if timelock has not been expired yet.
+    /// @param module The module address to remove.
+    function executeRemoveModule(address module) external;
+
+    /// @notice Cancels an initiated update for a module. Can be adding or removing a module
+    ///         from the Orchestrator
+    /// @dev Only callable by authorized address.
+    /// @dev Fails if module update has not been initiated
+    function cancelModuleUpdate(address module) external;
     /// @notice Executes a call on target `target` with call data `data`.
     /// @dev Only callable by authorized caller.
     /// @param target The address to call.

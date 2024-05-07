@@ -81,38 +81,6 @@ interface IModuleManagerBase_v1 is IERC2771Context {
         external
         returns (bool, bytes memory);
 
-    /// @notice Initiates the adding of a module to the Orchestrator on a timelock
-    /// @dev Only callable by authorized address.
-    /// @dev Fails of adding module exeeds max modules limit
-    /// @dev Fails if address invalid or address already added as module.
-    /// @param module The module address to add.
-    function initiateAddModuleWithTimelock(address module) external;
-
-    /// @notice Initiate the removal of a module from the Orchestrator on a timelock
-    /// @dev Only callable by authorized address.
-    /// @dev Fails if address not added as module.
-    function initiateRemoveModuleWithTimelock(address module) external;
-
-    /// @notice Adds address `module` as module.
-    /// @dev Only callable by authorized address.
-    /// @dev Fails if adding of module has not been initiated.
-    /// @dev Fails if timelock has not been expired yet.
-    /// @param module The module address to add.
-    function executeAddModule(address module) external;
-
-    /// @notice Removes address `module` as module.
-    /// @dev Only callable by authorized address.
-    /// @dev Fails if removing of module has not been initiated.
-    /// @dev Fails if timelock has not been expired yet.
-    /// @param module The module address to remove.
-    function executeRemoveModule(address module) external;
-
-    /// @notice Cancels an initiated update for a module. Can be adding or removing a module
-    ///         from the Orchestrator
-    /// @dev Only callable by authorized address.
-    /// @dev Fails if module update has not been initiated
-    function cancelModuleUpdate(address module) external;
-
     /// @notice Returns whether the address `module` is added as module.
     /// @param module The module to check.
     /// @return True if module added, false otherwise.
