@@ -20,7 +20,14 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 //External Dependencies
-import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
+import {
+    ERC2771ContextUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
+import {
+    Ownable2StepUpgradeable,
+    Initializable
+} from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -41,7 +48,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
  */
 contract OrchestratorFactory_v1 is
     IOrchestratorFactory_v1,
-    ERC2771Context,
+    ERC2771ContextUpgradeable,
+    Ownable2StepUpgradeable,
     ERC165
 {
     function supportsInterface(bytes4 interfaceId)
@@ -56,16 +64,13 @@ contract OrchestratorFactory_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Immutables
-
-    /// @inheritdoc IOrchestratorFactory_v1
-    address public immutable override target;
-
-    /// @inheritdoc IOrchestratorFactory_v1
-    address public immutable override moduleFactory;
-
-    //--------------------------------------------------------------------------
     // Storage
+
+    /// @inheritdoc IOrchestratorFactory_v1
+    address public override target;
+
+    /// @inheritdoc IOrchestratorFactory_v1
+    address public override moduleFactory;
 
     /// @dev Maps the id to the orchestrators
     mapping(uint => address) private _orchestrators;
@@ -86,13 +91,21 @@ contract OrchestratorFactory_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Constructor
+    // Constructor & Initializer
 
-    constructor(
-        address target_,
-        address moduleFactory_,
-        address _trustedForwarder
-    ) ERC2771Context(_trustedForwarder) {
+    constructor(address _trustedForwarder)
+        ERC2771ContextUpgradeable(_trustedForwarder)
+    {}
+
+    /// @notice The factories initializer function.
+    /// @param governor_ The address of the governor contract.
+    /// @param target_ The address of the governor contract.
+    /// @param moduleFactory_ The address of the module factory contract.
+    function init(address governor_, address target_, address moduleFactory_)
+        external
+        initializer
+    {
+        __Ownable_init(governor_);
         target = target_;
         moduleFactory = moduleFactory_;
     }
@@ -225,5 +238,40 @@ contract OrchestratorFactory_v1 is
         } catch {
             return false;
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, ContextUpgradeable)
+        returns (address sender)
+    {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return ERC2771ContextUpgradeable._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, ContextUpgradeable)
+        returns (uint)
+    {
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }
