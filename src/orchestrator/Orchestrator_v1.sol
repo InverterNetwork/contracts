@@ -207,7 +207,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // onlyOrchestratorOwner Functions
 
     /// @inheritdoc IOrchestrator_v1
-    function setAuthorizer(IAuthorizer_v1 authorizer_)
+    function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 authorizer_)
         external
         onlyOrchestratorOwner
     {
@@ -222,20 +222,36 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                     authorizerContract, authorizerInterfaceId
                 )
         ) {
-            addModule(address(authorizer_));
-            removeModule(address(authorizer));
-            authorizer = authorizer_;
-            emit AuthorizerUpdated(address(authorizer_));
+            _initiateAddModuleWithTimelock(authorizerContract);
+            _initiateRemoveModuleWithTimelock(address(authorizer));
         } else {
             revert Orchestrator__InvalidModuleType(address(authorizer_));
         }
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function setFundingManager(IFundingManager_v1 fundingManager_)
+    function executeSetAuthorizer(IAuthorizer_v1 authorizer_)
         external
         onlyOrchestratorOwner
     {
+        _executeAddModule(address(authorizer_));
+        _executeRemoveModule(address(authorizer));
+        authorizer = authorizer_;
+        emit AuthorizerUpdated(address(authorizer_));
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_)
+        external
+        onlyOrchestratorOwner
+    {
+        _cancelModuleUpdate(address(authorizer_));
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function initiateSetFundingManagerWithTimelock(
+        IFundingManager_v1 fundingManager_
+    ) external onlyOrchestratorOwner {
         address fundingManagerContract = address(fundingManager_);
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         bytes4 fundingManagerInterfaceId = type(IFundingManager_v1).interfaceId;
@@ -247,20 +263,36 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                     fundingManagerContract, fundingManagerInterfaceId
                 )
         ) {
-            addModule(address(fundingManager_));
-            removeModule(address(fundingManager));
-            fundingManager = fundingManager_;
-            emit FundingManagerUpdated(address(fundingManager_));
+            _initiateAddModuleWithTimelock(address(fundingManager_));
+            _initiateRemoveModuleWithTimelock(address(fundingManager));
         } else {
             revert Orchestrator__InvalidModuleType(address(fundingManager_));
         }
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function setPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
+    function executeSetFundingManager(IFundingManager_v1 fundingManager_)
         external
         onlyOrchestratorOwner
     {
+        _executeAddModule(address(fundingManager_));
+        _executeRemoveModule(address(fundingManager));
+        fundingManager = fundingManager_;
+        emit FundingManagerUpdated(address(fundingManager_));
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
+        external
+        onlyOrchestratorOwner
+    {
+        _cancelModuleUpdate(address(fundingManager_));
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function initiateSetPaymentProcessorWithTimelock(
+        IPaymentProcessor_v1 paymentProcessor_
+    ) external onlyOrchestratorOwner {
         address paymentProcessorContract = address(paymentProcessor_);
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         bytes4 paymentProcessorInterfaceId =
@@ -273,13 +305,66 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                     paymentProcessorContract, paymentProcessorInterfaceId
                 )
         ) {
-            addModule(address(paymentProcessor_));
-            removeModule(address(paymentProcessor));
-            paymentProcessor = paymentProcessor_;
-            emit PaymentProcessorUpdated(address(paymentProcessor_));
+            _initiateAddModuleWithTimelock(address(paymentProcessor_));
+            _initiateRemoveModuleWithTimelock(address(paymentProcessor));
         } else {
             revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
         }
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
+        external
+        onlyOrchestratorOwner
+    {
+        _executeAddModule(address(paymentProcessor_));
+        _executeRemoveModule(address(paymentProcessor));
+        paymentProcessor = paymentProcessor_;
+        emit PaymentProcessorUpdated(address(paymentProcessor_));
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function cancelPaymentProcessorUpdate(
+        IPaymentProcessor_v1 paymentProcessor_
+    ) external onlyOrchestratorOwner {
+        _cancelModuleUpdate(address(paymentProcessor_));
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function cancelModuleUpdate(address module_) external {
+        _cancelModuleUpdate(module_);
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function initiateAddModuleWithTimelock(address module_) external {
+        _initiateAddModuleWithTimelock(module_);
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function initiateRemoveModuleWithTimelock(address module_) external {
+        // Revert given module to be removed is equal to current authorizer
+        if (module_ == address(authorizer)) {
+            revert Orchestrator__InvalidRemovalOfAuthorizer();
+        }
+        // Revert given module to be removed is equal to current fundingManager
+        if (module_ == address(fundingManager)) {
+            revert Orchestrator__InvalidRemovalOfFundingManager();
+        }
+        // Revert given module to be removed is equal to current paymentProcessor
+        if (module_ == address(paymentProcessor)) {
+            revert Orchestrator__InvalidRemovalOfPaymentProcessor();
+        }
+        _initiateRemoveModuleWithTimelock(module_);
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function executeAddModule(address module_) external {
+        _executeAddModule(module_);
+    }
+
+    /// @inheritdoc IOrchestrator_v1
+    function executeRemoveModule(address module_) external {
+        _executeRemoveModule(module_);
     }
 
     /// @inheritdoc IOrchestrator_v1
