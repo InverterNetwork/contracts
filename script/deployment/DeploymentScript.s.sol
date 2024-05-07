@@ -309,7 +309,7 @@ contract DeploymentScript is Script {
 
         //Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
-            orchestrator, moduleFactory, forwarder
+            address(governor), orchestrator, moduleFactory, forwarder
         );
 
         console2.log(
