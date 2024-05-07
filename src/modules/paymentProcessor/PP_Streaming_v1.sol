@@ -19,6 +19,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // External Dependencies
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
+// External Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
 /**
  * @title   Linear Streaming Payment Processor
  *
@@ -44,6 +47,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             || super.supportsInterface(interfaceId);
     }
 
+    using SafeERC20 for IERC20;
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -58,11 +63,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice tracks all walletIds for payments that could not be made to the paymentReceiver due to any reason
     /// @dev paymentClient => paymentReceiver => walletId array
-    mapping(address => mapping(address => uint[])) private unclaimableWalletIds;
+    mapping(address => mapping(address => uint[])) internal unclaimableWalletIds;
 
     /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
     /// @dev paymentClient => paymentReceiver => vestingWalletID => unclaimable Amount
-    mapping(address => mapping(address => mapping(uint => uint))) private
+    mapping(address => mapping(address => mapping(uint => uint))) internal
         unclaimableAmountsForWalletId;
 
     /// @notice list of addresses with open payment Orders per paymentClient
@@ -125,7 +130,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function claimPreviouslyUnclaimable(address client, address receiver)
         external
     {
-        //@todo add test
         if (unclaimable(client, _msgSender()) == 0) {
             revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
         }
@@ -528,10 +532,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
 
         uint remainingReleasable = vestings[client][paymentReceiver][walletId] //The whole salary
-            ._salary - vestings[client][paymentReceiver][walletId]._released //Minus what has already been "released"
-            //"released" does not include the unclaimable amount of the specific wallet
-            //this works under the assumption that with the deletion of this specific wallet id the unclaimableAmountsForWalletId cannot be raised anymore;
-            + unclaimableAmountsForWalletId[client][paymentReceiver][walletId];
+            ._salary - vestings[client][paymentReceiver][walletId]._released; //Minus what has already been "released"
 
         //In case there is still something to be released
         if (remainingReleasable > 0) {
@@ -718,12 +719,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @dev assumes that the walletId array is not empty
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
-    function _claimPreviouslyUnclaimable( //@todo test
-    address client, address paymentReceiver)
-        internal
-    {
-        address _token = address(token());
-
+    function _claimPreviouslyUnclaimable(
+        address client,
+        address paymentReceiver
+    ) internal {
         //get amount
 
         uint amount;
@@ -741,10 +740,12 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         //As all of the wallet ids should have been claimed we can delete the wallet id array
         delete unclaimableWalletIds[client][sender];
 
-        //Call has to succeed otherwise no state change
-        IERC20(_token).transferFrom(client, paymentReceiver, amount);
+        IERC20 _token = token();
 
-        emit TokensReleased(paymentReceiver, _token, amount);
+        //Call has to succeed otherwise no state change
+        _token.safeTransferFrom(client, paymentReceiver, amount);
+
+        emit TokensReleased(paymentReceiver, address(_token), amount);
 
         //Make sure to let paymentClient know that amount doesnt have to be stored anymore
         IERC20PaymentClientBase_v1(client).amountPaid(amount);

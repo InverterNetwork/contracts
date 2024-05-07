@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -22,6 +23,10 @@ import {
 } from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 
 // Mocks
+
+import {PP_Streaming_v1AccessMock} from
+    "test/utils/mocks/modules/paymentProcessor/PP_Streaming_v1AccessMock.sol";
+
 import {
     IERC20PaymentClientBase_v1,
     ERC20PaymentClientBaseV1Mock
@@ -30,12 +35,13 @@ import {
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract PP_StreamingV1Test is ModuleTest {
+contract PP_StreamingV1Test is //@note do we want to do anything about these tests?
+    ModuleTest {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT
-    PP_Streaming_v1 paymentProcessor;
+    PP_Streaming_v1AccessMock paymentProcessor;
 
     // Mocks
     ERC20PaymentClientBaseV1Mock paymentClient;
@@ -92,9 +98,20 @@ contract PP_StreamingV1Test is ModuleTest {
         uint walletId
     );
 
+    event UnclaimableAmountAdded(
+        address indexed paymentClient,
+        address recipient,
+        uint walletId,
+        uint amount
+    );
+
+    event TokensReleased(
+        address indexed recipient, address indexed token, uint amount
+    );
+
     function setUp() public {
-        address impl = address(new PP_Streaming_v1());
-        paymentProcessor = PP_Streaming_v1(Clones.clone(impl));
+        address impl = address(new PP_Streaming_v1AccessMock());
+        paymentProcessor = PP_Streaming_v1AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 
@@ -1226,6 +1243,115 @@ contract PP_StreamingV1Test is ModuleTest {
         }
     }
 
+    function testClaimPreviouslyUnclaimable(address[] memory recipients)
+        public
+    {
+        vm.assume(recipients.length < 30);
+
+        for (uint i = 0; i < recipients.length; i++) {
+            //If recipient is invalid change it
+            if (
+                recipients[i] == address(0)
+                    || recipients[i] == address(_orchestrator)
+                    || recipients[i] == address(paymentProcessor)
+            ) recipients[i] = address(0x1);
+        }
+
+        // transfers will fail by returning false now
+        _token.toggleReturnFalse();
+
+        // Add payment order to client and call processPayments.
+
+        for (uint i = 0; i < recipients.length; i++) {
+            paymentClient.addPaymentOrder(
+                IERC20PaymentClientBase_v1.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: 1,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp
+                })
+            );
+            vm.prank(address(paymentClient));
+            paymentProcessor.processPayments(paymentClient);
+
+            //Immediately claim
+            //This should shift right into unclaimable
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+        }
+
+        // transfers will not fail anymore
+        _token.toggleReturnFalse();
+
+        uint amount;
+        address recipient;
+        uint amountPaid;
+        for (uint i = 0; i < recipients.length; i++) {
+            recipient = recipients[i];
+
+            //Check that recipients are not handled twice
+            if (recipientsHandled[recipient]) continue;
+            recipientsHandled[recipient] = true;
+
+            amount =
+                paymentProcessor.unclaimable(address(paymentClient), recipient);
+
+            //Grab Unclaimable Wallet Ids array
+            uint[] memory ids = paymentProcessor.getUnclaimableWalletIds(
+                address(paymentClient), recipient
+            );
+
+            //Do call
+            vm.expectEmit(true, true, true, true);
+            emit TokensReleased(recipient, address(_token), amount);
+
+            vm.prank(recipient);
+            paymentProcessor.claimPreviouslyUnclaimable(
+                address(paymentClient), recipient
+            );
+
+            //Unclaimable amount for Wallet Ids empty (mapping)
+            for (uint j = 0; j < ids.length; j++) {
+                assertEq(
+                    paymentProcessor.getUnclaimableAmountForWalletIds(
+                        address(paymentClient), recipient, ids[j]
+                    ),
+                    0
+                );
+            }
+
+            //Check Unclaimable Wallet Ids array empty
+            assertEq(
+                paymentProcessor.getUnclaimableWalletIds(
+                    address(paymentClient), recipient
+                ).length,
+                0
+            );
+
+            //Amount send
+            assertEq(_token.balanceOf(recipient), amount);
+
+            //Check that amountPaid is correct in PaymentClient
+            amountPaid += amount;
+            assertEq(paymentClient.amountPaidCounter(), amountPaid);
+        }
+    }
+
+    mapping(address => bool) recipientsHandled;
+
+    function testClaimPreviouslyUnclaimableFailsIfNothingToClaim() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPP_Streaming_v1.Module__PP_Streaming__NothingToClaim.selector,
+                address(paymentClient),
+                address(this)
+            )
+        );
+        paymentProcessor.claimPreviouslyUnclaimable(
+            address(paymentClient), address(0x1)
+        );
+    }
+
     //This test creates a new set of payments in a client which finished all running payments. one possible case would be a orchestrator that finishes all milestones succesfully and then gets "restarted" some time later
     function testUpdateFinishedPayments(
         address[] memory recipients,
@@ -1302,6 +1428,12 @@ contract PP_StreamingV1Test is ModuleTest {
 
         // FF 25% and claim.
         vm.warp(block.timestamp + duration / 4);
+
+        vm.expectEmit(true, true, true, true);
+        emit UnclaimableAmountAdded(
+            address(paymentClient), recipient, 1, amount / 4
+        );
+
         vm.prank(recipient);
         paymentProcessor.claimAll(address(paymentClient));
 
