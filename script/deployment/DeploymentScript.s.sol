@@ -44,6 +44,9 @@ import {DeployVotingRoleManager_v1} from
     "script/modules/utils/DeployVotingRoleManager_v1.s.sol";
 import {DeployMetadataManager} from "script/utils/DeployMetadataManager.s.sol";
 
+// Import external contracts:
+import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
+
 contract DeploymentScript is Script {
     error BeaconProxyDeploymentFailed();
 
@@ -246,12 +249,16 @@ contract DeploymentScript is Script {
     /// @notice Deploys all necessary factories, beacons and implementations
     /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
-        //Fetch the deployer address
-        address deployer = vm.addr(vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY"));
+        // Fetch the deployer details
+        uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+        address deployer = vm.addr(deployerPrivateKey);
 
         //Fetch the Multisig addresses
         address communityMultisig = vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
         address teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
+
+        // Fetch the treasury address
+        address treasury = vm.envAddress("TREASURY_ADDRESS");
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -269,7 +276,7 @@ contract DeploymentScript is Script {
 
         feeManager = deployFeeManager.run(
             address(governor), //owner
-            communityMultisig, //@note This is not the real target is it?
+            treasury, //treasury
             100, //Collateral Fee 1%
             100 //Issuance Fee 1%
         );
@@ -305,11 +312,11 @@ contract DeploymentScript is Script {
         console2.log("Deploy factory implementations \n");
 
         //Deploy module factory v1 implementation
-        moduleFactory = deployModuleFactory.run(address(governor), forwarder);
+        moduleFactory = deployModuleFactory.run(deployer, forwarder);
 
         //Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
-            address(governor), orchestrator, moduleFactory, forwarder
+            deployer, orchestrator, moduleFactory, forwarder
         );
 
         console2.log(
@@ -346,14 +353,14 @@ contract DeploymentScript is Script {
         // Funding Manager
         rebasingFundingManagerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
+            deployer,
             rebasingFundingManager,
             moduleFactory,
             rebasingFundingManagerMetadata
         );
         bancorBondingCurveFundingManagerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
+            deployer,
             bancorBondingCurveFundingManager,
             moduleFactory,
             bancorVirtualSupplyBondingCurveFundingManagerMetadata
@@ -361,14 +368,11 @@ contract DeploymentScript is Script {
         // Authorizer
         roleAuthorizerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
-            roleAuthorizer,
-            moduleFactory,
-            roleAuthorizerMetadata
+            deployer, roleAuthorizer, moduleFactory, roleAuthorizerMetadata
         );
         tokenGatedRoleAuthorizerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
+            deployer,
             tokenGatedRoleAuthorizer,
             moduleFactory,
             tokenGatedRoleAuthorizerMetadata
@@ -376,14 +380,14 @@ contract DeploymentScript is Script {
         // Payment Processor
         simplePaymentProcessorBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
+            deployer,
             simplePaymentProcessor,
             moduleFactory,
             simplePaymentProcessorMetadata
         );
         streamingPaymentProcessorBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
+            deployer,
             streamingPaymentProcessor,
             moduleFactory,
             streamingPaymentProcessorMetadata
@@ -391,14 +395,11 @@ contract DeploymentScript is Script {
         // Logic Module
         bountyManagerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
-            bountyManager,
-            moduleFactory,
-            bountyManagerMetadata
+            deployer, bountyManager, moduleFactory, bountyManagerMetadata
         );
         recurringPaymentManagerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
+            deployer,
             recurringPaymentManager,
             moduleFactory,
             recurringPaymentManagerMetadata
@@ -407,18 +408,52 @@ contract DeploymentScript is Script {
         // Utils
         singleVoteGovernorBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
+            deployer,
             singleVoteGovernor,
             moduleFactory,
             singleVoteGovernorMetadata
         );
         metadataManagerBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            address(governor),
-            metadataManager,
-            moduleFactory,
-            metadataManagerMetadata
+            deployer, metadataManager, moduleFactory, metadataManagerMetadata
         );
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+
+        // Transfer Ownership of all contracts
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            Ownable2Step(rebasingFundingManagerBeacon).transferOwnership(
+                governor
+            );
+            Ownable2Step(bancorBondingCurveFundingManagerBeacon)
+                .transferOwnership(governor);
+            Ownable2Step(roleAuthorizerBeacon).transferOwnership(governor);
+            Ownable2Step(tokenGatedRoleAuthorizerBeacon).transferOwnership(
+                governor
+            );
+            Ownable2Step(simplePaymentProcessorBeacon).transferOwnership(
+                governor
+            );
+            Ownable2Step(streamingPaymentProcessorBeacon).transferOwnership(
+                governor
+            );
+            Ownable2Step(bountyManagerBeacon).transferOwnership(governor);
+            Ownable2Step(recurringPaymentManagerBeacon).transferOwnership(
+                governor
+            );
+            Ownable2Step(singleVoteGovernorBeacon).transferOwnership(governor);
+            Ownable2Step(metadataManagerBeacon).transferOwnership(governor);
+
+            Ownable2Step(orchestratorFactory).transferOwnership(governor);
+            Ownable2Step(moduleFactory).transferOwnership(governor);
+        }
+        vm.stopBroadcast();
+
+        console2.log("Transferred ownership of all contract to Governor \n");
 
         return (orchestratorFactory);
     }
