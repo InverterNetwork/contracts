@@ -233,20 +233,36 @@ abstract contract Module_v1 is
     //--------------------------------------------------------------------------
     // Role Management
 
-    function grantModuleRole(bytes32 role, address addr)
+    function grantModuleRole(bytes32 role, address target)
         external
         onlyOrchestratorOwner
     {
         IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.grantRoleFromModule(role, addr);
+        roleAuthorizer.grantRoleFromModule(role, target);
     }
 
-    function revokeModuleRole(bytes32 role, address addr)
+    function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
         onlyOrchestratorOwner
     {
         IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.revokeRoleFromModule(role, addr);
+        roleAuthorizer.grantRoleFromModuleBatched(role, targets);
+    }
+
+    function revokeModuleRole(bytes32 role, address target)
+        external
+        onlyOrchestratorOwner
+    {
+        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
+        roleAuthorizer.revokeRoleFromModule(role, target);
+    }
+
+    function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
+        external
+        onlyOrchestratorOwner
+    {
+        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
+        roleAuthorizer.revokeRoleFromModuleBatched(role, targets);
     }
 
     //--------------------------------------------------------------------------
