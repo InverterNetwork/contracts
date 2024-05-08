@@ -701,7 +701,21 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 client, paymentReceiver, walletId, amount
             );
             //Adds the walletId to the array of unclaimable wallet ids
-            unclaimableWalletIds[client][paymentReceiver].push(walletId);
+
+            uint[] memory ids = unclaimableWalletIds[client][paymentReceiver];
+            bool containsId = false;
+
+            for (uint i = 0; i < ids.length; i++) {
+                if (walletId == ids[i]) {
+                    containsId = true;
+                    break;
+                }
+            }
+            //If it doesnt contain id than add it to array
+            if (!containsId) {
+                unclaimableWalletIds[client][paymentReceiver].push(walletId);
+            }
+
             unclaimableAmountsForWalletId[client][paymentReceiver][walletId] +=
                 amount;
         }
