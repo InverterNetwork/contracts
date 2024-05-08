@@ -1669,7 +1669,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     //      - Mints collateral tokens to a seller and
     //      - Deposits them so they can later be sold.
     //      - Approves the BondingCurve contract to spend the receipt tokens
-    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
+    // This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
     function _prepareSellConditions(address seller, uint amount)
         internal
         returns (uint userSellAmount)
