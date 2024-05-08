@@ -53,7 +53,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev Base Points used for percentage calculation. This value represents 100%
     uint internal constant BPS = 10_000;
-    
+
     /// @dev The token the Curve will mint and burn from
     IERC20Issuance_v1 internal issuanceToken;
 
@@ -123,11 +123,38 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @inheritdoc IBondingCurveBase_v1
     function calculatePurchaseReturn(uint _depositAmount)
-        external
+        public
         virtual
         returns (uint mintAmount)
     {
-        return _calculatePurchaseReturn(_depositAmount);
+        if (_depositAmount == 0) {
+            revert Module__BondingCurveBase__InvalidDepositAmount();
+        }
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        ) = _getBuyFeesAndTreasuryAddresses();
+
+        // Deduct protocol and project buy fee from collateral, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            _depositAmount, collateralBuyFeePercentage, buyFee
+        );
+
+        // Calculate issuance token return from formula
+        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol buy fee from issuance, if applicable
+        (mintAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
+
+        // Return expected purchase return amount
+        //return mintAmount;
     }
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -144,7 +171,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Public Functions
 
     /// @notice Returns the address of the issuance token
-    function getIssuanceToken() public view virtual returns (address) {
+    function getIssuanceToken() external view virtual returns (address) {
         return address(issuanceToken);
     }
 
@@ -277,7 +304,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;
     }
-
+    /*
     /// @dev Calculates the net amount after fee deduction and the fee amount based on
     /// a transaction amount and a specified fee percentage.
     /// @param _transactionAmount The amount involved in the transaction before fee deduction.
@@ -297,6 +324,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Calculate net amount after fee deduction
         netAmount = _transactionAmount - feeAmount;
     }
+    */
 
     /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
     ///     buy operations
@@ -332,7 +360,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         uint _protocolFee,
         uint _workflowFee
     )
-        public
+        internal
         pure
         returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
     {
@@ -373,7 +401,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         _mint(_treasury, _feeAmount);
         emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
     }
-
+    /*
     /// @dev This function takes into account any applicable buy fees before computing the
     /// token amount to be minted. Revert when depositAmount is zero.
     /// @param _depositAmount The amount of tokens deposited by the user.
@@ -388,30 +416,30 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
         // Get protocol fee percentages
         (
-            /* collateralreasury */
+            /* collateralreasury 
             ,
-            /* issuanceTreasury */
+             issuanceTreasury */
+    /*
             ,
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
         ) = _getBuyFeesAndTreasuryAddresses();
 
         // Deduct protocol and project buy fee from collateral, if applicable
-        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
-        _calculateNetAndSplitFees(
+        (_depositAmount, /* protocolFeeAmount ,  workflowFeeAmount */
+    /* ) =
+            _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
-        );
-
-        // Calculate issuance token return from formula
-        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
-
-        // Deduct protocol buy fee from issuance, if applicable
-        (mintAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+            );
+            // Calculate issuance token return from formula
+            mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+            // Deduct protocol buy fee from issuance, if applicable
+            (mintAmount, /* protocolFeeAmount ,  workflowFeeAmount */
+    /*) =
             _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
-
         // Return expected purchase return amount
         //return mintAmount;
-    }
+        }*/
 
     /// @dev Sets the issuance token for the FundingManager.
     /// This function updates the `issuanceToken` state variable and should be be overriden by
@@ -420,7 +448,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function _setIssuanceToken(address _issuanceToken) internal virtual {
         emit IssuanceTokenUpdated(address(issuanceToken), _issuanceToken);
         issuanceToken = IERC20Issuance_v1(_issuanceToken);
-        
     }
 
     /// @dev Witdraw project collateral fee amount to  to receiver.

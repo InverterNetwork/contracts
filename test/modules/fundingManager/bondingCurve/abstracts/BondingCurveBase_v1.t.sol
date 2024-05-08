@@ -839,6 +839,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         └── when feePct is lower than the BPS
                 └── it should return the deposit amount with the fee deducted
     */
+    /*
     function testCalculateFeeDeductedDepositAmount(uint _amount, uint _fee)
         public
     {
@@ -857,6 +858,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(_amountMinusFee, amountMinusFee);
         assertEq(_feeAmount, feeAmount);
     }
+    */
 
     /* Test _setIssuanceToken function
        

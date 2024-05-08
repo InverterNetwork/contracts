@@ -82,7 +82,9 @@ abstract contract Module_v1 is
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Orchestrator_v1.
     modifier onlyOrchestratorOwner() {
-        _checkRoleModifier(__Module_orchestrator.authorizer().getOwnerRole(), _msgSender());
+        _checkRoleModifier(
+            __Module_orchestrator.authorizer().getOwnerRole(), _msgSender()
+        );
         _;
     }
 
@@ -95,9 +97,12 @@ abstract contract Module_v1 is
 
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
-        _checkRoleModifier(__Module_orchestrator.authorizer().generateRoleId(
-                    address(this), role
-                ), _msgSender());
+        _checkRoleModifier(
+            __Module_orchestrator.authorizer().generateRoleId(
+                address(this), role
+            ),
+            _msgSender()
+        );
         _;
     }
 
@@ -299,17 +304,9 @@ abstract contract Module_v1 is
         }
     }
 
-    function _checkRoleModifier(bytes32 role, address addr)
-        internal
-        view
-    {
-        if (
-            !__Module_orchestrator.authorizer().hasRole(role, addr)
-        ) {
-            revert Module__CallerNotAuthorized(
-                role,
-                addr
-            );
+    function _checkRoleModifier(bytes32 role, address addr) internal view {
+        if (!__Module_orchestrator.authorizer().hasRole(role, addr)) {
+            revert Module__CallerNotAuthorized(role, addr);
         }
     }
 
@@ -329,18 +326,13 @@ abstract contract Module_v1 is
         }
     }
 
-    function _onlyOrchestratorModifier()
-        internal
-        view
-    {
+    function _onlyOrchestratorModifier() internal view {
         if (_msgSender() != address(__Module_orchestrator)) {
             revert Module__OnlyCallableByOrchestrator();
         }
     }
 
-    function _initializer2Modifier()
-        internal
-    {
+    function _initializer2Modifier() internal {
         if (__Module_initialization) {
             revert Module__CannotCallInit2Again();
         }

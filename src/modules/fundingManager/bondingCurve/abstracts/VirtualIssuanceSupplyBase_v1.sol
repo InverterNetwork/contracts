@@ -49,7 +49,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
 
     /// @inheritdoc IVirtualIssuanceSupplyBase_v1
     function getVirtualIssuanceSupply() external view virtual returns (uint) {
-        return _getVirtualIssuanceSupply();
+        return virtualIssuanceSupply;
     }
 
     //--------------------------------------------------------------------------
@@ -105,9 +105,9 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
         virtualIssuanceSupply = _virtualSupply;
     }
 
-    /// @dev Internal view function to return the current virtual issuance supply.
+    /* /// @dev Internal view function to return the current virtual issuance supply.
     /// @return The current virtual issuance supply as a uint.
     function _getVirtualIssuanceSupply() internal view returns (uint) {
         return virtualIssuanceSupply;
-    }
+    }*/
 }

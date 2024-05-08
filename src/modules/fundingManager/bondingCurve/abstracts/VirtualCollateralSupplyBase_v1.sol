@@ -53,7 +53,7 @@ abstract contract VirtualCollateralSupplyBase_v1 is
         virtual
         returns (uint)
     {
-        return _getVirtualCollateralSupply();
+        return virtualCollateralSupply;
     }
 
     //--------------------------------------------------------------------------
@@ -110,9 +110,9 @@ abstract contract VirtualCollateralSupplyBase_v1 is
         virtualCollateralSupply = _virtualSupply;
     }
 
-    /// @dev Internal view function to return the current virtual collateral supply.
+    /*  /// @dev Internal view function to return the current virtual collateral supply.
     /// @return The current virtual collateral supply as a uint.
     function _getVirtualCollateralSupply() internal view returns (uint) {
         return virtualCollateralSupply;
-    }
+    }*/
 }

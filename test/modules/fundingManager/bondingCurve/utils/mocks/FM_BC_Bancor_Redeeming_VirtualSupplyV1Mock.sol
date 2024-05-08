@@ -10,7 +10,8 @@ import {IOrchestrator_v1} from
 // SuT
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    FM_BC_Tools
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -54,7 +55,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         _setIssuanceToken(_newIssuanceToken);
     }
 
- /*   function call_staticPricePPM(
+    /*   function call_staticPricePPM(
         uint _issuanceSupply,
         uint _collateralSupply,
         uint32 _reserveRatio
@@ -68,7 +69,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         uint8 _tokenDecimals,
         uint8 _requiredDecimals
     ) external pure returns (uint) {
-        return _convertAmountToRequiredDecimal(
+        return FM_BC_Tools._convertAmountToRequiredDecimal(
             _amount, _tokenDecimals, _requiredDecimals
         );
     }
@@ -83,8 +84,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         view
         returns (uint)
     {
-        uint decimalConvertedVirtualIssuanceSupply =
-        _convertAmountToRequiredDecimal(
+        uint decimalConvertedVirtualIssuanceSupply = FM_BC_Tools
+            ._convertAmountToRequiredDecimal(
             virtualIssuanceSupply, issuanceTokenDecimals, 18
         );
         return decimalConvertedVirtualIssuanceSupply;
@@ -96,8 +97,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         view
         returns (uint)
     {
-        uint decimalConvertedVirtualCollateralSupply =
-        _convertAmountToRequiredDecimal(
+        uint decimalConvertedVirtualCollateralSupply = FM_BC_Tools
+            ._convertAmountToRequiredDecimal(
             virtualCollateralSupply, collateralTokenDecimals, 18
         );
         return decimalConvertedVirtualCollateralSupply;

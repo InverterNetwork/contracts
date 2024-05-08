@@ -104,11 +104,39 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function calculateSaleReturn(uint _depositAmount)
-        external
+        public
         virtual
         returns (uint redeemAmount)
     {
-        return _calculateSaleReturn(_depositAmount);
+        if (_depositAmount == 0) {
+            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
+        }
+
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        ) = _getSellFeesAndTreasuryAddresses();
+
+        // Deduct protocol sell fee from issuance, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
+
+        // Calculate redeem amount from formula
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol and project sell fee from collateral, if applicable
+        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            redeemAmount, collateralSellFeePercentage, sellFee
+        );
+
+        // Return redeem amount
+        //return redeemAmount;
     }
 
     //--------------------------------------------------------------------------
@@ -294,7 +322,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
         );
     }
-
+    /*
     /// @dev This function takes into account any applicable sell fees before computing the
     /// collateral amount to be redeemed. Revert when depositAmount is zero.
     /// @param _depositAmount The amount of tokens deposited by the user.
@@ -310,28 +338,30 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Get protocol fee percentages
         (
-            /* collateralreasury */
+            /* collateralreasury 
             ,
-            /* issuanceTreasury */
+             issuanceTreasury */
+    /*
             ,
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
         ) = _getSellFeesAndTreasuryAddresses();
 
         // Deduct protocol sell fee from issuance, if applicable
-        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        (_depositAmount, /* protocolFeeAmount , workflowFeeAmount */
+    /* ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
 
         // Calculate redeem amount from formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
 
         // Deduct protocol and project sell fee from collateral, if applicable
-        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
-        _calculateNetAndSplitFees(
+        (redeemAmount, /* protocolFeeAmount ,  workflowFeeAmount */
+    /* ) =
+            _calculateNetAndSplitFees(
             redeemAmount, collateralSellFeePercentage, sellFee
-        );
-
-        // Return redeem amount
-        //return redeemAmount;
-    }
+            );
+            // Return redeem amount
+            //return redeemAmount;
+            }*/
 }

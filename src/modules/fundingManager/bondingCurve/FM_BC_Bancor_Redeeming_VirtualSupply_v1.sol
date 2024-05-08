@@ -36,6 +36,101 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
+library FM_BC_Tools {
+    error Module__BondingCurveBase__FeeAmountToHigh();
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
+
+    /*     /// @dev Calculates the static price for either selling or buying the issuance token,
+    /// based on the provided issuance token supply, collateral supply, and buy or sell reserve ratio.
+    /// Note: The reserve ratio specifies whether the sell or buy price is returned.
+    /// The formula used is: PPM * PPM * collateralSupply / (issuanceTokenSupply * reserveRatio).
+    /// The formula is based on Aragon's BatchedBancorMarketMaker, which can be found here:
+    /// https://github.com/AragonBlack/fundraising/blob/5ad1332955bab9d36cfad345ae92b7ad7dc0bdbe/apps/batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol#L415
+    /// @param _issuanceSupply The total supply of the issuance tokens.
+    /// @param _collateralSupply The total supply of the collateral held by the FundingManager.
+    /// @param _reserveRatio The reserve ratio, specified as either sell or buy reserve ratio.
+    /// @return uint The calculated static price for the specified operation, formatted in PPM
+    function _staticPricePPM(
+        uint32 PPM,
+        uint _issuanceSupply,
+        uint _collateralSupply,
+        uint32 _reserveRatio
+    ) internal pure returns (uint) {
+        return uint(PPM) * uint(PPM) * _collateralSupply
+            / (_issuanceSupply * uint(_reserveRatio));
+    }*/
+
+    /// @dev Converts an amount to a required decimal representation.
+    /// This function is useful for handling tokens with different decimal places.
+    /// It takes care of both upscaling and downscaling the decimals based on the required decimals.
+    ///
+    /// @param _amount The amount to be converted.
+    /// @param _tokenDecimals The current decimal places of the token.
+    /// @param _requiredDecimals The required decimal places for the token.
+    ///
+    /// @return The converted amount with required decimal places.
+    function _convertAmountToRequiredDecimal(
+        uint _amount,
+        uint8 _tokenDecimals,
+        uint8 _requiredDecimals
+    ) internal pure returns (uint) {
+        // If the token decimal is the same as required decimal, return amount
+        if (_tokenDecimals == _requiredDecimals) {
+            return _amount;
+        }
+        // If the decimal of token is > required decimal, calculate conversion rate and
+        // return amount converted to required decimal
+        if (_tokenDecimals > _requiredDecimals) {
+            uint conversionFactor = (10 ** (_tokenDecimals - _requiredDecimals));
+            return (_amount / conversionFactor);
+        } else {
+            // If the decimal of token is < required decimal, calculate conversion rate and
+            // return amount converted to required decimals
+            uint conversionFactor = (10 ** (_requiredDecimals - _tokenDecimals));
+            return (_amount * conversionFactor);
+        }
+    }
+    /*
+        /// @dev Calculates the net amount after fee deduction and the fee amount based on
+    /// a transaction amount and a specified fee percentage.
+    /// @param _transactionAmount The amount involved in the transaction before fee deduction.
+    /// @param _feePct The fee percentage to be deducted, represented in basis points (BPS).
+    /// @return netAmount The transaction amount after fee deduction.
+    /// @return feeAmount The amount of fee deducted from the transaction amount.
+    function _calculateNetAmountAndFee(uint _transactionAmount, uint _feePct)
+        internal
+        pure
+        virtual
+        returns (uint netAmount, uint feeAmount)
+    {
+        // Return transaction amount as net amount if fee percentage is zero
+        if (_feePct == 0) return (_transactionAmount, feeAmount);
+        // Calculate fee amount
+        feeAmount = (_transactionAmount * _feePct) / BPS;
+        // Calculate net amount after fee deduction
+        netAmount = _transactionAmount - feeAmount;
+    }*/
+    /*
+    function _calculateNetAndSplitFees(
+        uint _totalAmount,
+        uint _protocolFee,
+        uint _workflowFee,
+        uint BPS
+    )
+        public
+        pure
+        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
+    {
+        if ((_protocolFee + _workflowFee) > BPS) {
+            revert Module__BondingCurveBase__FeeAmountToHigh();
+        }
+        protocolFeeAmount = _totalAmount * _protocolFee / BPS;
+        workflowFeeAmount = _totalAmount * _workflowFee / BPS;
+        netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;
+    }
+    */
+}
+
 /**
  * @title   Bancor Virtual Supply Bonding Curve Funding Manager
  *
@@ -186,13 +281,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _depositAmount The amount of collateral token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
-        external
+        public
         virtual
         override(BondingCurveBase_v1)
         validReceiver(_receiver)
         buyingIsEnabled
     {
-        _virtualBuyOrder(_receiver, _depositAmount, _minAmountOut);
+        //_virtualBuyOrder(_receiver, _depositAmount, _minAmountOut);
+        (uint amountIssued, uint collateralFeeAmount) =
+            _buyOrder(_receiver, _depositAmount, _minAmountOut);
+        _addVirtualIssuanceAmount(amountIssued);
+        _addVirtualCollateralAmount(_depositAmount - collateralFeeAmount);
     }
 
     /// @notice Buy tokens for the sender's address. This function is subject
@@ -206,12 +305,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _depositAmount The amount of collateral token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buy(uint _depositAmount, uint _minAmountOut)
-        external
+        public
         virtual
         override(BondingCurveBase_v1)
         buyingIsEnabled
     {
-        _virtualBuyOrder(_msgSender(), _depositAmount, _minAmountOut);
+        buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     /// @notice Redeem tokens on behalf of a specified receiver address. This function is subject
@@ -225,13 +324,16 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _depositAmount The amount of issued token to deposited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
-        external
+        public
         virtual
         override(RedeemingBondingCurveBase_v1)
         validReceiver(_receiver)
         sellingIsEnabled
     {
-        _virtualSellOrder(_receiver, _depositAmount, _minAmountOut);
+        (uint redeemAmount, uint issuanceFeeAmount) =
+            _sellOrder(_receiver, _depositAmount, _minAmountOut);
+        _subVirtualIssuanceAmount(_depositAmount - issuanceFeeAmount);
+        _subVirtualCollateralAmount(redeemAmount);
     }
 
     /// @notice Sell collateral for the sender's address. This function is subject
@@ -245,12 +347,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut)
-        external
+        public
         virtual
         override(RedeemingBondingCurveBase_v1)
         sellingIsEnabled
     {
-        _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
+        sellFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     //--------------------------------------------------------------------------
@@ -275,13 +377,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(BondingCurveBase_v1)
         returns (uint)
     {
-        /*
-        return _staticPricePPM(
+        /*return FM_BC_Tools._staticPricePPM(
+            PPM,
             virtualIssuanceSupply,
             virtualCollateralSupply,
             reserveRatioForBuying
         );*/
-                return uint(PPM) * uint(PPM) * virtualCollateralSupply
+        return uint(PPM) * uint(PPM) * virtualCollateralSupply
             / (virtualIssuanceSupply * uint(reserveRatioForBuying));
     }
 
@@ -294,7 +396,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(RedeemingBondingCurveBase_v1)
         returns (uint)
     {
-        /*return _staticPricePPM(
+        /* return FM_BC_Tools._staticPricePPM(
+            PPM,
             virtualIssuanceSupply,
             virtualCollateralSupply,
             reserveRatioForSelling
@@ -384,35 +487,46 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(BondingCurveBase_v1)
         returns (uint mintAmount)
     {
-        // Convert virtual supply and balance to 18 decimals
+        /* // Convert virtual supply and balance to 18 decimals
         uint decimalConvertedVirtualIssuanceSupply =
-        _convertAmountToRequiredDecimal(
+        FM_BC_Tools._convertAmountToRequiredDecimal(
             virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
         );
 
         uint decimalConvertedVirtualCollateralSupply =
-        _convertAmountToRequiredDecimal(
+        FM_BC_Tools._convertAmountToRequiredDecimal(
             virtualCollateralSupply, collateralTokenDecimals, eighteenDecimals
         );
 
         // Convert depositAmount to 18 decimals, which is required by Bancor formula
-        uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
+        uint decimalConvertedDepositAmount = FM_BC_Tools._convertAmountToRequiredDecimal(
             _depositAmount, collateralTokenDecimals, eighteenDecimals
-        );
+        );*/
 
         // Calculate mint amount through bonding curve
         uint decimalConvertedMintAmount = formula.calculatePurchaseReturn(
-            decimalConvertedVirtualIssuanceSupply,
-            decimalConvertedVirtualCollateralSupply,
+            //decimalConvertedVirtualIssuanceSupply,
+            FM_BC_Tools._convertAmountToRequiredDecimal(
+                virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
+            ),
+            //decimalConvertedVirtualCollateralSupply,
+            FM_BC_Tools._convertAmountToRequiredDecimal(
+                virtualCollateralSupply,
+                collateralTokenDecimals,
+                eighteenDecimals
+            ),
             reserveRatioForBuying,
-            decimalConvertedDepositAmount
+            //decimalConvertedDepositAmount
+            FM_BC_Tools._convertAmountToRequiredDecimal(
+                _depositAmount, collateralTokenDecimals, eighteenDecimals
+            )
         );
         // Convert mint amount to issuing token decimals
-        mintAmount = _convertAmountToRequiredDecimal(
+        mintAmount = FM_BC_Tools._convertAmountToRequiredDecimal(
             decimalConvertedMintAmount, eighteenDecimals, issuanceTokenDecimals
         );
     }
-/*
+    /*
     /// @dev Calculates the static price for either selling or buying the issuance token,
     /// based on the provided issuance token supply, collateral supply, and buy or sell reserve ratio.
     /// Note: The reserve ratio specifies whether the sell or buy price is returned.
@@ -431,44 +545,56 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         return uint(PPM) * uint(PPM) * _collateralSupply
             / (_issuanceSupply * uint(_reserveRatio));
     }
-*/
+    */
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
     /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula assumes 18 decimals for all tokens
     /// @param _depositAmount The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
+
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
         view
         override(RedeemingBondingCurveBase_v1)
         returns (uint redeemAmount)
     {
-        // Convert virtual supply and balance to 18 decimals
+        /*// Convert virtual supply and balance to 18 decimals
         uint decimalConvertedVirtualIssuanceSupply =
-        _convertAmountToRequiredDecimal(
+        FM_BC_Tools._convertAmountToRequiredDecimal(
             virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
         );
 
         uint decimalConvertedVirtualCollateralSupply =
-        _convertAmountToRequiredDecimal(
+        FM_BC_Tools._convertAmountToRequiredDecimal(
             virtualCollateralSupply, collateralTokenDecimals, eighteenDecimals
         );
 
         // Convert depositAmount to 18 decimals, which is required by Bancor formula
-        uint decimalConvertedDepositAmount = _convertAmountToRequiredDecimal(
+        uint decimalConvertedDepositAmount = FM_BC_Tools._convertAmountToRequiredDecimal(
             _depositAmount, issuanceTokenDecimals, eighteenDecimals
         );
-
+        */
         // Calculate redeem amount through bonding curve
         uint decimalConvertedRedeemAmount = formula.calculateSaleReturn(
-            decimalConvertedVirtualIssuanceSupply,
-            decimalConvertedVirtualCollateralSupply,
+            //decimalConvertedVirtualIssuanceSupply,
+            FM_BC_Tools._convertAmountToRequiredDecimal(
+                virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
+            ),
+            //decimalConvertedVirtualCollateralSupply,
+            FM_BC_Tools._convertAmountToRequiredDecimal(
+                virtualCollateralSupply,
+                collateralTokenDecimals,
+                eighteenDecimals
+            ),
             reserveRatioForSelling,
-            decimalConvertedDepositAmount
+            // decimalConvertedDepositAmount
+            FM_BC_Tools._convertAmountToRequiredDecimal(
+                _depositAmount, issuanceTokenDecimals, eighteenDecimals
+            )
         );
 
         // Convert redeem amount to collateral decimals
-        redeemAmount = _convertAmountToRequiredDecimal(
+        redeemAmount = FM_BC_Tools._convertAmountToRequiredDecimal(
             decimalConvertedRedeemAmount,
             eighteenDecimals,
             collateralTokenDecimals
@@ -499,7 +625,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         issuanceTokenDecimals = _decimals;
     }
 
-    /// @dev Executes a buy order and updates the virtual supply of tokens and collateral.
+    /*   /// @dev Executes a buy order and updates the virtual supply of tokens and collateral.
     /// This function internally calls `_buyOrder` to get the issuing amount and updates the
     /// virtual balances accordingly.
     /// @param _receiver The address of the recipient of the issued tokens.
@@ -515,8 +641,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _addVirtualIssuanceAmount(amountIssued);
         _addVirtualCollateralAmount(_depositAmount - collateralFeeAmount);
     }
-
-    /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
+    */
+    /*  /// @dev Executes a sell order and updates the virtual supply of tokens and collateral.
     /// This function internally calls `_sellOrder` to get the redeem amount and updates the
     /// virtual balances accordingly.
     /// @param _receiver The address that will receive the redeem amount.
@@ -531,21 +657,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
         _subVirtualIssuanceAmount(_depositAmount - issuanceFeeAmount);
         _subVirtualCollateralAmount(redeemAmount);
-    }
+    } */
 
     /// @dev Sets the reserve ratio for buying tokens.
     /// The function will revert if the ratio is greater than the constant PPM.
     ///
     /// @param _reserveRatio The reserve ratio to be set for buying tokens. Must be <= PPM.
     function _setReserveRatioForBuying(uint32 _reserveRatio) internal {
-        if (_reserveRatio == 0) {
-            revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
-        }
-        if (_reserveRatio > PPM) {
-            revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
-        }
+        _validateReserveRatio(_reserveRatio);
         emit BuyReserveRatioSet(_reserveRatio, reserveRatioForBuying);
         reserveRatioForBuying = _reserveRatio;
     }
@@ -556,6 +675,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///
     /// @param _reserveRatio The reserve ratio to be set for selling tokens. Must be <= PPM.
     function _setReserveRatioForSelling(uint32 _reserveRatio) internal {
+        _validateReserveRatio(_reserveRatio);
+        emit SellReserveRatioSet(_reserveRatio, reserveRatioForSelling);
+        reserveRatioForSelling = _reserveRatio;
+    }
+
+    function _validateReserveRatio(uint32 _reserveRatio) internal pure {
         if (_reserveRatio == 0) {
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
@@ -564,10 +689,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
         }
-        emit SellReserveRatioSet(_reserveRatio, reserveRatioForSelling);
-        reserveRatioForSelling = _reserveRatio;
     }
 
+    /*
     /// @dev Converts an amount to a required decimal representation.
     /// This function is useful for handling tokens with different decimal places.
     /// It takes care of both upscaling and downscaling the decimals based on the required decimals.
@@ -597,5 +721,5 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             uint conversionFactor = (10 ** (_requiredDecimals - _tokenDecimals));
             return (_amount * conversionFactor);
         }
-    }
+    }*/
 }
