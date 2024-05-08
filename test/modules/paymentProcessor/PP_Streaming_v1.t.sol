@@ -1250,11 +1250,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         for (uint i = 0; i < recipients.length; i++) {
             //If recipient is invalid change it
-            if (
-                recipients[i] == address(0)
-                    || recipients[i] == address(_orchestrator)
-                    || recipients[i] == address(paymentProcessor)
-            ) recipients[i] = address(0x1);
+            if (recipients[i] == address(0) || recipients[i].code.length == 0) {
+                recipients[i] = address(0x1);
+            }
         }
 
         // transfers will fail by returning false now
