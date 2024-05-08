@@ -48,9 +48,10 @@ import {FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock} from
 import {RedeemingBondingCurveBaseV1Test} from
     "test/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
 
-/*     
-    @NOTE: The functions:
+/*   
 
+    ::@NOTE: The functions: 
+    ::@note @0xNuggan is this still the case?
     - deposit(uint amount) external {}
     - depositFor(address to, uint amount) external {}
     - withdraw(uint amount) external {}
