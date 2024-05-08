@@ -6,6 +6,17 @@ import {IERC2771Context} from "src/external/interfaces/IERC2771Context.sol";
 
 interface IModuleManagerBase_v1 is IERC2771Context {
     //--------------------------------------------------------------------------
+    // Structs
+
+    /// @dev The timelock struct to keep track of updating the registerd modules
+    struct ModuleUpdateTimelock {
+        /// @dev Is the timelock currently active
+        bool timelockActive;
+        /// @dev Timestamp that represents from when the update can be carried out
+        uint timelockUntil;
+    }
+
+    //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by authorized address.
@@ -29,6 +40,14 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice The Manager has reached the maximum amount of modules.
     error ModuleManagerBase__ModuleAmountOverLimits();
 
+    /// @notice Timelock still active for the given module address.
+    error ModuleManagerBase__ModuleUpdateTimelockStillActive(
+        address _module, uint _timelockUntil
+    );
+
+    /// @notice Module update is already in progress.
+    error ModuleManagerBase__ModuleUpdateAlreadyStarted();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -39,6 +58,15 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice Event emitted when module removed.
     /// @param module The module's address.
     event ModuleRemoved(address indexed module);
+
+    /// @notice Event emitted when updating a module is initiated, and the timelock starts;
+    /// @param module The module's address.
+    /// @param timelockUntil The unix timestamp until the timelock is active.
+    event ModuleTimelockStarted(address module, uint timelockUntil);
+
+    /// @notice Event emitted when a module update is canceled
+    /// @param module The module's address.
+    event ModuleUpdateCanceled(address module);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -52,18 +80,6 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     function executeTxFromModule(address to, bytes memory data)
         external
         returns (bool, bytes memory);
-
-    /// @notice Adds address `module` as module.
-    /// @dev Only callable by authorized address.
-    /// @dev Fails if address invalid or address already added as module.
-    /// @param module The module address to add.
-    function addModule(address module) external;
-
-    /// @notice Removes address `module` as module.
-    /// @dev Only callable by authorized address.
-    /// @dev Fails if address not added as module.
-    /// @param module The module address to remove.
-    function removeModule(address module) external;
 
     /// @notice Returns whether the address `module` is added as module.
     /// @param module The module to check.

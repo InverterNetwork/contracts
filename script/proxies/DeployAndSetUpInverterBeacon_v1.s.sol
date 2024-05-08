@@ -43,6 +43,7 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
             );
 
             // Register Metadata at the ModuleFactory_v1
+            // @todo - needs changing for new registerMetadata flow
             ModuleFactory_v1(moduleFactory).registerMetadata(metadata, beacon);
         }
         vm.stopBroadcast();

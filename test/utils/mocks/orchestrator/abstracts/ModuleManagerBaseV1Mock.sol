@@ -33,6 +33,26 @@ contract ModuleManagerBaseV1Mock is ModuleManagerBase_v1 {
         __ModuleManager_init(modules);
     }
 
+    function call_cancelModuleUpdate(address module) external {
+        _cancelModuleUpdate(module);
+    }
+
+    function call_initiateAddModuleWithTimelock(address module) external {
+        _initiateAddModuleWithTimelock(module);
+    }
+
+    function call_initiateRemoveModuleWithTimelock(address module) external {
+        _initiateRemoveModuleWithTimelock(module);
+    }
+
+    function call_executeAddModule(address module) external {
+        _executeAddModule(module);
+    }
+
+    function call_executeRemoveModule(address module) external {
+        _executeRemoveModule(module);
+    }
+
     function __ModuleManager_isAuthorized(address who)
         internal
         view

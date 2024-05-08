@@ -30,6 +30,9 @@ interface IBondingCurveBase_v1 {
     /// @notice The combination of protocol fee and workflow fee cant be higher than 100%
     error Module__BondingCurveBase__FeeAmountToHigh();
 
+    /// @notice Withdrawl amount is bigger than project fee collected
+    error Module__BondingCurveBase__InvalidWithdrawAmount();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -46,6 +49,9 @@ interface IBondingCurveBase_v1 {
     event IssuanceTokenUpdated(
         address indexed oldToken, address indexed issuanceToken
     );
+
+    /// @notice Event emitted when project collateral fee is withdrawn
+    event ProjectCollateralFeeWithdrawn(address receiver, uint amount);
 
     /// @notice Event emitted when tokens have been succesfully issued
     /// @param receiver The address that will receive the issued tokens.
@@ -127,4 +133,17 @@ interface IBondingCurveBase_v1 {
     /// @notice Calculates and returns the static price for buying the issuance token.
     /// @return uint The static price for buying the issuance token.
     function getStaticPriceForBuying() external returns (uint);
+
+    /// @notice Calculates the amount of tokens to be minted based on a given deposit amount.
+    /// @dev This function takes into account any applicable buy fees before computing the
+    /// token amount to be minted. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
+    function calculatePurchaseReturn(uint _depositAmount)
+        external
+        returns (uint mintAmount);
+
+    /// @notice Withdraw project collateral fee to the receiver address
+    function withdrawProjectCollateralFee(address _receiver, uint _amount)
+        external;
 }

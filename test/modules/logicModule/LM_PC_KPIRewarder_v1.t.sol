@@ -285,8 +285,6 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         LM_PC_KPIRewarder_v1 alt_kpiManager =
             LM_PC_KPIRewarder_v1(Clones.clone(impl));
 
-        _orchestrator.addModule(address(alt_kpiManager));
-
         bytes memory configData = abi.encode(
             address(feeToken), address(feeToken), ooV3, DEFAULT_LIVENESS
         );

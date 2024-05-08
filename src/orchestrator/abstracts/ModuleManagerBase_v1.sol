@@ -81,11 +81,31 @@ abstract contract ModuleManagerBase_v1 is
         _;
     }
 
+    modifier updatingModuleAlreadyStarted(address _module) {
+        //if timelock not active
+        if (!moduleAddressToTimelock[_module].timelockActive) {
+            revert ModuleManagerBase__ModuleUpdateAlreadyStarted();
+        }
+        _;
+    }
+
+    modifier whenTimelockExpired(address _module) {
+        uint timeUntil = moduleAddressToTimelock[_module].timelockUntil;
+        if (block.timestamp < timeUntil) {
+            revert ModuleManagerBase__ModuleUpdateTimelockStillActive(
+                _module, timeUntil
+            );
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constants
 
     /// @dev Marks the maximum amount of Modules a Orchestrator_v1 can have to avoid out-of-gas risk.
     uint private constant MAX_MODULE_AMOUNT = 128;
+    /// @dev Timelock used between initiating adding or removing a module and executing it.
+    uint public constant MODULE_UPDATE_TIMELOCK = 72 hours;
 
     //--------------------------------------------------------------------------
     // Storage
@@ -94,6 +114,10 @@ abstract contract ModuleManagerBase_v1 is
     address[] private _modules;
 
     mapping(address => bool) _isModule;
+
+    /// @dev Mapping to keep track of active timelocks for updating modules
+    mapping(address module => ModuleUpdateTimelock timelock) public
+        moduleAddressToTimelock;
 
     /// @dev Mapping of modules and access control roles to accounts and
     ///      whether they holds that role.
@@ -177,23 +201,54 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // onlyOrchestratorOwner Functions
 
-    /// @inheritdoc IModuleManagerBase_v1
-    function addModule(address module)
-        public
+    function _cancelModuleUpdate(address module)
+        internal
+        __ModuleManager_onlyAuthorized
+        updatingModuleAlreadyStarted(module)
+    {
+        moduleAddressToTimelock[module].timelockActive = false;
+        emit ModuleUpdateCanceled(module);
+    }
+
+    function _initiateAddModuleWithTimelock(address module)
+        internal
         __ModuleManager_onlyAuthorized
         moduleLimitNotExceeded
         isNotModule(module)
         validModule(module)
     {
-        _commitAddModule(module);
+        _startModuleUpdateTimelock(module);
     }
 
-    /// @inheritdoc IModuleManagerBase_v1
-    function removeModule(address module)
-        public
+    function _initiateRemoveModuleWithTimelock(address module)
+        internal
         __ModuleManager_onlyAuthorized
         isModule_(module)
     {
+        _startModuleUpdateTimelock(module);
+    }
+
+    function _executeAddModule(address module)
+        internal
+        __ModuleManager_onlyAuthorized
+        updatingModuleAlreadyStarted(module)
+        whenTimelockExpired(module)
+    {
+        //set timelock to inactive
+        moduleAddressToTimelock[module].timelockActive = false;
+
+        _commitAddModule(module);
+    }
+
+    function _executeRemoveModule(address module)
+        internal
+        __ModuleManager_onlyAuthorized
+        updatingModuleAlreadyStarted(module)
+        whenTimelockExpired(module)
+    {
+        //set timelock to inactive
+        moduleAddressToTimelock[module].timelockActive = false;
+
         _commitRemoveModule(module);
     }
 
@@ -268,6 +323,15 @@ abstract contract ModuleManagerBase_v1 is
         if (isModule(module)) {
             revert ModuleManagerBase__IsModule();
         }
+    }
+
+    function _startModuleUpdateTimelock(address _module) internal {
+        moduleAddressToTimelock[_module] =
+            ModuleUpdateTimelock(true, block.timestamp + MODULE_UPDATE_TIMELOCK);
+
+        emit ModuleTimelockStarted(
+            _module, block.timestamp + MODULE_UPDATE_TIMELOCK
+        );
     }
 
     // IERC2771Context
