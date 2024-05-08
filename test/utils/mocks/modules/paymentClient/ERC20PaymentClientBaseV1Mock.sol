@@ -79,7 +79,7 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
         internal
         override(ERC20PaymentClientBase_v1)
     {
-        uint currentAllowance = token.allowance(_msgSender(), address(spender));
+        uint currentAllowance = token.allowance(address(this), address(spender));
         token.approve(address(spender), amount + currentAllowance);
     }
 
@@ -97,6 +97,7 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
         override(ERC20PaymentClientBase_v1)
     {
         amountPaidCounter += amount;
+
         _outstandingTokenAmount -= amount;
     }
 }
