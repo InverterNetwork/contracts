@@ -303,7 +303,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
             (REWARD_DEPOSIT_AMOUNT - totalDistributed)
         );
 
-        // TODO: Fix Staking precision bug
+        // ::@todo: Fix Staking precision bug ::@0xNuggan Still TODO lol, In all seriousness maybe we want to put a final pin in this. It was "just" a precision issue of less than 0,000001 percent or something right?
         assertApproxEqAbs(
             totalDistributed, totalExpectedRewardsDistributed, 1e6
         );

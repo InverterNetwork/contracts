@@ -202,7 +202,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooIntegrator.setOptimisticOracle(address(0));
     }
 
-    //@todo this Test is not correctly set @0xNuggan needs to be fixed
+    //::@todo this Test is not correctly set @0xNuggan needs to be fixed
     /*  function testSetOptimisticOracleFails_WhenNewOracleIsNotUmaOptimisticOracle(
         address notOracle
     ) public {
