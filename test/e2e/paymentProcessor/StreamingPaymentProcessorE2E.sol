@@ -237,9 +237,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         //Lets claim the releasable tokens for a single vestingwallet
         vm.prank(alice);
         streamingPaymentProcessor.claimForSpecificWalletId(
-            address(recurringPaymentManager),
-            vestings[0]._vestingWalletID,
-            false
+            address(recurringPaymentManager), vestings[0]._vestingWalletID
         );
         //check what got released
         released = streamingPaymentProcessor.releasedForSpecificWalletId(
@@ -317,8 +315,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         streamingPaymentProcessor.removePaymentForSpecificWalletId(
             address(recurringPaymentManager),
             alice,
-            vestings[0]._vestingWalletID,
-            false
+            vestings[0]._vestingWalletID
         );
 
         vestings = streamingPaymentProcessor.viewAllPaymentOrders(
