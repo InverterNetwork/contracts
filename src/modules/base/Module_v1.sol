@@ -5,7 +5,7 @@ pragma solidity 0.8.23;
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
-import {IFeeManager_v1} from "@ex/fees//interfaces/IFeeManager_v1.sol";
+import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
