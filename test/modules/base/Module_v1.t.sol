@@ -159,17 +159,72 @@ contract ModuleBaseV1Test is ModuleTest {
         vm.stopPrank();
     }
 
+    function testGrantModuleRoleBatched(bytes32 role, address[] memory addrs)
+        public
+    {
+        vm.startPrank(address(this));
+
+        for (uint i = 0; i < addrs.length; i++) {
+            vm.assume(addrs[i] != address(0));
+        }
+
+        module.grantModuleRoleBatched(role, addrs);
+
+        for (uint i = 0; i < addrs.length; i++) {
+            bytes32 roleId = _authorizer.generateRoleId(address(module), role);
+            bool isAuthorized =
+                _authorizer.checkRoleMembership(roleId, addrs[i]);
+            assertTrue(isAuthorized);
+        }
+
+        vm.stopPrank();
+    }
+
     function testRevokeModuleRole(bytes32 role, address addr) public {
         vm.assume(addr != address(0));
 
         vm.startPrank(address(this));
 
         module.grantModuleRole(role, addr);
-        module.revokeModuleRole(role, addr);
 
         bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-        bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
-        assertFalse(isAuthorized);
+        bool isAuthorizedBefore = _authorizer.checkRoleMembership(roleId, addr);
+        assertTrue(isAuthorizedBefore);
+
+        module.revokeModuleRole(role, addr);
+
+        bool isAuthorizedAfter = _authorizer.checkRoleMembership(roleId, addr);
+        assertFalse(isAuthorizedAfter);
+
+        vm.stopPrank();
+    }
+
+    function testRevokeModuleRoleBatched(bytes32 role, address[] memory addrs)
+        public
+    {
+        vm.startPrank(address(this));
+
+        for (uint i = 0; i < addrs.length; i++) {
+            vm.assume(addrs[i] != address(0));
+        }
+
+        module.grantModuleRoleBatched(role, addrs);
+
+        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
+
+        for (uint i = 0; i < addrs.length; i++) {
+            bool isAuthorizedBefore =
+                _authorizer.checkRoleMembership(roleId, addrs[i]);
+            assertTrue(isAuthorizedBefore);
+        }
+
+        module.revokeModuleRoleBatched(role, addrs);
+
+        for (uint i = 0; i < addrs.length; i++) {
+            bool isAuthorizedAfter =
+                _authorizer.checkRoleMembership(roleId, addrs[i]);
+            assertFalse(isAuthorizedAfter);
+        }
 
         vm.stopPrank();
     }

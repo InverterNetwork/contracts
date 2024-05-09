@@ -44,9 +44,6 @@ import {TransparentUpgradeableProxy} from
  * @dev Base contract for e2e tests.
  */
 contract E2ETest is E2EModuleRegistry {
-    //Governance Gontract
-    Governor_v1 gov;
-
     // Factory instances.
     OrchestratorFactory_v1 orchestratorFactory;
 
@@ -60,10 +57,6 @@ contract E2ETest is E2EModuleRegistry {
     TransactionForwarder_v1 forwarder;
 
     FeeManager_v1 feeManager;
-
-    address communityMultisig = makeAddr("communityMultisig");
-    address teamMultisig = makeAddr("teamMultisig");
-    address treasury = makeAddr("treasury");
 
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
@@ -101,12 +94,14 @@ contract E2ETest is E2EModuleRegistry {
         orchestratorImpl = new Orchestrator_v1(address(forwarder));
 
         // Deploy Factories.
-        moduleFactory = new ModuleFactory_v1(address(gov), address(forwarder));
+        moduleFactory = new ModuleFactory_v1(address(forwarder));
+        moduleFactory.init(address(gov));
 
-        orchestratorFactory = new OrchestratorFactory_v1(
+        orchestratorFactory = new OrchestratorFactory_v1(address(forwarder));
+        orchestratorFactory.init(
+            moduleFactory.governor(),
             address(orchestratorImpl),
-            address(moduleFactory),
-            address(forwarder)
+            address(moduleFactory)
         );
     }
 

@@ -92,8 +92,9 @@ contract OrchestratorFactoryV1Test is Test {
 
         target = new Orchestrator_v1(address(0));
 
-        factory = new OrchestratorFactory_v1(
-            address(target), address(moduleFactory), address(0)
+        factory = new OrchestratorFactory_v1(address(0));
+        factory.init(
+            moduleFactory.governor(), address(target), address(moduleFactory)
         );
     }
 

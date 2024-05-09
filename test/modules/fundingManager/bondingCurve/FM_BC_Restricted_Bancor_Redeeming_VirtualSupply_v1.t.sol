@@ -92,14 +92,13 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
         address buyer = makeAddr("buyer");
         address seller = makeAddr("seller");
 
-        bondingCurveFundingManager.grantModuleRole(
-            CURVE_INTERACTION_ROLE, buyer
-        );
-        bondingCurveFundingManager.grantModuleRole(
-            CURVE_INTERACTION_ROLE, seller
-        );
-        bondingCurveFundingManager.grantModuleRole(
-            CURVE_INTERACTION_ROLE, owner_address
+        address[] memory targets = new address[](3);
+        targets[0] = buyer;
+        targets[1] = seller;
+        targets[2] = owner_address;
+
+        bondingCurveFundingManager.grantModuleRoleBatched(
+            CURVE_INTERACTION_ROLE, targets
         );
     }
 
