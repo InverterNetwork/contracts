@@ -80,8 +80,28 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         _roleAuthorized[generateRoleId(_msgSender(), role)][target] = true;
     }
 
+    function grantRoleFromModuleBatched(
+        bytes32 role,
+        address[] calldata targets
+    ) external {
+        for (uint i = 0; i < targets.length; i++) {
+            _roleAuthorized[generateRoleId(_msgSender(), role)][targets[i]] =
+                true;
+        }
+    }
+
     function revokeRoleFromModule(bytes32 role, address target) external {
         _roleAuthorized[generateRoleId(_msgSender(), role)][target] = false;
+    }
+
+    function revokeRoleFromModuleBatched(
+        bytes32 role,
+        address[] calldata targets
+    ) external {
+        for (uint i = 0; i < targets.length; i++) {
+            _roleAuthorized[generateRoleId(_msgSender(), role)][targets[i]] =
+                false;
+        }
     }
 
     function grantRole(bytes32 role, address who) public {
@@ -134,20 +154,6 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
 
     //--------------------------------------------------------------------------
     // Functions left empty
-
-    function grantRoleFromModuleBatched(bytes32, address[] calldata)
-        external
-        pure
-    {
-        revert("Not implemented in Authorizer Mock");
-    }
-
-    function revokeRoleFromModuleBatched(bytes32, address[] calldata)
-        external
-        pure
-    {
-        revert("Not implemented in Authorizer Mock");
-    }
 
     function grantGlobalRoleBatched(bytes32, address[] calldata)
         external
