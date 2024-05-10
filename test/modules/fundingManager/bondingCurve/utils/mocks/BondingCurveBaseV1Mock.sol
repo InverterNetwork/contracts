@@ -85,7 +85,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     function call_withdrawProjectCollateralFee(address _receiver, uint _amount)
         public
     {
-        _withdrawProjectCollateralFee(_receiver, _amount);
+        withdrawProjectCollateralFee(_receiver, _amount);
     }
 
     function call_BPS() external pure returns (uint) {

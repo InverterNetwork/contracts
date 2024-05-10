@@ -67,7 +67,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
-        external
+        public
         virtual
         sellingIsEnabled
         validReceiver(_receiver)
@@ -76,12 +76,10 @@ abstract contract RedeemingBondingCurveBase_v1 is
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function sell(uint _depositAmount, uint _minAmountOut)
-        external
-        virtual
-        sellingIsEnabled
+    function sell(uint _depositAmount, uint _minAmountOut) public virtual 
+    /*sellingIsEnabled*/
     {
-        _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
+        sellFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     //--------------------------------------------------------------------------

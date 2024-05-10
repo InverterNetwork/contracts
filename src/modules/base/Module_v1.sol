@@ -211,32 +211,36 @@ abstract contract Module_v1 is
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.grantRoleFromModule(role, target);
+        //IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
+        __Module_orchestrator.authorizer().grantRoleFromModule(role, target);
     }
 
     function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.grantRoleFromModuleBatched(role, targets);
+        // IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
+        __Module_orchestrator.authorizer().grantRoleFromModuleBatched(
+            role, targets
+        );
     }
 
     function revokeModuleRole(bytes32 role, address target)
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.revokeRoleFromModule(role, target);
+        // IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
+        __Module_orchestrator.authorizer().revokeRoleFromModule(role, target);
     }
 
     function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.revokeRoleFromModuleBatched(role, targets);
+        //IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
+        __Module_orchestrator.authorizer().revokeRoleFromModuleBatched(
+            role, targets
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -286,18 +290,18 @@ abstract contract Module_v1 is
         internal
         returns (bool, bytes memory)
     {
-        bool ok;
+        /*bool ok;
         bytes memory returnData;
         (ok, returnData) =
             __Module_orchestrator.executeTxFromModule(address(this), data);
-
+        */
         // Note that there is no check whether the orchestrator callback succeeded.
         // This responsibility is delegated to the caller, i.e. downstream
         // module implementation.
         // However, the {IModule_v1} interface defines a generic error type for
         // failed orchestrator callbacks that can be used to prevent different
         // custom error types in each implementation.
-        return (ok, returnData);
+        return __Module_orchestrator.executeTxFromModule(address(this), data);
     }
 
     function decoder(bytes memory data)

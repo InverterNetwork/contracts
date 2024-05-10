@@ -86,7 +86,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @inheritdoc IBondingCurveBase_v1
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
-        external
+        public
         virtual
         buyingIsEnabled
         validReceiver(_receiver)
@@ -95,12 +95,10 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function buy(uint _depositAmount, uint _minAmountOut)
-        external
-        virtual
-        buyingIsEnabled
+    function buy(uint _depositAmount, uint _minAmountOut) public virtual 
+    /*buyingIsEnabled*/
     {
-        _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
+        buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     //--------------------------------------------------------------------------
@@ -147,11 +145,15 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
 
         // Calculate issuance token return from formula
-        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+        //mintAmount = _issueTokensFormulaWrapper(_depositAmount);
 
         // Deduct protocol buy fee from issuance, if applicable
         (mintAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
-            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
+        _calculateNetAndSplitFees(
+            _issueTokensFormulaWrapper(_depositAmount),
+            issuanceBuyFeePercentage,
+            0
+        );
 
         // Return expected purchase return amount
         //return mintAmount;
@@ -159,12 +161,22 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @inheritdoc IBondingCurveBase_v1
     function withdrawProjectCollateralFee(address _receiver, uint _amount)
-        external
+        public
         virtual
         validReceiver(_receiver)
         onlyOrchestratorOwner
     {
-        _withdrawProjectCollateralFee(_receiver, _amount);
+        if (_amount > projectCollateralFeeCollected) {
+            revert Module__BondingCurveBase__InvalidWithdrawAmount();
+        }
+
+        projectCollateralFeeCollected -= _amount;
+
+        __Module_orchestrator.fundingManager().token().safeTransfer(
+            _receiver, _amount
+        );
+
+        emit ProjectCollateralFeeWithdrawn(_receiver, _amount);
     }
 
     //--------------------------------------------------------------------------
@@ -229,11 +241,11 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             uint issuanceBuyFeePercentage
         ) = _getBuyFeesAndTreasuryAddresses();
 
-        uint protocolFeeAmount;
-        uint workflowFeeAmount;
-        uint netDeposit;
+        //uint protocolFeeAmount;
+        //uint workflowFeeAmount;
+        //uint netDeposit;
         // Get net amount, protocol and workflow fee amounts
-        (netDeposit, protocolFeeAmount, workflowFeeAmount) =
+        (uint netDeposit, uint protocolFeeAmount, uint workflowFeeAmount) =
         _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
@@ -241,7 +253,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         //collateral Fee Amount is the combination of protocolFeeAmount plus the workflowFeeAmount
         collateralFeeAmount = protocolFeeAmount + workflowFeeAmount;
 
-        // Process the protocol fee
+        // Process the protocol fee TODO inline
         _processProtocolFeeViaTransfer(
             collateralTreasury,
             __Module_orchestrator.fundingManager().token(),
@@ -449,7 +461,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         emit IssuanceTokenUpdated(address(issuanceToken), _issuanceToken);
         issuanceToken = IERC20Issuance_v1(_issuanceToken);
     }
-
+    /*
     /// @dev Witdraw project collateral fee amount to  to receiver.
     /// Reverts when the amount is bigger than witdrawable colllateral fee amount
     /// Deducts the _amount from the project fee collected
@@ -469,9 +481,10 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
         emit ProjectCollateralFeeWithdrawn(_receiver, _amount);
     }
+    */
 
     function _buyingIsEnabledModifier() internal view {
-        if (buyIsOpen == false) {
+        if (!buyIsOpen) {
             revert Module__BondingCurveBase__BuyingFunctionaltiesClosed();
         }
     }
