@@ -431,7 +431,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         assertEq(address(testAuthorizer.orchestrator()), address(0));
         assertEq(testAuthorizer.voterCount(), 0);
     }
-
+    /*
     function testInit2SingleVoteGovernor() public {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
@@ -458,7 +458,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         _governor.init2(_orchestrator, dependencyData);
     }
-
+    */
     //--------------------------------------------------------------------------
     // TESTS: VOTE CREATION
 

@@ -112,7 +112,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Get protocol fee percentages
         (
-            /* collateralreasury */
+            /* collateralTreasury */
             ,
             /* issuanceTreasury */
             ,
@@ -188,7 +188,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         }
         // Get protocol fee percentages and treasury addresses
         (
-            address collateralreasury,
+            address collateralTreasury,
             address issuanceTreasury,
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
@@ -234,7 +234,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
-            collateralreasury,
+            collateralTreasury,
             __Module_orchestrator.fundingManager().token(),
             protocolFeeAmount
         );
@@ -336,7 +336,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Get protocol fee percentages
         (
-            /* collateralreasury 
+            /* collateralTreasury 
             ,
              issuanceTreasury */
     /*

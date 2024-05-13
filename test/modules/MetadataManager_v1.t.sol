@@ -178,7 +178,7 @@ contract MetadataManagerV1Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         metadataManager.init(_orchestrator, _METADATA, bytes(""));
     }
-
+    /*
     function testInit2MetadataManager() public {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
@@ -204,7 +204,7 @@ contract MetadataManagerV1Test is ModuleTest {
         // SHOULD FAIL
         vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         metadataManager.init2(_orchestrator, dependencyData);
-    }
+    }*/
 
     function testSetter() public {
         //-----------------------

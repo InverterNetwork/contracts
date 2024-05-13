@@ -151,7 +151,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
     }
-
+    /*
     function testInit2StreamingPaymentProcessor() public {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
@@ -178,6 +178,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         paymentProcessor.init2(_orchestrator, dependencyData);
     }
+    */
 
     //--------------------------------------------------------------------------
     // Test: Payment Processing

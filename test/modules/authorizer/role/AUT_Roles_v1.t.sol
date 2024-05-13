@@ -244,7 +244,7 @@ contract AUT_RolesV1Test is Test {
         assertEq(_authorizer.hasRole("0x01", ALBA), true);
         assertEq(_authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1);
     }
-
+    /*
     function testInit2RoleAuthorizer() public {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
@@ -270,7 +270,7 @@ contract AUT_RolesV1Test is Test {
         // SHOULD FAIL
         vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         _authorizer.init2(_orchestrator, dependencyData);
-    }
+    }*/
 
     // Test Register Roles
 

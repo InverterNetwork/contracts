@@ -104,7 +104,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         recurringPaymentManager.init(_orchestrator, _METADATA, bytes(""));
     }
-
+    /*
     function testInit2RecurringPaymentManager() public {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
@@ -131,7 +131,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         recurringPaymentManager.init2(_orchestrator, dependencyData);
     }
-
+    */
     //--------------------------------------------------------------------------
     // Modifier
 

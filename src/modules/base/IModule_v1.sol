@@ -69,14 +69,14 @@ interface IModule_v1 {
         Metadata memory metadata,
         bytes memory configData
     ) external;
-
+    /*
     /// @notice Second initialization function of the module to take care of dependencies.
     /// @param orchestrator The module's orchestrator instance.
     /// @param configData Variable config data for specific module
     ///                   implementations.
     function init2(IOrchestrator_v1 orchestrator, bytes memory configData)
         external;
-
+    */
     /// @notice Returns the module's identifier.
     /// @dev The identifier is defined as the keccak256 hash of the module's
     ///      abi packed encoded major version, url and title.

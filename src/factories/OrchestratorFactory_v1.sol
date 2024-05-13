@@ -174,6 +174,7 @@ contract OrchestratorFactory_v1 is
             IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );
 
+        /*
         // Second round of module initializations to satisfy cross-referencing between modules
         // This can be run post the orchestrator initialization. This ensures a few more variables are
         // available that are set during the orchestrator init function.
@@ -201,7 +202,7 @@ contract OrchestratorFactory_v1 is
             IModule_v1(paymentProcessor).init2(
                 IOrchestrator_v1(clone), paymentProcessorConfig.dependencyData
             );
-        }
+        }*/
 
         return IOrchestrator_v1(clone);
     }

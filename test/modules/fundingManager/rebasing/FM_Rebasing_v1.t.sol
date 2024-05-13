@@ -121,7 +121,7 @@ contract FM_RebasingV1Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         fundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
-
+    /*
     function testInit2RebasingFundingManager() public {
         // Attempting to call the init2 function with malformed data
         // SHOULD FAIL
@@ -148,7 +148,7 @@ contract FM_RebasingV1Test is ModuleTest {
         vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
         fundingManager.init2(_orchestrator, dependencyData);
     }
-
+    */
     //--------------------------------------------------------------------------
     // Tests: Public View Functions
 
