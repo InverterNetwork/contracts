@@ -261,9 +261,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         // Set sell fee percentage
         _setSellFee(bondingCurveProperties.sellFee);
         // Set buying functionality to open if true. By default buying is false
-        if (bondingCurveProperties.buyIsOpen == true) _openBuy();
+        //if (bondingCurveProperties.buyIsOpen == true) _openBuy();
+        buyIsOpen = bondingCurveProperties.buyIsOpen;
         // Set selling functionality to open if true. By default selling is false
-        if (bondingCurveProperties.sellIsOpen == true) _openSell();
+        //if (bondingCurveProperties.sellIsOpen == true) _openSell();
+        sellIsOpen = bondingCurveProperties.sellIsOpen;
     }
 
     //--------------------------------------------------------------------------
@@ -681,11 +683,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     function _validateReserveRatio(uint32 _reserveRatio) internal pure {
-        if (_reserveRatio == 0) {
-            revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
-        }
-        if (_reserveRatio > PPM) {
+        if (_reserveRatio == 0 || _reserveRatio > PPM) {
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
         }

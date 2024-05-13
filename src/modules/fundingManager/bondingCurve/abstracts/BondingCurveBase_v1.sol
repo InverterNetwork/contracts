@@ -106,12 +106,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @inheritdoc IBondingCurveBase_v1
     function openBuy() external virtual onlyOrchestratorOwner {
-        _openBuy();
+       // _openBuy();
+               buyIsOpen = true;
+        emit BuyingEnabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
     function closeBuy() external virtual onlyOrchestratorOwner {
-        _closeBuy();
+        //_closeBuy();
+                buyIsOpen = false;
+        emit BuyingDisabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -288,7 +292,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _receiver, _depositAmount, issuanceMintAmount, _msgSender()
         );
     }
-
+/*
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
     function _openBuy() internal virtual {
         if (buyIsOpen) {
@@ -305,14 +309,12 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
         buyIsOpen = false;
         emit BuyingDisabled();
-    }
+    }*/
 
     /// @dev Sets the buy transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for buy transactions.
     function _setBuyFee(uint _fee) internal virtual {
-        if (_fee >= BPS) {
-            revert Module__BondingCurveBase__InvalidFeePercentage();
-        }
+        _validateWorkflowFee(_fee);
         emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;
     }
@@ -520,6 +522,12 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function _validReceiverModifier(address _receiver) internal view {
         if (_receiver == address(0) || _receiver == address(this)) {
             revert Module__BondingCurveBase__InvalidRecipient();
+        }
+    }
+
+    function _validateWorkflowFee(uint _workflowFee) internal pure {
+        if (_workflowFee > BPS) {
+            revert Module__BondingCurveBase__InvalidFeePercentage();
         }
     }
 

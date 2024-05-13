@@ -87,12 +87,16 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function openSell() external virtual onlyOrchestratorOwner {
-        _openSell();
+        //_openSell();
+                sellIsOpen = true;
+        emit SellingEnabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function closeSell() external virtual onlyOrchestratorOwner {
-        _closeSell();
+        //_closeSell();
+                sellIsOpen = false;
+        emit SellingDisabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -107,7 +111,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         returns (uint redeemAmount)
     {
         if (_depositAmount == 0) {
-            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
+            revert Module__BondingCurveBase__InvalidDepositAmount();
         }
 
         // Get protocol fee percentages
@@ -184,7 +188,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
     {
         if (_depositAmount == 0) {
-            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
+            revert Module__BondingCurveBase__InvalidDepositAmount();
         }
         // Get protocol fee percentages and treasury addresses
         (
@@ -246,7 +250,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (collateralRedeemAmount < _minAmountOut) {
-            revert Module__RedeemingBondingCurveBase__InsufficientOutputAmount();
+            revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
         // Transfer tokens to receiver
         __Module_orchestrator.fundingManager().token().transfer(
@@ -257,7 +261,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             _receiver, _depositAmount, collateralRedeemAmount, _msgSender()
         );
     }
-
+/*
     /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
     function _openSell() internal virtual {
         if (sellIsOpen) {
@@ -275,7 +279,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         sellIsOpen = false;
         emit SellingDisabled();
     }
-
+*/
     function _sellingIsEnabledModifier() internal view {
         if (!sellIsOpen) {
             revert
@@ -286,9 +290,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev Sets the sell transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for sell transactions.
     function _setSellFee(uint _fee) internal virtual {
-        if (_fee > BPS) {
-            revert Module__RedeemingBondingCurveBase__InvalidFeePercentage();
-        }
+        _validateWorkflowFee(_fee);
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
     }
@@ -333,7 +335,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         returns (uint redeemAmount)
     {
         if (_depositAmount == 0) {
-            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
+            revert Module__BondingCurveBase__InvalidDepositAmount();
         }
 
         // Get protocol fee percentages
