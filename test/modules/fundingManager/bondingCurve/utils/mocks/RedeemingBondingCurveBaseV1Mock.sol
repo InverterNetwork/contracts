@@ -45,7 +45,6 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
         _setBuyFee(_buyFee);
 
-
         buyIsOpen = _buyIsOpen;
 
         sellIsOpen = _sellIsOpen;
@@ -121,7 +120,9 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
             uint issuanceSellFeePercentage
         )
     {
-        return _getFunctionFeesAndTreasuryAddresses( bytes4(keccak256(bytes("_sellOrder(address, uint, uint)"))));
+        return _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+        );
     }
 
     function call_calculateNetAndSplitFees(

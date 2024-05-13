@@ -735,7 +735,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
                         └── it should open the buy functionality
                         └── it should emit an event
     */
-  /*  function testOpenBuy_FailsIfAlreadyOpen()
+    /*  function testOpenBuy_FailsIfAlreadyOpen()
         public
         callerIsOrchestratorOwner
     {
@@ -772,7 +772,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
                         ├── it should close the buy functionality
                         └── it should emit an event
     */
-  /*  function testCloseBuy_FailsIfAlreadyClosed()
+    /*  function testCloseBuy_FailsIfAlreadyClosed()
         public
         callerIsOrchestratorOwner
     {

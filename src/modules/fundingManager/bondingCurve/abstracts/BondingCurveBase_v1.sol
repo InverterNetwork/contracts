@@ -71,13 +71,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Modifiers
 
     modifier buyingIsEnabled() {
-        _buyingIsEnabledModifier();
+        _checkBuyIsEnabled();
         _;
     }
 
     /// @dev Modifier to guarantee token recipient is valid.
     modifier validReceiver(address _receiver) {
-        _validReceiverModifier(_receiver);
+        _validateRecipient(_receiver);
         _;
     }
 
@@ -95,9 +95,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function buy(uint _depositAmount, uint _minAmountOut) public virtual 
-    /*buyingIsEnabled*/
-    {
+    function buy(uint _depositAmount, uint _minAmountOut) public virtual {
         buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
@@ -106,15 +104,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @inheritdoc IBondingCurveBase_v1
     function openBuy() external virtual onlyOrchestratorOwner {
-       // _openBuy();
-               buyIsOpen = true;
+        buyIsOpen = true;
         emit BuyingEnabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
     function closeBuy() external virtual onlyOrchestratorOwner {
-        //_closeBuy();
-                buyIsOpen = false;
+        buyIsOpen = false;
         emit BuyingDisabled();
     }
 
@@ -129,9 +125,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         virtual
         returns (uint mintAmount)
     {
-        if (_depositAmount == 0) {
-            revert Module__BondingCurveBase__InvalidDepositAmount();
-        }
+        _validateDepositAmount(_depositAmount);
         // Get protocol fee percentages
         (
             /* collateralreasury */
@@ -140,7 +134,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             ,
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
-        ) = _getFunctionFeesAndTreasuryAddresses(bytes4(keccak256(bytes("_buyOrder(address, uint, uint)"))));
+        ) = _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
 
         // Deduct protocol and project buy fee from collateral, if applicable
         (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
@@ -148,10 +144,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
 
-        // Calculate issuance token return from formula
-        //mintAmount = _issueTokensFormulaWrapper(_depositAmount);
-
-        // Deduct protocol buy fee from issuance, if applicable
+        // Get issuance token return from formula and deduct protocol buy fee, if applicable
         (mintAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
         _calculateNetAndSplitFees(
             _issueTokensFormulaWrapper(_depositAmount),
@@ -230,9 +223,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         internal
         returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
     {
-        if (_depositAmount == 0) {
-            revert Module__BondingCurveBase__InvalidDepositAmount();
-        }
+        _validateDepositAmount(_depositAmount);
         // Transfer collateral, confirming that correct amount == allowance
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
             _msgSender(), address(this), _depositAmount
@@ -243,11 +234,10 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             address issuanceTreasury,
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
-        ) = _getFunctionFeesAndTreasuryAddresses(bytes4(keccak256(bytes("_buyOrder(address, uint, uint)"))));
+        ) = _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
 
-        //uint protocolFeeAmount;
-        //uint workflowFeeAmount;
-        //uint netDeposit;
         // Get net amount, protocol and workflow fee amounts
         (uint netDeposit, uint protocolFeeAmount, uint workflowFeeAmount) =
         _calculateNetAndSplitFees(
@@ -257,12 +247,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         //collateral Fee Amount is the combination of protocolFeeAmount plus the workflowFeeAmount
         collateralFeeAmount = protocolFeeAmount + workflowFeeAmount;
 
-        // Process the protocol fee TODO inline
+        // Process the protocol fee
         _processProtocolFeeViaTransfer(
             collateralTreasury,
             __Module_orchestrator.fundingManager().token(),
             protocolFeeAmount
         );
+
         // Add workflow fee if applicable
         if (workflowFeeAmount > 0) {
             projectCollateralFeeCollected += workflowFeeAmount;
@@ -292,24 +283,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _receiver, _depositAmount, issuanceMintAmount, _msgSender()
         );
     }
-/*
-    /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
-    function _openBuy() internal virtual {
-        if (buyIsOpen) {
-            revert Module__BondingCurveBase__BuyingAlreadyOpen();
-        }
-        buyIsOpen = true;
-        emit BuyingEnabled();
-    }
-
-    /// @dev Closes the buy functionality by setting the state variable `buyIsOpen` to false.
-    function _closeBuy() internal virtual {
-        if (!buyIsOpen) {
-            revert Module__BondingCurveBase__BuyingAlreadyClosed();
-        }
-        buyIsOpen = false;
-        emit BuyingDisabled();
-    }*/
 
     /// @dev Sets the buy transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for buy transactions.
@@ -318,55 +291,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;
     }
-    /*
-    /// @dev Calculates the net amount after fee deduction and the fee amount based on
-    /// a transaction amount and a specified fee percentage.
-    /// @param _transactionAmount The amount involved in the transaction before fee deduction.
-    /// @param _feePct The fee percentage to be deducted, represented in basis points (BPS).
-    /// @return netAmount The transaction amount after fee deduction.
-    /// @return feeAmount The amount of fee deducted from the transaction amount.
-    function _calculateNetAmountAndFee(uint _transactionAmount, uint _feePct)
-        internal
-        pure
-        virtual
-        returns (uint netAmount, uint feeAmount)
-    {
-        // Return transaction amount as net amount if fee percentage is zero
-        if (_feePct == 0) return (_transactionAmount, feeAmount);
-        // Calculate fee amount
-        feeAmount = (_transactionAmount * _feePct) / BPS;
-        // Calculate net amount after fee deduction
-        netAmount = _transactionAmount - feeAmount;
-    }
-    */
-
- /*   /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
-    ///     buy operations
-    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
-    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
-    /// @return collateralBuyFeePercentage The percentage fee to be collected from the collateral
-    ///     token being deposited for minting issuance, expressed in BPS
-    /// @return issuanceBuyFeePercentage The percentage fee to be collected from the issuance token
-    ///     being minted, expressed in BPS
-    function _getBuyFeesAndTreasuryAddresses()
-        internal
-        virtual
-        returns (
-            address collateralTreasury,
-            address issuanceTreasury,
-            uint collateralBuyFeePercentage,
-            uint issuanceBuyFeePercentage
-        )
-    {
-        (collateralBuyFeePercentage, collateralTreasury) =
-        _getFeeManagerCollateralFeeData(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
-        );
-        (issuanceBuyFeePercentage, issuanceTreasury) =
-        _getFeeManagerIssuanceFeeData(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
-        );
-    }*/
 
     /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
     ///     a specific operation
@@ -387,13 +311,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         )
     {
         (collateralFeePercentage, collateralTreasury) =
-        _getFeeManagerCollateralFeeData(
-            _selector
-        );
+            _getFeeManagerCollateralFeeData(_selector);
         (issuanceFeePercentage, issuanceTreasury) =
-        _getFeeManagerIssuanceFeeData(
-            _selector
-        );
+            _getFeeManagerIssuanceFeeData(_selector);
     }
 
     //@note missing description
@@ -420,68 +340,27 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         uint _feeAmount
     ) internal {
         // skip protocol fee collection if fee percentage set to zero
-        if (_feeAmount == 0) return;
-        if (_treasury == address(0)) {
-            revert Module__BondingCurveBase__InvalidRecipient();
-        }
+        if (_feeAmount > 0) {
+            _validateRecipient(_treasury);
 
-        // transfer fee amount
-        _token.safeTransfer(_treasury, _feeAmount);
-        emit ProtocolFeeTransferred(address(_token), _treasury, _feeAmount);
+            // transfer fee amount
+            _token.safeTransfer(_treasury, _feeAmount);
+            emit ProtocolFeeTransferred(address(_token), _treasury, _feeAmount);
+        }
     }
 
     function _processProtocolFeeViaMinting(address _treasury, uint _feeAmount)
         internal
     {
         // skip protocol fee collection if fee percentage set to zero
-        if (_feeAmount == 0) return;
-        if (_treasury == address(0)) {
-            revert Module__BondingCurveBase__InvalidRecipient();
-        }
+        if (_feeAmount > 0) {
+            _validateRecipient(_treasury);
 
-        // mint fee amount
-        _mint(_treasury, _feeAmount);
-        emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
+            // mint fee amount
+            _mint(_treasury, _feeAmount);
+            emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
+        }
     }
-    /*
-    /// @dev This function takes into account any applicable buy fees before computing the
-    /// token amount to be minted. Revert when depositAmount is zero.
-    /// @param _depositAmount The amount of tokens deposited by the user.
-    /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
-    function _calculatePurchaseReturn(uint _depositAmount)
-        internal
-        virtual
-        returns (uint mintAmount)
-    {
-        if (_depositAmount == 0) {
-            revert Module__BondingCurveBase__InvalidDepositAmount();
-        }
-        // Get protocol fee percentages
-        (
-            /* collateralreasury 
-            ,
-             issuanceTreasury */
-    /*
-            ,
-            uint collateralBuyFeePercentage,
-            uint issuanceBuyFeePercentage
-        ) = _getBuyFeesAndTreasuryAddresses();
-
-        // Deduct protocol and project buy fee from collateral, if applicable
-        (_depositAmount, /* protocolFeeAmount ,  workflowFeeAmount */
-    /* ) =
-            _calculateNetAndSplitFees(
-            _depositAmount, collateralBuyFeePercentage, buyFee
-            );
-            // Calculate issuance token return from formula
-            mintAmount = _issueTokensFormulaWrapper(_depositAmount);
-            // Deduct protocol buy fee from issuance, if applicable
-            (mintAmount, /* protocolFeeAmount ,  workflowFeeAmount */
-    /*) =
-            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
-        // Return expected purchase return amount
-        //return mintAmount;
-        }*/
 
     /// @dev Sets the issuance token for the FundingManager.
     /// This function updates the `issuanceToken` state variable and should be be overriden by
@@ -491,35 +370,14 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         emit IssuanceTokenUpdated(address(issuanceToken), _issuanceToken);
         issuanceToken = IERC20Issuance_v1(_issuanceToken);
     }
-    /*
-    /// @dev Witdraw project collateral fee amount to  to receiver.
-    /// Reverts when the amount is bigger than witdrawable colllateral fee amount
-    /// Deducts the _amount from the project fee collected
-    function _withdrawProjectCollateralFee(address _receiver, uint _amount)
-        internal
-        virtual
-    {
-        if (_amount > projectCollateralFeeCollected) {
-            revert Module__BondingCurveBase__InvalidWithdrawAmount();
-        }
 
-        projectCollateralFeeCollected -= _amount;
-
-        __Module_orchestrator.fundingManager().token().safeTransfer(
-            _receiver, _amount
-        );
-
-        emit ProjectCollateralFeeWithdrawn(_receiver, _amount);
-    }
-    */
-
-    function _buyingIsEnabledModifier() internal view {
+    function _checkBuyIsEnabled() internal view {
         if (!buyIsOpen) {
             revert Module__BondingCurveBase__BuyingFunctionaltiesClosed();
         }
     }
 
-    function _validReceiverModifier(address _receiver) internal view {
+    function _validateRecipient(address _receiver) internal view {
         if (_receiver == address(0) || _receiver == address(this)) {
             revert Module__BondingCurveBase__InvalidRecipient();
         }
@@ -528,6 +386,12 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function _validateWorkflowFee(uint _workflowFee) internal pure {
         if (_workflowFee > BPS) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
+        }
+    }
+
+    function _validateDepositAmount(uint _depositAmount) internal pure {
+        if (_depositAmount == 0) {
+            revert Module__BondingCurveBase__InvalidDepositAmount();
         }
     }
 

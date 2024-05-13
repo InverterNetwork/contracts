@@ -379,7 +379,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                         ├── it should open the sell functionality
                         └── it should emit an event
     */
- /*   function testOpenSell_FailsIfAlreadyOpen()
+    /*   function testOpenSell_FailsIfAlreadyOpen()
         public
         callerIsOrchestratorOwner
     {
@@ -417,7 +417,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                         └── it should emit an event
     */
 
-  /*  function testCloseSell_FailsIfAlreadyClosed()
+    /*  function testCloseSell_FailsIfAlreadyClosed()
         public
         callerIsOrchestratorOwner
     {
@@ -430,7 +430,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         );
         bondingCurveFundingManager.closeSell();
     }
-*/
+    */
     function testCloseSell() public callerIsOrchestratorOwner {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 

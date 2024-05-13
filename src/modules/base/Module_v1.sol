@@ -114,18 +114,7 @@ abstract contract Module_v1 is
         _onlyOrchestratorModifier();
         _;
     }
-/*
-    /// @dev same function as OZ initializer, but for the init2 function
-    modifier initializer2() {
-        _initializer2Modifier();
-        _;
-    }*/
-    /*
-    modifier validDependencyData(bytes memory dependencyData) {
-        _validDependencyModifier(dependencyData);
-        _;
-    }*/
-
+   
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -169,13 +158,6 @@ abstract contract Module_v1 is
         );
     }
 
-    /*  function init2(IOrchestrator_v1 orchestrator_, bytes memory dependencyData)
-        external
-        virtual
-        initializer2
-        validDependencyData(dependencyData)
-    {}
-    */
     //--------------------------------------------------------------------------
     // Public View Functions
 
@@ -211,7 +193,6 @@ abstract contract Module_v1 is
         external
         onlyOrchestratorOwner
     {
-        //IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
         __Module_orchestrator.authorizer().grantRoleFromModule(role, target);
     }
 
@@ -219,7 +200,6 @@ abstract contract Module_v1 is
         external
         onlyOrchestratorOwner
     {
-        // IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
         __Module_orchestrator.authorizer().grantRoleFromModuleBatched(
             role, targets
         );
@@ -229,7 +209,6 @@ abstract contract Module_v1 is
         external
         onlyOrchestratorOwner
     {
-        // IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
         __Module_orchestrator.authorizer().revokeRoleFromModule(role, target);
     }
 
@@ -237,7 +216,6 @@ abstract contract Module_v1 is
         external
         onlyOrchestratorOwner
     {
-        //IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
         __Module_orchestrator.authorizer().revokeRoleFromModuleBatched(
             role, targets
         );
@@ -290,11 +268,6 @@ abstract contract Module_v1 is
         internal
         returns (bool, bytes memory)
     {
-        /*bool ok;
-        bytes memory returnData;
-        (ok, returnData) =
-            __Module_orchestrator.executeTxFromModule(address(this), data);
-        */
         // Note that there is no check whether the orchestrator callback succeeded.
         // This responsibility is delegated to the caller, i.e. downstream
         // module implementation.
@@ -303,27 +276,7 @@ abstract contract Module_v1 is
         // custom error types in each implementation.
         return __Module_orchestrator.executeTxFromModule(address(this), data);
     }
-    /*
-    function decoder(bytes memory data)
-        public
-        pure
-        returns (bool requirement)
-    {
-        (requirement,) = abi.decode(data, (bool, string[]));
-    }
-
-    function _dependencyInjectionRequired(bytes memory dependencyData)
-        internal
-        view
-        returns (bool)
-    {
-        try this.decoder(dependencyData) returns (bool) {
-            return this.decoder(dependencyData);
-        } catch {
-            return false;
-        }
-    }*/
-
+ 
     function _checkRoleModifier(bytes32 role, address addr) internal view {
         if (!__Module_orchestrator.authorizer().hasRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
@@ -351,22 +304,6 @@ abstract contract Module_v1 is
             revert Module__OnlyCallableByOrchestrator();
         }
     }
-/*
-    function _initializer2Modifier() internal {
-        if (__Module_initialization) {
-            revert Module__CannotCallInit2Again();
-        }
-        __Module_initialization = true;
-    }*/
-    /*
-    function _validDependencyModifier(bytes memory dependencyData)
-        internal
-        view
-    {
-        if (!_dependencyInjectionRequired(dependencyData)) {
-            revert Module__NoDependencyOrMalformedDependencyData();
-        }
-    }*/
 
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable

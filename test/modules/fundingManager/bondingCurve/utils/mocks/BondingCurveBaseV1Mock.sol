@@ -127,7 +127,9 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
             uint issuanceBuyFeePercentage
         )
     {
-        return _getFunctionFeesAndTreasuryAddresses(bytes4(keccak256(bytes("_buyOrder(address, uint, uint)"))));
+        return _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
     }
 
     function call_calculateNetAndSplitFees(

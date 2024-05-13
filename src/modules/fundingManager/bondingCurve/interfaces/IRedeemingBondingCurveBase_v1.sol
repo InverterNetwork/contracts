@@ -5,7 +5,6 @@ interface IRedeemingBondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-
     /// @notice Selling functionalities are set to closed
     error Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
 

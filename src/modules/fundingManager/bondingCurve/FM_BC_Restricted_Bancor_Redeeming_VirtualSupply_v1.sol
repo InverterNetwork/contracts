@@ -53,7 +53,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev added role check
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
-        override /*(FM_BC_Bancor_Redeeming_VirtualSupply_v1)*/
+        override
         validReceiver(_receiver)
         buyingIsEnabled
         onlyModuleRole(CURVE_INTERACTION_ROLE)
@@ -62,40 +62,17 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
         super.buyFor(_receiver, _depositAmount, _minAmountOut);
     }
 
-    /*  /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
-    /// @dev added role check
-    function buy(uint _depositAmount, uint _minAmountOut)
-        public
-        override(FM_BC_Bancor_Redeeming_VirtualSupply_v1)
-        buyingIsEnabled
-        onlyModuleRole(CURVE_INTERACTION_ROLE)
-    {
-        //_virtualBuyOrder(_msgSender(), _depositAmount, _minAmountOut);
-        super.buy(_depositAmount, _minAmountOut);
-    }*/
-
     /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
     /// @dev added role check
     function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
-        override /*(FM_BC_Bancor_Redeeming_VirtualSupply_v1)*/
+        override
         validReceiver(_receiver)
         sellingIsEnabled
         onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
         super.sellFor(_receiver, _depositAmount, _minAmountOut);
     }
-
-    /*  /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
-    /// @dev added role check
-    function sell(uint _depositAmount, uint _minAmountOut)
-        public
-        override (FM_BC_Bancor_Redeeming_VirtualSupply_v1)
-        sellingIsEnabled
-        onlyModuleRole(CURVE_INTERACTION_ROLE)
-    {
-        super.sell(_depositAmount, _minAmountOut);
-    }*/
 
     /// @notice Mints a specified amount of Issuance Tokens to a designated receiver address. Deactivated in this implementation..
     function mintIssuanceTokenTo(address, uint)

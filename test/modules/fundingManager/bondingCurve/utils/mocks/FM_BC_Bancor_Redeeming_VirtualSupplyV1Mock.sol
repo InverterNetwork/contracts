@@ -55,15 +55,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         _setIssuanceToken(_newIssuanceToken);
     }
 
-    /*   function call_staticPricePPM(
-        uint _issuanceSupply,
-        uint _collateralSupply,
-        uint32 _reserveRatio
-    ) external pure returns (uint) {
-        return
-            _staticPricePPM(_issuanceSupply, _collateralSupply, _reserveRatio);
-    }*/
-
     function call_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,
@@ -84,11 +75,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         view
         returns (uint)
     {
-        uint decimalConvertedVirtualIssuanceSupply = FM_BC_Tools
-            ._convertAmountToRequiredDecimal(
+        return FM_BC_Tools._convertAmountToRequiredDecimal(
             virtualIssuanceSupply, issuanceTokenDecimals, 18
         );
-        return decimalConvertedVirtualIssuanceSupply;
     }
 
     // Note: this function returns the virtual collateral supply in the same format it will be fed to the Bancor formula
@@ -97,11 +86,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         view
         returns (uint)
     {
-        uint decimalConvertedVirtualCollateralSupply = FM_BC_Tools
-            ._convertAmountToRequiredDecimal(
+        return FM_BC_Tools._convertAmountToRequiredDecimal(
             virtualCollateralSupply, collateralTokenDecimals, 18
         );
-        return decimalConvertedVirtualCollateralSupply;
     }
 
     function call_calculateNetAndSplitFees(
