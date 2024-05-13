@@ -120,7 +120,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
             uint issuanceSellFeePercentage
         )
     {
-        return _getSellFeesAndTreasuryAddresses();
+        return _getFunctionFeesAndTreasuryAddresses( bytes4(keccak256(bytes("_sellOrder(address, uint, uint)"))));
     }
 
     function call_calculateNetAndSplitFees(

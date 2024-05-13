@@ -118,7 +118,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             ,
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
-        ) = _getSellFeesAndTreasuryAddresses();
+        ) = _getFunctionFeesAndTreasuryAddresses( bytes4(keccak256(bytes("_sellOrder(address, uint, uint)"))));
 
         // Deduct protocol sell fee from issuance, if applicable
         (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
@@ -192,7 +192,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             address issuanceTreasury,
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
-        ) = _getSellFeesAndTreasuryAddresses();
+        ) = _getFunctionFeesAndTreasuryAddresses( bytes4(keccak256(bytes("_sellOrder(address, uint, uint)"))));
 
         uint protocolFeeAmount;
         uint workflowFeeAmount;
@@ -293,6 +293,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         sellFee = _fee;
     }
 
+/*
     /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
     ///     sell operations
     /// @return collateralTreasury The address the protocol fee in collateral should be sent to
@@ -320,6 +321,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
         );
     }
+    *
     /*
     /// @dev This function takes into account any applicable sell fees before computing the
     /// collateral amount to be redeemed. Revert when depositAmount is zero.

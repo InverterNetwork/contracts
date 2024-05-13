@@ -136,7 +136,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             ,
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
-        ) = _getBuyFeesAndTreasuryAddresses();
+        ) = _getFunctionFeesAndTreasuryAddresses(bytes4(keccak256(bytes("_buyOrder(address, uint, uint)"))));
 
         // Deduct protocol and project buy fee from collateral, if applicable
         (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
@@ -239,7 +239,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             address issuanceTreasury,
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
-        ) = _getBuyFeesAndTreasuryAddresses();
+        ) = _getFunctionFeesAndTreasuryAddresses(bytes4(keccak256(bytes("_buyOrder(address, uint, uint)"))));
 
         //uint protocolFeeAmount;
         //uint workflowFeeAmount;
@@ -338,7 +338,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
     */
 
-    /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
+ /*   /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
     ///     buy operations
     /// @return collateralTreasury The address the protocol fee in collateral should be sent to
     /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
@@ -363,6 +363,34 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         (issuanceBuyFeePercentage, issuanceTreasury) =
         _getFeeManagerIssuanceFeeData(
             bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
+    }*/
+
+    /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
+    ///     a specific operation
+    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
+    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
+    /// @return collateralFeePercentage The percentage fee to be collected from the collateral
+    ///     token being redeemed, expressed in BPS
+    /// @return issuanceFeePercentage The percentage fee to be collected from the issuance token
+    ///     being deposited, expressed in BPS
+    function _getFunctionFeesAndTreasuryAddresses(bytes4 _selector)
+        internal
+        virtual
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralFeePercentage,
+            uint issuanceFeePercentage
+        )
+    {
+        (collateralFeePercentage, collateralTreasury) =
+        _getFeeManagerCollateralFeeData(
+            _selector
+        );
+        (issuanceFeePercentage, issuanceTreasury) =
+        _getFeeManagerIssuanceFeeData(
+            _selector
         );
     }
 
