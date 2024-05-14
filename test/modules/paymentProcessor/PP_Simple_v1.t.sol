@@ -28,7 +28,7 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_SimpleV1Test is ModuleTest {
-    bool hasDependency;
+    //..bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT

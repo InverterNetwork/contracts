@@ -191,7 +191,7 @@ contract OrchestratorFactory_v1 is
         return _orchestratorIdCounter;
     }
 
-    function decoder(bytes memory data)
+    /* //..    function decoder(bytes memory data)
         public
         pure
         returns (bool requirement)
@@ -209,7 +209,7 @@ contract OrchestratorFactory_v1 is
         } catch {
             return false;
         }
-    }
+    } */
 
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable

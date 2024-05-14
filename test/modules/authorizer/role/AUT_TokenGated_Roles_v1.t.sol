@@ -78,7 +78,7 @@ contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
 }
 
 contract TokenGatedAUT_RoleV1Test is Test {
-    bool hasDependency;
+    //..bool hasDependency;
     string[] dependencies = new string[](0);
 
     // Mocks

@@ -28,7 +28,7 @@ import {
 } from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract FM_RebasingV1Test is ModuleTest {
-    bool hasDependency;
+    //..bool hasDependency;
     string[] dependencies = new string[](0);
 
     struct UserDeposits {

@@ -65,31 +65,29 @@ contract InverterBeaconE2E is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                abi.encode(address(this), address(this))
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
+        //.. abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
         //--------------------------------------------------------------------------
         // Beacon added to factory
 
@@ -112,12 +110,9 @@ contract InverterBeaconE2E is E2ETest {
 
         //Add new Beacon to this moduleConfiguration
         moduleConfigurations.push(
-            IOrchestratorFactory_v1.ModuleConfig(
-                DATA,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
-            )
+            IOrchestratorFactory_v1.ModuleConfig(DATA, bytes(""))
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     }
 
     //--------------------------------------------------------------------------

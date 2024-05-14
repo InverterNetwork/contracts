@@ -44,39 +44,37 @@ contract MetaTxAndMulticallE2E is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                abi.encode(address(this), address(this))
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Additional Logic Modules
         setUpBountyManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 bountyManagerMetadata,
-                bytes(""),
-                abi.encode(true, EMPTY_DEPENDENCY_LIST)
+                bytes("")
+                //..abi.encode(true, EMPTY_DEPENDENCY_LIST)
             )
         );
     }

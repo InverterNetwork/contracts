@@ -26,7 +26,7 @@ import {
 } from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 contract LM_PC_RecurringV1Test is ModuleTest {
-    bool hasDependency;
+    //..bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT

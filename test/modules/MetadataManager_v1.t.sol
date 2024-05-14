@@ -25,7 +25,7 @@ import {
 } from "src/modules/utils/MetadataManager_v1.sol";
 
 contract MetadataManagerV1Test is ModuleTest {
-    bool hasDependency;
+    //..bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT

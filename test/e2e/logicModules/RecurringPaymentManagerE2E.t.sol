@@ -60,41 +60,37 @@ contract RecurringPaymentManagerE2E is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpStreamingPaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                streamingPaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                streamingPaymentProcessorMetadata, bytes("")
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Additional Logic Modules
         setUpRecurringPaymentManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                recurringPaymentManagerMetadata,
-                abi.encode(1 weeks),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                recurringPaymentManagerMetadata, abi.encode(1 weeks)
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     }
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {

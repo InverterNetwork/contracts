@@ -27,7 +27,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract OrchestratorFactoryV1Test is Test {
-    bool hasDependency;
+    //..bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT
@@ -60,32 +60,31 @@ contract OrchestratorFactoryV1Test is Test {
         IModule_v1.Metadata(
             1, 0, "https://fundingmanager.com", "FundingManager"
         ),
-        bytes("data"),
-        abi.encode(hasDependency, dependencies)
+        bytes("data")
     );
+    //..abi.encode(hasDependency, dependencies)
 
     IOrchestratorFactory_v1.ModuleConfig authorizerConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         IModule_v1.Metadata(1, 0, "https://authorizer.com", "Authorizer"),
-        abi.encode(address(this), address(this)),
-        abi.encode(hasDependency, dependencies)
+        abi.encode(address(this), address(this))
     );
+    //..abi.encode(hasDependency, dependencies)
 
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         IModule_v1.Metadata(
             1, 1, "https://paymentprocessor.com", "PP_Simple_v1"
         ),
-        bytes("data"),
-        abi.encode(hasDependency, dependencies)
+        bytes("data")
     );
+    //..abi.encode(hasDependency, dependencies)
 
     IOrchestratorFactory_v1.ModuleConfig moduleConfig = IOrchestratorFactory_v1
         .ModuleConfig(
-        IModule_v1.Metadata(1, 0, "https://module.com", "Module_v1"),
-        bytes(""),
-        abi.encode(hasDependency, dependencies)
+        IModule_v1.Metadata(1, 0, "https://module.com", "Module_v1"), bytes("")
     );
+    //..abi.encode(hasDependency, dependencies)
 
     function setUp() public {
         moduleFactory = new ModuleFactoryV1Mock();

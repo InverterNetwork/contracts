@@ -46,50 +46,46 @@ contract SingleVoteGovernorE2E is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                abi.encode(address(this), address(this))
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Additional Logic Modules
         setUpBountyManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata,
-                bytes(""),
-                abi.encode(true, EMPTY_DEPENDENCY_LIST)
+                bountyManagerMetadata, bytes("")
             )
         );
+        //..abi.encode(true, EMPTY_DEPENDENCY_LIST)
 
         setUpSingleVoteGovernor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                singleVoteGovernorMetadata,
-                abi.encode(initialVoters, 2, 3 days),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                singleVoteGovernorMetadata, abi.encode(initialVoters, 2, 3 days)
             )
         );
+        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     }
 
     function test_e2e_SingleVoteGovernor() public {

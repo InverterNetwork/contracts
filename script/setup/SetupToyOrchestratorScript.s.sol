@@ -20,8 +20,8 @@ import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     ScriptConstants scriptConstants = new ScriptConstants();
-    bool hasDependency;
-    string[] dependencies = new string[](0);
+    //..bool hasDependency;
+    //..string[] dependencies = new string[](0);
 
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
@@ -78,35 +78,30 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Funding Manager: Metadata, token address
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            rebasingFundingManagerMetadata,
-            abi.encode(address(token)),
-            abi.encode(hasDependency, dependencies)
+            rebasingFundingManagerMetadata, abi.encode(address(token))
         );
+        //..abi.encode(hasDependency, dependencies)
 
         // Payment Processor: only Metadata
         IOrchestratorFactory_v1.ModuleConfig memory
             paymentProcessorFactoryConfig = IOrchestratorFactory_v1
-                .ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(hasDependency, dependencies)
-            );
+                .ModuleConfig(simplePaymentProcessorMetadata, bytes(""));
+        //..abi.encode(hasDependency, dependencies)
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             roleAuthorizerMetadata,
-            abi.encode(orchestratorOwner, orchestratorOwner),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(orchestratorOwner, orchestratorOwner)
         );
+        //..abi.encode(hasDependency, dependencies)
 
         // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
         IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            bountyManagerMetadata,
-            abi.encode(""),
-            abi.encode(true, dependencies)
+            bountyManagerMetadata, abi.encode("")
         );
+        //..abi.encode(true, dependencies)
 
         // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.
         IOrchestratorFactory_v1.ModuleConfig[] memory additionalModuleConfig =
