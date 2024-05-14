@@ -101,9 +101,10 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol
 	@forge script script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol
 	
-	## governance
-	@forge script script/modules/governance/DeployAUT_Role_v1.s.sol
-	@forge script script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol
+	## authorizer
+	@forge script script/modules/authorizer/DeployAUT_Role_v1.s.sol
+	@forge script script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol
+	@forge script script/modules/authorizer/extensions/DeployVotingRoleManager_v1.s.sol
 
 	## logicModule
 	@forge script script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol
@@ -113,8 +114,6 @@ testScripts: ## Run e2e test suite
 	@forge script script/modules/paymentProcessor/DeployPP_Simple_v1.s.sol
 	@forge script script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol
 
-	## utils
-	@forge script script/modules/utils/DeployVotingRoleManager_v1.s.sol
 	
 	## orchestrator
 	@forge script script/orchestrator/DeployOrchestrator_v1.s.sol

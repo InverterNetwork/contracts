@@ -10,7 +10,7 @@ import {
     IAuthorizer_v1
 } from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {DeployAUT_TokenGated_Role_v1} from
-    "script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol";
+    "script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol";
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {
     Orchestrator_v1,

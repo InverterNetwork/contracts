@@ -18,9 +18,9 @@ import {
 import {
     VotingRoleManager_v1,
     IVotingRoleManager_v1
-} from "src/modules/utils/VotingRoleManager_v1.sol";
+} from "src/modules/authorizer/extensions/VotingRoleManager_v1.sol";
 
-contract SingleVoteGovernorE2E is E2ETest {
+contract VotingRoleManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
