@@ -26,6 +26,7 @@ contract FeeManagerTest is Test {
     uint INVALID_FEE;
 
     //Events
+    event MaxFeeSet(uint maxFee);
     event DefaultProtocolTreasurySet(address defaultProtocolTreasury);
     event WorkflowTreasurySet(address workflow, address treasury);
     event DefaultCollateralFeeSet(uint feeMan);
@@ -54,6 +55,9 @@ contract FeeManagerTest is Test {
             defaultIssuanceFee
         );
         INVALID_FEE = feeMan.BPS() + 1;
+
+        //For easier testing set maxfee to BPS
+        feeMan.setMaxFee(feeMan.BPS());
     }
 
     //--------------------------------------------------------------------------
@@ -236,6 +240,36 @@ contract FeeManagerTest is Test {
 
     //--------------------------------------------------------------------------
     // Test: Setter Functions
+
+    function testSetMaxFee(uint amount) public {
+        amount = bound(amount, 0, feeMan.BPS());
+
+        vm.expectEmit(true, true, true, true);
+        emit MaxFeeSet(amount);
+
+        feeMan.setMaxFee(amount);
+        assertEq(feeMan.maxFee(), amount);
+    }
+
+    function testSetMaxFeeModifierInPosition() public {
+        //onlyOwner
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OZErrors.Ownable__UnauthorizedAccount, address(0)
+            )
+        );
+        vm.prank(address(0));
+        feeMan.setMaxFee(0);
+
+        //validMaxFee(maxFee)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFeeManager_v1.FeeManager__InvalidMaxFee.selector
+            )
+        );
+
+        feeMan.setMaxFee(INVALID_FEE);
+    }
 
     function testSetDefaultProtocolTreasury(address adr) public {
         vm.assume(adr != address(0));

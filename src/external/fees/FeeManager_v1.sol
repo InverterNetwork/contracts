@@ -92,13 +92,15 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         initializer
         validAddress(owner)
         validAddress(_defaultProtocolTreasury)
-        validFee(_defaultCollateralFee)
-        validFee(_defaultIssuanceFee)
     {
         __Ownable_init(owner); //@note instead constructor -> not upgradeable?
 
         //initial max fee is 10%
         maxFee = 1000;
+
+        if (_defaultCollateralFee > maxFee || _defaultIssuanceFee > maxFee) {
+            revert FeeManager__InvalidFee();
+        }
 
         defaultProtocolTreasury = _defaultProtocolTreasury;
         defaultCollateralFee = _defaultCollateralFee;
@@ -210,7 +212,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     // MaxFee
 
     /// @inheritdoc IFeeManager_v1
-    function setMaxFee(uint _maxFee) external onlyOwner validMaxFee(maxFee) {
+    function setMaxFee(uint _maxFee) external onlyOwner validMaxFee(_maxFee) {
         maxFee = _maxFee;
         emit MaxFeeSet(_maxFee);
     }
