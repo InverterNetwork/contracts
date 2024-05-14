@@ -42,7 +42,6 @@ import {DeployLM_PC_RecurringPayments_v1} from
     "script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol";
 import {DeployVotingRoleManager_v1} from
     "script/modules/utils/DeployVotingRoleManager_v1.s.sol";
-import {DeployMetadataManager} from "script/utils/DeployMetadataManager.s.sol";
 
 // Import external contracts:
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
@@ -79,7 +78,6 @@ contract DeploymentScript is Script {
     // Utils
     DeployVotingRoleManager_v1 deploySingleVoteGovernor =
         new DeployVotingRoleManager_v1();
-    DeployMetadataManager deployMetadataManager = new DeployMetadataManager();
     // TransactionForwarder_v1
     DeployTransactionForwarder_v1 deployTransactionForwarder =
         new DeployTransactionForwarder_v1();
@@ -340,7 +338,6 @@ contract DeploymentScript is Script {
         recurringPaymentManager = deployRecurringPaymentManager.run();
         // Utils
         singleVoteGovernor = deploySingleVoteGovernor.run();
-        metadataManager = deployMetadataManager.run();
 
         console2.log(
             "-----------------------------------------------------------------------------"
