@@ -114,7 +114,6 @@ contract DeploymentScript is Script {
     address recurringPaymentManager;
     // Utils
     address singleVoteGovernor;
-    address metadataManager;
 
     // ------------------------------------------------------------------------
     // Beacons
@@ -135,7 +134,6 @@ contract DeploymentScript is Script {
     address recurringPaymentManagerBeacon;
     // Utils
     address singleVoteGovernorBeacon;
-    address metadataManagerBeacon;
 
     // ------------------------------------------------------------------------
     // Deployed Proxy Contracts
@@ -235,13 +233,6 @@ contract DeploymentScript is Script {
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "VotingRoleManager_v1"
-    );
-
-    IModule_v1.Metadata metadataManagerMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "MetadataManager_v1"
     );
 
     /// @notice Deploys all necessary factories, beacons and implementations
@@ -410,10 +401,6 @@ contract DeploymentScript is Script {
             moduleFactory,
             singleVoteGovernorMetadata
         );
-        metadataManagerBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer, metadataManager, moduleFactory, metadataManagerMetadata
-        );
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -443,7 +430,6 @@ contract DeploymentScript is Script {
                 governor
             );
             Ownable2Step(singleVoteGovernorBeacon).transferOwnership(governor);
-            Ownable2Step(metadataManagerBeacon).transferOwnership(governor);
 
             Ownable2Step(orchestratorFactory).transferOwnership(governor);
             Ownable2Step(moduleFactory).transferOwnership(governor);
