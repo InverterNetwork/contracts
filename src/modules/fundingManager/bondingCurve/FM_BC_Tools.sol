@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 library FM_BC_Tools {
     //error Module__BondingCurveBase__FeeAmountToHigh();
-    
 
     /// @dev Converts an amount to a required decimal representation.
     /// This function is useful for handling tokens with different decimal places.
@@ -35,7 +34,7 @@ library FM_BC_Tools {
             return (_amount * conversionFactor);
         }
     }
-  
+
     /*
     function _calculateNetAndSplitFees(
         uint _totalAmount,

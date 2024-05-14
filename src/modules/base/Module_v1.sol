@@ -114,7 +114,7 @@ abstract contract Module_v1 is
         _onlyOrchestratorModifier();
         _;
     }
-   
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -276,7 +276,7 @@ abstract contract Module_v1 is
         // custom error types in each implementation.
         return __Module_orchestrator.executeTxFromModule(address(this), data);
     }
- 
+
     function _checkRoleModifier(bytes32 role, address addr) internal view {
         if (!__Module_orchestrator.authorizer().hasRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
