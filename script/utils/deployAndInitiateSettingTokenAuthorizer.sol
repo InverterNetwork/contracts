@@ -27,9 +27,6 @@ contract deployAndSwitchTokenAuthorizer is Script {
         new DeployAndSetUpInverterBeacon_v1();
     ScriptConstants scriptConstants = new ScriptConstants();
 
-    //..bool hasDependency;
-    //..string[] dependencies = new string[](0);
-
     uint orchestratorOwnerPrivateKey =
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
@@ -69,7 +66,6 @@ contract deployAndSwitchTokenAuthorizer is Script {
         IOrchestratorFactory_v1.ModuleConfig(
             authorizerMetadata, abi.encode(orchestratorOwner, orchestratorOwner)
         );
-        //..abi.encode(hasDependency, dependencies)
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);
 

@@ -85,7 +85,6 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 )
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpRoleAuthorizer();
@@ -94,7 +93,6 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
@@ -103,7 +101,6 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 simplePaymentProcessorMetadata, bytes("")
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Additional Logic Modules
         setUpBountyManager();
@@ -112,7 +109,6 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 bountyManagerMetadata, bytes("")
             )
         );
-        //..abi.encode(true, EMPTY_DEPENDENCY_LIST)
     }
 
     function test_e2e_OrchestratorFundManagement() public {

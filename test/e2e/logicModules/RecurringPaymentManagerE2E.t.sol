@@ -63,7 +63,6 @@ contract RecurringPaymentManagerE2E is E2ETest {
                 rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpRoleAuthorizer();
@@ -72,7 +71,6 @@ contract RecurringPaymentManagerE2E is E2ETest {
                 roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpStreamingPaymentProcessor();
@@ -81,7 +79,6 @@ contract RecurringPaymentManagerE2E is E2ETest {
                 streamingPaymentProcessorMetadata, bytes("")
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Additional Logic Modules
         setUpRecurringPaymentManager();
@@ -90,7 +87,6 @@ contract RecurringPaymentManagerE2E is E2ETest {
                 recurringPaymentManagerMetadata, abi.encode(1 weeks)
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     }
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {

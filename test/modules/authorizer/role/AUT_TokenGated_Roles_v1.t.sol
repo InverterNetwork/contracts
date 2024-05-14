@@ -78,9 +78,6 @@ contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
 }
 
 contract TokenGatedAUT_RoleV1Test is Test {
-    //..bool hasDependency;
-    string[] dependencies = new string[](0);
-
     // Mocks
     AUT_TokenGated_Roles_v1 _authorizer;
     Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));

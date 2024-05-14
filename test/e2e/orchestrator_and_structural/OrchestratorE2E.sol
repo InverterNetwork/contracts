@@ -62,7 +62,6 @@ contract OrchestratorE2E is E2ETest {
                 rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpRoleAuthorizer();
@@ -71,7 +70,6 @@ contract OrchestratorE2E is E2ETest {
                 roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
@@ -80,7 +78,6 @@ contract OrchestratorE2E is E2ETest {
                 simplePaymentProcessorMetadata, bytes("")
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // We also set up the LM_PC_Bounties_v1, even though we'll add it later
         setUpBountyManager();

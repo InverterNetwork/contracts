@@ -48,7 +48,6 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
                 rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
@@ -58,7 +57,6 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
                 abi.encode(address(this), address(this))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
@@ -67,15 +65,12 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
                 simplePaymentProcessorMetadata, bytes("")
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Additional Logic Modules
         setUpBountyManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata,
-                bytes("")
-                //..abi.encode(true, EMPTY_DEPENDENCY_LIST)
+                bountyManagerMetadata, bytes("")
             )
         );
     }

@@ -80,7 +80,6 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
                 rebasingFundingManagerMetadata, abi.encode(address(rewardToken))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpRoleAuthorizer();
@@ -89,7 +88,6 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
                 roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
@@ -98,7 +96,6 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
                 simplePaymentProcessorMetadata, bytes("")
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Additional Logic Modules
         setUpLM_PC_Staking_v1();
@@ -107,7 +104,6 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
                 LM_PC_Staking_v1Metadata, abi.encode(stakingToken)
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     }
 
     function test_e2e_LM_PC_Staking_v1Lifecycle() public {

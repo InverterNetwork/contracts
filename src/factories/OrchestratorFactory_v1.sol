@@ -191,26 +191,6 @@ contract OrchestratorFactory_v1 is
         return _orchestratorIdCounter;
     }
 
-    /* //..    function decoder(bytes memory data)
-        public
-        pure
-        returns (bool requirement)
-    {
-        (requirement,) = abi.decode(data, (bool, string[]));
-    }
-
-    function _dependencyInjectionRequired(bytes memory dependencyData)
-        internal
-        view
-        returns (bool)
-    {
-        try this.decoder(dependencyData) returns (bool) {
-            return this.decoder(dependencyData);
-        } catch {
-            return false;
-        }
-    } */
-
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
 

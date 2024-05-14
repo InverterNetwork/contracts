@@ -41,9 +41,6 @@ import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract VotingRoleManagerV1Test is ModuleTest {
-    //..bool hasDependency;
-    string[] dependencies = new string[](0);
-
     // SuT
     VotingRoleManager_v1 _governor;
 

@@ -43,7 +43,6 @@ contract MetadataManagerE2E is E2ETest {
                 rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
@@ -53,7 +52,6 @@ contract MetadataManagerE2E is E2ETest {
                 abi.encode(address(this), address(this))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
@@ -62,7 +60,6 @@ contract MetadataManagerE2E is E2ETest {
                 simplePaymentProcessorMetadata, bytes("")
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // MetadataManager_v1
         // !!! Note !!!
@@ -122,7 +119,6 @@ contract MetadataManagerE2E is E2ETest {
                 )
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     }
 
     function test_e2e_MetadataManager() public {

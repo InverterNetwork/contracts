@@ -68,7 +68,6 @@ contract InverterBeaconE2E is E2ETest {
                 rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // Authorizer
         setUpTokenGatedRoleAuthorizer();
@@ -78,7 +77,6 @@ contract InverterBeaconE2E is E2ETest {
                 abi.encode(address(this), address(this))
             )
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
@@ -87,7 +85,7 @@ contract InverterBeaconE2E is E2ETest {
                 simplePaymentProcessorMetadata, bytes("")
             )
         );
-        //.. abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+
         //--------------------------------------------------------------------------
         // Beacon added to factory
 
@@ -112,7 +110,6 @@ contract InverterBeaconE2E is E2ETest {
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(DATA, bytes(""))
         );
-        //..abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     }
 
     //--------------------------------------------------------------------------

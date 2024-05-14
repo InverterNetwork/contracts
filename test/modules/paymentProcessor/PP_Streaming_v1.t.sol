@@ -37,9 +37,6 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_StreamingV1Test is //@note do we want to do anything about these tests?
     ModuleTest {
-    //..bool hasDependency;
-    //..string[] dependencies = new string[](0);
-
     // SuT
     PP_Streaming_v1AccessMock paymentProcessor;
 
