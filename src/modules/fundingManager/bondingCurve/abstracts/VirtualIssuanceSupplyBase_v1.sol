@@ -104,10 +104,4 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
         emit VirtualIssuanceSupplySet(_virtualSupply, virtualIssuanceSupply);
         virtualIssuanceSupply = _virtualSupply;
     }
-
-    /* /// @dev Internal view function to return the current virtual issuance supply.
-    /// @return The current virtual issuance supply as a uint.
-    function _getVirtualIssuanceSupply() internal view returns (uint) {
-        return virtualIssuanceSupply;
-    }*/
 }

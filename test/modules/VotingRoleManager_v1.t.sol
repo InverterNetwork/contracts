@@ -431,34 +431,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         assertEq(address(testAuthorizer.orchestrator()), address(0));
         assertEq(testAuthorizer.voterCount(), 0);
     }
-    /*
-    function testInit2SingleVoteGovernor() public {
-        // Attempting to call the init2 function with malformed data
-        // SHOULD FAIL
-        vm.expectRevert(
-            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
-        );
-        _authorizer.init2(_orchestrator, abi.encode(123));
 
-        // Calling init2 for the first time with no dependency
-        // SHOULD FAIL
-        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
-        vm.expectRevert(
-            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
-        );
-        _governor.init2(_orchestrator, dependencyData);
-
-        // Calling init2 for the first time with dependency = true
-        // SHOULD PASS
-        dependencyData = abi.encode(true, dependencies);
-        _governor.init2(_orchestrator, dependencyData);
-
-        // Attempting to call the init2 function again.
-        // SHOULD FAIL
-        vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
-        _governor.init2(_orchestrator, dependencyData);
-    }
-    */
     //--------------------------------------------------------------------------
     // TESTS: VOTE CREATION
 

@@ -109,10 +109,4 @@ abstract contract VirtualCollateralSupplyBase_v1 is
         emit VirtualCollateralSupplySet(_virtualSupply, virtualCollateralSupply);
         virtualCollateralSupply = _virtualSupply;
     }
-
-    /*  /// @dev Internal view function to return the current virtual collateral supply.
-    /// @return The current virtual collateral supply as a uint.
-    function _getVirtualCollateralSupply() internal view returns (uint) {
-        return virtualCollateralSupply;
-    }*/
 }
