@@ -44,8 +44,15 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     }
 
     modifier validFee(uint fee) {
-        if (fee > BPS) {
+        if (fee > maxFee) {
             revert FeeManager__InvalidFee();
+        }
+        _;
+    }
+
+    modifier validMaxFee(uint max) {
+        if (max > BPS) {
+            revert FeeManager__InvalidMaxFee();
         }
         _;
     }
@@ -55,6 +62,8 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
 
     /// @dev Base Points used for percentage calculation. This value represents 100%
     uint public constant BPS = 10_000;
+    /// @dev The maximum fee percentage amount that can be set. Based on the BPS.
+    uint public maxFee;
 
     address internal defaultProtocolTreasury;
 
@@ -87,6 +96,9 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         validFee(_defaultIssuanceFee)
     {
         __Ownable_init(owner); //@note instead constructor -> not upgradeable?
+
+        //initial max fee is 10%
+        maxFee = 1000;
 
         defaultProtocolTreasury = _defaultProtocolTreasury;
         defaultCollateralFee = _defaultCollateralFee;
@@ -193,6 +205,15 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
 
     //--------------------------------------------------------------------------
     // Setter Functions
+
+    //---------------------------
+    // MaxFee
+
+    /// @inheritdoc IFeeManager_v1
+    function setMaxFee(uint _maxFee) external onlyOwner validMaxFee(maxFee) {
+        maxFee = _maxFee;
+        emit MaxFeeSet(_maxFee);
+    }
 
     //---------------------------
     // Treasuries
