@@ -100,7 +100,13 @@ interface IModule_v1 {
     /// @return The module's orchestrator.
     function orchestrator() external view returns (IOrchestrator_v1);
 
-    function grantModuleRole(bytes32 role, address addr) external;
+    function grantModuleRole(bytes32 role, address target) external;
 
-    function revokeModuleRole(bytes32 role, address addr) external;
+    function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
+        external;
+
+    function revokeModuleRole(bytes32 role, address target) external;
+
+    function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
+        external;
 }
