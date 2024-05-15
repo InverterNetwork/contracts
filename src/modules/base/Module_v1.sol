@@ -57,11 +57,6 @@ abstract contract Module_v1 is
     //
     // Variables are prefixed with `__Module_`.
 
-    /// @dev same thing as the initializer modifier but for the init2 function
-    ///
-    /// @custom:invariant Not mutated after the init2 call
-    bool private __Module_initialization;
-
     /// @dev The module's orchestrator instance.
     ///
     /// @custom:invariant Not mutated after initialization.
