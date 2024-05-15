@@ -819,7 +819,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         public
         callerIsOrchestratorOwner
     {
-        vm.assume(_fee >= bondingCurveFundingManager.call_BPS());
+        vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
             IBondingCurveBase_v1
                 .Module__BondingCurveBase__InvalidFeePercentage

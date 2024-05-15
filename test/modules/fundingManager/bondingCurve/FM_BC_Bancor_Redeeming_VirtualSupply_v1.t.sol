@@ -17,9 +17,6 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
 import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
-// import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-// import {IERC20Metadata} from
-//     "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // Internal Dependencies
 import {
