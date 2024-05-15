@@ -82,7 +82,7 @@ contract FeeManagerTest is Test {
     }
 
     function testValidFee(uint amt) public {
-        if (amt > feeMan.BPS()) {
+        if (amt > feeMan.maxFee()) {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IFeeManager_v1.FeeManager__InvalidFee.selector
@@ -91,6 +91,18 @@ contract FeeManagerTest is Test {
         }
 
         feeMan.setDefaultCollateralFee(amt);
+    }
+
+    function testValidMaxFee(uint amt) public {
+        if (amt > feeMan.BPS()) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IFeeManager_v1.FeeManager__InvalidMaxFee.selector
+                )
+            );
+        }
+
+        feeMan.setMaxFee(amt);
     }
 
     //--------------------------------------------------------------------------
