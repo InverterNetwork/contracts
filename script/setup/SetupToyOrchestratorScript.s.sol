@@ -100,7 +100,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             abi.encode(hasDependency, dependencies)
         );
 
-        // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
+        // BountyManager: Metadata, salary precision, fee percentage, fee treasury address
         IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             bountyManagerMetadata,

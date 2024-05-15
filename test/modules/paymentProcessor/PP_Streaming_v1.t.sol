@@ -1110,7 +1110,6 @@ contract PP_StreamingV1Test is ModuleTest {
     }
 
     //This test creates a new set of payments in a client which finished all running payments.
-    //one possible case would be a orchestrator that finishes all milestones succesfully and then gets "restarted" some time later
     function testCancelRunningPayments(
         address[] memory recipients,
         uint128[] memory amounts,
@@ -1351,7 +1350,7 @@ contract PP_StreamingV1Test is ModuleTest {
         );
     }
 
-    //This test creates a new set of payments in a client which finished all running payments. one possible case would be a orchestrator that finishes all milestones succesfully and then gets "restarted" some time later
+    //This test creates a new set of payments in a client which finished all running payments.
     function testUpdateFinishedPayments(
         address[] memory recipients,
         uint128[] memory amounts,
