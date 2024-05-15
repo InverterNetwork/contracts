@@ -67,14 +67,6 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 
-    /* function call_calculateNetAmountAndFee(uint _depositAmount, uint _feePct)
-        external
-        pure
-        returns (uint, uint)
-    {
-        return _calculateNetAmountAndFee(_depositAmount, _feePct);
-    }*/
-
     function call_calculatePurchaseReturn(uint _depositAmount)
         external
         returns (uint)

@@ -369,27 +369,24 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(issuanceToken.totalSupply(), protocolIssuanceFeeAmount);
     }
 
-    /* Test openSell and _openSell function
+    /* Test openSell function
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module modifier tests)
         └── when caller is the Orchestrator owner
                └── when sell functionality is already open
-                │      └── it should revert
+                │      └── it should stay as is
+                │      └── it should reemit an eventvert
                 └── when sell functionality is not open
                         ├── it should open the sell functionality
                         └── it should emit an event
     */
-    /*   function testOpenSell_FailsIfAlreadyOpen()
-        public
-        callerIsOrchestratorOwner
-    {
-        vm.expectRevert(
-            IBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase__SellingAlreadyOpen
-                .selector
-        );
+    function testOpenSell_Idempotence() public callerIsOrchestratorOwner {
+        assertEq(bondingCurveFundingManager.sellIsOpen(), true);
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit SellingEnabled();
+
         bondingCurveFundingManager.openSell();
-    }*/
+    }
 
     function testOpenSell() public callerIsOrchestratorOwner {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
@@ -406,31 +403,37 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
     }
 
-    /* Test closeSell and _closeSell function
+    /* Test closeSell function
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
                └── when sell functionality is already closed
-                │      └── it should revert -> 
+                │      └── it should stay as is
+                │      └── it should reemit an eventvert
                 └── when sell functionality is not closed
                         ├── it should close the sell functionality
                         └── it should emit an event
     */
 
-    /*  function testCloseSell_FailsIfAlreadyClosed()
+    function testCloseSell_FailsIfAlreadyClosed()
         public
         callerIsOrchestratorOwner
     {
+        assertEq(bondingCurveFundingManager.sellIsOpen(), true);
+
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
-        vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase__SellingAlreadyClosed
-                .selector
-        );
+        assertEq(bondingCurveFundingManager.sellIsOpen(), false);
+
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit SellingDisabled();
         bondingCurveFundingManager.closeSell();
+
+        assertEq(bondingCurveFundingManager.sellIsOpen(), false);
     }
-    */
+
     function testCloseSell() public callerIsOrchestratorOwner {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 

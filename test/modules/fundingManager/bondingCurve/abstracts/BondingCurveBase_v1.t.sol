@@ -730,22 +730,22 @@ contract BondingCurveBaseV1Test is ModuleTest {
         │      └── it should revert (tested in base Module modifier tests)
         └── when caller is the Orchestrator_v1 owner
                └── when buy functionality is already open
-                │      └── it should revert
+                │      └── it should stay as is
+                │      └── it should emit an event
                 └── when buy functionality is not open
                         └── it should open the buy functionality
                         └── it should emit an event
     */
-    /*  function testOpenBuy_FailsIfAlreadyOpen()
-        public
-        callerIsOrchestratorOwner
-    {
-        vm.expectRevert(
-            IBondingCurveBase_v1
-                .Module__BondingCurveBase__BuyingAlreadyOpen
-                .selector
-        );
+    function testOpenBuy_Idempotence() public callerIsOrchestratorOwner {
+        assertEq(bondingCurveFundingManager.buyIsOpen(), true);
+
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit BuyingEnabled();
+
         bondingCurveFundingManager.openBuy();
-    }*/
+
+        assertEq(bondingCurveFundingManager.buyIsOpen(), true);
+    }
 
     function testOpenBuy() public callerIsOrchestratorOwner {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
@@ -767,24 +767,30 @@ contract BondingCurveBaseV1Test is ModuleTest {
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator_v1 owner
                └── when buy functionality is already closed
-                │      └── it should revert 
+                │      └── it should stay as is
+                │      └── it should emit an event
                 └── when buy functionality is not closed
                         ├── it should close the buy functionality
                         └── it should emit an event
     */
-    /*  function testCloseBuy_FailsIfAlreadyClosed()
+    function testCloseBuy_FailsIfAlreadyClosed()
         public
         callerIsOrchestratorOwner
     {
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit BuyingDisabled();
+
         bondingCurveFundingManager.closeBuy();
 
-        vm.expectRevert(
-            IBondingCurveBase_v1
-                .Module__BondingCurveBase__BuyingAlreadyClosed
-                .selector
-        );
+        assertEq(bondingCurveFundingManager.buyIsOpen(), false);
+
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit BuyingDisabled();
+
         bondingCurveFundingManager.closeBuy();
-    }*/
+
+        assertEq(bondingCurveFundingManager.buyIsOpen(), false);
+    }
 
     function testCloseBuy() public callerIsOrchestratorOwner {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
@@ -834,31 +840,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         assertEq(bondingCurveFundingManager.buyFee(), newFee);
     }
-
-    /* Test _calculateNetAmountAndFee function
-        └── when feePct is lower than the BPS
-                └── it should return the deposit amount with the fee deducted
-    */
-    /*
-    function testCalculateFeeDeductedDepositAmount(uint _amount, uint _fee)
-        public
-    {
-        uint _bps = bondingCurveFundingManager.call_BPS();
-        vm.assume(_fee <= _bps);
-
-        uint maxAmount = type(uint).max / _bps; // to prevent overflows
-        _amount = bound(_amount, 1, maxAmount);
-
-        uint feeAmount = _amount * _fee / _bps;
-        uint amountMinusFee = _amount - feeAmount;
-
-        (uint _amountMinusFee, uint _feeAmount) = bondingCurveFundingManager
-            .call_calculateNetAmountAndFee(_amount, _fee);
-
-        assertEq(_amountMinusFee, amountMinusFee);
-        assertEq(_feeAmount, feeAmount);
-    }
-    */
 
     /* Test _setIssuanceToken function
        

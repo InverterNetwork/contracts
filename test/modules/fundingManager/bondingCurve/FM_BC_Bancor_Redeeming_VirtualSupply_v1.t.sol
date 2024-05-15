@@ -1028,22 +1028,140 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         );
     }
 
-    /* Test getStaticPriceForBuying() */
+    /* Test getStaticPriceForBuying()
+        ├── When calling for buying without fuzzing
+            └── it should update return value after buying
+    */
 
-    function testgetStaticPriceForBuying() public {
-        uint returnValue = bondingCurveFundingManager.getStaticPriceForBuying();
-        assertEq(
-            bondingCurveFundingManager.getStaticPriceForBuying(), returnValue
+    function testStaticPriceForBuyingNonFuzzing() public {
+        uint amountIn = 100;
+        uint minAmountOut =
+            bondingCurveFundingManager.calculatePurchaseReturn(amountIn);
+        address buyer = makeAddr("buyer");
+        _prepareBuyConditions(buyer, amountIn);
+
+        // Set virtual supplies to a relatively high value before buying
+        // This way the buy-in won't modify the price too much
+        uint _virtualIssuanceSupplyBeforeBuy = amountIn * 1000;
+        uint _virtualCollateralSupplyBeforeBuy = minAmountOut * 1000;
+
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setVirtualIssuanceSupply(
+                _virtualIssuanceSupplyBeforeBuy
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                _virtualCollateralSupplyBeforeBuy
+            );
+        }
+        vm.stopPrank();
+
+        uint32 _reserveRatioBuying =
+            bondingCurveFundingManager.call_reserveRatioForBuying();
+        // Calculate static price before buy
+        uint staticPriceBeforeBuy =
+            bondingCurveFundingManager.getStaticPriceForBuying();
+
+        // Buy tokens
+        vm.prank(buyer);
+        bondingCurveFundingManager.buy(amountIn, minAmountOut);
+
+        // Get virtual supply after buy
+        uint _virtualIssuanceSupplyAfterBuy =
+            bondingCurveFundingManager.getVirtualIssuanceSupply();
+        uint _virtualCollateralSupplyAfterBuy =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        // Calculate static price after buy
+        uint staticPriceAfterBuy =
+            bondingCurveFundingManager.getStaticPriceForBuying();
+
+        // Collateral has been added to the supply
+        assertGt(
+            _virtualCollateralSupplyAfterBuy, _virtualCollateralSupplyBeforeBuy
+        );
+        // Static price has increased after buy
+        assertGt(staticPriceAfterBuy, staticPriceBeforeBuy);
+
+        // Price has risen less than 1 * PPM
+        assertApproxEqAbs(
+            staticPriceAfterBuy,
+            staticPriceBeforeBuy,
+            1 * bondingCurveFundingManager.call_PPM()
         );
     }
-    /* Test getStaticPriceForSelling() */
 
-    function testgetStaticPriceForSelling() public {
-        uint returnValue = bondingCurveFundingManager.getStaticPriceForSelling();
-        assertEq(
-            bondingCurveFundingManager.getStaticPriceForSelling(), returnValue
+    /* Test getStaticPriceForSelling() 
+            ├── When calling for selling without fuzzing
+                  └── it should update return value after selling
+    */
+    function testStaticPriceWithSellReserveRatioNonFuzzing() public {
+        uint amountIn = 1000;
+        address seller = makeAddr("seller");
+        uint availableForSale = _prepareSellConditions(seller, amountIn); // Multiply amount to ensure that user has enough tokens, because return amount when buying less than amount
+        // Set virtual supply to some number above _sellAmount
+        // Set virtual collateral to some number
+        uint newVirtualIssuanceSupply = availableForSale * 2;
+        uint newVirtualCollateral = amountIn * 2;
+
+        _token.mint(
+            address(bondingCurveFundingManager), (type(uint).max - amountIn)
+        ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
+
+        // Set virtual supplies
+        vm.startPrank(owner_address);
+        {
+            bondingCurveFundingManager.setVirtualIssuanceSupply(
+                newVirtualIssuanceSupply
+            );
+            bondingCurveFundingManager.setVirtualCollateralSupply(
+                newVirtualCollateral
+            );
+        }
+        vm.stopPrank();
+
+        // Calculate min amount out for selling
+        uint minAmountOut =
+            bondingCurveFundingManager.calculateSaleReturn(availableForSale);
+
+        // Get virtual supplies before selling
+        uint _virtualIssuanceSupplyBeforeSell =
+            bondingCurveFundingManager.getVirtualIssuanceSupply();
+        uint _virtualCollateralSupplyBeforeSell =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        uint32 _reserveRatioSelling =
+            bondingCurveFundingManager.call_reserveRatioForSelling();
+
+        // Calculate static price before selling
+        uint staticPriceBeforeSell =
+            bondingCurveFundingManager.getStaticPriceForSelling();
+
+        // Sell tokens
+        vm.prank(seller);
+        bondingCurveFundingManager.sell(availableForSale, minAmountOut);
+
+        // Get virtual supplies after selling
+        uint _virtualIssuanceSupplyAfterSell =
+            bondingCurveFundingManager.getVirtualIssuanceSupply();
+        uint _virtualCollateralSupplyAfterSell =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+
+        // Calculate static price after selling
+        uint staticPriceAfterSell =
+            bondingCurveFundingManager.getStaticPriceForSelling();
+
+        // Assert that supply has changed
+        assertLt(
+            _virtualIssuanceSupplyAfterSell, _virtualIssuanceSupplyBeforeSell
         );
+        assertLt(
+            _virtualCollateralSupplyAfterSell,
+            _virtualCollateralSupplyBeforeSell
+        );
+
+        // Static price has decreased after sell
+        assertLt(staticPriceAfterSell, staticPriceBeforeSell);
     }
+
     /* Test getVirtualCollateralSupply() */
 
     function testGetVirtualCollateralSupply(uint _supply) public {
@@ -1394,157 +1512,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             _newDecimals
         );
     }
-
-    /* Test _staticPricePPM function
-        ├── When calling with reserve ratio for selling without fuzzing
-        |   └── it should update return value after selling
-        ├── When calling with reserve ratio for selling with fuzzing
-        |   └── it should update return value after selling
-        ├── When calling with reserve ratio for buying without fuzzing
-        |   └── it should update return value after buying
-        └── When calling with reserve ratio for buying with fuzzing
-            └── it should update return value after buying
-    */
-    /*
-    function testStaticPriceWithSellReserveRatioNonFuzzing() public {
-        uint amountIn = 1000;
-        address seller = makeAddr("seller");
-        uint availableForSale = _prepareSellConditions(seller, amountIn); // Multiply amount to ensure that user has enough tokens, because return amount when buying less than amount
-        // Set virtual supply to some number above _sellAmount
-        // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = availableForSale * 2;
-        uint newVirtualCollateral = amountIn * 2;
-
-        _token.mint(
-            address(bondingCurveFundingManager), (type(uint).max - amountIn)
-        ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
-
-        // Set virtual supplies
-        vm.startPrank(owner_address);
-        {
-            bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
-            );
-            bondingCurveFundingManager.setVirtualCollateralSupply(
-                newVirtualCollateral
-            );
-        }
-        vm.stopPrank();
-
-        // Calculate min amount out for selling
-        uint minAmountOut =
-            bondingCurveFundingManager.calculateSaleReturn(availableForSale);
-
-        // Get virtual supplies before selling
-        uint _virtualIssuanceSupplyBeforeSell =
-            bondingCurveFundingManager.getVirtualIssuanceSupply();
-        uint _virtualCollateralSupplyBeforeSell =
-            bondingCurveFundingManager.getVirtualCollateralSupply();
-        uint32 _reserveRatioSelling =
-            bondingCurveFundingManager.call_reserveRatioForSelling();
-
-        // Calculate static price before selling
-        uint staticPriceBeforeSell = bondingCurveFundingManager
-            .call_staticPricePPM(
-            _virtualIssuanceSupplyBeforeSell,
-            _virtualCollateralSupplyBeforeSell,
-            _reserveRatioSelling
-        );
-
-        // Sell tokens
-        vm.prank(seller);
-        bondingCurveFundingManager.sell(availableForSale, minAmountOut);
-
-        // Get virtual supplies after selling
-        uint _virtualIssuanceSupplyAfterSell =
-            bondingCurveFundingManager.getVirtualIssuanceSupply();
-        uint _virtualCollateralSupplyAfterSell =
-            bondingCurveFundingManager.getVirtualCollateralSupply();
-
-        // Calculate static price after selling
-        uint staticPriceAfterSell = bondingCurveFundingManager
-            .call_staticPricePPM(
-            _virtualIssuanceSupplyAfterSell,
-            _virtualCollateralSupplyAfterSell,
-            _reserveRatioSelling
-        );
-
-        // Assert that supply has changed
-        assertLt(
-            _virtualIssuanceSupplyAfterSell, _virtualIssuanceSupplyBeforeSell
-        );
-        assertLt(
-            _virtualCollateralSupplyAfterSell,
-            _virtualCollateralSupplyBeforeSell
-        );
-
-        // Static price has decreased after sell
-        assertLt(staticPriceAfterSell, staticPriceBeforeSell);
-    }
-
-    function testStaticPriceWithBuyReserveRatioNonFuzzing() public {
-        uint amountIn = 100;
-        uint minAmountOut =
-            bondingCurveFundingManager.calculatePurchaseReturn(amountIn);
-        address buyer = makeAddr("buyer");
-        _prepareBuyConditions(buyer, amountIn);
-
-        // Set virtual supplies to a relatively high value before buying
-        // This way the buy-in won't modify the price too much
-        uint _virtualIssuanceSupplyBeforeBuy = amountIn * 1000;
-        uint _virtualCollateralSupplyBeforeBuy = minAmountOut * 1000;
-
-        vm.startPrank(owner_address);
-        {
-            bondingCurveFundingManager.setVirtualIssuanceSupply(
-                _virtualIssuanceSupplyBeforeBuy
-            );
-            bondingCurveFundingManager.setVirtualCollateralSupply(
-                _virtualCollateralSupplyBeforeBuy
-            );
-        }
-        vm.stopPrank();
-
-        uint32 _reserveRatioBuying =
-            bondingCurveFundingManager.call_reserveRatioForBuying();
-        // Calculate static price before buy
-        uint staticPriceBeforeBuy = bondingCurveFundingManager
-            .call_staticPricePPM(
-            _virtualIssuanceSupplyBeforeBuy,
-            _virtualCollateralSupplyBeforeBuy,
-            _reserveRatioBuying
-        );
-        // Buy tokens
-        vm.prank(buyer);
-        bondingCurveFundingManager.buy(amountIn, minAmountOut);
-
-        // Get virtual supply after buy
-        uint _virtualIssuanceSupplyAfterBuy =
-            bondingCurveFundingManager.getVirtualIssuanceSupply();
-        uint _virtualCollateralSupplyAfterBuy =
-            bondingCurveFundingManager.getVirtualCollateralSupply();
-        // Calculate static price after buy
-        uint staticPriceAfterBuy = bondingCurveFundingManager
-            .call_staticPricePPM(
-            _virtualIssuanceSupplyAfterBuy,
-            _virtualCollateralSupplyAfterBuy,
-            _reserveRatioBuying
-        );
-        // Collateral has been added to the supply
-        assertGt(
-            _virtualCollateralSupplyAfterBuy, _virtualCollateralSupplyBeforeBuy
-        );
-        // Static price has increased after buy
-        assertGt(staticPriceAfterBuy, staticPriceBeforeBuy);
-
-        // Price has risen less than 1 * PPM
-        assertApproxEqAbs(
-            staticPriceAfterBuy,
-            staticPriceBeforeBuy,
-            1 * bondingCurveFundingManager.call_PPM()
-        );
-    }
-    */
 
     /* Test _convertAmountToRequiredDecimal function
         ├── when the token decimals and the required decimals are the same
