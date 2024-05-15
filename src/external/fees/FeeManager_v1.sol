@@ -73,7 +73,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     //--------------------------------------------------------------------------
     // Initialization
 
-    function init( //@note instead constructor?
+    function init(
         address owner,
         address _defaultProtocolTreasury,
         uint _defaultCollateralFee,
@@ -86,7 +86,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         validFee(_defaultCollateralFee)
         validFee(_defaultIssuanceFee)
     {
-        __Ownable_init(owner); //@note instead constructor -> not upgradeable?
+        __Ownable_init(owner);
 
         defaultProtocolTreasury = _defaultProtocolTreasury;
         defaultCollateralFee = _defaultCollateralFee;
