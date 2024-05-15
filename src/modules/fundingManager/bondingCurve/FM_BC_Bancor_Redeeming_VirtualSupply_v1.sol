@@ -2,41 +2,41 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IVirtualIssuanceSupplyBase_v1} from
-    "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
-import {IVirtualCollateralSupplyBase_v1} from
-    "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {RedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
-import {BondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
-import {VirtualCollateralSupplyBase_v1} from
-    "@fm/bondingCurve/abstracts/VirtualCollateralSupplyBase_v1.sol";
-import {VirtualIssuanceSupplyBase_v1} from
-    "@fm/bondingCurve/abstracts/VirtualIssuanceSupplyBase_v1.sol";
+
+import {
+    IBondingCurveBase_v1,
+    BondingCurveBase_v1
+} from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+import {
+    IRedeemingBondingCurveBase_v1,
+    RedeemingBondingCurveBase_v1
+} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+import {
+    IVirtualCollateralSupplyBase_v1,
+    VirtualCollateralSupplyBase_v1
+} from "@fm/bondingCurve/abstracts/VirtualCollateralSupplyBase_v1.sol";
+import {
+    IVirtualIssuanceSupplyBase_v1,
+    VirtualIssuanceSupplyBase_v1
+} from "@fm/bondingCurve/abstracts/VirtualIssuanceSupplyBase_v1.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
+import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
-// External Libraries
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-
+// Libraries
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title   Bancor Virtual Supply Bonding Curve Funding Manager

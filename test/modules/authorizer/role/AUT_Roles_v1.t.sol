@@ -241,7 +241,7 @@ contract AUT_RolesV1Test is Test {
         assertEq(_authorizer.hasRole("0x01", ALBA), true);
         assertEq(_authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1);
     }
-
+    
     // Test Register Roles
 
     //--------------------------------------------------------------------------------------

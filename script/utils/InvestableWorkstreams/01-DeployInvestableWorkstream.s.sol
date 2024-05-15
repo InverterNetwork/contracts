@@ -89,7 +89,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                 "\t-Bancor Bonding Curve Formula deployed at address: %s ",
                 address(formula)
             );
-            //!!!! This is not a real ERC20 implementation. Befor going into production change this deployment!!!!
+            //!!!! This is not a real ERC20 implementation. Before going into production change this deployment!!!!
             collateralToken = new ERC20Mock("Inverter USD", "iUSD");
             console2.log(
                 "\t-Inverter Mock USD Deployed at address: %s ",
