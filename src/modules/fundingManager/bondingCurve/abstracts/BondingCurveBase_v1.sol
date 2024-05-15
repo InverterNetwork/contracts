@@ -328,7 +328,14 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
     }
 
-    //@note missing description
+    /// @dev Calculates the propotion of the fees for the given amount and returns them plus the amount minus the fees
+    /// @param _totalAmount The amount from which the fees will be taken
+    /// @param _protocolFee The protocol fee percentage in relation to the BPS that will be applied to the totalAmount
+    /// @param _workflowFee The workflow fee percentage in relation to the BPS that will be applied to the totalAmount
+    /// @return netAmount The total amount minus the combined fee amount
+    /// @return protocolFeeAmount The fee amount of the protocol fee
+    /// @return workflowFeeAmount The fee amount of the workflow fee
+
     function _calculateNetAndSplitFees(
         uint _totalAmount,
         uint _protocolFee,

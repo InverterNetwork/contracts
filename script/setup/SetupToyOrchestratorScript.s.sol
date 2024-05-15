@@ -100,7 +100,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             abi.encode(hasDependency, dependencies)
         );
 
-        // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
+        // BountyManager: Metadata, salary precision, fee percentage, fee treasury address
         IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             bountyManagerMetadata,
@@ -138,10 +138,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         );
         assertEq(orchestratorToken, address(token));
 
-        // Now we need to find the MilestoneManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
-        // active modules, let's use that to get the address of the MilestoneManager.
-
-        // TODO: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
+        // Now we need to find the BountyManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
+        // active modules, let's use that to get the address of the BountyManager.
 
         address[] memory moduleAddresses =
             IOrchestrator_v1(test_orchestrator).listModules();
