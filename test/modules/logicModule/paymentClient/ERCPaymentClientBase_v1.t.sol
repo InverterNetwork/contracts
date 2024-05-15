@@ -146,10 +146,6 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 })
             );
         }
-    }
-
-    function testAddPaymentOrderFailsForInvalidAmount() public {
-        address recipient = address(0xCAFE);
         uint[] memory invalids = _createInvalidAmounts();
         uint end = block.timestamp;
 
