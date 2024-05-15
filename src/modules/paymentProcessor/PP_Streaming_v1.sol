@@ -188,7 +188,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             address _token;
             uint _amount;
             uint _start;
-            uint _dueTo;
+            uint _end;
             uint _walletId;
 
             uint numOrders = orders.length;
@@ -198,7 +198,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 _token = orders[i].paymentToken;
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
-                _dueTo = orders[i].dueTo;
+                _end = orders[i].end;
                 _walletId = numVestingWallets[address(client)][_recipient] + 1;
 
                 _addPayment(
@@ -207,7 +207,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     _token,
                     _amount,
                     _start,
-                    _dueTo,
+                    _end,
                     _walletId
                 );
 
@@ -217,7 +217,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     _recipient,
                     _amount,
                     _start,
-                    _dueTo,
+                    _end,
                     _walletId
                 );
 
@@ -266,7 +266,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         // We will delete the payment order in question, if it hasn't already reached the end of its duration.
         if (
             block.timestamp
-                < dueToForSpecificWalletId(client, paymentReceiver, walletId)
+                < endForSpecificWalletId(client, paymentReceiver, walletId)
         ) {
             _afterClaimCleanup(client, paymentReceiver, walletId);
         }
@@ -294,12 +294,12 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function dueToForSpecificWalletId(
+    function endForSpecificWalletId(
         address client,
         address paymentReceiver,
         uint walletId
     ) public view returns (uint) {
-        return vestings[client][paymentReceiver][walletId]._dueTo;
+        return vestings[client][paymentReceiver][walletId]._end;
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -505,7 +505,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             // Otherwise, we would remove that paymentOrder in the following lines.
             if (
                 block.timestamp
-                    < dueToForSpecificWalletId(client, paymentReceiver, walletId)
+                    < endForSpecificWalletId(client, paymentReceiver, walletId)
             ) {
                 _afterClaimCleanup(client, paymentReceiver, walletId);
             }
@@ -608,8 +608,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ///      without overriding the earlier ones. The maximum payment orders for a paymentReceiver MUST BE capped at (2**256-1).
     /// @param _paymentReceiver PaymentReceiver's address.
     /// @param _salary Salary paymentReceiver will receive per epoch.
-    /// @param _start Start vesting timestamp.
-    /// @param _dueTo Streaming dueTo timestamp.
+    /// @param _start Streaming start timestamp.
+    /// @param _end Streaming end timestamp.
     /// @param _walletId ID of the new wallet of the a particular paymentReceiver being added
     function _addPayment(
         address client,
@@ -617,7 +617,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         address _token,
         uint _salary,
         uint _start,
-        uint _dueTo,
+        uint _end,
         uint _walletId
     ) internal {
         if (
@@ -625,13 +625,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 || !validStart(_start) || !validPaymentToken(_token)
         ) {
             emit InvalidStreamingOrderDiscarded(
-                _paymentReceiver, _token, _salary, _start, _dueTo
+                _paymentReceiver, _token, _salary, _start, _end
             );
         } else {
             ++numVestingWallets[client][_paymentReceiver];
 
             vestings[client][_paymentReceiver][_walletId] =
-                VestingWallet(_token, _salary, 0, _start, _dueTo, _walletId);
+                VestingWallet(_token, _salary, 0, _start, _end, _walletId);
 
             // We do not want activePaymentReceivers[client] to have duplicate paymentReceiver entries
             // So we avoid pushing the _paymentReceiver to activePaymentReceivers[client] if it already exists
@@ -650,7 +650,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 _token,
                 _salary,
                 _start,
-                _dueTo,
+                _end,
                 _walletId
             );
         }
@@ -739,11 +739,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 amount;
         }
 
-        uint dueToPaymentReceiver =
-            dueToForSpecificWalletId(client, paymentReceiver, walletId);
-
         // This if conditional block represents that nothing more remains to be vested from the specific walletId
-        if (block.timestamp >= dueToPaymentReceiver) {
+        if (
+            block.timestamp
+                >= endForSpecificWalletId(client, paymentReceiver, walletId)
+        ) {
             _afterClaimCleanup(client, paymentReceiver, walletId);
         }
     }
@@ -800,16 +800,16 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             vestings[client][paymentReceiver][walletId]._salary;
         uint startPaymentReceiver =
             startForSpecificWalletId(client, paymentReceiver, walletId);
-        uint dueToPaymentReceiver =
-            dueToForSpecificWalletId(client, paymentReceiver, walletId);
+        uint endPaymentReceiver =
+            endForSpecificWalletId(client, paymentReceiver, walletId);
 
         if (timestamp < startPaymentReceiver) {
             return 0;
-        } else if (timestamp >= dueToPaymentReceiver) {
+        } else if (timestamp >= endPaymentReceiver) {
             return totalAllocation;
         } else {
             return (totalAllocation * (timestamp - startPaymentReceiver))
-                / (dueToPaymentReceiver - startPaymentReceiver);
+                / (endPaymentReceiver - startPaymentReceiver);
         }
     }
 

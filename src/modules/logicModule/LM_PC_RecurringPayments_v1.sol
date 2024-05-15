@@ -282,8 +282,8 @@ contract LM_PC_RecurringPayments_v1 is
                             ),
                             amount: currentPayment.amount,
                             createdAt: block.timestamp,
-                            //End of current epoch is the dueTo Date
-                            dueTo: (currentEpoch + 1) * epochLength
+                            //End of current epoch is the end Date
+                            end: (currentEpoch + 1) * epochLength
                         })
                     );
 
@@ -300,7 +300,7 @@ contract LM_PC_RecurringPayments_v1 is
                                     * (epochsNotTriggered - 1),
                                 createdAt: block.timestamp,
                                 //Payment was already due so dueDate is start of this epoch which should already have passed
-                                dueTo: currentEpoch * epochLength
+                                end: currentEpoch * epochLength
                             })
                         );
                     }

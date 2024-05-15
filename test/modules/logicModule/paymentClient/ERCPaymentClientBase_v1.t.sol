@@ -85,7 +85,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         uint orderAmount,
         address recipient,
         uint amount,
-        uint dueTo
+        uint end
     ) public {
         // Note to stay reasonable.
         orderAmount = bound(orderAmount, 0, 100);
@@ -104,7 +104,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: dueTo
+                    end: end
                 })
             );
         }
@@ -116,7 +116,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         for (uint i; i < orderAmount; ++i) {
             assertEq(orders[i].recipient, recipient);
             assertEq(orders[i].amount, amount);
-            assertEq(orders[i].dueTo, dueTo);
+            assertEq(orders[i].end, end);
         }
 
         assertEq(
@@ -128,7 +128,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testAddPaymentOrderFailsForInvalidRecipient() public {
         address[] memory invalids = _createInvalidRecipients();
         uint amount = 1e18;
-        uint dueTo = block.timestamp;
+        uint end = block.timestamp;
 
         for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
@@ -142,7 +142,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: dueTo
+                    end: end
                 })
             );
         }
@@ -151,7 +151,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testAddPaymentOrderFailsForInvalidAmount() public {
         address recipient = address(0xCAFE);
         uint[] memory invalids = _createInvalidAmounts();
-        uint dueTo = block.timestamp;
+        uint end = block.timestamp;
 
         for (uint i; i < invalids.length; ++i) {
             vm.expectRevert(
@@ -165,7 +165,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     paymentToken: address(_token),
                     amount: invalids[0],
                     createdAt: block.timestamp,
-                    dueTo: dueTo
+                    end: end
                 })
             );
         }
@@ -182,21 +182,21 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             paymentToken: address(_token),
             amount: 100e18,
             createdAt: block.timestamp,
-            dueTo: block.timestamp
+            end: block.timestamp
         });
         ordersToAdd[1] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE2),
             paymentToken: address(_token),
             amount: 100e18,
             createdAt: block.timestamp,
-            dueTo: block.timestamp + 1
+            end: block.timestamp + 1
         });
         ordersToAdd[2] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE3),
             paymentToken: address(_token),
             amount: 100e18,
             createdAt: block.timestamp,
-            dueTo: block.timestamp + 2
+            end: block.timestamp + 2
         });
 
         vm.expectEmit();
@@ -213,7 +213,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         for (uint i; i < 3; ++i) {
             assertEq(orders[i].recipient, ordersToAdd[i].recipient);
             assertEq(orders[i].amount, ordersToAdd[i].amount);
-            assertEq(orders[i].dueTo, ordersToAdd[i].dueTo);
+            assertEq(orders[i].end, ordersToAdd[i].end);
         }
 
         assertEq(paymentClient.outstandingTokenAmount(address(_token)), 300e18);
@@ -226,7 +226,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         uint orderAmount,
         address recipient,
         uint amount,
-        uint dueTo
+        uint end
     ) public {
         // Note to stay reasonable.
         orderAmount = bound(orderAmount, 1, 100);
@@ -244,7 +244,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
-                    dueTo: dueTo
+                    end: end
                 })
             );
         }
@@ -261,7 +261,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         for (uint i; i < orderAmount; ++i) {
             assertEq(orders[i].recipient, recipient);
             assertEq(orders[i].amount, amount);
-            assertEq(orders[i].dueTo, dueTo);
+            assertEq(orders[i].end, end);
         }
 
         // Check that the returned token list and outstanding amounts are correct.
