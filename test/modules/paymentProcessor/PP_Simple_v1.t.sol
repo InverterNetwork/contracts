@@ -45,13 +45,13 @@ contract PP_SimpleV1Test is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
-    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    /// @param end Timestamp at which the full amount should be payed out/claimable.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint createdAt,
-        uint dueTo
+        uint end
     );
 
     /// @notice Emitted when an amount of ERC20 tokens gets sent out of the contract.
@@ -145,7 +145,7 @@ contract PP_SimpleV1Test is ModuleTest {
                 recipient: recipient,
                 amount: amount,
                 createdAt: block.timestamp,
-                dueTo: block.timestamp
+                end: block.timestamp
             })
         );
 

@@ -14,7 +14,7 @@ interface IERC20PaymentClientBase_v1 {
         /// @dev Timestamp at which the order got created.
         uint createdAt;
         /// @dev Timestamp at which the payment SHOULD be fulfilled.
-        uint dueTo;
+        uint end;
     }
 
     //--------------------------------------------------------------------------
@@ -32,8 +32,8 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Given amount invalid.
     error Module__ERC20PaymentClientBase__InvalidAmount();
 
-    /// @notice Given dueTo invalid.
-    error Module__ERC20PaymentClientBase__InvalidDueTo();
+    /// @notice Given end invalid.
+    error Module__ERC20PaymentClientBase__Invalidend();
 
     /// @notice Given arrays' length mismatch.
     error Module__ERC20PaymentClientBase__ArrayLengthMismatch();

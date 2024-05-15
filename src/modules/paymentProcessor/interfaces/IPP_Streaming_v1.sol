@@ -17,13 +17,13 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param _salary: The total amount that the paymentReceiver should eventually get
     /// @param _released: The amount that has been claimed by the paymentReceiver till now
     /// @param _start: The start date of the vesting period
-    /// @param _dueTo: The ending of the vesting period
+    /// @param _end: The ending of the vesting period
     /// @param _vestingWalletID: A unique identifier of a wallet for a specific paymentClient and paymentReceiver combination
     struct VestingWallet {
         uint _salary;
         uint _released;
         uint _start;
-        uint _dueTo;
+        uint _end;
         uint _vestingWalletID;
     }
 
@@ -34,14 +34,14 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param dueTo Timestamp at which the full amount should be claimable.
+    /// @param end Timestamp at which the full amount should be claimable.
     /// @param walletId ID of the payment order that was added
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint start,
-        uint dueTo,
+        uint end,
         uint walletId
     );
 
@@ -58,9 +58,9 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
-    /// @param dueTo Timestamp at which the full amount should be claimable.
+    /// @param end Timestamp at which the full amount should be claimable.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint dueTo
+        address indexed recipient, uint amount, uint start, uint end
     );
 
     /// @notice Emitted when a payment gets processed for execution.
@@ -68,14 +68,14 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
-    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    /// @param end Timestamp at which the full amount should be payed out/claimable.
     /// @param walletId ID of the payment order that was processed
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
         uint createdAt,
-        uint dueTo,
+        uint end,
         uint walletId
     );
 
@@ -172,11 +172,11 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint walletId
     ) external view returns (uint);
 
-    /// @notice Getter for the vesting dueTo timestamp of a particular payment order with id = walletId associated with a particular paymentReceiver
+    /// @notice Getter for the vesting end timestamp of a particular payment order with id = walletId associated with a particular paymentReceiver
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
-    /// @param walletId Id of the wallet for which dueTo is fetched
-    function dueToForSpecificWalletId(
+    /// @param walletId Id of the wallet for which end is fetched
+    function endForSpecificWalletId(
         address client,
         address paymentReceiver,
         uint walletId
