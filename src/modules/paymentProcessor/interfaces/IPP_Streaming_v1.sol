@@ -135,14 +135,8 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         address paymentClient, address paymentReceiver, uint streamId
     );
 
-    /// @notice the paymentReceiver for the given paymentClient does not exist (anymore)
-    error Module__PP_Streaming__InvalidPaymentReceiver(
-        address paymentClient, address paymentReceiver
-    );
-
     //--------------------------------------------------------------------------
     // Functions
-
     /// @notice claim everything that the paymentClient owes to the _msgSender till the current timestamp
     /// @dev This function should be callable if the _msgSender is an activePaymentReceiver
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
