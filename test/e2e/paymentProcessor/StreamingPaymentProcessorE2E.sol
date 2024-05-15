@@ -151,7 +151,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         recurringPaymentManager.addRecurringPayment(
             paymentAmount, startEpoch, alice
         );
-        //this should create 3 streamingpayments with dueTo timestamp of startEpoch * epochLength + 1 week
+        //this should create 3 streamingpayments with end timestamp of startEpoch * epochLength + 1 week
         recurringPaymentManager.trigger();
 
         // ----------------
@@ -175,14 +175,14 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         );
         assertTrue(start == block.timestamp);
 
-        //dueToForSpecificWalletId
-        //When is the payment dueTo?
-        uint dueTo = streamingPaymentProcessor.dueToForSpecificWalletId(
+        //endForSpecificWalletId
+        //When is the payment end?
+        uint end = streamingPaymentProcessor.endForSpecificWalletId(
             address(recurringPaymentManager),
             alice,
             vestings[0]._vestingWalletID
         );
-        assertTrue(dueTo == startEpoch * epochLength + 1 weeks);
+        assertTrue(end == startEpoch * epochLength + 1 weeks);
 
         //vestedAmountForSpecificWalletId
         //lets see what is hypotheically realeasable in half a week
