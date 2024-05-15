@@ -202,14 +202,13 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooIntegrator.setOptimisticOracle(address(0));
     }
 
-    //::@todo this Test is not correctly set @0xNuggan needs to be fixed
-    /*  function testSetOptimisticOracleFails_WhenNewOracleIsNotUmaOptimisticOracle(
+    function testSetOptimisticOracleFails_WhenNewOracleIsNotUmaOptimisticOracle(
         address notOracle
     ) public {
         _validateAddress(notOracle);
         vm.expectRevert();
         ooIntegrator.setOptimisticOracle(notOracle);
-    } */
+    }
 
     function testSetOptimisticOracle() public {
         OptimisticOracleV3Mock newOracle =

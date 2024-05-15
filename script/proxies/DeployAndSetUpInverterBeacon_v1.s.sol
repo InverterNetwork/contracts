@@ -43,7 +43,6 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
             );
 
             // Register Metadata at the ModuleFactory_v1
-            // ::@todo - needs changing for new registerMetadata flow -> @marvinkruse This is not ideal at least for the initial setup in case we need it to be repeatable. We might wanna include a Metadata registration array in the factory itself to allow multiple registrations at the same time during init. thoughts?
             ModuleFactory_v1(moduleFactory).registerMetadata(metadata, beacon);
         }
         vm.stopBroadcast();

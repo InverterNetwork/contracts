@@ -12,9 +12,6 @@ import {IOrchestratorFactory_v1} from
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 
 // Modules
-
-//::@todo: rename @0xNuggan Dont know what you meant here
-
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from

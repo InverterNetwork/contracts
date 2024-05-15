@@ -138,11 +138,9 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         );
         assertEq(orchestratorToken, address(token));
 
-        // Now we need to find the MilestoneManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
-        // active modules, let's use that to get the address of the MilestoneManager.
+        // Now we need to find the BountyManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
+        // active modules, let's use that to get the address of the BountyManager.
 
-        //::@todo: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
-        // @0xNuggan are these Contracts still up to date? Can we maybe remove them?
         address[] memory moduleAddresses =
             IOrchestrator_v1(test_orchestrator).listModules();
         uint lenModules = moduleAddresses.length;

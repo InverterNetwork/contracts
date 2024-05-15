@@ -49,22 +49,11 @@ import {RedeemingBondingCurveBaseV1Test} from
     "test/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
 
 /*   
-
-    ::@NOTE: The functions: 
-    ::@note @0xNuggan is this still the case?
-    - deposit(uint amount) external {}
-    - depositFor(address to, uint amount) external {}
-    - withdraw(uint amount) external {}
-    - withdrawTo(address to, uint amount) external {} 
-
-    are not tested since they are empty and will be removed in the future.
-
-    Also, since the following functions just wrap the Bancor formula contract, their content is assumed to be tested in the original formula tests, not here:
+    Since the following functions just wrap the Bancor formula contract, their content is assumed to be tested in the original formula tests, not here:
 
     - _issueTokensFormulaWrapper(uint _depositAmount)
     - _redeemTokensFormulaWrapper(uint _depositAmount)
-
-    */
+*/
 
 contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     string internal constant NAME = "Bonding Curve Token";
