@@ -32,6 +32,18 @@ contract LM_PC_Staking_v1 is
     ReentrancyGuard
 {
     using SafeERC20 for IERC20;
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC20PaymentClientBase_v1)
+        returns (bool)
+    {
+        return interfaceId == type(ILM_PC_Staking_v1).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //--------------------------------------------------------------------------
     // Modifiers
 

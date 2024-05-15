@@ -125,7 +125,8 @@ contract RecurringPaymentManagerE2E is E2ETest {
                     type(ILM_PC_RecurringPayments_v1).interfaceId
                 )
             ) {
-                recurringPaymentManager = LM_PC_RecurringPayments_v1(modulesList[i]);
+                recurringPaymentManager =
+                    LM_PC_RecurringPayments_v1(modulesList[i]);
                 break;
             }
         }

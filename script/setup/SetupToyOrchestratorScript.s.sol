@@ -143,7 +143,6 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
         LM_PC_Bounties_v1 orchestratorCreatedBountyManager;
 
-
         bytes4 LM_PC_Bounties_v1InterfaceId =
             type(ILM_PC_Bounties_v1).interfaceId;
         address[] memory modulesList = test_orchestrator.listModules();
@@ -153,7 +152,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
                     LM_PC_Bounties_v1InterfaceId
                 )
             ) {
-                orchestratorCreatedBountyManager = LM_PC_Bounties_v1(modulesList[i]);
+                orchestratorCreatedBountyManager =
+                    LM_PC_Bounties_v1(modulesList[i]);
                 break;
             }
         }

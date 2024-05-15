@@ -197,7 +197,6 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // Now we need to find the BountyManager. ModuleManager has a function called `listModules` that returns a list of
         // active modules, let's use that to get the address of the BountyManager.
 
-
         LM_PC_Bounties_v1 orchestratorCreatedBountyManager;
 
         address[] memory modulesList = _orchestrator.listModules();
@@ -207,7 +206,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                     type(ILM_PC_Bounties_v1).interfaceId
                 )
             ) {
-                orchestratorCreatedBountyManager = LM_PC_Bounties_v1(modulesList[i]);
+                orchestratorCreatedBountyManager =
+                    LM_PC_Bounties_v1(modulesList[i]);
                 break;
             }
         }

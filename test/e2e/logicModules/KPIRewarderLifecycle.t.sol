@@ -224,7 +224,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165(modulesList[i]).supportsInterface(
-                     type(ILM_PC_KPIRewarder_v1).interfaceId
+                    type(ILM_PC_KPIRewarder_v1).interfaceId
                 )
             ) {
                 kpiRewarder = LM_PC_KPIRewarder_v1(modulesList[i]);

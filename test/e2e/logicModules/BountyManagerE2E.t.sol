@@ -10,7 +10,9 @@ import {
 
 // SuT
 import {
-    LM_PC_Bounties_v1, ILM_PC_Bounties_v1, ERC165
+    LM_PC_Bounties_v1,
+    ILM_PC_Bounties_v1,
+    ERC165
 } from "@lm/LM_PC_Bounties_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
@@ -105,15 +107,13 @@ contract BountyManagerE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165(modulesList[i]).supportsInterface(
-                   type(ILM_PC_Bounties_v1).interfaceId
+                    type(ILM_PC_Bounties_v1).interfaceId
                 )
             ) {
                 bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
             }
         }
-
-        
 
         // we authorize the deployer of the orchestrator as the bounty admin
         bountyManager.grantModuleRole(
