@@ -4,7 +4,8 @@ pragma solidity 0.8.23;
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v1,
-    Module_v1
+    Module_v1,
+    ERC165
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Interfaces
