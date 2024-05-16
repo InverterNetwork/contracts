@@ -354,21 +354,21 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         //Fund Fundingmanager
         _token.mint(address(_fundingManager), amount);
 
-        // Fill list again with milestones.
+        // Fill list again with recurring payments.
         for (uint i; i < amount; ++i) {
             recurringPaymentManager.addRecurringPayment(
                 1, currentEpoch, address(0xBEEF)
             );
         }
 
-        // Remove milestones from the back, i.e. highest milestone id, until
+        // Remove recurring payments from the back, i.e. highest recurring payment id, until
         // list is empty.
         for (uint i; i < amount; ++i) {
             // Note that id's start at amount, because they have been created before.
             uint prevId = 2 * amount - i - 1;
             uint id = 2 * amount - i;
 
-            // Note that removing the last milestone requires the sentinel as
+            // Note that removing the last recurring payment requires the sentinel as
             // prevId.
             if (prevId == amount) {
                 prevId = _SENTINEL;

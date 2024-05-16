@@ -76,7 +76,7 @@ contract ModuleFactoryV1Test is Test {
     // Test: registerMetadata
 
     function testRegisterMetadataOnlyCallableByOwner(address caller) public {
-        vm.assume(caller != address(this));
+        vm.assume(caller != governanceContract);
         vm.assume(caller != address(0));
         vm.prank(caller);
 
