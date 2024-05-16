@@ -53,7 +53,9 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
         // Add new order to list of oustanding orders.
         _orders.push(order);
 
-        emit PaymentOrderAdded(order.recipient, order.amount);
+        emit PaymentOrderAdded(
+            order.recipient, order.paymentToken, order.amount
+        );
     }
 
     function addPaymentOrders(PaymentOrder[] memory orders) external {

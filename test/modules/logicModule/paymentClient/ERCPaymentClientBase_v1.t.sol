@@ -48,7 +48,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     /// @notice Added a payment order.
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
-    event PaymentOrderAdded(address indexed recipient, uint amount);
+    event PaymentOrderAdded(address indexed recipient, address indexed token, uint amount);
 
     function setUp() public {
         address impl = address(new ERC20PaymentClientBaseV1AccessMock());
@@ -92,11 +92,12 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
         for (uint i; i < orderAmount; ++i) {
             vm.expectEmit();
-            emit PaymentOrderAdded(recipient, amount);
+            emit PaymentOrderAdded(recipient, address(_token), amount);
 
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: dueTo
@@ -131,6 +132,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: invalids[0],
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: dueTo
@@ -153,6 +155,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: invalids[0],
                     createdAt: block.timestamp,
                     dueTo: dueTo
@@ -169,27 +172,30 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             new IERC20PaymentClientBase_v1.PaymentOrder[](3);
         ordersToAdd[0] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE1),
+            paymentToken: address(_token),
             amount: 100e18,
             createdAt: block.timestamp,
             dueTo: block.timestamp
         });
         ordersToAdd[1] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE2),
+            paymentToken: address(_token),
             amount: 100e18,
             createdAt: block.timestamp,
             dueTo: block.timestamp + 1
         });
         ordersToAdd[2] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE3),
+            paymentToken: address(_token),
             amount: 100e18,
             createdAt: block.timestamp,
             dueTo: block.timestamp + 2
         });
 
         vm.expectEmit();
-        emit PaymentOrderAdded(address(0xCAFE1), 100e18);
-        emit PaymentOrderAdded(address(0xCAFE2), 100e18);
-        emit PaymentOrderAdded(address(0xCAFE3), 100e18);
+        emit PaymentOrderAdded(address(0xCAFE1), address(_token), 100e18);
+        emit PaymentOrderAdded(address(0xCAFE2), address(_token), 100e18);
+        emit PaymentOrderAdded(address(0xCAFE3), address(_token), 100e18);
 
         paymentClient.addPaymentOrders(ordersToAdd);
 
@@ -228,6 +234,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: dueTo

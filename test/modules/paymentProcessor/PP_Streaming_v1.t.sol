@@ -135,7 +135,7 @@ contract PP_StreamingV1Test is ModuleTest {
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
-        assertEq(address(paymentProcessor.token()), address(_token));
+        assertEq(address(paymentProcessor.orchestrator()), address(_orchestrator));
     }
 
     function testSupportsInterface() public {
@@ -207,6 +207,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -290,6 +291,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -385,6 +387,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: payoutAmount,
                     createdAt: block.timestamp,
                     dueTo: dueTimes[i]
@@ -439,6 +442,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrderUnchecked(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: 100,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + 100
@@ -459,6 +463,7 @@ contract PP_StreamingV1Test is ModuleTest {
         paymentClient.addPaymentOrderUnchecked(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: address(0xB0B),
+                paymentToken: address(_token),
                 amount: invalidAmt,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp + 100
@@ -547,6 +552,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -588,6 +594,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -706,6 +713,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -817,6 +825,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -976,6 +985,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: amounts[i],
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + duration
@@ -1136,6 +1146,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amounts[i],
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + durations[i]
@@ -1215,6 +1226,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: start + duration
@@ -1264,6 +1276,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: 1,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp
@@ -1416,6 +1429,7 @@ contract PP_StreamingV1Test is ModuleTest {
         paymentClient.addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
+                paymentToken: address(_token),
                 amount: amount,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp + duration
@@ -1486,6 +1500,7 @@ contract PP_StreamingV1Test is ModuleTest {
         paymentClient.addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
+                paymentToken: address(_token),
                 amount: amount,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp + duration
@@ -1558,6 +1573,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: 1,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp
@@ -1613,6 +1629,7 @@ contract PP_StreamingV1Test is ModuleTest {
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: amounts[i],
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time

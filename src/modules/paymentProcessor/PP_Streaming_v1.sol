@@ -173,7 +173,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             uint totalAmount;
             (orders, totalAmount) = client.collectPaymentOrders();
 
-            if (token().balanceOf(address(client)) < totalAmount) {
+            if (orchestrator().fundingManager().token().balanceOf(address(client)) < totalAmount) {
                 revert Module__PP_Streaming__InsufficientTokenBalanceInClient();
             }
 
@@ -341,11 +341,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             amount +=
                 unclaimableAmountsForWalletId[client][paymentReceiver][ids[i]];
         }
-    }
-
-    /// @inheritdoc IPaymentProcessor_v1
-    function token() public view returns (IERC20) {
-        return this.orchestrator().fundingManager().token();
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -680,7 +675,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
         vestings[client][paymentReceiver][walletId]._released += amount;
 
-        address _token = address(token());
+        address _token = address(orchestrator().fundingManager().token()); // TODO: for first iteration, we still assume collateralToken. FIX!!!!!
 
         (bool success, bytes memory data) = _token.call(
             abi.encodeWithSelector(
@@ -754,7 +749,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         //As all of the wallet ids should have been claimed we can delete the wallet id array
         delete unclaimableWalletIds[client][sender];
 
-        IERC20 _token = token();
+        IERC20 _token = orchestrator().fundingManager().token();
 
         //Call has to succeed otherwise no state change
         _token.safeTransferFrom(client, paymentReceiver, amount);

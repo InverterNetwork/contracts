@@ -76,11 +76,6 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     // IPaymentProcessor_v1 Functions
 
     /// @inheritdoc IPaymentProcessor_v1
-    function token() public view returns (IERC20) {
-        return __Module_orchestrator.fundingManager().token();
-    }
-
-    /// @inheritdoc IPaymentProcessor_v1
     function processPayments(IERC20PaymentClientBase_v1 client)
         external
         onlyModule
@@ -94,15 +89,13 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         //Make sure to let paymentClient know that amount doesnt have to be stored anymore
         client.amountPaid(totalAmount);
 
-        // Cache token.
-        IERC20 token_ = token();
-
         // Transfer tokens from {IERC20PaymentClientBase_v1} to order recipients.
         address recipient;
         uint amount;
         uint len = orders.length;
         for (uint i; i < len; ++i) {
             recipient = orders[i].recipient;
+            IERC20 token_ = IERC20(orders[i].paymentToken);
             amount = orders[i].amount;
 
             token_.safeTransferFrom(address(client), recipient, amount);
@@ -112,6 +105,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             emit PaymentOrderProcessed(
                 address(client),
                 recipient,
+                address(token_),
                 amount,
                 orders[i].createdAt,
                 orders[i].dueTo

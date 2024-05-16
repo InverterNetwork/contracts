@@ -89,7 +89,9 @@ abstract contract ERC20PaymentClientBase_v1 is
         // Add new order to list of oustanding orders.
         _orders.push(order);
 
-        emit PaymentOrderAdded(order.recipient, order.amount);
+        emit PaymentOrderAdded(
+            order.recipient, order.paymentToken, order.amount
+        );
     }
 
     /// @dev Adds a set of new {PaymentOrder}s to the list of outstanding
@@ -111,7 +113,11 @@ abstract contract ERC20PaymentClientBase_v1 is
             // Add new order to list of oustanding orders.
             _orders.push(currentOrder);
 
-            emit PaymentOrderAdded(currentOrder.recipient, currentOrder.amount);
+            emit PaymentOrderAdded(
+                currentOrder.recipient,
+                currentOrder.paymentToken,
+                currentOrder.amount
+            );
         }
 
         // Add total orders' amount to current outstanding amount.
