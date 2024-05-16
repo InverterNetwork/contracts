@@ -48,22 +48,12 @@ import {FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock} from
 import {RedeemingBondingCurveBaseV1Test} from
     "test/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
 
-/*     
-    @NOTE: The functions:
-
-    - deposit(uint amount) external {}
-    - depositFor(address to, uint amount) external {}
-    - withdraw(uint amount) external {}
-    - withdrawTo(address to, uint amount) external {} 
-
-    are not tested since they are empty and will be removed in the future.
-
-    Also, since the following functions just wrap the Bancor formula contract, their content is assumed to be tested in the original formula tests, not here:
+/*   
+    Since the following functions just wrap the Bancor formula contract, their content is assumed to be tested in the original formula tests, not here:
 
     - _issueTokensFormulaWrapper(uint _depositAmount)
     - _redeemTokensFormulaWrapper(uint _depositAmount)
-
-    */
+*/
 
 contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     string internal constant NAME = "Bonding Curve Token";
@@ -1668,7 +1658,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     //      - Mints collateral tokens to a seller and
     //      - Deposits them so they can later be sold.
     //      - Approves the BondingCurve contract to spend the receipt tokens
-    // @note This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
+    // This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
     function _prepareSellConditions(address seller, uint amount)
         internal
         returns (uint userSellAmount)

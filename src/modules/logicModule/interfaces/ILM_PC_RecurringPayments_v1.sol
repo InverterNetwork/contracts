@@ -29,7 +29,7 @@ interface ILM_PC_RecurringPayments_v1 {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when a new milestone added.
+    /// @notice Event emitted when a new recurring payment added.
     /// @param recurringPaymentId The id of the RecurringPayment.
     /// @param amount The amount of tokens that should be sent to the recipient address.
     /// @param startEpoch The epoch in which the payment starts.
@@ -43,11 +43,11 @@ interface ILM_PC_RecurringPayments_v1 {
         address recipient
     );
 
-    /// @notice Event emitted when a new milestone added.
+    /// @notice Event emitted when a recurring payment was removed.
     /// @param recurringPaymentId The id of the RecurringPayment.
     event RecurringPaymentRemoved(uint indexed recurringPaymentId);
 
-    /// @notice Event emitted when a new milestone added.
+    /// @notice Event emitted when a recurring payment was triggered.
     /// @param currentEpoch The current epoch.
     event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
