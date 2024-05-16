@@ -24,8 +24,15 @@ interface IFeeManager_v1 {
     /// @notice The given fee is invalid
     error FeeManager__InvalidFee();
 
+    /// @notice The given max fee is invalid
+    error FeeManager__InvalidMaxFee();
+
     //--------------------------------------------------------------------------
     // Events
+
+    /// @notice Event emitted when the max fee percentage is set
+    /// @param maxFee The maximum fee percentage
+    event MaxFeeSet(uint maxFee);
 
     /// @notice Event emitted when the default protocol treasury is set
     /// @param defaultProtocolTreasury The address of the default protocol treasury
@@ -152,6 +159,15 @@ interface IFeeManager_v1 {
 
     //--------------------------------------------------------------------------
     // Setter Functions
+
+    //---------------------------
+    // MaxFee
+
+    /// @notice Sets the maximum fee percentage that can be assigned
+    /// @dev This function can only be called by the owner
+    /// @dev The given max fee can not be higher than the BPS
+    /// @param _maxFee The max Fee in relation to the BPS
+    function setMaxFee(uint _maxFee) external;
 
     //---------------------------
     // Treasuries
