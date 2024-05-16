@@ -84,7 +84,9 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         uint[] trancheRewards
     );
 
-    event PaymentOrderAdded(address indexed recipient, address indexed token, uint amount);
+    event PaymentOrderAdded(
+        address indexed recipient, address indexed token, uint amount
+    );
 
     //=========================================================================================
     // Setup

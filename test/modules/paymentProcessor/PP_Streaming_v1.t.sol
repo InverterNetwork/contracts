@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// TODO: update all events and look into the failing tests
+
 import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -49,7 +51,9 @@ contract PP_StreamingV1Test is ModuleTest {
     // Events
 
     /// @notice Emitted when a payment gets processed for execution.
+    /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that is being used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param dueTo Timestamp at which the full amount should be claimable.
@@ -57,6 +61,7 @@ contract PP_StreamingV1Test is ModuleTest {
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
+        address indexed paymentToken,
         uint amount,
         uint start,
         uint dueTo,
@@ -64,6 +69,7 @@ contract PP_StreamingV1Test is ModuleTest {
     );
 
     /// @notice Emitted when the vesting to an address is removed.
+    /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will stop receiving payment.
     /// @param walletId ID of the payment order removed
     event StreamingPaymentRemoved(
@@ -74,16 +80,22 @@ contract PP_StreamingV1Test is ModuleTest {
 
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param dueTo Timestamp at which the full amount should be claimable.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint dueTo
+        address indexed recipient,
+        address indexed paymentToken,
+        uint amount,
+        uint start,
+        uint dueTo
     );
 
     /// @notice Emitted when a payment gets processed for execution.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
     /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
@@ -91,15 +103,23 @@ contract PP_StreamingV1Test is ModuleTest {
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
+        address indexed paymentToken,
         uint amount,
         uint createdAt,
         uint dueTo,
         uint walletId
     );
 
+    /// @notice Emitted when a payment was unclaimable due to a token error.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that wshould have received the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
+    /// @param walletId ID of the payment order that was processed
+    /// @param amount The amount of tokens that were unclaimable.
     event UnclaimableAmountAdded(
         address indexed paymentClient,
         address recipient,
+        address paymentToken,
         uint walletId,
         uint amount
     );
@@ -135,7 +155,9 @@ contract PP_StreamingV1Test is ModuleTest {
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
-        assertEq(address(paymentProcessor.orchestrator()), address(_orchestrator));
+        assertEq(
+            address(paymentProcessor.orchestrator()), address(_orchestrator)
+        );
     }
 
     function testSupportsInterface() public {
