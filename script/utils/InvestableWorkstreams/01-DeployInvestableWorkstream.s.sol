@@ -29,8 +29,6 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract SetupInvestableWorkstream is Test, DeploymentScript {
     //ScriptConstants scriptConstants = new ScriptConstants();
-    bool hasDependency;
-    string[] dependencies = new string[](0);
 
     // ========================================================================
     // ENVIRONMENT VARIABLES OR CONSTANTS
@@ -145,33 +143,25 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                     orchestratorOwner,
                     buf_bondingCurveProperties,
                     address(collateralToken)
-                ),
-                abi.encode(hasDependency, dependencies)
+                )
             );
 
         // Payment Processor: only Metadata
         IOrchestratorFactory_v1.ModuleConfig memory
             paymentProcessorFactoryConfig = IOrchestratorFactory_v1
-                .ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(hasDependency, dependencies)
-            );
+                .ModuleConfig(simplePaymentProcessorMetadata, bytes(""));
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             roleAuthorizerMetadata,
-            abi.encode(orchestratorOwner, orchestratorOwner),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(orchestratorOwner, orchestratorOwner)
         );
 
         // Bounty Manager:
         IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            bountyManagerMetadata,
-            abi.encode(""),
-            abi.encode(hasDependency, dependencies)
+            bountyManagerMetadata, abi.encode("")
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.

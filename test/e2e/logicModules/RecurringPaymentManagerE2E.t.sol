@@ -60,9 +60,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
 
@@ -70,9 +68,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
 
@@ -80,9 +76,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         setUpStreamingPaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                streamingPaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                streamingPaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -90,9 +84,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         setUpRecurringPaymentManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                recurringPaymentManagerMetadata,
-                abi.encode(1 weeks),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                recurringPaymentManagerMetadata, abi.encode(1 weeks)
             )
         );
     }

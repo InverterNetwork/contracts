@@ -35,9 +35,6 @@ import {PaymentProcessorV1Mock} from
 import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
 
 contract AUT_RolesV1Test is Test {
-    bool hasDependency;
-    string[] dependencies = new string[](0);
-
     // Mocks
     AUT_Roles_v1 _authorizer;
     Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));
@@ -244,6 +241,7 @@ contract AUT_RolesV1Test is Test {
         assertEq(_authorizer.hasRole("0x01", ALBA), true);
         assertEq(_authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1);
     }
+
     // Test Register Roles
 
     //--------------------------------------------------------------------------------------

@@ -48,9 +48,6 @@ contract E2EModuleRegistry is Test {
 
     address public DEFAULT_BEACON_OWNER = address(0x3BEAC0);
 
-    bool constant HAS_NO_DEPENDENCIES = false;
-    string[] EMPTY_DEPENDENCY_LIST = new string[](0);
-
     //--------------------------------------------------------------------------
     // General Module Information
     //--------------------------------------------------------------------------
@@ -68,7 +65,7 @@ contract E2EModuleRegistry is Test {
     //      IOrchestratorFactory_v1.ModuleConfig(
     //          moduleMetadata,
     //          abi.encode(address(this)),
-    //          abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+    //
     //      );
     // */
     // Followed by the  setUpModule() function.
@@ -94,7 +91,7 @@ contract E2EModuleRegistry is Test {
         IOrchestratorFactory_v1.ModuleConfig(
             rebasingFundingManagerMetadata,
             abi.encode(address(token)),
-            abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+             
         )
     */
 
@@ -163,8 +160,8 @@ contract E2EModuleRegistry is Test {
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(issuanceToken, bc_properties, token),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                abi.encode(issuanceToken, bc_properties, token)
+                 
             )
         );
     */
@@ -212,8 +209,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig roleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         roleAuthorizerMetadata,
-        abi.encode(address(this), address(this)),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(address(this), address(this))  
     );
     */
     function setUpRoleAuthorizer() internal {
@@ -255,8 +251,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         tokenRoleAuthorizerMetadata,
-        abi.encode(address(this), address(this)),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(address(this), address(this))  
     ); 
     */
 
@@ -299,8 +294,7 @@ contract E2EModuleRegistry is Test {
      IOrchestratorFactory_v1.ModuleConfig simplePaymentProcessorFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         simplePaymentProcessorMetadata,
-        bytes(""),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        bytes("")  
     );
     */
     function setUpSimplePaymentProcessor() internal {
@@ -342,7 +336,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig(
         streamingPaymentProcessorMetadata,
         bytes(""),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+         HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     );
     */
     function setUpStreamingPaymentProcessor() internal {
@@ -385,8 +379,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig recurringPaymentManagerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         recurringPaymentManagerMetadata,
-        abi.encode(1 weeks),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(1 weeks)  
     );
     */
 
@@ -464,8 +457,7 @@ contract E2EModuleRegistry is Test {
      IOrchestratorFactory_v1.ModuleConfig LM_PC_Staking_v1FactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         LM_PC_Staking_v1Metadata,
-        bytes(address(stakingToken)),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        bytes(address(stakingToken))  
     ); 
     */
 
@@ -504,8 +496,7 @@ contract E2EModuleRegistry is Test {
      IOrchestratorFactory_v1.ModuleConfig LM_PC_KPIRewarder_v1FactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         LM_PC_KPIRewarder_v1Metadata,
-        abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address), uint64(assertionLiveness) ),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address), uint64(assertionLiveness) )  
     ); 
     */
 
@@ -553,8 +544,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig singleVoteGovernorFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         singleVoteGovernorMetadata,
-        abi.encode(initialVoters, 2, 3 days),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(initialVoters, 2, 3 days)  
     ); 
     */
 
