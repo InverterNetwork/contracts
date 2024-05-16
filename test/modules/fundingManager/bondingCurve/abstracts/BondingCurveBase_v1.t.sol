@@ -86,6 +86,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
 
+        //Set max fee of feeManager to 100% for testing purposes
+        vm.prank(address(governor));
+        feeManager.setMaxFee(feeManager.BPS());
+
         // Init Module
         bondingCurveFundingManager.init(
             _orchestrator,
