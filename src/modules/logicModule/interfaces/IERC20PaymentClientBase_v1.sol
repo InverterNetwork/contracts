@@ -9,6 +9,8 @@ interface IERC20PaymentClientBase_v1 {
     struct PaymentOrder {
         /// @dev The recipient of the payment.
         address recipient;
+        /// @dev The token in which to pay.
+        address paymentToken;
         /// @dev The amount of tokens to pay.
         uint amount;
         /// @dev Timestamp at which the order got created.
@@ -29,6 +31,9 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Given recipient invalid.
     error Module__ERC20PaymentClientBase__InvalidRecipient();
 
+    /// @notice Given token invalid.
+    error Module__ERC20PaymentClientBase__InvalidToken();
+
     /// @notice Given amount invalid.
     error Module__ERC20PaymentClientBase__InvalidAmount();
 
@@ -44,7 +49,9 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Added a payment order.
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
-    event PaymentOrderAdded(address indexed recipient, uint amount);
+    event PaymentOrderAdded(
+        address indexed recipient, address indexed token, uint amount
+    );
 
     //--------------------------------------------------------------------------
     // Functions

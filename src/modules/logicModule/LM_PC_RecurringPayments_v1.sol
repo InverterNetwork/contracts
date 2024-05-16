@@ -276,6 +276,9 @@ contract LM_PC_RecurringPayments_v1 is
                     _addPaymentOrder(
                         PaymentOrder({
                             recipient: currentPayment.recipient,
+                            paymentToken: address(
+                                orchestrator().fundingManager().token()
+                            ), //TODO evaluate storing token in recurringPaymentOrder
                             amount: currentPayment.amount,
                             createdAt: block.timestamp,
                             //End of current epoch is the dueTo Date
@@ -289,6 +292,9 @@ contract LM_PC_RecurringPayments_v1 is
                             PaymentOrder({
                                 recipient: currentPayment.recipient,
                                 //because we already made a payment that for the current epoch
+                                paymentToken: address(
+                                    orchestrator().fundingManager().token()
+                                ), //TODO evaluate storing token in recurringPaymentOrder
                                 amount: currentPayment.amount
                                     * (epochsNotTriggered - 1),
                                 createdAt: block.timestamp,
