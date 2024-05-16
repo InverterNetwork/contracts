@@ -58,7 +58,6 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
         buyingIsEnabled
         onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
-        //_virtualBuyOrder(_receiver, _depositAmount, _minAmountOut);
         super.buyFor(_receiver, _depositAmount, _minAmountOut);
     }
 
