@@ -203,7 +203,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
                 _addPayment(
                     address(client),
-                    _token,
                     _recipient,
                     _token,
                     _amount,
