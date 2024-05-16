@@ -12,9 +12,6 @@ import {IOrchestratorFactory_v1} from
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 
 // Modules
-
-//TODO: rename
-
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
@@ -29,7 +26,6 @@ import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {VotingRoleManager_v1} from "src/modules/utils/VotingRoleManager_v1.sol";
-import {MetadataManager_v1} from "src/modules/utils/MetadataManager_v1.sol";
 
 // Beacon
 import {
@@ -566,40 +562,6 @@ contract E2EModuleRegistry is Test {
             moduleFactory,
             singleVoteGovernorMetadata,
             IInverterBeacon_v1(singleVoteGovernorBeacon)
-        );
-    }
-
-    // MetadataManager_v1
-
-    MetadataManager_v1 metadataManagerImpl;
-
-    InverterBeacon_v1 metadataManagerBeacon;
-
-    IModule_v1.Metadata metadataManagerMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        "https://github.com/inverter/metadata-manager",
-        "MetadataManager_v1"
-    );
-
-    function setUpMetadataManager() internal {
-        // Deploy module implementations.
-        metadataManagerImpl = new MetadataManager_v1();
-
-        // Deploy module beacons.
-        metadataManagerBeacon = new InverterBeacon_v1(
-            DEFAULT_BEACON_OWNER,
-            metadataManagerMetadata.majorVersion,
-            address(metadataManagerImpl),
-            metadataManagerMetadata.minorVersion
-        );
-
-        // Register modules at moduleFactory.
-        vm.prank(teamMultisig);
-        gov.registerMetadata(
-            moduleFactory,
-            metadataManagerMetadata,
-            IInverterBeacon_v1(metadataManagerBeacon)
         );
     }
 }

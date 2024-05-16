@@ -23,10 +23,6 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {
     ILM_PC_Bounties_v1, LM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
-import {
-    IMetadataManager_v1,
-    MetadataManager_v1
-} from "src/modules/utils/MetadataManager_v1.sol";
 
 //Beacon
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
@@ -37,11 +33,6 @@ import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 contract OrchestratorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
-
-    //Orchestrator_v1 Metadata
-    IMetadataManager_v1.ManagerMetadata ownerMetadata;
-    IMetadataManager_v1.OrchestratorMetadata orchestratorMetadata;
-    IMetadataManager_v1.MemberMetadata[] teamMetadata;
 
     function setUp() public override {
         // Setup common E2E framework
@@ -81,35 +72,6 @@ contract OrchestratorE2E is E2ETest {
 
         // We also set up the LM_PC_Bounties_v1, even though we'll add it later
         setUpBountyManager();
-
-        //==========================================
-        //Set up Orchestrator_v1 Metadata
-
-        ownerMetadata = IMetadataManager_v1.ManagerMetadata(
-            "Name", address(0xBEEF), "TwitterHandle"
-        );
-
-        orchestratorMetadata = IMetadataManager_v1.OrchestratorMetadata(
-            "Title",
-            "DescriptionShort",
-            "DescriptionLong",
-            new string[](0),
-            new string[](0)
-        );
-
-        orchestratorMetadata.externalMedias.push("externalMedia1");
-        orchestratorMetadata.externalMedias.push("externalMedia2");
-        orchestratorMetadata.externalMedias.push("externalMedia3");
-
-        orchestratorMetadata.categories.push("category1");
-        orchestratorMetadata.categories.push("category2");
-        orchestratorMetadata.categories.push("category3");
-
-        teamMetadata.push(
-            IMetadataManager_v1.MemberMetadata(
-                "Name", address(0xBEEF), "Something"
-            )
-        );
     }
 
     //We're adding and removing a Module during the lifetime of the orchestrator

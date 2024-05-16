@@ -296,7 +296,6 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
             (REWARD_DEPOSIT_AMOUNT - totalDistributed)
         );
 
-        // TODO: Fix Staking precision bug
         assertApproxEqAbs(
             totalDistributed, totalExpectedRewardsDistributed, 1e6
         );

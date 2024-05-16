@@ -27,6 +27,8 @@ contract GovernorV1Mock is IGovernor_v1 {
         feeManager = newFeeManager;
     }
 
+    function setFeeManagerMaxFee(uint maxFee) external {}
+
     function setFeeManagerDefaultProtocolTreasury(address) external {}
 
     function setFeeManagerWorkflowTreasuries(address workflow, address treasury)

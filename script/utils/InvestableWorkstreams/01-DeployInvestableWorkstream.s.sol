@@ -193,11 +193,8 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             address(IOrchestrator_v1(_orchestrator).fundingManager().token());
         assertEq(orchestratorToken, address(collateralToken));
 
-        // Now we need to find the MilestoneManager. ModuleManager has a function called `listModules` that returns a list of
-        // active modules, let's use that to get the address of the MilestoneManager.
-
-        // TODO: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
-
+        // Now we need to find the BountyManager. ModuleManager has a function called `listModules` that returns a list of
+        // active modules, let's use that to get the address of the BountyManager.
         address[] memory moduleAddresses =
             IOrchestrator_v1(_orchestrator).listModules();
         uint lenModules = moduleAddresses.length;

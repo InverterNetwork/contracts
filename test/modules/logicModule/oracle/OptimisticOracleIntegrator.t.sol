@@ -31,6 +31,7 @@ import {
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
 contract OptimisticOracleIntegratorTest is ModuleTest {
+    address ooIntegratorImplementation;
     OptimisticOracleIntegratorMock ooIntegrator;
     OptimisticOracleV3Mock ooV3;
 
@@ -49,8 +50,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooV3.whitelistCurrency(address(_token), 5e17);
 
         //Add Module to Mock Orchestrator
-        address impl = address(new OptimisticOracleIntegratorMock());
-        ooIntegrator = OptimisticOracleIntegratorMock(Clones.clone(impl));
+        ooIntegratorImplementation =
+            address(new OptimisticOracleIntegratorMock());
+        ooIntegrator = OptimisticOracleIntegratorMock(
+            Clones.clone(ooIntegratorImplementation)
+        );
 
         _setUpOrchestrator(ooIntegrator);
 
@@ -75,8 +79,11 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     function testInit() public override(ModuleTest) {
         //set up new orchestrator
-        address impl = address(new OptimisticOracleIntegratorMock());
-        ooIntegrator = OptimisticOracleIntegratorMock(Clones.clone(impl));
+        ooIntegratorImplementation =
+            address(new OptimisticOracleIntegratorMock());
+        ooIntegrator = OptimisticOracleIntegratorMock(
+            Clones.clone(ooIntegratorImplementation)
+        );
         _setUpOrchestrator(ooIntegrator);
 
         bytes memory _configData =
@@ -202,14 +209,13 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooIntegrator.setOptimisticOracle(address(0));
     }
 
-    //@todo this Test is not correctly set @0xNuggan needs to be fixed
-    /*  function testSetOptimisticOracleFails_WhenNewOracleIsNotUmaOptimisticOracle(
+    function testSetOptimisticOracleFails_WhenNewOracleIsNotUmaOptimisticOracle(
         address notOracle
     ) public {
         _validateAddress(notOracle);
         vm.expectRevert();
         ooIntegrator.setOptimisticOracle(notOracle);
-    } */
+    }
 
     function testSetOptimisticOracle() public {
         OptimisticOracleV3Mock newOracle =
@@ -446,6 +452,8 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         vm.assume(validate != address(ooV3));
         // Integrator
         vm.assume(validate != address(ooIntegrator));
+        // Integrator Implementation
+        vm.assume(validate != ooIntegratorImplementation);
         // this
         vm.assume(validate != address(this));
     }

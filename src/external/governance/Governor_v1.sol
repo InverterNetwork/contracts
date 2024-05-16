@@ -175,6 +175,14 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     }
 
     /// @inheritdoc IGovernor_v1
+    function setFeeManagerMaxFee(uint maxFee)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        feeManager.setMaxFee(maxFee);
+    }
+
+    /// @inheritdoc IGovernor_v1
     function setFeeManagerDefaultProtocolTreasury(
         address _defaultProtocolTreasury
     ) external onlyRole(COMMUNITY_MULTISIG_ROLE) {

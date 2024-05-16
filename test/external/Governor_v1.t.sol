@@ -289,6 +289,18 @@ contract GovernorV1Test is Test {
         gov.setFeeManager(address(0));
     }
 
+    function testSetFeeManagerMaxFeeModifierInPosition() public {
+        //onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setFeeManagerMaxFee(0);
+    }
+
     function testSetFeeManagerDefaultProtocolTreasuryModifierInPosition()
         public
     {

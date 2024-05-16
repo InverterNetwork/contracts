@@ -68,8 +68,6 @@ contract OrchestratorV1Test is Test {
     );
 
     function setUp() public {
-        /// @note This test needs refactoring. The setup does not init the Orchestrator, leading to
-        /// a lot of duplicate code.
         fundingManager = new FundingManagerV1Mock();
         authorizer = new AuthorizerV1Mock();
         paymentProcessor = new PaymentProcessorV1Mock();
