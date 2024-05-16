@@ -184,7 +184,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         }
         vm.stopPrank();
 
-        // If the orchestrator spends half of the deposited tokens in the fundingmanager, i.e. for a milestone,
+        // If the orchestrator spends half of the deposited tokens in the fundingmanager, i.e. for a logic module,
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
         // Note that we simulate orchestrator spending by just burning tokens.
