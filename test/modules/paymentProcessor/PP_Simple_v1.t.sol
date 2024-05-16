@@ -178,7 +178,6 @@ contract PP_SimpleV1Test is ModuleTest {
 
         assertEq(amount, paymentClient.amountPaidCounter());
     }
-    
 
     function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)
         public
