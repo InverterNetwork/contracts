@@ -201,8 +201,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
                 _addPayment(
                     address(client),
-                    _token,
                     _recipient,
+                    _token,
                     _amount,
                     _start,
                     _dueTo,
@@ -709,7 +709,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             IERC20PaymentClientBase_v1(client).amountPaid(amount);
         } else {
             emit UnclaimableAmountAdded(
-                client, paymentReceiver, walletId, amount
+                client, paymentReceiver, address(_token), walletId, amount
             );
             //Adds the walletId to the array of unclaimable wallet ids
 
@@ -833,7 +833,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @param _token Address of the token to validate.
     /// @return True if address is valid.
     function validPaymentToken(address _token) internal view returns (bool) {
-        // TODO find a way to check if it's ERC20
+        // Only a basic sanity check, the corresponding module should ensure it's sending an ERC20.
         return !(
             _token == address(0) || _token == _msgSender()
                 || _token == address(this) || _token == address(orchestrator())

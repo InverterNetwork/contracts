@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// TODO: update all events and look into the failing tests
-
 import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -247,6 +245,7 @@ contract PP_StreamingV1Test is ModuleTest {
             emit StreamingPaymentAdded(
                 address(paymentClient),
                 recipients[i],
+                address(_token),
                 amounts[i],
                 block.timestamp,
                 block.timestamp + durations[i],
@@ -255,6 +254,7 @@ contract PP_StreamingV1Test is ModuleTest {
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
+                address(_token),
                 amounts[i],
                 block.timestamp,
                 block.timestamp + durations[i],
@@ -475,7 +475,11 @@ contract PP_StreamingV1Test is ModuleTest {
         for (uint i = 0; i < recipients.length - 1; ++i) {
             vm.expectEmit(true, true, true, true);
             emit InvalidStreamingOrderDiscarded(
-                recipients[i], 100, block.timestamp, block.timestamp + 100
+                recipients[i],
+                address(_token),
+                100,
+                block.timestamp,
+                block.timestamp + 100
             );
         }
 
@@ -493,7 +497,11 @@ contract PP_StreamingV1Test is ModuleTest {
         );
         vm.expectEmit(true, true, true, true);
         emit InvalidStreamingOrderDiscarded(
-            address(0xB0B), invalidAmt, block.timestamp, block.timestamp + 100
+            address(0xB0B),
+            address(_token),
+            invalidAmt,
+            block.timestamp,
+            block.timestamp + 100
         );
         paymentProcessor.processPayments(paymentClient);
 
@@ -1020,6 +1028,7 @@ contract PP_StreamingV1Test is ModuleTest {
             emit StreamingPaymentAdded(
                 address(paymentClient),
                 recipients[i],
+                address(_token),
                 amounts[i],
                 block.timestamp,
                 duration + block.timestamp,
@@ -1028,6 +1037,7 @@ contract PP_StreamingV1Test is ModuleTest {
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
+                address(_token),
                 amounts[i],
                 block.timestamp,
                 duration + block.timestamp,
@@ -1465,7 +1475,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.expectEmit(true, true, true, true);
         emit UnclaimableAmountAdded(
-            address(paymentClient), recipient, 1, amount / 4
+            address(paymentClient), recipient, address(_token), 1, amount / 4
         );
 
         vm.prank(recipient);
