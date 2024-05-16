@@ -41,7 +41,7 @@ import {DeployPP_Streaming_v1} from
 import {DeployLM_PC_RecurringPayments_v1} from
     "script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol";
 import {DeployVotingRoleManager_v1} from
-    "script/modules/authorizer/extensions/DeployVotingRoleManager_v1.s.sol";
+    "script/modules/authorizer/extension/DeployVotingRoleManager_v1.s.sol";
 
 // Import external contracts:
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";

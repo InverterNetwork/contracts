@@ -7,7 +7,7 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {IVotingRoleManager_v1} from
-    "src/modules/authorizer/extensions/interfaces/IVotingRoleManager_v1.sol";
+    "src/modules/authorizer/role/interfaces/IVotingRoleManager_v1.sol";
 
 /**
  * @title   Voting Role Manager
