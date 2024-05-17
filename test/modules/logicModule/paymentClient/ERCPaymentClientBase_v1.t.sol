@@ -98,7 +98,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
-                    createdAt: block.timestamp,
+                    start: block.timestamp,
                     end: end
                 })
             );
@@ -132,7 +132,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: invalids[0],
                     amount: amount,
-                    createdAt: block.timestamp,
+                    start: block.timestamp,
                     end: end
                 })
             );
@@ -154,7 +154,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
                     amount: invalids[0],
-                    createdAt: block.timestamp,
+                    start: block.timestamp,
                     end: end
                 })
             );
@@ -170,19 +170,19 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         ordersToAdd[0] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE1),
             amount: 100e18,
-            createdAt: block.timestamp,
+            start: block.timestamp,
             end: block.timestamp
         });
         ordersToAdd[1] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE2),
             amount: 100e18,
-            createdAt: block.timestamp,
+            start: block.timestamp,
             end: block.timestamp + 1
         });
         ordersToAdd[2] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE3),
             amount: 100e18,
-            createdAt: block.timestamp,
+            start: block.timestamp,
             end: block.timestamp + 2
         });
 
@@ -229,7 +229,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
                     amount: amount,
-                    createdAt: block.timestamp,
+                    start: block.timestamp,
                     end: end
                 })
             );

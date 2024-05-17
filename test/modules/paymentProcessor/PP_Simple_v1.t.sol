@@ -44,13 +44,13 @@ contract PP_SimpleV1Test is ModuleTest {
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
-    /// @param createdAt Timestamp at which the order was created.
+    /// @param start Timestamp at which the order was created.
     /// @param end Timestamp at which the full amount should be payed out/claimable.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         uint amount,
-        uint createdAt,
+        uint start,
         uint end
     );
 
@@ -144,7 +144,7 @@ contract PP_SimpleV1Test is ModuleTest {
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
                 amount: amount,
-                createdAt: block.timestamp,
+                start: block.timestamp,
                 end: block.timestamp
             })
         );
