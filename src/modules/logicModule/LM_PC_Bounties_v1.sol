@@ -460,7 +460,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
                     amount: contrib.claimAmount,
                     start: block.timestamp,
                     cliff: 0,
-                    end: block.timestamp // end Date is now
+                    end: block.timestamp // end date is now
                 })
             );
             unchecked {

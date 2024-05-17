@@ -283,7 +283,7 @@ contract LM_PC_RecurringPayments_v1 is
                             amount: currentPayment.amount,
                             start: block.timestamp,
                             cliff: 0,
-                            //End of current epoch is the end Date
+                            //End of current epoch is the end date
                             end: (currentEpoch + 1) * epochLength
                         })
                     );
