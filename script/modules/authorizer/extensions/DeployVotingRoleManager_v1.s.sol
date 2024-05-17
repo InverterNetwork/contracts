@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {VotingRoleManager_v1} from
-    "src/modules/authorizer/extension/VotingRoleManager_v1.sol";
+    "src/modules/authorizer/extensions/VotingRoleManager_v1.sol";
 
 /**
  * @title VotingRoleManager_v1 Deployment Script

@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import {
     VotingRoleManager_v1,
     IVotingRoleManager_v1
-} from "src/modules/authorizer/extension/VotingRoleManager_v1.sol";
+} from "src/modules/authorizer/extensions/VotingRoleManager_v1.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";

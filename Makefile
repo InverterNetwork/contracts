@@ -104,7 +104,7 @@ testScripts: ## Run e2e test suite
 	## authorizer
 	@forge script script/modules/authorizer/DeployAUT_Role_v1.s.sol
 	@forge script script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol
-	@forge script script/modules/authorizer/extension/DeployVotingRoleManager_v1.s.sol
+	@forge script script/modules/authorizer/extensions/DeployVotingRoleManager_v1.s.sol
 
 	## logicModule
 	@forge script script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol

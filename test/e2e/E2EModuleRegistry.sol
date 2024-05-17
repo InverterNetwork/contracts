@@ -26,7 +26,7 @@ import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {VotingRoleManager_v1} from
-    "src/modules/authorizer/extension/VotingRoleManager_v1.sol";
+    "src/modules/authorizer/extensions/VotingRoleManager_v1.sol";
 
 // Beacon
 import {
