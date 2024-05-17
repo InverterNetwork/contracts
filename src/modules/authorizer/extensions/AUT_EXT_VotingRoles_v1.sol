@@ -6,8 +6,8 @@ import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
-import {IVotingRoleManager_v1} from
-    "src/modules/authorizer/role/interfaces/IVotingRoleManager_v1.sol";
+import {IAUT_EXT_VotingRoles_v1} from
+    "src/modules/authorizer/role/interfaces/IAUT_EXT_VotingRoles_v1.sol";
 
 /**
  * @title   Voting Role Manager
@@ -22,7 +22,7 @@ import {IVotingRoleManager_v1} from
  *
  * @author  Inverter Network
  */
-contract VotingRoleManager_v1 is IVotingRoleManager_v1, Module_v1 {
+contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -30,7 +30,7 @@ contract VotingRoleManager_v1 is IVotingRoleManager_v1, Module_v1 {
         override(Module_v1)
         returns (bool)
     {
-        return interfaceId == type(IVotingRoleManager_v1).interfaceId
+        return interfaceId == type(IAUT_EXT_VotingRoles_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -66,31 +66,31 @@ contract VotingRoleManager_v1 is IVotingRoleManager_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @inheritdoc IVotingRoleManager_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public constant MAX_VOTING_DURATION = 2 weeks;
 
-    /// @inheritdoc IVotingRoleManager_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public constant MIN_VOTING_DURATION = 1 days;
 
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @inheritdoc IVotingRoleManager_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     mapping(address => bool) public isVoter;
 
-    /// @inheritdoc IVotingRoleManager_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     mapping(uint => Motion) public motions;
 
-    /// @inheritdoc IVotingRoleManager_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public motionCount;
 
-    /// @inheritdoc IVotingRoleManager_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public voterCount;
 
-    /// @inheritdoc IVotingRoleManager_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public threshold;
 
-    /// @inheritdoc IVotingRoleManager_v1
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public voteDuration;
 
     //--------------------------------------------------------------------------
