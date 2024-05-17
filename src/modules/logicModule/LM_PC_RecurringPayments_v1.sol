@@ -277,7 +277,7 @@ contract LM_PC_RecurringPayments_v1 is
                         PaymentOrder({
                             recipient: currentPayment.recipient,
                             amount: currentPayment.amount,
-                            createdAt: block.timestamp,
+                            start: block.timestamp,
                             //End of current epoch is the end Date
                             end: (currentEpoch + 1) * epochLength
                         })
@@ -291,7 +291,7 @@ contract LM_PC_RecurringPayments_v1 is
                                 //because we already made a payment that for the current epoch
                                 amount: currentPayment.amount
                                     * (epochsNotTriggered - 1),
-                                createdAt: block.timestamp,
+                                start: block.timestamp,
                                 //Payment was already due so dueDate is start of this epoch which should already have passed
                                 end: currentEpoch * epochLength
                             })
