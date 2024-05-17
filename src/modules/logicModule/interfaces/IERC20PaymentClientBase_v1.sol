@@ -13,6 +13,8 @@ interface IERC20PaymentClientBase_v1 {
         uint amount;
         /// @dev Timestamp at which the payment should start.
         uint start;
+        /// @dev Duration of the payment cliff.
+        uint cliff;
         /// @dev Timestamp at which the payment should be fulfilled.
         uint end;
     }

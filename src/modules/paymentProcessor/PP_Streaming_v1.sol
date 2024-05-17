@@ -180,6 +180,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             uint _streamId;
             uint _amount;
             uint _start;
+            uint _cliff;
             uint _end;
 
             uint numOrders = orders.length;
@@ -189,6 +190,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 _streamId = numStreams[address(client)][_recipient] + 1;
                 _amount = orders[i].amount;
                 _start = orders[i].start;
+                _cliff = orders[i].cliff;
                 _end = orders[i].end;
 
                 _addPayment(
@@ -197,6 +199,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     _streamId,
                     _amount,
                     _start,
+                    _cliff,
                     _end
                 );
 
@@ -206,6 +209,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     _streamId,
                     _amount,
                     _start,
+                    _cliff,
                     _end
                 );
 
@@ -279,6 +283,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint streamId
     ) public view returns (uint) {
         return streams[client][paymentReceiver][streamId]._start;
+    }
+
+    /// @inheritdoc IPP_Streaming_v1
+    function cliffForSpecificStream(
+        address client,
+        address paymentReceiver,
+        uint streamId
+    ) public view returns (uint) {
+        return streams[client][paymentReceiver][streamId]._cliff;
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -594,6 +607,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @param _paymentReceiver PaymentReceiver's address.
     /// @param _salary Salary paymentReceiver will receive per epoch.
     /// @param _start Streaming start timestamp.
+    /// @param _cliff The duration of the cliff period.
     /// @param _end Streaming end timestamp.
     /// @param _streamId ID of the new stream of the a particular paymentReceiver being added
     function _addPayment(
@@ -602,20 +616,21 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint _streamId,
         uint _salary,
         uint _start,
+        uint _cliff,
         uint _end
     ) internal {
         if (
             !validAddress(_paymentReceiver) || !validSalary(_salary)
-                || !validStart(_start)
+                || !validTimes(_start, _cliff, _end)
         ) {
             emit InvalidStreamingOrderDiscarded(
-                _paymentReceiver, _salary, _start, _end
+                _paymentReceiver, _salary, _start, _cliff, _end
             );
         } else {
             ++numStreams[client][_paymentReceiver];
 
             streams[client][_paymentReceiver][_streamId] =
-                Stream(_streamId, _salary, 0, _start, _end);
+                Stream(_streamId, _salary, 0, _start, _cliff, _end);
 
             // We do not want activePaymentReceivers[client] to have duplicate paymentReceiver entries
             // So we avoid pushing the _paymentReceiver to activePaymentReceivers[client] if it already exists
@@ -629,7 +644,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             activeStreams[client][_paymentReceiver].push(_streamId);
 
             emit StreamingPaymentAdded(
-                client, _paymentReceiver, _streamId, _salary, _start, _end
+                client,
+                _paymentReceiver,
+                _streamId,
+                _salary,
+                _start,
+                _cliff,
+                _end
             );
         }
     }
@@ -777,7 +798,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint endPaymentReceiver =
             endForSpecificStream(client, paymentReceiver, streamId);
 
-        if (timestamp < startPaymentReceiver) {
+        if (
+            timestamp
+                < (
+                    startPaymentReceiver
+                        + streams[client][paymentReceiver][streamId]._cliff
+                )
+        ) {
+            // if current time is smaller than starting date plus
+            // optional cliff duration, return 0
             return 0;
         } else if (timestamp >= endPaymentReceiver) {
             return totalAllocation;
@@ -806,8 +835,14 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice validate uint start input.
     /// @param _start uint to validate.
+    /// @param _cliff uint to validate.
+    /// @param _end uint to validate.
     /// @return True if uint is valid.
-    function validStart(uint _start) internal view returns (bool) {
-        return !(_start < block.timestamp || _start >= type(uint).max);
+    function validTimes(uint _start, uint _cliff, uint _end)
+        internal
+        view
+        returns (bool)
+    {
+        return !(_start >= type(uint).max && _start + _cliff > _end);
     }
 }

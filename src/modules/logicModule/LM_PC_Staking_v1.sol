@@ -272,6 +272,7 @@ contract LM_PC_Staking_v1 is
                 recipient: recipient,
                 amount: amount,
                 start: block.timestamp,
+                cliff: 0,
                 end: block.timestamp
             })
         );
