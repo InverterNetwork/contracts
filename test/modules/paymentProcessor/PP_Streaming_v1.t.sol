@@ -53,6 +53,7 @@ contract PP_StreamingV1Test is ModuleTest {
     /// @param streamId ID of the streaming payment order that was added.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event StreamingPaymentAdded(
         address indexed paymentClient,
@@ -60,6 +61,7 @@ contract PP_StreamingV1Test is ModuleTest {
         uint indexed streamId,
         uint amount,
         uint start,
+        uint cliff,
         uint end
     );
 
@@ -76,9 +78,10 @@ contract PP_StreamingV1Test is ModuleTest {
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint end
+        address indexed recipient, uint amount, uint start, uint cliff, uint end
     );
 
     /// @notice Emitted when a payment gets processed for execution.
@@ -87,6 +90,7 @@ contract PP_StreamingV1Test is ModuleTest {
     /// @param streamId ID of the streaming payment order that was processed
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event PaymentOrderProcessed(
         address indexed paymentClient,
@@ -94,6 +98,7 @@ contract PP_StreamingV1Test is ModuleTest {
         uint indexed streamId,
         uint amount,
         uint start,
+        uint cliff,
         uint end
     );
 
@@ -214,6 +219,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -232,15 +238,17 @@ contract PP_StreamingV1Test is ModuleTest {
                 1,
                 amounts[i],
                 block.timestamp,
+                0,
                 block.timestamp + durations[i]
             );
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
+                1,
                 amounts[i],
                 block.timestamp,
-                block.timestamp + durations[i],
-                1
+                0,
+                block.timestamp + durations[i]
             );
         }
 
@@ -297,6 +305,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -369,13 +378,13 @@ contract PP_StreamingV1Test is ModuleTest {
     }
 
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
-    function testProcessPaymentsWorksForDueTimeThatIsPlacedBeforeStartTime(
+    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
         address[] memory recipients,
-        uint[] memory dueTimes
+        uint[] memory endTimes
     ) public {
         uint length = recipients.length;
         vm.assume(length < 50); //Restrict to reasonable size
-        vm.assume(length <= dueTimes.length);
+        vm.assume(length <= endTimes.length);
 
         assumeValidRecipients(recipients);
 
@@ -392,7 +401,8 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     amount: payoutAmount,
                     start: block.timestamp,
-                    end: dueTimes[i]
+                    cliff: 0,
+                    end: endTimes[i]
                 })
             );
         }
@@ -446,6 +456,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     amount: 100,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + 100
                 })
             );
@@ -454,7 +465,7 @@ contract PP_StreamingV1Test is ModuleTest {
         for (uint i = 0; i < recipients.length - 1; ++i) {
             vm.expectEmit(true, true, true, true);
             emit InvalidStreamingOrderDiscarded(
-                recipients[i], 100, block.timestamp, block.timestamp + 100
+                recipients[i], 100, block.timestamp, 0, block.timestamp + 100
             );
         }
 
@@ -466,12 +477,17 @@ contract PP_StreamingV1Test is ModuleTest {
                 recipient: address(0xB0B),
                 amount: invalidAmt,
                 start: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + 100
             })
         );
         vm.expectEmit(true, true, true, true);
         emit InvalidStreamingOrderDiscarded(
-            address(0xB0B), invalidAmt, block.timestamp, block.timestamp + 100
+            address(0xB0B),
+            invalidAmt,
+            block.timestamp,
+            0,
+            block.timestamp + 100
         );
         paymentProcessor.processPayments(paymentClient);
 
@@ -554,6 +570,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -595,6 +612,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -713,6 +731,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -823,6 +842,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -982,6 +1002,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     amount: amounts[i],
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + duration
                 })
             );
@@ -995,6 +1016,7 @@ contract PP_StreamingV1Test is ModuleTest {
                 1,
                 amounts[i],
                 block.timestamp,
+                0,
                 duration + block.timestamp
             );
             emit PaymentOrderProcessed(
@@ -1003,6 +1025,7 @@ contract PP_StreamingV1Test is ModuleTest {
                 1,
                 amounts[i],
                 block.timestamp,
+                0,
                 duration + block.timestamp
             );
         }
@@ -1142,6 +1165,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipient,
                     amount: amounts[i],
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + durations[i]
                 })
             );
@@ -1221,6 +1245,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipient,
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: start + duration
                 })
             );
@@ -1270,6 +1295,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     amount: 1,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp
                 })
             );
@@ -1422,6 +1448,7 @@ contract PP_StreamingV1Test is ModuleTest {
                 recipient: recipient,
                 amount: amount,
                 start: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + duration
             })
         );
@@ -1492,6 +1519,7 @@ contract PP_StreamingV1Test is ModuleTest {
                 recipient: recipient,
                 amount: amount,
                 start: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + duration
             })
         );
@@ -1564,6 +1592,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     amount: 1,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp
                 })
             );
@@ -1619,6 +1648,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     amount: amounts[i],
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
