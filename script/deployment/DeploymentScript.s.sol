@@ -31,17 +31,17 @@ import {DeployFM_Rebasing_v1} from
 import {DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol";
 import {DeployAUT_Role_v1} from
-    "script/modules/governance/DeployAUT_Role_v1.s.sol";
+    "script/modules/authorizer/DeployAUT_Role_v1.s.sol";
 import {DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol";
 import {DeployAUT_TokenGated_Role_v1} from
-    "script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol";
+    "script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol";
 import {DeployPP_Streaming_v1} from
     "script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol";
 import {DeployLM_PC_RecurringPayments_v1} from
     "script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol";
-import {DeployVotingRoleManager_v1} from
-    "script/modules/utils/DeployVotingRoleManager_v1.s.sol";
+import {DeployAUT_EXT_VotingRoles_v1} from
+    "script/modules/authorizer/extensions/DeployAUT_EXT_VotingRoles_v1.s.sol";
 
 // Import external contracts:
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
@@ -76,8 +76,8 @@ contract DeploymentScript is Script {
     DeployLM_PC_RecurringPayments_v1 deployRecurringPaymentManager =
         new DeployLM_PC_RecurringPayments_v1();
     // Utils
-    DeployVotingRoleManager_v1 deploySingleVoteGovernor =
-        new DeployVotingRoleManager_v1();
+    DeployAUT_EXT_VotingRoles_v1 deploySingleVoteGovernor =
+        new DeployAUT_EXT_VotingRoles_v1();
     // TransactionForwarder_v1
     DeployTransactionForwarder_v1 deployTransactionForwarder =
         new DeployTransactionForwarder_v1();
@@ -232,7 +232,7 @@ contract DeploymentScript is Script {
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
-        "VotingRoleManager_v1"
+        "AUT_EXT_VotingRoles_v1"
     );
 
     /// @notice Deploys all necessary factories, beacons and implementations
