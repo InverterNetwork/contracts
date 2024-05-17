@@ -285,7 +285,7 @@ contract LM_PC_Staking_v1 is
                 recipient: recipient,
                 paymentToken: address(orchestrator().fundingManager().token()),
                 amount: amount,
-                createdAt: block.timestamp,
+                start: block.timestamp,
                 end: block.timestamp
             })
         );

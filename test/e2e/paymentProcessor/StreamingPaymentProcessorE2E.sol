@@ -152,57 +152,46 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         //Check Payments
         //viewAllPaymentOrders
         //Lets see all avaialable orders
-        IPP_Streaming_v1.VestingWallet[] memory vestings =
-        streamingPaymentProcessor.viewAllPaymentOrders(
-            address(recurringPaymentManager), alice
-        );
-        assertTrue(vestings.length == 3);
+        IPP_Streaming_v1.Stream[] memory streams = streamingPaymentProcessor
+            .viewAllPaymentOrders(address(recurringPaymentManager), alice);
+        assertTrue(streams.length == 3);
 
-        //startForSpecificWalletId
-        //When does the payment start vesting?
-        uint start = streamingPaymentProcessor.startForSpecificWalletId(
-            address(recurringPaymentManager),
-            alice,
-            vestings[0]._vestingWalletID
+        //startForSpecificStream
+        //When does the payment start stream?
+        uint start = streamingPaymentProcessor.startForSpecificStream(
+            address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(start == block.timestamp);
 
-        //endForSpecificWalletId
+        //endForSpecificStream
         //When is the payment end?
-        uint end = streamingPaymentProcessor.endForSpecificWalletId(
-            address(recurringPaymentManager),
-            alice,
-            vestings[0]._vestingWalletID
+        uint end = streamingPaymentProcessor.endForSpecificStream(
+            address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(end == startEpoch * epochLength + 1 weeks);
 
-        //vestedAmountForSpecificWalletId
+        //streamedAmountForSpecificStream
         //lets see what is hypotheically realeasable in half a week
-        uint vestedAmount = streamingPaymentProcessor
-            .vestedAmountForSpecificWalletId(
+        uint streamedAmount = streamingPaymentProcessor
+            .streamedAmountForSpecificStream(
             address(recurringPaymentManager),
             alice,
-            block.timestamp + 1 weeks / 2,
-            vestings[0]._vestingWalletID
+            streams[0]._streamId,
+            block.timestamp + 1 weeks / 2
         );
-        assertTrue(vestedAmount == paymentAmount / 2);
+        assertTrue(streamedAmount == paymentAmount / 2);
 
-        //releasedForSpecificWalletId
+        //releasedForSpecificStream
         //What got already released for that specific wallet id?
-        uint released = streamingPaymentProcessor.releasedForSpecificWalletId(
-            address(recurringPaymentManager),
-            alice,
-            vestings[0]._vestingWalletID
+        uint released = streamingPaymentProcessor.releasedForSpecificStream(
+            address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(released == 0);
 
-        //releasableForSpecificWalletId
+        //releasableForSpecificStream
         //What is currently releasable? Emphasis on "currently"
-        uint releasable = streamingPaymentProcessor
-            .releasableForSpecificWalletId(
-            address(recurringPaymentManager),
-            alice,
-            vestings[0]._vestingWalletID
+        uint releasable = streamingPaymentProcessor.releasableForSpecificStream(
+            address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(releasable == 0);
 
@@ -219,23 +208,19 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         //Lets do a time jump of half a week
         vm.warp(block.timestamp + 1 weeks / 2);
         //And check how much is releasable
-        releasable = streamingPaymentProcessor.releasableForSpecificWalletId(
-            address(recurringPaymentManager),
-            alice,
-            vestings[0]._vestingWalletID
+        releasable = streamingPaymentProcessor.releasableForSpecificStream(
+            address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(releasable == paymentAmount / 2);
 
-        //Lets claim the releasable tokens for a single vestingwallet
+        //Lets claim the releasable tokens for a single stream
         vm.prank(alice);
-        streamingPaymentProcessor.claimForSpecificWalletId(
-            address(recurringPaymentManager), vestings[0]._vestingWalletID
+        streamingPaymentProcessor.claimForSpecificStream(
+            address(recurringPaymentManager), streams[0]._streamId
         );
         //check what got released
-        released = streamingPaymentProcessor.releasedForSpecificWalletId(
-            address(recurringPaymentManager),
-            alice,
-            vestings[0]._vestingWalletID
+        released = streamingPaymentProcessor.releasedForSpecificStream(
+            address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(released == paymentAmount / 2);
 
@@ -282,11 +267,9 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         recurringPaymentManager.trigger();
 
         //Check if everyone has a running payment active
-        IPP_Streaming_v1.VestingWallet[] memory vestings =
-        streamingPaymentProcessor.viewAllPaymentOrders(
-            address(recurringPaymentManager), alice
-        );
-        assertTrue(vestings.length == 3);
+        IPP_Streaming_v1.Stream[] memory streams = streamingPaymentProcessor
+            .viewAllPaymentOrders(address(recurringPaymentManager), alice);
+        assertTrue(streams.length == 3);
 
         assertTrue(
             streamingPaymentProcessor.isActivePaymentReceiver(
@@ -303,17 +286,15 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // RemovePayment Functions
 
         //remove 1 Alice
-        //removePaymentForSpecificWalletId
-        streamingPaymentProcessor.removePaymentForSpecificWalletId(
-            address(recurringPaymentManager),
-            alice,
-            vestings[0]._vestingWalletID
+        //removePaymentForSpecificStream
+        streamingPaymentProcessor.removePaymentForSpecificStream(
+            address(recurringPaymentManager), alice, streams[0]._streamId
         );
 
-        vestings = streamingPaymentProcessor.viewAllPaymentOrders(
+        streams = streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), alice
         );
-        assertTrue(vestings.length == 2);
+        assertTrue(streams.length == 2);
 
         //remove all Payments from Alice
         streamingPaymentProcessor.removeAllPaymentReceiverPayments(

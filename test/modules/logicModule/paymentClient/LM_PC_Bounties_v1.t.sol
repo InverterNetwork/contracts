@@ -820,7 +820,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             assertEq(orders[i].recipient, contribs[i].addr);
 
             assertEq(orders[i].amount, claimAmount);
-            assertEq(orders[i].createdAt, block.timestamp);
+            assertEq(orders[i].start, block.timestamp);
 
             assertEq(orders[i].end, block.timestamp);
         }

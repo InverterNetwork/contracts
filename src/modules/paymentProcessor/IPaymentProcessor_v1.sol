@@ -25,14 +25,14 @@ interface IPaymentProcessor_v1 {
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
     /// @param amount The amount of tokens the payment consists of.
-    /// @param createdAt Timestamp at which the order was created.
-    /// @param end Timestamp at which the full amount should be payed out/claimable.
+    /// @param start Timestamp at which the payment should start being paid out.
+    /// @param end Timestamp at which the payment should finished being paid out.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         address indexed token,
         uint amount,
-        uint createdAt,
+        uint start,
         uint end
     );
 

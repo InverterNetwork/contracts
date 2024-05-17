@@ -13,9 +13,9 @@ interface IERC20PaymentClientBase_v1 {
         address paymentToken;
         /// @dev The amount of tokens to pay.
         uint amount;
-        /// @dev Timestamp at which the order got created.
-        uint createdAt;
-        /// @dev Timestamp at which the payment SHOULD be fulfilled.
+        /// @dev Timestamp at which the payment should start.
+        uint start;
+        /// @dev Timestamp at which the payment should be fulfilled.
         uint end;
     }
 

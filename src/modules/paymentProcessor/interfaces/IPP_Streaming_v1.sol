@@ -13,20 +13,20 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     // Structs
 
     /// @notice This struct is used to store the payment order for a particular paymentReceiver by a particular payment client
-    /// @dev for _vestingWalletID, valid values will start from 1. 0 is not a valid vestingWalletID.
+    /// @dev for _streamId, valid values will start from 1. 0 is not a valid id.
     /// @param _paymentToken: The address of the token that is being used for the payment
-    /// @param _salary: The total amount that the paymentReceiver should eventually get
-    /// @param _released: The amount that has been claimed by the paymentReceiver till now
-    /// @param _start: The start date of the vesting period
-    /// @param _end: The ending of the vesting period
-    /// @param _vestingWalletID: A unique identifier of a wallet for a specific paymentClient and paymentReceiver combination
-    struct VestingWallet {
+    /// @param _streamId: A unique identifier of a stream for a specific paymentClient and paymentReceiver combination.
+    /// @param _salary: The total amount that the paymentReceiver should eventually get.
+    /// @param _released: The amount that has been claimed by the paymentReceiver till now.
+    /// @param _start: The start date of the streaming period.
+    /// @param _end: The ending of the streaming period.
+    struct Stream {
         address _paymentToken;
+        uint _streamId;
         uint _salary;
         uint _released;
         uint _start;
         uint _end;
-        uint _vestingWalletID;
     }
 
     //--------------------------------------------------------------------------
@@ -36,36 +36,36 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
     /// @param paymentToken The address of the token that is being used for the payment
+    /// @param streamId ID of the streaming payment order that was added.
     /// @param amount The amount of tokens the payment consists of.
-    /// @param start Timestamp at which the vesting starts.
-    /// @param end Timestamp at which the full amount should be claimable.
-    /// @param walletId ID of the payment order that was added
+    /// @param start The start date of the streaming period.
+    /// @param end The ending of the streaming period.
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
+        uint indexed streamId,
         uint amount,
         uint start,
-        uint end,
-        uint walletId
+        uint end
     );
 
     /// @notice Emitted when the vesting to an address is removed.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will stop receiving payment.
-    /// @param walletId ID of the payment order removed
+    /// @param streamId ID of the streaming payment order that was removed.
     event StreamingPaymentRemoved(
         address indexed paymentClient,
         address indexed recipient,
-        uint indexed walletId
+        uint indexed streamId
     );
 
-    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @notice Emitted when a running stream schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
-    /// @param start Timestamp at which the vesting starts.
-    /// @param end Timestamp at which the full amount should be claimable.
+    /// @param start The start date of the streaming period.
+    /// @param end The ending of the streaming period.
     event InvalidStreamingOrderDiscarded(
         address indexed recipient,
         address indexed paymentToken,
@@ -78,31 +78,31 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
     /// @param paymentToken The address of the token that will be used for the payment
+    /// @param streamId ID of the streaming payment order that was processed
     /// @param amount The amount of tokens the payment consists of.
-    /// @param createdAt Timestamp at which the order was created.
-    /// @param end Timestamp at which the full amount should be payed out/claimable.
-    /// @param walletId ID of the payment order that was processed
+    /// @param start The start date of the streaming period.
+    /// @param end The ending of the streaming period.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
+        uint indexed streamId,
         uint amount,
-        uint createdAt,
-        uint end,
-        uint walletId
+        uint start,
+        uint end
     );
 
     /// @notice Emitted when a payment was unclaimable due to a token error.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that wshould have received the payment.
     /// @param paymentToken The address of the token that will be used for the payment
-    /// @param walletId ID of the payment order that was processed
+    /// @param streamId ID of the streaming payment order that was processed
     /// @param amount The amount of tokens that were unclaimable.
     event UnclaimableAmountAdded(
         address indexed paymentClient,
         address recipient,
         address paymentToken,
-        uint walletId,
+        uint streamId,
         uint amount
     );
 
@@ -117,14 +117,14 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         address paymentClient, address paymentReceiver
     );
 
-    /// @notice paymentReceiver's walletId for the paymentClient is not valid
-    error Module__PP_Streaming__InvalidWallet(
-        address paymentClient, address paymentReceiver, uint walletId
+    /// @notice paymentReceiver's streamId for the paymentClient is not valid
+    error Module__PP_Streaming__InvalidStream(
+        address paymentClient, address paymentReceiver, uint streamId
     );
 
-    /// @notice paymentReceiver's walletId for the paymentClient is no longer active
-    error Module__PP_Streaming__InactiveWallet(
-        address paymentClient, address paymentReceiver, uint walletId
+    /// @notice paymentReceiver's streamId for the paymentClient is no longer active
+    error Module__PP_Streaming__InactiveStream(
+        address paymentClient, address paymentReceiver, uint streamId
     );
 
     /// @notice the paymentReceiver for the given paymentClient does not exist (anymore)
@@ -147,17 +147,17 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     function claimPreviouslyUnclaimable(address client, address receiver)
         external;
 
-    /// @notice claim the salary uptil block.timestamp from the client for a payment order with id = walletId by _msgSender
-    /// @dev If for a specific walletId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
-    ///      of the paymentReceiver, and the amount would no longer hold any co-relation with the specific walletId of the paymentReceiver.
-    /// @param client The {IERC20PaymentClientBase_v1} instance address that processes the walletId claim from _msgSender
-    /// @param walletId The ID of the payment order for which claim is being made
-    function claimForSpecificWalletId(address client, uint walletId) external;
+    /// @notice claim the salary uptil block.timestamp from the client for a payment order with id = streamId by _msgSender
+    /// @dev If for a specific streamId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
+    ///      of the paymentReceiver, and the amount would no longer hold any co-relation with the specific streamId of the paymentReceiver.
+    /// @param client The {IERC20PaymentClientBase_v1} instance address that processes the streamId claim from _msgSender
+    /// @param streamId The ID of the streaming payment order for which claim is being made
+    function claimForSpecificStream(address client, uint streamId) external;
 
-    /// @notice Deletes all payments related to a paymentReceiver & leaves unvested tokens in the ERC20PaymentClientBase_v1.
+    /// @notice Deletes all payments related to a paymentReceiver & leaves currently streaming tokens in the ERC20PaymentClientBase_v1.
     /// @dev this function calls _removePayment which goes through all the payment orders for a paymentReceiver. For the payment orders
-    ///      that are completely vested, their details are deleted in the _claimForSpecificWalletId function and for others it is
-    ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the paymentClient itself.
+    ///      that are completely streamed, their details are deleted in the _claimForSpecificStream function and for others it is
+    ///      deleted in the _removePayment function only, leaving the currently streaming tokens as balance of the paymentClient itself.
     /// @param client The {IERC20PaymentClientBase_v1} instance address from which we will remove the payments
     /// @param paymentReceiver PaymentReceiver's address.
     function removeAllPaymentReceiverPayments(
@@ -165,68 +165,68 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         address paymentReceiver
     ) external;
 
-    /// @notice Deletes a specific payment with id = walletId for a paymentReceiver & leaves unvested tokens in the ERC20PaymentClientBase_v1.
-    /// @dev the detail of the wallet that is being removed is either deleted in the _claimForSpecificWalletId or later down in this
+    /// @notice Deletes a specific payment with id = streamId for a paymentReceiver & leaves currently streaming tokens in the ERC20PaymentClientBase_v1.
+    /// @dev the detail of the wallet that is being removed is either deleted in the _claimForSpecificStream or later down in this
     ///      function itself depending on the timestamp of when this function was called
     /// @param client The {IERC20PaymentClientBase_v1} instance address from which we will remove the payment
     /// @param paymentReceiver address of the paymentReceiver whose payment order is to be removed
-    /// @param walletId The ID of the paymentReceiver's payment order which is to be removed
-    function removePaymentForSpecificWalletId(
+    /// @param streamId The ID of the paymentReceiver's payment order which is to be removed
+    function removePaymentForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) external;
 
-    /// @notice Getter for the start timestamp of a particular payment order with id = walletId associated with a particular paymentReceiver
+    /// @notice Getter for the start timestamp of a particular payment order with id = streamId associated with a particular paymentReceiver
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
-    /// @param walletId Id of the wallet for which start is fetched
-    function startForSpecificWalletId(
+    /// @param streamId Id of the wallet for which start is fetched
+    function startForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) external view returns (uint);
 
-    /// @notice Getter for the vesting end timestamp of a particular payment order with id = walletId associated with a particular paymentReceiver
+    /// @notice Getter for the stream end timestamp of a particular payment order with id = streamId associated with a particular paymentReceiver
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
-    /// @param walletId Id of the wallet for which end is fetched
-    function endForSpecificWalletId(
+    /// @param streamId Id of the wallet for which end is fetched
+    function endForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) external view returns (uint);
 
-    /// @notice Getter for the amount of tokens already released for a particular payment order with id = walletId associated with a particular paymentReceiver
+    /// @notice Getter for the amount of tokens already released for a particular payment order with id = streamId associated with a particular paymentReceiver
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
-    /// @param walletId Id of the wallet for which released is fetched
-    function releasedForSpecificWalletId(
+    /// @param streamId Id of the wallet for which released is fetched
+    function releasedForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) external view returns (uint);
 
-    /// @notice Calculates the amount of tokens that has already vested for a particular payment order with id = walletId associated with a particular paymentReceiver.
+    /// @notice Calculates the amount of tokens that has already streamed for a particular payment order with id = streamId associated with a particular paymentReceiver.
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
-    /// @param timestamp the time upto which we want the vested amount
-    /// @param walletId Id of the wallet for which the vested amount is fetched
-    function vestedAmountForSpecificWalletId(
+    /// @param streamId Id of the wallet for which the streamed amount is fetched
+    /// @param timestamp the time upto which we want the streamed amount
+    function streamedAmountForSpecificStream(
         address client,
         address paymentReceiver,
-        uint timestamp,
-        uint walletId
+        uint streamId,
+        uint timestamp
     ) external view returns (uint);
 
-    /// @notice Getter for the amount of releasable tokens for a particular payment order with id = walletId associated with a particular paymentReceiver.
+    /// @notice Getter for the amount of releasable tokens for a particular payment order with id = streamId associated with a particular paymentReceiver.
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
-    /// @param walletId Id of the wallet for which the releasable amount is fetched
-    function releasableForSpecificWalletId(
+    /// @param streamId Id of the wallet for which the releasable amount is fetched
+    function releasableForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) external view returns (uint);
 
     /// @notice Getter for the amount of tokens that could not be claimed.
@@ -244,7 +244,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     function viewAllPaymentOrders(address client, address paymentReceiver)
         external
         view
-        returns (VestingWallet[] memory);
+        returns (Stream[] memory);
 
     /// @notice tells whether a paymentReceiver has any pending payments for a particular client
     /// @dev this function is for convenience and can be easily figured out by other means in the codebase.

@@ -752,13 +752,13 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         IERC20PaymentClientBase_v1.PaymentOrder memory order,
         address recipient,
         uint amount,
-        uint createdAt,
+        uint start,
         uint end
     ) internal {
         assertEq(order.recipient, recipient);
 
         assertEq(order.amount, amount);
-        assertEq(order.createdAt, createdAt);
+        assertEq(order.start, start);
 
         assertEq(order.end, end);
     }

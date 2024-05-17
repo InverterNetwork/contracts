@@ -103,7 +103,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
+                    start: block.timestamp,
                     end: end
                 })
             );
@@ -141,7 +141,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     recipient: invalids[0],
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
+                    start: block.timestamp,
                     end: end
                 })
             );
@@ -164,7 +164,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: invalids[0],
-                    createdAt: block.timestamp,
+                    start: block.timestamp,
                     end: end
                 })
             );
@@ -181,21 +181,21 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             recipient: address(0xCAFE1),
             paymentToken: address(_token),
             amount: 100e18,
-            createdAt: block.timestamp,
+            start: block.timestamp,
             end: block.timestamp
         });
         ordersToAdd[1] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE2),
             paymentToken: address(_token),
             amount: 100e18,
-            createdAt: block.timestamp,
+            start: block.timestamp,
             end: block.timestamp + 1
         });
         ordersToAdd[2] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE3),
             paymentToken: address(_token),
             amount: 100e18,
-            createdAt: block.timestamp,
+            start: block.timestamp,
             end: block.timestamp + 2
         });
 
@@ -243,7 +243,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
+                    start: block.timestamp,
                     end: end
                 })
             );
