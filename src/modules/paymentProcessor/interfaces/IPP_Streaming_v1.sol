@@ -19,6 +19,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param _salary: The total amount that the paymentReceiver should eventually get.
     /// @param _released: The amount that has been claimed by the paymentReceiver till now.
     /// @param _start: The start date of the streaming period.
+    /// @param _cliff: The duration of the cliff period.
     /// @param _end: The ending of the streaming period.
     struct Stream {
         address _paymentToken;
@@ -26,6 +27,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint _salary;
         uint _released;
         uint _start;
+        uint _cliff;
         uint _end;
     }
 
@@ -39,6 +41,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param streamId ID of the streaming payment order that was added.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event StreamingPaymentAdded(
         address indexed paymentClient,
@@ -47,6 +50,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint indexed streamId,
         uint amount,
         uint start,
+        uint cliff,
         uint end
     );
 
@@ -65,12 +69,14 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event InvalidStreamingOrderDiscarded(
         address indexed recipient,
         address indexed paymentToken,
         uint amount,
         uint start,
+        uint cliff,
         uint end
     );
 
@@ -81,6 +87,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param streamId ID of the streaming payment order that was processed
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event PaymentOrderProcessed(
         address indexed paymentClient,
@@ -89,6 +96,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint indexed streamId,
         uint amount,
         uint start,
+        uint cliff,
         uint end
     );
 
@@ -182,6 +190,16 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param paymentReceiver PaymentReceiver's address.
     /// @param streamId Id of the wallet for which start is fetched
     function startForSpecificStream(
+        address client,
+        address paymentReceiver,
+        uint streamId
+    ) external view returns (uint);
+
+    /// @notice Getter for the cliff duration of a particular payment order with id = streamId associated with a particular paymentReceiver
+    /// @param client address of the payment client
+    /// @param paymentReceiver PaymentReceiver's address.
+    /// @param streamId Id of the wallet for which cliff is fetched
+    function cliffForSpecificStream(
         address client,
         address paymentReceiver,
         uint streamId

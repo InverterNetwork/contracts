@@ -459,6 +459,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
                     paymentToken: address(orchestrator().fundingManager().token()),
                     amount: contrib.claimAmount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp // end Date is now
                 })
             );
