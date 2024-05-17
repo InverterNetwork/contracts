@@ -104,6 +104,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: end
                 })
             );
@@ -142,6 +143,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: end
                 })
             );
@@ -161,6 +163,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     paymentToken: address(_token),
                     amount: invalids[0],
                     start: block.timestamp,
+                    cliff: 0,
                     end: end
                 })
             );
@@ -178,6 +181,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             paymentToken: address(_token),
             amount: 100e18,
             start: block.timestamp,
+            cliff: 0,
             end: block.timestamp
         });
         ordersToAdd[1] = IERC20PaymentClientBase_v1.PaymentOrder({
@@ -185,6 +189,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             paymentToken: address(_token),
             amount: 100e18,
             start: block.timestamp,
+            cliff: 0,
             end: block.timestamp + 1
         });
         ordersToAdd[2] = IERC20PaymentClientBase_v1.PaymentOrder({
@@ -192,6 +197,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             paymentToken: address(_token),
             amount: 100e18,
             start: block.timestamp,
+            cliff: 0,
             end: block.timestamp + 2
         });
 
@@ -240,6 +246,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: end
                 })
             );

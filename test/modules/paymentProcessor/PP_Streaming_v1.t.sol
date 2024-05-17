@@ -53,6 +53,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     /// @param streamId ID of the streaming payment order that was added.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event StreamingPaymentAdded(
         address indexed paymentClient,
@@ -61,6 +62,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint indexed streamId,
         uint amount,
         uint start,
+        uint cliff,
         uint end
     );
 
@@ -79,12 +81,14 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event InvalidStreamingOrderDiscarded(
         address indexed recipient,
         address indexed paymentToken,
         uint amount,
         uint start,
+        uint cliff,
         uint end
     );
 
@@ -95,6 +99,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     /// @param streamId ID of the streaming payment order that was processed
     /// @param amount The amount of tokens the payment consists of.
     /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
     /// @param end The ending of the streaming period.
     event PaymentOrderProcessed(
         address indexed paymentClient,
@@ -103,6 +108,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint indexed streamId,
         uint amount,
         uint start,
+        uint cliff,
         uint end
     );
 
@@ -201,6 +207,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -220,16 +227,18 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 1,
                 amounts[i],
                 block.timestamp,
+                0,
                 block.timestamp + durations[i]
             );
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
+                1,
                 amounts[i],
                 block.timestamp,
-                block.timestamp + durations[i],
-                1
+                0,
+                block.timestamp + durations[i]
             );
         }
 
@@ -287,6 +296,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -359,13 +369,13 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     }
 
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
-    function testProcessPaymentsWorksForDueTimeThatIsPlacedBeforeStartTime(
+    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
         address[] memory recipients,
-        uint[] memory dueTimes
+        uint[] memory endTimes
     ) public {
         uint length = recipients.length;
         vm.assume(length < 50); //Restrict to reasonable size
-        vm.assume(length <= dueTimes.length);
+        vm.assume(length <= endTimes.length);
 
         assumeValidRecipients(recipients);
 
@@ -383,7 +393,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: payoutAmount,
                     start: block.timestamp,
-                    end: dueTimes[i]
+                    cliff: 0,
+                    end: endTimes[i]
                 })
             );
         }
@@ -438,6 +449,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: 100,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + 100
                 })
             );
@@ -450,6 +462,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 address(_token),
                 100,
                 block.timestamp,
+                0,
                 block.timestamp + 100
             );
         }
@@ -463,6 +476,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 paymentToken: address(_token),
                 amount: invalidAmt,
                 start: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + 100
             })
         );
@@ -472,6 +486,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address(_token),
             invalidAmt,
             block.timestamp,
+            0,
             block.timestamp + 100
         );
         paymentProcessor.processPayments(paymentClient);
@@ -556,6 +571,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -598,6 +614,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -717,6 +734,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -828,6 +846,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
@@ -988,6 +1007,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amounts[i],
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + duration
                 })
             );
@@ -1002,13 +1022,18 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 1,
                 amounts[i],
                 block.timestamp,
+                0,
                 duration + block.timestamp
             );
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
-                block.timestamp
+                1,
+                amounts[i],
+                block.timestamp,
+                0,
+                duration + block.timestamp
             );
         }
 
@@ -1148,6 +1173,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amounts[i],
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + durations[i]
                 })
             );
@@ -1228,6 +1254,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amount,
                     start: block.timestamp,
+                    cliff: 0,
                     end: start + duration
                 })
             );
@@ -1278,6 +1305,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: 1,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp
                 })
             );
@@ -1431,6 +1459,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 paymentToken: address(_token),
                 amount: amount,
                 start: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + duration
             })
         );
@@ -1502,6 +1531,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 paymentToken: address(_token),
                 amount: amount,
                 start: block.timestamp,
+                cliff: 0,
                 end: block.timestamp + duration
             })
         );
@@ -1575,6 +1605,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: 1,
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp
                 })
             );
@@ -1631,6 +1662,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     paymentToken: address(_token),
                     amount: amounts[i],
                     start: block.timestamp,
+                    cliff: 0,
                     end: block.timestamp + time
                 })
             );
