@@ -25,7 +25,8 @@ import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
-import {VotingRoleManager_v1} from "src/modules/utils/VotingRoleManager_v1.sol";
+import {AUT_EXT_VotingRoles_v1} from
+    "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
 
 // Beacon
 import {
@@ -529,9 +530,9 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // utils
 
-    // VotingRoleManager_v1
+    // AUT_EXT_VotingRoles_v1
 
-    VotingRoleManager_v1 singleVoteGovernorImpl;
+    AUT_EXT_VotingRoles_v1 singleVoteGovernorImpl;
 
     InverterBeacon_v1 singleVoteGovernorBeacon;
 
@@ -539,7 +540,7 @@ contract E2EModuleRegistry is Test {
         1,
         0,
         "https://github.com/inverter/single-vote-governor",
-        "VotingRoleManager_v1"
+        "AUT_EXT_VotingRoles_v1"
     );
 
     /*    
@@ -556,7 +557,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpSingleVoteGovernor() internal {
         // Deploy module implementations.
-        singleVoteGovernorImpl = new VotingRoleManager_v1();
+        singleVoteGovernorImpl = new AUT_EXT_VotingRoles_v1();
 
         // Deploy module beacons.
         singleVoteGovernorBeacon = new InverterBeacon_v1(

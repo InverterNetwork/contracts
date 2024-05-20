@@ -6,9 +6,9 @@ import "forge-std/console.sol";
 
 // SuT
 import {
-    VotingRoleManager_v1,
-    IVotingRoleManager_v1
-} from "src/modules/utils/VotingRoleManager_v1.sol";
+    AUT_EXT_VotingRoles_v1,
+    IAUT_EXT_VotingRoles_v1
+} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -40,12 +40,12 @@ import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract VotingRoleManagerV1Test is ModuleTest {
+contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     bool hasDependency;
     string[] dependencies = new string[](0);
 
     // SuT
-    VotingRoleManager_v1 _governor;
+    AUT_EXT_VotingRoles_v1 _governor;
 
     //Orchestrator_v1 _orchestrator;
     address[] initialVoters;
@@ -59,7 +59,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
     address internal constant ALBA = address(0xa1ba);
     address internal constant BOB = address(0xb0b);
     address internal constant COBIE = address(0xc0b1e);
-    IVotingRoleManager_v1.Motion _bufMotion;
+    IAUT_EXT_VotingRoles_v1.Motion _bufMotion;
 
     //--------------------------------------------------------------------------
     // Events
@@ -92,8 +92,8 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
     function setUp() public {
         // Set up a orchestrator
-        address authImpl = address(new VotingRoleManager_v1());
-        _governor = VotingRoleManager_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_EXT_VotingRoles_v1());
+        _governor = AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
 
         _setUpOrchestrator(_governor);
 
@@ -127,7 +127,9 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
     function testSupportsInterface() public {
         assertTrue(
-            _governor.supportsInterface(type(IVotingRoleManager_v1).interfaceId)
+            _governor.supportsInterface(
+                type(IAUT_EXT_VotingRoles_v1).interfaceId
+            )
         );
     }
 
@@ -232,7 +234,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
     function getFullMotionData(uint voteId)
         internal
-        returns (IVotingRoleManager_v1.Motion storage)
+        returns (IAUT_EXT_VotingRoles_v1.Motion storage)
     {
         (
             address _addr,
@@ -295,9 +297,9 @@ contract VotingRoleManagerV1Test is ModuleTest {
         vm.assume(testVoters.length >= 2);
         _validateUserList(testVoters);
 
-        address authImpl = address(new VotingRoleManager_v1());
-        VotingRoleManager_v1 testAuthorizer =
-            VotingRoleManager_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_EXT_VotingRoles_v1());
+        AUT_EXT_VotingRoles_v1 testAuthorizer =
+            AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
 
         //Since the authorizer we are working with is not the default one,
         // we must manually control that the fuzzer doesn't feed us its address
@@ -330,9 +332,9 @@ contract VotingRoleManagerV1Test is ModuleTest {
         vm.assume(testVoters.length >= 2);
         position = uint8(bound(position, 1, testVoters.length - 1));
 
-        address authImpl = address(new VotingRoleManager_v1());
-        VotingRoleManager_v1 testAuthorizer =
-            VotingRoleManager_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_EXT_VotingRoles_v1());
+        AUT_EXT_VotingRoles_v1 testAuthorizer =
+            AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
 
         _validateUserList(testVoters);
 
@@ -346,7 +348,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__IsAlreadyVoter
                     .selector
             )
@@ -366,14 +368,14 @@ contract VotingRoleManagerV1Test is ModuleTest {
     function testInitWithInvalidInitialVotersFails() public {
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
-        address authImpl = address(new VotingRoleManager_v1());
-        VotingRoleManager_v1 testAuthorizer =
-            VotingRoleManager_v1(Clones.clone(authImpl));
+        address authImpl = address(new AUT_EXT_VotingRoles_v1());
+        AUT_EXT_VotingRoles_v1 testAuthorizer =
+            AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
 
         address[] memory testVoters;
         vm.expectRevert(
             abi.encodeWithSelector(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__EmptyVoters
                     .selector
             )
@@ -389,7 +391,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidVoterAddress
                     .selector
             )
@@ -403,7 +405,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         testVoters[0] = address(testAuthorizer);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidVoterAddress
                     .selector
             )
@@ -417,7 +419,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         testVoters[0] = address(_orchestrator);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidVoterAddress
                     .selector
             )
@@ -469,7 +471,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         for (uint i; i < initialVoters.length; ++i) {
             uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-            IVotingRoleManager_v1.Motion storage _motion =
+            IAUT_EXT_VotingRoles_v1.Motion storage _motion =
                 getFullMotionData(_voteID);
 
             assertEq(_governor.motionCount(), (_voteID + 1));
@@ -496,7 +498,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             assertEq(_governor.isVoter(users[i]), false);
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__CallerNotVoter
                     .selector
             );
@@ -572,7 +574,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        IVotingRoleManager_v1.Motion storage _motion =
+        IAUT_EXT_VotingRoles_v1.Motion storage _motion =
             getFullMotionData(_voteID);
         uint _votesBefore = _motion.forVotes;
 
@@ -616,7 +618,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__CallerNotVoter
                     .selector
             );
@@ -633,7 +635,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        IVotingRoleManager_v1.Motion storage _motion =
+        IAUT_EXT_VotingRoles_v1.Motion storage _motion =
             getFullMotionData(_voteID);
         uint _votesBefore = _motion.againstVotes;
 
@@ -676,7 +678,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__CallerNotVoter
                     .selector
             );
@@ -693,7 +695,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        IVotingRoleManager_v1.Motion storage _motion =
+        IAUT_EXT_VotingRoles_v1.Motion storage _motion =
             getFullMotionData(_voteID);
         uint _votesBefore = _motion.abstainVotes;
 
@@ -710,7 +712,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         vm.warp(startTime + DEFAULT_DURATION);
         voteAbstain(BOB, _voteID);
 
-        IVotingRoleManager_v1.Receipt memory _r =
+        IAUT_EXT_VotingRoles_v1.Receipt memory _r =
             _governor.getReceipt(_voteID, ALBA);
         assertEq(_r.hasVoted, true);
         assertEq(_r.support, 2);
@@ -751,7 +753,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__CallerNotVoter
                     .selector
             );
@@ -771,7 +773,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
             // For
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__MotionVotingPhaseClosed
                     .selector
             );
@@ -780,7 +782,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
             // Against
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__MotionVotingPhaseClosed
                     .selector
             );
@@ -788,7 +790,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
             //Abstain
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__MotionVotingPhaseClosed
                     .selector
             );
@@ -808,7 +810,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
             // For
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidMotionId
                     .selector
             );
@@ -817,7 +819,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
             // Against
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidMotionId
                     .selector
             );
@@ -826,7 +828,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
             //Abstain
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidMotionId
                     .selector
             );
@@ -842,7 +844,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         vm.expectRevert(
-            IVotingRoleManager_v1
+            IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__InvalidSupport
                 .selector
         );
@@ -863,21 +865,21 @@ contract VotingRoleManagerV1Test is ModuleTest {
             voteAgainst(users[i], _voteID);
 
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__AttemptedDoubleVote
                     .selector
             );
             voteInFavor(users[i], _voteID);
 
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__AttemptedDoubleVote
                     .selector
             );
             voteAgainst(users[i], _voteID);
 
             vm.expectRevert(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__AttemptedDoubleVote
                     .selector
             );
@@ -918,7 +920,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
     function testExecuteInexistentVote(uint wrongId) public {
         //No votes exist yet, everyting should fail
         vm.expectRevert(
-            IVotingRoleManager_v1
+            IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__InvalidMotionId
                 .selector
         );
@@ -936,7 +938,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         //No prank address needed
         vm.expectRevert(
-            IVotingRoleManager_v1
+            IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__ThresholdNotReached
                 .selector
         );
@@ -955,7 +957,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodePacked(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__MotionInVotingPhase
                     .selector
             )
@@ -967,7 +969,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodePacked(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__MotionInVotingPhase
                     .selector
             )
@@ -994,7 +996,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         // 4) Now we test that we can't execute again:
         vm.expectRevert(
             abi.encodeWithSelector(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__MotionAlreadyExecuted
                     .selector
             )
@@ -1078,7 +1080,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         //this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
-            IVotingRoleManager_v1
+            IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__UnreachableThreshold
                 .selector
         );
@@ -1097,7 +1099,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         //this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
-            IVotingRoleManager_v1
+            IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__EmptyVoters
                 .selector
         );
@@ -1134,7 +1136,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
         vm.assume(newThreshold > _governor.voterCount());
 
         vm.expectRevert(
-            IVotingRoleManager_v1
+            IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__UnreachableThreshold
                 .selector
         );
@@ -1216,7 +1218,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidVotingDuration
                     .selector
             )
@@ -1228,7 +1230,7 @@ contract VotingRoleManagerV1Test is ModuleTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IVotingRoleManager_v1
+                IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidVotingDuration
                     .selector
             )
