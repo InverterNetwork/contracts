@@ -10,7 +10,9 @@ import {
 
 // SuT
 import {
-    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+    LM_PC_Bounties_v1,
+    ILM_PC_Bounties_v1,
+    ERC165
 } from "@lm/LM_PC_Bounties_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
@@ -93,15 +95,15 @@ contract BountyManagerE2E is E2ETest {
 
         LM_PC_Bounties_v1 bountyManager;
 
-        // Find LM_PC_Bounties_v1
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
-            returns (bool) {
+            if (
+                ERC165(modulesList[i]).supportsInterface(
+                    type(ILM_PC_Bounties_v1).interfaceId
+                )
+            ) {
                 bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
-            } catch {
-                continue;
             }
         }
 
