@@ -16,7 +16,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @dev for _streamId, valid values will start from 1. 0 is not a valid id.
     /// @param _paymentToken: The address of the token that is being used for the payment
     /// @param _streamId: A unique identifier of a stream for a specific paymentClient and paymentReceiver combination.
-    /// @param _salary: The total amount that the paymentReceiver should eventually get.
+    /// @param _total: The total amount that the paymentReceiver should eventually get.
     /// @param _released: The amount that has been claimed by the paymentReceiver till now.
     /// @param _start: The start date of the streaming period.
     /// @param _cliff: The duration of the cliff period.
@@ -24,7 +24,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     struct Stream {
         address _paymentToken;
         uint _streamId;
-        uint _salary;
+        uint _total;
         uint _released;
         uint _start;
         uint _cliff;
@@ -155,7 +155,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     function claimPreviouslyUnclaimable(address client, address receiver)
         external;
 
-    /// @notice claim the salary uptil block.timestamp from the client for a payment order with id = streamId by _msgSender
+    /// @notice claim the total amount up til block.timestamp from the client for a payment order with id = streamId by _msgSender
     /// @dev If for a specific streamId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
     ///      of the paymentReceiver, and the amount would no longer hold any co-relation with the specific streamId of the paymentReceiver.
     /// @param client The {IERC20PaymentClientBase_v1} instance address that processes the streamId claim from _msgSender

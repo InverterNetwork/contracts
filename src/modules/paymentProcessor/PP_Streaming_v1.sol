@@ -546,8 +546,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
         address _token =
             vestings[client][paymentReceiver][walletId]._paymentToken;
-        uint remainingReleasable = streams[client][paymentReceiver][streamId] //The whole salary
-            ._salary - streams[client][paymentReceiver][streamId]._released; //Minus what has already been "released"
+        uint remainingReleasable = streams[client][paymentReceiver][streamId] //The total amount
+            ._total - streams[client][paymentReceiver][streamId]._released; //Minus what has already been "released"
 
         //In case there is still something to be released
         if (remainingReleasable > 0) {
@@ -614,7 +614,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @dev This function can handle multiple payment orders associated with a particular paymentReceiver for the same payment client
     ///      without overriding the earlier ones. The maximum payment orders for a paymentReceiver MUST BE capped at (2**256-1).
     /// @param _paymentReceiver PaymentReceiver's address.
-    /// @param _salary Salary paymentReceiver will receive per epoch.
+    /// @param _total Total amount the paymentReceiver will receive per epoch.
     /// @param _start Streaming start timestamp.
     /// @param _cliff The duration of the cliff period.
     /// @param _end Streaming end timestamp.
@@ -624,23 +624,23 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         address _paymentReceiver,
         address _token,
         uint _streamId,
-        uint _salary,
+        uint _total,
         uint _start,
         uint _cliff,
         uint _end
     ) internal {
         if (
-            !validAddress(_paymentReceiver) || !validSalary(_salary)
-                || !validStart(_start) || !validPaymentToken(_token)
+            !validAddress(_paymentReceiver) || !validTotal(_total)
+                || !validTimes(_start, _cliff, _end) || !validPaymentToken(_token)
         ) {
             emit InvalidStreamingOrderDiscarded(
-                _paymentReceiver, _token, _salary, _start, _end
+                _paymentReceiver, _token, _total, _start, _cliff, _end
             );
         } else {
             ++numStreams[client][_paymentReceiver];
 
             streams[client][_paymentReceiver][_streamId] =
-                Stream(_token, _streamId, _salary, 0, _start, _cliff, _end);
+                Stream(_token, _streamId, _total, 0, _start, _cliff, _end);
 
             // We do not want activePaymentReceivers[client] to have duplicate paymentReceiver entries
             // So we avoid pushing the _paymentReceiver to activePaymentReceivers[client] if it already exists
@@ -658,7 +658,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 _paymentReceiver,
                 _token,
                 _streamId,
-                _salary,
+                _total,
                 _start,
                 _cliff,
                 _end
@@ -766,7 +766,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         address paymentReceiver
     ) internal {
         //get amount
-
         uint amount;
 
         address sender = _msgSender();
@@ -805,28 +804,26 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint streamId,
         uint timestamp
     ) internal view virtual returns (uint) {
-        uint totalAllocation =
-            streams[client][paymentReceiver][streamId]._salary;
-        uint startPaymentReceiver =
-            startForSpecificStream(client, paymentReceiver, streamId);
-        uint endPaymentReceiver =
-            endForSpecificStream(client, paymentReceiver, streamId);
+        uint total = streams[client][paymentReceiver][streamId]._total;
+        uint start = startForSpecificStream(client, paymentReceiver, streamId);
+        uint end = endForSpecificStream(client, paymentReceiver, streamId);
 
         if (
             timestamp
                 < (
-                    startPaymentReceiver
-                        + streams[client][paymentReceiver][streamId]._cliff
+                    start
+                        + cliffForSpecificStream(client, paymentReceiver, streamId)
                 )
         ) {
             // if current time is smaller than starting date plus
             // optional cliff duration, return 0
             return 0;
-        } else if (timestamp >= endPaymentReceiver) {
-            return totalAllocation;
+        } else if (timestamp >= end) {
+            return total;
         } else {
-            return (totalAllocation * (timestamp - startPaymentReceiver))
-                / (endPaymentReceiver - startPaymentReceiver);
+            // here the cliff is not applied, as it is just delaying
+            // the start of the release, not the vesting part itself
+            return (total * (timestamp - start)) / (end - start);
         }
     }
 
@@ -840,11 +837,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         );
     }
 
-    /// @notice validate uint salary input.
-    /// @param _salary uint to validate.
+    /// @notice validate uint total amount input.
+    /// @param _total uint to validate.
     /// @return True if uint is valid.
-    function validSalary(uint _salary) internal pure returns (bool) {
-        return !(_salary == 0);
+    function validTotal(uint _total) internal pure returns (bool) {
+        return !(_total == 0);
     }
 
     /// @notice validate uint start input.
@@ -854,7 +851,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @return True if uint is valid.
     function validTimes(uint _start, uint _cliff, uint _end)
         internal
-        view
+        pure
         returns (bool)
     {
         return !(_start >= type(uint).max && _start + _cliff > _end);

@@ -634,8 +634,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         assertTrue(paymentReceiverStreams.length == 2);
         assertEq(
             (
-                paymentReceiverStreams[0]._salary
-                    + paymentReceiverStreams[1]._salary
+                paymentReceiverStreams[0]._total
+                    + paymentReceiverStreams[1]._total
             ),
             (amounts_1[1] + amounts_2[0]),
             "Improper accounting of orders"
@@ -649,8 +649,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         assertTrue(paymentReceiverStreams.length == 2);
         assertEq(
             (
-                paymentReceiverStreams[0]._salary
-                    + paymentReceiverStreams[1]._salary
+                paymentReceiverStreams[0]._total
+                    + paymentReceiverStreams[1]._total
             ),
             (amounts_1[2] + amounts_2[1]),
             "Improper accounting of orders"
@@ -663,7 +663,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assertTrue(paymentReceiverStreams.length == 1);
         assertEq(
-            (paymentReceiverStreams[0]._salary),
+            (paymentReceiverStreams[0]._total),
             (amounts_2[2]),
             "Improper accounting of orders"
         );
@@ -675,7 +675,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assertTrue(paymentReceiverStreams.length == 1);
         assertEq(
-            (paymentReceiverStreams[0]._salary),
+            (paymentReceiverStreams[0]._total),
             (amounts_1[0]),
             "Improper accounting of orders"
         );
@@ -756,14 +756,14 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         );
 
         // We are interested in finding the details of the 2nd wallet of paymentReceiver1
-        uint expectedSalary = paymentReceiverStreams[1]._salary;
+        uint expectedTotal = paymentReceiverStreams[1]._total;
         uint walletId = paymentReceiverStreams[1]._streamId;
 
         initialNumWallets = paymentReceiverStreams.length;
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
         initialStreamIdAtIndex1 = walletId;
 
-        assertTrue(expectedSalary != 0);
+        assertTrue(expectedTotal != 0);
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificStream(
@@ -780,18 +780,18 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         assertEq(finalNumWallets + 1, initialNumWallets);
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
-            (expectedSalary / 2)
+            (expectedTotal / 2)
         );
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), expectedSalary);
+        assertEq(paymentClient.amountPaidCounter(), expectedTotal);
         assertTrue(
             initialStreamIdAtIndex1 != paymentReceiverStreams[1]._streamId
         );
     }
 
-    uint salary1;
-    uint salary2;
-    uint salary3;
+    uint total1;
+    uint total2;
+    uint total3;
     uint amountPaidAlready;
 
     function test_removePaymentAndClaimForSpecificStream(
@@ -868,9 +868,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address(paymentClient), paymentReceiver1
         );
 
-        salary1 = paymentReceiverStreams[0]._salary;
+        total1 = paymentReceiverStreams[0]._total;
 
-        // Now we claim the entire salary from the first payment order
+        // Now we claim the entire total amount from the first payment order
         vm.prank(paymentReceiver1);
         paymentProcessor.claimForSpecificStream(
             address(paymentClient), paymentReceiverStreams[0]._streamId
@@ -881,18 +881,18 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
-            salary1
+            total1
         );
 
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), salary1);
+        assertEq(paymentClient.amountPaidCounter(), total1);
         amountPaidAlready += paymentClient.amountPaidCounter();
 
         // Now we are interested in finding the details of the 2nd wallet of paymentReceiver1
-        salary2 = (paymentReceiverStreams[1]._salary) / 2; // since we are at half the vesting duration
+        total2 = (paymentReceiverStreams[1]._total) / 2; // since we are at half the vesting duration
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        assertTrue(salary2 != 0);
+        assertTrue(total2 != 0);
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
         paymentProcessor.removePaymentForSpecificStream(
@@ -904,7 +904,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(
             paymentClient.amountPaidCounter(),
-            paymentReceiverStreams[1]._salary + salary1
+            paymentReceiverStreams[1]._total + total1
         );
         amountPaidAlready = paymentClient.amountPaidCounter();
 
@@ -918,13 +918,13 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         assertEq(finalNumWallets, 1); // One was deleted because the vesting was completed and claimed. The other was deleted because of removePayment
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
-            salary2
+            total2
         );
 
         // Now we try and claim the 3rd payment order for paymentReceiver1
-        // we are at half it's vesting period, so the salary3 should be half of the total salary
+        // we are at half it's vesting period, so the total3 should be half of the total amount
         // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete vesting.
-        salary3 = (paymentReceiverStreams[0]._salary) / 2;
+        total3 = (paymentReceiverStreams[0]._total) / 2;
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         vm.prank(paymentReceiver1);
@@ -932,13 +932,13 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address(paymentClient), paymentReceiverStreams[0]._streamId
         );
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, salary3);
+        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, total3);
 
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
-            salary3
+            total3
         );
     }
 
