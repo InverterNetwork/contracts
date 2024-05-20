@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import "../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v1, ERC165} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -138,26 +138,25 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         );
         assertEq(orchestratorToken, address(token));
 
-        // Now we need to find the BountyManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
+        // Now we need to find the BountyManager. ModuleManager has a function called `listModules` that returns a list of
         // active modules, let's use that to get the address of the BountyManager.
 
-        address[] memory moduleAddresses =
-            IOrchestrator_v1(test_orchestrator).listModules();
-        uint lenModules = moduleAddresses.length;
-        address orchestratorCreatedBountyManagerAddress;
+        LM_PC_Bounties_v1 orchestratorCreatedBountyManager;
 
-        for (uint i; i < lenModules;) {
-            try ILM_PC_Bounties_v1(moduleAddresses[i]).isExistingBountyId(0)
-            returns (bool) {
-                orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
+        bytes4 LM_PC_Bounties_v1InterfaceId =
+            type(ILM_PC_Bounties_v1).interfaceId;
+        address[] memory modulesList = test_orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            if (
+                ERC165(modulesList[i]).supportsInterface(
+                    LM_PC_Bounties_v1InterfaceId
+                )
+            ) {
+                orchestratorCreatedBountyManager =
+                    LM_PC_Bounties_v1(modulesList[i]);
                 break;
-            } catch {
-                i++;
             }
         }
-
-        LM_PC_Bounties_v1 orchestratorCreatedBountyManager =
-            LM_PC_Bounties_v1(orchestratorCreatedBountyManagerAddress);
 
         assertEq(
             address(orchestratorCreatedBountyManager.orchestrator()),
