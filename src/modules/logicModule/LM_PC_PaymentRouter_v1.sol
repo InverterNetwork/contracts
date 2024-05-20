@@ -50,6 +50,37 @@ contract LM_PC_PaymentRouter_v1 is ILM_PC_PaymentRouter_v1, ERC20PaymentClientBa
             || super.supportsInterface(interfaceId);
     }
 
+    //--------------------------------------------------------------------------
+    // Storage
+
+    // Payment Pusher Role
+    bytes32 public constant PAYMENT_PUSHER_ROLE = "PAYMENT_PUSHER";
+
+    /// @inheritdoc ILM_PC_PaymentRouter_v1
+    function pushPayment(address recipient,
+        address paymentToken,
+        uint amount,
+        uint dueTo) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
+
+        }
+
+    
+    /// @inheritdoc ILM_PC_PaymentRouter_v1
+    function pushPaymentBatched(uint8 numOfOrders, address[] calldata recipients,
+        address[] calldata paymentTokens,
+        uint[] calldata amounts,
+        uint[] calldata dueTos) public onlyModuleRole(PAYMENT_PUSHER_ROLE){
+
+            // Validate all arrays have the same length
+            if (recipients.length != numOfOrders || paymentTokens.length != numOfOrders || amounts.length != numOfOrders || dueTos.length != numOfOrders) {
+                revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
+            }
+
+            // Loop through the arrays and call pushPayment
+            for(uint8 i = 0; i < numOfOrders; i++) {
+                pushPayment(recipients[i], paymentTokens[i], amounts[i], dueTos[i]);
+            }
+        }
 
     
 
