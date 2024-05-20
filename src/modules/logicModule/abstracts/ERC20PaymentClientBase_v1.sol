@@ -108,20 +108,7 @@ abstract contract ERC20PaymentClientBase_v1 is
 
         for (uint i; i < orderAmount; ++i) {
             currentOrder = orders[i];
-            _ensureValidPaymentOrder(currentOrder);
-
-            // Add order's amount to total amount of new orders.
-            _outstandingTokenAmounts[currentOrder.paymentToken] +=
-                currentOrder.amount;
-
-            // Add new order to list of oustanding orders.
-            _orders.push(currentOrder);
-
-            emit PaymentOrderAdded(
-                currentOrder.recipient,
-                currentOrder.paymentToken,
-                currentOrder.amount
-            );
+            _addPaymentOrder(currentOrder);
         }
     }
 
