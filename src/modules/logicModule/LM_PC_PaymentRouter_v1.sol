@@ -5,7 +5,7 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
-import {ILM_PC_PaymentRouter_v1} from "@lm/interfaces/ILM_PC_Bounties_v1.sol";
+import {ILM_PC_PaymentRouter_v1} from "@lm/interfaces/ILM_PC_PaymentRouter_v1.sol";
 import {
     IERC20PaymentClientBase_v1,
     IPaymentProcessor_v1
