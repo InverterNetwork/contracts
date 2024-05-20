@@ -221,7 +221,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
     //----------------------------------
     // Test: collectPaymentOrders()
-    /* TODO rewrite
+
     function testCollectPaymentOrders(
         uint orderAmount,
         address recipient,
@@ -229,7 +229,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         uint dueTo
     ) public {
         // Note to stay reasonable.
-        orderAmount = bound(orderAmount, 0, 100);
+        orderAmount = bound(orderAmount, 1, 100);
         amount = bound(amount, 1, 1_000_000_000_000_000_000);
 
         _assumeValidRecipient(recipient);
@@ -250,8 +250,8 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         }
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
-        address[] tokens;
-        uint[] totalOutstandingAmounts;
+        address[] memory tokens;
+        uint[] memory totalOutstandingAmounts;
         vm.prank(address(_paymentProcessor));
         (orders, tokens, totalOutstandingAmounts) =
             paymentClient.collectPaymentOrders();
@@ -264,8 +264,11 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             assertEq(orders[i].dueTo, dueTo);
         }
 
-        // Check that total outstanding token amount is correct.
-        //assertEq(totalOutstandingAmount, orderAmount * amount);
+        // Check that the returned token list and outstanding amounts are correct.
+        assertEq(tokens.length, 1);
+        assertEq(tokens[0], address(_token));
+        assertEq(totalOutstandingAmounts.length, 1);
+        assertEq(totalOutstandingAmounts[0], orderAmount * amount);
 
         // Check that orders in ERC20PaymentClientBase_v1 got reset.
         IERC20PaymentClientBase_v1.PaymentOrder[] memory updatedOrders;
@@ -273,14 +276,36 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         assertEq(updatedOrders.length, 0);
 
         // Check that outstanding token amount is still the same afterwards.
-        assertEq(paymentClient.outstandingTokenAmount(), totalOutstandingAmount);
+        assertEq(
+            paymentClient.outstandingTokenAmount(address(_token)),
+            totalOutstandingAmounts[0]
+        );
 
         // Check that we received allowance to fetch tokens from ERC20PaymentClientBase_v1.
         assertTrue(
             _token.allowance(address(paymentClient), address(_paymentProcessor))
-                >= totalOutstandingAmount
+                >= totalOutstandingAmounts[0]
         );
-    }*/
+    }
+
+    function testCollectPaymentOrders_IfThereAreNoOrders() public {
+        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
+        address[] memory tokens;
+        uint[] memory totalOutstandingAmounts;
+        vm.prank(address(_paymentProcessor));
+        (orders, tokens, totalOutstandingAmounts) =
+            paymentClient.collectPaymentOrders();
+
+        // Check that received values are correct.
+        assertEq(orders.length, 0);
+        assertEq(tokens.length, 0);
+        assertEq(totalOutstandingAmounts.length, 0);
+
+        // Check that there are no orders in the paymentClient
+        IERC20PaymentClientBase_v1.PaymentOrder[] memory updatedOrders;
+        updatedOrders = paymentClient.paymentOrders();
+        assertEq(updatedOrders.length, 0);
+    }
 
     function testCollectPaymentOrdersFailsCallerNotAuthorized() public {
         vm.expectRevert(
