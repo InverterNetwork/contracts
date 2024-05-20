@@ -220,13 +220,11 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
         // Get the kpiRewarder module
-        bytes4 LM_PC_KPIRewarder_v1InterfaceId =
-            type(ILM_PC_KPIRewarder_v1).interfaceId;
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165(modulesList[i]).supportsInterface(
-                    LM_PC_KPIRewarder_v1InterfaceId
+                    type(ILM_PC_KPIRewarder_v1).interfaceId
                 )
             ) {
                 kpiRewarder = LM_PC_KPIRewarder_v1(modulesList[i]);
