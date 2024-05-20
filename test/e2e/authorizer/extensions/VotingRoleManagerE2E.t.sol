@@ -16,11 +16,11 @@ import {
 
 //SuT
 import {
-    VotingRoleManager_v1,
-    IVotingRoleManager_v1
-} from "src/modules/utils/VotingRoleManager_v1.sol";
+    AUT_EXT_VotingRoles_v1,
+    IAUT_EXT_VotingRoles_v1
+} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
 
-contract SingleVoteGovernorE2E is E2ETest {
+contract VotingRoleManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
@@ -122,13 +122,13 @@ contract SingleVoteGovernorE2E is E2ETest {
             }
         }
 
-        // Find VotingRoleManager_v1
-        VotingRoleManager_v1 singleVoteGovernor;
+        // Find AUT_EXT_VotingRoles_v1
+        AUT_EXT_VotingRoles_v1 singleVoteGovernor;
 
         for (uint i; i < modulesList.length; ++i) {
-            try IVotingRoleManager_v1(modulesList[i]).isVoter(address(0))
+            try IAUT_EXT_VotingRoles_v1(modulesList[i]).isVoter(address(0))
             returns (bool) {
-                singleVoteGovernor = VotingRoleManager_v1(modulesList[i]);
+                singleVoteGovernor = AUT_EXT_VotingRoles_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -144,7 +144,7 @@ contract SingleVoteGovernorE2E is E2ETest {
             bountyManager.BOUNTY_ISSUER_ROLE(), address(singleVoteGovernor)
         );
 
-        // By having address(this) renounce the Owner Role, all changes from now on need to go through the VotingRoleManager_v1
+        // By having address(this) renounce the Owner Role, all changes from now on need to go through the AUT_EXT_VotingRoles_v1
         authorizer.renounceRole(ownerRole, address(this));
 
         //--------------------------------------------------------------------------------
@@ -198,7 +198,7 @@ contract SingleVoteGovernorE2E is E2ETest {
     }
 
     function _getMotionExecutionResult(
-        VotingRoleManager_v1 singleVoteGovernor,
+        AUT_EXT_VotingRoles_v1 singleVoteGovernor,
         uint motionId
     ) internal view returns (bool, bytes memory) {
         (
