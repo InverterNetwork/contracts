@@ -239,13 +239,16 @@ abstract contract ERC20PaymentClientBase_v1 is
         }
     }
 
+    function _ensureValidToken(address token) private pure {
+        if (token == address(0)) {
+            revert Module__ERC20PaymentClientBase__InvalidToken();
+        }
+    }
+
     function _ensureValidPaymentOrder(PaymentOrder memory order) private view {
-        if (order.amount == 0) {
-            revert Module__ERC20PaymentClientBase__InvalidAmount();
-        }
-        if (order.recipient == address(0) || order.recipient == address(this)) {
-            revert Module__ERC20PaymentClientBase__InvalidRecipient();
-        }
+        _ensureValidRecipient(order.recipient);
+        _ensureValidToken(order.paymentToken);
+        _ensureValidAmount(order.amount);
     }
 
     //--------------------------------------------------------------------------
