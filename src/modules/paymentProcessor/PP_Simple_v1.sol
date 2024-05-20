@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -89,12 +87,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         uint[] memory totalAmounts;
         (orders, tokens, totalAmounts) = client.collectPaymentOrders();
 
-        //console.log("orders", orders);
-
         for (uint i = 0; i < tokens.length; i++) {
-            console.log("tokens %s: %s", i, tokens[i]);
-            console.log("totalAmounts %s: %s", i, totalAmounts[i]);
-
             address token = tokens[i];
             uint totalAmount = totalAmounts[i];
 

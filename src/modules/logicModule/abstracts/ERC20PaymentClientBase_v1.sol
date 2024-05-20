@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
@@ -87,12 +85,6 @@ abstract contract ERC20PaymentClientBase_v1 is
     {
         // Add order's token amount to current outstanding amount.
         _outstandingTokenAmounts[order.paymentToken] += order.amount;
-
-        console.log(
-            "Outstanding token amount for token %s : %s",
-            order.paymentToken,
-            _outstandingTokenAmounts[order.paymentToken]
-        );
 
         // Add new order to list of oustanding orders.
         _orders.push(order);
@@ -198,11 +190,6 @@ abstract contract ERC20PaymentClientBase_v1 is
         uint[] memory amounts = new uint[](tokenCount);
 
         for (uint i; i < tokenCount; ++i) {
-            console.log("CollectPaymentOrder: token %s: %s", i, tokens[i]);
-            console.log(
-                "CollectPaymentOrder: totalAmount %s: %s", i, amounts[i]
-            );
-
             tokens[i] = tokens_buffer[i];
             amounts[i] = amounts_buffer[i];
 
@@ -215,20 +202,6 @@ abstract contract ERC20PaymentClientBase_v1 is
             // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
             _ensureTokenBalance(tokens[i], amounts[i]);
         }
-
-        // Ensure payment processor is able to fetch the tokens from address(this).
-        //_ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), totalAmount);
-
-        // TODO: collect what tokens are in the orders
-        // ensure nbalance for all
-        // return orders, tokenAddresses and amounts (these two worted correctly )
-        // write tests for this
-
-        // New TODO: remove totalAmount, use only outstandngAmount.  do the array thing to check outstanding on all tokens and then refactor all the way down with outstadningAmounts[token]
-
-        //Ensure that the Client will have sufficient funds.
-        // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
-        //_ensureTokenBalance(_outstandingTokenAmounts);
 
         // Return copy of orders and orders' total token amount to payment
         // processor.
@@ -245,12 +218,6 @@ abstract contract ERC20PaymentClientBase_v1 is
 
         // reduce outstanding token amount by the given amount
         _outstandingTokenAmounts[token] -= amount;
-
-        console.log(
-            "Outstanding token amount for token %s : %s",
-            token,
-            _outstandingTokenAmounts[token]
-        );
     }
 
     //--------------------------------------------------------------------------
