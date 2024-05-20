@@ -96,12 +96,12 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
         return authorized[_msgSender()];
     }
 
-    function amountPaid(address token, uint amount)
+    function amountPaid(address _token, uint amount)
         external
         override(ERC20PaymentClientBase_v1)
     {
         amountPaidCounter += amount;
 
-        _outstandingTokenAmounts[token] -= amount;
+        _outstandingTokenAmounts[_token] -= amount;
     }
 }
