@@ -44,7 +44,7 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
     // add a payment order without checking the arguments
     function addPaymentOrderUnchecked(PaymentOrder memory order) external {
         // Add order's token amount to current outstanding amount.
-        _outstandingTokenAmount += order.amount;
+        _outstandingTokenAmounts[order.paymentToken] += order.amount;
 
         // Add new order to list of oustanding orders.
         _orders.push(order);
@@ -60,15 +60,16 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
 
     //for testing the original functionality of the internal functions I created these placeholders
 
-    function originalEnsureTokenBalance(uint amount) external {
-        return _ensureTokenBalance(amount);
+    function originalEnsureTokenBalance(address token, uint amount) external {
+        return _ensureTokenBalance(token, amount);
     }
 
     function originalEnsureTokenAllowance(
         IPaymentProcessor_v1 spender,
+        address token,
         uint amount
     ) external {
-        return _ensureTokenAllowance(spender, amount);
+        return _ensureTokenAllowance(spender, token, amount);
     }
 
     function originalIsAuthorizedPaymentProcessor(
@@ -77,7 +78,7 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
         return _isAuthorizedPaymentProcessor(processor);
     }
 
-    function set_outstandingTokenAmount(uint amount) external {
-        _outstandingTokenAmount = amount;
+    function set_outstandingTokenAmount(address token, uint amount) external {
+        _outstandingTokenAmounts[token] = amount;
     }
 }

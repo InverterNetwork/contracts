@@ -170,15 +170,18 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         if (client.paymentOrders().length > 0) {
             // Collect outstanding orders and their total token amount.
             IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
-            uint totalAmount;
-            (orders, totalAmount) = client.collectPaymentOrders();
+            address[] memory tokens;
+            uint[] memory totalAmounts;
+            (orders, tokens, totalAmounts) = client.collectPaymentOrders();
             // TODO: check totalAmount per token
-            if (
-                orchestrator().fundingManager().token().balanceOf(
-                    address(client)
-                ) < totalAmount
-            ) {
-                revert Module__PP_Streaming__InsufficientTokenBalanceInClient();
+            for (uint i = 0; i < tokens.length; i++) {
+                if (
+                    IERC20(tokens[i]).balanceOf(address(client))
+                        < totalAmounts[i]
+                ) {
+                    revert
+                        Module__PP_Streaming__InsufficientTokenBalanceInClient();
+                }
             }
 
             // Generate Streaming Payments for all orders
@@ -534,6 +537,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             );
         }
 
+        address _token =
+            vestings[client][paymentReceiver][walletId]._paymentToken;
         uint remainingReleasable = vestings[client][paymentReceiver][walletId] //The whole salary
             ._salary - vestings[client][paymentReceiver][walletId]._released; //Minus what has already been "released"
 
@@ -541,7 +546,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         if (remainingReleasable > 0) {
             //Let PaymentClient know that the amount is not needed to be stored anymore
 
-            IERC20PaymentClientBase_v1(client).amountPaid(remainingReleasable);
+            IERC20PaymentClientBase_v1(client).amountPaid(
+                _token, remainingReleasable
+            );
         }
 
         // Standard deletion process.
@@ -706,7 +713,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             emit TokensReleased(paymentReceiver, _token, amount);
 
             //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-            IERC20PaymentClientBase_v1(client).amountPaid(amount);
+            IERC20PaymentClientBase_v1(client).amountPaid(
+                address(_token), amount
+            );
         } else {
             emit UnclaimableAmountAdded(
                 client, paymentReceiver, address(_token), walletId, amount
@@ -773,7 +782,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         emit TokensReleased(paymentReceiver, address(_token), amount);
 
         //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v1(client).amountPaid(amount);
+        IERC20PaymentClientBase_v1(client).amountPaid(address(_token), amount);
     }
 
     /// @notice Virtual implementation of the vesting formula.
