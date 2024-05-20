@@ -173,7 +173,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             address[] memory tokens;
             uint[] memory totalAmounts;
             (orders, tokens, totalAmounts) = client.collectPaymentOrders();
-            // TODO: check totalAmount per token
             for (uint i = 0; i < tokens.length; i++) {
                 if (
                     IERC20(tokens[i]).balanceOf(address(client))

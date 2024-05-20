@@ -209,7 +209,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooIntegrator.setOptimisticOracle(address(0));
     }
 
-/*
+    /*
     function testSetOptimisticOracleFails_WhenNewOracleIsNotUmaOptimisticOracle(
         address notOracle
     ) public {
@@ -217,7 +217,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         vm.expectRevert();
         ooIntegrator.setOptimisticOracle(notOracle);
     }
-*/
+    */
 
     function testSetOptimisticOracle() public {
         OptimisticOracleV3Mock newOracle =
