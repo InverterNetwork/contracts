@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+import "forge-std/console.sol";
+
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -83,11 +85,22 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     {
         // Collect outstanding orders and their total token amount.
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
-        uint totalAmount;
-        (orders, totalAmount) = client.collectPaymentOrders();
+        address[] memory tokens;
+        uint[] memory totalAmounts;
+        (orders, tokens, totalAmounts) = client.collectPaymentOrders();
 
-        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        client.amountPaid(totalAmount);
+        //console.log("orders", orders);
+
+        for (uint i = 0; i < tokens.length; i++) {
+            console.log("tokens %s: %s", i, tokens[i]);
+            console.log("totalAmounts %s: %s", i, totalAmounts[i]);
+
+            address token = tokens[i];
+            uint totalAmount = totalAmounts[i];
+
+            //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+            client.amountPaid(token, totalAmount);
+        }
 
         // Transfer tokens from {IERC20PaymentClientBase_v1} to order recipients.
         address recipient;

@@ -28,6 +28,9 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice ERC20 token transfer failed.
     error Module__ERC20PaymentClientBase__TokenTransferFailed();
 
+    /// @notice Insufficient funds to fulfill the payment.
+    error Module__ERC20PaymentClientBase__InsufficientFunds(address token);
+
     /// @notice Given recipient invalid.
     error Module__ERC20PaymentClientBase__InvalidRecipient();
 
@@ -60,7 +63,10 @@ interface IERC20PaymentClientBase_v1 {
     function paymentOrders() external view returns (PaymentOrder[] memory);
 
     /// @notice Returns the total outstanding token payment amount.
-    function outstandingTokenAmount() external view returns (uint);
+    function outstandingTokenAmount(address token)
+        external
+        view
+        returns (uint);
 
     /// @notice Collects outstanding payment orders.
     /// @dev Marks the orders as completed for the client.
@@ -70,11 +76,11 @@ interface IERC20PaymentClientBase_v1 {
     /// @return total amount of token to pay
     function collectPaymentOrders()
         external
-        returns (PaymentOrder[] memory, uint);
+        returns (PaymentOrder[] memory, address[] memory, uint[] memory);
 
     /// @notice Notifies the PaymentClient, that tokens have been paid out accordingly
     /// @dev Payment Client will reduce the total amount of tokens it will stock up by the given amount
     /// This has to be called by a paymentProcessor
     /// @param amount amount of tokens that have been paid out
-    function amountPaid(uint amount) external;
+    function amountPaid(address token, uint amount) external;
 }
