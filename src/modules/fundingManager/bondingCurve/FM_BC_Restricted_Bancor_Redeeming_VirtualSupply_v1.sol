@@ -54,8 +54,6 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         override
-        validReceiver(_receiver)
-        buyingIsEnabled
         onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
         super.buyFor(_receiver, _depositAmount, _minAmountOut);
@@ -66,8 +64,6 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         override
-        validReceiver(_receiver)
-        sellingIsEnabled
         onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
         super.sellFor(_receiver, _depositAmount, _minAmountOut);

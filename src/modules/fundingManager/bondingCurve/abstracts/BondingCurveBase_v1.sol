@@ -293,9 +293,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @return collateralTreasury The address the protocol fee in collateral should be sent to
     /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
     /// @return collateralFeePercentage The percentage fee to be collected from the collateral
-    ///     token being redeemed, expressed in BPS
+    ///     token being deposited or redeemed, expressed in BPS
     /// @return issuanceFeePercentage The percentage fee to be collected from the issuance token
-    ///     being deposited, expressed in BPS
+    ///     being deposited or minted, expressed in BPS
     function _getFunctionFeesAndTreasuryAddresses(bytes4 _selector)
         internal
         virtual
