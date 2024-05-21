@@ -104,11 +104,8 @@ abstract contract ERC20PaymentClientBase_v1 is
     function _addPaymentOrders(PaymentOrder[] memory orders) internal virtual {
         uint orderAmount = orders.length;
 
-        PaymentOrder memory currentOrder;
-
         for (uint i; i < orderAmount; ++i) {
-            currentOrder = orders[i];
-            _addPaymentOrder(currentOrder);
+            _addPaymentOrder(orders[i]);
         }
     }
 
@@ -241,7 +238,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     //--------------------------------------------------------------------------
     // {ERC20PaymentClientBase_v1} Function Implementations
 
-    /// @dev Ensures `amount` of payment tokens exist in address(this).
+    /// @dev Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to address(this). If the token is not the FundingManager token, it will only check if the local balance is sufficient.
     function _ensureTokenBalance(address token, uint amount) internal virtual {
         uint currentFunds = IERC20(token).balanceOf(address(this));
 
@@ -278,7 +275,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         address token,
         uint amount
     ) internal virtual {
-        IERC20(token).safeIncreaseAllowance(address(spender), amount);
+        IERC20(token).forceApprove(address(spender), amount);
     }
 
     /// @dev Returns whether address `who` is an authorized payment processor.
