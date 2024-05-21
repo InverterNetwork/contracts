@@ -43,6 +43,10 @@ contract InverterBeaconV1Mock is IInverterBeacon_v1, ERC165 {
         return (majorVersion, minorVersion);
     }
 
+    function getImplementationAddress() external returns (address) {
+        return implementation;
+    }
+
     function emergencyModeActive() external view returns (bool) {
         return emergencyMode;
     }

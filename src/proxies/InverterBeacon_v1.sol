@@ -103,6 +103,16 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     }
 
     /// @inheritdoc IInverterBeacon_v1
+    function getImplementationAddress()
+        external
+        view
+        virtual
+        returns (address)
+    {
+        return _implementationAddress;
+    }
+
+    /// @inheritdoc IInverterBeacon_v1
     function emergencyModeActive() external view returns (bool) {
         return _emergencyMode;
     }
