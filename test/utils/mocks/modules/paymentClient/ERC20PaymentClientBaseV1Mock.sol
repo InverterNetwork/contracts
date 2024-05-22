@@ -65,10 +65,12 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // IERC20PaymentClientBase_v1 Overriden Functions
 
-    function _ensureTokenBalance(address _token, uint amount)
+    function _ensureTokenBalance(address _token)
         internal
         override(ERC20PaymentClientBase_v1)
     {
+        uint amount = _outstandingTokenAmounts[_token];
+
         if (ERC20Mock(_token).balanceOf(address(this)) >= amount) {
             return;
         } else {
@@ -77,14 +79,11 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
         }
     }
 
-    function _ensureTokenAllowance(
-        IPaymentProcessor_v1 spender,
-        address _token,
-        uint amount
-    ) internal override(ERC20PaymentClientBase_v1) {
-        uint currentAllowance =
-            ERC20Mock(_token).allowance(address(this), address(spender));
-        token.approve(address(spender), amount + currentAllowance);
+    function _ensureTokenAllowance(IPaymentProcessor_v1 spender, address _token)
+        internal
+        override(ERC20PaymentClientBase_v1)
+    {
+        token.approve(address(spender), _outstandingTokenAmounts[_token]);
     }
 
     function _isAuthorizedPaymentProcessor(IPaymentProcessor_v1)

@@ -355,8 +355,20 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testEnsureTokenBalance(uint amountRequired, uint currentFunds)
         public
     {
+        amountRequired = bound(amountRequired, 1, 1_000_000_000_000e18);
         //prep paymentClient
         _token.mint(address(paymentClient), currentFunds);
+
+        // create paymentOrder with required amount
+        IERC20PaymentClientBase_v1.PaymentOrder memory order =
+        IERC20PaymentClientBase_v1.PaymentOrder({
+            recipient: address(0xA11CE),
+            paymentToken: address(_token),
+            amount: amountRequired,
+            createdAt: block.timestamp,
+            dueTo: block.timestamp
+        });
+        paymentClient.addPaymentOrder(order);
 
         _orchestrator.setInterceptData(true);
 
@@ -371,15 +383,11 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     .Module__ERC20PaymentClientBase__TokenTransferFailed
                     .selector
             );
-            paymentClient.originalEnsureTokenBalance(
-                address(_token), amountRequired
-            );
+            paymentClient.originalEnsureTokenBalance(address(_token));
 
             _orchestrator.setExecuteTxBoolReturn(true);
 
-            paymentClient.originalEnsureTokenBalance(
-                address(_token), amountRequired
-            );
+            paymentClient.originalEnsureTokenBalance(address(_token));
 
             //callback from orchestrator to transfer tokens has to be in this form
             assertEq(
@@ -392,25 +400,59 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         }
     }
 
-    function testEnsureTokenAllowance(uint initialAllowance, uint newAllowance)
+    function testEnsureTokenAllowance(uint firstAmount, uint secondAmount)
         public
     {
         //Set up reasonable boundaries
-        initialAllowance = bound(initialAllowance, 0, type(uint).max / 2);
-        newAllowance = bound(newAllowance, 0, type(uint).max / 2);
+        firstAmount = bound(firstAmount, 1, type(uint).max / 2);
+        secondAmount = bound(secondAmount, 1, type(uint).max / 2);
 
-        //Set up initial allowance
-        vm.prank(address(paymentClient));
-        _token.approve(address(_paymentProcessor), initialAllowance);
+        // We make sure the allowance starts at zero
+        assertEq(
+            _token.allowance(address(paymentClient), address(_paymentProcessor)),
+            0
+        );
 
+        // we add the first paymentOrder to increase the outstanding amount
+        IERC20PaymentClientBase_v1.PaymentOrder memory order =
+        IERC20PaymentClientBase_v1.PaymentOrder({
+            recipient: address(0xA11CE),
+            paymentToken: address(_token),
+            amount: firstAmount,
+            createdAt: block.timestamp,
+            dueTo: block.timestamp
+        });
+        paymentClient.addPaymentOrder(order);
+
+        // test ensureTokenAllowance
         paymentClient.originalEnsureTokenAllowance(
-            _paymentProcessor, address(_token), newAllowance
+            _paymentProcessor, address(_token)
         );
 
         uint currentAllowance =
             _token.allowance(address(paymentClient), address(_paymentProcessor));
 
-        assertEq(currentAllowance, newAllowance);
+        assertEq(currentAllowance, firstAmount);
+
+        // we add a second paymentOrder to increase the outstanding amount
+        order = IERC20PaymentClientBase_v1.PaymentOrder({
+            recipient: address(0xA11CE),
+            paymentToken: address(_token),
+            amount: secondAmount,
+            createdAt: block.timestamp,
+            dueTo: block.timestamp
+        });
+        paymentClient.addPaymentOrder(order);
+
+        // test ensureTokenAllowance now accounts for both
+        paymentClient.originalEnsureTokenAllowance(
+            _paymentProcessor, address(_token)
+        );
+
+        currentAllowance =
+            _token.allowance(address(paymentClient), address(_paymentProcessor));
+
+        assertEq(currentAllowance, firstAmount + secondAmount);
     }
 
     function testIsAuthorizedPaymentProcessor(address addr) public {

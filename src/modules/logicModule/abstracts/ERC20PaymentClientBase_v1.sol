@@ -182,13 +182,11 @@ abstract contract ERC20PaymentClientBase_v1 is
             amounts[i] = amounts_buffer[i];
 
             // Ensure payment processor is able to fetch the tokens from address(this).
-            _ensureTokenAllowance(
-                IPaymentProcessor_v1(_msgSender()), tokens[i], amounts[i]
-            );
+            _ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), tokens[i]);
 
             //Ensure that the Client will have sufficient funds.
             // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
-            _ensureTokenBalance(tokens[i], amounts[i]);
+            _ensureTokenBalance(tokens[i]);
         }
 
         // Return copy of orders and orders' total token amount to payment
@@ -239,7 +237,8 @@ abstract contract ERC20PaymentClientBase_v1 is
     // {ERC20PaymentClientBase_v1} Function Implementations
 
     /// @dev Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to address(this). If the token is not the FundingManager token, it will only check if the local balance is sufficient.
-    function _ensureTokenBalance(address token, uint amount) internal virtual {
+    function _ensureTokenBalance(address token) internal virtual {
+        uint amount = _outstandingTokenAmounts[token];
         uint currentFunds = IERC20(token).balanceOf(address(this));
 
         // If current funds are not enough
@@ -270,12 +269,13 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @dev Ensures `amount` of token allowance for payment processor(s).
-    function _ensureTokenAllowance(
-        IPaymentProcessor_v1 spender,
-        address token,
-        uint amount
-    ) internal virtual {
-        IERC20(token).forceApprove(address(spender), amount);
+    function _ensureTokenAllowance(IPaymentProcessor_v1 spender, address token)
+        internal
+        virtual
+    {
+        IERC20(token).forceApprove(
+            address(spender), _outstandingTokenAmounts[token]
+        );
     }
 
     /// @dev Returns whether address `who` is an authorized payment processor.

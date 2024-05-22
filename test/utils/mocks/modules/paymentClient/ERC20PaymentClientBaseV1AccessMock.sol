@@ -60,16 +60,15 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
 
     //for testing the original functionality of the internal functions I created these placeholders
 
-    function originalEnsureTokenBalance(address token, uint amount) external {
-        return _ensureTokenBalance(token, amount);
+    function originalEnsureTokenBalance(address token) external {
+        return _ensureTokenBalance(token);
     }
 
     function originalEnsureTokenAllowance(
         IPaymentProcessor_v1 spender,
-        address token,
-        uint amount
+        address token
     ) external {
-        return _ensureTokenAllowance(spender, token, amount);
+        return _ensureTokenAllowance(spender, token);
     }
 
     function originalIsAuthorizedPaymentProcessor(
