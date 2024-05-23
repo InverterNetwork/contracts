@@ -66,14 +66,12 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint end
     );
 
-    /// @notice Emitted when the stream to an address is removed.
+    /// @notice Emitted when the vesting to an address is removed.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will stop receiving payment.
     /// @param streamId ID of the streaming payment order that was removed.
     event StreamingPaymentRemoved(
-        address indexed paymentClient,
-        address indexed recipient,
-        uint indexed streamId
+        address indexed paymentClient, address indexed recipient, uint streamId
     );
 
     /// @notice Emitted when a running stream schedule gets updated.

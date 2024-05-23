@@ -24,6 +24,7 @@ interface IPaymentProcessor_v1 {
     /// @notice Emitted when a payment gets processed for execution.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the payment should start being paid out.
     /// @param cliff Duration of the cliff period.
@@ -31,7 +32,7 @@ interface IPaymentProcessor_v1 {
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
-        address indexed token,
+        address indexed paymentToken,
         uint amount,
         uint start,
         uint cliff,
