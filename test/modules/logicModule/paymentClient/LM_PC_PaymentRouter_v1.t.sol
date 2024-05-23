@@ -52,7 +52,7 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
     address po_paymentToken = address(_token);
     uint po_amount = 100;
     uint po_start = block.timestamp;
-    uint po_cliff = block.timestamp + 100;
+    uint po_cliff = 100;
     uint po_end = block.timestamp + 1000;
 
     // Events
@@ -444,7 +444,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         }
 
         start = block.timestamp;
-        cliff = block.timestamp + 100;
+        cliff = 100;
         end = block.timestamp + 1000;
     }
 }

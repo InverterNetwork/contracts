@@ -366,6 +366,120 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         assertEq(totalAmount, paymentClient.amountPaidCounter());
     }
 
+    // test cannot claim before cliff ends
+
+    function test_claimStreamedAmounts_cannotClaimBeforeCliff(
+        address[] memory recipients,
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= 10);
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        uint max_time = uint(durations[0]);
+        uint totalAmount;
+
+        for (uint i; i < recipients.length; i++) {
+            durations[i] = uint64(bound(durations[i], 100, 100_000_000)); // by setting the minimum duration to 100, we ensure that the cliff period is always lower than the total duration
+            uint amount = uint(amounts[i]);
+            uint time = uint(durations[i]);
+
+            if (time > max_time) {
+                max_time = time;
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                IERC20PaymentClientBase_v1.PaymentOrder({
+                    recipient: recipients[i],
+                    paymentToken: address(_token),
+                    amount: amount,
+                    start: block.timestamp,
+                    cliff: 50,
+                    end: block.timestamp + time
+                })
+            );
+
+            totalAmount += amount;
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
+
+        // Moving ahead in time, before the cliff period ends
+        vm.warp(block.timestamp + 49);
+
+        // All recepients try to claim their vested tokens
+        for (uint i; i < recipients.length;) {
+            uint balanceBefore = _token.balanceOf(recipients[i]);
+
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+            assertTrue(
+                paymentProcessor.isActivePaymentReceiver(
+                    address(paymentClient), recipients[i]
+                )
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificStream(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "Nothing would have vested before the cliff period ends"
+            );
+            assertEq(_token.balanceOf(recipients[i]), balanceBefore);
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Now we move past the end of the longest streaming period
+        vm.warp(block.timestamp + max_time);
+
+        // All recepients try to claim their vested tokens
+        for (uint i; i < recipients.length;) {
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Now, all recipients should have their entire vested amount with them
+        for (uint i; i < recipients.length;) {
+            // Check recipient balance
+            assertEq(
+                _token.balanceOf(recipients[i]),
+                uint(amounts[i]),
+                "Vested tokens not received by the paymentReceiver"
+            );
+
+            assertEq(
+                paymentProcessor.releasableForSpecificStream(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "All vested amount is already released"
+            );
+
+            unchecked {
+                ++i;
+            }
+        }
+        assertEq(totalAmount, paymentClient.amountPaidCounter());
+    }
+
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
     function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
         address[] memory recipients,
@@ -439,6 +553,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         vm.warp(1000);
         vm.startPrank(address(paymentClient));
+
+        // Check addinng invalid recipients
+
         //we don't mind about adding address(this)in this case
         for (uint i = 0; i < recipients.length - 1; ++i) {
             paymentClient.addPaymentOrderUnchecked(
@@ -468,6 +585,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // Call processPayments and expect emits
         paymentProcessor.processPayments(paymentClient);
 
+        // Check adding an invalid amount
+
         paymentClient.addPaymentOrderUnchecked(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: address(0xB0B),
@@ -485,6 +604,29 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             invalidAmt,
             block.timestamp,
             0,
+            block.timestamp + 100
+        );
+        paymentProcessor.processPayments(paymentClient);
+
+        // Check adding an invalid end time
+
+        paymentClient.addPaymentOrderUnchecked(
+            IERC20PaymentClientBase_v1.PaymentOrder({
+                recipient: address(0xB0B),
+                paymentToken: address(_token),
+                amount: invalidAmt,
+                start: block.timestamp,
+                cliff: 500,
+                end: block.timestamp + 100
+            })
+        );
+        vm.expectEmit(true, true, true, true);
+        emit InvalidStreamingOrderDiscarded(
+            address(0xB0B),
+            address(_token),
+            invalidAmt,
+            block.timestamp,
+            500,
             block.timestamp + 100
         );
         paymentProcessor.processPayments(paymentClient);
@@ -1723,7 +1865,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         invalids[1] = address(_orchestrator);
         invalids[2] = address(paymentProcessor);
         invalids[3] = address(paymentClient);
-        invalids[4] = address(this);
+        invalids[4] = address(_token);
 
         return invalids;
     }

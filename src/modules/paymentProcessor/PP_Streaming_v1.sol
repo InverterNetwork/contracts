@@ -214,8 +214,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
                 emit PaymentOrderProcessed(
                     address(client),
-                    _token,
                     _recipient,
+                    _token,
                     _streamId,
                     _amount,
                     _start,
@@ -630,7 +630,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint _end
     ) internal {
         if (
-            !validAddress(_paymentReceiver) || !validTotal(_total)
+            !validPaymentReceiver(_paymentReceiver) || !validTotal(_total)
                 || !validTimes(_start, _cliff, _end) || !validPaymentToken(_token)
         ) {
             emit InvalidStreamingOrderDiscarded(
@@ -830,10 +830,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice validate address input.
     /// @param addr Address to validate.
     /// @return True if address is valid.
-    function validAddress(address addr) internal view returns (bool) {
+    function validPaymentReceiver(address addr) internal view returns (bool) {
         return !(
             addr == address(0) || addr == _msgSender() || addr == address(this)
                 || addr == address(orchestrator())
+                || addr == address(orchestrator().fundingManager().token())
         );
     }
 
