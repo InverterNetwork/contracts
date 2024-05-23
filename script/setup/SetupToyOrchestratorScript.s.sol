@@ -69,10 +69,10 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Define Initial Configuration Data
 
         // Orchestrator_v1: Owner, funding token
-        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory_v1.OrchestratorConfig({
-            owner: orchestratorOwner,
-            token: token
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
+        IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
         });
 
         // Funding Manager: Metadata, token address
@@ -120,7 +120,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         {
             test_orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
-                orchestratorConfig,
+                workflowConfig,
                 fundingManagerFactoryConfig,
                 authorizerFactoryConfig,
                 paymentProcessorFactoryConfig,
