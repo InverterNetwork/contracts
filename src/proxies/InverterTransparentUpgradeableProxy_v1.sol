@@ -43,10 +43,10 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     // State
 
     /// @dev The address of the admin that can update the implementation address of this proxy
-    address private immutable _admin;
+    address internal immutable _admin;
 
     /// @dev The address of the beacon that is used to fetch the implementation address.
-    IInverterBeacon_v1 private immutable _beacon;
+    IInverterBeacon_v1 internal immutable _beacon;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -55,7 +55,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
         IInverterBeacon_v1 beacon,
         address initialOwner,
         bytes memory _data
-    ) payable ERC1967Proxy(beacon.getImplementationAddress(), _data) {
+    ) ERC1967Proxy(beacon.getImplementationAddress(), _data) {
         _beacon = beacon;
         _admin = initialOwner;
         // Set the storage value and emit an event for ERC-1967 compatibility
