@@ -170,15 +170,22 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         if (client.paymentOrders().length > 0) {
             // Collect outstanding orders and their total token amount.
             IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
-            uint totalAmount;
-            (orders, totalAmount) = client.collectPaymentOrders();
-
-            if (token().balanceOf(address(client)) < totalAmount) {
-                revert Module__PP_Streaming__InsufficientTokenBalanceInClient();
+            address[] memory tokens;
+            uint[] memory totalAmounts;
+            (orders, tokens, totalAmounts) = client.collectPaymentOrders();
+            for (uint i = 0; i < tokens.length; i++) {
+                if (
+                    IERC20(tokens[i]).balanceOf(address(client))
+                        < totalAmounts[i]
+                ) {
+                    revert
+                        Module__PP_Streaming__InsufficientTokenBalanceInClient();
+                }
             }
 
             // Generate Streaming Payments for all orders
             address _recipient;
+            address _token;
             uint _amount;
             uint _start;
             uint _dueTo;
@@ -188,6 +195,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
             for (uint i; i < numOrders;) {
                 _recipient = orders[i].recipient;
+                _token = orders[i].paymentToken;
                 _amount = orders[i].amount;
                 _start = orders[i].createdAt;
                 _dueTo = orders[i].dueTo;
@@ -196,6 +204,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 _addPayment(
                     address(client),
                     _recipient,
+                    _token,
                     _amount,
                     _start,
                     _dueTo,
@@ -204,6 +213,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
                 emit PaymentOrderProcessed(
                     address(client),
+                    _token,
                     _recipient,
                     _amount,
                     _start,
@@ -341,11 +351,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             amount +=
                 unclaimableAmountsForWalletId[client][paymentReceiver][ids[i]];
         }
-    }
-
-    /// @inheritdoc IPaymentProcessor_v1
-    function token() public view returns (IERC20) {
-        return this.orchestrator().fundingManager().token();
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -531,6 +536,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             );
         }
 
+        address _token =
+            vestings[client][paymentReceiver][walletId]._paymentToken;
         uint remainingReleasable = vestings[client][paymentReceiver][walletId] //The whole salary
             ._salary - vestings[client][paymentReceiver][walletId]._released; //Minus what has already been "released"
 
@@ -538,7 +545,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         if (remainingReleasable > 0) {
             //Let PaymentClient know that the amount is not needed to be stored anymore
 
-            IERC20PaymentClientBase_v1(client).amountPaid(remainingReleasable);
+            IERC20PaymentClientBase_v1(client).amountPaid(
+                _token, remainingReleasable
+            );
         }
 
         // Standard deletion process.
@@ -605,6 +614,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function _addPayment(
         address client,
         address _paymentReceiver,
+        address _token,
         uint _salary,
         uint _start,
         uint _dueTo,
@@ -612,16 +622,16 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ) internal {
         if (
             !validAddress(_paymentReceiver) || !validSalary(_salary)
-                || !validStart(_start)
+                || !validStart(_start) || !validPaymentToken(_token)
         ) {
             emit InvalidStreamingOrderDiscarded(
-                _paymentReceiver, _salary, _start, _dueTo
+                _paymentReceiver, _token, _salary, _start, _dueTo
             );
         } else {
             ++numVestingWallets[client][_paymentReceiver];
 
             vestings[client][_paymentReceiver][_walletId] =
-                VestingWallet(_salary, 0, _start, _dueTo, _walletId);
+                VestingWallet(_token, _salary, 0, _start, _dueTo, _walletId);
 
             // We do not want activePaymentReceivers[client] to have duplicate paymentReceiver entries
             // So we avoid pushing the _paymentReceiver to activePaymentReceivers[client] if it already exists
@@ -635,7 +645,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             activeVestingWallets[client][_paymentReceiver].push(_walletId);
 
             emit StreamingPaymentAdded(
-                client, _paymentReceiver, _salary, _start, _dueTo, _walletId
+                client,
+                _paymentReceiver,
+                _token,
+                _salary,
+                _start,
+                _dueTo,
+                _walletId
             );
         }
     }
@@ -680,7 +696,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
         vestings[client][paymentReceiver][walletId]._released += amount;
 
-        address _token = address(token());
+        address _token =
+            vestings[client][paymentReceiver][walletId]._paymentToken;
 
         (bool success, bytes memory data) = _token.call(
             abi.encodeWithSelector(
@@ -695,10 +712,12 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             emit TokensReleased(paymentReceiver, _token, amount);
 
             //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-            IERC20PaymentClientBase_v1(client).amountPaid(amount);
+            IERC20PaymentClientBase_v1(client).amountPaid(
+                address(_token), amount
+            );
         } else {
             emit UnclaimableAmountAdded(
-                client, paymentReceiver, walletId, amount
+                client, paymentReceiver, address(_token), walletId, amount
             );
             //Adds the walletId to the array of unclaimable wallet ids
 
@@ -754,7 +773,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         //As all of the wallet ids should have been claimed we can delete the wallet id array
         delete unclaimableWalletIds[client][sender];
 
-        IERC20 _token = token();
+        IERC20 _token = orchestrator().fundingManager().token();
 
         //Call has to succeed otherwise no state change
         _token.safeTransferFrom(client, paymentReceiver, amount);
@@ -762,7 +781,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         emit TokensReleased(paymentReceiver, address(_token), amount);
 
         //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v1(client).amountPaid(amount);
+        IERC20PaymentClientBase_v1(client).amountPaid(address(_token), amount);
     }
 
     /// @notice Virtual implementation of the vesting formula.
@@ -816,5 +835,16 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @return True if uint is valid.
     function validStart(uint _start) internal view returns (bool) {
         return !(_start < block.timestamp || _start >= type(uint).max);
+    }
+
+    /// @notice validate payment token input.
+    /// @param _token Address of the token to validate.
+    /// @return True if address is valid.
+    function validPaymentToken(address _token) internal view returns (bool) {
+        // Only a basic sanity check, the corresponding module should ensure it's sending an ERC20.
+        return !(
+            _token == address(0) || _token == _msgSender()
+                || _token == address(this) || _token == address(orchestrator())
+        );
     }
 }

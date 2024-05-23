@@ -47,7 +47,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     // Events
 
     /// @notice Emitted when a payment gets processed for execution.
+    /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that is being used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param dueTo Timestamp at which the full amount should be claimable.
@@ -55,6 +57,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
+        address indexed paymentToken,
         uint amount,
         uint start,
         uint dueTo,
@@ -62,6 +65,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     );
 
     /// @notice Emitted when the vesting to an address is removed.
+    /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will stop receiving payment.
     /// @param walletId ID of the payment order removed
     event StreamingPaymentRemoved(
@@ -72,16 +76,22 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param dueTo Timestamp at which the full amount should be claimable.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint dueTo
+        address indexed recipient,
+        address indexed paymentToken,
+        uint amount,
+        uint start,
+        uint dueTo
     );
 
     /// @notice Emitted when a payment gets processed for execution.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
     /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
@@ -89,15 +99,23 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
+        address indexed paymentToken,
         uint amount,
         uint createdAt,
         uint dueTo,
         uint walletId
     );
 
+    /// @notice Emitted when a payment was unclaimable due to a token error.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that wshould have received the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
+    /// @param walletId ID of the payment order that was processed
+    /// @param amount The amount of tokens that were unclaimable.
     event UnclaimableAmountAdded(
         address indexed paymentClient,
         address recipient,
+        address paymentToken,
         uint walletId,
         uint amount
     );
@@ -133,7 +151,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
-        assertEq(address(paymentProcessor.token()), address(_token));
+        assertEq(
+            address(paymentProcessor.orchestrator()), address(_orchestrator)
+        );
     }
 
     function testSupportsInterface() public {
@@ -178,6 +198,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -195,6 +216,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             emit StreamingPaymentAdded(
                 address(paymentClient),
                 recipients[i],
+                address(_token),
                 amounts[i],
                 block.timestamp,
                 block.timestamp + durations[i],
@@ -203,6 +225,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
+                address(_token),
                 amounts[i],
                 block.timestamp,
                 block.timestamp + durations[i],
@@ -261,6 +284,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -356,6 +380,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: payoutAmount,
                     createdAt: block.timestamp,
                     dueTo: dueTimes[i]
@@ -410,6 +435,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrderUnchecked(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: 100,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + 100
@@ -420,7 +446,11 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         for (uint i = 0; i < recipients.length - 1; ++i) {
             vm.expectEmit(true, true, true, true);
             emit InvalidStreamingOrderDiscarded(
-                recipients[i], 100, block.timestamp, block.timestamp + 100
+                recipients[i],
+                address(_token),
+                100,
+                block.timestamp,
+                block.timestamp + 100
             );
         }
 
@@ -430,6 +460,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         paymentClient.addPaymentOrderUnchecked(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: address(0xB0B),
+                paymentToken: address(_token),
                 amount: invalidAmt,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp + 100
@@ -437,7 +468,11 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         );
         vm.expectEmit(true, true, true, true);
         emit InvalidStreamingOrderDiscarded(
-            address(0xB0B), invalidAmt, block.timestamp, block.timestamp + 100
+            address(0xB0B),
+            address(_token),
+            invalidAmt,
+            block.timestamp,
+            block.timestamp + 100
         );
         paymentProcessor.processPayments(paymentClient);
 
@@ -518,6 +553,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -559,6 +595,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -677,6 +714,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -788,6 +826,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time
@@ -947,6 +986,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: amounts[i],
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + duration
@@ -959,6 +999,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             emit StreamingPaymentAdded(
                 address(paymentClient),
                 recipients[i],
+                address(_token),
                 amounts[i],
                 block.timestamp,
                 duration + block.timestamp,
@@ -967,6 +1008,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
+                address(_token),
                 amounts[i],
                 block.timestamp,
                 duration + block.timestamp,
@@ -1107,6 +1149,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amounts[i],
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + durations[i]
@@ -1186,6 +1229,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipient,
+                    paymentToken: address(_token),
                     amount: amount,
                     createdAt: block.timestamp,
                     dueTo: start + duration
@@ -1235,6 +1279,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: 1,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp
@@ -1387,6 +1432,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         paymentClient.addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
+                paymentToken: address(_token),
                 amount: amount,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp + duration
@@ -1400,7 +1446,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         vm.expectEmit(true, true, true, true);
         emit UnclaimableAmountAdded(
-            address(paymentClient), recipient, 1, amount / 4
+            address(paymentClient), recipient, address(_token), 1, amount / 4
         );
 
         vm.prank(recipient);
@@ -1457,6 +1503,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         paymentClient.addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
+                paymentToken: address(_token),
                 amount: amount,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp + duration
@@ -1529,6 +1576,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: 1,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp
@@ -1584,6 +1632,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
+                    paymentToken: address(_token),
                     amount: amounts[i],
                     createdAt: block.timestamp,
                     dueTo: block.timestamp + time

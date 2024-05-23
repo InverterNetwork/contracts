@@ -46,6 +46,7 @@ contract PP_SimpleV1Test is ModuleTest {
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
+        address indexed token,
         uint amount,
         uint createdAt,
         uint dueTo
@@ -84,7 +85,9 @@ contract PP_SimpleV1Test is ModuleTest {
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
-        assertEq(address(paymentProcessor.token()), address(_token));
+        assertEq(
+            address(paymentProcessor.orchestrator()), address(_orchestrator)
+        );
     }
 
     function testSupportsInterface() public {
@@ -113,6 +116,7 @@ contract PP_SimpleV1Test is ModuleTest {
         paymentClient.addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
+                paymentToken: address(_token),
                 amount: amount,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp
@@ -126,6 +130,7 @@ contract PP_SimpleV1Test is ModuleTest {
         emit PaymentOrderProcessed(
             address(paymentClient),
             recipient,
+            address(_token),
             amount,
             block.timestamp,
             block.timestamp

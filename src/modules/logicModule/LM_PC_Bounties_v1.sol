@@ -456,6 +456,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
             _addPaymentOrder(
                 PaymentOrder({
                     recipient: contrib.addr,
+                    paymentToken: address(orchestrator().fundingManager().token()),
                     amount: contrib.claimAmount,
                     createdAt: block.timestamp,
                     dueTo: block.timestamp //dueTo Date is now

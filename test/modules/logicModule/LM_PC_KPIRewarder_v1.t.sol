@@ -84,7 +84,9 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         uint[] trancheRewards
     );
 
-    event PaymentOrderAdded(address indexed recipient, uint amount);
+    event PaymentOrderAdded(
+        address indexed recipient, address indexed token, uint amount
+    );
 
     //=========================================================================================
     // Setup
@@ -951,7 +953,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit PaymentOrderAdded(users[i], earnedReward);
+                emit PaymentOrderAdded(users[i], address(_token), earnedReward);
             }
 
             kpiManager.unstake(amounts[i]);
@@ -1027,7 +1029,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit PaymentOrderAdded(users[i], earnedReward);
+                emit PaymentOrderAdded(users[i], address(_token), earnedReward);
             }
 
             kpiManager.unstake(amounts[i]);
