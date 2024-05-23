@@ -22,12 +22,10 @@ import {
 
 // External Libraries
 
-// NOTE: Development halted until the payment processor can handle multiple tokens,  and not only the native orchestrator one
-
 /**
  * @title   Payment Router
  *
- * @notice  Tis module is a stopgap solution to enable pushing payments to the Payment Processor.
+ * @notice  This module is enable pushing payments directly to the Payment Processor.
  *
  *
  * @dev     Extends {ERC20PaymentClientBase_v1} to integrate payment processing with
