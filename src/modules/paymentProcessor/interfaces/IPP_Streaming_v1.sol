@@ -54,7 +54,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint end
     );
 
-    /// @notice Emitted when the vesting to an address is removed.
+    /// @notice Emitted when the stream to an address is removed.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will stop receiving payment.
     /// @param streamId ID of the streaming payment order that was removed.

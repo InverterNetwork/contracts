@@ -66,7 +66,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint end
     );
 
-    /// @notice Emitted when the vesting to an address is removed.
+    /// @notice Emitted when the stream to an address is removed.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will stop receiving payment.
     /// @param streamId ID of the streaming payment order that was removed.
@@ -255,7 +255,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     1 // 1 is the first default wallet ID for all unique recepients
                 ),
                 0,
-                "Nothing would have vested at the start of the vesting duration"
+                "Nothing would have vested at the start of the streaming duration"
             );
             unchecked {
                 ++i;
@@ -319,7 +319,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     1 // 1 is the first default wallet ID for all unique recepients
                 ),
                 0,
-                "Nothing would have vested at the start of the vesting duration"
+                "Nothing would have vested at the start of the streaming duration"
             );
             unchecked {
                 ++i;
@@ -328,7 +328,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
 
-        // Moving ahead in time, past the longest vesting period
+        // Moving ahead in time, past the longest streaming period
         vm.warp(block.timestamp + (max_time + 1));
 
         // All recepients try to claim their vested tokens
@@ -492,7 +492,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         vm.stopPrank();
     }
 
-    function test_processPayments_vestingInfoGetsDeletedPostFullPayment(
+    function test_processPayments_streamInfoGetsDeletedPostFullPayment(
         address[] memory recipients,
         uint128[] memory amounts,
         uint64[] memory durations
@@ -512,7 +512,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
 
-            // Check that the vesting information is deleted once vested tokens are claimed after total vesting duration
+            // Check that the stream information is deleted once vested tokens are claimed after total streaming duration
             assertEq(
                 paymentProcessor.streamedAmountForSpecificStream(
                     address(paymentClient),
@@ -622,7 +622,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
-        // Now, let's check whether all vesting informations exist or not
+        // Now, let's check whether all streaming informations exist or not
         // checking for paymentReceiver2
         IPP_Streaming_v1.Stream[] memory paymentReceiverStreams;
         paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
@@ -821,7 +821,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             durations[i] = (randomDuration * (i + 1));
         }
 
-        // we want the durations of vesting for paymentReceiver 1 to be double of the initial one
+        // we want the durations of the stream for paymentReceiver 1 to be double of the initial one
         // and the last payment order to have the same duration as the middle one
         durations[3] = durations[0] * 2;
         durations[5] = durations[3];
@@ -855,7 +855,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         paymentProcessor.processPayments(paymentClient);
 
         // Let's travel in time, to the point after paymentReceiver1's tokens for the second payment order
-        // are 1/2 vested, or the complete vesting of duration of the first payment order
+        // are 1/2 vested, or the complete streaming of duration of the first payment order
         vm.warp(block.timestamp + durations[0]);
 
         // Let's note down the current balance of the paymentReceiver1
@@ -887,7 +887,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         amountPaidAlready += paymentClient.amountPaidCounter();
 
         // Now we are interested in finding the details of the 2nd wallet of paymentReceiver1
-        total2 = (paymentReceiverStreams[1]._total) / 2; // since we are at half the vesting duration
+        total2 = (paymentReceiverStreams[1]._total) / 2; // since we are at half the streaming duration
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         assertTrue(total2 != 0);
@@ -913,15 +913,15 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         finalNumWallets = paymentReceiverStreams.length;
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        assertEq(finalNumWallets, 1); // One was deleted because the vesting was completed and claimed. The other was deleted because of removePayment
+        assertEq(finalNumWallets, 1); // One was deleted because the streaming was completed and claimed. The other was deleted because of removePayment
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
             total2
         );
 
         // Now we try and claim the 3rd payment order for paymentReceiver1
-        // we are at half it's vesting period, so the total3 should be half of the total amount
-        // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete vesting.
+        // we are at half it's streaming period, so the total3 should be half of the total amount
+        // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete streaming.
         total3 = (paymentReceiverStreams[0]._total) / 2;
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
@@ -1637,7 +1637,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     //--------------------------------------------------------------------------
     // Helper functions
 
-    // Speedruns a round of vesting + claiming
+    // Speedruns a round of streaming + claiming
     // note Neither checks the inputs nor verifies results
     function speedRunStreamingAndClaim(
         address[] memory recipients,
