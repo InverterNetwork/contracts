@@ -61,11 +61,18 @@ contract LM_PC_PaymentRouter_v1 is
         address recipient,
         address paymentToken,
         uint amount,
-        uint dueTo
+        uint start,
+        uint cliff,
+        uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
         _addPaymentOrder(
             PaymentOrder(
-                recipient, paymentToken, amount, block.timestamp, dueTo
+                recipient,
+                paymentToken,
+                amount,
+                start == 0 ? block.timestamp : start,
+                cliff,
+                end
             )
         );
 
@@ -74,6 +81,46 @@ contract LM_PC_PaymentRouter_v1 is
             IERC20PaymentClientBase_v1(address(this))
         );
     }
+    /*
+    /// @inheritdoc ILM_PC_PaymentRouter_v1
+    function pushPaymentBatched(
+        uint8 numOfOrders,
+        address[] calldata recipients,
+        address[] calldata paymentTokens,
+        uint[] calldata amounts,
+        uint[] calldata starts,
+        uint[] calldata cliffs,
+        uint[] calldata ends
+    ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
+        // Validate all arrays have the same length
+        if (
+            recipients.length != numOfOrders
+                || paymentTokens.length != numOfOrders
+                || amounts.length != numOfOrders || starts.length != numOfOrders
+                || cliffs.length != numOfOrders || ends.length != numOfOrders
+        ) {
+            revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
+        }
+
+        // Loop through the arrays and add Payments
+        for (uint8 i = 0; i < numOfOrders; i++) {
+
+            _addPaymentOrderFromComponents(
+                recipients[i],
+                paymentTokens[i],
+                amounts[i],
+                starts[i] == 0 ? block.timestamp : starts[i],
+                cliffs[i],
+                ends[i]
+            );
+        }
+
+        // call PaymentProcessor
+        __Module_orchestrator.paymentProcessor().processPayments(
+            IERC20PaymentClientBase_v1(address(this))
+        );
+    }
+    */
 
     /// @inheritdoc ILM_PC_PaymentRouter_v1
     function pushPaymentBatched(
@@ -81,13 +128,15 @@ contract LM_PC_PaymentRouter_v1 is
         address[] calldata recipients,
         address[] calldata paymentTokens,
         uint[] calldata amounts,
-        uint[] calldata dueTos
+        uint start,
+        uint cliff,
+        uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
         // Validate all arrays have the same length
         if (
             recipients.length != numOfOrders
                 || paymentTokens.length != numOfOrders
-                || amounts.length != numOfOrders || dueTos.length != numOfOrders
+                || amounts.length != numOfOrders
         ) {
             revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
         }
@@ -99,8 +148,9 @@ contract LM_PC_PaymentRouter_v1 is
                     recipients[i],
                     paymentTokens[i],
                     amounts[i],
-                    block.timestamp,
-                    dueTos[i]
+                    start == 0 ? block.timestamp : start,
+                    cliff,
+                    end
                 )
             );
         }
