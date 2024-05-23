@@ -40,7 +40,6 @@ import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-=======
 contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // SuT
     AUT_EXT_VotingRoles_v1 _governor;
