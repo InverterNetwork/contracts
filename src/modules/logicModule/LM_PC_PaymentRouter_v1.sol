@@ -25,7 +25,7 @@ import {
 /**
  * @title   Payment Router
  *
- * @notice  This module is enable pushing payments directly to the Payment Processor.
+ * @notice  This module enables pushing payments directly to the Payment Processor.
  *
  *
  * @dev     Extends {ERC20PaymentClientBase_v1} to integrate payment processing with
