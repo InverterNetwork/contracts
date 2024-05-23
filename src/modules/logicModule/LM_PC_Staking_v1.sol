@@ -283,6 +283,7 @@ contract LM_PC_Staking_v1 is
         _addPaymentOrder(
             PaymentOrder({
                 recipient: recipient,
+                paymentToken: address(orchestrator().fundingManager().token()),
                 amount: amount,
                 createdAt: block.timestamp,
                 dueTo: block.timestamp

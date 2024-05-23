@@ -32,7 +32,7 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
  * @dev     Uses epochs to define the period of recurring payments and supports operations
  *          such as adding, removing, and triggering payments based on time cycles.
  *          Integrates with {ERC20PaymentClientBase_v1} for handling actual payment
- *          transactions.
+ *          transactions. Note that it will use the token type stored in the FundingManager for the payments.
  *
  * @author  Inverter Network
  */
@@ -277,6 +277,9 @@ contract LM_PC_RecurringPayments_v1 is
                     _addPaymentOrder(
                         PaymentOrder({
                             recipient: currentPayment.recipient,
+                            paymentToken: address(
+                                orchestrator().fundingManager().token()
+                            ),
                             amount: currentPayment.amount,
                             createdAt: block.timestamp,
                             //End of current epoch is the dueTo Date
@@ -290,6 +293,9 @@ contract LM_PC_RecurringPayments_v1 is
                             PaymentOrder({
                                 recipient: currentPayment.recipient,
                                 //because we already made a payment that for the current epoch
+                                paymentToken: address(
+                                    orchestrator().fundingManager().token()
+                                ),
                                 amount: currentPayment.amount
                                     * (epochsNotTriggered - 1),
                                 createdAt: block.timestamp,

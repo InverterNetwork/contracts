@@ -14,12 +14,14 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
 
     /// @notice This struct is used to store the payment order for a particular paymentReceiver by a particular payment client
     /// @dev for _vestingWalletID, valid values will start from 1. 0 is not a valid vestingWalletID.
+    /// @param _paymentToken: The address of the token that is being used for the payment
     /// @param _salary: The total amount that the paymentReceiver should eventually get
     /// @param _released: The amount that has been claimed by the paymentReceiver till now
     /// @param _start: The start date of the vesting period
     /// @param _dueTo: The ending of the vesting period
     /// @param _vestingWalletID: A unique identifier of a wallet for a specific paymentClient and paymentReceiver combination
     struct VestingWallet {
+        address _paymentToken;
         uint _salary;
         uint _released;
         uint _start;
@@ -31,7 +33,9 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     // Events
 
     /// @notice Emitted when a payment gets processed for execution.
+    /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that is being used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param dueTo Timestamp at which the full amount should be claimable.
@@ -39,6 +43,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
+        address indexed paymentToken,
         uint amount,
         uint start,
         uint dueTo,
@@ -46,6 +51,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     );
 
     /// @notice Emitted when the vesting to an address is removed.
+    /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will stop receiving payment.
     /// @param walletId ID of the payment order removed
     event StreamingPaymentRemoved(
@@ -56,16 +62,22 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
 
     /// @notice Emitted when a running vesting schedule gets updated.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the vesting starts.
     /// @param dueTo Timestamp at which the full amount should be claimable.
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient, uint amount, uint start, uint dueTo
+        address indexed recipient,
+        address indexed paymentToken,
+        uint amount,
+        uint start,
+        uint dueTo
     );
 
     /// @notice Emitted when a payment gets processed for execution.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
     /// @param createdAt Timestamp at which the order was created.
     /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
@@ -73,6 +85,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
+        address indexed paymentToken,
         uint amount,
         uint createdAt,
         uint dueTo,
@@ -82,11 +95,13 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @notice Emitted when a payment was unclaimable due to a token error.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that wshould have received the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param walletId ID of the payment order that was processed
     /// @param amount The amount of tokens that were unclaimable.
     event UnclaimableAmountAdded(
         address indexed paymentClient,
         address recipient,
+        address paymentToken,
         uint walletId,
         uint amount
     );
