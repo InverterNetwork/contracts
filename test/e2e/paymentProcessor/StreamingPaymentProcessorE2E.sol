@@ -99,14 +99,14 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         //--------------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
-        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory_v1.OrchestratorConfig({
-            owner: address(this),
-            token: token
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
+        IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
         });
 
-        orchestrator =
-            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
+        IOrchestrator_v1 orchestrator =
+            _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 

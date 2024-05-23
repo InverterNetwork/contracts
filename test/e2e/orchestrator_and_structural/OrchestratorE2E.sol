@@ -121,15 +121,15 @@ contract OrchestratorE2E is E2ETest {
     //We're adding and removing a Module during the lifetime of the orchestrator
     function testManageModulesLiveOnPorposal() public {
         // address(this) creates a new orchestrator.
-        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory_v1.OrchestratorConfig({
-            owner: address(this),
-            token: token
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
+        IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
         });
 
-        //Create Orchestrator_v1
         IOrchestrator_v1 orchestrator =
-            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
+            _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
+
         uint timelock =
             Orchestrator_v1(address(orchestrator)).MODULE_UPDATE_TIMELOCK();
         //------------------------------------------------------------------------------------------------

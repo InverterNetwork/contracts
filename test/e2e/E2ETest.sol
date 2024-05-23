@@ -114,7 +114,7 @@ contract E2ETest is E2EModuleRegistry {
     //      moduleConfigurations[2]  => PaymentProcessor
     //      moduleConfigurations[3:] => Additional Logic Modules
     function _create_E2E_Orchestrator(
-        IOrchestratorFactory_v1.OrchestratorConfig memory _config,
+        IOrchestratorFactory_v1.WorkflowConfig memory _config,
         IOrchestratorFactory_v1.ModuleConfig[] memory _moduleConfigurations
     ) internal virtual returns (IOrchestrator_v1) {
         // Prepare array of optional modules (hopefully can be made more succinct in the future)
