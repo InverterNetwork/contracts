@@ -148,6 +148,10 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 })
             );
         }
+    }
+
+    function testAddPaymentOrderFailsForInvalidAmount() public {
+        address recipient = address(0xCAFE);
         uint[] memory invalids = _createInvalidAmounts();
         uint end = block.timestamp;
 
@@ -368,8 +372,9 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             recipient: address(0xA11CE),
             paymentToken: address(_token),
             amount: amountRequired,
-            createdAt: block.timestamp,
-            dueTo: block.timestamp
+            start: block.timestamp,
+            cliff: 0,
+            end: block.timestamp
         });
         paymentClient.addPaymentOrder(order);
 
@@ -422,8 +427,9 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             recipient: address(0xA11CE),
             paymentToken: address(_token),
             amount: firstAmount,
-            createdAt: block.timestamp,
-            dueTo: block.timestamp
+            start: block.timestamp,
+            cliff: 0,
+            end: block.timestamp
         });
         paymentClient.addPaymentOrder(order);
 
@@ -442,8 +448,9 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             recipient: address(0xA11CE),
             paymentToken: address(_token),
             amount: secondAmount,
-            createdAt: block.timestamp,
-            dueTo: block.timestamp
+            start: block.timestamp,
+            cliff: 0,
+            end: block.timestamp
         });
         paymentClient.addPaymentOrder(order);
 

@@ -47,7 +47,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
-        uint indexed streamId,
+        uint streamId,
         uint amount,
         uint start,
         uint cliff,
@@ -59,9 +59,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param recipient The address that will stop receiving payment.
     /// @param streamId ID of the streaming payment order that was removed.
     event StreamingPaymentRemoved(
-        address indexed paymentClient,
-        address indexed recipient,
-        uint indexed streamId
+        address indexed paymentClient, address indexed recipient, uint streamId
     );
 
     /// @notice Emitted when a running stream schedule gets updated.
@@ -93,7 +91,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
-        uint indexed streamId,
+        uint streamId,
         uint amount,
         uint start,
         uint cliff,
@@ -133,6 +131,11 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @notice paymentReceiver's streamId for the paymentClient is no longer active
     error Module__PP_Streaming__InactiveStream(
         address paymentClient, address paymentReceiver, uint streamId
+    );
+
+    /// @notice the paymentReceiver for the given paymentClient does not exist (anymore)
+    error Module__PP_Streaming__InvalidPaymentReceiver(
+        address paymentClient, address paymentReceiver
     );
 
     //--------------------------------------------------------------------------

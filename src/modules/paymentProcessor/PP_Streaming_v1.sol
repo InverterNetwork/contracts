@@ -545,7 +545,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
 
         address _token =
-            vestings[client][paymentReceiver][walletId]._paymentToken;
+            streams[client][paymentReceiver][streamId]._paymentToken;
         uint remainingReleasable = streams[client][paymentReceiver][streamId] //The total amount
             ._total - streams[client][paymentReceiver][streamId]._released; //Minus what has already been "released"
 
@@ -706,7 +706,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         streams[client][paymentReceiver][streamId]._released += amount;
 
         address _token =
-            vestings[client][paymentReceiver][walletId]._paymentToken;
+            streams[client][paymentReceiver][streamId]._paymentToken;
 
         (bool success, bytes memory data) = _token.call(
             abi.encodeWithSelector(
