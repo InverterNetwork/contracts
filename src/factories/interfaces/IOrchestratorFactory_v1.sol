@@ -33,9 +33,9 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
-    struct OrchestratorConfig {
-        address owner;
-        IERC20 token;
+    struct WorkflowConfig {
+        bool independentUpdates;
+        address independentUpdateAdmin;
     }
 
     struct ModuleConfig {
@@ -48,7 +48,7 @@ interface IOrchestratorFactory_v1 {
     // Functions
 
     /// @notice Creates a new orchestrator_v1 with caller being the orchestrator's owner.
-    /// @param orchestratorConfig The orchestrator's config data.
+    /// @param workflowConfig The workflow's config data.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1}
     ///                         instance.
     /// @param paymentProcessorConfig The config data for the orchestrator's
@@ -56,7 +56,7 @@ interface IOrchestratorFactory_v1 {
     /// @param moduleConfigs Variable length set of optional module's config
     ///                      data.
     function createOrchestrator(
-        OrchestratorConfig memory orchestratorConfig,
+        WorkflowConfig memory workflowConfig,
         ModuleConfig memory fundingManagerConfig,
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,

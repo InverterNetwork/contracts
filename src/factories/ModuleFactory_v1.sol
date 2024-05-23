@@ -8,6 +8,9 @@ import {
     IModule_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+
 // Internal Dependencies
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
@@ -115,7 +118,8 @@ contract ModuleFactory_v1 is
     function createModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
-        bytes memory configData
+        bytes memory configData,
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.

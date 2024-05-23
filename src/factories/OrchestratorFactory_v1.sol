@@ -115,7 +115,7 @@ contract OrchestratorFactory_v1 is
 
     /// @inheritdoc IOrchestratorFactory_v1
     function createOrchestrator(
-        OrchestratorConfig memory orchestratorConfig,
+        WorkflowConfig memory workflowConfig,
         ModuleConfig memory fundingManagerConfig,
         ModuleConfig memory authorizerConfig,
         ModuleConfig memory paymentProcessorConfig,
@@ -156,10 +156,6 @@ contract OrchestratorFactory_v1 is
                 IOrchestrator_v1(clone),
                 moduleConfigs[i].configData
             );
-        }
-
-        if (orchestratorConfig.owner == address(0)) {
-            revert OrchestratorFactory__OrchestratorOwnerIsInvalid();
         }
 
         emit OrchestratorCreated(_orchestratorIdCounter, clone);
