@@ -130,21 +130,24 @@ contract OrchestratorFactory_v1 is
         address fundingManager = IModuleFactory_v1(moduleFactory).createModule(
             fundingManagerConfig.metadata,
             IOrchestrator_v1(clone),
-            fundingManagerConfig.configData
+            fundingManagerConfig.configData,
+            workflowConfig
         );
 
         // Deploy and cache {IAuthorizer_v1} module.
         address authorizer = IModuleFactory_v1(moduleFactory).createModule(
             authorizerConfig.metadata,
             IOrchestrator_v1(clone),
-            authorizerConfig.configData
+            authorizerConfig.configData,
+            workflowConfig
         );
 
         // Deploy and cache {IPaymentProcessor_v1} module.
         address paymentProcessor = IModuleFactory_v1(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
             IOrchestrator_v1(clone),
-            paymentProcessorConfig.configData
+            paymentProcessorConfig.configData,
+            workflowConfig
         );
 
         // Deploy and cache optional modules.
@@ -154,7 +157,8 @@ contract OrchestratorFactory_v1 is
             modules[i] = IModuleFactory_v1(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
                 IOrchestrator_v1(clone),
-                moduleConfigs[i].configData
+                moduleConfigs[i].configData,
+                workflowConfig
             );
         }
 

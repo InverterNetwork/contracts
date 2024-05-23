@@ -6,8 +6,6 @@ import "forge-std/Test.sol";
 // Internal Dependencies
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 
-import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
-
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -17,6 +15,11 @@ import {
     IModule_v1,
     IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
+
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // Mocks
 import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
@@ -35,6 +38,18 @@ contract ModuleFactoryV1Test is Test {
     InverterBeaconV1OwnableMock beacon;
 
     address governanceContract = address(0x010101010101);
+
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfigNoIndependentUpdates =
+    IOrchestratorFactory_v1.WorkflowConfig({
+        independentUpdates: false,
+        independentUpdateAdmin: address(0)
+    });
+
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfigIndependentUpdates = //@todo
+    IOrchestratorFactory_v1.WorkflowConfig({
+        independentUpdates: false,
+        independentUpdateAdmin: address(0)
+    });
 
     //--------------------------------------------------------------------------
     // Events
@@ -196,7 +211,10 @@ contract ModuleFactoryV1Test is Test {
         // Create new module instance.
         IModule_v1 newModule = IModule_v1(
             factory.createModule(
-                metadata, IOrchestrator_v1(orchestrator), configData
+                metadata,
+                IOrchestrator_v1(orchestrator),
+                configData,
+                workflowConfigNoIndependentUpdates
             )
         );
 
@@ -216,7 +234,10 @@ contract ModuleFactoryV1Test is Test {
             IModuleFactory_v1.ModuleFactory__UnregisteredMetadata.selector
         );
         factory.createModule(
-            metadata, IOrchestrator_v1(orchestrator), configData
+            metadata,
+            IOrchestrator_v1(orchestrator),
+            configData,
+            workflowConfigNoIndependentUpdates
         );
     }
 

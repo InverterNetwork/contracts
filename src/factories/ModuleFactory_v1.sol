@@ -119,7 +119,7 @@ contract ModuleFactory_v1 is
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
         bytes memory configData,
-        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig //@todo Do smth with workflowConfig
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.

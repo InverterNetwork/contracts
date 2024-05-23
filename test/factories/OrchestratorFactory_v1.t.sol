@@ -49,10 +49,16 @@ contract OrchestratorFactoryV1Test is Test {
     ModuleFactoryV1Mock moduleFactory;
 
     // Metadata
-    IOrchestratorFactory_v1.OrchestratorConfig orchestratorConfig =
-    IOrchestratorFactory_v1.OrchestratorConfig({
-        owner: address(this),
-        token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfigNoIndependentUpdates = //@todo
+    IOrchestratorFactory_v1.WorkflowConfig({
+        independentUpdates: false,
+        independentUpdateAdmin: address(0)
+    });
+
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfigIndependentUpdates = //@todo
+    IOrchestratorFactory_v1.WorkflowConfig({
+        independentUpdates: false,
+        independentUpdateAdmin: address(0)
     });
 
     IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig =
@@ -137,7 +143,7 @@ contract OrchestratorFactoryV1Test is Test {
 
         // Deploy Orchestrator_v1 with id=1
         IOrchestrator_v1 orchestrator = factory.createOrchestrator(
-            orchestratorConfig,
+            workflowConfigNoIndependentUpdates,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
@@ -155,7 +161,7 @@ contract OrchestratorFactoryV1Test is Test {
 
         // Deploy Orchestrator_v1 with id=2
         orchestrator = factory.createOrchestrator(
-            orchestratorConfig,
+            workflowConfigNoIndependentUpdates,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
@@ -188,7 +194,7 @@ contract OrchestratorFactoryV1Test is Test {
 
         // Deploy Orchestrator_v1
         IOrchestrator_v1 orchestrator = factory.createOrchestrator(
-            orchestratorConfig,
+            workflowConfigNoIndependentUpdates,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
