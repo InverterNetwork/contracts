@@ -5,27 +5,12 @@ interface IRedeemingBondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Function is only callable if selling is not already enabled.
-    error Module__RedeemingBondingCurveBase__SellingAlreadyOpen();
-
-    /// @notice Function is only callable if selling is not already closed.
-    error Module__RedeemingBondingCurveBase__SellingAlreadyClosed();
-
-    /// @notice Percentage amount is bigger than 100%, i.e. 10_000
-    error Module__RedeemingBondingCurveBase__InvalidFeePercentage();
-
-    /// @notice Deposit amount has to be larger than zero
-    error Module__RedeemingBondingCurveBase__InvalidDepositAmount();
-
     /// @notice Selling functionalities are set to closed
     error Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
 
     /// @notice Not enough collateral in contract for redemption
     error Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption(
     );
-
-    /// @notice Actual redeem amount is lower than the minimum acceptable amount
-    error Module__RedeemingBondingCurveBase__InsufficientOutputAmount();
 
     //--------------------------------------------------------------------------
     // Events

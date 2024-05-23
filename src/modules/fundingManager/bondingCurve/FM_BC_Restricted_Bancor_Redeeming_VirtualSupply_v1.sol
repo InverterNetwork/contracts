@@ -52,47 +52,21 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
     /// @dev added role check
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
-        external
-        override(FM_BC_Bancor_Redeeming_VirtualSupply_v1)
-        validReceiver(_receiver)
-        buyingIsEnabled
+        public
+        override
         onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
-        _virtualBuyOrder(_receiver, _depositAmount, _minAmountOut);
-    }
-
-    /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
-    /// @dev added role check
-    function buy(uint _depositAmount, uint _minAmountOut)
-        external
-        override(FM_BC_Bancor_Redeeming_VirtualSupply_v1)
-        buyingIsEnabled
-        onlyModuleRole(CURVE_INTERACTION_ROLE)
-    {
-        _virtualBuyOrder(_msgSender(), _depositAmount, _minAmountOut);
+        super.buyFor(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
     /// @dev added role check
     function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
-        external
-        override(FM_BC_Bancor_Redeeming_VirtualSupply_v1)
-        validReceiver(_receiver)
-        sellingIsEnabled
+        public
+        override
         onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
-        _virtualSellOrder(_receiver, _depositAmount, _minAmountOut);
-    }
-
-    /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
-    /// @dev added role check
-    function sell(uint _depositAmount, uint _minAmountOut)
-        external
-        override(FM_BC_Bancor_Redeeming_VirtualSupply_v1)
-        sellingIsEnabled
-        onlyModuleRole(CURVE_INTERACTION_ROLE)
-    {
-        _virtualSellOrder(_msgSender(), _depositAmount, _minAmountOut);
+        super.sellFor(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Mints a specified amount of Issuance Tokens to a designated receiver address. Deactivated in this implementation..

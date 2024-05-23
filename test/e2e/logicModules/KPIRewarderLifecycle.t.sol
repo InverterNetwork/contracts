@@ -158,9 +158,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(rewardToken)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(rewardToken))
             )
         );
 
@@ -168,9 +166,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
 
@@ -178,9 +174,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -197,8 +191,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
                     USDC_address,
                     ooV3_address,
                     ASSERTION_LIVENESS
-                ),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                )
             )
         );
     }

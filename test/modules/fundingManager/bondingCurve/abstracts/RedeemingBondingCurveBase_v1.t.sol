@@ -245,8 +245,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.startPrank(non_owner_address);
         {
             vm.expectRevert(
-                IRedeemingBondingCurveBase_v1
-                    .Module__RedeemingBondingCurveBase__InvalidDepositAmount
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__InvalidDepositAmount
                     .selector
             );
             bondingCurveFundingManager.sell(0, 0);
@@ -291,8 +291,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         vm.startPrank(seller);
         vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase__InsufficientOutputAmount
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InsufficientOutputAmount
                 .selector
         );
         bondingCurveFundingManager.sell(amount, minAmountOut);
@@ -373,25 +373,22 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(issuanceToken.totalSupply(), protocolIssuanceFeeAmount);
     }
 
-    /* Test openSell and _openSell function
+    /* Test openSell function
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module modifier tests)
         └── when caller is the Orchestrator owner
                └── when sell functionality is already open
-                │      └── it should revert
+                │      └── it should stay as is
+                │      └── it should reemit an eventvert
                 └── when sell functionality is not open
                         ├── it should open the sell functionality
                         └── it should emit an event
     */
-    function testOpenSell_FailsIfAlreadyOpen()
-        public
-        callerIsOrchestratorOwner
-    {
-        vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase__SellingAlreadyOpen
-                .selector
-        );
+    function testOpenSell_Idempotence() public callerIsOrchestratorOwner {
+        assertEq(bondingCurveFundingManager.sellIsOpen(), true);
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit SellingEnabled();
+
         bondingCurveFundingManager.openSell();
     }
 
@@ -410,12 +407,13 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
     }
 
-    /* Test closeSell and _closeSell function
+    /* Test closeSell function
         ├── when caller is not the Orchestrator owner
         │      └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator owner
                └── when sell functionality is already closed
-                │      └── it should revert -> 
+                │      └── it should stay as is
+                │      └── it should reemit an eventvert
                 └── when sell functionality is not closed
                         ├── it should close the sell functionality
                         └── it should emit an event
@@ -425,14 +423,19 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         public
         callerIsOrchestratorOwner
     {
+        assertEq(bondingCurveFundingManager.sellIsOpen(), true);
+
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit SellingDisabled();
         bondingCurveFundingManager.closeSell();
 
-        vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase__SellingAlreadyClosed
-                .selector
-        );
+        assertEq(bondingCurveFundingManager.sellIsOpen(), false);
+
+        vm.expectEmit(address(bondingCurveFundingManager));
+        emit SellingDisabled();
         bondingCurveFundingManager.closeSell();
+
+        assertEq(bondingCurveFundingManager.sellIsOpen(), false);
     }
 
     function testCloseSell() public callerIsOrchestratorOwner {
@@ -465,8 +468,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     {
         vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase__InvalidFeePercentage
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidFeePercentage
                 .selector
         );
         bondingCurveFundingManager.setSellFee(_fee);
@@ -502,8 +505,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         uint depositAmount = 0;
 
         vm.expectRevert(
-            IRedeemingBondingCurveBase_v1
-                .Module__RedeemingBondingCurveBase__InvalidDepositAmount
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidDepositAmount
                 .selector
         );
         bondingCurveFundingManager.call_calculateSaleReturn(depositAmount);

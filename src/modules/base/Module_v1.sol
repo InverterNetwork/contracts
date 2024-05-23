@@ -57,11 +57,6 @@ abstract contract Module_v1 is
     //
     // Variables are prefixed with `__Module_`.
 
-    /// @dev same thing as the initializer modifier but for the init2 function
-    ///
-    /// @custom:invariant Not mutated after the init2 call
-    bool private __Module_initialization;
-
     /// @dev The module's orchestrator instance.
     ///
     /// @custom:invariant Not mutated after initialization.
@@ -82,46 +77,27 @@ abstract contract Module_v1 is
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Orchestrator_v1.
     modifier onlyOrchestratorOwner() {
-        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
-
-        bytes32 ownerRole = authorizer.getOwnerRole();
-
-        if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
-        }
+        _checkRoleModifier(
+            __Module_orchestrator.authorizer().getOwnerRole(), _msgSender()
+        );
         _;
     }
 
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Orchestrator_v1 or the Orchestrator_v1's manager.
     modifier onlyOrchestratorOwnerOrManager() {
-        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
-
-        bytes32 ownerRole = authorizer.getOwnerRole();
-        bytes32 managerRole = authorizer.getManagerRole();
-
-        if (
-            authorizer.hasRole(ownerRole, _msgSender())
-                || authorizer.hasRole(managerRole, _msgSender())
-        ) {
-            _;
-        } else {
-            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
-        }
+        _checkOnlyOrchestratorOwnerOrManagerModifier();
+        _;
     }
 
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
-        if (
-            !__Module_orchestrator.authorizer().hasModuleRole(role, _msgSender())
-        ) {
-            revert Module__CallerNotAuthorized(
-                __Module_orchestrator.authorizer().generateRoleId(
-                    address(this), role
-                ),
-                _msgSender()
-            );
-        }
+        _checkRoleModifier(
+            __Module_orchestrator.authorizer().generateRoleId(
+                address(this), role
+            ),
+            _msgSender()
+        );
         _;
     }
 
@@ -130,25 +106,7 @@ abstract contract Module_v1 is
     ///      `__Module_` variables.
     /// @dev Note to use function prefix `__Module_`.
     modifier onlyOrchestrator() {
-        if (_msgSender() != address(__Module_orchestrator)) {
-            revert Module__OnlyCallableByOrchestrator();
-        }
-        _;
-    }
-
-    /// @dev same function as OZ initializer, but for the init2 function
-    modifier initializer2() {
-        if (__Module_initialization) {
-            revert Module__CannotCallInit2Again();
-        }
-        __Module_initialization = true;
-        _;
-    }
-
-    modifier validDependencyData(bytes memory dependencyData) {
-        if (!_dependencyInjectionRequired(dependencyData)) {
-            revert Module__NoDependencyOrMalformedDependencyData();
-        }
+        _onlyOrchestratorModifier();
         _;
     }
 
@@ -195,13 +153,6 @@ abstract contract Module_v1 is
         );
     }
 
-    function init2(IOrchestrator_v1 orchestrator_, bytes memory dependencyData)
-        external
-        virtual
-        initializer2
-        validDependencyData(dependencyData)
-    {}
-
     //--------------------------------------------------------------------------
     // Public View Functions
 
@@ -237,32 +188,32 @@ abstract contract Module_v1 is
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.grantRoleFromModule(role, target);
+        __Module_orchestrator.authorizer().grantRoleFromModule(role, target);
     }
 
     function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.grantRoleFromModuleBatched(role, targets);
+        __Module_orchestrator.authorizer().grantRoleFromModuleBatched(
+            role, targets
+        );
     }
 
     function revokeModuleRole(bytes32 role, address target)
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.revokeRoleFromModule(role, target);
+        __Module_orchestrator.authorizer().revokeRoleFromModule(role, target);
     }
 
     function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
         onlyOrchestratorOwner
     {
-        IAuthorizer_v1 roleAuthorizer = __Module_orchestrator.authorizer();
-        roleAuthorizer.revokeRoleFromModuleBatched(role, targets);
+        __Module_orchestrator.authorizer().revokeRoleFromModuleBatched(
+            role, targets
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -312,37 +263,40 @@ abstract contract Module_v1 is
         internal
         returns (bool, bytes memory)
     {
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) =
-            __Module_orchestrator.executeTxFromModule(address(this), data);
-
         // Note that there is no check whether the orchestrator callback succeeded.
         // This responsibility is delegated to the caller, i.e. downstream
         // module implementation.
         // However, the {IModule_v1} interface defines a generic error type for
         // failed orchestrator callbacks that can be used to prevent different
         // custom error types in each implementation.
-        return (ok, returnData);
+        return __Module_orchestrator.executeTxFromModule(address(this), data);
     }
 
-    function decoder(bytes memory data)
-        public
-        pure
-        returns (bool requirement)
-    {
-        (requirement,) = abi.decode(data, (bool, string[]));
+    function _checkRoleModifier(bytes32 role, address addr) internal view {
+        if (!__Module_orchestrator.authorizer().hasRole(role, addr)) {
+            revert Module__CallerNotAuthorized(role, addr);
+        }
     }
 
-    function _dependencyInjectionRequired(bytes memory dependencyData)
-        internal
-        view
-        returns (bool)
-    {
-        try this.decoder(dependencyData) returns (bool) {
-            return this.decoder(dependencyData);
-        } catch {
-            return false;
+    function _checkOnlyOrchestratorOwnerOrManagerModifier() internal view {
+        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
+
+        bytes32 ownerRole = authorizer.getOwnerRole();
+        bytes32 managerRole = authorizer.getManagerRole();
+
+        if (
+            authorizer.hasRole(ownerRole, _msgSender())
+                || authorizer.hasRole(managerRole, _msgSender())
+        ) {
+            return;
+        } else {
+            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
+        }
+    }
+
+    function _onlyOrchestratorModifier() internal view {
+        if (_msgSender() != address(__Module_orchestrator)) {
+            revert Module__OnlyCallableByOrchestrator();
         }
     }
 

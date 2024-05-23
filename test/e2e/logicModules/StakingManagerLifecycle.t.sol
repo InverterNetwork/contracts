@@ -81,9 +81,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(rewardToken)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(rewardToken))
             )
         );
 
@@ -91,9 +89,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
 
@@ -101,9 +97,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -111,9 +105,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         setUpLM_PC_Staking_v1();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                LM_PC_Staking_v1Metadata,
-                abi.encode(stakingToken),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                LM_PC_Staking_v1Metadata, abi.encode(stakingToken)
             )
         );
     }

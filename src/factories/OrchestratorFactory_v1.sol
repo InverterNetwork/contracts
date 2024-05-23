@@ -174,35 +174,6 @@ contract OrchestratorFactory_v1 is
             IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );
 
-        // Second round of module initializations to satisfy cross-referencing between modules
-        // This can be run post the orchestrator initialization. This ensures a few more variables are
-        // available that are set during the orchestrator init function.
-        for (uint i; i < modulesLen; ++i) {
-            if (_dependencyInjectionRequired(moduleConfigs[i].dependencyData)) {
-                IModule_v1(modules[i]).init2(
-                    IOrchestrator_v1(clone), moduleConfigs[i].dependencyData
-                );
-            }
-        }
-
-        // Also, running the init2 functionality on the compulsory modules excluded from the modules array
-        if (_dependencyInjectionRequired(fundingManagerConfig.dependencyData)) {
-            IModule_v1(fundingManager).init2(
-                IOrchestrator_v1(clone), fundingManagerConfig.dependencyData
-            );
-        }
-        if (_dependencyInjectionRequired(authorizerConfig.dependencyData)) {
-            IModule_v1(authorizer).init2(
-                IOrchestrator_v1(clone), authorizerConfig.dependencyData
-            );
-        }
-        if (_dependencyInjectionRequired(paymentProcessorConfig.dependencyData))
-        {
-            IModule_v1(paymentProcessor).init2(
-                IOrchestrator_v1(clone), paymentProcessorConfig.dependencyData
-            );
-        }
-
         return IOrchestrator_v1(clone);
     }
 
@@ -218,26 +189,6 @@ contract OrchestratorFactory_v1 is
 
     function getOrchestratorIDCounter() external view returns (uint) {
         return _orchestratorIdCounter;
-    }
-
-    function decoder(bytes memory data)
-        public
-        pure
-        returns (bool requirement)
-    {
-        (requirement,) = abi.decode(data, (bool, string[]));
-    }
-
-    function _dependencyInjectionRequired(bytes memory dependencyData)
-        internal
-        view
-        returns (bool)
-    {
-        try this.decoder(dependencyData) returns (bool) {
-            return this.decoder(dependencyData);
-        } catch {
-            return false;
-        }
     }
 
     //--------------------------------------------------------------------------

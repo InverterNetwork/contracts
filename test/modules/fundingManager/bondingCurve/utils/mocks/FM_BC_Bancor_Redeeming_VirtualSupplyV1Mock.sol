@@ -10,7 +10,8 @@ import {IOrchestrator_v1} from
 // SuT
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    FM_BC_Tools
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -54,21 +55,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         _setIssuanceToken(_newIssuanceToken);
     }
 
-    function call_staticPricePPM(
-        uint _issuanceSupply,
-        uint _collateralSupply,
-        uint32 _reserveRatio
-    ) external pure returns (uint) {
-        return
-            _staticPricePPM(_issuanceSupply, _collateralSupply, _reserveRatio);
-    }
-
     function call_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,
         uint8 _requiredDecimals
     ) external pure returns (uint) {
-        return _convertAmountToRequiredDecimal(
+        return FM_BC_Tools._convertAmountToRequiredDecimal(
             _amount, _tokenDecimals, _requiredDecimals
         );
     }
@@ -83,11 +75,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         view
         returns (uint)
     {
-        uint decimalConvertedVirtualIssuanceSupply =
-        _convertAmountToRequiredDecimal(
+        return FM_BC_Tools._convertAmountToRequiredDecimal(
             virtualIssuanceSupply, issuanceTokenDecimals, 18
         );
-        return decimalConvertedVirtualIssuanceSupply;
     }
 
     // Note: this function returns the virtual collateral supply in the same format it will be fed to the Bancor formula
@@ -96,11 +86,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         view
         returns (uint)
     {
-        uint decimalConvertedVirtualCollateralSupply =
-        _convertAmountToRequiredDecimal(
+        return FM_BC_Tools._convertAmountToRequiredDecimal(
             virtualCollateralSupply, collateralTokenDecimals, 18
         );
-        return decimalConvertedVirtualCollateralSupply;
     }
 
     function call_calculateNetAndSplitFees(
