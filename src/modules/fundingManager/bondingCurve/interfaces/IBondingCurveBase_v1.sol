@@ -5,12 +5,6 @@ interface IBondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Function is only callable if buying is not already enabled.
-    error Module__BondingCurveBase__BuyingAlreadyOpen();
-
-    /// @notice Function is only callable if buying is not already closed.
-    error Module__BondingCurveBase__BuyingAlreadyClosed();
-
     /// @notice Percentage amount is bigger than 100%, i.e. 10_000
     error Module__BondingCurveBase__InvalidFeePercentage();
 

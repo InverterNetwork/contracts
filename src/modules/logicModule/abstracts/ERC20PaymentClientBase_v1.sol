@@ -8,7 +8,11 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Module_v1, ContextUpgradeable} from "src/modules/base/Module_v1.sol";
+import {
+    Module_v1,
+    ERC165,
+    ContextUpgradeable
+} from "src/modules/base/Module_v1.sol";
 import {
     IERC20PaymentClientBase_v1,
     IPaymentProcessor_v1
@@ -71,7 +75,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     PaymentOrder[] internal _orders;
 
     /// @dev The current cumulative amount of tokens outstanding.
-    uint internal _outstandingTokenAmount;
+    mapping(address => uint) internal _outstandingTokenAmounts;
 
     //--------------------------------------------------------------------------
     // Internal Mutating Functions
@@ -84,12 +88,14 @@ abstract contract ERC20PaymentClientBase_v1 is
         validPaymentOrder(order)
     {
         // Add order's token amount to current outstanding amount.
-        _outstandingTokenAmount += order.amount;
+        _outstandingTokenAmounts[order.paymentToken] += order.amount;
 
         // Add new order to list of oustanding orders.
         _orders.push(order);
 
-        emit PaymentOrderAdded(order.recipient, order.amount);
+        emit PaymentOrderAdded(
+            order.recipient, order.paymentToken, order.amount
+        );
     }
 
     /// @dev Adds a set of new {PaymentOrder}s to the list of outstanding
@@ -98,24 +104,9 @@ abstract contract ERC20PaymentClientBase_v1 is
     function _addPaymentOrders(PaymentOrder[] memory orders) internal virtual {
         uint orderAmount = orders.length;
 
-        PaymentOrder memory currentOrder;
-
-        uint totalTokenAmount;
         for (uint i; i < orderAmount; ++i) {
-            currentOrder = orders[i];
-            _ensureValidPaymentOrder(currentOrder);
-
-            // Add order's amount to total amount of new orders.
-            totalTokenAmount += currentOrder.amount;
-
-            // Add new order to list of oustanding orders.
-            _orders.push(currentOrder);
-
-            emit PaymentOrderAdded(currentOrder.recipient, currentOrder.amount);
+            _addPaymentOrder(orders[i]);
         }
-
-        // Add total orders' amount to current outstanding amount.
-        _outstandingTokenAmount += totalTokenAmount;
     }
 
     //--------------------------------------------------------------------------
@@ -132,15 +123,20 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function outstandingTokenAmount() external view virtual returns (uint) {
-        return _outstandingTokenAmount;
+    function outstandingTokenAmount(address _token)
+        external
+        view
+        virtual
+        returns (uint)
+    {
+        return _outstandingTokenAmounts[_token];
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
     function collectPaymentOrders()
         external
         virtual
-        returns (PaymentOrder[] memory, uint)
+        returns (PaymentOrder[] memory, address[] memory, uint[] memory)
     {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
@@ -149,31 +145,57 @@ abstract contract ERC20PaymentClientBase_v1 is
         }
 
         // Create a copy of all orders to return.
-        uint totalAmount;
         uint ordersLength = _orders.length;
+        uint tokenCount;
+
+        address[] memory tokens_buffer = new address[](ordersLength);
+        uint[] memory amounts_buffer = new uint[](ordersLength);
         PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);
+
         for (uint i; i < ordersLength; ++i) {
             copy[i] = _orders[i];
-            totalAmount += copy[i].amount;
+            bool found;
+            for (uint j; j < tokenCount; ++j) {
+                if (tokens_buffer[j] == copy[i].paymentToken) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                // if the token is not in the list, add it
+                tokens_buffer[tokenCount] = copy[i].paymentToken;
+                amounts_buffer[tokenCount] =
+                    _outstandingTokenAmounts[copy[i].paymentToken];
+                tokenCount++;
+            }
         }
 
         // Delete all outstanding orders.
         delete _orders;
 
-        // Ensure payment processor is able to fetch the tokens from address(this).
-        _ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), totalAmount);
+        // Prepare the arrays that will be sent back
+        address[] memory tokens = new address[](tokenCount);
+        uint[] memory amounts = new uint[](tokenCount);
 
-        //Ensure that the Client will have sufficient funds.
-        // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
-        _ensureTokenBalance(_outstandingTokenAmount);
+        for (uint i; i < tokenCount; ++i) {
+            tokens[i] = tokens_buffer[i];
+            amounts[i] = amounts_buffer[i];
+
+            // Ensure payment processor is able to fetch the tokens from address(this).
+            _ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), tokens[i]);
+
+            //Ensure that the Client will have sufficient funds.
+            // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
+            _ensureTokenBalance(tokens[i]);
+        }
 
         // Return copy of orders and orders' total token amount to payment
         // processor.
-        return (copy, _outstandingTokenAmount);
+        return (copy, tokens, amounts);
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function amountPaid(uint amount) external virtual {
+    function amountPaid(address token, uint amount) external virtual {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
         {
@@ -181,7 +203,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         }
 
         // reduce outstanding token amount by the given amount
-        _outstandingTokenAmount -= amount;
+        _outstandingTokenAmounts[token] -= amount;
     }
 
     //--------------------------------------------------------------------------
@@ -199,49 +221,60 @@ abstract contract ERC20PaymentClientBase_v1 is
         }
     }
 
+    function _ensureValidToken(address token) private pure {
+        if (token == address(0)) {
+            revert Module__ERC20PaymentClientBase__InvalidToken();
+        }
+    }
+
     function _ensureValidPaymentOrder(PaymentOrder memory order) private view {
-        if (order.amount == 0) {
-            revert Module__ERC20PaymentClientBase__InvalidAmount();
-        }
-        if (order.recipient == address(0) || order.recipient == address(this)) {
-            revert Module__ERC20PaymentClientBase__InvalidRecipient();
-        }
+        _ensureValidRecipient(order.recipient);
+        _ensureValidToken(order.paymentToken);
+        _ensureValidAmount(order.amount);
     }
 
     //--------------------------------------------------------------------------
     // {ERC20PaymentClientBase_v1} Function Implementations
 
-    /// @dev Ensures `amount` of payment tokens exist in address(this).
-    function _ensureTokenBalance(uint amount) internal virtual {
-        uint currentFunds = __Module_orchestrator.fundingManager().token()
-            .balanceOf(address(this));
+    /// @dev Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to address(this). If the token is not the FundingManager token, it will only check if the local balance is sufficient.
+    function _ensureTokenBalance(address token) internal virtual {
+        uint amount = _outstandingTokenAmounts[token];
+        uint currentFunds = IERC20(token).balanceOf(address(this));
 
         // If current funds are not enough
         if (currentFunds < amount) {
-            // Trigger callback from orchestrator to transfer tokens
-            // to address(this).
-            bool ok;
-            (ok, /*returnData*/ ) = __Module_orchestrator.executeTxFromModule(
-                address(__Module_orchestrator.fundingManager()),
-                abi.encodeCall(
-                    IFundingManager_v1.transferOrchestratorToken,
-                    (address(this), amount - currentFunds)
-                )
-            );
+            // check if the token is the FudningManager token and transfer it
+            if (
+                token == address(__Module_orchestrator.fundingManager().token())
+            ) {
+                // Trigger callback from orchestrator to transfer tokens
+                // to address(this).
+                bool ok;
+                (ok, /*returnData*/ ) = __Module_orchestrator
+                    .executeTxFromModule(
+                    address(__Module_orchestrator.fundingManager()),
+                    abi.encodeCall(
+                        IFundingManager_v1.transferOrchestratorToken,
+                        (address(this), amount - currentFunds)
+                    )
+                );
 
-            if (!ok) {
-                revert Module__ERC20PaymentClientBase__TokenTransferFailed();
+                if (!ok) {
+                    revert Module__ERC20PaymentClientBase__TokenTransferFailed();
+                }
+            } else {
+                revert Module__ERC20PaymentClientBase__InsufficientFunds(token);
             }
         }
     }
 
     /// @dev Ensures `amount` of token allowance for payment processor(s).
-    function _ensureTokenAllowance(IPaymentProcessor_v1 spender, uint amount)
+    function _ensureTokenAllowance(IPaymentProcessor_v1 spender, address token)
         internal
         virtual
     {
-        __Module_orchestrator.fundingManager().token().safeIncreaseAllowance(
-            address(spender), amount
+        IERC20(token).forceApprove(
+            address(spender), _outstandingTokenAmounts[token]
         );
     }
 

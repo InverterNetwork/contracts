@@ -26,9 +26,6 @@ import {
 } from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 contract LM_PC_RecurringV1Test is ModuleTest {
-    bool hasDependency;
-    string[] dependencies = new string[](0);
-
     // SuT
     LM_PC_RecurringPayments_v1 recurringPaymentManager;
 
@@ -103,33 +100,6 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         recurringPaymentManager.init(_orchestrator, _METADATA, bytes(""));
-    }
-
-    function testInit2RecurringPaymentManager() public {
-        // Attempting to call the init2 function with malformed data
-        // SHOULD FAIL
-        vm.expectRevert(
-            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
-        );
-        recurringPaymentManager.init2(_orchestrator, abi.encode(123));
-
-        // Calling init2 for the first time with no dependency
-        // SHOULD FAIL
-        bytes memory dependencyData = abi.encode(hasDependency, dependencies);
-        vm.expectRevert(
-            IModule_v1.Module__NoDependencyOrMalformedDependencyData.selector
-        );
-        recurringPaymentManager.init2(_orchestrator, dependencyData);
-
-        // Calling init2 for the first time with dependency = true
-        // SHOULD PASS
-        dependencyData = abi.encode(true, dependencies);
-        recurringPaymentManager.init2(_orchestrator, dependencyData);
-
-        // Attempting to call the init2 function again.
-        // SHOULD FAIL
-        vm.expectRevert(IModule_v1.Module__CannotCallInit2Again.selector);
-        recurringPaymentManager.init2(_orchestrator, dependencyData);
     }
 
     //--------------------------------------------------------------------------
@@ -354,21 +324,21 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         //Fund Fundingmanager
         _token.mint(address(_fundingManager), amount);
 
-        // Fill list again with milestones.
+        // Fill list again with recurring payments.
         for (uint i; i < amount; ++i) {
             recurringPaymentManager.addRecurringPayment(
                 1, currentEpoch, address(0xBEEF)
             );
         }
 
-        // Remove milestones from the back, i.e. highest milestone id, until
+        // Remove recurring payments from the back, i.e. highest recurring payment id, until
         // list is empty.
         for (uint i; i < amount; ++i) {
             // Note that id's start at amount, because they have been created before.
             uint prevId = 2 * amount - i - 1;
             uint id = 2 * amount - i;
 
-            // Note that removing the last milestone requires the sentinel as
+            // Note that removing the last recurring payment requires the sentinel as
             // prevId.
             if (prevId == amount) {
                 prevId = _SENTINEL;

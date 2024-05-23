@@ -51,6 +51,11 @@ contract FeeManagerV1Mock is IFeeManager_v1 {
     // Setter Functions
 
     //---------------------------
+    // MaxFee
+
+    function setMaxFee(uint _maxFee) external {}
+
+    //---------------------------
     // Treasuries
 
     function setDefaultProtocolTreasury(address _defaultProtocolTreasury)

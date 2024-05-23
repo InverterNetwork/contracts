@@ -82,8 +82,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                     issuanceTokenAdmin,
                     bc_properties,
                     token
-                ),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                )
             )
         );
 
@@ -91,9 +90,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
 
@@ -101,9 +98,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -111,9 +106,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         setUpBountyManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata,
-                bytes(""),
-                abi.encode(true, EMPTY_DEPENDENCY_LIST)
+                bountyManagerMetadata, bytes("")
             )
         );
     }
@@ -184,7 +177,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         }
         vm.stopPrank();
 
-        // If the orchestrator spends half of the deposited tokens in the fundingmanager, i.e. for a milestone,
+        // If the orchestrator spends half of the deposited tokens in the fundingmanager, i.e. for a logic module,
         // alice and bob are still able to withdraw their respective leftover
         // of the tokens.
         // Note that we simulate orchestrator spending by just burning tokens.

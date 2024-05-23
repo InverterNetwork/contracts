@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import "../../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v1, ERC165} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -29,8 +29,6 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract SetupInvestableWorkstream is Test, DeploymentScript {
     //ScriptConstants scriptConstants = new ScriptConstants();
-    bool hasDependency;
-    string[] dependencies = new string[](0);
 
     // ========================================================================
     // ENVIRONMENT VARIABLES OR CONSTANTS
@@ -52,18 +50,18 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // ========================================================================
     // BONDING CURVE PARAMETERS
 
-    string CURVE_TOKEN_NAME = "Conding Burve Token";
+    string CURVE_TOKEN_NAME = "Bonding Curve Issuance Token";
     string CURVE_TOKEN_SYMBOL = "BCRG";
     uint8 CURVE_TOKEN_DECIMALS = 18;
 
-    uint32 RESERVE_RATIO_FOR_BUYING = 330_000;
-    uint32 RESERVE_RATIO_FOR_SELLING = 330_000;
+    uint32 RESERVE_RATIO_FOR_BUYING = 333_333;
+    uint32 RESERVE_RATIO_FOR_SELLING = 333_333;
     uint BUY_FEE = 0;
     uint SELL_FEE = 100;
     bool BUY_IS_OPEN = true;
     bool SELL_IS_OPEN = false;
-    uint INITIAL_ISSUANCE_SUPPLY = 1;
-    uint INITIAL_COLLATERAL_SUPPLY = 1;
+    uint INITIAL_ISSUANCE_SUPPLY = 100;
+    uint INITIAL_COLLATERAL_SUPPLY = 33;
 
     // ========================================================================
 
@@ -87,8 +85,16 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
             formula = new BancorFormula();
-            //!!!! This is not a real ERC20 implementation. Befor going into production change this deployment!!!!
-            collateralToken = new ERC20Mock("MOCK", "MCK");
+            console2.log(
+                "\t-Bancor Bonding Curve Formula deployed at address: %s ",
+                address(formula)
+            );
+            //!!!! This is not a real ERC20 implementation. Before going into production change this deployment!!!!
+            collateralToken = new ERC20Mock("Inverter USD", "iUSD");
+            console2.log(
+                "\t-Inverter Mock USD Deployed at address: %s ",
+                address(collateralToken)
+            );
         }
         vm.stopBroadcast();
 
@@ -134,35 +140,28 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(
                     buf_issuanceToken,
+                    orchestratorOwner,
                     buf_bondingCurveProperties,
                     address(collateralToken)
-                ),
-                abi.encode(hasDependency, dependencies)
+                )
             );
 
         // Payment Processor: only Metadata
         IOrchestratorFactory_v1.ModuleConfig memory
             paymentProcessorFactoryConfig = IOrchestratorFactory_v1
-                .ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(hasDependency, dependencies)
-            );
+                .ModuleConfig(simplePaymentProcessorMetadata, bytes(""));
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             roleAuthorizerMetadata,
-            abi.encode(orchestratorOwner, orchestratorOwner),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(orchestratorOwner, orchestratorOwner)
         );
 
         // Bounty Manager:
         IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            bountyManagerMetadata,
-            abi.encode(""),
-            abi.encode(hasDependency, dependencies)
+            bountyManagerMetadata, abi.encode("")
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.
@@ -194,29 +193,23 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             address(IOrchestrator_v1(_orchestrator).fundingManager().token());
         assertEq(orchestratorToken, address(collateralToken));
 
-        // Now we need to find the MilestoneManager. ModuleManager has a function called `listModules` that returns a list of
-        // active modules, let's use that to get the address of the MilestoneManager.
+        // Now we need to find the BountyManager. ModuleManager has a function called `listModules` that returns a list of
+        // active modules, let's use that to get the address of the BountyManager.
 
-        // TODO: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
+        LM_PC_Bounties_v1 orchestratorCreatedBountyManager;
 
-        address[] memory moduleAddresses =
-            IOrchestrator_v1(_orchestrator).listModules();
-        uint lenModules = moduleAddresses.length;
-        address orchestratorCreatedBountyManagerAddress;
-
-        for (uint i; i < lenModules;) {
-            try ILM_PC_Bounties_v1(moduleAddresses[i]).isExistingBountyId(0)
-            returns (bool) {
-                orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
+        address[] memory modulesList = _orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            if (
+                ERC165(modulesList[i]).supportsInterface(
+                    type(ILM_PC_Bounties_v1).interfaceId
+                )
+            ) {
+                orchestratorCreatedBountyManager =
+                    LM_PC_Bounties_v1(modulesList[i]);
                 break;
-            } catch {
-                i++;
             }
         }
-
-        LM_PC_Bounties_v1 orchestratorCreatedBountyManager =
-            LM_PC_Bounties_v1(orchestratorCreatedBountyManagerAddress);
-
         assertEq(
             address(orchestratorCreatedBountyManager.orchestrator()),
             address(_orchestrator)

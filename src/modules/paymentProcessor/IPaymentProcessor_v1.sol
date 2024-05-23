@@ -30,6 +30,7 @@ interface IPaymentProcessor_v1 {
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
+        address indexed token,
         uint amount,
         uint createdAt,
         uint dueTo
@@ -57,7 +58,4 @@ interface IPaymentProcessor_v1 {
     /// @param client The {IERC20PaymentClientBase_v1} instance to process its to payments.
     function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
         external;
-
-    /// @notice Returns the IERC20 token the payment processor can process.
-    function token() external view returns (IERC20);
 }

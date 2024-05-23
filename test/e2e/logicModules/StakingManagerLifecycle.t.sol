@@ -19,7 +19,11 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {FM_Rebasing_v1} from
     "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
 // SuT
-import {LM_PC_Staking_v1, ILM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
+import {
+    LM_PC_Staking_v1,
+    ILM_PC_Staking_v1,
+    ERC165
+} from "@lm/LM_PC_Staking_v1.sol";
 
 // Mocks
 //import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -77,9 +81,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(rewardToken)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(rewardToken))
             )
         );
 
@@ -87,9 +89,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
 
@@ -97,9 +97,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -107,9 +105,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         setUpLM_PC_Staking_v1();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                LM_PC_Staking_v1Metadata,
-                abi.encode(stakingToken),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                LM_PC_Staking_v1Metadata, abi.encode(stakingToken)
             )
         );
     }
@@ -135,13 +131,13 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Staking_v1(modulesList[i]).earned(address(1)) returns (
-                uint
+            if (
+                ERC165(modulesList[i]).supportsInterface(
+                    type(ILM_PC_Staking_v1).interfaceId
+                )
             ) {
                 stakingManager = LM_PC_Staking_v1(modulesList[i]);
                 break;
-            } catch {
-                continue;
             }
         }
 

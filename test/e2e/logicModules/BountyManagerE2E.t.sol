@@ -10,7 +10,9 @@ import {
 
 // SuT
 import {
-    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
+    LM_PC_Bounties_v1,
+    ILM_PC_Bounties_v1,
+    ERC165
 } from "@lm/LM_PC_Bounties_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
@@ -46,9 +48,7 @@ contract BountyManagerE2E is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
 
@@ -56,9 +56,7 @@ contract BountyManagerE2E is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
 
@@ -66,9 +64,7 @@ contract BountyManagerE2E is E2ETest {
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -76,9 +72,7 @@ contract BountyManagerE2E is E2ETest {
         setUpBountyManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata,
-                bytes(""),
-                abi.encode(true, EMPTY_DEPENDENCY_LIST)
+                bountyManagerMetadata, bytes("")
             )
         );
     }
@@ -101,15 +95,15 @@ contract BountyManagerE2E is E2ETest {
 
         LM_PC_Bounties_v1 bountyManager;
 
-        // Find LM_PC_Bounties_v1
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
-            returns (bool) {
+            if (
+                ERC165(modulesList[i]).supportsInterface(
+                    type(ILM_PC_Bounties_v1).interfaceId
+                )
+            ) {
                 bountyManager = LM_PC_Bounties_v1(modulesList[i]);
                 break;
-            } catch {
-                continue;
             }
         }
 

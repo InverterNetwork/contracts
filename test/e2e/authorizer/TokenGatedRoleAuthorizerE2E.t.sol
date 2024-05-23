@@ -45,9 +45,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
 
@@ -56,8 +54,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                abi.encode(address(this), address(this))
             )
         );
 
@@ -65,9 +62,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -75,9 +70,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         setUpBountyManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata,
-                bytes(""),
-                abi.encode(true, EMPTY_DEPENDENCY_LIST)
+                bountyManagerMetadata, bytes("")
             )
         );
     }

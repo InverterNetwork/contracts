@@ -158,9 +158,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(rewardToken)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(rewardToken))
             )
         );
 
@@ -168,9 +166,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                roleAuthorizerMetadata, abi.encode(address(this), address(this))
             )
         );
 
@@ -178,9 +174,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -197,8 +191,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
                     USDC_address,
                     ooV3_address,
                     ASSERTION_LIVENESS
-                ),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                )
             )
         );
     }
@@ -220,13 +213,11 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
         // Get the kpiRewarder module
-        bytes4 LM_PC_KPIRewarder_v1InterfaceId =
-            type(ILM_PC_KPIRewarder_v1).interfaceId;
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165(modulesList[i]).supportsInterface(
-                    LM_PC_KPIRewarder_v1InterfaceId
+                    type(ILM_PC_KPIRewarder_v1).interfaceId
                 )
             ) {
                 kpiRewarder = LM_PC_KPIRewarder_v1(modulesList[i]);
@@ -303,7 +294,6 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
             (REWARD_DEPOSIT_AMOUNT - totalDistributed)
         );
 
-        // TODO: Fix Staking precision bug
         assertApproxEqAbs(
             totalDistributed, totalExpectedRewardsDistributed, 1e6
         );

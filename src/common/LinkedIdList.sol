@@ -225,7 +225,7 @@ library LinkedIdList {
 
         //Re-Add id in list:
 
-        //Get the Id that should come after the milestone with idToPositionAfter
+        //Get the Id that should come after with idToPositionAfter
         nextIdInLine = self.list[idToPositionAfter];
 
         // Add id inbetween the targeted id (idToPositionAfter) and the originally following id (nextIdInLine)

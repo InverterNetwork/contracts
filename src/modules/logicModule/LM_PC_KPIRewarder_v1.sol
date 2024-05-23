@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
@@ -42,7 +40,7 @@ contract LM_PC_KPIRewarder_v1 is
         public
         view
         virtual
-        override(ERC20PaymentClientBase_v1, Module_v1)
+        override(LM_PC_Staking_v1, Module_v1)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_KPIRewarder_v1).interfaceId

@@ -98,7 +98,7 @@ interface IGovernor_v1 {
     function init(
         address communityMultisig,
         address teamMultisig,
-        uint timelockPeriod //@note should we add feeManager here?
+        uint timelockPeriod
     ) external;
 
     //--------------------------------------------------------------------------
@@ -122,6 +122,12 @@ interface IGovernor_v1 {
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
     /// @param newFeeManager The address of the new FeeManager
     function setFeeManager(address newFeeManager) external;
+
+    /// @notice Sets the maximum fee percentage that can be assigned in the linked FeeManager
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev The given max fee can not be higher than the BPS
+    /// @param maxFee The max Fee in relation to the BPS
+    function setFeeManagerMaxFee(uint maxFee) external;
 
     /// @notice Sets the default protocol treasury address in the linked FeeManager
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE

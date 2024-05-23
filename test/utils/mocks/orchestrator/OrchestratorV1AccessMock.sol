@@ -136,12 +136,6 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         address recurringPaymentManager
     ) external view returns (bool) {}
 
-    function verifyAddressIsMilestoneManager(address milestoneManagerAddress)
-        external
-        view
-        returns (bool)
-    {}
-
     function verifyAddressIsFundingManager(address fundingManagerAddress)
         external
         view

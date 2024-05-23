@@ -12,9 +12,6 @@ import {IOrchestratorFactory_v1} from
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 
 // Modules
-
-//TODO: rename
-
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
@@ -28,8 +25,8 @@ import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
-import {VotingRoleManager_v1} from "src/modules/utils/VotingRoleManager_v1.sol";
-import {MetadataManager_v1} from "src/modules/utils/MetadataManager_v1.sol";
+import {AUT_EXT_VotingRoles_v1} from
+    "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
 
 // Beacon
 import {
@@ -48,9 +45,6 @@ contract E2EModuleRegistry is Test {
 
     address public DEFAULT_BEACON_OWNER = address(0x3BEAC0);
 
-    bool constant HAS_NO_DEPENDENCIES = false;
-    string[] EMPTY_DEPENDENCY_LIST = new string[](0);
-
     //--------------------------------------------------------------------------
     // General Module Information
     //--------------------------------------------------------------------------
@@ -68,7 +62,7 @@ contract E2EModuleRegistry is Test {
     //      IOrchestratorFactory_v1.ModuleConfig(
     //          moduleMetadata,
     //          abi.encode(address(this)),
-    //          abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+    //
     //      );
     // */
     // Followed by the  setUpModule() function.
@@ -94,7 +88,7 @@ contract E2EModuleRegistry is Test {
         IOrchestratorFactory_v1.ModuleConfig(
             rebasingFundingManagerMetadata,
             abi.encode(address(token)),
-            abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+             
         )
     */
 
@@ -163,8 +157,8 @@ contract E2EModuleRegistry is Test {
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(issuanceToken, bc_properties, token),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                abi.encode(issuanceToken, bc_properties, token)
+                 
             )
         );
     */
@@ -212,8 +206,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig roleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         roleAuthorizerMetadata,
-        abi.encode(address(this), address(this)),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(address(this), address(this))  
     );
     */
     function setUpRoleAuthorizer() internal {
@@ -255,8 +248,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         tokenRoleAuthorizerMetadata,
-        abi.encode(address(this), address(this)),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(address(this), address(this))  
     ); 
     */
 
@@ -299,8 +291,7 @@ contract E2EModuleRegistry is Test {
      IOrchestratorFactory_v1.ModuleConfig simplePaymentProcessorFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         simplePaymentProcessorMetadata,
-        bytes(""),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        bytes("")  
     );
     */
     function setUpSimplePaymentProcessor() internal {
@@ -342,7 +333,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig(
         streamingPaymentProcessorMetadata,
         bytes(""),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+         HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
     );
     */
     function setUpStreamingPaymentProcessor() internal {
@@ -385,8 +376,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig recurringPaymentManagerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         recurringPaymentManagerMetadata,
-        abi.encode(1 weeks),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(1 weeks)  
     );
     */
 
@@ -464,8 +454,7 @@ contract E2EModuleRegistry is Test {
      IOrchestratorFactory_v1.ModuleConfig LM_PC_Staking_v1FactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         LM_PC_Staking_v1Metadata,
-        bytes(address(stakingToken)),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        bytes(address(stakingToken))  
     ); 
     */
 
@@ -504,8 +493,7 @@ contract E2EModuleRegistry is Test {
      IOrchestratorFactory_v1.ModuleConfig LM_PC_KPIRewarder_v1FactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         LM_PC_KPIRewarder_v1Metadata,
-        abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address), uint64(assertionLiveness) ),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address), uint64(assertionLiveness) )  
     ); 
     */
 
@@ -533,9 +521,9 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // utils
 
-    // VotingRoleManager_v1
+    // AUT_EXT_VotingRoles_v1
 
-    VotingRoleManager_v1 singleVoteGovernorImpl;
+    AUT_EXT_VotingRoles_v1 singleVoteGovernorImpl;
 
     InverterBeacon_v1 singleVoteGovernorBeacon;
 
@@ -543,7 +531,7 @@ contract E2EModuleRegistry is Test {
         1,
         0,
         "https://github.com/inverter/single-vote-governor",
-        "VotingRoleManager_v1"
+        "AUT_EXT_VotingRoles_v1"
     );
 
     /*    
@@ -553,14 +541,13 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig singleVoteGovernorFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         singleVoteGovernorMetadata,
-        abi.encode(initialVoters, 2, 3 days),
-        abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+        abi.encode(initialVoters, 2, 3 days)  
     ); 
     */
 
     function setUpSingleVoteGovernor() internal {
         // Deploy module implementations.
-        singleVoteGovernorImpl = new VotingRoleManager_v1();
+        singleVoteGovernorImpl = new AUT_EXT_VotingRoles_v1();
 
         // Deploy module beacons.
         singleVoteGovernorBeacon = new InverterBeacon_v1(
@@ -576,40 +563,6 @@ contract E2EModuleRegistry is Test {
             moduleFactory,
             singleVoteGovernorMetadata,
             IInverterBeacon_v1(singleVoteGovernorBeacon)
-        );
-    }
-
-    // MetadataManager_v1
-
-    MetadataManager_v1 metadataManagerImpl;
-
-    InverterBeacon_v1 metadataManagerBeacon;
-
-    IModule_v1.Metadata metadataManagerMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        "https://github.com/inverter/metadata-manager",
-        "MetadataManager_v1"
-    );
-
-    function setUpMetadataManager() internal {
-        // Deploy module implementations.
-        metadataManagerImpl = new MetadataManager_v1();
-
-        // Deploy module beacons.
-        metadataManagerBeacon = new InverterBeacon_v1(
-            DEFAULT_BEACON_OWNER,
-            metadataManagerMetadata.majorVersion,
-            address(metadataManagerImpl),
-            metadataManagerMetadata.minorVersion
-        );
-
-        // Register modules at moduleFactory.
-        vm.prank(teamMultisig);
-        gov.registerMetadata(
-            moduleFactory,
-            metadataManagerMetadata,
-            IInverterBeacon_v1(metadataManagerBeacon)
         );
     }
 }

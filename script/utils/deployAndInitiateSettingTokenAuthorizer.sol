@@ -9,7 +9,7 @@ import {
     IAuthorizer_v1
 } from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {DeployAUT_TokenGated_Role_v1} from
-    "script/modules/governance/DeployAUT_TokenGated_Role_v1.s.sol";
+    "script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol";
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {
     Orchestrator_v1,
@@ -26,9 +26,6 @@ contract deployAndSwitchTokenAuthorizer is Script {
     DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
         new DeployAndSetUpInverterBeacon_v1();
     ScriptConstants scriptConstants = new ScriptConstants();
-
-    bool hasDependency;
-    string[] dependencies = new string[](0);
 
     uint orchestratorOwnerPrivateKey =
         vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
@@ -74,9 +71,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            authorizerMetadata,
-            abi.encode(orchestratorOwner, orchestratorOwner),
-            abi.encode(hasDependency, dependencies)
+            authorizerMetadata, abi.encode(orchestratorOwner, orchestratorOwner)
         );
 
         vm.startBroadcast(orchestratorOwnerPrivateKey);

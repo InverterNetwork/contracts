@@ -41,7 +41,6 @@ interface IOrchestratorFactory_v1 {
     struct ModuleConfig {
         IModule_v1.Metadata metadata;
         bytes configData;
-        bytes dependencyData;
     }
 
     //--------------------------------------------------------------------------

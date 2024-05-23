@@ -16,11 +16,11 @@ import {
 
 //SuT
 import {
-    VotingRoleManager_v1,
-    IVotingRoleManager_v1
-} from "src/modules/utils/VotingRoleManager_v1.sol";
+    AUT_EXT_VotingRoles_v1,
+    IAUT_EXT_VotingRoles_v1
+} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
 
-contract SingleVoteGovernorE2E is E2ETest {
+contract VotingRoleManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
@@ -46,9 +46,7 @@ contract SingleVoteGovernorE2E is E2ETest {
         setUpRebasingFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata,
-                abi.encode(address(token)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                rebasingFundingManagerMetadata, abi.encode(address(token))
             )
         );
 
@@ -57,8 +55,7 @@ contract SingleVoteGovernorE2E is E2ETest {
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this)),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                abi.encode(address(this), address(this))
             )
         );
 
@@ -66,9 +63,7 @@ contract SingleVoteGovernorE2E is E2ETest {
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                simplePaymentProcessorMetadata, bytes("")
             )
         );
 
@@ -76,18 +71,14 @@ contract SingleVoteGovernorE2E is E2ETest {
         setUpBountyManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata,
-                bytes(""),
-                abi.encode(true, EMPTY_DEPENDENCY_LIST)
+                bountyManagerMetadata, bytes("")
             )
         );
 
         setUpSingleVoteGovernor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                singleVoteGovernorMetadata,
-                abi.encode(initialVoters, 2, 3 days),
-                abi.encode(HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+                singleVoteGovernorMetadata, abi.encode(initialVoters, 2, 3 days)
             )
         );
     }
@@ -122,13 +113,13 @@ contract SingleVoteGovernorE2E is E2ETest {
             }
         }
 
-        // Find VotingRoleManager_v1
-        VotingRoleManager_v1 singleVoteGovernor;
+        // Find AUT_EXT_VotingRoles_v1
+        AUT_EXT_VotingRoles_v1 singleVoteGovernor;
 
         for (uint i; i < modulesList.length; ++i) {
-            try IVotingRoleManager_v1(modulesList[i]).isVoter(address(0))
+            try IAUT_EXT_VotingRoles_v1(modulesList[i]).isVoter(address(0))
             returns (bool) {
-                singleVoteGovernor = VotingRoleManager_v1(modulesList[i]);
+                singleVoteGovernor = AUT_EXT_VotingRoles_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -144,7 +135,7 @@ contract SingleVoteGovernorE2E is E2ETest {
             bountyManager.BOUNTY_ISSUER_ROLE(), address(singleVoteGovernor)
         );
 
-        // By having address(this) renounce the Owner Role, all changes from now on need to go through the VotingRoleManager_v1
+        // By having address(this) renounce the Owner Role, all changes from now on need to go through the AUT_EXT_VotingRoles_v1
         authorizer.renounceRole(ownerRole, address(this));
 
         //--------------------------------------------------------------------------------
@@ -198,7 +189,7 @@ contract SingleVoteGovernorE2E is E2ETest {
     }
 
     function _getMotionExecutionResult(
-        VotingRoleManager_v1 singleVoteGovernor,
+        AUT_EXT_VotingRoles_v1 singleVoteGovernor,
         uint motionId
     ) internal view returns (bool, bytes memory) {
         (

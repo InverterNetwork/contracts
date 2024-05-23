@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import "../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v1, ERC165} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -20,8 +20,6 @@ import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     ScriptConstants scriptConstants = new ScriptConstants();
-    bool hasDependency;
-    string[] dependencies = new string[](0);
 
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
@@ -78,34 +76,25 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Funding Manager: Metadata, token address
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            rebasingFundingManagerMetadata,
-            abi.encode(address(token)),
-            abi.encode(hasDependency, dependencies)
+            rebasingFundingManagerMetadata, abi.encode(address(token))
         );
 
         // Payment Processor: only Metadata
         IOrchestratorFactory_v1.ModuleConfig memory
             paymentProcessorFactoryConfig = IOrchestratorFactory_v1
-                .ModuleConfig(
-                simplePaymentProcessorMetadata,
-                bytes(""),
-                abi.encode(hasDependency, dependencies)
-            );
+                .ModuleConfig(simplePaymentProcessorMetadata, bytes(""));
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             roleAuthorizerMetadata,
-            abi.encode(orchestratorOwner, orchestratorOwner),
-            abi.encode(hasDependency, dependencies)
+            abi.encode(orchestratorOwner, orchestratorOwner)
         );
 
-        // MilestoneManager: Metadata, salary precision, fee percentage, fee treasury address
+        // BountyManager: Metadata, salary precision, fee percentage, fee treasury address
         IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            bountyManagerMetadata,
-            abi.encode(""),
-            abi.encode(true, dependencies)
+            bountyManagerMetadata, abi.encode("")
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.
@@ -138,28 +127,25 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         );
         assertEq(orchestratorToken, address(token));
 
-        // Now we need to find the MilestoneManager. ModuleManagerBase_v1 has a function called `listModules` that returns a list of
-        // active modules, let's use that to get the address of the MilestoneManager.
+        // Now we need to find the BountyManager. ModuleManager has a function called `listModules` that returns a list of
+        // active modules, let's use that to get the address of the BountyManager.
 
-        // TODO: Ideally this would be substituted by a check that that all mandatory modules implement their corresponding interfaces + the same for MilestoneManager
+        LM_PC_Bounties_v1 orchestratorCreatedBountyManager;
 
-        address[] memory moduleAddresses =
-            IOrchestrator_v1(test_orchestrator).listModules();
-        uint lenModules = moduleAddresses.length;
-        address orchestratorCreatedBountyManagerAddress;
-
-        for (uint i; i < lenModules;) {
-            try ILM_PC_Bounties_v1(moduleAddresses[i]).isExistingBountyId(0)
-            returns (bool) {
-                orchestratorCreatedBountyManagerAddress = moduleAddresses[i];
+        bytes4 LM_PC_Bounties_v1InterfaceId =
+            type(ILM_PC_Bounties_v1).interfaceId;
+        address[] memory modulesList = test_orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            if (
+                ERC165(modulesList[i]).supportsInterface(
+                    LM_PC_Bounties_v1InterfaceId
+                )
+            ) {
+                orchestratorCreatedBountyManager =
+                    LM_PC_Bounties_v1(modulesList[i]);
                 break;
-            } catch {
-                i++;
             }
         }
-
-        LM_PC_Bounties_v1 orchestratorCreatedBountyManager =
-            LM_PC_Bounties_v1(orchestratorCreatedBountyManagerAddress);
 
         assertEq(
             address(orchestratorCreatedBountyManager.orchestrator()),
