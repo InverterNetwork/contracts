@@ -192,6 +192,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         // Return copy of orders and orders' total token amount to payment
         // processor.
         return (copy, tokens, amounts);
+        return (copy, tokens, amounts);
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1

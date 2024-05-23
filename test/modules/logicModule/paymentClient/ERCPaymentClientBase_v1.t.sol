@@ -51,6 +51,9 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     event PaymentOrderAdded(
         address indexed recipient, address indexed token, uint amount
     );
+    event PaymentOrderAdded(
+        address indexed recipient, address indexed token, uint amount
+    );
 
     function setUp() public {
         address impl = address(new ERC20PaymentClientBaseV1AccessMock());
