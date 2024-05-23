@@ -45,9 +45,9 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
         _setBuyFee(_buyFee);
 
-        if (_buyIsOpen == true) _openBuy();
+        buyIsOpen = _buyIsOpen;
 
-        if (_sellIsOpen == true) _openSell();
+        sellIsOpen = _sellIsOpen;
     }
 
     function _issueTokensFormulaWrapper(uint _depositAmount)
@@ -76,7 +76,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         external
         returns (uint)
     {
-        return _calculateSaleReturn(_depositAmount);
+        return calculateSaleReturn(_depositAmount);
     }
 
     function getStaticPriceForSelling()
@@ -120,7 +120,9 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
             uint issuanceSellFeePercentage
         )
     {
-        return _getSellFeesAndTreasuryAddresses();
+        return _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+        );
     }
 
     function call_calculateNetAndSplitFees(

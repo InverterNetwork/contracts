@@ -58,10 +58,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // Modifiers
 
     modifier sellingIsEnabled() {
-        if (sellIsOpen == false) {
-            revert
-                Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
-        }
+        _sellingIsEnabledModifier();
         _;
     }
 
@@ -70,7 +67,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
-        external
+        public
         virtual
         sellingIsEnabled
         validReceiver(_receiver)
@@ -79,12 +76,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function sell(uint _depositAmount, uint _minAmountOut)
-        external
-        virtual
-        sellingIsEnabled
-    {
-        _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
+    function sell(uint _depositAmount, uint _minAmountOut) public virtual {
+        sellFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     //--------------------------------------------------------------------------
@@ -92,12 +85,14 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function openSell() external virtual onlyOrchestratorOwner {
-        _openSell();
+        sellIsOpen = true;
+        emit SellingEnabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function closeSell() external virtual onlyOrchestratorOwner {
-        _closeSell();
+        sellIsOpen = false;
+        emit SellingDisabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -107,11 +102,39 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function calculateSaleReturn(uint _depositAmount)
-        external
+        public
         virtual
         returns (uint redeemAmount)
     {
-        return _calculateSaleReturn(_depositAmount);
+        _validateDepositAmount(_depositAmount);
+
+        // Get protocol fee percentages
+        (
+            /* collateralTreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        ) = _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+        );
+
+        // Deduct protocol sell fee from issuance, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
+
+        // Calculate redeem amount from formula
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol and project sell fee from collateral, if applicable
+        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            redeemAmount, collateralSellFeePercentage, sellFee
+        );
+
+        // Return redeem amount
+        //return redeemAmount;
     }
 
     //--------------------------------------------------------------------------
@@ -160,16 +183,16 @@ abstract contract RedeemingBondingCurveBase_v1 is
         internal
         returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
     {
-        if (_depositAmount == 0) {
-            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
-        }
+        _validateDepositAmount(_depositAmount);
         // Get protocol fee percentages and treasury addresses
         (
-            address collateralreasury,
+            address collateralTreasury,
             address issuanceTreasury,
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
-        ) = _getSellFeesAndTreasuryAddresses();
+        ) = _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+        );
 
         uint protocolFeeAmount;
         uint workflowFeeAmount;
@@ -211,7 +234,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
-            collateralreasury,
+            collateralTreasury,
             __Module_orchestrator.fundingManager().token(),
             protocolFeeAmount
         );
@@ -223,7 +246,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (collateralRedeemAmount < _minAmountOut) {
-            revert Module__RedeemingBondingCurveBase__InsufficientOutputAmount();
+            revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
         // Transfer tokens to receiver
         __Module_orchestrator.fundingManager().token().transfer(
@@ -235,99 +258,18 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
     }
 
-    /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
-    function _openSell() internal virtual {
-        if (sellIsOpen == true) {
-            revert Module__RedeemingBondingCurveBase__SellingAlreadyOpen();
+    function _sellingIsEnabledModifier() internal view {
+        if (!sellIsOpen) {
+            revert
+                Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
         }
-        sellIsOpen = true;
-        emit SellingEnabled();
-    }
-
-    /// @dev Closes the sell functionality by setting the state variable `sellIsOpen` to false.
-    function _closeSell() internal virtual {
-        if (sellIsOpen == false) {
-            revert Module__RedeemingBondingCurveBase__SellingAlreadyClosed();
-        }
-        sellIsOpen = false;
-        emit SellingDisabled();
     }
 
     /// @dev Sets the sell transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for sell transactions.
     function _setSellFee(uint _fee) internal virtual {
-        if (_fee > BPS) {
-            revert Module__RedeemingBondingCurveBase__InvalidFeePercentage();
-        }
+        _validateWorkflowFee(_fee);
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
-    }
-
-    /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
-    ///     sell operations
-    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
-    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
-    /// @return collateralSellFeePercentage The percentage fee to be collected from the collateral
-    ///     token being redeemed, expressed in BPS
-    /// @return issuanceSellFeePercentage The percentage fee to be collected from the issuance token
-    ///     being deposited, expressed in BPS
-    function _getSellFeesAndTreasuryAddresses()
-        internal
-        virtual
-        returns (
-            address collateralTreasury,
-            address issuanceTreasury,
-            uint collateralSellFeePercentage,
-            uint issuanceSellFeePercentage
-        )
-    {
-        (collateralSellFeePercentage, collateralTreasury) =
-        _getFeeManagerCollateralFeeData(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
-        );
-        (issuanceSellFeePercentage, issuanceTreasury) =
-        _getFeeManagerIssuanceFeeData(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
-        );
-    }
-
-    /// @dev This function takes into account any applicable sell fees before computing the
-    /// collateral amount to be redeemed. Revert when depositAmount is zero.
-    /// @param _depositAmount The amount of tokens deposited by the user.
-    /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
-    function _calculateSaleReturn(uint _depositAmount)
-        internal
-        virtual
-        returns (uint redeemAmount)
-    {
-        if (_depositAmount == 0) {
-            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
-        }
-
-        // Get protocol fee percentages
-        (
-            /* collateralreasury */
-            ,
-            /* issuanceTreasury */
-            ,
-            uint collateralSellFeePercentage,
-            uint issuanceSellFeePercentage
-        ) = _getSellFeesAndTreasuryAddresses();
-
-        // Deduct protocol sell fee from issuance, if applicable
-        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
-        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
-
-        // Calculate redeem amount from formula
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-
-        // Deduct protocol and project sell fee from collateral, if applicable
-        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
-        _calculateNetAndSplitFees(
-            redeemAmount, collateralSellFeePercentage, sellFee
-        );
-
-        // Return redeem amount
-        return redeemAmount;
     }
 }

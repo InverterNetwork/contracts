@@ -43,7 +43,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
         _setBuyFee(_buyFee);
 
-        if (_buyIsOpen == true) _openBuy();
+        buyIsOpen = _buyIsOpen;
     }
 
     function _issueTokensFormulaWrapper(uint _depositAmount)
@@ -67,25 +67,17 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 
-    function call_calculateNetAmountAndFee(uint _depositAmount, uint _feePct)
-        external
-        pure
-        returns (uint, uint)
-    {
-        return _calculateNetAmountAndFee(_depositAmount, _feePct);
-    }
-
     function call_calculatePurchaseReturn(uint _depositAmount)
         external
         returns (uint)
     {
-        return _calculatePurchaseReturn(_depositAmount);
+        return calculatePurchaseReturn(_depositAmount);
     }
 
     function call_withdrawProjectCollateralFee(address _receiver, uint _amount)
         public
     {
-        _withdrawProjectCollateralFee(_receiver, _amount);
+        withdrawProjectCollateralFee(_receiver, _amount);
     }
 
     function call_BPS() external pure returns (uint) {
@@ -127,7 +119,9 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
             uint issuanceBuyFeePercentage
         )
     {
-        return _getBuyFeesAndTreasuryAddresses();
+        return _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+        );
     }
 
     function call_calculateNetAndSplitFees(

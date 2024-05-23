@@ -47,13 +47,6 @@ interface IModule_v1 {
     /// @param funcSig The signature of the function called.
     error Module_OrchestratorCallbackFailed(string funcSig);
 
-    /// @notice init2 was called again for a module
-    error Module__CannotCallInit2Again();
-
-    /// @notice the dependency data passed to init2 was not in the correct format
-    ///         or there was no dependency for the particular module
-    error Module__NoDependencyOrMalformedDependencyData();
-
     //--------------------------------------------------------------------------
     // Functions
 
@@ -69,13 +62,6 @@ interface IModule_v1 {
         Metadata memory metadata,
         bytes memory configData
     ) external;
-
-    /// @notice Second initialization function of the module to take care of dependencies.
-    /// @param orchestrator The module's orchestrator instance.
-    /// @param configData Variable config data for specific module
-    ///                   implementations.
-    function init2(IOrchestrator_v1 orchestrator, bytes memory configData)
-        external;
 
     /// @notice Returns the module's identifier.
     /// @dev The identifier is defined as the keccak256 hash of the module's

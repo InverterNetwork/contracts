@@ -228,15 +228,6 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         _claimList.init();
     }
 
-    function init2(IOrchestrator_v1, bytes memory)
-        external
-        override(Module_v1)
-        initializer2
-    {
-        //Note: due to the authorizer still not being set during initialization,
-        // this function has to be called after.
-    }
-
     //--------------------------------------------------------------------------
     // Getter Functions
 
