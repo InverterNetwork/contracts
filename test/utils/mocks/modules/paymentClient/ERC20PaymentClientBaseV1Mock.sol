@@ -49,10 +49,14 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
     function addPaymentOrderUnchecked(PaymentOrder memory order) external {
         // Add order's token amount to current outstanding amount.
         _outstandingTokenAmounts[order.paymentToken] += order.amount;
+        _outstandingTokenAmounts[order.paymentToken] += order.amount;
 
         // Add new order to list of oustanding orders.
         _orders.push(order);
 
+        emit PaymentOrderAdded(
+            order.recipient, order.paymentToken, order.amount
+        );
         emit PaymentOrderAdded(
             order.recipient, order.paymentToken, order.amount
         );
@@ -65,26 +69,26 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // IERC20PaymentClientBase_v1 Overriden Functions
 
-    function _ensureTokenBalance(address _token, uint amount)
+    function _ensureTokenBalance(address _token)
         internal
         override(ERC20PaymentClientBase_v1)
     {
+        uint amount = _outstandingTokenAmounts[_token];
+
         if (ERC20Mock(_token).balanceOf(address(this)) >= amount) {
             return;
         } else {
+            uint amtToMint = amount - ERC20Mock(_token).balanceOf(address(this));
             uint amtToMint = amount - ERC20Mock(_token).balanceOf(address(this));
             token.mint(address(this), amtToMint);
         }
     }
 
-    function _ensureTokenAllowance(
-        IPaymentProcessor_v1 spender,
-        address _token,
-        uint amount
-    ) internal override(ERC20PaymentClientBase_v1) {
-        uint currentAllowance =
-            ERC20Mock(_token).allowance(address(this), address(spender));
-        token.approve(address(spender), amount + currentAllowance);
+    function _ensureTokenAllowance(IPaymentProcessor_v1 spender, address _token)
+        internal
+        override(ERC20PaymentClientBase_v1)
+    {
+        token.approve(address(spender), _outstandingTokenAmounts[_token]);
     }
 
     function _isAuthorizedPaymentProcessor(IPaymentProcessor_v1)
