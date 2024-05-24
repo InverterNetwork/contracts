@@ -44,7 +44,7 @@ import {DeployLM_PC_RecurringPayments_v1} from
 import {DeployLM_PC_PaymentRouter_v1} from
     "script/modules/logicModule/DeployLM_PC_PaymentRouter_v1.s.sol";
 import {DeployLM_PC_KPIRewarder_v1} from
-    "script/modules/logicModule/DeployLM_PC_KPIRewarder_v1.s.sol";
+    "script/modules/logicModule/DeployLM_PC_KPIRewarder.s.sol";
 import {DeployAUT_EXT_VotingRoles_v1} from
     "script/modules/authorizer/extensions/DeployAUT_EXT_VotingRoles_v1.s.sol";
 
