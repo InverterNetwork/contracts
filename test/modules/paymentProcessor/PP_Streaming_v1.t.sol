@@ -480,6 +480,102 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         assertEq(totalAmount, paymentClient.amountPaidCounter());
     }
 
+    function test_claimStreamedAmounts_CliffDoesNotInfluencePayout(
+        address[] memory recipients,
+        uint128[] memory amounts
+    ) public {
+        vm.assume(recipients.length <= 10);
+        vm.assume(recipients.length <= amounts.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+
+        uint expectedHalfAmount;
+
+        for (uint i; i < recipients.length; i++) {
+            uint amount = uint(amounts[i]);
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                IERC20PaymentClientBase_v1.PaymentOrder({
+                    recipient: recipients[i],
+                    paymentToken: address(_token),
+                    amount: amount,
+                    start: block.timestamp,
+                    cliff: 50_000,
+                    end: block.timestamp + 100_000
+                })
+            );
+
+            expectedHalfAmount += amount / 2;
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Moving ahead in time, before the cliff period ends
+        vm.warp(block.timestamp + 49_999);
+
+        // All recepients try to claim their vested tokens without success
+        for (uint i; i < recipients.length;) {
+            uint balanceBefore = _token.balanceOf(recipients[i]);
+
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+            assertTrue(
+                paymentProcessor.isActivePaymentReceiver(
+                    address(paymentClient), recipients[i]
+                )
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificStream(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "Nothing would have vested before the cliff period ends"
+            );
+            assertEq(_token.balanceOf(recipients[i]), balanceBefore);
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Now we move to just the end of the cliff. Half of tokens should become unlocked
+        vm.warp(block.timestamp + 1);
+
+        // Now, all recipients should claim their entire vested amount
+        for (uint i; i < recipients.length;) {
+            uint balanceBefore = _token.balanceOf(recipients[i]);
+
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+
+            // Check recipient balance
+            assertEq(
+                _token.balanceOf(recipients[i]),
+                (uint(amounts[i]) / 2 + balanceBefore),
+                "Vested tokens not received by the paymentReceiver"
+            );
+
+            assertEq(
+                paymentProcessor.releasableForSpecificStream(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "All vested amount is already released"
+            );
+
+            unchecked {
+                ++i;
+            }
+        }
+        assertEq(expectedHalfAmount, paymentClient.amountPaidCounter());
+    }
+
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
     function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
         address[] memory recipients,
