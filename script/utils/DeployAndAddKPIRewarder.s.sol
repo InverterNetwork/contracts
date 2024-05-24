@@ -1,7 +1,13 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
+
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
+
+import {DeployAndSetUpInverterBeacon_v1} from
+    "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 /**
  * @title DeployLM_PC_KPIRewarder_v1 Deployment Script
  *
